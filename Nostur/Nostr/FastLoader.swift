@@ -70,7 +70,9 @@ class FastLoader: ObservableObject {
     
     // How to transform (eg from Event to NRPost)
     var transformer:(_ event:Event) -> NRPost? = { event in
-        NRPost(event: event)
+        var nrPost = NRPost(event: event)
+        nrPost.cancellationId = event.cancellationId
+        return nrPost
     }
     
     // load first set of [limit] posts
@@ -82,15 +84,21 @@ class FastLoader: ObservableObject {
         next.fetchLimit = limit ?? self.limit
         self.limit = limit ?? self.limit
         
+        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
+        
         if nrPostTransform {
             next.fetchOffset = max(0, self.nrPosts.count - 1)
             bgContext.perform { [weak self] in
                 guard let self = self else { return }
-                let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
+                let dbEvents:[Event] = (try? self.bgContext.fetch(next)) ?? [Event]()
+                    .map { event in
+                        event.cancellationId = cancellationIds[event.id]
+                        return event
+                    }
                 let currentNRPostIds = Set(self.nrPosts.map { item in
                     item.id
                 })
-                let onlyUnrendered = dbEventIds.filter { item in
+                let onlyUnrendered = dbEvents.filter { item in
                     !currentNRPostIds.contains(item.id)
                 }
                 let nextItems = onlyUnrendered
@@ -104,11 +112,16 @@ class FastLoader: ObservableObject {
         }
         else {
             next.fetchOffset = max(0, self.events.count - 1)
-            let dbEventIds = (try? viewContext.fetch(next)) ?? []
+            let dbEvents:[Event] = (try? viewContext.fetch(next)) ?? [Event]()
+                .map { event in
+                    event.cancellationId = cancellationIds[event.id]
+                    return event
+                }
+            
             let currentEventIds = Set(self.events.map { event in
                 event.id
             })
-            let onlyUnrendered = dbEventIds.filter { item in
+            let onlyUnrendered = dbEvents.filter { item in
                 !currentEventIds.contains(item.id)
             }
             let nextItems = onlyUnrendered
@@ -126,6 +139,8 @@ class FastLoader: ObservableObject {
     // Only for .nrPosts, not .events
     private func _loadNewer(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
         L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewer()")
+        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
+        
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
@@ -133,7 +148,11 @@ class FastLoader: ObservableObject {
         next.fetchOffset = 0
         bgContext.perform { [weak self] in
             guard let self = self else { return }
-            let dbEvents = (try? self.bgContext.fetch(next)) ?? []
+            let dbEvents:[Event] = (try? self.bgContext.fetch(next)) ?? [Event]()
+                .map { event in
+                    event.cancellationId = cancellationIds[event.id]
+                    return event
+                }
             let currentNRPostIds = Set(self.nrPosts.map { item in
                 item.id
             })
@@ -160,12 +179,18 @@ class FastLoader: ObservableObject {
     // Only for .events, not .nrPosts, on main
     private func _loadNewerEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
         L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewerEvents()")
+        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
+        
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
         next.fetchLimit = limit ?? 1000
         next.fetchOffset = 0
-        let dbEvents = (try? self.viewContext.fetch(next)) ?? []
+        let dbEvents:[Event] = (try? self.viewContext.fetch(next)) ?? [Event]()
+            .map { event in
+                event.cancellationId = cancellationIds[event.id]
+                return event
+            }
         let currentEventIds = Set(self.events.map { item in
             item.id
         })
@@ -189,12 +214,18 @@ class FastLoader: ObservableObject {
     // Only for .events, not .nrPosts, on main
     private func _loadOlderEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
         L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadOlderEvents()")
+        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
+        
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
         next.fetchLimit = limit ?? 1000
         next.fetchOffset = max(0, self.events.count - 1)
-        let dbEvents = (try? self.viewContext.fetch(next)) ?? []
+        let dbEvents:[Event] = (try? self.viewContext.fetch(next)) ?? [Event]()
+            .map { event in
+                event.cancellationId = cancellationIds[event.id]
+                return event
+            }
         let currentEventIds = Set(self.events.map { item in
             item.id
         })
