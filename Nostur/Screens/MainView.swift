@@ -15,7 +15,6 @@ struct MainView: View {
     @State var navPath = NavigationPath()
     @State var account:Account?
     @State var showingNewNote = false
-    @State var noteCancellationId:UUID?
     @EnvironmentObject var sm:SideBarModel
     @ObservedObject var settings:SettingsStore = .shared
     
@@ -41,11 +40,11 @@ struct MainView: View {
                         NavigationStack {
                             if account.isNC, let nsecBunker = NosturState.shared.nsecBunker {
                                 WithNSecBunkerConnection(nsecBunker: nsecBunker) {
-                                    NewPost(noteCancellationId: $noteCancellationId)
+                                    NewPost()
                                 }
                             }
                             else {
-                                NewPost(noteCancellationId: $noteCancellationId)
+                                NewPost()
                             }
                         }
                     }

@@ -18,7 +18,6 @@ struct NewPost: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
-    @Binding var noteCancellationId:UUID?
     
     @StateObject var vm = NewPostModel()
     @StateObject var ipm = ImagePickerModel()
@@ -151,14 +150,13 @@ struct NewPost: View {
 }
 
 struct NewNote_Previews: PreviewProvider {
-    @State static var noteCancellationId:UUID?
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadPosts()
             pe.loadContacts()
         }) {
             NavigationStack {
-                NewPost(noteCancellationId: $noteCancellationId)
+                NewPost()
             }
         }
     }
