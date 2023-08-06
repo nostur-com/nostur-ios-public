@@ -29,6 +29,19 @@ public final class NewPostModel: ObservableObject {
     
     @Published var contactSearchResults:[Contact] = []
     
+    var filteredContactSearchResults:[Contact] {
+        guard let wot = NosturState.shared.wot else {
+            // WoT disabled, just following before non-following
+            return contactSearchResults
+                .sorted(by: { NosturState.shared.followingPublicKeys.contains($0.pubkey) && !NosturState.shared.followingPublicKeys.contains($1.pubkey) })
+        }
+        return contactSearchResults
+            // WoT enabled, so put in-WoT before non-WoT
+            .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
+            // Put following before non-following
+            .sorted(by: { NosturState.shared.followingPublicKeys.contains($0.pubkey) && !NosturState.shared.followingPublicKeys.contains($1.pubkey) })
+    }
+    
     static let rules: [HighlightRule] = [
         HighlightRule(pattern: NewPostModel.mentionRegex, formattingRules: [
             TextFormattingRule(key: .foregroundColor, value: UIColor(named: "AccentColor")!),
