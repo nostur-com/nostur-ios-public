@@ -216,10 +216,10 @@ struct NewReply: View {
                     }
                 }
                 
-                if vm.mentioning && !vm.contactSearchResults.isEmpty {
+                if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {
                     ScrollView {
                         LazyVStack {
-                            ForEach(vm.contactSearchResults) { contact in
+                            ForEach(vm.filteredContactSearchResults) { contact in
                                 ContactSearchResultRow(contact: contact, onSelect: {
                                     vm.selectContactSearchResult(contact)
                                 })

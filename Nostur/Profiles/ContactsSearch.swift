@@ -30,10 +30,24 @@ struct ContactsSearch: View, Equatable {
     var contacts:FetchedResults<Contact>
 
     var filteredContacts:[Contact] {
-        contacts
+        guard let wot = NosturState.shared.wot else {
+            // WoT disabled, just normal following/all filter
+            return contacts
+                .filter {
+                    contactFilter == "All" || followingPubkeys.contains($0.pubkey)
+                }
+                // Put following before non-following
+                .sorted(by: { followingPubkeys.contains($0.pubkey) && !followingPubkeys.contains($1.pubkey) })
+        }
+        return contacts
             .filter {
+                // normal following/all filter
                 contactFilter == "All" || followingPubkeys.contains($0.pubkey)
             }
+            // WoT enabled, so put in-WoT before non-WoT
+            .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
+            // Put following before non-following
+            .sorted(by: { followingPubkeys.contains($0.pubkey) && !followingPubkeys.contains($1.pubkey) })
     }
     
     @State var searching = false
