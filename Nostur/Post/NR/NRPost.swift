@@ -837,6 +837,34 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     @MainActor public func unlike() {
         self.objectWillChange.send()
         self.liked = false
+        DataProvider.shared().bg.perform {
+            self.event.likesCount -= 1
+        }
+    }
+    
+    @MainActor public func unpublish() {
+        guard let cancellationId = cancellationId else { return }
+        let cancelled = Unpublisher.shared.cancel(cancellationId)
+        self.objectWillChange.send()
+        self.cancellationId = nil
+        
+        if !cancelled {
+            L.og.info("🔴🔴 Unpublish failed")
+        }
+        else {
+            sendNotification(.unpublishedNRPost, self)
+        }
+    }
+    
+    @MainActor public func sendNow() {
+        guard let cancellationId = cancellationId else { return }
+        let didSend = Unpublisher.shared.sendNow(cancellationId)
+        self.objectWillChange.send()
+        self.cancellationId = nil
+        
+        if !didSend {
+            L.og.info("🔴🔴 Send now failed")
+        }
     }
 }
 
