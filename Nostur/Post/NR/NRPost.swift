@@ -138,6 +138,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var plainTextOnly = false
     var flags:String = ""
     var aTag:String = ""
+    var isPreview = false // hide 'Sent to 0 relays' in preview footer
     
     var anyName:String {
         if let contact = contact {
@@ -165,8 +166,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var articleImageURL:URL?
     var mostRecentId:String?
     
-    init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false) {
+    init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isPreview:Bool = false) {
         self.event = event // Only touch this in BG context!!!
+        self.isPreview = isPreview
         self.id = event.id
         self.pubkey = event.pubkey
         self.kind = event.kind
