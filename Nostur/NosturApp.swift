@@ -35,18 +35,24 @@ struct NosturApp: App {
         .onChange(of: scenePhase) { newScenePhase in
             switch newScenePhase {
             case .active:
-                sendNotification(.scenePhaseActive)
                 L.og.notice("scenePhase active")
+                sendNotification(.scenePhaseActive)
                 SocketPool.shared.connectAll()
                 lvmManager.restoreSubscriptions()
             case .background:
+                L.og.notice("scenePhase background")
                 sendNotification(.scenePhaseBackground)
                 if !IS_CATALYST {
                     SocketPool.shared.disconnectAll()
                     lvmManager.stopSubscriptions()
                 }
                 saveState()
-                
+            case .inactive:
+                L.og.notice("scenePhase inactive")
+                if IS_CATALYST {
+                    saveState()
+                }
+
             default:
                 break
             }
