@@ -36,30 +36,30 @@ class LVMManager {
             .store(in: &subscriptions)
     }
     
-    func followingLVM(forAccount account:Account) -> LVM {
+    func followingLVM(forAccount account:Account, isDeck:Bool = false) -> LVM {
         if let lvm = listVMs.first(where: { $0.pubkey == account.publicKey && $0.id == "Following" }) {
             return lvm
         }
         L.lvm.info("⭐️ New LVM for: \(account.publicKey) - \(account.name) - following: \(account.followingPublicKeys.count)")
-        let lvm = LVM(type: .pubkeys, pubkey: account.publicKey, pubkeys: account.followingPublicKeys, listId: "Following", name: account.name)
+        let lvm = LVM(type: .pubkeys, pubkey: account.publicKey, pubkeys: account.followingPublicKeys, listId: "Following", name: account.name, isDeck: isDeck)
         listVMs.append(lvm)
         return lvm
     }
-    func exploreLVM() -> LVM {
+    func exploreLVM(isDeck:Bool = false) -> LVM {
         if let lvm = listVMs.first(where: { $0.id == "Explore" }) {
             return lvm
         }
-        let lvm = LVM(type: .pubkeys, pubkeys: NosturState.shared.explorePubkeys, listId: "Explore", name: "Explore")
+        let lvm = LVM(type: .pubkeys, pubkeys: NosturState.shared.explorePubkeys, listId: "Explore", name: "Explore", isDeck: isDeck)
         listVMs.append(lvm)
         return lvm
     }
-    func listLVM(forList list:NosturList) -> LVM {
+    func listLVM(forList list:NosturList, isDeck:Bool = false) -> LVM {
         if let lvm = listVMs.first(where: { $0.id == list.subscriptionId }) {
             return lvm
         }
         let lvm = list.type == LVM.ListType.relays.rawValue
-            ? LVM(type: .relays, pubkeys: [], listId: list.subscriptionId, name: list.name_, relays: list.relays_, wotEnabled: list.wotEnabled)
-            : LVM(type: .pubkeys, pubkeys: Set(list.contacts_.map { $0.pubkey }), listId: list.subscriptionId, name: list.name_)
+        ? LVM(type: .relays, pubkeys: [], listId: list.subscriptionId, name: list.name_, relays: list.relays_, wotEnabled: list.wotEnabled, isDeck: isDeck)
+            : LVM(type: .pubkeys, pubkeys: Set(list.contacts_.map { $0.pubkey }), listId: list.subscriptionId, name: list.name_, isDeck: isDeck)
         
         listVMs.append(lvm)
         return lvm

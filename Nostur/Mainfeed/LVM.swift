@@ -105,6 +105,7 @@ class LVM: NSObject, ObservableObject {
     }
     
     var viewIsVisible:Bool {
+        if isDeck { return true }
         if id.prefix(5) == "List-" {
             return selectedSubTab == "List" && selectedListId == id
         }
@@ -546,13 +547,15 @@ class LVM: NSObject, ObservableObject {
     var restoreLeafs:String?
     
     var instantFeed = InstantFeed()
+    var isDeck = false
     
-    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<Relay> = [], wotEnabled:Bool = true) {
+    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<Relay> = [], wotEnabled:Bool = true, isDeck:Bool = false) {
         self.type = type
         self.name = name
         self.pubkey = pubkey
         self.pubkeys = pubkeys
         self.wotEnabled = wotEnabled
+        self.isDeck = isDeck
 
         self.id = listId
         super.init()
