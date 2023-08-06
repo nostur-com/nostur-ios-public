@@ -16,6 +16,19 @@ struct Search: View {
         predicate: NSPredicate(value: false),
         animation: .none)
     var contacts:FetchedResults<Contact>
+    
+    var filteredContactSearchResults:[Contact] {
+        guard let wot = NosturState.shared.wot else {
+            // WoT disabled, just following before non-following
+            return contacts
+                .sorted(by: { NosturState.shared.followingPublicKeys.contains($0.pubkey) && !NosturState.shared.followingPublicKeys.contains($1.pubkey) })
+        }
+        return contacts
+            // WoT enabled, so put in-WoT before non-WoT
+            .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
+            // Put following before non-following
+            .sorted(by: { NosturState.shared.followingPublicKeys.contains($0.pubkey) && !NosturState.shared.followingPublicKeys.contains($1.pubkey) })
+    }
 
     @State var searching = false
     @AppStorage("selected_tab") var selectedTab = "Search"
@@ -30,12 +43,12 @@ struct Search: View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             ScrollView {
-                if (contacts.isEmpty && nrPosts.isEmpty && searching) {
+                if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
                     CenteredProgressView()
                 }
                 LazyVStack(spacing: 0) {
                     Section {
-                        ForEach(contacts.prefix(150)) { contact in
+                        ForEach(filteredContactSearchResults.prefix(75)) { contact in
                             ProfileRow(contact: contact)
                                 .roundedBoxShadow()
                                 .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
