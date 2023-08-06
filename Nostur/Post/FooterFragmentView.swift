@@ -142,7 +142,7 @@ struct FooterFragmentView: View {
                         .contentShape(Rectangle())
                     //                        .padding(.leading, 10)
                         .onTapGesture {
-                            NosturState.shared.removeBookmark(nrPost.mainEvent)
+                            NosturState.shared.removeBookmark(nrPost)
                         }
                 }
                 else {
@@ -153,7 +153,7 @@ struct FooterFragmentView: View {
                         .onTapGesture {
                             let impactMed = UIImpactFeedbackGenerator(style: .medium)
                             impactMed.impactOccurred()
-                            NosturState.shared.addBookmark(nrPost.mainEvent)
+                            NosturState.shared.addBookmark(nrPost)
                         }
                 }
                 

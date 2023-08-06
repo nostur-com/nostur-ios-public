@@ -275,42 +275,25 @@ final class NosturState : ObservableObject {
         return account.follows?.contains(contact) ?? false
     }    
     
-    func addBookmark(_ event:Event) {
-        guard let account = account else { return }
-        event.objectWillChange.send()
-        account.addToBookmarks(event)
-        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: event.id, bookmarked: true))
-        if viewContext.hasChanges {
-            do {
-                try viewContext.save()
-            }
-            catch {
-                L.og.error("Could not add bookmark: \(error)")
-            }
+    func addBookmark(_ nrPost:NRPost) {
+        guard account != nil else { return }
+        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: nrPost.id, bookmarked: true))
+        
+        DataProvider.shared().bg.perform {
+            guard let account = self.bgAccount else { return }
+            account.addToBookmarks(nrPost.event)
+            DataProvider.shared().bgSave()
         }
     }
     
-    func removeBookmark(_ event:Event) {
-        guard let account = account else { return }
-        account.removeFromBookmarks(event)
-        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: event.id, bookmarked: false))
-        DataProvider.shared().save()
-    }
-    
-    func toggleBookmark(_ event:Event) {
-        if isBookmarked(event) {
-            removeBookmark(event)
+    func removeBookmark(_ nrPost:NRPost) {
+        guard account != nil else { return }
+        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: nrPost.id, bookmarked: false))
+        DataProvider.shared().bg.perform {
+            guard let account = self.bgAccount else { return }
+            account.removeFromBookmarks(nrPost.event)
+            DataProvider.shared().bgSave()
         }
-        else {
-            addBookmark(event)
-        }
-    }
-    
-    func isBookmarked(_ event:Event) -> Bool {
-        guard account != nil else {
-            return false
-        }
-        return account!.bookmarks?.contains(event) ?? false
     }
     
     func signEvent(_ event:NEvent) throws -> NEvent {
