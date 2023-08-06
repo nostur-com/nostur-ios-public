@@ -159,22 +159,38 @@ struct FooterFragmentView: View {
                 
             }
             if (nrPost.pubkey == NosturState.shared.activeAccountPublicKey) {
-                HStack {
-                    if nrPost.flags == "nsecbunker_unsigned" {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
+                if nrPost.cancellationId != nil && nrPost.relays == "" {
+                    HStack {
+                        Text("Sending post...")
+                        Spacer()
+                        Button("Send now") {
+                            nrPost.sendNow()
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundColor(Color.accentColor)
+                        .padding(.trailing, 5)
+                        Button("Undo") {
+                            nrPost.unpublish()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .foregroundColor(Color.white)
                     }
-                    else if relaysCount == 0 {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.yellow)
-                    }
-                    Text("Sent to \(relaysCount) relays", comment:"Message shown in footer of sent post")
-                    Spacer()
+                    .padding(.bottom, 5)
+                    .foregroundColor(Color.primary)
+                    .fontWeight(.bold)
                 }
-                .padding(.bottom, 5)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if nrPost.flags == "nsecbunker_unsigned" {
-                        
+                else if !nrPost.isPreview && nrPost.flags != "awaiting_send" {
+                    HStack {
+                        if nrPost.flags == "nsecbunker_unsigned" && nrPost.relays != "" {
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
+                        }
+                        else if relaysCount == 0 {
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.yellow)
+                        }
+                        Text("Sent to \(relaysCount) relays", comment:"Message shown in footer of sent post")
+                        Spacer()
                     }
+                    .padding(.bottom, 5)
                 }
             }
         }
