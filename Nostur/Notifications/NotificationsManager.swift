@@ -232,11 +232,11 @@ class NotificationsManager: ObservableObject {
         }
     }
     
-    private func checkForOfflinePosts(_ maxAgo:TimeInterval = 3600 * 24 * 3) {
+    private func checkForOfflinePosts(_ maxAgo:TimeInterval = 3600 * 24 * 3) { // 3 days
         guard SocketPool.shared.anyConnected else { return }
         guard let account = ns.bgAccount else { return }
         let pubkey = account.publicKey
-        let ago = Double(Date.now.timeIntervalSince1970) - (maxAgo)
+        let xDaysAgo = Date.now.addingTimeInterval(-(maxAgo))
         
         let r1 = Event.fetchRequest()
         // X days ago, from our pubkey, only kinds that we can create+send
@@ -248,7 +248,7 @@ class NotificationsManager: ObservableObject {
                                     "AND flags != \"nsecbunker_unsigned\"" +
                                     "AND sig != nil"
                                     ,
-                                    ago,
+                                    Int64(xDaysAgo.timeIntervalSince1970),
                                     pubkey)
         r1.fetchLimit = 100 // sanity
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
