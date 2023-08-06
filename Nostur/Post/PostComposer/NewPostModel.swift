@@ -250,7 +250,7 @@ public final class NewPostModel: ObservableObject {
             if (!self.pastedImages.isEmpty) {
                 previewEvent.previewImages = self.pastedImages
             }
-            let nrPost = NRPost(event: previewEvent)
+            let nrPost = NRPost(event: previewEvent, isPreview: true)
             DispatchQueue.main.async {
                 self.previewNRPost = nrPost
             }
