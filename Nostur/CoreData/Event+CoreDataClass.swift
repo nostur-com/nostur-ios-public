@@ -42,6 +42,7 @@ public class Event: NSManagedObject, Identifiable {
     
     var isPreview:Bool = false
     var previewImages:[UIImage] = []
+    var cancellationId:UUID?
     
     public override func validateValue(_ value: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey key: String) throws {
         
