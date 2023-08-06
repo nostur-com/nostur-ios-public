@@ -12,6 +12,7 @@ import NukeUI
 
 struct BadgeDetailView: View {
     @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.dismiss) var dismiss
     let up:Unpublisher = .shared
     @EnvironmentObject var ns:NosturState
     
@@ -131,6 +132,13 @@ struct BadgeDetailView: View {
                 })
                 .navigationTitle(String(localized:"Award to", comment: "Navigation title of screen where you choose who to award badge to"))
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                    }
+                }
             }
         }
     }
