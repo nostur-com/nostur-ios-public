@@ -12,6 +12,7 @@ struct MacListsView: View {
     @StateObject private var dim = DIMENSIONS()
     @StateObject private var vm:MacListState = .shared
     @State var lvm:LVM? = nil
+    @State var availableFeeds:[NosturList] = []
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -59,7 +60,7 @@ struct MacListsView: View {
                 // Extra lists (+ -)
                 ForEach(0..<max(1,vm.columnsCount), id:\.self) { columnIndex in
                     MacList(availableWidth: columnSize(geo.size.width)) {
-                        SomeView()
+                        ColumnViewWrapper(availableFeeds: availableFeeds)
                     }
                         .id(columnIndex)
                 }
@@ -69,6 +70,8 @@ struct MacListsView: View {
             if let account = NosturState.shared.account {
                 lvm = LVMManager.shared.followingLVM(forAccount: account)
             }
+            
+            availableFeeds = NosturList.fetchLists(context: DataProvider.shared().viewContext)
         }
         .withSheets()
         .environmentObject(dim)
@@ -80,39 +83,75 @@ struct MacListsView: View {
     }
 }
 
-struct SomeView: View {
+struct ColumnViewWrapper: View {
+    let availableFeeds:[NosturList]
+    @State private var selectedFeed:NosturList? = nil
+    @State private var lvm:LVM? = nil
+    
+    var body: some View {
+        ColumnView(availableFeeds: availableFeeds, selectedFeed: $selectedFeed, lvm: $lvm)
+    }
+}
+
+struct ColumnView: View {
+    let availableFeeds:[NosturList]
+    @Binding var selectedFeed:NosturList?
+    @Binding var lvm:LVM?
+    
     var body: some View {
         ZStack {
             Color("ListBackground")
-            VStack(alignment:.leading) {
-                Text("Choose content for this column")
-                
-                Group {
-                    Button { } label: {
-                        Label("Custom Feed", systemImage: "person.3.fill")
-                    }
-                    
-                    Button { } label: {
-                        Label("Profile", systemImage: "person.fill")
-                    }
-                    
-                    Button { } label: {
-                        Label("Private notes", systemImage: "note.text")
-                    }
-                    
-                    Button { } label: {
-                        Label("Hashtag", systemImage: "number")
-                    }
-                    
-                    Button { } label: {
-                        Label("Messages", systemImage: "envelope")
-                    }
-                    
-                    Button { } label: {
-                        Label("Notifications", systemImage: "bell.fill")
-                    }
+            VStack {
+                FeedSelector(feeds: availableFeeds, selected: $selectedFeed)
+                    .padding(.top, 10)
+                if let lvm = lvm {
+                    ListViewContainer(vm: lvm)
+                        .overlay(alignment: .topTrailing) {
+                            ListUnreadCounter(vm: lvm)
+                                .padding(.trailing, 10)
+                                .padding(.top, 5)
+                        }
                 }
-                .buttonStyle(.bordered)
+                Spacer()
+            }
+            if selectedFeed == nil {
+                VStack(alignment:.leading) {
+                    
+                    Text("Choose content for this column")
+                    
+                    Group {
+                        
+                        Button { } label: {
+                            Label("Custom Feed", systemImage: "rectangle.stack")
+                        }
+                        
+                        Button { } label: {
+                            Label("Profile", systemImage: "person.fill")
+                        }
+                        
+                        Button { } label: {
+                            Label("Private notes", systemImage: "note.text")
+                        }
+                        
+                        Button { } label: {
+                            Label("Hashtag", systemImage: "number")
+                        }
+                        
+                        Button { } label: {
+                            Label("Messages", systemImage: "envelope")
+                        }
+                        
+                        Button { } label: {
+                            Label("Notifications", systemImage: "bell.fill")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+        }
+        .onChange(of: selectedFeed) { newFeed in
+            if let feed = newFeed {
+                lvm = LVMManager.shared.listLVM(forList: feed, isDeck: true)
             }
         }
     }
@@ -197,11 +236,14 @@ struct SideTabs:View {
             Spacer()
             
             
-            Button { addColumn() } label: {
-                Image(systemName: "rectangle.righthalf.inset.fill.arrow.right")
-            }
-            Button { removeColumn() } label: {
-                Image(systemName: "rectangle.lefthalf.inset.fill.arrow.left")
+            Group {
+                Button { addColumn() } label: {
+                    Image(systemName: "rectangle.stack.fill.badge.plus")
+                }
+                Color.clear.frame(height: 5)
+                Button { removeColumn() } label: {
+                    Image(systemName: "rectangle.stack.badge.minus")
+                }
             }
             Spacer()
         }
@@ -221,8 +263,14 @@ struct SideTabs:View {
 
 struct MacListsView_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer(previewDevice:PreviewDevice(rawValue: "My Mac (Mac Catalyst)")) {
+        PreviewContainer({ pe in
+            
+            pe.loadContacts()
+            pe.loadNosturLists()
+            pe.loadRelayNosturLists()
+            
+        }, previewDevice:PreviewDevice(rawValue: "My Mac (Mac Catalyst)"), content: {
             MacListsView()
-        }
+        })
     }
 }

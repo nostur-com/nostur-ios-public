@@ -32,6 +32,7 @@
 		1F0A25542A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A25532A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift */; };
 		1F0A25562A3E139E00178A5C /* WebOfTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A25552A3E139E00178A5C /* WebOfTrust.swift */; };
 		1F0A3C252A0C113700B30D7E /* Kind1063.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A3C242A0C113700B30D7E /* Kind1063.swift */; };
+		1F0A6BDC2A7DF97100258255 /* FeedSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A6BDB2A7DF97100258255 /* FeedSelector.swift */; };
 		1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F35672A31C76900AA9C41 /* InfoPlist.strings */; };
 		1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F356A2A31C76900AA9C41 /* Localizable.strings */; };
 		1F12422A2A1CB0BC003AC591 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1242292A1CB0BC003AC591 /* Logger.swift */; };
@@ -403,6 +404,7 @@
 		1F0A25532A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrFilesDevMediaUploadService.swift; sourceTree = "<group>"; };
 		1F0A25552A3E139E00178A5C /* WebOfTrust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebOfTrust.swift; sourceTree = "<group>"; };
 		1F0A3C242A0C113700B30D7E /* Kind1063.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1063.swift; sourceTree = "<group>"; };
+		1F0A6BDB2A7DF97100258255 /* FeedSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSelector.swift; sourceTree = "<group>"; };
 		1F0F35682A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1F0F356B2A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1F0F356D2A31DFB700AA9C41 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -949,6 +951,7 @@
 			isa = PBXGroup;
 			children = (
 				1F38AFF32A2789C70035641E /* MacListsView.swift */,
+				1F0A6BDB2A7DF97100258255 /* FeedSelector.swift */,
 				1FFED8022A39C86F00A0B1E8 /* MacListState.swift */,
 			);
 			path = Mac;
@@ -1780,6 +1783,7 @@
 				1F71E8B329EB4E4C00B99340 /* NosturList+CoreDataProperties.swift in Sources */,
 				1FCDDEBC2A480AA2002EDEEC /* SettingsDevTools.swift in Sources */,
 				1F88491529B537B400145340 /* NSRegularExpression.swift in Sources */,
+				1F0A6BDC2A7DF97100258255 /* FeedSelector.swift in Sources */,
 				1FF2C6C629EAD7D00096AC4A /* NosturListsView.swift in Sources */,
 				1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */,
 				1FE31EE42A58889A008A4A6F /* ProfileZapButton.swift in Sources */,

@@ -543,6 +543,11 @@ struct PreviewFetcher {
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.randomElement()
     }
     
+    static func fetchLists(context:NSManagedObjectContext? = nil) -> [NosturList] {
+        let request = NosturList.fetchRequest()
+        return (try? (context ?? PreviewFetcher.viewContext).fetch(request)) ?? []
+    }
+    
     
     static func fetchPersistentNotification(_ id:String? = nil, context:NSManagedObjectContext? = nil) -> PersistentNotification? {
         let request = PersistentNotification.fetchRequest()
