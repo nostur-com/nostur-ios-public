@@ -81,6 +81,37 @@ struct ProfileNotesView: View {
             backlog.add(fetchNewerTask)
             fetchNewerTask.fetch()
         }
+        .onReceive(receiveNotification(.newPostSaved)) { notification in
+            // Similar code as in LVM.showOwnNewPostsImmediately()
+            let context = DataProvider.shared().bg
+            context.perform {
+                let event = notification.object as! Event
+                guard event.pubkey == pubkey else { return }
+                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "ProfileNotesView.newPostSaved")
+                let nrPost = NRPost(event: event)
+                let cancellationId = event.cancellationId
+                DispatchQueue.main.async {
+                    nrPost.cancellationId = cancellationId
+                    fl.nrPosts.insert(nrPost, at: 0)
+                }
+            }
+        }
+        .onReceive(receiveNotification(.unpublishedNRPost)) { notification in
+            // Similar code as in LVM.removeUnpublishedEvents()
+            let nrPost = notification.object as! NRPost
+            let context = DataProvider.shared().bg
+            
+            // Remove from view
+            DispatchQueue.main.async {
+                fl.nrPosts.removeAll(where: { $0.id == nrPost.id })
+            }
+            
+            // Remove from database
+            context.perform {
+                context.delete(nrPost.event)
+                DataProvider.shared().bgSave()
+            }
+        }
         .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
             let importedNotification = notification.object as! ImportedNotification
             let reqTasks = backlog.tasks(with: importedNotification.subscriptionIds)

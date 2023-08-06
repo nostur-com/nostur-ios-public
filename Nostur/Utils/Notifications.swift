@@ -115,6 +115,11 @@ extension Notification.Name {
     static var publishingEvent: Notification.Name {
         return Notification.Name("publishingEvent")
     }
+    
+    static var unpublishedNRPost: Notification.Name {
+        return Notification.Name("unpublishedNRPost")
+    }
+    
     static var createNewReply: Notification.Name {
         return Notification.Name("createNewReply")
     }
