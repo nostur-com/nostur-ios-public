@@ -107,22 +107,44 @@ public final class NewPostModel: ObservableObject {
                             nEvent.content = replaceNsecWithHunter2(nEvent.content)
                         }
                         
+                        let cancellationId = UUID()
                         if account.isNC {
                             // Save unsigned event:
                             DataProvider.shared().bg.perform {
                                 nEvent.publicKey = publicKey
                                 nEvent = nEvent.withId()
                                 let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
+                                savedEvent.cancellationId = cancellationId
                                 DispatchQueue.main.async {
                                     sendNotification(.newPostSaved, savedEvent)
                                 }
+                                DataProvider.shared().bgSave()
                             }
                             NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
-                                Unpublisher.shared.publishNow(signedEvent)
+                                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
                             })
                         }
                         else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
-                            Unpublisher.shared.publishNow(signedEvent)
+                            DataProvider.shared().bg.perform {
+                                let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
+                                savedEvent.cancellationId = cancellationId
+                                // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+                                if nEvent.kind == .reaction {
+                                    do {
+                                        try Event.updateReactionTo(savedEvent, context: DataProvider.shared().bg) // TODO: Revert this on 'undo'
+                                    } catch {
+                                        L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
+                                    }
+                                }
+                                Importer.shared.existingIds.insert(savedEvent.id)
+                                DataProvider.shared().bgSave()
+                                if ([1,6,9802,30023].contains(savedEvent.kind)) {
+                                    DispatchQueue.main.async {
+                                        sendNotification(.newPostSaved, savedEvent)
+                                    }
+                                }
+                            }
+                            _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
                         }
                         
                         if let replyTo {
@@ -153,22 +175,44 @@ public final class NewPostModel: ObservableObject {
             if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
             }
+            let cancellationId = UUID()
             if account.isNC {
                 // Save unsigned event:
                 DataProvider.shared().bg.perform {
                     nEvent.publicKey = publicKey
                     nEvent = nEvent.withId()
                     let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
+                    savedEvent.cancellationId = cancellationId
                     DispatchQueue.main.async {
                         sendNotification(.newPostSaved, savedEvent)
                     }
+                    DataProvider.shared().bgSave()
                 }
                 NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
-                    Unpublisher.shared.publishNow(signedEvent)
+                    _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
                 })
             }
             else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
-                Unpublisher.shared.publishNow(signedEvent)
+                DataProvider.shared().bg.perform {
+                    let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
+                    savedEvent.cancellationId = cancellationId
+                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+                    if nEvent.kind == .reaction {
+                        do {
+                            try Event.updateReactionTo(savedEvent, context: DataProvider.shared().bg) // TODO: Revert this on 'undo'
+                        } catch {
+                            L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
+                        }
+                    }
+                    Importer.shared.existingIds.insert(savedEvent.id)
+                    DataProvider.shared().bgSave()
+                    if ([1,6,9802,30023].contains(savedEvent.kind)) {
+                        DispatchQueue.main.async {
+                            sendNotification(.newPostSaved, savedEvent)
+                        }
+                    }
+                }
+                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
             }
             if let replyTo {
                 sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
