@@ -112,6 +112,9 @@ extension Notification.Name {
         return Notification.Name("newPostSaved")
     }
     
+    static var publishingEvent: Notification.Name {
+        return Notification.Name("publishingEvent")
+    }
     static var createNewReply: Notification.Name {
         return Notification.Name("createNewReply")
     }

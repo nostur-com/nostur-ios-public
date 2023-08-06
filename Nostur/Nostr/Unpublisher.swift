@@ -41,6 +41,7 @@ class Unpublisher {
     init() {
         self.viewContext = DataProvider.shared().viewContext
         self.timer = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(onNextTick), userInfo: nil, repeats: true)
+        self.timer?.tolerance = 1.0
         NotificationCenter.default.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
     }
     
@@ -54,7 +55,7 @@ class Unpublisher {
     }
     
     func publish(_ nEvent:NEvent, cancellationId:UUID? = nil) -> UUID {
-        L.og.info("Going to publish")
+        L.og.info("Going to publish event.id after 9 sec: \(nEvent.id)")
         let cancellationId = cancellationId ?? UUID()
         queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
         return cancellationId
@@ -67,6 +68,15 @@ class Unpublisher {
     func cancel(_ cancellationId:UUID) -> Bool {
         let beforeCount = queue.count
         queue.removeAll(where: { $0.cancellationId == cancellationId })
+        return beforeCount != queue.count
+    }
+    
+    func sendNow(_ cancellationId:UUID) -> Bool {
+        let beforeCount = queue.count
+        if let event = queue.first(where: { $0.cancellationId == cancellationId })?.nEvent {
+            queue.removeAll(where: { $0.cancellationId == cancellationId })
+            sendToRelays(event)
+        }
         return beforeCount != queue.count
     }
     
@@ -89,6 +99,7 @@ class Unpublisher {
         queue.removeAll()
         
         // lets also save context here...
+        L.og.debug("DataProvider.shared().save() from Unpublisher.appMovedToBackground ")
         DataProvider.shared().save()
     }
     
@@ -98,23 +109,25 @@ class Unpublisher {
             sp.sendMessage(ClientMessage(onlyForNWCRelay: true, message: nEvent.wrappedEventJson()))
             return
         }
-//        Disabled: Don't go through Unpublisher, not needed for NC messages
-//        if nEvent.kind == .ncMessage {
-//            L.og.info("⚡️ Sending .ncMessage to NC relay")
-//            sp.sendMessage(ClientMessage(onlyForNCRelay: true, message: nEvent.wrappedEventJson()))
-//            return
-//        }
+
         // Always save event first
         // Save or update event
         if let dbEvent = try? Event.fetchEvent(id: nEvent.id, context: viewContext) {
             // We already have it in db
+            
             Importer.shared.existingIds.insert(nEvent.id)
+            DispatchQueue.main.async {
+                sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
+            }
             sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
             
             // Just update signature/flag if it was unsigned (nsecbunker)
             if dbEvent.flags == "nsecbunker_unsigned" && nEvent.signature != "" {
                 dbEvent.flags = ""
                 dbEvent.sig = nEvent.signature
+            }
+            else if dbEvent.flags == "awaiting_send" {
+                dbEvent.flags = ""
             }
         }
         else {
@@ -137,6 +150,9 @@ class Unpublisher {
                     DispatchQueue.main.async {
                         sendNotification(.newPostSaved, savedEvent)
                     }
+                }
+                DispatchQueue.main.async {
+                    sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                 }
                 self.sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
             }
