@@ -78,9 +78,10 @@ struct FooterFragmentView: View {
                     .contentShape(Rectangle())
                     .onTapGesture {
                         if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
-                            NosturState.shared.unlikePost(nrPost.mainEvent)
+                            nrPost.mainEvent.likesCount -= 1
                             unpublishLikeId = nil
                             nrPost.unlike()
+                            DataProvider.shared().save()
                         }
                     }
                 }

@@ -381,42 +381,7 @@ final class NosturState : ObservableObject {
         catch {
             L.og.error("Could not save after muting thread \(error)")
         }
-    }
-    
-    func likePost(_ event:Event) -> NEvent? {
-        guard let account = account else { return nil }
-        guard account.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
-        let impactMed = UIImpactFeedbackGenerator(style: .medium)
-        impactMed.impactOccurred()
-        
-//      1. create kind 7 event based on kind 1 event:
-        let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: event)
-//      2. sign that event with account keys
-        
-        if account.isNC {
-            NosturState.shared.nsecBunker?.requestSignature(forEvent: likeEvent, whenSigned: { signedEvent in
-                Unpublisher.shared.publishNow(signedEvent)
-            })
-        }
-        
-        guard let signedEvent = try? signEvent(likeEvent) else {
-            L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
-            return nil
-        }
-        event.likesCount += 1
-        return signedEvent
-    }
-    
-    func unlikePost(_ event:Event) {
-        event.likesCount -= 1
-        do {
-            try viewContext.save()
-//            sendNotification(.viewNeedsUpdate)
-        }
-        catch {
-            L.og.error("Could not save after unlike \(error)")
-        }
-    }
+    }    
     
     func logout(_ account:Account) {
         if (account.privateKey != nil) {
