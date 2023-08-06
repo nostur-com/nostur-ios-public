@@ -847,9 +847,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         DataProvider.shared().viewContext.object(with: event.objectID) as! Event
     }
     
-    @MainActor public func like() {
+    @MainActor public func like() -> NEvent {
         self.objectWillChange.send()
         self.liked = true
+        DataProvider.shared().bg.perform {
+            self.event.likesCount += 1
+        }
+        
+        return EventMessageBuilder.makeReactionEvent(reactingTo: mainEvent)
     }
     
     @MainActor public func unlike() {

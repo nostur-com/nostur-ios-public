@@ -78,10 +78,8 @@ struct FooterFragmentView: View {
                     .contentShape(Rectangle())
                     .onTapGesture {
                         if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
-                            nrPost.mainEvent.likesCount -= 1
-                            unpublishLikeId = nil
                             nrPost.unlike()
-                            DataProvider.shared().save()
+                            unpublishLikeId = nil
                         }
                     }
                 }
@@ -104,24 +102,23 @@ struct FooterFragmentView: View {
                         let impactMed = UIImpactFeedbackGenerator(style: .medium)
                         impactMed.impactOccurred()
                         
-                //      1. create kind 7 event based on kind 1 event:
-                        let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: nrPost.mainEvent)
-                //      2. sign that event with account keys
-                        nrPost.mainEvent.likesCount += 1
+                        let likeNEvent = nrPost.like()
                         
                         if account.isNC {
-                            NosturState.shared.nsecBunker?.requestSignature(forEvent: likeEvent, whenSigned: { signedEvent in
-                                unpublishLikeId = Unpublisher.shared.publish(signedEvent)
+                            unpublishLikeId = UUID()
+                            NosturState.shared.nsecBunker?.requestSignature(forEvent: likeNEvent, whenSigned: { signedEvent in
+                                if let unpublishLikeId = self.unpublishLikeId {
+                                    self.unpublishLikeId = Unpublisher.shared.publish(signedEvent, cancellationId: unpublishLikeId)
+                                }
                             })
                         }
                         else {
-                            guard let signedEvent = try? NosturState.shared.signEvent(likeEvent) else {
+                            guard let signedEvent = try? NosturState.shared.signEvent(likeNEvent) else {
                                 L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
                                 return
                             }
                             unpublishLikeId = Unpublisher.shared.publish(signedEvent)
                         }
-                        nrPost.like()                        
                     }
                 }
                 Spacer()
