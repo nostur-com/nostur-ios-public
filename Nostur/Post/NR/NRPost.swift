@@ -455,6 +455,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         likesListener()
         zapsListener()
         isFollowingListener()
+        unpublishListener()
         
         groupRepliesToRoot
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
@@ -495,6 +496,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         self.objectWillChange.send()
                         self.following = isFollowing
                     }
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    private func unpublishListener() {
+        guard let account = NosturState.shared.bgAccount, account.publicKey == pubkey else { return }
+        
+        receiveNotification(.publishingEvent)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let eventId = notification.object as! String
+                guard eventId == self.id else { return }
+                
+                DispatchQueue.main.async {
+                    self.objectWillChange.send()
+                    self.cancellationId = nil
                 }
             }
             .store(in: &subscriptions)
