@@ -832,6 +832,7 @@ extension LVM {
         processNewEventsInBg()
         keepFilteringMuted()
         showOwnNewPostsImmediately()
+        removeUnpublishedEvents()
         trackListSettingsChanged()
         renderFromLocalIfWeHaveNothingNewAndScreenIsEmpty()
         trackTabVisibility()
@@ -1033,17 +1034,41 @@ extension LVM {
                 guard let self = self else { return }
                 guard self.id == "Following" else { return }
                 let event = notification.object as! Event
-                
                 let context = DataProvider.shared().bg
                 context.perform { [weak self] in
                     guard let self = self else { return }
                     guard !self.leafIdsOnScreen.contains(event.id) else { return }
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.showOwnNewPostsImmediately")
                     let newNRPostLeaf = NRPost(event: event, withParents: true, withRepliesCount: true)
+                    let cancellationId = event.cancellationId
                     DispatchQueue.main.async {
+                        newNRPostLeaf.cancellationId = cancellationId
                         self.nrPostLeafs.insert(newNRPostLeaf, at: 0)
                         self.lvmCounter.count = self.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
                     }
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    func removeUnpublishedEvents() {
+        receiveNotification(.unpublishedNRPost)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let nrPost = notification.object as! NRPost
+                let context = DataProvider.shared().bg
+                
+                // Remove from view
+                DispatchQueue.main.async {
+                    self.nrPostLeafs.removeAll(where: { $0.id == nrPost.id })
+                    self.lvmCounter.count = max(0, self.lvmCounter.count - 1)
+                }
+                
+                // Remove from database
+                context.perform { [weak self] in
+                    guard let self = self else { return }
+                    context.delete(nrPost.event)
+                    DataProvider.shared().bgSave()
                 }
             }
             .store(in: &subscriptions)
