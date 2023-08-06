@@ -393,8 +393,8 @@ struct ArticleView: View {
                 if !hideFooter {
                     FooterFragmentView(nrPost: article)
                         .padding(.bottom, 10)
-                        .frame(idealHeight: 38.0)
-                        .fixedSize(horizontal: false, vertical: true)
+//                        .frame(idealHeight: 38.0)
+//                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(.bottom, 10)

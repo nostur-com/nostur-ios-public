@@ -155,8 +155,8 @@ struct Kind1Default: View {
                 if (!hideFooter && settings.rowFooterEnabled) {
                     FooterFragmentView(nrPost: nrPost)
                         .padding(.top, 10)
-                        .frame(idealHeight: 38.0)
-                        .fixedSize(horizontal: false, vertical: true)
+//                        .frame(idealHeight: 38.0)
+//                        .fixedSize(horizontal: false, vertical: true)
 //                     Make sure we get the correct size (is now 28.0 + 10.0)
 //                        .readSize { newSize in
 //                            print("Final Footer size: \(newSize)")
