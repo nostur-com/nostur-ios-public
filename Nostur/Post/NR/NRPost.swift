@@ -121,6 +121,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var zapState:Event.ZapState?
     var following = false
     @Published var blocked = false
+    @Published var cancellationId:UUID? = nil // if set, will show 'undo send' view
     var replied = false
     var liked = false
     var reposted = false
