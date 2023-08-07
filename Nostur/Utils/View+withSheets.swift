@@ -40,7 +40,7 @@ private struct WithSheets: ViewModifier {
     @State var deletePost:DeletePost? = nil
     
     // new post/quote post / new reply
-    @State var replyToEvent:Event? = nil
+    @State var replyToEvent:EventNotification? = nil
     @State var quoteOrRepostEvent:Event? = nil
     @State var quotePostEvent:Event? = nil
     
@@ -166,7 +166,7 @@ private struct WithSheets: ViewModifier {
                     ns.readOnlyAccountSheetShown = true
                     return
                 }
-                replyToEvent = notification.object as? Event
+                replyToEvent = notification.object as? EventNotification
             }
                        
             .onReceive(receiveNotification(.createNewQuoteOrRepost)) { notification in
@@ -177,17 +177,17 @@ private struct WithSheets: ViewModifier {
                 quoteOrRepostEvent = notification.object as? Event
             }
         
-            .sheet(item: $replyToEvent) { event in
+            .sheet(item: $replyToEvent) { eventNotification in
                 NavigationStack {
                     if let account = ns.account, account.isNC, let nsecBunker = ns.nsecBunker {
                         WithNSecBunkerConnection(nsecBunker: nsecBunker) {
-                            NewReply(replyTo: event)
+                            NewReply(replyTo: eventNotification.event)
                                 .environmentObject(ns)
                                 .environmentObject(dim)
                         }
                     }
                     else {
-                        NewReply(replyTo: event)
+                        NewReply(replyTo: eventNotification.event)
                             .environmentObject(ns)
                             .environmentObject(dim)
                     }
@@ -388,6 +388,11 @@ struct MiniProfileSheetInfo: Identifiable, Equatable {
     static func == (lhs: MiniProfileSheetInfo, rhs: MiniProfileSheetInfo) -> Bool {
         lhs.id == rhs.id
     }
+}
+
+struct EventNotification: Identifiable {
+    let id = UUID()
+    let event:Event // bg
 }
 
 struct ShareablePostImage: Identifiable {
