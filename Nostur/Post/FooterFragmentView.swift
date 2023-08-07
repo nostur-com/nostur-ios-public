@@ -31,9 +31,7 @@ struct FooterFragmentView: View {
                 .padding([.vertical, .trailing], 5)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    if let replyTo = nrPost.event.toMain() {
-                        sendNotification(.createNewReply, replyTo)
-                    }
+                    sendNotification(.createNewReply, EventNotification(event: nrPost.event))
                 }
                 Spacer()
                 
@@ -57,9 +55,7 @@ struct FooterFragmentView: View {
                     .padding(5)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        if let mainEvent = nrPost.event.toMain() {
-                            sendNotification(.createNewQuoteOrRepost, mainEvent)
-                        }
+                        sendNotification(.createNewQuoteOrRepost, nrPost.event)
                     }
                 }
                 Spacer()
