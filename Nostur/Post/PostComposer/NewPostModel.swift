@@ -67,11 +67,6 @@ public final class NewPostModel: ObservableObject {
     }
     
     public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
-        guard let account = NosturState.shared.account else { return }
-        guard account.privateKey != nil else { NosturState.shared.readOnlyAccountSheetShown = true; return }
-        let publicKey = account.publicKey
-        var nEvent = nEvent ?? NEvent(content: "")
-        nEvent.createdAt = NTimestamp.init(date: Date())
         if (!pastedImages.isEmpty) {
             uploading = true
             
@@ -87,141 +82,96 @@ public final class NewPostModel: ObservableObject {
                         L.og.debug("All images uploaded successfully")
                     }
                 }, receiveValue: { urls in
-                    
                     if (self.pastedImages.count == urls.count) {
-                        // send message with images
-                        for url in urls {
-                            nEvent.content += "\n\(url)"
-                        }
-                        
-                        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:self.selectedMentions)
-                        nEvent = applyMentionsNip08(nEvent, bumpIndex: quotingEvent != nil)
-                        nEvent = putHashtagsInTags(nEvent)
-                        
-                        if let quotingEvent {
-                            nEvent.content = nEvent.content + "\n#[0]"
-                            nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
-                        }
-                        
-                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
-                        }
-                        
-                        let cancellationId = UUID()
-                        if account.isNC {
-                            // Save unsigned event:
-                            DataProvider.shared().bg.perform {
-                                nEvent.publicKey = publicKey
-                                nEvent = nEvent.withId()
-                                let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
-                                savedEvent.cancellationId = cancellationId
-                                DispatchQueue.main.async {
-                                    sendNotification(.newPostSaved, savedEvent)
-                                }
-                                DataProvider.shared().bgSave()
-                            }
-                            NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
-                                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
-                            })
-                        }
-                        else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
-                            DataProvider.shared().bg.perform {
-                                let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
-                                savedEvent.cancellationId = cancellationId
-                                // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-                                if nEvent.kind == .reaction {
-                                    do {
-                                        try Event.updateReactionTo(savedEvent, context: DataProvider.shared().bg) // TODO: Revert this on 'undo'
-                                    } catch {
-                                        L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
-                                    }
-                                }
-                                Importer.shared.existingIds.insert(savedEvent.id)
-                                DataProvider.shared().bgSave()
-                                if ([1,6,9802,30023].contains(savedEvent.kind)) {
-                                    DispatchQueue.main.async {
-                                        sendNotification(.newPostSaved, savedEvent)
-                                    }
-                                }
-                            }
-                            _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
-                        }
-                        
-                        if let replyTo {
-                            sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
-                        }
-                        if let quotingEvent {
-                            sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
-                        }
-                        
-                        dismiss()
+                        self._sendNow(urls:urls, pastedImages: self.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss:dismiss)
                     }
                 })
                 .store(in: &subscriptions)
-            
-            
         }
         else {
-
-            nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-            nEvent = applyMentionsNip08(nEvent, bumpIndex: quotingEvent != nil)
-            nEvent = putHashtagsInTags(nEvent)
-
-            if let quotingEvent {
-                nEvent.content = nEvent.content + "\n#[0]"
-                nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
+            self._sendNow(urls:[], pastedImages: pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss:dismiss)
+        }
+    }
+    
+    private func _sendNow(urls:[String], pastedImages:[UIImage], replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
+        guard let account = NosturState.shared.account else { return }
+        guard account.privateKey != nil else { NosturState.shared.readOnlyAccountSheetShown = true; return }
+        let publicKey = account.publicKey
+        var nEvent = nEvent ?? NEvent(content: "")
+        nEvent.createdAt = NTimestamp.init(date: Date())
+        
+        if !pastedImages.isEmpty && urls.count > 0 {
+            // send message with images
+            for url in urls {
+                nEvent.content += "\n\(url)"
             }
+        }
+        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
+        nEvent = applyMentionsNip08(nEvent, bumpIndex: quotingEvent != nil)
+        nEvent = putHashtagsInTags(nEvent)
+        
+        if let quotingEvent {
+            nEvent.content = nEvent.content + "\n#[0]"
+            nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
+        }
+        
+        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+        }
 
-            if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                nEvent.content = replaceNsecWithHunter2(nEvent.content)
+        
+        let cancellationId = UUID()
+        if account.isNC {
+            // Save unsigned event:
+            DataProvider.shared().bg.perform {
+                nEvent.publicKey = publicKey
+                nEvent = nEvent.withId()
+                let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
+                savedEvent.cancellationId = cancellationId
+                DispatchQueue.main.async {
+                    sendNotification(.newPostSaved, savedEvent)
+                }
+                DataProvider.shared().bgSave()
             }
-            let cancellationId = UUID()
-            if account.isNC {
-                // Save unsigned event:
-                DataProvider.shared().bg.perform {
-                    nEvent.publicKey = publicKey
-                    nEvent = nEvent.withId()
-                    let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
-                    savedEvent.cancellationId = cancellationId
+            NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
+                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
+            })
+        }
+        else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
+            DataProvider.shared().bg.perform {
+                let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
+                savedEvent.cancellationId = cancellationId
+                // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+                if nEvent.kind == .reaction {
+                    do {
+                        try Event.updateReactionTo(savedEvent, context: DataProvider.shared().bg) // TODO: Revert this on 'undo'
+                    } catch {
+                        L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
+                    }
+                }
+                Importer.shared.existingIds.insert(savedEvent.id)
+                
+                DataProvider.shared().bgSave()
+                if ([1,6,9802,30023].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         sendNotification(.newPostSaved, savedEvent)
                     }
-                    DataProvider.shared().bgSave()
                 }
-                NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
-                    _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
-                })
             }
-            else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
-                DataProvider.shared().bg.perform {
-                    let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
-                    savedEvent.cancellationId = cancellationId
-                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-                    if nEvent.kind == .reaction {
-                        do {
-                            try Event.updateReactionTo(savedEvent, context: DataProvider.shared().bg) // TODO: Revert this on 'undo'
-                        } catch {
-                            L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
-                        }
-                    }
-                    Importer.shared.existingIds.insert(savedEvent.id)
-                    DataProvider.shared().bgSave()
-                    if ([1,6,9802,30023].contains(savedEvent.kind)) {
-                        DispatchQueue.main.async {
-                            sendNotification(.newPostSaved, savedEvent)
-                        }
-                    }
-                }
-                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
-            }
-            if let replyTo {
+            _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
+        }
+        
+        if let replyTo {
+            DataProvider.shared().bg.perform {
                 sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
             }
-            if let quotingEvent {
+        }
+        if let quotingEvent {
+            DataProvider.shared().bg.perform {
                 sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
             }
-            dismiss()
         }
+        dismiss()
     }
     
     public func showPreview(quotingEvent:Event? = nil) {
