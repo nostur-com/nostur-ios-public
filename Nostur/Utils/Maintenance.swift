@@ -280,6 +280,7 @@ struct Maintenance {
             
             // DELETE OLDER KIND 3 + 10002 EVENTS
             // BUT NOT OUR OWN OR THOSE WE ARE FOLLOWING (FOR WoT follows-follows)
+            // AND NOT OUR PUBKEY IN Ps (is following us, for following notifications)
             
             var followingPubkeys = Set(ownAccountPubkeys)
             for account in allAccounts {
@@ -289,7 +290,7 @@ struct Maintenance {
             }
             
             let r = NSFetchRequest<Event>(entityName: "Event")
-            r.predicate = NSPredicate(format: "kind IN {3,10002} AND NOT pubkey IN %@", followingPubkeys)
+            r.predicate = NSPredicate(format: "kind IN {3,10002} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", followingPubkeys, regex)
             r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
             let kind3 = try! context.fetch(r)
             
