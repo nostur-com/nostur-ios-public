@@ -24,6 +24,7 @@ public class Event: NSManagedObject, Identifiable {
     var contactsUpdated = PassthroughSubject<[Contact], Never>()
     var relaysUpdated = PassthroughSubject<String, Never>()
     var zapStateChanged = PassthroughSubject<ZapState?, Never>()
+    var updateNRPost = PassthroughSubject<Event, Never>()
         
     enum ZapState:String {
         case initiated = "INITIATED"

@@ -122,20 +122,32 @@ public final class NewPostModel: ObservableObject {
         
         let cancellationId = UUID()
         if account.isNC {
+            nEvent.publicKey = publicKey
+            nEvent = nEvent.withId()
+            
             // Save unsigned event:
             DataProvider.shared().bg.perform {
-                nEvent.publicKey = publicKey
-                nEvent = nEvent.withId()
                 let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
                 savedEvent.cancellationId = cancellationId
                 DispatchQueue.main.async {
                     sendNotification(.newPostSaved, savedEvent)
                 }
                 DataProvider.shared().bgSave()
+                
+                DispatchQueue.main.async {
+                    NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
+                        DataProvider.shared().bg.perform {
+                            savedEvent.sig = signedEvent.signature
+                            savedEvent.flags = "awaiting_send"
+                            savedEvent.cancellationId = cancellationId
+                            savedEvent.updateNRPost.send(savedEvent)
+                            DispatchQueue.main.async {
+                                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
+                            }
+                        }
+                    })
+                }
             }
-            NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
-                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
-            })
         }
         else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
             DataProvider.shared().bg.perform {

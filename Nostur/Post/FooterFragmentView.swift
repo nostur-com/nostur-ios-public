@@ -152,27 +152,36 @@ struct FooterFragmentView: View {
                 
             }
             if (nrPost.pubkey == NosturState.shared.activeAccountPublicKey) {
-                if nrPost.cancellationId != nil && nrPost.relays == "" {
+                if (nrPost.relays == "" && (nrPost.cancellationId != nil || nrPost.flags == "nsecbunker_unsigned" || nrPost.flags == "awaiting_send")) {
                     HStack {
-                        Text("Sending post...")
-                        Spacer()
-                        Button("Send now") {
-                            nrPost.sendNow()
+                        if nrPost.flags == "nsecbunker_unsigned" {
+                            Text("Signing post...")
                         }
-                        .buttonStyle(.borderless)
-                        .foregroundColor(Color.accentColor)
-                        .padding(.trailing, 5)
+                        else {
+                            Text("Sending post...")
+                        }
+                        Spacer()
+                        if nrPost.flags != "nsecbunker_unsigned" {
+                            Button("Send now") {
+                                nrPost.sendNow()
+                            }
+                            .buttonStyle(.borderless)
+                            .foregroundColor(Color.accentColor)
+                            .opacity(nrPost.flags == "nsecbunker_unsigned" ? 0 : 1.0)
+                            .padding(.trailing, 5)
+                        }
                         Button("Undo") {
                             nrPost.unpublish()
                         }
                         .buttonStyle(.borderedProminent)
                         .foregroundColor(Color.white)
+                        .opacity(nrPost.flags == "nsecbunker_unsigned" ? 0 : 1.0)
                     }
                     .padding(.bottom, 5)
                     .foregroundColor(Color.primary)
                     .fontWeight(.bold)
                 }
-                else if !nrPost.isPreview && nrPost.flags != "awaiting_send" {
+                else if !nrPost.isPreview && nrPost.flags != "awaiting_send" && nrPost.flags != "nsecbunker_unsigned" {
                     HStack {
                         if nrPost.flags == "nsecbunker_unsigned" && nrPost.relays != "" {
                             Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)

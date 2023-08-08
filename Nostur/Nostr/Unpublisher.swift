@@ -110,31 +110,27 @@ class Unpublisher {
             return
         }
 
+        let bgContext = DataProvider.shared().bg
+        
         // Always save event first
         // Save or update event
-        if let dbEvent = try? Event.fetchEvent(id: nEvent.id, context: viewContext) {
-            // We already have it in db
-            
-            Importer.shared.existingIds.insert(nEvent.id)
-            DispatchQueue.main.async {
-                sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
-            }
-            sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
-            
-            // Just update signature/flag if it was unsigned (nsecbunker)
-            if dbEvent.flags == "nsecbunker_unsigned" && nEvent.signature != "" {
+        
+        bgContext.perform {
+            if let dbEvent = try? Event.fetchEvent(id: nEvent.id, context: bgContext) {
+                // We already have it in db
+                
+                DispatchQueue.main.async {
+                    Importer.shared.existingIds.insert(nEvent.id)
+                    sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
+                    self.sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
+                }
+                
                 dbEvent.flags = ""
-                dbEvent.sig = nEvent.signature
+                dbEvent.cancellationId = nil
+                dbEvent.updateNRPost.send(dbEvent)
             }
-            else if dbEvent.flags == "awaiting_send" {
-                dbEvent.flags = ""
-            }
-        }
-        else {
-            // Event not in db yet
-            let bgContext = DataProvider.shared().bg
-            
-            bgContext.perform {
+            else {
+                // Event not in db yet
                 let savedEvent = Event.saveEvent(event: nEvent)
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                 if nEvent.kind == .reaction {
@@ -144,7 +140,7 @@ class Unpublisher {
                         L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
                     }
                 }
-                Importer.shared.existingIds.insert(savedEvent.id)
+                
                 DataProvider.shared().bgSave()
                 if ([1,6,9802,30023].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
@@ -152,9 +148,10 @@ class Unpublisher {
                     }
                 }
                 DispatchQueue.main.async {
+                    Importer.shared.existingIds.insert(nEvent.id)
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
+                    self.sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
                 }
-                self.sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
             }
         }
     }
