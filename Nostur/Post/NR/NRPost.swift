@@ -453,6 +453,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
         
         relaysUpdatedListener()
+        updateNRPostListener()
         actionListener()
         likesListener()
         zapsListener()
@@ -475,12 +476,27 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self = self else { return }
                 self.objectWillChange.send()
                 self.relays = relays
+            }
+            .store(in: &subscriptions)
+    }
+    
+    private func updateNRPostListener() {
+        event.updateNRPost
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { [weak self] event in
+                guard let self = self else { return }
                 
-                // TODO: Need implement better way to update NRPost fields
-                // so we can just do dbEvent.flags = "" instead of hooking into relaysUpdatedListener()
-                // or any other listener
-                if (self.flags == "nsecbunker_unsigned") {
-                    self.flags = ""
+                DataProvider.shared().bg.perform {
+                    let relays = event.relays
+                    let flags = event.flags
+                    let cancellationId = event.cancellationId
+
+                    DispatchQueue.main.async {
+                        self.objectWillChange.send()
+                        self.relays = relays
+                        self.flags = flags
+                        self.cancellationId = cancellationId
+                    }
                 }
             }
             .store(in: &subscriptions)
@@ -524,7 +540,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self = self else { return }
                 guard self.withGroupedReplies else { return }
                 let nrPost = notification.object as! NRPost
-                guard replies.contains(where: { $0.id == nrPost.id }) else { return }
+                guard replies.contains(where: { $0.id == nrPost.id }) || repliesToRoot.contains(where: { $0.id == nrPost.id })else { return }
                 self.loadGroupedReplies()
             }
             .store(in: &subscriptions)
@@ -884,16 +900,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     @MainActor public func unpublish() {
         guard let cancellationId = cancellationId else { return }
-        let cancelled = Unpublisher.shared.cancel(cancellationId)
+        _ = Unpublisher.shared.cancel(cancellationId)
         self.objectWillChange.send()
         self.cancellationId = nil
-        
-        if !cancelled {
-            L.og.info("🔴🔴 Unpublish failed")
-        }
-        else {
-            sendNotification(.unpublishedNRPost, self)
-        }
+        sendNotification(.unpublishedNRPost, self)
     }
     
     @MainActor public func sendNow() {
@@ -901,6 +911,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         let didSend = Unpublisher.shared.sendNow(cancellationId)
         self.objectWillChange.send()
         self.cancellationId = nil
+        self.flags = ""
         
         if !didSend {
             L.og.info("🔴🔴 Send now failed")
@@ -964,6 +975,9 @@ extension NRPost { // Helpers for grouped replies
             repliesToRootListener()
         }
         let ctx = DataProvider.shared().bg
+        
+        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
+        
         ctx.perform { [weak self] in
             guard let self = self else { return }
             guard let account = NosturState.shared.account?.toBG() else { return }
@@ -981,7 +995,11 @@ extension NRPost { // Helpers for grouped replies
             }
             let nrRepliesToRoot = repliesToRoot
                 .filter { !Set(account.blockedPubkeys_).contains($0.pubkey) }
-                .map { NRPost(event: $0, withReplyTo: false, withParents: false, withReplies: false, plainText: false) } // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
+                .map { event in
+                    let nrPost = NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: false)
+                    nrPost.cancellationId = cancellationIds[event.id]
+                    return nrPost
+                } // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
             self.repliesToRoot = nrRepliesToRoot
         }
     }
