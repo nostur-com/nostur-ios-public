@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22F82" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22G74" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Account" representedClassName=".Account" syncable="YES">
         <attribute name="about" attributeType="String" defaultValueString=""/>
         <attribute name="banner" attributeType="String" defaultValueString=""/>
@@ -31,6 +31,7 @@
     <entity name="Contact" representedClassName=".Contact" syncable="YES">
         <attribute name="about" optional="YES" attributeType="String"/>
         <attribute name="banner" optional="YES" attributeType="String"/>
+        <attribute name="couldBeImposter" attributeType="Integer 16" defaultValueString="-1" usesScalarValueType="YES"/>
         <attribute name="display_name" optional="YES" attributeType="String"/>
         <attribute name="fixedName" optional="YES" attributeType="String"/>
         <attribute name="lud06" optional="YES" attributeType="String"/>
