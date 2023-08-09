@@ -150,7 +150,7 @@ class Unpublisher {
                 DispatchQueue.main.async {
                     Importer.shared.existingIds.insert(nEvent.id)
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
-                    self.sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
+                    self.sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
                 }
             }
         }
