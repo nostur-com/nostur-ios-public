@@ -131,13 +131,24 @@ struct PostHeader: View {
             guard contact.metadata_created_at != 0 else { return }
             guard contact.couldBeImposter == -1 else { return }
             guard !contact.following else { return }
-            guard let account = NosturState.shared.account else { return }
-            guard let similarContact = account.follows_.first(where: {
-                isSimilar(string1: $0.anyName.lowercased(), string2: contact.anyName.lowercased())
-            }) else { return }
-            guard let cPic = contact.pictureUrl, let wotPic = similarContact.picture else { return }
-            similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-            contact.couldBeImposter = similarPFP ? 1 : 0
+            
+            DataProvider.shared().bg.perform {
+                guard let account = NosturState.shared.bgAccount else { return }
+                guard let similarContact = account.follows_.first(where: {
+                    isSimilar(string1: $0.anyName.lowercased(), string2: contact.anyName.lowercased())
+                }) else { return }
+                guard let cPic = contact.pictureUrl, let wotPic = similarContact.picture else { return }
+                Task.detached(priority: .background) {
+                    let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+                    DispatchQueue.main.async {
+                        contact.couldBeImposter = similarPFP ? 1 : 0
+                        DataProvider.shared().bg.perform {
+                            contact.contact.couldBeImposter = similarPFP ? 1 : 0
+//                            DataProvider.shared().bgSave()
+                        }
+                    }
+                }
+            }
         }
         .onDisappear {
             if contact.metadata_created_at == 0 {

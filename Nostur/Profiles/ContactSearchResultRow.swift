@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ContactSearchResultRow: View {
     @ObservedObject var contact:Contact
-    @EnvironmentObject var ns:NosturState
     var onSelect:(() -> Void)?
     
     @State var similarPFP = false
@@ -18,7 +17,7 @@ struct ContactSearchResultRow: View {
     var couldBeImposter:Bool {
         guard let account = NosturState.shared.account else { return false }
         guard account.publicKey != contact.pubkey else { return false }
-        guard !ns.isFollowing(contact) else { return false }
+        guard !NosturState.shared.isFollowing(contact.pubkey) else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
         return similarPFP
     }
@@ -73,19 +72,28 @@ struct ContactSearchResultRow: View {
             }
         }
         .task {
-            if (ns.isFollowing(contact)) {
+            if (NosturState.shared.isFollowing(contact.pubkey)) {
                 isFollowing = true
             }
             else {
+                guard contact.metadata_created_at != 0 else { return }
                 guard contact.couldBeImposter == -1 else { return }
-                guard !ns.isFollowing(contact.pubkey) else { return }
-                guard let account = ns.account else { return }
-                guard let similarContact = account.follows_.first(where: {
-                    isSimilar(string1: $0.anyName.lowercased(), string2: contact.anyName.lowercased())
-                }) else { return }
-                guard let cPic = contact.picture, let wotPic = similarContact.picture else { return }
-                similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                contact.couldBeImposter = similarPFP ? 1 : 0
+                guard let cPic = contact.picture else { return }
+                let contactAnyName = contact.anyName
+                
+                DataProvider.shared().bg.perform {
+                    guard let account = NosturState.shared.bgAccount else { return }
+                    guard let similarContact = account.follows_.first(where: {
+                        isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName.lowercased())
+                    }) else { return }
+                    guard let wotPic = similarContact.picture else { return }
+                    Task.detached(priority: .background) {
+                        let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+                        DispatchQueue.main.async {
+                            contact.couldBeImposter = similarPFP ? 1 : 0
+                        }
+                    }
+                }
             }
         }
     }
