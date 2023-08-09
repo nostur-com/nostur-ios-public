@@ -26,6 +26,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var name:String?
     var pictureUrl:String?
     var about:String?
+    @Published var couldBeImposter:Int16 = -1 // -1: unchecked, 0:false 1:true
     
     var nip05verified:Bool
     var nip05domain:String?
@@ -50,6 +51,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.name = contact.name
         self.pictureUrl = contact.picture
         self.about = contact.about
+        self.couldBeImposter = contact.couldBeImposter
         
         self.nip05verified = contact.nip05veried
         self.nip05domain = contact.nip05domain
@@ -110,6 +112,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                 let name = contact.name
                 let pictureUrl = contact.picture
                 let about = contact.about
+                let couldBeImposter = contact.couldBeImposter
                 
                 let nip05verified = contact.nip05veried
                 let nip05domain = contact.nip05domain
@@ -129,6 +132,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     self.name = name
                     self.pictureUrl = pictureUrl
                     self.about = about
+                    self.couldBeImposter = couldBeImposter
                     
                     self.nip05verified = nip05verified
                     self.nip05domain = nip05domain

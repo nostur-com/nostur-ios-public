@@ -37,6 +37,7 @@ extension Contact {
     @NSManaged public var events: Set<Event>?
     @NSManaged public var lists: NSSet?
     @NSManaged public var privateFollow: Bool
+    @NSManaged public var couldBeImposter: Int16 // cache (-1 = unchecked, 1/0 = true/false checked)
 
     var lists_:[NosturList] {
         get { lists?.allObjects as! [NosturList] }
@@ -241,6 +242,19 @@ extension Contact : Identifiable {
                 // Received metadata is newer than stored Contact
                 if contact.metadata_created_at < event.createdAt.timestamp {
                     
+                    // Needs imposter recheck?
+                    if contact.couldBeImposter == 0 { // only if wasnt imposter before
+                        if (contact.name != metaData.name) {
+                            contact.couldBeImposter = -1
+                        }
+                        else if (contact.display_name != metaData.display_name) {
+                            contact.couldBeImposter = -1
+                        }
+                        else if (contact.picture != metaData.picture) {
+                            contact.couldBeImposter = -1
+                        }
+                    }
+                    
                     // update contact
                     contact.objectWillChange.send()
                     contact.name = metaData.name
@@ -254,6 +268,9 @@ extension Contact : Identifiable {
                     contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                     contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
                     contact.contactUpdated.send(contact)
+                    
+                    
+                    
                     updateRelatedEvents(contact)
                 }
                 else {

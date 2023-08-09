@@ -89,3 +89,45 @@ struct Previews_ImpostorChecker_Previews: PreviewProvider {
         ImposterTesterView()
     }
 }
+
+
+func isSimilar(string1: String, string2: String, percent:Double = 0.8) -> Bool {
+    let length1 = string1.count
+    let length2 = string2.count
+    
+    let maxLength = max(length1, length2)
+    let minLength = min(length1, length2)
+    
+    let distance = levenshteinDistance(string1: string1, string2: string2)
+    let similarity = 1 - (Double(distance) / Double(maxLength))
+    
+    return similarity >= percent
+}
+
+func levenshteinDistance(string1: String, string2: String) -> Int {
+    let length1 = string1.count
+    let length2 = string2.count
+    
+    var matrix = Array(repeating: Array(repeating: 0, count: length2 + 1), count: length1 + 1)
+    
+    for i in 0...length1 {
+        matrix[i][0] = i
+    }
+    
+    for j in 0...length2 {
+        matrix[0][j] = j
+    }
+    
+    for i in 1...length1 {
+        for j in 1...length2 {
+            let cost = string1[string1.index(string1.startIndex, offsetBy: i - 1)] == string2[string2.index(string2.startIndex, offsetBy: j - 1)] ? 0 : 1
+            matrix[i][j] = min(
+                matrix[i - 1][j] + 1,
+                matrix[i][j - 1] + 1,
+                matrix[i - 1][j - 1] + cost
+            )
+        }
+    }
+    
+    return matrix[length1][length2]
+}

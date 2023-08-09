@@ -84,6 +84,7 @@ struct PostHeader: View {
     @ObservedObject var contact:NRContact
     let nrPost:NRPost
     let singleLine:Bool
+    @State var similarPFP = false
     
     var body: some View {
         HStack(alignment: .top, spacing: 5) {
@@ -97,7 +98,15 @@ struct PostHeader: View {
                         navigateTo(ContactPath(key: nrPost.pubkey))
                     }
                 
-                if (contact.nip05verified) {
+                if contact.couldBeImposter == 1 {
+                    Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                        .padding(.horizontal, 8)
+                        .background(.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                        .layoutPriority(2)
+                }
+                else if (contact.nip05verified) {
                     Image(systemName: "checkmark.seal.fill")
                         .foregroundColor(Color("AccentColor"))
                         .layoutPriority(3)
@@ -117,6 +126,18 @@ struct PostHeader: View {
                 EventRelationsQueue.shared.addAwaitingContact(contact.contact, debugInfo: "NoteHeaderView.001")
                 QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
             }
+        }
+        .task {
+            guard contact.metadata_created_at != 0 else { return }
+            guard contact.couldBeImposter == -1 else { return }
+            guard !contact.following else { return }
+            guard let account = NosturState.shared.account else { return }
+            guard let similarContact = account.follows_.first(where: {
+                isSimilar(string1: $0.anyName.lowercased(), string2: contact.anyName.lowercased())
+            }) else { return }
+            guard let cPic = contact.pictureUrl, let wotPic = similarContact.picture else { return }
+            similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+            contact.couldBeImposter = similarPFP ? 1 : 0
         }
         .onDisappear {
             if contact.metadata_created_at == 0 {
