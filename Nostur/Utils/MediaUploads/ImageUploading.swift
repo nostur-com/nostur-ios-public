@@ -16,7 +16,7 @@ func uploadImages(images: [UIImage]) -> AnyPublisher<[String], Error> {
         .eraseToAnyPublisher()
 }
 
-func uploadImage(image: UIImage, maxWidth:CGFloat = 900.0) -> AnyPublisher<String, Error> {
+func uploadImage(image: UIImage, maxWidth:CGFloat = 1800.0) -> AnyPublisher<String, Error> {
     let scale = image.size.width > maxWidth ? image.size.width / maxWidth : 1
     let size = CGSize(width: image.size.width / scale, height: image.size.height / scale)
     
@@ -24,7 +24,7 @@ func uploadImage(image: UIImage, maxWidth:CGFloat = 900.0) -> AnyPublisher<Strin
     let scaledImage = renderer.image { _ in
         image.draw(in: CGRect(origin: .zero, size: size))
     }
-    guard let imageData = scaledImage.jpegData(compressionQuality: 0.8) else {
+    guard let imageData = scaledImage.pngData() else {
         return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
     }
     

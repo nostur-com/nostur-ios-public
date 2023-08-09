@@ -22,7 +22,7 @@ func getVoidCatService() -> MediaUploadService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("*/*", forHTTPHeaderField: "accept")
-        request.setValue("image/jpg", forHTTPHeaderField: "V-Content-Type")
+        request.setValue("image/png", forHTTPHeaderField: "V-Content-Type")
 
         request.httpBody = imageData
         return request
@@ -39,6 +39,6 @@ func getVoidCatService() -> MediaUploadService {
 //            L.og.debug(responseText?.description)
             throw ImageUploadError.uploadFailure
         }
-        return responseString.replacingOccurrences(of: "http://", with: "https://") + ".jpg"
+        return responseString.replacingOccurrences(of: "http://", with: "https://") + ".png"
     })
 }
