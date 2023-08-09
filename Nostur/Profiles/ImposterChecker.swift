@@ -25,16 +25,18 @@ func compareImages(image1: UIImage, image2: UIImage) -> CGFloat {
         let g1 = CGFloat(pixelData1[i + 1])
         let b1 = CGFloat(pixelData1[i + 2])
         
-        let r2 = CGFloat(pixelData2[i])
-        let g2 = CGFloat(pixelData2[i + 1])
-        let b2 = CGFloat(pixelData2[i + 2])
-        
-        let diffR = abs(r1 - r2)
-        let diffG = abs(g1 - g2)
-        let diffB = abs(b1 - b2)
-        
-        let diff = (diffR + diffG + diffB) / (3 * 255)
-        mae += diff
+        if i < pixelData2.count {
+            let r2 = CGFloat(pixelData2[i])
+            let g2 = CGFloat(pixelData2[i + 1])
+            let b2 = CGFloat(pixelData2[i + 2])
+            
+            let diffR = abs(r1 - r2)
+            let diffG = abs(g1 - g2)
+            let diffB = abs(b1 - b2)
+            
+            let diff = (diffR + diffG + diffB) / (3 * 255)
+            mae += diff
+        }
     }
     
     mae /= CGFloat(pixelCount)
@@ -51,12 +53,12 @@ func pfpsAreSimilar(imposter:String, real:String, threshold:Double = 0.1) async 
     
     let task1 = ImageProcessing.shared.pfp.imageTask(with: impostorReq)
     if let response = try? await task1.response {
-        impostorImage = response.container.image
+        impostorImage = response.container.image //.preparingForDisplay()
     }
     
     let task2 = ImageProcessing.shared.pfp.imageTask(with: realReq)
     if let response = try? await task2.response {
-        realImage = response.container.image
+        realImage = response.container.image //.preparingForDisplay()
     }
     
     guard let impostorImage = impostorImage, let realImage = realImage else { return false }
