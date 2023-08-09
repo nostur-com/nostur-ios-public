@@ -20,7 +20,8 @@ struct ChatInputField: View {
     
     var body: some View {
         HStack {
-            TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message)
+            TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message, axis: .vertical)
+                .lineLimit(...8)
                 .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 0))
                 .background(Color.clear)
                 .focused($focusedField, equals: .message)
