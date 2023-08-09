@@ -7,24 +7,21 @@
 
 import Foundation
 
-// https://github.com/quentintaranpino/nostrcheck-api
-// different JSON response as others
-// max 5 public uploads per day?
-// api key in in form data instead of header
-
-
+// https://github.com/quentintaranpino/nostrcheck-api-ts
+// Supports  NIP98 HTTP Auth.
+//
 // CURL EXAMPLE
-//curl --location 'https://nostrcheck.me/api/media.php' \
-//--form 'publicgallery=@"testupload.png"' \
-//--form 'apikey="26d075787d261660682fb9d20dbffa538c708b1eda921d0efa2be95fbef4910a"' \
-//--form 'type="media"'
+// curl --location 'https://nostrcheck.me/api/v1/media?apikey=API_KEY' \
+// --form 'mediafile=@"pngtest1.png"' \
+// --form 'uploadtype="media"'
 
+// TODO: implement  NIP98 HTTP Auth
 func getNostrCheckMeService() -> MediaUploadService {
     
     let NOSTRCHECK_PUBLIC_API_KEY = Bundle.main.infoDictionary?["NOSTRCHECK_PUBLIC_API_KEY"] as? String ?? ""
     
     return MediaUploadService(name: "nostrcheck.me", request: { imageData in
-        let url = URL(string: "https://nostrcheck.me/api/media.php")!
+        let url = URL(string: "https://nostrcheck.me/api/v1/media?apikey=\(NOSTRCHECK_PUBLIC_API_KEY)")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
 
@@ -35,17 +32,13 @@ func getNostrCheckMeService() -> MediaUploadService {
         let body = NSMutableData()
         
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"publicgallery\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"mediafile\"; filename=\"image.png\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/png\r\n\r\n".data(using: .utf8)!)
         body.append(imageData)
 
         body.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"type\"\r\n\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"uploadtype\"\r\n\r\n".data(using: .utf8)!)
         body.append("media".data(using: .utf8)!)
-        
-        body.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"apikey\"\r\n\r\n".data(using: .utf8)!)
-        body.append(NOSTRCHECK_PUBLIC_API_KEY.data(using: .utf8)!)
         
         body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
         request.httpBody = body as Data
@@ -64,6 +57,6 @@ func getNostrCheckMeService() -> MediaUploadService {
 //            L.og.debug(json?.description ?? "")
             throw ImageUploadError.uploadFailure
         }
-        return url
+        return url.replacingOccurrences(of: "http://", with: "https://")
     })
 }
