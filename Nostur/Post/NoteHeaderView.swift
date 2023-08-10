@@ -84,7 +84,6 @@ struct PostHeader: View {
     @ObservedObject var contact:NRContact
     let nrPost:NRPost
     let singleLine:Bool
-    @State var similarPFP = false
     
     var body: some View {
         HStack(alignment: .top, spacing: 5) {
