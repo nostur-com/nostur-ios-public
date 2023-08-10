@@ -141,7 +141,7 @@ struct Settings: View {
                             guard updatingWoT == false else { return }
                             updatingWoT = true
                             DataProvider.shared().bg.perform {
-                                NosturState.shared.wot?.loadNormal()
+                                NosturState.shared.wot?.loadNormal(force: true)
                             }
                         }
                     }
