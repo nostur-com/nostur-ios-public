@@ -220,14 +220,33 @@ struct ProfileOverlayCard: View {
                 isFollowing = true
             }
             else {
+                guard contact.metadata_created_at != 0 else { return }
                 guard contact.couldBeImposter == -1 else { return }
-                guard let account = NosturState.shared.account else { return }
-                guard let similarContact = account.follows_.first(where: {
-                    isSimilar(string1: $0.anyName.lowercased(), string2: contact.anyName.lowercased())
-                }) else { return }
-                guard let cPic = contact.picture, let wotPic = similarContact.picture else { return }
-                similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                contact.couldBeImposter = similarPFP ? 1 : 0
+                guard let cPic = contact.picture else { return }
+                let contactAnyName = contact.anyName
+                let cPubkey = contact.pubkey
+                
+                DataProvider.shared().bg.perform {
+                    guard let account = NosturState.shared.bgAccount else { return }
+                    guard let similarContact = account.follows_.first(where: {
+                        isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName.lowercased())
+                    }) else { return }
+                    guard let wotPic = similarContact.picture else { return }
+                    
+                    L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarContact.anyName)")
+                    
+                    Task.detached(priority: .background) {
+                        let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+                        if similarPFP {
+                            L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
+                        }
+                        
+                        DispatchQueue.main.async {
+                            self.similarPFP = similarPFP
+                            contact.couldBeImposter = similarPFP ? 1 : 0
+                        }
+                    }
+                }
             }
         }
         .task {
