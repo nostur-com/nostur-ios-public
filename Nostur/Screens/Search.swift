@@ -401,7 +401,7 @@ struct Search: View {
                 // search in names/usernames
                 else {
                     searching = false
-                    contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@ OR about CONTAINS[cd] %@", searchTrimmed, searchTrimmed, searchTrimmed)
+                    contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
                     
                     let fr = Event.fetchRequest()
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
