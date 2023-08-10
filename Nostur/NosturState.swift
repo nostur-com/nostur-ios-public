@@ -213,6 +213,7 @@ final class NosturState : ObservableObject {
 
 //        DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
+        sendNotification(.followingAdded, pubkey)
         self.publishNewContactList()
     }
     
@@ -223,6 +224,7 @@ final class NosturState : ObservableObject {
         
 //        DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
+        sendNotification(.followingAdded, contact.pubkey)
         self.publishNewContactList()
     }
     

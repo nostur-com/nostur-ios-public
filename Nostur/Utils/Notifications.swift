@@ -131,6 +131,10 @@ extension Notification.Name {
         return Notification.Name("followersChanged")
     }
     
+    static var followingAdded: Notification.Name {
+        return Notification.Name("followingAdded")
+    }
+    
     static var explorePubkeysChanged: Notification.Name {
         return Notification.Name("explorePubkeysChanged")
     }
