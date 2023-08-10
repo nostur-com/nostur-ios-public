@@ -238,6 +238,8 @@
 		1FB6E6FB29E3B827008BE8A6 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6E6FA29E3B827008BE8A6 /* MainView.swift */; };
 		1FB6E6FD29E48109008BE8A6 /* LVMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */; };
 		1FB6E70329E52EF3008BE8A6 /* SmoothList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */; };
+		1FBB901F2A85128A007A1550 /* StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901D2A85128A007A1550 /* StringMetric.swift */; };
+		1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901E2A85128A007A1550 /* String+StringMetric.swift */; };
 		1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */; };
 		1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */; };
 		1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8221299A6F3D00FB41CE /* LUD16.swift */; };
@@ -609,6 +611,8 @@
 		1FB6E6FA29E3B827008BE8A6 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LVMManager.swift; sourceTree = "<group>"; };
 		1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothList.swift; sourceTree = "<group>"; };
+		1FBB901D2A85128A007A1550 /* StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringMetric.swift; sourceTree = "<group>"; };
+		1FBB901E2A85128A007A1550 /* String+StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+StringMetric.swift"; sourceTree = "<group>"; };
 		1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FBE8221299A6F3D00FB41CE /* LUD16.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LUD16.swift; sourceTree = "<group>"; };
@@ -1114,6 +1118,7 @@
 		1F83498529DE80E60032E52B /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				1FBB901C2A85128A007A1550 /* StringMetric */,
 				1F88490129B537A000145340 /* HighlightedTextEditor */,
 			);
 			path = Libraries;
@@ -1323,6 +1328,15 @@
 				1F756530296AE4260078474E /* RelaysView.swift */,
 			);
 			path = Relays;
+			sourceTree = "<group>";
+		};
+		1FBB901C2A85128A007A1550 /* StringMetric */ = {
+			isa = PBXGroup;
+			children = (
+				1FBB901D2A85128A007A1550 /* StringMetric.swift */,
+				1FBB901E2A85128A007A1550 /* String+StringMetric.swift */,
+			);
+			path = StringMetric;
 			sourceTree = "<group>";
 		};
 		1FC0F5A12A4AEAE8004E4DAA /* Article */ = {
@@ -1744,6 +1758,7 @@
 				1FC2DFF429A9330600C8A9DA /* ProfileLightningButton.swift in Sources */,
 				1F740DA329AF524100EFCCA7 /* BadgeDetailView.swift in Sources */,
 				1F2F54EE2A02904E00B6D7E4 /* FastLoader.swift in Sources */,
+				1FBB901F2A85128A007A1550 /* StringMetric.swift in Sources */,
 				1FC6807A29DB0BF7003EE054 /* ReportPostSheet.swift in Sources */,
 				1F740DAB29AF898400EFCCA7 /* BadgesView.swift in Sources */,
 				1FB38B6129E29CEC00B85156 /* ProfilePicPicker.swift in Sources */,
@@ -1838,6 +1853,7 @@
 				1F8B6A742A20C6510060EDB3 /* NRKinds.swift in Sources */,
 				1FAE9B442A2F0ADB00439A63 /* ProfileImagesHelpers.swift in Sources */,
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
+				1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */,
 				1F7E38EC2A2D9AED00ABAA85 /* DIMENSIONS.swift in Sources */,
 				1FC7A49729F8EFBA00645FEF /* AddRemoveToListsheet.swift in Sources */,
 				1F88491729B537B400145340 /* UITextView.swift in Sources */,
