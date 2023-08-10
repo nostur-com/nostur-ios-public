@@ -1066,7 +1066,6 @@ extension LVM {
                 
                 // Remove from database
                 context.perform { [weak self] in
-                    guard let self = self else { return }
                     context.delete(nrPost.event)
                     DataProvider.shared().bgSave()
                 }
