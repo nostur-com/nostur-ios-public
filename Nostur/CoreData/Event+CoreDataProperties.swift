@@ -651,11 +651,11 @@ extension Event {
     }
     
     var fastPs:[(String, String, String?, String?)] {
-        fastTags.filter { $0.0 == "p" }
+        fastTags.filter { $0.0 == "p" && $0.1.count == 64 }
     }
     
     var fastEs:[(String, String, String?, String?)] {
-        fastTags.filter { $0.0 == "e" }
+        fastTags.filter { $0.0 == "e" && $0.1.count == 64 }
     }
     
     
