@@ -25,6 +25,7 @@
 import SwiftUI
 import FileProvider
 import Foundation
+import Combine
 
 class WebOfTrust: ObservableObject {
  
@@ -74,10 +75,67 @@ class WebOfTrust: ObservableObject {
         get { NosturState.shared.backlog }
         set { NosturState.shared.backlog = newValue }
     }
+    var subscriptions = Set<AnyCancellable>()
     
     init(pubkey:String, followingPubkeys:Set<String>) {
         self.pubkey = pubkey
         self.followingPubkeys = followingPubkeys
+        updateWoTonNewFollowing()
+    }
+    
+    private func updateWoTonNewFollowing() {
+        receiveNotification(.followingAdded)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
+                guard NosturState.shared.account != nil else { return }
+                let pubkey = notification.object as! String
+                self.followingPubkeys.insert(pubkey)
+                guard SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.normal.rawValue else { return }
+                self.updateWoTwithFollowsOf(pubkey)
+            }
+            .store(in: &subscriptions)
+    }
+    
+    private func updateWoTwithFollowsOf(_ pubkey:String) {
+        // Fetch kind 3 for pubkey
+        let task = ReqTask(
+            prefix: "S-WoTFol-",
+            reqCommand: { taskId in
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Fetching contact list for \(pubkey)")
+                req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
+            },
+            processResponseCommand: { [weak self] taskId, _ in
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Received contact list")
+                self?.regenerateWoTWithFollowsOf(pubkey)
+            },
+            timeoutCommand: {  [weak self] _ in
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Time-out")
+                self?.regenerateWoTWithFollowsOf(pubkey)
+            })
+
+        backlog.add(task)
+        task.fetch()
+    }
+    
+    private func regenerateWoTWithFollowsOf(_ pubkey:String) {
+        var followsOfPubkey = Set<String>()
+        DataProvider.shared().bg.perform { [weak self] in
+            guard let self = self else { return }
+            let fr = Event.fetchRequest()
+            fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", pubkey)
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
+            if let list = try? DataProvider.shared().bg.fetch(fr).first {
+                followsOfPubkey = followsOfPubkey.union( Set(list.fastPs.map { $0.1 }) )
+            }
+            let newSet = self.followingFollowingPubkeys.union(followsOfPubkey)
+            
+            DispatchQueue.main.async {
+                self.followingFollowingPubkeys = newSet
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
+            }
+            self.storeData(pubkeys: newSet, pubkey: pubkey)
+        }
     }
     
     // TODO: Listen for follow changes
