@@ -97,8 +97,9 @@ class WebOfTrust: ObservableObject {
     
     private var pubkey:String
     
-    public func loadNormal() { // This is for "normal" mode (follows + follows of follows)
-        self.loadFollowingFollowing()
+    // This is for "normal" mode (follows + follows of follows)
+    public func loadNormal(force:Bool = false) { // force = true to force fetching (update)
+        self.loadFollowingFollowing(force: force)
         
         if let lastUpdated = lastUpdatedDate(pubkey) {
             L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.pubkey).txt --> \(lastUpdated.description)")
@@ -108,12 +109,15 @@ class WebOfTrust: ObservableObject {
         }
     }
     
-    private func loadFollowingFollowing() {
+    // force = true to force fetching (update) - else will only use what is already on disk
+    private func loadFollowingFollowing(force:Bool = false) {
         // Load from disk
         self.followingFollowingPubkeys = self.loadData(pubkey)
         
         var pubkeys = followingPubkeys
         pubkeys.remove(pubkey)
+        
+        guard self.followingFollowingPubkeys.count < 10 || force == true else { return }
         
         // Fetch kind 3s
         let task = ReqTask(
