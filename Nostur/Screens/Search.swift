@@ -47,21 +47,18 @@ struct Search: View {
                     CenteredProgressView()
                 }
                 LazyVStack(spacing: 0) {
-                    Section {
-                        ForEach(filteredContactSearchResults.prefix(75)) { contact in
-                            ProfileRow(contact: contact)
-                                .roundedBoxShadow()
-                                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                .padding(.vertical, 10)
-                        }
-
-                        ForEach(nrPosts) { nrPost in
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true)
-                                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                                .roundedBoxShadow()
-                                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                .padding(.vertical, 10)
-                        }
+                    ForEach(filteredContactSearchResults.prefix(75)) { contact in
+                        ProfileRow(contact: contact)
+                            .roundedBoxShadow()
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                            .padding(.vertical, 10)
+                    }
+                    ForEach(nrPosts.prefix(75)) { nrPost in
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true)
+                            .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                            .roundedBoxShadow()
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                            .padding(.vertical, 10)
                     }
                 }
                 .toolbar {

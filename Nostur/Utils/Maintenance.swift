@@ -57,6 +57,7 @@ struct Maintenance {
             Self.runUseDtagForReplacableEvents(context: context)
             Self.runInsertFixedNames(context: context)
             Self.runFixArticleReplies(context: context)
+//            Self.runTempAlways(context: context)
         }
         // Time based migrations
     
@@ -570,6 +571,33 @@ struct Maintenance {
         }
         catch {
             L.maintenance.error("🧹🧹 🔴🔴 runFixArticleReplies error on save(): \(error)")
+        }
+        
+    }
+    
+    static func runTempAlways(context: NSManagedObjectContext) {
+
+        let fr = Contact.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+        
+        guard let contacts = try? context.fetch(fr) else {
+            L.maintenance.error("runTempAlways: Could not fetch")
+            return
+        }
+        
+        L.maintenance.debug("runTempAlways: Found \(contacts.count) contacts")
+        
+        for contact in contacts {
+            if contact.couldBeImposter != -1 {
+                contact.couldBeImposter = -1
+            }
+        }
+
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runTempAlways error on save(): \(error)")
         }
         
     }

@@ -312,7 +312,7 @@ final class SocketPool: ObservableObject {
                 }
                 
                 else {
-                    L.og.debug("\(managedClient.url) - activeSubscriptions: \(managedClient.activeSubscriptions.joined(separator: " "))")
+//                    L.og.debug("\(managedClient.url) - activeSubscriptions: \(managedClient.activeSubscriptions.joined(separator: " "))")
                     if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
                     guard limitToRelayIds.isEmpty || limitToRelayIds.contains(managedClient.relayId) else { continue }
                     
