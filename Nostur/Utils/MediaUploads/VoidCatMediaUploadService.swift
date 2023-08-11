@@ -17,16 +17,18 @@ import Foundation
 // --data-binary "@testupload.png"
 
 func getVoidCatService() -> MediaUploadService {
-    return MediaUploadService(name: "void.cat", request: { imageData in
+    return MediaUploadService(name: "void.cat", request: { imageData, usePNG in
+        let ext = usePNG ? "png" : "jpeg"
+        
         let url = URL(string: "https://void.cat/upload?cli=true")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("*/*", forHTTPHeaderField: "accept")
-        request.setValue("image/png", forHTTPHeaderField: "V-Content-Type")
+        request.setValue("image/\(ext)", forHTTPHeaderField: "V-Content-Type")
 
         request.httpBody = imageData
         return request
-    }, urlFromResponse: { (data, response) in
+    }, urlFromResponse: { (data, response, usePNG) in
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode),
               let responseString = String(data: data, encoding: .utf8),
@@ -39,6 +41,7 @@ func getVoidCatService() -> MediaUploadService {
 //            L.og.debug(responseText?.description)
             throw ImageUploadError.uploadFailure
         }
-        return responseString.replacingOccurrences(of: "http://", with: "https://") + ".png"
+        let ext = usePNG ? "png" : "jpeg"
+        return responseString.replacingOccurrences(of: "http://", with: "https://") + ".\(ext)"
     })
 }
