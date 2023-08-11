@@ -917,6 +917,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             L.og.info("🔴🔴 Send now failed")
         }
     }
+    @MainActor public func unblockFirstQuote() {
+        guard firstQuote != nil else { return }
+        self.objectWillChange.send()
+        self.firstQuote!.blocked = false
+    }
 }
 
 extension NRPost { // Helpers for grouped replies
