@@ -28,7 +28,7 @@ struct ContactSearchResultRow: View {
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {                        
-                        HStack(spacing:3) {
+                        HStack(alignment: .top, spacing:3) {
                             Text(contact.anyName).font(.headline).foregroundColor(.primary)
                                 .lineLimit(1)
                             
@@ -38,6 +38,7 @@ struct ContactSearchResultRow: View {
                                     .background(.red)
                                     .foregroundColor(.white)
                                     .cornerRadius(8)
+                                    .padding(.top, 3)
                                     .layoutPriority(2)
                             }
                             else if (contact.nip05veried) {

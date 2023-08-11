@@ -103,6 +103,7 @@ struct PostHeader: View {
                         .background(.red)
                         .foregroundColor(.white)
                         .cornerRadius(8)
+                        .padding(.top, 3)
                         .layoutPriority(2)
                 }
                 else if (contact.nip05verified) {
