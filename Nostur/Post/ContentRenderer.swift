@@ -136,10 +136,11 @@ struct QuoteById: View {
 //                                Color.systemBackground
 //                                    .cornerRadius(15)
 //                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(.regularMaterial, lineWidth: 1)
-                            )
+                            .roundedCorner(15, corners: [.allCorners])
+//                            .overlay(
+//                                RoundedRectangle(cornerRadius: 15)
+//                                    .stroke(.regularMaterial, lineWidth: 1)
+//                            )
                     }
                     else {
                         QuotedNoteFragmentView(nrPost: nrPost)

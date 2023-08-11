@@ -52,6 +52,7 @@ struct NoteRow: View {
                 }
                 .padding(.leading, 40)
                 .frame(idealHeight: 20.0)
+                .padding(.top, 10)
                 .fixedSize(horizontal: false, vertical: true)
                 // Fixed size for scrolling performance maybe, use to confirm correct size:
 //                .readSize { newSize in
@@ -78,7 +79,7 @@ struct NoteRow: View {
                 KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
             }
         }
-        .padding(.top, 20)
+//        .padding(.vertical, 20)
         // Performance testing
 //        .background(Color.random) // NOTEROW BOX BACKGROUND
 //        .readSize { size in

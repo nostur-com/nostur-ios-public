@@ -47,13 +47,14 @@ struct BookmarksView: View {
 //        let _ = Self._printChanges()
         ScrollView {
             if !vBookmarks.isEmpty {
-                LazyVStack {
+                LazyVStack(spacing: 0) {
                     ForEach(vBookmarks) { vBookmark in
                         PostRowDeletable(nrPost: vBookmark, missingReplyTo: true)
                             .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                             .fixedSize(horizontal: false, vertical: true)
                             .roundedBoxShadow()
                             .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                            .padding(.vertical, 10)
                             .id(vBookmark.id)
                             .onDelete {
                                 vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }

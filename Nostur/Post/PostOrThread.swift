@@ -28,9 +28,11 @@ struct PostOrThread: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .id(nrPost.id)
         }
-        .roundedBoxShadow()
         .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+        .background(Color.systemBackground)
         .padding(.vertical, 10)
+        .roundedBoxShadow(backgroundColor: nrPost.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
+        .padding(10)
     }
 }
 //
