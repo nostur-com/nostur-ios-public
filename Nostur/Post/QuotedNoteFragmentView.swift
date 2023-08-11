@@ -25,6 +25,7 @@ struct QuotedNoteFragmentView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
             )
+            .hCentered()
         }
         else {
             VStack(alignment:.leading) {

@@ -397,8 +397,8 @@ struct ArticleView: View {
 //                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(.bottom, 10)
-            .padding(.horizontal, 10)
+            .padding(10)
+            .roundedBoxShadow(backgroundColor:Color(.secondarySystemBackground))
         }
     }
 }
