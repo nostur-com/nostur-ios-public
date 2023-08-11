@@ -24,16 +24,19 @@ func uploadImage(image: UIImage, maxWidth:CGFloat = 1800.0) -> AnyPublisher<Stri
     let scaledImage = renderer.image { _ in
         image.draw(in: CGRect(origin: .zero, size: size))
     }
-    guard let imageData = scaledImage.pngData() else {
+    
+    let usePNG = false // hasTransparency(image: image) // TODO: Disabled for now
+    
+    guard let imageData = usePNG ? scaledImage.pngData() : scaledImage.jpegData(compressionQuality: 0.85) else {
         return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
     }
     
-    let request = SettingsStore.shared.defaultMediaUploadService.request(imageData)
+    let request = SettingsStore.shared.defaultMediaUploadService.request(imageData, usePNG)
 
     let session = URLSession(configuration: .default)
     return session.dataTaskPublisher(for: request)
         .tryMap { data, response -> String in
-            return try SettingsStore.shared.defaultMediaUploadService.urlFromResponse((data, response))
+            return try SettingsStore.shared.defaultMediaUploadService.urlFromResponse((data, response, usePNG))
         }
         .eraseToAnyPublisher()
 }
@@ -59,6 +62,18 @@ struct MediaUploadService: Identifiable, Hashable {
     }
     var id:String { name }
     let name: String
-    let request: (_ with: Data) -> URLRequest
-    let urlFromResponse: ((Data, URLResponse)) throws -> String
+    let request: (_ with: Data, _ usePNG:Bool) -> URLRequest
+    let urlFromResponse: ((Data, URLResponse, Bool)) throws -> String
+}
+
+
+func hasTransparency(image: UIImage) -> Bool {
+    guard let cgImage = image.cgImage else {
+        return false
+    }
+    
+    let alphaInfo = cgImage.alphaInfo
+    
+    // Check if the alpha info indicates transparency
+    return alphaInfo == .first || alphaInfo == .last || alphaInfo == .premultipliedFirst || alphaInfo == .premultipliedLast
 }

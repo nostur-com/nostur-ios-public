@@ -9,7 +9,7 @@ import Foundation
 
 // Something wrong with the response, can't find api. Disabled for now
 func getNostrBuildService() -> MediaUploadService {
-    return MediaUploadService(name: "nostr.build", request: { imageData in
+    return MediaUploadService(name: "nostr.build", request: { imageData, usePNG in
         let url = URL(string: "https://nostr.build/upload.php")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -29,7 +29,7 @@ func getNostrBuildService() -> MediaUploadService {
         
         request.httpBody = body as Data
         return request
-    }, urlFromResponse: { (data, response) in
+    }, urlFromResponse: { (data, response, _) in
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode),
               let responseString = String(data: data, encoding: .utf8),
