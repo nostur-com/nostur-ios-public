@@ -61,7 +61,24 @@ struct NoteRow: View {
                 
                 if let firstQuote = nrPost.firstQuote {
                     // CASE - WE HAVE REPOSTED POST ALREADY
-                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
+                    if firstQuote.blocked {
+                        HStack {
+                            Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                            Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) {
+                                nrPost.unblockFirstQuote()
+                            }
+                                .buttonStyle(.bordered)
+                        }
+                        .padding(.leading, 8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        )
+                        .hCentered()
+                    }
+                    else {
+                        KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
+                    }
                 }
                 else if let firstQuoteId = nrPost.firstQuoteId {
                     CenteredProgressView()
