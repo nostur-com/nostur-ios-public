@@ -125,7 +125,7 @@ struct GifSearcher: View {
     }
     
     func search(_ searchTerm:String) {
-        // the test search term
+        guard let searchTerm = searchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else { return }
         
         // Define the results upper limit
         let limit = 30
