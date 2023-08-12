@@ -122,7 +122,7 @@ struct InnerPFP: View {
             else if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                 LazyImage(url: URL(string: pictureUrl)) { state in
                     if let container = state.imageContainer {
-                        if container.type == .gif, let gifData = container.data {
+                        if !ProcessInfo.processInfo.isLowPowerModeEnabled, container.type == .gif, let gifData = container.data {
                             ZStack {
                                 if let image = state.image {
                                     image
