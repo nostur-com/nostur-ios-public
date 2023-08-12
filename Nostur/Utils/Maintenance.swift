@@ -293,17 +293,17 @@ struct Maintenance {
             let r = NSFetchRequest<Event>(entityName: "Event")
             r.predicate = NSPredicate(format: "kind IN {3,10002} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", followingPubkeys, regex)
             r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            let kind3 = try! context.fetch(r)
+            let kind3or10002 = try! context.fetch(r)
             
             var noDuplicates:Dictionary<String, Event> = [:]
             var forDeletion:[Event] = []
             
-            for event in kind3 {
-                if noDuplicates[event.pubkey] != nil {
+            for event in kind3or10002 {
+                if noDuplicates[event.pubkey + String(event.kind)] != nil {
                     forDeletion.append(event)
                 }
                 else {
-                    noDuplicates[event.pubkey] = event
+                    noDuplicates[event.pubkey + String(event.kind)] = event
                 }
             }
             for toDelete in forDeletion {
