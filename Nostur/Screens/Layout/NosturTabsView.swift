@@ -25,7 +25,9 @@ struct NosturTabsView: View {
                         guard size.width > 0 else { return }
                         dim.listWidth = size.width
                     }
-                TabView(selection: $selectedTab.onUpdate { tabTapped(selectedTab) }) {
+                TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
+                    tabTapped(newTab, oldTab: oldTab)
+                }) {
                     MainView()
                         .tabItem { Image(systemName: "house") }
                         .tag("Main")
@@ -101,10 +103,10 @@ struct NosturTabsView: View {
         }
     }
 
-    private func tabTapped(_ tabName:String) {
+    private func tabTapped(_ tabName:String, oldTab:String) {
         
         // Only do something if we are already on same the tab
-        guard selectedTab == tabName else { return }
+        guard oldTab == tabName else { return }
 
         // For main, we scroll to first unread
         // but depends on condition with values only known in FollowingAndExplore
@@ -117,12 +119,13 @@ struct NosturTabsView: View {
 
 
 extension Binding {
-    func onUpdate(_ closure: @escaping () -> Void) -> Binding<Value> {
+    func onUpdate(_ closure: @escaping (Value, Value) -> Void) -> Binding<Value> {
         Binding(get: {
             wrappedValue
         }, set: { newValue in
+            let oldValue = wrappedValue
             wrappedValue = newValue
-            closure()
+            closure(oldValue, newValue)
         })
     }
 }
