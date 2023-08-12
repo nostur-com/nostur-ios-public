@@ -299,6 +299,7 @@ struct ProfileView: View {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!, isFollowing: ns.isFollowing(contact.pubkey))
         }
         .task {
+            guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard contact.metadata_created_at != 0 else { return }
             guard contact.couldBeImposter != 0 else { return } // if its -1 (unknown) or 1 (true), we always re-check on profile view
             guard let cPic = contact.picture else { return }

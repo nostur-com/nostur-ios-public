@@ -844,6 +844,9 @@ extension LVM {
     
     func fetchNIP05ForVisibleIndexPaths() {
         postsAppearedSubject
+            .filter { _ in
+                !ProcessInfo.processInfo.isLowPowerModeEnabled
+            }
             .throttle(for: .seconds(0.5), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] nrPostIds in
                 guard let self = self else { return }
@@ -874,6 +877,9 @@ extension LVM {
     
     func fetchCountsForVisibleIndexPaths() {
         postsAppearedSubject
+            .filter { _ in
+                !ProcessInfo.processInfo.isLowPowerModeEnabled
+            }
             .throttle(for: .seconds(0.5), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] nrPostIds in
                 guard let self = self else { return }
@@ -1065,7 +1071,7 @@ extension LVM {
                 }
                 
                 // Remove from database
-                context.perform { [weak self] in
+                context.perform {
                     context.delete(nrPost.event)
                     DataProvider.shared().bgSave()
                 }

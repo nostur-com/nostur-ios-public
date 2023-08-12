@@ -174,6 +174,20 @@ final class NosturState : ObservableObject {
             }
         }
         initMutedWords()
+        managePowerUsage()
+    }
+    
+    func managePowerUsage() {
+        NotificationCenter.default.addObserver(self, selector: #selector(powerStateChanged), name: Notification.Name.NSProcessInfoPowerStateDidChange, object: nil)
+    }
+    
+    
+    @objc func powerStateChanged(_ notification: Notification) {
+        if ProcessInfo.processInfo.isLowPowerModeEnabled {
+            if SettingsStore.shared.animatedPFPenabled {
+                SettingsStore.shared.objectWillChange.send() // This will reload views to stop playing animated PFP GIFs
+            }
+        }
     }
     
     func initMutedWords() {
