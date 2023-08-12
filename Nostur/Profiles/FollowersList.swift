@@ -51,9 +51,20 @@ struct FollowersList: View {
             .filter { $0.contact == nil } }
     }
     
+    @State var rechecking = false
+    
     var body: some View {
         VStack {
-            Text("Total: \(clEventsPerPubkey.count)")
+            HStack {
+                Text("Total: \(clEventsPerPubkey.count)")
+                if !rechecking {
+                    Image(systemName:"arrow.clockwise.circle.fill")
+                        .onTapGesture {
+                            req(RM.getFollowers(pubkey: pubkey))
+                        }
+                        .help("Recheck")
+                }
+            }
             LazyVStack {
                 ForEach(clEventsFollowingPubkeyWithContact) { event in
                     ProfileRow(contact: event.contact!)
