@@ -51,7 +51,15 @@ struct ShareableIdentifierTest: View {
             ForEach(s.relays, id:\.self) { r in
                 Text(r)
             }
-            
+            .onAppear {
+                if let naddr = try? ShareableIdentifier(prefix: "naddr", kind: 30023, pubkey: "6e468422dfb74a5738702a8823b9b28168abab8655faacb6853cd0ee15deee93", dTag: "1680612926599") {
+                    print(naddr.bech32string)
+                }
+                
+                if let nevent = try? ShareableIdentifier(prefix: "nevent", kind: 1, pubkey: "d61f3bc5b3eb4400efdae6169a5c17cabf3246b514361de939ce4a1a0da6ef4a", eventId: "64df6fe7512fee4318728f8704c82a86926c8e0ec1eef7613ed066d840d16b79") {
+                    print(nevent.bech32string)
+                }
+            }
         }
         else {
             Text("gmmm broken \(error)")

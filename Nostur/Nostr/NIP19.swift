@@ -114,8 +114,7 @@ class ShareableIdentifier: Hashable {
                         case "nrelay":
                             relayUrl = String(data: value, encoding: .utf8)
                         case "naddr":
-                            eventId = String(data: value, encoding: .utf8)
-//                            eventId = value.hexEncodedString() // or: String(data: value, encoding: .utf8) ??
+                            eventId = String(data: value, encoding: .utf8) // identifier / "d" tag
                         default:
                             throw "EncodingError.invalidPrefix.0"
                     }
@@ -144,6 +143,53 @@ class ShareableIdentifier: Hashable {
                     print("EncodingError.invalidType")
             }
         }
+    }
+    
+    init(prefix:String, kind:Int64, pubkey:String, dTag:String? = nil, eventId:String? = nil, relays:[String] = []) throws {
+        self.prefix = prefix
+        self.kind = kind
+        self.pubkey = pubkey
+        self.eventId = dTag ?? (eventId ?? nil)
+        self.relays = relays
+        
+        var tlvData = Data()
+        
+        if let dTag, prefix == "naddr" {
+            // Append TLV for the special type
+            let dTagValue = dTag.data(using: .utf8)!
+            tlvData.append(0) // Type
+            tlvData.append(UInt8(dTagValue.count)) // Length
+            tlvData.append(contentsOf: dTagValue) // Value
+        }
+        else if let eventId, prefix == "nevent" {
+            // Append TLV for the special type
+            let eventId = eventId.hexToBytes()
+            tlvData.append(0) // Type
+            tlvData.append(UInt8(eventId.count)) // Length
+            tlvData.append(contentsOf: eventId) // Value
+        }
+        
+        let authorValue = pubkey.hexToBytes()
+        tlvData.append(2)
+        tlvData.append(UInt8(authorValue.count))
+        tlvData.append(contentsOf: authorValue)
+        
+        var kindValue = UInt32(kind).bigEndian
+        let kindBytes = withUnsafeBytes(of: &kindValue) { Array($0) }
+        tlvData.append(3) // Type
+        tlvData.append(UInt8(kindBytes.count)) // Length (assuming 4 bytes)
+        tlvData.append(contentsOf: kindBytes) // Value
+        
+        for relay in relays {
+            let value = relay.data(using: .utf8)!
+            tlvData.append(1)
+            tlvData.append(UInt8(value.count))
+            tlvData.append(value)
+        }
+        
+        let bech32 = Bech32()
+        
+        self.bech32string = bech32.encode(prefix, values: tlvData, eightToFive: true)
     }
 }
 
