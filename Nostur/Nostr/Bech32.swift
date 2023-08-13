@@ -88,7 +88,8 @@ public class Bech32 {
     }
     
     /// Encode Bech32 string
-    public func encode(_ hrp: String, values: Data) -> String {
+    public func encode(_ hrp: String, values iData: Data, eightToFive:Bool = false) -> String {
+        let values = eightToFive ? self.convertBits(idata: iData) : iData
         let checksum = createChecksum(hrp: hrp, values: values)
         var combined = values
         combined.append(checksum)
@@ -260,6 +261,30 @@ public class Bech32 {
             throw DecodingError.bitsConversionFailed
         }
         return odata
+    }
+    
+    public func convertBits(from: Int = 8, to: Int = 5, idata: Data) -> Data {
+        guard !idata.isEmpty else { return Data() }
+
+        var outputSize = (idata.count * from) / to
+        if (idata.count * from) % to != 0 {
+            outputSize += 1
+        }
+        var outputData = Data()
+        for i in (0..<outputSize) {
+            let division = (i * to) / from
+            let remainder = (i * to) % from
+            var element = idata[division] << remainder
+            element >>= 3
+
+            if (remainder > (from - to)) && (i + 1 < outputSize) {
+                element = element | (idata[division + 1] >> (from - remainder + 3))
+            }
+
+            outputData.append(element)
+        }
+
+        return outputData
     }
 }
 
