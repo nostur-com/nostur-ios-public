@@ -274,6 +274,10 @@ extension Notification.Name {
         return Notification.Name("sharePostScreenshot")
     }
     
+    static var shareWeblink: Notification.Name {
+        return Notification.Name("shareWeblink")
+    }
+    
     static var showZapCustomizerSheet: Notification.Name {
         return Notification.Name("showZapCustomizerSheet")
     }
