@@ -36,13 +36,39 @@ struct LazyNoteMenuSheet: View {
         NavigationStack {
             List {
                 Group {
-                    Button {
-                        dismiss()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                            sendNotification(.sharePostScreenshot, nrPost)
+                    HStack {
+                        Button {
+                            dismiss()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                                sendNotification(.shareWeblink, nrPost)
+                            }
+                        } label: {
+                            Label(String(localized:"Share link", comment: "Post context menu button"), systemImage: "square.and.arrow.up")
+                                .padding(.trailing, 5)
                         }
-                    } label: {
-                        Label(String(localized:"Share post", comment: "Post context menu button"), systemImage: "square.and.arrow.up")
+                        .buttonStyle(.plain)
+                        Divider()
+                        Button {
+                            dismiss()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                                sendNotification(.sharePostScreenshot, nrPost)
+                            }
+                        } label: {
+                            Text("screenshot", comment:"Post context menu button")
+                                .padding(.horizontal, 5)
+                        }
+                        .buttonStyle(.plain)
+                        .overlay(
+                            Color.white
+                                .opacity(0.01)
+                                .scaleEffect(x: 1.75, y:1.7)
+                        )
+                        .onTapGesture {
+                            dismiss()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                                sendNotification(.sharePostScreenshot, nrPost)
+                            }
+                        }
                     }
                     Button {
                         dismiss()
