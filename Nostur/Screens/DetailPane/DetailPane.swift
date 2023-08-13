@@ -51,13 +51,17 @@ struct DetailPane: View {
                                         if (index != 0) {
                                             tm.selected = tm.tabs[(index - 1)]
                                             if let id = tm.selected?.id {
-                                                proxy.scrollTo(id)
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                    proxy.scrollTo(id)
+                                                }
                                             }
                                         }
                                         else if (tm.tabs.count > 1) {
                                             tm.selected = tm.tabs[1]
                                             if let id = tm.selected?.id {
-                                                proxy.scrollTo(id)
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                    proxy.scrollTo(id)
+                                                }
                                             }
                                         }
                                         if let nrPost = tm.selected?.nrPost {
