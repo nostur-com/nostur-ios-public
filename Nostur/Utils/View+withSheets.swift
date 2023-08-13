@@ -57,6 +57,7 @@ private struct WithSheets: ViewModifier {
     @State private var sharablePostImage:ShareablePostImage? = nil
     @State private var screenshotRenderer:AnyCancellable? = nil
 //    @State private var renderer:ImageRenderer<AnyView>? = nil
+    @State private var shareableWeblink:ShareableWeblink? = nil
     
     @State var miniProfileSheetInfo:MiniProfileSheetInfo? = nil
     @State var miniProfileAnimateIn = false
@@ -340,7 +341,35 @@ private struct WithSheets: ViewModifier {
                 ActivityView(activityItems: [item])
             }
             
-        
+        // Share post weblink
+        .onReceive(receiveNotification(.shareWeblink)) { notification in
+            let nrPost = notification.object as! NRPost
+            
+            let relays = nrPost.relays.components(separatedBy: " ")
+                .map { relay in
+                    // first try to put just scheme+hostname as relay. because extra parameters in url can be irrelevant
+                    if let url = URL(string: relay), let scheme = url.scheme, let host = url.host {
+                        return (scheme + "://" + host)
+                    }
+                    else {
+                        return relay
+                    }
+                }
+
+            if nrPost.kind == 30023 {
+                guard let sharable = try? ShareableIdentifier(prefix: "naddr", kind: nrPost.kind, pubkey: nrPost.pubkey, dTag: nrPost.mainEvent.dTag, relays: relays) else { return }
+                let url = "https://nostr.com/\(sharable.bech32string)"
+                self.shareableWeblink = ShareableWeblink(url: url)
+            }
+            else {
+                guard let sharable = try? ShareableIdentifier(prefix: "nevent", kind: nrPost.kind, pubkey: nrPost.pubkey, eventId: nrPost.id, relays: relays) else { return }
+                let url = "https://nostr.com/\(sharable.bech32string)"
+                self.shareableWeblink = ShareableWeblink(url: url)
+            }
+        }
+        .sheet(item: $shareableWeblink) { shareableWeblink in
+            ActivityView(activityItems: [NSURL(string: shareableWeblink.url)!])
+        }
         
             .onReceive(receiveNotification(.showMiniProfile)) { notification in
                 let miniProfileSheetInfo = notification.object as! MiniProfileSheetInfo
@@ -398,6 +427,11 @@ struct EventNotification: Identifiable {
 struct ShareablePostImage: Identifiable {
     let id = UUID()
     let pngData:Data
+}
+
+struct ShareableWeblink: Identifiable {
+    let id = UUID()
+    let url:String
 }
 
 struct RemovedPubkeys: Identifiable {
