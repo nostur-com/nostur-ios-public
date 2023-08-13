@@ -431,7 +431,7 @@ struct EventMessageBuilder {
         
         // first try to put just scheme+hostname as relay. because extra parameters in url can be irrelevant
         if let url = URL(string: firstRelay), let scheme = url.scheme, let host = url.host {
-            let firstPart = scheme + "://" + host + "/"
+            let firstPart = (scheme + "://" + host)
             repost.tags.append(NostrTag(["e", original.id, firstPart, "mention"]))
         }
         else {
