@@ -30,23 +30,21 @@ struct CommandResult: Decodable {
 }
 
 struct NMessage: Decodable {
+    var container:UnkeyedDecodingContainer
     let values: [Any]
 
     init(from decoder: Decoder) throws {
-        var container = try decoder.unkeyedContainer()
+        container = try decoder.unkeyedContainer()
         let type = try container.decode(String.self)
         let subscription = try container.decode(String.self)
-        if let event = try? container.decode(NEvent.self) {
-            values = [type, subscription, event]
-        }
-        else {
-            values = [type, subscription]
-        }
+        values = [type, subscription]
     }
     
     var type:String { values[safe: 0] as? String ?? "NOSTUR.ERROR" }
     var subscription:String { values[safe: 1] as? String ?? "NOSTUR.ERROR" }
-    var event:NEvent? { values[safe: 2] as? NEvent }
+    lazy var event:NEvent? = {
+        return try? self.container.decode(NEvent.self)
+    }()
 }
 
 public struct NTimestamp: Codable {
