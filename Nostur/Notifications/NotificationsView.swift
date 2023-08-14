@@ -13,6 +13,7 @@ struct NotificationsContainer: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     @AppStorage("selected_tab") var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
     @State var navPath = NavigationPath()
     
     var body: some View {
@@ -20,7 +21,7 @@ struct NotificationsContainer: View {
         NavigationStack(path: $navPath) {
             VStack {
                 if let account = ns.account {
-                    NotificationsView(account: account)
+                    NotificationsView(account: account, tab: $selectedNotificationsTab)
                 }
                 else {
                     Text("Select account account first")
@@ -46,7 +47,7 @@ struct NotificationsView: View {
     @ObservedObject var account:Account
     let sp:SocketPool = .shared
     
-    @State var tab = "Posts"
+    @Binding var tab:String
     @ObservedObject var settings:SettingsStore = .shared
     @State var markAsReadDelayer:Timer?
     
@@ -108,19 +109,14 @@ struct NotificationsView: View {
     }
     
     func markActiveTabAsRead() {
-        markAsReadDelayer?.invalidate()
-        
-        markAsReadDelayer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
-            // Mark unread for active tab
-            if tab == "Posts" {
-                NotificationsManager.shared.markMentionsAsRead()
-            }
-            else if tab == "Reactions" {
-                NotificationsManager.shared.markReactionsAsRead()
-            }
-            else {
-                NotificationsManager.shared.markZapsAsRead()
-            }
+        if tab == "Posts" {
+            NotificationsManager.shared.markMentionsAsRead()
+        }
+        else if tab == "Reactions" {
+            NotificationsManager.shared.markReactionsAsRead()
+        }
+        else {
+            NotificationsManager.shared.markZapsAsRead()
         }
     }
 }

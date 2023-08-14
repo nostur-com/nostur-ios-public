@@ -8,8 +8,12 @@
 import Foundation
 import CoreData
 import Combine
+import SwiftUI
 
 class NotificationsManager: ObservableObject {
+    
+    @AppStorage("selected_tab") var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
     
     let FETCH_LIMIT = 999
     
@@ -158,7 +162,12 @@ class NotificationsManager: ObservableObject {
         unreadMentions = unreadMentions + unreadNewFollowers
         DispatchQueue.main.async {
             if unreadMentions != self.unreadMentions {
-                self.unreadMentions = min(unreadMentions,9999)
+                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {
+                    self.unreadMentions = 0
+                }
+                else {
+                    self.unreadMentions = min(unreadMentions,9999)
+                }
             }
         }
     }
@@ -190,7 +199,12 @@ class NotificationsManager: ObservableObject {
         
         DispatchQueue.main.async {
             if unreadReactions != self.unreadReactions {
-                self.unreadReactions = min(unreadReactions,9999)
+                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Reactions" {
+                    self.unreadReactions = 0
+                }
+                else {
+                    self.unreadReactions = min(unreadReactions,9999)
+                }
             }
         }
     }
@@ -227,7 +241,12 @@ class NotificationsManager: ObservableObject {
         unreadZaps = unreadZaps + unreadZapNotifications
         DispatchQueue.main.async {
             if unreadZaps != self.unreadZaps {
-                self.unreadZaps = min(unreadZaps,9999)
+                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Zaps" {
+                    self.unreadZaps = 0
+                }
+                else {
+                    self.unreadZaps = min(unreadZaps,9999)
+                }
             }
         }
     }
@@ -349,6 +368,7 @@ class NotificationsManager: ObservableObject {
     }
     
     func markMentionsAsRead() {
+        self.unreadMentions = 0
         guard let account = ns.account else { return }
         let mutedRootIds = account.mutedRootIds_
         let pubkey = account.publicKey
@@ -394,6 +414,7 @@ class NotificationsManager: ObservableObject {
     }
     
     func markReactionsAsRead() {
+        self.unreadReactions = 0
         guard let account = ns.account else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
@@ -423,6 +444,7 @@ class NotificationsManager: ObservableObject {
     }
     
     func markZapsAsRead() {
+        self.unreadZaps = 0
         guard let account = ns.account else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
