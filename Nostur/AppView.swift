@@ -99,6 +99,9 @@ struct AppView: View {
         if (firstTimeCompleted) {
             Maintenance.maintenance(context: DataProvider.shared().container.newBackgroundContext())
         }
+        else {
+            Importer.shared.preloadExistingIdsCache()
+        }
         
         if (!firstTimeCompleted) {
             Maintenance.ensureBootstrapRelaysExist(context: DataProvider.shared().container.viewContext)

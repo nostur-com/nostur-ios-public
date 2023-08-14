@@ -36,7 +36,6 @@ class Importer {
     var nwcConnection:NWCConnection?
     
     init() {
-        self.preloadExistingIdsCache()
         triggerImportWhenRelayMessagesAreAdded()
         sendReceivedNotifications()
     }
