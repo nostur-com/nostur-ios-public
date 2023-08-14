@@ -48,6 +48,86 @@ class MessageParser {
                     if (message.type == .EVENT) {
                         guard let nEvent = message.event else { L.sockets.info("🔴🔴 uhh, where is nEvent "); return }
                         
+                        if nEvent.kind == .ncMessage {
+                            // Don't save to database, just handle response directly
+                            DispatchQueue.main.async {
+                                sendNotification(.receivedMessage, message)
+                            }
+                            return
+                        }
+                        
+                        if nEvent.kind == .nwcResponse {
+                            let decoder = JSONDecoder()
+                            guard let nwcConnection = Importer.shared.nwcConnection else { L.og.error("⚡️ NWC response but nwcConnection missing \(nEvent.eventJson())"); return }
+                            guard let pk = nwcConnection.privateKey else { L.og.error("⚡️ NWC response but private key missing \(nEvent.eventJson())"); return }
+                            guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: nEvent.publicKey, content: nEvent.content) else {
+                                L.og.error("⚡️ Could not decrypt nwcResponse, \(nEvent.eventJson())")
+                                return
+                            }
+                            guard let nwcResponse = try? decoder.decode(NWCResponse.self, from: decrypted.data(using: .utf8)!) else {
+                                L.og.error("⚡️ Could not parse/decode nwcResponse, \(nEvent.eventJson()) - \(decrypted)")
+                                return
+                            }
+                            guard let firstE = nEvent.eTags().first, let awaitingRequest = NWCRequestQueue.shared.getAwaitingRequest(byId: firstE) else {
+                                L.og.error("⚡️ No matching nwc request for response, or e-tag missing, \(nEvent.eventJson()) - \(decrypted)")
+                                return
+                            }
+                            if let awaitingZap = awaitingRequest.zap {
+                                // HANDLE ZAPS
+                                if let error = nwcResponse.error {
+                                    L.og.info("⚡️ NWC response with error: \(error.code) - \(error.message)")
+                                    if let eventId = awaitingZap.eventId {
+                                        let message = "[Zap](nostur:e:\(eventId)) may have failed.\n\(error.message)"
+                                        _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                                        L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
+                                        if let ev = try? Event.fetchEvent(id: eventId, context: DataProvider.shared().bg) {
+                                            ev.zapState = .none
+                                            ev.zapStateChanged.send(.none)
+                                        }
+                                    }
+                                    else {
+                                        let message = "Zap may have failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)).\n\(error.message)"
+                                        _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                                        L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)). \(error.message)")
+                                    }
+                                    NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
+                                    NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                    return
+                                }
+                                guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
+                                    L.og.error("⚡️ Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
+                                    return
+                                }
+                                if let result = nwcResponse.result {
+                                    L.og.info("⚡️ Zap success \(result.preimage ?? "-") - \(decrypted)")
+                                    NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
+                                    NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                    return
+                                }
+                            }
+                            else {
+                                // HANDLE OLD BOLT11 INVOICE PAYMENT
+                                if let error = nwcResponse.error {
+                                    let message = "Failed to pay lightning invoice.\n\(error.message)"
+                                    _ = PersistentNotification.createFailedLightningInvoice(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                                    L.og.error("⚡️ Failed to pay lightning invoice. \(error.message)")
+                                    NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                    return
+                                }
+                                guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
+                                    L.og.error("⚡️ Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
+                                    return
+                                }
+                                if let result = nwcResponse.result {
+                                    L.og.info("⚡️ Lighting Invoice Payment (Not Zap) success \(result.preimage ?? "-") - \(decrypted)")
+                                    NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                    return
+                                }
+                            }
+                            L.og.info("⚡️ NWC response not handled: \(nEvent.eventJson()) ")
+                            return
+                        }
+                        
                         
                         let sameMessageInQueue = self.messageBucket.first(where: { // TODO: Instruments: slow here...
                              nEvent.id == $0.event?.id && $0.type == .EVENT
