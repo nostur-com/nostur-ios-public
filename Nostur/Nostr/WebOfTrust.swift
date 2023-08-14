@@ -29,7 +29,7 @@ import Combine
 
 class WebOfTrust: ObservableObject {
  
-    let ENABLE_THRESHOLD = 200 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
+    let ENABLE_THRESHOLD = 1000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
     // For views
     @Published var lastUpdated:Date? = nil {
@@ -141,7 +141,7 @@ class WebOfTrust: ObservableObject {
     // TODO: Listen for follow changes
     
     public func isAllowed(_ pubkey:String) -> Bool {
-        if allowedKeysCount < ENABLE_THRESHOLD { return true }
+        if SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.strict.rawValue && allowedKeysCount < ENABLE_THRESHOLD { return true }
         
         // Maybe check small set first, faster?
         if followingPubkeys.contains(pubkey) { return true }
@@ -171,11 +171,14 @@ class WebOfTrust: ObservableObject {
     private func loadFollowingFollowing(force:Bool = false) {
         // Load from disk
         self.followingFollowingPubkeys = self.loadData(pubkey)
-        
+
         var pubkeys = followingPubkeys
         pubkeys.remove(pubkey)
         
         guard self.followingFollowingPubkeys.count < 10 || force == true else { return }
+        
+        guard !NosturState.shared.didWoT.contains(pubkey) || force == true else { return }
+        NosturState.shared.didWoT.insert(pubkey)
         
         // Fetch kind 3s
         let task = ReqTask(
