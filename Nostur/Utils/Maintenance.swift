@@ -63,7 +63,11 @@ struct Maintenance {
     
         let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
         let hoursAgo = Date(timeIntervalSinceNow: (-24 * 60 * 60))
-        guard lastMaintenanceTimestamp < hoursAgo else { L.maintenance.info("Skipping maintenance"); return } // don't do maintenance more than once every 24 hours
+        guard lastMaintenanceTimestamp < hoursAgo else { // don't do maintenance more than once every 24 hours
+            L.maintenance.info("Skipping maintenance");
+            Importer.shared.preloadExistingIdsCache()
+            return
+        }
         SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
         L.maintenance.info("Starting time based maintenance")
         
@@ -330,6 +334,8 @@ struct Maintenance {
             catch {
                 L.maintenance.info("🧹🧹 🔴🔴 maintenance error on save(), nothing deleted: \(error)")
             }
+            
+            Importer.shared.preloadExistingIdsCache()
         }
     }
     
