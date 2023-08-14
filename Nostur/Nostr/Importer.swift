@@ -10,16 +10,25 @@ import OSLog
 import CoreData
 import Combine
 
+enum EventState {
+    case UNKNOWN
+    case RECEIVED
+    case PARSED
+    case SAVED
+}
+
 class Importer {
     
     var isImporting = false
     var needsImport = false
     var subscriptions = Set<AnyCancellable>()
     var addedRelayMessage = PassthroughSubject<Void, Never>()
+    var callbackSubscriptionIds = Set<String>()
+    var sendReceivedNotification = PassthroughSubject<Void, Never>()
 
     var settingsStore = SettingsStore.shared
     
-    var existingIds:Set<String> = []
+    var existingIds:[String: EventState] = [:]
     
     static let shared = Importer()
     
@@ -29,6 +38,24 @@ class Importer {
     init() {
         self.preloadExistingIdsCache()
         triggerImportWhenRelayMessagesAreAdded()
+        sendReceivedNotifications()
+    }
+    
+    func sendReceivedNotifications() {
+        sendReceivedNotification
+            .debounce(for: .seconds(0.3), scheduler: DispatchQueue.global())
+            .throttle(for: 1.5, scheduler: DispatchQueue.global(), latest: true)
+            .sink { () in
+                DataProvider.shared().bg.perform {
+                    L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
+                    let importedNotification = ImportedNotification(subscriptionIds: self.callbackSubscriptionIds)
+                    self.callbackSubscriptionIds = []
+                    DispatchQueue.main.async {
+                        sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
+                    }
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     func triggerImportWhenRelayMessagesAreAdded() {
@@ -42,14 +69,20 @@ class Importer {
             .store(in: &subscriptions)
     }
     
+    
+    // Load all kind 3 ids, these are expensive to parse
+    // and load recent 5000
+    // Might as well just load all??? Its fast anyway
     func preloadExistingIdsCache() {
         let fr = Event.fetchRequest()
-        fr.fetchLimit = 5000
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.fetchLimit = 1000000
+//        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.propertiesToFetch = ["id"]
-        DataProvider.shared().bg.perform { [unowned self] in
+        DataProvider.shared().bg.performAndWait { [unowned self] in // AndWait because existingIds MUST be in sync with db
             if let results = try? DataProvider.shared().bg.fetch(fr) {
-                self.existingIds = Set(results.map { $0.id })
+                self.existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
+                    dict[event.id] = .SAVED
+                }
                 L.og.debug("\(self.existingIds.count) existing ids added to cache")
             }
         }
@@ -81,7 +114,6 @@ class Importer {
             let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
             do {
                 var count = 0
-                var alreadyInIdCacheSkipped = 0
                 var alreadyInDBskipped = 0
                 var saved = 0
                 
@@ -199,19 +231,8 @@ class Importer {
                     if message.subscriptionId == "Profiles" && event.kind == .setMetadata {
                         NosturState.shared.lastProfileReceivedAt = Date.now
                     }
-                    
-                    guard !self.existingIds.contains(event.id) else {
-                        alreadyInIdCacheSkipped = alreadyInIdCacheSkipped + 1
-                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
-                            DispatchQueue.main.async {
-                                FollowingGuardian.shared.didReceiveContactListThisSession = true
-                            }
-                        }
-                        Event.updateRelays(event.id, relays: message.relays)
-                        continue
-                    }
-                    
-                    guard Event.eventExists(id: event.id, context: context) == false else {
+                                        
+                    guard existingIds[event.id] != .SAVED else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
                         if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
@@ -219,6 +240,14 @@ class Importer {
                             }
                         }
                         Event.updateRelays(event.id, relays: message.relays)
+                        var alreadySavedSubs = Set<String>()
+                        if let subscriptionId = message.subscriptionId {
+                            alreadySavedSubs.insert(subscriptionId)
+                        }
+                        let importedNotification = ImportedNotification(subscriptionIds: alreadySavedSubs)
+                        DispatchQueue.main.async {
+                            sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
+                        }
                         continue
                     }
                     // Skip if we already have a newer kind 3
@@ -243,7 +272,7 @@ class Importer {
                             }
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            if !Event.eventExists(id: noteInNote.id, context: context) {
+                            if !Event.eventExists(id: noteInNote.id, context: context) { // TODO: check existingIds instead of .eventExists
                                 _ = Event.saveEvent(event: noteInNote, relays: message.relays)
                             }
                             else {
@@ -318,8 +347,6 @@ class Importer {
                         //                        }
                     }
                     
-                    self.existingIds.insert(event.id)
-                    
                     // batch save every 100
                     if count % 100 == 0 {
                         if (context.hasChanges) {
@@ -345,7 +372,7 @@ class Importer {
                 if (context.hasChanges) {
                     try context.save() // This is saving bg context to main, not to disk
                     if (saved > 0) {
-                        L.importing.info("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.info("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
                         let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
@@ -357,7 +384,7 @@ class Importer {
                         subscriptionIds.removeAll()
                     }
                     else {
-                        L.importing.info("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.info("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
                     }
                 }
                 else {
