@@ -175,12 +175,18 @@ public final class NewPostModel: ObservableObject {
         
         if let replyTo {
             DataProvider.shared().bg.perform {
-                sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
+                let replyToId = replyTo.id
+                DispatchQueue.main.async {
+                    sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
+                }
             }
         }
         if let quotingEvent {
             DataProvider.shared().bg.perform {
-                sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
+                let quotingEventId = quotingEvent.id
+                DispatchQueue.main.async {
+                    sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEventId))
+                }
             }
         }
         dismiss()
