@@ -21,6 +21,7 @@ class FastLoader: ObservableObject {
     public var offset:Int = 0
     public var limit:Int = 10
     public var nrPostTransform = true
+    public var onComplete:(() -> Void)?
     
     @Published var nrPosts:[NRPost] = []
     @Published var events:[Event] = []
@@ -107,6 +108,7 @@ class FastLoader: ObservableObject {
                 
                 DispatchQueue.main.async {
                     self.nrPosts = self.nrPosts + nextItems
+                    self.onComplete?()
                 }
             }
         }
@@ -128,6 +130,7 @@ class FastLoader: ObservableObject {
                 .filter { includeSpam || !$0.isSpam }
             
             events = events + nextItems
+            self.onComplete?()
         }
     }
     
@@ -166,6 +169,7 @@ class FastLoader: ObservableObject {
             DispatchQueue.main.async {
                 L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.nrPosts = nextItems (\(nextItems.count)) + self.nrPosts ")
                 self.nrPosts = nextItems + self.nrPosts
+                self.onComplete?()
             }
         }
     }
@@ -202,6 +206,7 @@ class FastLoader: ObservableObject {
         Task { @MainActor in
             L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.events = nextItems (\(nextItems.count)) + self.events ")
             self.events = nextItems + self.events
+            self.onComplete?()
         }
     }
     
@@ -237,6 +242,7 @@ class FastLoader: ObservableObject {
         Task { @MainActor in
             L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.events = self.events + nextItems (\(nextItems.count)) ")
             self.events = self.events + nextItems
+            self.onComplete?()
         }
     }
 }
