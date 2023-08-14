@@ -120,6 +120,12 @@ extension Account {
 
 extension Account : Identifiable {
 
+    var anyName:String {
+        if name != "" { return name }
+        if display_name != "" { return display_name }
+        return String(npub.prefix(11))
+    }
+    
     var npub:String { try! NIP19(prefix: "npub", hexString: publicKey).displayString }
     
     var privateKey:String? {
