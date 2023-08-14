@@ -181,9 +181,6 @@ struct AddExistingAccountSheet: View {
             return
         }
         
-        Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
-        
-        
         let account = Account(context: viewContext)
         account.id = UUID()
         account.createdAt = Date()        
@@ -222,7 +219,7 @@ struct AddExistingAccountSheet: View {
             ns.onBoardingIsShown = false
             return
         }
-        Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
+
         let account = Account(context: viewContext)
         account.id = UUID()
         account.createdAt = Date()
@@ -259,8 +256,7 @@ struct AddExistingAccountSheet: View {
             bunkerManager.connect(existingAccount, token: token)
             return
         }
-        
-        Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
+
         let account = Account(context: viewContext)
         account.id = UUID()
         account.createdAt = Date()
