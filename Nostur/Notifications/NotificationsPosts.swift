@@ -134,15 +134,6 @@ struct NotificationsPosts: View {
     func load() {
         guard let account = NosturState.shared.account else { return }
         didLoad = true
-        if (fl.nrPosts.isEmpty) {
-            req(RM.getMentions(
-                pubkeys: [account.publicKey],
-                kinds: [1],
-                limit: 50,
-                until: NTimestamp(timestamp: Int(fl.nrPosts.last?.created_at ?? Int64(Date.now.timeIntervalSince1970)))
-            ))
-        }
-        fl.reset()
         fl.predicate = NSPredicate(
             format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
             (account.blockedPubkeys_ + [account.publicKey]),
@@ -153,19 +144,15 @@ struct NotificationsPosts: View {
         
         
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fl.loadMore(25)
-
-        if let first = fl.nrPosts.first, let account = ns.account {
-            let firstCreatedAt = first.created_at
-            DataProvider.shared().bg.perform {
-                if let account = account.toBG() {
-                    account.lastSeenPostCreatedAt = firstCreatedAt
-                }
-                DataProvider.shared().bgSave()
-            }
+        fl.onComplete = {
+            saveLastSeenPostCreatedAt() // onComplete from local database
+            self.fetchNewer()
         }
-
-
+        fl.loadMore(25)
+    }
+    
+    func fetchNewer() {
+        guard let account = NosturState.shared.account else { return }
         let fetchNewerTask = ReqTask(
             reqCommand: { (taskId) in
                 req(RM.getMentions(
@@ -177,7 +164,6 @@ struct NotificationsPosts: View {
                 ))
             },
             processResponseCommand: { (taskId, _) in
-//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
                 let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
@@ -189,10 +175,27 @@ struct NotificationsPosts: View {
                     account.mutedRootIds_,
                     account.mutedRootIds_
                   )
-            })
+            }) { taskId in
+                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
+                    saveLastSeenPostCreatedAt()
+                }
+                fl.loadNewer(taskId: taskId)
+            }
 
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
+    }
+    
+    func saveLastSeenPostCreatedAt() {
+        if let first = fl.nrPosts.first, let account = ns.account {
+            let firstCreatedAt = first.created_at
+            DataProvider.shared().bg.perform {
+                if let account = account.toBG() {
+                    account.lastSeenPostCreatedAt = firstCreatedAt
+                }
+                DataProvider.shared().bgSave()
+            }
+        }
     }
     
     func loadMore() {
