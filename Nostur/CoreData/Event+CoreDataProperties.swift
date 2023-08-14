@@ -904,6 +904,7 @@ extension Event {
         let context = DataProvider.shared().bg
         
         let savedEvent = Event(context: context)
+        Importer.shared.existingIds[event.id] = .SAVED
         savedEvent.insertedAt = Date.now
         savedEvent.id = event.id
         savedEvent.kind = Int64(event.kind.id)

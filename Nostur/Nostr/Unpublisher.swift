@@ -120,7 +120,6 @@ class Unpublisher {
                 // We already have it in db
                 
                 DispatchQueue.main.async {
-                    Importer.shared.existingIds.insert(nEvent.id)
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     self.sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
                 }
@@ -148,7 +147,6 @@ class Unpublisher {
                     }
                 }
                 DispatchQueue.main.async {
-                    Importer.shared.existingIds.insert(nEvent.id)
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     self.sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
                 }
