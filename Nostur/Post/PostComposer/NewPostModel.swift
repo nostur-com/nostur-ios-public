@@ -161,7 +161,6 @@ public final class NewPostModel: ObservableObject {
                         L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
                     }
                 }
-                Importer.shared.existingIds.insert(savedEvent.id)
                 
                 DataProvider.shared().bgSave()
                 if ([1,6,9802,30023].contains(savedEvent.kind)) {
