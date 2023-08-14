@@ -109,16 +109,18 @@ class NotificationsManager: ObservableObject {
     
     func relayCheckSinceNotifications() {
         // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-        guard ns.account != nil else { return }
+        guard let account = ns.account else { return }
         guard ns.activeAccountPublicKey != "" else { return }
         guard let since = NosturState.shared.lastNotificationReceivedAt else { return }
     
         let sinceNTimestamp = NTimestamp(date: since)
+        let dmSinceNTimestamp = NTimestamp(timestamp: Int(account.lastSeenDMRequestCreatedAt))
         L.og.info("checking notifications since: \(since.description(with: .current))")
         
         let ago = since.agoString
         
-        req(RM.getMentions(pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp))
+        req(RM.getMentions(pubkeys: [ns.activeAccountPublicKey], kinds:[1,7,9735,9802,30023], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp))
+        req(RM.getMentions(pubkeys: [ns.activeAccountPublicKey], kinds:[4], subscriptionId: "DMs-CATCHUP-\(ago)", since: dmSinceNTimestamp))
     }
     
     private func checkForNewPosts() {
