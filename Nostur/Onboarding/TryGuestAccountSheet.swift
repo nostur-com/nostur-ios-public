@@ -61,7 +61,6 @@ struct TryGuestAccountSheet: View {
             
             if let guestAccount, !letsGo && didCreate {
                 viewContext.delete(guestAccount)
-                Importer.shared.existingIds = []
                 NewOnboardingTracker.shared.abort()
             }
             else {

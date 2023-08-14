@@ -30,7 +30,6 @@ extension Settings {
     //   AND FILLS AGAIN FROM tagsSerialized
 
     func fixPointers() {
-        Importer.shared.existingIds.removeAll()
     
         let bg = DataProvider.shared().newTaskContext()
         bg.performAndWait {
@@ -145,7 +144,6 @@ extension Settings {
     
     
     func putContactsInEventsForPs() {
-        Importer.shared.existingIds.removeAll()
         
         let bg = DataProvider.shared().newTaskContext()
         bg.performAndWait {
@@ -199,7 +197,6 @@ extension Settings {
     // TAKES ALL 1,7,9735 (NOTES, REACTIONS, ZAPS) Not reposts? 6?
     // RESET ALL COUNTERS TO 0
     func rebuildCountingCache() {
-        Importer.shared.existingIds.removeAll()
         
         let bg = DataProvider.shared().newTaskContext()
         bg.perform {
@@ -321,7 +318,6 @@ extension Settings {
     }
     
     func rebuildContactCache() {
-        Importer.shared.existingIds.removeAll()
         // update fields. BUT ALSO NIL THEM IF MISSING // TODO: SHOULD ALSO DO IN REGULAR METADATA PARSING
         
         let bg = DataProvider.shared().newTaskContext()
@@ -379,7 +375,6 @@ extension Settings {
     }
     
     func deleteAllContacts() {
-        Importer.shared.existingIds.removeAll()
         
         let bg = DataProvider.shared().newTaskContext()
         viewPrint("Starting...")
@@ -435,7 +430,6 @@ extension Settings {
     
     func deleteAllEvents() {
         sendNotification(.willDeleteAllEvents, nil)
-        Importer.shared.existingIds.removeAll()
         
         let bg = DataProvider.shared().newTaskContext()
         viewPrint("Starting...")
@@ -470,7 +464,6 @@ extension Settings {
     }
     
     func fixContactEventRelations() {
-        Importer.shared.existingIds.removeAll()
         
         let bg = DataProvider.shared().container.newBackgroundContext()
         viewPrint("Starting...")
@@ -516,7 +509,6 @@ extension Settings {
     }
     
     func fixRelations() {
-        Importer.shared.existingIds.removeAll()
         let bg = DataProvider.shared().newTaskContext()
         viewPrint("Starting...")
         bg.performAndWait {

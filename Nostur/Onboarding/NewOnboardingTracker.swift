@@ -140,7 +140,7 @@ class NewOnboardingTracker {
                     L.onboarding.info("\(taskId) ✈️✈️ SKIPPED - ALREADY HAVE BOTH")
                     return
                 }
-                Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
+
                 req(RM.getUserMetadataAndContactList(pubkey: pubkey, subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] (taskId, _) in
