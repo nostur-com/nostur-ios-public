@@ -59,6 +59,8 @@ class MessageParser {
                         }
                         else {
                             self.messageBucket.append(message)
+                            guard let event = message.event else { return }
+                            Importer.shared.existingIds[event.id] = .PARSED
                             Importer.shared.addedRelayMessage.send()
                         }
                     }
