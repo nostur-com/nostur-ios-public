@@ -120,7 +120,7 @@ struct AccountRow: View {
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
-                        Text(account.name).font(.headline).foregroundColor(.primary)
+                        Text(account.anyName).font(.headline).foregroundColor(.primary)
                             .lineLimit(1)
                         if (account.privateKey == nil) {
                             Text("Read only", comment: "Label to indicate this a Read Only account").font(.system(size: 12.0))
