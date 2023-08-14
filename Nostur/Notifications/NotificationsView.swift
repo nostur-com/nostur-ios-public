@@ -90,7 +90,9 @@ struct NotificationsView: View {
             Spacer()
         }
         .onReceive(receiveNotification(.notificationsTabAppeared)) { _ in
-            markActiveTabAsRead()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                markActiveTabAsRead()
+            }
         }
         .onChange(of: tab, perform: { newValue in
             markActiveTabAsRead()

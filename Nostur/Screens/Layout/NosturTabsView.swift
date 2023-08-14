@@ -10,6 +10,7 @@ import SwiftUI
 struct NosturTabsView: View {
     @StateObject private var dim = DIMENSIONS()
     @AppStorage("selected_tab") var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
     @State var unread = 0
     @State var unreadDMs = 0
     @State var showTabBar = true
@@ -78,6 +79,30 @@ struct NosturTabsView: View {
                 }
             }
             if newValue == "Notifications" {
+                
+                // If there is only one tab with unread notifications, go to that tab
+                if NotificationsManager.shared.unread > 0 {
+                    if NotificationsManager.shared.unreadMentions == NotificationsManager.shared.unread {
+                        selectedNotificationsTab = "Posts"
+                    }
+                    else if NotificationsManager.shared.unreadReactions == NotificationsManager.shared.unread {
+                        selectedNotificationsTab = "Reactions"
+                    }
+                    else if NotificationsManager.shared.unreadZaps == NotificationsManager.shared.unread {
+                        selectedNotificationsTab = "Zaps"
+                    }
+                    // 2 tabs have unread, go to Zaps or Posts
+                    else if NotificationsManager.shared.unreadMentions == 0 {
+                        selectedNotificationsTab = "Zaps"
+                    }
+                    else if NotificationsManager.shared.unreadReactions == 0 {
+                        selectedNotificationsTab = "Posts"
+                    }
+                    else if NotificationsManager.shared.unreadZaps == 0 {
+                        selectedNotificationsTab = "Posts"
+                    }
+                }
+                
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     sendNotification(.notificationsTabAppeared) // use for resetting unread count
                 }
