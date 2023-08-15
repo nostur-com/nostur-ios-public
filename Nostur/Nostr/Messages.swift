@@ -427,7 +427,12 @@ struct EventMessageBuilder {
     static func makeRepost(original: Event, embedOriginal:Bool = false) -> NEvent {
         var repost = NEvent(content: embedOriginal ? original.toNEvent().eventJson() : "#[0]")
         
-        let firstRelay = original.relays.components(separatedBy: " ").first ?? ""
+        let firstRelay = original.relays.split(separator: " ").map { String($0) }
+            .filter {
+                // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
+                !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0")
+            }
+            .first ?? ""
         
         // first try to put just scheme+hostname as relay. because extra parameters in url can be irrelevant
         if let url = URL(string: firstRelay), let scheme = url.scheme, let host = url.host {
