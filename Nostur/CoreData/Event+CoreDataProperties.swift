@@ -879,14 +879,16 @@ extension Event {
                 let newRelays = relays.split(separator: " ").map { String($0) }
                 existingRelays.append(contentsOf: newRelays)
                 let uniqueRelays = Set(existingRelays)
-                event.relays = uniqueRelays.joined(separator: " ")
-                event.relaysUpdated.send(event.relays)
-                if bg.hasChanges {
-                    do {
-                        try bg.save()
-                    }
-                    catch {
-                        L.og.error("🔴🔴 error updateRelays \(error)")
+                if uniqueRelays.count > existingRelays.count {
+                    event.relays = uniqueRelays.joined(separator: " ")
+                    event.relaysUpdated.send(event.relays)
+                    if bg.hasChanges {
+                        do {
+                            try bg.save()
+                        }
+                        catch {
+                            L.og.error("🔴🔴 error updateRelays \(error)")
+                        }
                     }
                 }
             }
