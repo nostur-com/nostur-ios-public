@@ -345,7 +345,11 @@ private struct WithSheets: ViewModifier {
         .onReceive(receiveNotification(.shareWeblink)) { notification in
             let nrPost = notification.object as! NRPost
             
-            let relays = nrPost.relays.components(separatedBy: " ")
+            let relays = nrPost.relays.split(separator: " ").map { String($0) }
+                .filter {
+                    // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
+                    !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0")
+                }
                 .map { relay in
                     // first try to put just scheme+hostname as relay. because extra parameters in url can be irrelevant
                     if let url = URL(string: relay), let scheme = url.scheme, let host = url.host {

@@ -247,7 +247,7 @@ class WebOfTrust: ObservableObject {
                 .appendingPathComponent("web-of-trust-\(pubkey).txt")
             
             let input = try String(contentsOf: filename)
-            let pubkeys = Set(input.components(separatedBy: "\n"))
+            let pubkeys = Set(input.split(separator: "\n").map { String($0) })
             if pubkeys.count < 2 {
                 // Something wrong, delete corrupt file
                 do {
