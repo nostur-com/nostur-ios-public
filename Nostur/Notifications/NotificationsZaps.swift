@@ -25,6 +25,8 @@ struct NotificationsZaps: View {
     @State var didLoad = false
     @State var backlog = Backlog()
     @EnvironmentObject var ns:NosturState
+    @AppStorage("selected_tab") var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Zaps"
     
     @State var zapsForMeDeduplicated = [ZapInfo]()
     
@@ -133,6 +135,9 @@ struct NotificationsZaps: View {
         .onReceive(receiveNotification(.newZaps)) { _ in
             guard let account = NosturState.shared.account else { return }
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+            fl.onComplete = {
+                saveLastSeenZapCreatedAt() // onComplete from local database
+            }
             fl.predicate = NSPredicate(
                 format:
                     "created_at >= %i " +
@@ -221,6 +226,9 @@ struct NotificationsZaps: View {
         fl.onComplete = {
             self.saveLastSeenZapCreatedAt()
             self.fetchNewer()
+            fl.onComplete = {
+                saveLastSeenZapCreatedAt() // onComplete from local database
+            }
         }
         fl.loadMore(500)
     }
@@ -247,15 +255,9 @@ struct NotificationsZaps: View {
                     account.publicKey,
                     account.blockedPubkeys_
                   )
-                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
-                    saveLastSeenZapCreatedAt()
-                }
                 fl.loadNewerEvents(5000, taskId: taskId)
             },
             timeoutCommand: { taskId in
-                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
-                    saveLastSeenZapCreatedAt()
-                }
                 fl.loadNewerEvents(5000, taskId: taskId)
             })
 
@@ -264,6 +266,7 @@ struct NotificationsZaps: View {
     }
     
     func saveLastSeenZapCreatedAt() {
+        guard selectedTab == "Notifications" && selectedNotificationsTab == "Zaps" else { return }
         if let first = fl.events.first, let account = ns.account {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
