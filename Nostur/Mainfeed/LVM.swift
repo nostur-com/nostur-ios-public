@@ -277,7 +277,7 @@ class LVM: NSObject, ObservableObject {
             guard let self = self else { return }
             var newNRPostLeafs:[NRPost] = []
             var transformedObjectIds = Set<NRPostID>()
-            for event in ((self.type == .relays && appWoTactive && self.wotEnabled) ? events.filter { $0.inWoT } : events) {
+            for event in ((self.type == .relays && appWoTactive && self.wotEnabled) ? events.filter { $0.inWoT } : (appWoTactive ? events.filter { $0.inWoT } : events)) {
 //                guard !danglingObjectIds.contains(event.objectID) else { continue } // Skip if the post is already on screen
                 guard !leafsAndParentIdsOnScreen.contains(event.id) else {
                     if let existingNRPost = currentNRPostLeafs.first(where: { $0.id == event.id }) {
