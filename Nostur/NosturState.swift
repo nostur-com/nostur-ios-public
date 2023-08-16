@@ -15,7 +15,7 @@ final class NosturState : ObservableObject {
     public static let shared = NosturState()
     
     public var wot:WebOfTrust?
-    public var backlog = Backlog(timeout: 12.5, auto: true)
+    public var backlog = Backlog(timeout: 60.0, auto: true)
     public var nsecBunker:NSecBunkerManager?
     
     public var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
@@ -129,16 +129,20 @@ final class NosturState : ObservableObject {
         }
     }
     
-    var didWoT = Set<String>()
-    
     public func loadWoT(_ account:Account? = nil) {
         guard let account = account ?? self.account else { L.og.error("🕸️🕸️ WebOfTrust: loadWoT. account = nil"); return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
+        
+        guard account.followingPublicKeys.count > 10 else {
+            L.og.info("🕸️🕸️ WebOfTrust: Not enough follows to build WoT. Maybe still onboarding and contact list not received yet")
+            return
+        }
         
         let wotFollowingPubkeys = account.followingPublicKeys.subtracting(account.silentFollows) // We don't include silent follows in WoT
         
         let publicKey = account.publicKey
         DataProvider.shared().bg.perform { [weak self] in
+            guard self?.wot?.pubkey != publicKey else { return }
             self?.wot = WebOfTrust(pubkey: publicKey, followingPubkeys: wotFollowingPubkeys)
             
             switch SettingsStore.shared.webOfTrustLevel {

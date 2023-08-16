@@ -29,7 +29,7 @@ import Combine
 
 class WebOfTrust: ObservableObject {
  
-    let ENABLE_THRESHOLD = 1000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
+    let ENABLE_THRESHOLD = 2000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
     // For views
     @Published var lastUpdated:Date? = nil {
@@ -71,6 +71,8 @@ class WebOfTrust: ObservableObject {
         }
     }
     
+    var didWoT = false
+    
     var backlog:Backlog {
         get { NosturState.shared.backlog }
         set { NosturState.shared.backlog = newValue }
@@ -78,9 +80,14 @@ class WebOfTrust: ObservableObject {
     var subscriptions = Set<AnyCancellable>()
     
     init(pubkey:String, followingPubkeys:Set<String>) {
+        L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: init for \(pubkey)")
         self.pubkey = pubkey
         self.followingPubkeys = followingPubkeys
         updateWoTonNewFollowing()
+    }
+    
+    deinit {
+        L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: deinit for \(self.pubkey)")
     }
     
     private func updateWoTonNewFollowing() {
@@ -100,7 +107,7 @@ class WebOfTrust: ObservableObject {
     private func updateWoTwithFollowsOf(_ pubkey:String) {
         // Fetch kind 3 for pubkey
         let task = ReqTask(
-            prefix: "S-WoTFol-",
+            subscriptionId: "RM.getAuthorContactsList",
             reqCommand: { taskId in
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Fetching contact list for \(pubkey)")
                 req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
@@ -153,7 +160,7 @@ class WebOfTrust: ObservableObject {
         return followingFollowingPubkeys.contains(pubkey)
     }
     
-    private var pubkey:String
+    public var pubkey:String
     
     // This is for "normal" mode (follows + follows of follows)
     public func loadNormal(force:Bool = false) { // force = true to force fetching (update)
@@ -175,10 +182,16 @@ class WebOfTrust: ObservableObject {
         var pubkeys = followingPubkeys
         pubkeys.remove(pubkey)
         
-        guard self.followingFollowingPubkeys.count < 10 || force == true else { return }
+        guard self.followingFollowingPubkeys.count < ENABLE_THRESHOLD || force == true else {
+            L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already have loaded enough from file")
+            return
+        }
         
-        guard !NosturState.shared.didWoT.contains(pubkey) || force == true else { return }
-        NosturState.shared.didWoT.insert(pubkey)
+        guard !didWoT || force == true else {
+            L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already didWot")
+            return
+        }
+        didWoT = true
         
         // Fetch kind 3s
         let task = ReqTask(
@@ -291,5 +304,5 @@ class WebOfTrust: ObservableObject {
 }
 
 func WOT_FILTER_ENABLED() -> Bool {
-    SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue
+    SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue && NosturState.shared.wot != nil
 }
