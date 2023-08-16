@@ -38,11 +38,20 @@ struct Search: View {
     @State var searchTask:Task<Void, Never>? = nil
     @State var backlog = Backlog()
     @ObservedObject var settings:SettingsStore = .shared
+    
+    var isSearchingHashtag:Bool {
+        let term = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return isHashtag(term)
+    }
 
     var body: some View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             ScrollView {
+                if isSearchingHashtag, let account = NosturState.shared.account {
+                    FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:account)
+                        .padding([.top, .horizontal], 10)
+                }
                 if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
                     CenteredProgressView()
                 }
