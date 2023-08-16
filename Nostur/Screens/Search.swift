@@ -220,10 +220,11 @@ struct Search: View {
                             fr.predicate = NSPredicate(format: "id = %@", noteHex)
                             fr.fetchLimit = 1
                             DataProvider.shared().bg.perform {
+                                guard self.nrPosts.isEmpty else { return }
                                 if let result = try? DataProvider.shared().bg.fetch(fr).first {
                                     let nrPost = NRPost(event: result)
                                     DispatchQueue.main.async {
-                                        self.nrPosts.append(nrPost)
+                                        self.nrPosts = [nrPost]
                                     }
                                 }
                             }
@@ -278,7 +279,10 @@ struct Search: View {
                     fr.fetchLimit = 150
                     DataProvider.shared().bg.perform {
                         if let results = try? DataProvider.shared().bg.fetch(fr) {
+                            
                             let nrPosts = results.map { NRPost(event: $0) }
+                                .sorted(by: { $0.createdAt > $1.createdAt })
+                            
                             DispatchQueue.main.async {
                                 self.nrPosts = nrPosts
                             }
@@ -294,11 +298,16 @@ struct Search: View {
                         let fr = Event.fetchRequest()
                         fr.predicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", serializedT(String(searchTrimmed.dropFirst(1))))
                         fr.fetchLimit = 150
+                        let existingIds = self.nrPosts.map { $0.id }
                         DataProvider.shared().bg.perform {
                             if let results = try? DataProvider.shared().bg.fetch(fr) {
-                                let nrPosts = results.map { NRPost(event: $0) }
+                                let nrPosts = results
+                                    .filter { !existingIds.contains($0.id) }
+                                    .map { NRPost(event: $0) }
+
                                 DispatchQueue.main.async {
-                                    self.nrPosts.insert(contentsOf: nrPosts, at: 0)
+                                    self.nrPosts = (self.nrPosts + nrPosts)
+                                        .sorted(by: { $0.createdAt > $1.createdAt })
                                 }
                             }
                         }
@@ -335,9 +344,10 @@ struct Search: View {
                             fr.fetchLimit = 1
                             DataProvider.shared().bg.perform {
                                 if let result = try? DataProvider.shared().bg.fetch(fr).first {
+                                    guard !self.nrPosts.isEmpty else { return }
                                     let nrPost = NRPost(event: result)
                                     DispatchQueue.main.async {
-                                        self.nrPosts.append(nrPost)
+                                        self.nrPosts = [nrPost]
                                     }
                                 }
                             }
@@ -378,9 +388,10 @@ struct Search: View {
                         fr.fetchLimit = 1
                         DataProvider.shared().bg.perform {
                             if let result = try? DataProvider.shared().bg.fetch(fr).first {
+                                guard !self.nrPosts.isEmpty else { return }
                                 let nrPost = NRPost(event: result)
                                 DispatchQueue.main.async {
-                                    self.nrPosts.append(nrPost)
+                                    self.nrPosts = [nrPost]
                                 }
                             }
                         }
@@ -404,11 +415,16 @@ struct Search: View {
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
                     fr.predicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", searchTrimmed, "lnbc")
                     fr.fetchLimit = 150
+                    let existingIds = self.nrPosts.map { $0.id }
                     DataProvider.shared().bg.perform {
                         if let results = try? DataProvider.shared().bg.fetch(fr) {
-                            let nrPosts = results.map { NRPost(event: $0) }
+                            let nrPosts = results
+                                .filter { !existingIds.contains($0.id) }
+                                .map { NRPost(event: $0) }
+                            
                             DispatchQueue.main.async {
-                                self.nrPosts = nrPosts
+                                self.nrPosts = (self.nrPosts + nrPosts)
+                                    .sorted(by: { $0.createdAt > $1.createdAt })
                             }
                         }
                     }
