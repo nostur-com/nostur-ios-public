@@ -18,6 +18,7 @@ public class NosturList: NSManagedObject {
             list.id = UUID()
             list.name = "Example Feed \(i)"
             list.addToContacts(NSSet(array: contacts.randomSample(count: 10)))
+            list.followingHashtags = ["bitcoin","nostr"]
         }
     }
     
