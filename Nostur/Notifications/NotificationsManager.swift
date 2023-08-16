@@ -404,10 +404,15 @@ class NotificationsManager: ObservableObject {
             guard let self = self else { return }
             guard let account = ns.bgAccount else { return }
             if let mostRecent = try? self.context.fetch(r2).first {
-                account.lastSeenPostCreatedAt = mostRecent.created_at
+                if account.lastSeenPostCreatedAt != mostRecent.created_at {
+                    account.lastSeenPostCreatedAt = mostRecent.created_at
+                }
             }
             else {
-                account.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                let twoDaysAgoOrNewer = max(account.lastSeenPostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24)))
+                if account.lastSeenPostCreatedAt != twoDaysAgoOrNewer {
+                    account.lastSeenPostCreatedAt = twoDaysAgoOrNewer
+                }
             }
             let _ = try? self.context.execute(r3) as? NSBatchUpdateResult
             DataProvider.shared().bgSave()
@@ -440,8 +445,9 @@ class NotificationsManager: ObservableObject {
                 }
             }
             else {
-                if account.lastSeenReactionCreatedAt != Int64(Date.now.timeIntervalSince1970) {
-                    account.lastSeenReactionCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                let twoDaysAgoOrNewer = max(account.lastSeenReactionCreatedAt, (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24)))
+                if account.lastSeenReactionCreatedAt != twoDaysAgoOrNewer {
+                    account.lastSeenReactionCreatedAt = twoDaysAgoOrNewer
                 }
             }
             DataProvider.shared().bgSave()
@@ -474,10 +480,15 @@ class NotificationsManager: ObservableObject {
             guard let self = self else { return }
             guard let account = ns.bgAccount else { return }
             if let mostRecent = try? context.fetch(r2).first {
-                account.lastSeenZapCreatedAt = mostRecent.created_at
+                if account.lastSeenZapCreatedAt != mostRecent.created_at {
+                    account.lastSeenZapCreatedAt = mostRecent.created_at
+                }
             }
             else {
-                account.lastSeenZapCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                let twoDaysAgoOrNewer = max(account.lastSeenZapCreatedAt, (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24)))
+                if account.lastSeenZapCreatedAt != twoDaysAgoOrNewer {
+                    account.lastSeenZapCreatedAt = twoDaysAgoOrNewer
+                }
             }
             let _ = try? context.execute(r3) as? NSBatchUpdateResult
             DataProvider.shared().bgSave()

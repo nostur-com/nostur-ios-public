@@ -58,21 +58,21 @@ struct NotificationsView: View {
                 TabButton(action: {
                     withAnimation {
                         tab = "Posts"
-//                        nm.unreadMentions = 0
+                        nm.unreadMentions = 0
                     }
                 }, title: String(localized: "Posts", comment:"Title of tab"), selected: tab == "Posts", unread: nm.unreadMentions)
                 
                 TabButton(action: {
                     withAnimation {
                         tab = "Reactions"
-//                        nm.unreadReactions = 0
+                        nm.unreadReactions = 0
                     }
                 }, title: String(localized: "Reactions", comment:"Title of tab"), selected: tab == "Reactions", unread: nm.unreadReactions)
                 
                 TabButton(action: {
                     withAnimation {
                         tab = "Zaps"
-//                        nm.unreadZaps = 0
+                        nm.unreadZaps = 0
                     }
                 }, title: String(localized: "Zaps", comment:"Title of tab"), selected: tab == "Zaps", unread: nm.unreadZaps)
             }
