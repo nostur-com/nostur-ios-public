@@ -669,7 +669,12 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         }
         self.activeSubscriptions = []
         self.lastMessageReceivedAt = nil
-        self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+        if self.exponentialReconnectBackOff >= 512 {
+            self.exponentialReconnectBackOff = 512
+        }
+        else {
+            self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+        }
         L.sockets.info("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
