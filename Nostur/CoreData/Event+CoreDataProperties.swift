@@ -875,10 +875,9 @@ extension Event {
         let bg = DataProvider.shared().bg
         bg.perform { 
             if let event = try? bg.fetch(request).first {
-                var existingRelays = event.relays.split(separator: " ").map { String($0) }
+                let existingRelays = event.relays.split(separator: " ").map { String($0) }
                 let newRelays = relays.split(separator: " ").map { String($0) }
-                existingRelays.append(contentsOf: newRelays)
-                let uniqueRelays = Set(existingRelays)
+                let uniqueRelays = Set(existingRelays + newRelays)
                 if uniqueRelays.count > existingRelays.count {
                     event.relays = uniqueRelays.joined(separator: " ")
                     event.relaysUpdated.send(event.relays)
