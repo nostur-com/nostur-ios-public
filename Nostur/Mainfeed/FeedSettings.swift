@@ -118,7 +118,7 @@ struct FeedSettingsTester: View {
 
 struct FeedSettings_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer({ pe in pe.loadRelayNosturLists() }) {
+        PreviewContainer({ pe in pe.loadNosturLists() }) {
             FeedSettingsTester()
         }
     }
