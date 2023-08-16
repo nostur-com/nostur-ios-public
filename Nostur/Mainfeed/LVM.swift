@@ -21,6 +21,8 @@ let LVM_MAX_VISIBLE:Int = 20
 
 class LVM: NSObject, ObservableObject {
         
+    var feed:NosturList?
+    
     @Published var state:LVM.LIST_STATE = .INIT
     @Published var nrPostLeafs:[NRPost] = [] {
         didSet {
@@ -86,6 +88,15 @@ class LVM: NSObject, ObservableObject {
             leafsAndParentIdsOnScreen = []
             startInstantFeed()
         }
+    }
+    
+    @MainActor func reload() {
+        lvmCounter.count = 0
+        instantFinished = false
+        nrPostLeafs = []
+        leafIdsOnScreen = []
+        leafsAndParentIdsOnScreen = []
+        startInstantFeed()
     }
     
     @Published var hideReplies = false {
@@ -551,7 +562,8 @@ class LVM: NSObject, ObservableObject {
     var instantFeed = InstantFeed()
     var isDeck = false
     
-    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<Relay> = [], wotEnabled:Bool = true, isDeck:Bool = false) {
+    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<Relay> = [], wotEnabled:Bool = true, isDeck:Bool = false, feed:NosturList? = nil) {
+        self.feed = feed
         self.type = type
         self.name = name
         self.pubkey = pubkey
@@ -1253,6 +1265,7 @@ extension LVM {
         }
         let ctx = DataProvider.shared().bg
         let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
+        let hashtagRegex = self.hashtagRegex
         ctx.perform { [weak self] in
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch LVM.id (\(self.uuid)")
@@ -1260,7 +1273,7 @@ extension LVM {
                 //            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
                 let fr = type == .relays
                     ? Event.postsByRelays(self.bgRelays, mostRecent: mostRecentEvent, hideReplies: self.hideReplies)
-                    : Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent, hideReplies: self.hideReplies)
+                    : Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
                 
                 
                 guard let posts = try? ctx.fetch(fr) else { return }
@@ -1270,7 +1283,7 @@ extension LVM {
 //                print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
                 let fr = type == .relays
                     ? Event.postsByRelays(self.bgRelays, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies)
-                    : Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies)
+                    : Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
 
                 guard let posts = try? ctx.fetch(fr) else { return }
                 self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt)
@@ -1346,12 +1359,13 @@ extension LVM {
         
         performingLocalOlderFetch = true
         let ctx = DataProvider.shared().bg
+        let hashtagRegex = self.hashtagRegex
         ctx.perform { [weak self] in
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalOlderFetch LVM.id (\(self.uuid)")
             let fr = type == .relays
                 ? Event.postsByRelays(self.bgRelays, until: oldestEvent, hideReplies: self.hideReplies)
-                : Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies)
+                : Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
             guard let posts = try? ctx.fetch(fr) else {
                 DispatchQueue.main.async {
                     self.performingLocalOlderFetch = false

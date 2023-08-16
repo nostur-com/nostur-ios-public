@@ -7,6 +7,11 @@
 
 import Foundation
 import CoreData
+import NostrEssentials
+
+typealias CM = NostrEssentials.ClientMessage
+
+let FOLLOWING_EVENT_KINDS:Set<Int> = [1,5,6,9802,30023]
 
 // LVM things related to feeds of pubkeys
 extension LVM {
@@ -15,7 +20,32 @@ extension LVM {
         guard !pubkeys.isEmpty else { return }
         guard self.pubkeysPrefixString != "" else { return }
         let now = NTimestamp(date: Date.now)
-        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: subscriptionId, since: now), activeSubscriptionId: subscriptionId)
+        
+        var filters:[Filters] = []
+        
+        let followingContactsFilter = Filters(
+            authors: Set(self.pubkeys.map { String($0.prefix(10)) }),
+            kinds: FOLLOWING_EVENT_KINDS,
+            since: now.timestamp, limit: 5000)
+        
+        filters.append(followingContactsFilter)
+        
+        let hashtags:Set<String> = self.id == "Following"
+        ? (NosturState.shared.account?.followingHashtags ?? [])
+        : (feed?.followingHashtags ?? [])
+        
+        if !hashtags.isEmpty {
+            let followingHashtagsFilter = Filters(
+                kinds: FOLLOWING_EVENT_KINDS,
+                tagFilter: TagFilter(tag:"t", values: Array(hashtags)),
+                since: now.timestamp, limit: 5000)
+            filters.append(followingHashtagsFilter)
+        }
+        
+        if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
+            req(message, activeSubscriptionId: subscriptionId)
+        }
+        //        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: subscriptionId, since: now), activeSubscriptionId: subscriptionId)
     }
     
     // FETCHES ALL NEW, UNTIL NOW
@@ -23,13 +53,71 @@ extension LVM {
         let now = NTimestamp(date: Date.now)
         guard !pubkeys.isEmpty else { return }
         guard self.pubkeysPrefixString != "" else { return }
-        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "CATCHUP-" + subscriptionId, until: now))
+        
+        
+        var filters:[Filters] = []
+        
+        let followingContactsFilter = Filters(
+            authors: Set(self.pubkeys.map { String($0.prefix(10)) }),
+            kinds: FOLLOWING_EVENT_KINDS,
+            until: now.timestamp, limit: 5000)
+        
+        filters.append(followingContactsFilter)
+        
+        let hashtags:Set<String> = self.id == "Following"
+        ? (NosturState.shared.account?.followingHashtags ?? [])
+        : (feed?.followingHashtags ?? [])
+        
+        if !hashtags.isEmpty {
+            let followingHashtagsFilter = Filters(
+                kinds: FOLLOWING_EVENT_KINDS,
+                tagFilter: TagFilter(tag:"t", values: Array(hashtags)),
+                until: now.timestamp, limit: 5000)
+            filters.append(followingHashtagsFilter)
+        }
+        
+        if let message = CM(type: .REQ, subscriptionId: "CATCHUP-" + subscriptionId, filters: filters).json() {
+            req(message)
+        }
+        
+        
+        //        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "CATCHUP-" + subscriptionId, until: now))
     }
     
     func fetchNewerSince(subscriptionId:String, since: NTimestamp) {
         guard !pubkeys.isEmpty else { return }
         guard self.pubkeysPrefixString != "" else { return }
-        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "RESUME-" + subscriptionId, since: since))
+        
+        
+        var filters:[Filters] = []
+        
+        let followingContactsFilter = Filters(
+            authors: Set(self.pubkeys.map { String($0.prefix(10)) }),
+            kinds: FOLLOWING_EVENT_KINDS,
+            since: since.timestamp, limit: 5000)
+        
+        filters.append(followingContactsFilter)
+        
+        let hashtags:Set<String> = self.id == "Following"
+        ? (NosturState.shared.account?.followingHashtags ?? [])
+        : (feed?.followingHashtags ?? [])
+        
+        if !hashtags.isEmpty {
+            let followingHashtagsFilter = Filters(
+                kinds: FOLLOWING_EVENT_KINDS,
+                tagFilter: TagFilter(tag:"t", values: Array(hashtags)),
+                since: since.timestamp, limit: 5000)
+            filters.append(followingHashtagsFilter)
+        }
+        
+        if let message = CM(type: .REQ, subscriptionId: "RESUME-" + subscriptionId, filters: filters).json() {
+            req(message)
+        }
+        
+        
+        
+        
+        //        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "RESUME-" + subscriptionId, since: since))
     }
     
     func fetchNextPage() {
@@ -37,48 +125,110 @@ extension LVM {
         guard self.pubkeysPrefixString != "" else { return }
         guard let last = self.nrPostLeafs.last else { return }
         let until = NTimestamp(date: last.createdAt)
-        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString,
-                                  limit: 100,
-                                  subscriptionId: "PAGE-" + UUID().uuidString,
-                                  until: until))
+        
+        var filters:[Filters] = []
+        
+        let followingContactsFilter = Filters(
+            authors: Set(self.pubkeys.map { String($0.prefix(10)) }),
+            kinds: FOLLOWING_EVENT_KINDS,
+            until: until.timestamp, limit: 100)
+        
+        filters.append(followingContactsFilter)
+        
+        let hashtags:Set<String> = self.id == "Following"
+        ? (NosturState.shared.account?.followingHashtags ?? [])
+        : (feed?.followingHashtags ?? [])
+        
+        if !hashtags.isEmpty {
+            let followingHashtagsFilter = Filters(
+                kinds: FOLLOWING_EVENT_KINDS,
+                tagFilter: TagFilter(tag:"t", values: Array(hashtags)),
+                until: until.timestamp, limit: 100)
+            filters.append(followingHashtagsFilter)
+        }
+        
+        if let message = CM(type: .REQ, subscriptionId: "PAGE-" + UUID().uuidString, filters: filters).json() {
+            req(message)
+        }
+        
+        
+        //        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString,
+        //                                  limit: 100,
+        //                                  subscriptionId: "PAGE-" + UUID().uuidString,
+        //                                  until: until))
+    }
+    
+    var hashtagRegex:String? {
+        let hashtags:Set<String> = self.id == "Following"
+        ? (NosturState.shared.account?.followingHashtags ?? [])
+        : (feed?.followingHashtags ?? [])
+        
+        if !hashtags.isEmpty {
+            let regex = ".*(" + hashtags.map {
+                NSRegularExpression.escapedPattern(for: serializedT($0))
+            }.joined(separator: "|") + ").*"
+            return regex
+        }
+        
+        return nil
     }
 }
 
 
 extension Event {
     
-    static func postsByPubkeys(_ pubkeys:Set<String>, mostRecent:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys:Set<String>, mostRecent:Event, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
         let cutOffPoint = mostRecent.created_at - (15 * 60)
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 25
-        if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+        if let hashtagRegex = hashtagRegex {
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at >= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at >= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+            }
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+            }
         }
         return fr
     }
     
     
-    static func postsByPubkeys(_ pubkeys:Set<String>, until:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys:Set<String>, until:Event, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
         let cutOffPoint = until.created_at + (1 * 60)
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 25
-        if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+        if let hashtagRegex = hashtagRegex {
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+            }
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+            }
         }
         return fr
     }
     
-    static func postsByPubkeys(_ pubkeys:Set<String>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys:Set<String>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
         
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
         
@@ -90,11 +240,21 @@ extension Event {
         let frBefore = Event.fetchRequest()
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         frBefore.fetchLimit = 25
-        if hideReplies {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+        if let hashtagRegex = hashtagRegex {
+            if hideReplies {
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+            }
+            else {
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+            }
         }
         else {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+            if hideReplies {
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  pubkeys)
+            }
+            else {
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, pubkeys)
+            }
         }
         
         let ctx = DataProvider.shared().bg
