@@ -27,7 +27,7 @@ struct ArticleView: View {
     let WORDS_PER_MINUTE:Double = 200.0
     
     var minutesToRead:Int {
-        let wordCount = (article.content ?? "").components(separatedBy: " ").count
+        let wordCount = (article.content ?? "").split(separator: " ").count
         return Int(ceil(Double(wordCount) / WORDS_PER_MINUTE))
     }
     
