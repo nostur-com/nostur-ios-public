@@ -26,6 +26,15 @@
       }
     },
     {
+      "identity" : "nostr-essentials",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nostur-com/nostr-essentials",
+      "state" : {
+        "branch" : "main",
+        "revision" : "e03f18a16d7234aa04f62e3d98d904d0437f242a"
+      }
+    },
+    {
       "identity" : "nuke",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/Nuke",
@@ -39,8 +48,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GigaBitcoin/secp256k1.swift",
       "state" : {
-        "revision" : "48fb20fce4ca3aad89180448a127d5bc16f0e44c",
-        "version" : "0.10.0"
+        "revision" : "39dd39248e769ea88253a0ce300399b402a64529",
+        "version" : "0.9.2"
       }
     },
     {
