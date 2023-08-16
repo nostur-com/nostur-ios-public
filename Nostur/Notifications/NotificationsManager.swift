@@ -56,8 +56,7 @@ class NotificationsManager: ObservableObject {
     
     // Notifications tab
     var unread: Int {
-        let sum = unreadMentions &+ unreadReactions
-        return sum &+ unreadZaps
+        unreadMentions + unreadReactions + unreadZaps
     }
     
     // DMs tab

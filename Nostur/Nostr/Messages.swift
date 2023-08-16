@@ -38,7 +38,7 @@ public struct RequestMessage {
     
     static func getArticle(pubkey: String, kind:Int, definition:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "ARTICLE-"+UUID().uuidString)", {"#d": ["\(definition)"], "authors": ["\(pubkey)"], "kinds": [\(kind)], "limit": 11}]
+["REQ", "\(subscriptionId ?? ("ARTICLE-"+UUID().uuidString))", {"#d": ["\(definition)"], "authors": ["\(pubkey)"], "kinds": [\(kind)], "limit": 11}]
 """
     }
     
@@ -89,13 +89,13 @@ public struct RequestMessage {
     // FETCH A SINGLE EVENT
     static func getEvent(id:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "S-" + UUID().uuidString)", {"ids": ["\(id)"], "limit": 1}]
+["REQ", "\(subscriptionId ?? ("S-" + UUID().uuidString))", {"ids": ["\(id)"], "limit": 1}]
 """
     }
     
     static func getEvents(ids:[String], limit:Int = 500, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "SS-" + UUID().uuidString)", {"ids": \(JSON.shared.toString(ids)), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("SS-" + UUID().uuidString))", {"ids": \(JSON.shared.toString(ids)), "limit": \(limit)}]
 """
     }
     // FETCH A SINGLE EVENT AND REFERENCES
@@ -108,7 +108,7 @@ public struct RequestMessage {
     // FETCH A SINGLE EVENT AND REFERENCES
     static func getEventAndReferences(id:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "ER-"+UUID().uuidString)", {"ids": ["\(id)"]}, {"#e": ["\(id)"]}]
+["REQ", "\(subscriptionId ?? ("ER-"+UUID().uuidString))", {"ids": ["\(id)"]}, {"#e": ["\(id)"]}]
 """
     }
     
@@ -224,7 +224,7 @@ public struct RequestMessage {
     
     static func getLastSeen(pubkey:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "LAST-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "limit": 1}]
+["REQ", "\(subscriptionId ?? ("LAST-" + UUID().uuidString))", {"authors": ["\(pubkey)"], "limit": 1}]
 """
     }
     
@@ -256,42 +256,42 @@ public struct RequestMessage {
     
     static func getAuthorContactsList(pubkey:String, limit:Int = 1, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "AC-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [3], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("AC-" + UUID().uuidString))", {"authors": ["\(pubkey)"], "kinds": [3], "limit": \(limit)}]
 """
     }
     
-    static func getAuthorContactsLists(pubkeys:[String], limit:Int = 999, subscriptionId:String? = nil) -> String {
+    static func getAuthorContactsLists(pubkeys:[String], limit:Int = 3000, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "ACLS-" + UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [3], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("ACLS-" + UUID().uuidString))", {"authors": \(fasterShort(pubkeys)), "kinds": [3], "limit": \(limit)}]
 """
     }
     
     static func getFollowers(pubkey:String, since:NTimestamp? = nil, subscriptionId:String? = nil) -> String {
         if let since {
             return """
-    ["REQ", "\(subscriptionId ?? "FOLL-" + UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [3], "since": \(since.timestamp)}]
+    ["REQ", "\(subscriptionId ?? ("FOLL-" + UUID().uuidString))", {"#p": ["\(pubkey)"], "kinds": [3], "since": \(since.timestamp)}]
     """
         }
         return """
-["REQ", "\(subscriptionId ?? "FOLL-" + UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [3]}]
+["REQ", "\(subscriptionId ?? ("FOLL-" + UUID().uuidString))", {"#p": ["\(pubkey)"], "kinds": [3]}]
 """
     }
     
     static func getAuthorKind1(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "A1-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("A1-" + UUID().uuidString))", {"authors": ["\(pubkey)"], "kinds": [1], "limit": \(limit)}]
 """
     }
     
     static func getAuthorNotes(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "AN-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6,9802,30023], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("AN-" + UUID().uuidString))", {"authors": ["\(pubkey)"], "kinds": [1,6,9802,30023], "limit": \(limit)}]
 """
     }
     
     static func getAuthorNotesUntil(pubkey:String, until:NTimestamp, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "ANU-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6,9802,30023], "until": \(until.timestamp), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("ANU-" + UUID().uuidString))", {"authors": ["\(pubkey)"], "kinds": [1,6,9802,30023], "until": \(until.timestamp), "limit": \(limit)}]
 """
     }
     
@@ -378,7 +378,7 @@ public struct RequestMessage {
     
     static func getUserMetadata(pubkey:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "UM-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0], "limit": 1}]
+["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": ["\(pubkey)"], "kinds": [0], "limit": 1}]
 """
     }
     
@@ -405,18 +405,18 @@ public struct RequestMessage {
         
         if let since {
             return """
-    ["REQ", "\(subscriptionId ?? "UM-" + UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "since": \(since.timestamp)}]
+    ["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "since": \(since.timestamp)}]
     """
         }
         else if let until {
             return """
-    ["REQ", "\(subscriptionId ?? "UM-" + UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "until": \(until.timestamp)}]
+    ["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "until": \(until.timestamp)}]
     """
         }
         
         let limit = limit ?? (pubkeys.count + 20) // add 20 in case of multiple setMetadata's for a pubkey maybe?? not sure
         return """
-["REQ", "\(subscriptionId ?? "UM-" + UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "limit": \(limit)}]
 """
     }
 }
