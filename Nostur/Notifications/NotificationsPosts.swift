@@ -16,6 +16,9 @@ struct NotificationsPosts: View {
     @State var backlog = Backlog()
     @State var didLoad = false
     
+    @AppStorage("selected_tab") var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
+    
     @FetchRequest
     var pNotifications:FetchedResults<PersistentNotification>
     
@@ -83,6 +86,9 @@ struct NotificationsPosts: View {
         .onReceive(receiveNotification(.newMentions)) { _ in
             guard let account = NosturState.shared.account else { return }
             let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
+            fl.onComplete = {
+                saveLastSeenPostCreatedAt() // onComplete from local database
+            }
             fl.predicate = NSPredicate(
                 format:
                     "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
@@ -147,6 +153,9 @@ struct NotificationsPosts: View {
         fl.onComplete = {
             saveLastSeenPostCreatedAt() // onComplete from local database
             self.fetchNewer()
+            fl.onComplete = {
+                saveLastSeenPostCreatedAt() // onComplete from local database
+            }
         }
         fl.loadMore(25)
     }
@@ -175,15 +184,9 @@ struct NotificationsPosts: View {
                     account.mutedRootIds_,
                     account.mutedRootIds_
                   )
-                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
-                    saveLastSeenPostCreatedAt()
-                }
                 fl.loadNewer(taskId: taskId)
             },
             timeoutCommand: { taskId in
-                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
-                    saveLastSeenPostCreatedAt()
-                }
                 fl.loadNewer(taskId: taskId)
             })
 
@@ -192,6 +195,7 @@ struct NotificationsPosts: View {
     }
     
     func saveLastSeenPostCreatedAt() {
+        guard selectedTab == "Notifications" && selectedNotificationsTab == "Posts" else { return }
         if let first = fl.nrPosts.first, let account = ns.account {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {

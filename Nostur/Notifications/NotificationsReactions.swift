@@ -16,6 +16,8 @@ struct NotificationsReactions: View {
     @State var backlog = Backlog()
     @EnvironmentObject var ns:NosturState
     @ObservedObject var settings:SettingsStore = .shared
+    @AppStorage("selected_tab") var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Reactions"
     
     func myNotesReactedTo(_ events:[Event]) -> [Event] {
         
@@ -100,6 +102,9 @@ struct NotificationsReactions: View {
         .onReceive(receiveNotification(.newReactions)) { _ in
             guard let account = NosturState.shared.account else { return }
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+            fl.onComplete = {
+                saveLastSeenReactionCreatedAt() // onComplete from local database
+            }
             fl.predicate = NSPredicate(
                 format:
                     "created_at >= %i AND NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
@@ -170,6 +175,9 @@ struct NotificationsReactions: View {
         fl.onComplete = {
             saveLastSeenReactionCreatedAt() // onComplete from local database
             self.fetchNewer()
+            fl.onComplete = { // set onComplete again because self.fetchNewer() should only run once
+                saveLastSeenReactionCreatedAt() // onComplete from local database
+            }
         }
         fl.loadMore(500)
         
@@ -197,15 +205,9 @@ struct NotificationsReactions: View {
                     account.blockedPubkeys_,
                     account.publicKey
                   )
-                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
-                    saveLastSeenReactionCreatedAt()
-                }
                 fl.loadNewerEvents(5000, taskId: taskId)
             },
             timeoutCommand: { taskId in
-                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
-                    saveLastSeenReactionCreatedAt()
-                }
                 fl.loadNewerEvents(5000, taskId: taskId)
             })
         
@@ -214,11 +216,14 @@ struct NotificationsReactions: View {
     }
     
     func saveLastSeenReactionCreatedAt() {
+        guard selectedTab == "Notifications" && selectedNotificationsTab == "Reactions" else { return }
         if let first = fl.events.first, let account = ns.account {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
                 if let account = account.toBG() {
-                    account.lastSeenReactionCreatedAt = firstCreatedAt
+                    if account.lastSeenReactionCreatedAt != firstCreatedAt {
+                        account.lastSeenReactionCreatedAt = firstCreatedAt
+                    }
                 }
                 DataProvider.shared().bgSave()
             }

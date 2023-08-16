@@ -435,10 +435,14 @@ class NotificationsManager: ObservableObject {
             guard let account = ns.bgAccount else { return }
             
             if let mostRecent = try? context.fetch(r2).first {
-                account.lastSeenReactionCreatedAt = mostRecent.created_at
+                if account.lastSeenReactionCreatedAt != mostRecent.created_at {
+                    account.lastSeenReactionCreatedAt = mostRecent.created_at
+                }
             }
             else {
-                account.lastSeenReactionCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                if account.lastSeenReactionCreatedAt != Int64(Date.now.timeIntervalSince1970) {
+                    account.lastSeenReactionCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                }
             }
             DataProvider.shared().bgSave()
         }
