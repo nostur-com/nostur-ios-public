@@ -171,6 +171,7 @@
 		1F810B3329E670AB006B1614 /* MutedWords+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B3129E670AB006B1614 /* MutedWords+CoreDataClass.swift */; };
 		1F810B3429E670AB006B1614 /* MutedWords+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B3229E670AB006B1614 /* MutedWords+CoreDataProperties.swift */; };
 		1F810B3529E67145006B1614 /* MutedWordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B2F29E67017006B1614 /* MutedWordsView.swift */; };
+		1F8227D72A8BD0B10034AA19 /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F8227D62A8BD0B10034AA19 /* NostrEssentials */; };
 		1F83497F29DD6F980032E52B /* LRUCache2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83497E29DD6F980032E52B /* LRUCache2.swift */; };
 		1F83498129DE28290032E52B /* ProfileRelays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498029DE28290032E52B /* ProfileRelays.swift */; };
 		1F8418992A2BDCB1001EFE7A /* NIP47SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8418982A2BDCB1001EFE7A /* NIP47SecretManager.swift */; };
@@ -323,6 +324,8 @@
 		1FE4D91B2A53D50F0064F649 /* ZapCustomizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */; };
 		1FE4D91D2A5442450064F649 /* SettingsDefaultZapAmount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */; };
 		1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */; };
+		1FE6947A2A8B4DCD004BB949 /* FeedSettings+Hashtags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */; };
+		1FE6947C2A8B5550004BB949 /* Search+FollowHashtagTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */; };
 		1FE69EB62A2CE95000FE73B4 /* ZapNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */; };
 		1FE9D2962A0E0F2200256B90 /* NRContentElementBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */; };
 		1FE9D2982A0E104D00256B90 /* NRTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2972A0E104D00256B90 /* NRTextParser.swift */; };
@@ -697,6 +700,8 @@
 		1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapCustomizer.swift; sourceTree = "<group>"; };
 		1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsDefaultZapAmount.swift; path = Nostur/Screens/SettingsDefaultZapAmount.swift; sourceTree = SOURCE_ROOT; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
+		1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FeedSettings+Hashtags.swift"; sourceTree = "<group>"; };
+		1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+FollowHashtagTile.swift"; sourceTree = "<group>"; };
 		1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapNotificationsView.swift; sourceTree = "<group>"; };
 		1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContentElementBuilder.swift; sourceTree = "<group>"; };
 		1FE9D2972A0E104D00256B90 /* NRTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTextParser.swift; sourceTree = "<group>"; };
@@ -739,6 +744,7 @@
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
 				1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
+				1F8227D72A8BD0B10034AA19 /* NostrEssentials in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -876,6 +882,7 @@
 				1FB6E6FA29E3B827008BE8A6 /* MainView.swift */,
 				1F810B2F29E67017006B1614 /* MutedWordsView.swift */,
 				1F57C54A299285B300DFE063 /* Search.swift */,
+				1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */,
 				1F21442B29A797930090E78E /* Settings.swift */,
 				1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */,
 				1F21442D29A797B80090E78E /* SettingsStore.swift */,
@@ -1316,6 +1323,7 @@
 				1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */,
 				1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */,
 				1F2884A92A77D11D0006766E /* FeedSettings.swift */,
+				1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */,
 			);
 			path = Mainfeed;
 			sourceTree = "<group>";
@@ -1547,6 +1555,7 @@
 				1F2F54E92A0236E500B6D7E4 /* Gifu */,
 				1F91D8F52A17C55F00C419A3 /* Collections */,
 				1F77AD0A2A42133000585E12 /* MarkdownUI */,
+				1F8227D62A8BD0B10034AA19 /* NostrEssentials */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -1607,6 +1616,7 @@
 				1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */,
 				1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				1F8227D52A8BD0B10034AA19 /* XCRemoteSwiftPackageReference "nostr-essentials" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -1646,6 +1656,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FE31EE12A587F60008A4A6F /* ProfileOverlayCard.swift in Sources */,
+				1FE6947C2A8B5550004BB949 /* Search+FollowHashtagTile.swift in Sources */,
 				1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */,
 				1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */,
 				1F0592DC2A505531003B4B3C /* DiscoverCommunities.swift in Sources */,
@@ -1714,6 +1725,7 @@
 				1FCB526F2A530A7F006D08DF /* CommunityImporter.swift in Sources */,
 				1F45C7F529EFB13F00F58772 /* NostrBuildMediaUploadService.swift in Sources */,
 				1F0088EB29D735080016F111 /* ContentRenderer.swift in Sources */,
+				1FE6947A2A8B4DCD004BB949 /* FeedSettings+Hashtags.swift in Sources */,
 				1F38AFF12A27166C0035641E /* VideoHelpers.swift in Sources */,
 				1FC78F6F29CAD3510009C1C7 /* DMConversationView.swift in Sources */,
 				1FA3AB242A4E17070059F6B7 /* NIP46SecretManager.swift in Sources */,
@@ -2383,6 +2395,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		1F8227D52A8BD0B10034AA19 /* XCRemoteSwiftPackageReference "nostr-essentials" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nostur-com/nostr-essentials";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Kitura/swift-html-entities.git";
@@ -2446,6 +2466,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
+		};
+		1F8227D62A8BD0B10034AA19 /* NostrEssentials */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F8227D52A8BD0B10034AA19 /* XCRemoteSwiftPackageReference "nostr-essentials" */;
+			productName = NostrEssentials;
 		};
 		1F91D8F52A17C55F00C419A3 /* Collections */ = {
 			isa = XCSwiftPackageProductDependency;
