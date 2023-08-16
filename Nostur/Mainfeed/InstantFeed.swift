@@ -91,7 +91,7 @@ class InstantFeed {
                     }
                 }
                 else {
-                    let getContactListTask = ReqTask(prefix: "CLT-") { taskId in
+                    let getContactListTask = ReqTask(subscriptionId: "RM.getAuthorContactsList") { taskId in
                         L.og.notice("🟪 Fetching clEvent from relays")
                         reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
                     } processResponseCommand: { taskId, _ in

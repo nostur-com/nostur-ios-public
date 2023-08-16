@@ -44,7 +44,7 @@ class FollowingGuardian: ObservableObject {
     func checkForUpdatedContactList() {
         guard !NosturState.shared.activeAccountPublicKey.isEmpty else { return }
         L.og.info("Checking for updated contact list")
-        reqP(RM.getAuthorContactsList(pubkey: NosturState.shared.activeAccountPublicKey))
+        reqP(RM.getAuthorContactsList(pubkey: NosturState.shared.activeAccountPublicKey, subscriptionId: "RM.getAuthorContactsList"))
     }
     
     func listenForAccountChanged() {
@@ -53,7 +53,7 @@ class FollowingGuardian: ObservableObject {
             .sink { notification in
                 let account = notification.object as! Account
                 guard account.privateKey != nil else { return }
-                reqP(RM.getAuthorContactsList(pubkey: account.publicKey))
+                reqP(RM.getAuthorContactsList(pubkey: account.publicKey, subscriptionId: "RM.getAuthorContactsList"))
             }
             .store(in: &subscriptions)
     }

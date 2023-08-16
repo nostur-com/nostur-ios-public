@@ -289,7 +289,6 @@ class Backlog {
                     let reqTasks = self.tasks(with: importedNotification.subscriptionIds)
                     for task in reqTasks {
                         task.process()
-//                        self.remove(task)
                     }
                 })
                 .store(in: &subscriptions)
@@ -302,7 +301,6 @@ class Backlog {
                     let reqTasks = self.tasks(with: [subscriptionId])
                     for task in reqTasks {
                         task.process(receivedMessage)
-//                        self.remove(task)
                     }
                 }
                 .store(in: &subscriptions)
@@ -351,23 +349,32 @@ class ReqTask: Identifiable, Hashable {
     
     var prefix:String? = nil
     let createdAt = Date.now
-    let id = UUID().uuidString
-    var subscriptionId:String { (prefix ?? "") + id }
+    let id:String
+    var subscriptionId:String {
+        if let prefix = prefix {
+            return (prefix + id)
+        }
+        return id
+    }
     
     let reqCommand:(_ taskId:String) -> Void
     let timeoutCommand:((_ taskId:String) -> Void)?
+    var didProcess = false
     
     // Use full subscriptionId instead of prefix to have multiple listeners for a task
     // eg. Onboarding + InstantFeed, both having a task with exact subscriptionId: "pubkey-3"
-    // So both can listen for "pubkey-3" notifications. 
-    init(debounceTime:Double = 0.1, prefix:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String, _:RelayMessage?) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
+    // So both can listen for "pubkey-3" notifications. (make sure prefix is nil, and subscriptionId is set on ReqTask
+    init(debounceTime:Double = 0.1, prefix:String? = nil, subscriptionId:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String, _:RelayMessage?) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
         self.prefix = prefix
+        self.id = subscriptionId ?? UUID().uuidString
         self.reqCommand = reqCommand
         self.timeoutCommand = timeoutCommand
         processSubject
             .debounce(for: RunLoop.SchedulerTimeType.Stride(debounceTime), scheduler: RunLoop.main)
             .sink { [weak self] message in
                 guard let self = self else { return }
+                guard !didProcess else { return }
+                didProcess = true
                 processResponseCommand(self.subscriptionId, message)
             }
             .store(in: &subscriptions)
