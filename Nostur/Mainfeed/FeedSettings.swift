@@ -12,6 +12,7 @@ struct FeedSettings: View {
     @ObservedObject var lvm:LVM
     @Binding var showFeedSettings:Bool
     var list:NosturList? = nil
+    @State var needsReload = false
     
     var body: some View {
         Rectangle().fill(.thinMaterial)
@@ -47,6 +48,28 @@ struct FeedSettings: View {
                         }
                     }
                     .padding(.vertical, 5)
+                    
+                    if lvm.pubkey != nil, let account = NosturState.shared.account, !account.followingHashtags.isEmpty {
+                       
+                        Text("Included hashtags:")
+                            .padding(.top, 20)
+                        FeedSettings_Hashtags(hashtags: Array(account.followingHashtags), onChange: { hashtags in
+                            guard let account = NosturState.shared.account else { return }
+                            account.followingHashtags = Set(hashtags)
+                            needsReload = true
+                        })
+                        .frame(height: 200)
+                    }
+                    if lvm.pubkey == nil, let list = list, !list.followingHashtags.isEmpty {
+                        
+                        Text("Included hashtags:")
+                            .padding(.top, 20)
+                        FeedSettings_Hashtags(hashtags: Array(list.followingHashtags), onChange: { hashtags in
+                            list.followingHashtags = Set(hashtags)
+                            needsReload = true
+                        })
+                        .frame(height: 200)
+                    }
                 }
                 .padding(10)
                 .roundedBoxShadow()
@@ -62,6 +85,11 @@ struct FeedSettings: View {
             .onChange(of: lvm.wotEnabled) { wotEnabled in
                 guard let list = list else { return }
                 list.wotEnabled = wotEnabled
+            }
+            .onDisappear {
+                if needsReload {
+                    lvm.reload()
+                }
             }
     }
 }
@@ -79,6 +107,9 @@ struct FeedSettingsTester: View {
                     }
                     Spacer()
                 }
+            }
+            .onAppear {
+                account.followingHashtags = ["bitcoin","nostr"]
             }
         }
     }
