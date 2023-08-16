@@ -40,6 +40,18 @@ extension Account {
     @NSManaged public var isNC: Bool
     @NSManaged public var ncRelay: String
     
+    @NSManaged public var followingHashtags_: String?
+    
+    var followingHashtags:Set<String> {
+        get {
+            guard let followingHashtags_ else { return [] }
+            return Set(followingHashtags_.split(separator: " ").map { String($0) })
+        }
+        set {
+            followingHashtags_ = newValue.joined(separator: " ")
+        }
+    }
+    
     var followingPublicKeys:Set<String> {
         get {
             let withSelfIncluded = Set([publicKey] + (follows ?? Set<Contact>()).map { $0.pubkey })

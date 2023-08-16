@@ -30,6 +30,18 @@ extension NosturList {
     @NSManaged public var showAsTab: Bool
     @NSManaged public var wotEnabled: Bool
     
+    @NSManaged public var followingHashtags_: String?
+    
+    var followingHashtags:Set<String> {
+        get {
+            guard let followingHashtags_ else { return [] }
+            return Set(followingHashtags_.split(separator: " ").map { String($0) })
+        }
+        set {
+            followingHashtags_ = newValue.joined(separator: " ")
+        }
+    }
+    
     var contacts_:[Contact] {
         get { contacts?.allObjects as! [Contact] }
         set { contacts = NSSet(array: newValue) }
