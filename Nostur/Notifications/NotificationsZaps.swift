@@ -160,7 +160,7 @@ struct NotificationsZaps: View {
             load()
         }
         .onChange(of: settings.webOfTrustLevel) { _ in
-            fl.nrPosts = []
+            fl.events = []
             backlog.clear()
             load()
         }
@@ -202,6 +202,8 @@ struct NotificationsZaps: View {
                     }
                     DispatchQueue.main.async {
                         self.zapsForMeDeduplicated = transformed
+                        
+                        self.saveLastSeenZapCreatedAt()
                     }
                 }
             })
@@ -216,19 +218,15 @@ struct NotificationsZaps: View {
             account.blockedPubkeys_
             )
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        
-        fl.loadMore(500)
-        
-        if let first = fl.events.first, let account = ns.account {
-            let firstCreatedAt = first.created_at
-            DataProvider.shared().bg.perform {
-                if let account = account.toBG() {
-                    account.lastSeenZapCreatedAt = firstCreatedAt
-                }
-                DataProvider.shared().bgSave()
-            }
+        fl.onComplete = {
+            self.saveLastSeenZapCreatedAt()
+            self.fetchNewer()
         }
-        
+        fl.loadMore(500)
+    }
+    
+    func fetchNewer() {
+        guard let account = ns.account else { return }
         let fetchNewerTask = ReqTask(
             reqCommand: { (taskId) in
                 req(RM.getMentions(
@@ -249,11 +247,32 @@ struct NotificationsZaps: View {
                     account.publicKey,
                     account.blockedPubkeys_
                   )
+                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
+                    saveLastSeenZapCreatedAt()
+                }
+                fl.loadNewerEvents(5000, taskId: taskId)
+            },
+            timeoutCommand: { taskId in
+                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
+                    saveLastSeenZapCreatedAt()
+                }
                 fl.loadNewerEvents(5000, taskId: taskId)
             })
 
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
+    }
+    
+    func saveLastSeenZapCreatedAt() {
+        if let first = fl.events.first, let account = ns.account {
+            let firstCreatedAt = first.created_at
+            DataProvider.shared().bg.perform {
+                if let account = account.toBG() {
+                    account.lastSeenZapCreatedAt = firstCreatedAt
+                }
+                DataProvider.shared().bgSave()
+            }
+        }
     }
 }
 

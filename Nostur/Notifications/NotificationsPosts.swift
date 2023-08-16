@@ -175,12 +175,17 @@ struct NotificationsPosts: View {
                     account.mutedRootIds_,
                     account.mutedRootIds_
                   )
-            }) { taskId in
                 fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
                     saveLastSeenPostCreatedAt()
                 }
                 fl.loadNewer(taskId: taskId)
-            }
+            },
+            timeoutCommand: { taskId in
+                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
+                    saveLastSeenPostCreatedAt()
+                }
+                fl.loadNewer(taskId: taskId)
+            })
 
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()

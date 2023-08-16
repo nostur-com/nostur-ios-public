@@ -124,7 +124,7 @@ struct NotificationsReactions: View {
             load()
         }
         .onChange(of: settings.webOfTrustLevel) { _ in
-            fl.nrPosts = []
+            fl.events = []
             backlog.clear()
             load()
         }
@@ -167,20 +167,17 @@ struct NotificationsReactions: View {
             account.publicKey
             )
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        
+        fl.onComplete = {
+            saveLastSeenReactionCreatedAt() // onComplete from local database
+            self.fetchNewer()
+        }
         fl.loadMore(500)
         
-        if let first = fl.events.first, let account = ns.account {
-            let firstCreatedAt = first.created_at
-            DataProvider.shared().bg.perform {
-                if let account = account.toBG() {
-                    account.lastSeenReactionCreatedAt = firstCreatedAt
-                }
-                DataProvider.shared().bgSave()
-            }
-            
-        }
-        
+        fixReactionsWithMissingRelation()
+    }
+    
+    func fetchNewer() {
+        guard let account = NosturState.shared.account else { return }
         let fetchNewerTask = ReqTask(
             reqCommand: { (taskId) in
                 req(RM.getMentions(
@@ -200,13 +197,32 @@ struct NotificationsReactions: View {
                     account.blockedPubkeys_,
                     account.publicKey
                   )
+                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
+                    saveLastSeenReactionCreatedAt()
+                }
+                fl.loadNewerEvents(5000, taskId: taskId)
+            },
+            timeoutCommand: { taskId in
+                fl.onComplete = { // onComplete after fetching with "since" nrPost.first.created_at
+                    saveLastSeenReactionCreatedAt()
+                }
                 fl.loadNewerEvents(5000, taskId: taskId)
             })
         
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
-        
-        fixReactionsWithMissingRelation()
+    }
+    
+    func saveLastSeenReactionCreatedAt() {
+        if let first = fl.events.first, let account = ns.account {
+            let firstCreatedAt = first.created_at
+            DataProvider.shared().bg.perform {
+                if let account = account.toBG() {
+                    account.lastSeenReactionCreatedAt = firstCreatedAt
+                }
+                DataProvider.shared().bgSave()
+            }
+        }
     }
     
     func fixReactionsWithMissingRelation() {
