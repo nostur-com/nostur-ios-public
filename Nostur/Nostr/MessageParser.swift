@@ -146,6 +146,9 @@ class MessageParser {
                     }
                 }
             }
+            catch RelayMessage.error.NOT_IN_WOT {
+                L.sockets.debug("🟠 \(relayUrl) Not in WoT, skipped: \(text)")
+            }
             catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
                 L.sockets.notice("🟠 \(relayUrl) Unknown message type: \(text)")
             }
@@ -156,7 +159,7 @@ class MessageParser {
                 L.sockets.notice("🟠 \(relayUrl) Could not parse EVENT: \(text)")
             }
             catch {
-                L.sockets.error("🔴🔴 \(relayUrl) \(error)")
+                L.sockets.debug("🔴🔴 \(relayUrl) \(error)")
             }
         }
     }

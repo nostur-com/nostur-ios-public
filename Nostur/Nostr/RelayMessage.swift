@@ -23,6 +23,7 @@ class RelayMessage {
         case UNKNOWN_MESSAGE_TYPE // NOT EVENT, NOTICE or EOSE
         case FAILED_TO_PARSE_EVENT // Could parse raw websocket but not event
         case DUPLICATE_ID // We already received this message (in cache, not db, db check is later)
+        case NOT_IN_WOT // Message not in Web of Trust, we don't want it
     }
     
     var relays:String // space seperated relays
@@ -83,6 +84,18 @@ class RelayMessage {
         
         // Try to get just the ID so if it is duplicate we don't parse whole event for nothing
         if let mMessage = try? decoder.decode(MinimalMessage.self, from: dataFromString) {
+            
+            // These subscriptions: "Following", "CATCHUP-", "RESUME-", "PAGE-"
+            // also can include hashtags, if WoT spam filter is enabled we filter these messages out
+            if WOT_FILTER_ENABLED() && subCanHaveHashtags(mMessage.subscriptionId) {
+                if !(NosturState.shared.wot?.isAllowed(mMessage.pubkey) ?? true) {
+                    throw error.NOT_IN_WOT
+                }
+            }
+
+            // TODO: CHECK HOW TO HANDLE FOR RELAY FEEDS ALSO
+                
+                
             if let eventState = Importer.shared.existingIds[mMessage.id] {
 
                 if eventState == .SAVED {
@@ -162,4 +175,14 @@ struct MinimalEvent: Decodable {
     let id:String
     let kind:Int
     let pubkey:String
+}
+
+// These subscriptions: "Following", "CATCHUP-", "RESUME-", "PAGE-"
+// also can include hashtags, if WoT spam filter is enabled we filter these messages out
+func subCanHaveHashtags(_ subscriptionId:String) -> Bool {
+    if subscriptionId == "Following" { return true }
+    if subscriptionId.hasPrefix("CATCHUP-") { return true }
+    if subscriptionId.hasPrefix("RESUME-") { return true }
+    if subscriptionId.hasPrefix("PAGE-") { return true }
+    return false
 }
