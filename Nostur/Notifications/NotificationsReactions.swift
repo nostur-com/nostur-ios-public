@@ -220,7 +220,7 @@ struct NotificationsReactions: View {
         if let first = fl.events.first, let account = ns.account {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
-                if let account = account.toBG() {
+                if let account = NosturState.shared.bgAccount {
                     if account.lastSeenReactionCreatedAt != firstCreatedAt {
                         account.lastSeenReactionCreatedAt = firstCreatedAt
                     }

@@ -270,8 +270,10 @@ struct NotificationsZaps: View {
         if let first = fl.events.first, let account = ns.account {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
-                if let account = account.toBG() {
-                    account.lastSeenZapCreatedAt = firstCreatedAt
+                if let account = NosturState.shared.bgAccount {
+                    if account.lastSeenZapCreatedAt != firstCreatedAt {
+                        account.lastSeenZapCreatedAt = firstCreatedAt
+                    }
                 }
                 DataProvider.shared().bgSave()
             }
