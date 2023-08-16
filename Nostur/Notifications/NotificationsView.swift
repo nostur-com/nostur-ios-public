@@ -91,11 +91,12 @@ struct NotificationsView: View {
         }
         .onReceive(receiveNotification(.notificationsTabAppeared)) { _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                markActiveTabAsRead()
+                markActiveTabAsRead(tab)
             }
         }
         .onChange(of: tab, perform: { newValue in
-            markActiveTabAsRead()
+            guard tab != newValue else { return }
+            markActiveTabAsRead(newValue)
         })
         .overlay(alignment: .bottom) {
             if settings.statusBubble {
@@ -110,7 +111,7 @@ struct NotificationsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
     
-    func markActiveTabAsRead() {
+    func markActiveTabAsRead(_ tab:String) {
         if tab == "Posts" {
             NotificationsManager.shared.markMentionsAsRead()
         }
