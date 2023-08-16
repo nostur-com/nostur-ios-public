@@ -146,7 +146,9 @@ class InstantFeed {
                             L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more. Our pubkey: \(self.pubkey?.short ?? "-") ")
                             return
                         }
-                        self.events = events
+                        DispatchQueue.main.async {
+                            self.events = events
+                        }
                         L.og.notice("🟪 Received \(events.count) posts from relays (found in db)")
                     }
                 } timeoutCommand: { taskId in
