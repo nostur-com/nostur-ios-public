@@ -10,21 +10,31 @@ import Foundation
 
 // Fetch and parse meta og tags
 func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Error>) -> Void) {
-    var request = URLRequest(url: url)
-    request.addValue("Nostur/1 Unknown/0.0.0 Unknown/0.0.0", forHTTPHeaderField: "User-Agent")
-    // Normal user agent is Nostur/1 CFNetwork/1406.0.4 Darwin/22.4.0, but then youtube doesn't give back metatags we need.
+    // if youtube, use https://youtube.com/oembed?url= to fetch metadata (less than 1 KB, vs ~800 KB regular youtube page)
+    if let host = url.host, (host.contains("youtube.com") || host.contains("youtu.be")) {
+        guard let urlAsQueryString = url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else { return }
+        guard let url = URL(string: String(format:"https://youtube.com/oembed?url=%@", urlAsQueryString)) else { return }
+        let request = URLRequest(url: url)
     
-    // if youtube, add consent cookie to skip "Before you continue" or we can't load the preview
-    if let host = url.host, host.contains("youtube.com") {
-        let cookie = HTTPCookie(properties: [
-            .domain: "youtube.com",
-            .path: "/",
-            .name: "CONSENT",
-            .value: "YES+999"
-        ])!
-        request.addValue("\(cookie.name)=\(cookie.value)", forHTTPHeaderField: "Cookie")
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data, error == nil else {
+                completion(.failure(error!))
+                return
+            }
+            guard let json = String(data: data, encoding: .utf8) else {
+                completion(.failure(NSError(domain: "Invalid JSON", code: 0, userInfo: nil)))
+                return
+            }
+            let metaTags = parseYoutube(json: json)
+            completion(.success(metaTags))
+        }
+        task.resume()
+        
+        
+        return
     }
     
+    let request = URLRequest(url: url)
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         guard let data = data, error == nil else {
             completion(.failure(error!))
@@ -38,6 +48,35 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
         completion(.success(metaTags))
     }
     task.resume()
+}
+
+struct YouTubeOembedJson: Codable {
+    var title:String? // "title": "#272 - Fragiliteit van het individu, Nederland in recessie en recordwinsten Banken"
+    var thumbnail_url:String? // "thumbnail_url": "https://i.ytimg.com/vi/JoOAzgRvjU0/hqdefault.jpg"
+    var author_name:String? // "author_name": "Satoshi Radio"
+}
+
+func parseYoutube(json: String) -> [String: String] {
+    var metaTags = [String: String]()
+
+    let decoder = JSONDecoder()
+    guard let jsonData = json.data(using: .utf8), let yt = try? decoder.decode(YouTubeOembedJson.self, from: jsonData) else {
+        return metaTags
+    }
+    
+    if let title = yt.title {
+        metaTags["title"] = title
+    }
+    
+    if let author_name = yt.author_name {
+        metaTags["description"] = author_name
+    }
+    
+    if let thumbnail_url = yt.thumbnail_url {
+        metaTags["image"] = thumbnail_url
+    }
+
+    return metaTags
 }
 
 func parseMetaTags(html: String) -> [String: String] {
