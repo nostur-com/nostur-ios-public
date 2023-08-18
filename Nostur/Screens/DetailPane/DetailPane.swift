@@ -116,6 +116,9 @@ struct DetailPane: View {
                             L.og.info("💄💄 onPreferenceChange: \(title)")
                         }
                 }
+                if (tm.tabs.count == 0) {
+                    DiscoverNostr()
+                }
                 VStack {
                     Spacer()
                     HStack {
@@ -134,7 +137,6 @@ struct DetailPane: View {
                 }
             }
             .environmentObject(dim)
-//            Spacer()
         }
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
