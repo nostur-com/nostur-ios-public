@@ -992,7 +992,7 @@ final class EphemeralSocketPool: ObservableObject {
     }
     
     private func removeAfterDelay(_ url:String) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(60)) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(60)) { [weak self] in
             if let socket = self?.sockets.first(where: { (key: String, value: NewEphemeralClient) in
                 key == url
             }) {
