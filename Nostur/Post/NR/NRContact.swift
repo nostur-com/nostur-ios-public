@@ -22,6 +22,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     let pubkey:String
 
     var anyName:String
+    var fixedName:String?
     var display_name:String?
     var name:String?
     var pictureUrl:String?
@@ -40,6 +41,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var following:Bool = false
     var privateFollow:Bool = false
     var zapperPubkey: String?
+    var zapState: Contact.ZapState?
     
     let contact:Contact // Only touch this in BG context!!!
 
@@ -47,11 +49,12 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.contact = contact
         self.pubkey = contact.pubkey
         self.anyName = contact.anyName
+        self.fixedName = contact.fixedName
         self.display_name = contact.display_name
         self.name = contact.name
         self.pictureUrl = contact.picture
         self.about = contact.about
-        self.couldBeImposter = contact.couldBeImposter
+        self.couldBeImposter = (following ?? false) ? 0 : contact.couldBeImposter
         
         self.nip05verified = contact.nip05veried
         self.nip05domain = contact.nip05domain
@@ -62,12 +65,14 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.lud06 = contact.lud06
         self.lud16 = contact.lud16
         self.zapperPubkey = contact.zapperPubkey
+        self.zapState = contact.zapState
         
         self.following = following ?? false
         self.privateFollow = contact.privateFollow
         listenForChanges()
         isFollowingListener()
         listenForNip05()
+        listenForZapState()
     }
     
     private func isFollowingListener() {
@@ -89,6 +94,19 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     var subscriptions = Set<AnyCancellable>()
     
+    private func listenForZapState() {
+        self.contact.zapStateChanged
+            .sink { [weak self] (zapState, _) in
+                guard let self = self else { return }
+                DispatchQueue.main.async {
+                    guard zapState != self.zapState else { return }
+                    self.objectWillChange.send()
+                    self.zapState = zapState
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
     private func listenForNip05() {
         self.contact.nip05updated
             .sink { [weak self] isVerified in
@@ -108,6 +126,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                 guard let self = self else { return }
                 
                 let anyName = contact.anyName
+                let fixedName = contact.fixedName
                 let display_name = contact.display_name
                 let name = contact.name
                 let pictureUrl = contact.picture
@@ -123,11 +142,13 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                 let lud06 = contact.lud06
                 let lud16 = contact.lud16
                 let zapperPubkey = contact.zapperPubkey
+                let zapState = contact.zapState
                 
                 DispatchQueue.main.async {
                     self.objectWillChange.send()
                     
                     self.anyName = anyName
+                    self.fixedName = fixedName
                     self.display_name = display_name
                     self.name = name
                     self.pictureUrl = pictureUrl
@@ -143,6 +164,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     self.lud06 = lud06
                     self.lud16 = lud16
                     self.zapperPubkey = zapperPubkey
+                    self.zapState = zapState
                 }
             }
             .store(in: &subscriptions)
@@ -150,5 +172,53 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     var mainContact:Contact {
         DataProvider.shared().viewContext.object(with: contact.objectID) as! Contact
+    }
+    
+    @MainActor public func setFixedName(_ name:String) {
+        guard name != self.fixedName else { return }
+        self.objectWillChange.send()
+        self.fixedName = name
+        DataProvider.shared().bg.perform {
+            self.contact.fixedName = name
+        }
+    }
+    
+    public func follow(privateFollow: Bool = false) {
+        guard let account = NosturState.shared.bgAccount else { return }
+        self.objectWillChange.send()
+        self.following = true
+        self.privateFollow = privateFollow
+        
+        DataProvider.shared().bg.perform {
+            self.contact.privateFollow = privateFollow // TODO: need to fix for multi account
+            account.addToFollows(self.contact)
+            let followingPublicKeys = account.followingPublicKeys
+            DataProvider.shared().bgSave()
+            
+            DispatchQueue.main.async {
+                sendNotification(.followersChanged, account.followingPublicKeys)
+                sendNotification(.followingAdded, self.pubkey)
+                NosturState.shared.publishNewContactList()
+            }
+        }
+    }
+    
+    public func unfollow() {
+        guard let account = NosturState.shared.bgAccount else { return }
+        self.objectWillChange.send()
+        self.following = false
+        self.privateFollow = false
+        
+        DataProvider.shared().bg.perform {
+            self.contact.privateFollow = false // TODO: need to fix for multi account
+            account.removeFromFollows(self.contact)
+            let followingPublicKeys = account.followingPublicKeys
+            DataProvider.shared().bgSave()
+            
+            DispatchQueue.main.async {
+                sendNotification(.followersChanged, account.followingPublicKeys)
+                NosturState.shared.publishNewContactList()
+            }
+        }
     }
 }

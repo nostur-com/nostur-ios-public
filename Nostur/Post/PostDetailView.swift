@@ -417,7 +417,7 @@ struct DetailPost: View {
                                         sendNotification(.showMiniProfile,
                                                          MiniProfileSheetInfo(
                                                             pubkey: nrPost.pubkey,
-                                                            contact: nrPost.contact?.mainContact,
+                                                            contact: nrPost.contact,
                                                             zapEtag: nrPost.id,
                                                             location: geo.frame(in: .global).origin
                                                          )

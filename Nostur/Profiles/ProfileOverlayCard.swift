@@ -12,11 +12,11 @@ struct ProfileOverlayCardContainer: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     let pubkey:String
-    @State var contact:Contact? = nil
+    @State var contact:NRContact? = nil
     var zapEtag:String? = nil // so other clients can still tally zaps
     
     @State private var backlog = Backlog(timeout: 15, auto: true)
-    @State private var error:String? = nil
+    @State private var error: String? = nil
     
     var body: some View {
         VStack {
@@ -29,29 +29,41 @@ struct ProfileOverlayCardContainer: View {
             else {
                 ProgressView()
                     .onAppear {
-                        if let contact = Contact.fetchByPubkey(pubkey, context: viewContext) {
-                            self.contact = contact
-                        }
-                        else {
-                            let reqTask = ReqTask(
-                                prefix: "CONTACT-",
-                                reqCommand: { taskId in
-                                    req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId))
-                                },
-                                processResponseCommand: { taskId, _ in
-                                    if let contact = Contact.fetchByPubkey(pubkey, context: viewContext) {
-                                        self.contact = contact
-                                        self.backlog.clear()
-                                    }
-                                },
-                                timeoutCommand: { taskId in
-                                    DispatchQueue.main.async {
-                                        self.error = "Could not fetch contact info"
-                                    }
-                                })
-                            
-                            backlog.add(reqTask)
-                            reqTask.fetch()
+                        DataProvider.shared().bg.perform {
+                            if let bgContact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().bg) {
+                                let isFollowing = NosturState.shared.bgFollowingPublicKeys.contains(pubkey)
+                                let nrContact = NRContact(contact: bgContact, following: isFollowing)
+                                DispatchQueue.main.async {
+                                    self.contact = nrContact
+                                }
+                            }
+                            else {
+                                let reqTask = ReqTask(
+                                    prefix: "CONTACT-",
+                                    reqCommand: { taskId in
+                                        req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId))
+                                    },
+                                    processResponseCommand: { taskId, _ in
+                                        DataProvider.shared().bg.perform {
+                                            if let bgContact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().bg) {
+                                                let isFollowing = NosturState.shared.bgFollowingPublicKeys.contains(pubkey)
+                                                let nrContact = NRContact(contact: bgContact, following: isFollowing)
+                                                DispatchQueue.main.async {
+                                                    self.contact = nrContact
+                                                }
+                                                self.backlog.clear()
+                                            }
+                                        }
+                                    },
+                                    timeoutCommand: { taskId in
+                                        DispatchQueue.main.async {
+                                            self.error = "Could not fetch contact info"
+                                        }
+                                    })
+                                
+                                backlog.add(reqTask)
+                                reqTask.fetch()
+                            }
                         }
                     }
             }
@@ -60,15 +72,12 @@ struct ProfileOverlayCardContainer: View {
 }
 
 struct ProfileOverlayCard: View {
-    @ObservedObject var contact:Contact
+    @ObservedObject var contact:NRContact
     var zapEtag:String? // so other clients can still tally zaps
     @EnvironmentObject private var ns:NosturState
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var fg:FollowingGuardian = .shared
     private let sp:SocketPool = .shared
-    
-    // Following/Unfollowing tap is slow so update UI and do in background:
-    @State private var isFollowing = false
     
     var withoutFollowButton = false
     
@@ -78,13 +87,14 @@ struct ProfileOverlayCard: View {
     @State var similarPFP = false
     @State var backlog = Backlog(timeout: 2.0, auto: true)
     @State var lastSeen:String? = nil
+    @State var isFollowingYou = false
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
     var couldBeImposter:Bool {
         guard let account = NosturState.shared.account else { return false }
         guard account.publicKey != contact.pubkey else { return false }
-        guard !NosturState.shared.isFollowing(contact) else { return false }
+        guard !contact.following else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
         return similarPFP
     }
@@ -106,21 +116,17 @@ struct ProfileOverlayCard: View {
                 
                 if (!withoutFollowButton) {
                     Button {
-                        if (isFollowing && !contact.privateFollow) {
-                            contact.privateFollow = true
-                            ns.follow(contact)
+                        if (contact.following && !contact.privateFollow) {
+                            contact.follow(privateFollow: true)
                         }
-                        else if (isFollowing && contact.privateFollow) {
-                            isFollowing = false
-                            contact.privateFollow = false
-                            ns.unfollow(contact)
+                        else if (contact.following && contact.privateFollow) {
+                            contact.unfollow()
                         }
                         else {
-                            isFollowing = true
-                            ns.follow(contact)
+                            contact.follow()
                         }
                     } label: {
-                        FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.privateFollow)
+                        FollowButton(isFollowing:contact.following, isPrivateFollowing:contact.privateFollow)
                     }
                     .disabled(!fg.didReceiveContactListThisSession)
                 }
@@ -138,13 +144,13 @@ struct ProfileOverlayCard: View {
                             .cornerRadius(8)
                             .layoutPriority(2)
                     }
-                    else if (contact.nip05veried) {
+                    else if (contact.nip05verified) {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.title)
                             .foregroundColor(Color("AccentColor"))
                     }
                     
-                    if (NosturState.shared.followsYou(contact)) {
+                    if (isFollowingYou) {
                         Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
                             .foregroundColor(.white)
                             .padding(.horizontal, 7)
@@ -160,7 +166,7 @@ struct ProfileOverlayCard: View {
                             .lineLimit(1)
                         Image(systemName: "multiply.circle.fill")
                             .onTapGesture {
-                                contact.fixedName = contact.anyName
+                                contact.setFixedName(contact.anyName)
                             }
                     }
                 }
@@ -216,46 +222,43 @@ struct ProfileOverlayCard: View {
         .roundedBoxShadow()
         .padding(10)
         .task {
-            if (ns.isFollowing(contact)) {
-                isFollowing = true
-            }
-            else {
-                guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-                guard contact.metadata_created_at != 0 else { return }
-                guard contact.couldBeImposter == -1 else { return }
-                guard let cPic = contact.picture else { return }
-                let contactAnyName = contact.anyName
-                let cPubkey = contact.pubkey
+            guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
+            guard !contact.following else { return }
+            guard contact.metadata_created_at != 0 else { return }
+            guard contact.couldBeImposter == -1 else { return }
+            guard let cPic = contact.pictureUrl else { return }
+            let contactAnyName = contact.anyName
+            let cPubkey = contact.pubkey
+            
+            DataProvider.shared().bg.perform {
+                guard let account = NosturState.shared.bgAccount else { return }
+                guard let similarContact = account.follows_.first(where: {
+                    isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName.lowercased())
+                }) else { return }
+                guard let wotPic = similarContact.picture else { return }
                 
-                DataProvider.shared().bg.perform {
-                    guard let account = NosturState.shared.bgAccount else { return }
-                    guard let similarContact = account.follows_.first(where: {
-                        isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName.lowercased())
-                    }) else { return }
-                    guard let wotPic = similarContact.picture else { return }
+                L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarContact.anyName)")
+                
+                Task.detached(priority: .background) {
+                    let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+                    if similarPFP {
+                        L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
+                    }
                     
-                    L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarContact.anyName)")
-                    
-                    Task.detached(priority: .background) {
-                        let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                        if similarPFP {
-                            L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
-                        }
-                        
-                        DispatchQueue.main.async {
-                            self.similarPFP = similarPFP
-                            contact.couldBeImposter = similarPFP ? 1 : 0
-                        }
+                    DispatchQueue.main.async {
+                        self.similarPFP = similarPFP
+                        contact.couldBeImposter = similarPFP ? 1 : 0
                     }
                 }
             }
         }
         .task {
+            let contact = contact.mainContact
+            EventRelationsQueue.shared.addAwaitingContact(contact)
+            req(RM.getUserProfileKinds(pubkey: contact.pubkey, kinds: [0]))
             if (NIP05Verifier.shouldVerify(contact)) {
                 NIP05Verifier.shared.verify(contact)
             }
-        }
-        .task {
             guard contact.anyLud else { return }
             do {
                 if let lud16 = contact.lud16, lud16 != "" {
@@ -281,14 +284,10 @@ struct ProfileOverlayCard: View {
                 L.og.error("problem in lnurlp \(error)")
             }
         }
-        .onChange(of: contact.nip05) { nip05 in
-            if (NIP05Verifier.shouldVerify(contact)) {
-                NIP05Verifier.shared.verify(contact)
+        .onChange(of: contact.mainContact.nip05) { nip05 in
+            if (NIP05Verifier.shouldVerify(contact.mainContact)) {
+                NIP05Verifier.shared.verify(contact.mainContact)
             }
-        }
-        .task {
-            EventRelationsQueue.shared.addAwaitingContact(contact)
-            req(RM.getUserProfileKinds(pubkey: contact.pubkey, kinds: [0]))
         }
         .task {
             let contactPubkey = contact.pubkey
@@ -326,7 +325,7 @@ struct ProfileOverlayCard: View {
 struct ProfileOverlayCard_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadContacts() }) {
-            if let contact = PreviewFetcher.fetchContact() {
+            if let contact = PreviewFetcher.fetchNRContact() {
                 ProfileOverlayCard(contact: contact)
             }
         }

@@ -12,7 +12,7 @@ struct ProfileZapButton: View {
     @EnvironmentObject var dim:DIMENSIONS
     private let er:ExchangeRateModel = .shared // Not Observed for performance
     
-    @ObservedObject var contact:Contact
+    @ObservedObject var contact:NRContact
     var zapEtag: String?
     
     @ObservedObject private var ss:SettingsStore = .shared
@@ -46,7 +46,9 @@ struct ProfileZapButton: View {
 //                            nrPost.zapState = .cancelled
                             activeColor = Self.grey
                             contact.zapState = .cancelled
-                            contact.zapStateChanged.send((.cancelled, zapEtag))
+                            DataProvider.shared().bg.perform {
+                                contact.contact.zapStateChanged.send((.cancelled, zapEtag))
+                            }
                             L.og.info("⚡️ Zap cancelled")
                         }
                 }
@@ -119,11 +121,11 @@ struct ProfileZapButton: View {
             }
         }
         else {
-            ProfileLightningButton(contact: contact)
+            ProfileLightningButton(contact: contact.mainContact)
         }
     }
     
-    func triggerZap(strikeLocation:CGPoint, contact:Contact, zapMessage:String = "", amount:Double? = nil) {
+    func triggerZap(strikeLocation:CGPoint, contact:NRContact, zapMessage:String = "", amount:Double? = nil) {
         guard let account = NosturState.shared.account else { return }
         guard NosturState.shared.account?.privateKey != nil else {
             NosturState.shared.readOnlyAccountSheetShown = true
@@ -139,10 +141,10 @@ struct ProfileZapButton: View {
         }
         cancellationId = UUID()
         contact.zapState = .initiated
-        contact.zapStateChanged.send((.initiated, zapEtag))
 
         DataProvider.shared().bg.perform {
-            guard let bgContact = DataProvider.shared().bg.object(with: contact.objectID) as? Contact else { return }
+            let bgContact = contact.contact
+            bgContact.zapStateChanged.send((.initiated, zapEtag))
             NWCRequestQueue.shared.ensureNWCconnection()
             guard let cancellationId = cancellationId else { return }
             let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), contact: bgContact, eventId: zapEtag, cancellationId: cancellationId, zapMessage: zapMessage)
@@ -159,7 +161,7 @@ struct ProfileZapButton_Previews: PreviewProvider {
             pe.loadZaps()
         }) {
             VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1"), let contact = nrPost.contact?.contact {
+                if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1"), let contact = nrPost.contact {
                     ProfileZapButton(contact: contact, zapEtag: nrPost.id)
                 }
                 
