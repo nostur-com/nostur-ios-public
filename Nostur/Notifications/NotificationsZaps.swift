@@ -64,15 +64,13 @@ struct NotificationsZaps: View {
     var body: some View {
 //        let _ = Self._printChanges()
         ScrollView {
-            LazyVStack(alignment:.leading, spacing: 0) {
+            LazyVStack(alignment:.leading, spacing: 10) {
                 ForEach(notifications) { pNotification in
                     switch pNotification.type {
                     case .NOTIFICATION:
                         ZapNotificationView(notification: pNotification.notification!)
                             .padding(10)
-                            .roundedBoxShadow()
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            .padding(.vertical, 10)
+                            .background(Color.systemBackground)
                             .id(pNotification.id)
                     case .ZAP:
                         VStack {
@@ -86,9 +84,7 @@ struct NotificationsZaps: View {
                             }
                         }
                         .padding(10)
-                        .roundedBoxShadow()
-                        .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                        .padding(.vertical, 10)
+                        .background(Color.systemBackground)
                         .id(pNotification.id)
                     }
                 }
@@ -267,7 +263,7 @@ struct NotificationsZaps: View {
     
     func saveLastSeenZapCreatedAt() {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Zaps" else { return }
-        if let first = fl.events.first, let account = ns.account {
+        if let first = fl.events.first {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
                 if let account = NosturState.shared.bgAccount {

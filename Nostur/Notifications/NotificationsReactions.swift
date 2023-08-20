@@ -46,16 +46,15 @@ struct NotificationsReactions: View {
     var body: some View {
 //        let _ = Self._printChanges()
         ScrollView {
-            LazyVStack(alignment:.leading, spacing: 0) {
+            LazyVStack(alignment:.leading, spacing: 10) {
                 ForEach(myNotesReactedToAsNRPosts) { nrPost in
                     VStack(alignment:.leading, spacing: 3) {
                         ReactionsForThisNote(reactions:reactionsForNote(nrPost.id))
                         NoteMinimalContentView(nrPost: nrPost)
                     }
                     .padding(10)
-                    .roundedBoxShadow()
-                    .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                    .padding(.vertical, 10)
+                    .background(Color.systemBackground)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         navigateTo(nrPost)
                     }
@@ -217,7 +216,7 @@ struct NotificationsReactions: View {
     
     func saveLastSeenReactionCreatedAt() {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Reactions" else { return }
-        if let first = fl.events.first, let account = ns.account {
+        if let first = fl.events.first {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
                 if let account = NosturState.shared.bgAccount {

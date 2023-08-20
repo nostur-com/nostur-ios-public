@@ -44,22 +44,24 @@ struct NotificationsPosts: View {
     var body: some View {
 //        let _ = Self._printChanges()
         ScrollView {
-            LazyVStack(spacing: 0) {
+            LazyVStack(spacing: 10) {
                 ForEach(notifications) { pNotification in
                     switch pNotification.type {
                     case .NOTIFICATION:
                         NewFollowersNotificationView(notification: pNotification.notification!)
-                            .roundedBoxShadow()
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            .padding(.vertical, 10)
+                            .padding(10)
+                            .background(Color.systemBackground)
                             .id(pNotification.id)
                     case .POST:
                         PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true)
+                            .padding(10)
+                            .background(pNotification.post!.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
                             .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                            .roundedBoxShadow()
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            .padding(.vertical, 10)
                             .id(pNotification.id)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(pNotification.post!)
+                            }
                     }
                 }
                 VStack {
