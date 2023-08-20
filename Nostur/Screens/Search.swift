@@ -453,24 +453,24 @@ struct Search: View {
                 guard type(of: destination.destination) == Nevent1Path.self || type(of: destination.destination) == Nprofile1Path.self || type(of: destination.destination) == HashtagPath.self || !IS_IPAD else { return }
                 guard selectedTab == "Search" else { return }
                 if (type(of: destination.destination) == HashtagPath.self) {
+                    navPath.removeLast(navPath.count)
                     let hashtag = (destination.destination as! HashtagPath).hashTag
                     searchText = "#\(hashtag)"
                 }
                 else if (type(of: destination.destination) == Nevent1Path.self) {
+                    navPath.removeLast(navPath.count)
                     let nevent1 = (destination.destination as! Nevent1Path).nevent1
                     searchText = nevent1
                 }
                 else if (type(of: destination.destination) == Nprofile1Path.self) {
+                    navPath.removeLast(navPath.count)
                     let nprofile1 = (destination.destination as! Nprofile1Path).nprofile1
                     searchText = nprofile1
                 }
                 else {
+                    navPath.removeLast(navPath.count)
                     navPath.append(destination.destination)
                 }
-//                else {
-//
-//
-//                }
             }
             .onReceive(receiveNotification(.clearNavigation)) { notification in
                 navPath.removeLast(navPath.count)
