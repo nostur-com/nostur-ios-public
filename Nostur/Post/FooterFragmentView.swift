@@ -55,7 +55,7 @@ struct FooterFragmentView: View {
                     .padding(5)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        sendNotification(.createNewQuoteOrRepost, nrPost.event)
+                        sendNotification(.createNewQuoteOrRepost, nrPost.event.toMain())
                     }
                 }
                 Spacer()
