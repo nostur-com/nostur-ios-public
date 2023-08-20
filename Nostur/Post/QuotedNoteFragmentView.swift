@@ -12,9 +12,15 @@ struct QuotedNoteFragmentView: View {
     @State var viewSize:CGSize = .zero
     
     @ObservedObject var nrPost:NRPost
+    @ObservedObject var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
+    
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+        self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
+    }
     
     var body: some View {
-        if nrPost.blocked {
+        if postRowDeletableAttributes.blocked {
             HStack {
                 Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
                 Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
