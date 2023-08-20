@@ -20,6 +20,7 @@ struct NEventView: View {
     struct NEventViewInner: View {
         
         @State var nrPost:NRPost?
+        @State var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes?
         @State var fetchTask:Task<Void, Never>?
         
         private var fetchRequest: FetchRequest<Event>
@@ -38,7 +39,7 @@ struct NEventView: View {
         
         var body: some View {
             VStack {
-                if let nrPost = nrPost, nrPost.blocked {
+                if let nrPost = nrPost, let prd = postRowDeletableAttributes, prd.blocked {
                     HStack {
                         Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
                         Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
@@ -76,6 +77,7 @@ struct NEventView: View {
                                 let nrPost = NRPost(event: bgEvent)
                                 DispatchQueue.main.async {
                                     self.nrPost = nrPost
+                                    self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
                                 }
                             }
                         }
