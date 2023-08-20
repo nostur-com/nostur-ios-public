@@ -64,13 +64,32 @@ struct ContentRenderer: View { // VIEW things
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, nrPost:nrPost)
                         .padding(.vertical, 10)
-//                        .padding(.horizontal, fullWidth ? 10 : 0)
-                case .video(let url):
-                    NosturVideoViewur(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 20 : 10)
-                        .padding(.vertical, 10)
-                case .image(let url):
-                    SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, forceShow: nrPost.following, contentPadding: nrPost.kind == 30023 ? 20 : 10)
-                        .padding(.vertical, 10)
+                case .video(let mediaContent):
+                    if let dimensions = mediaContent.dimensions {
+                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                            .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+                            .padding(.vertical, 10)
+                    }
+                    else {
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+//                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .padding(.vertical, 10)
+                    }
+                    
+                case .image(let mediaContent):
+                    if let dimensions = mediaContent.dimensions {
+                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, forceShow: nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                            .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+                            .padding(.horizontal, fullWidth ? -10 : 0)
+                            .padding(.vertical, 10)
+                    }
+                    else {
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, forceShow: nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                            .padding(.horizontal, fullWidth ? -10 : 0)
+                            .padding(.vertical, 10)
+                    }
                 case .linkPreview(let url):
                     // TODO: do no link preview if restrictAutoDownload...
                     LinkPreviewView(url: url)
@@ -220,3 +239,14 @@ struct ContentRenderer_Previews: PreviewProvider {
     }
 }
 
+
+func scaledToFit(_ dimensions: CGSize, scale screenScale: Double, maxWidth: Double, maxHeight: Double) -> CGSize {
+    let pointWidth = Double(dimensions.width / screenScale)
+    let pointHeight = Double(dimensions.height / screenScale)
+    
+    let widthRatio = min(maxWidth / pointWidth,1)
+    let heightRatio = min(maxHeight / pointHeight,1)
+    let fittingScale = min(widthRatio, heightRatio)
+    
+    return CGSize(width: pointWidth * fittingScale, height: pointHeight * fittingScale)
+}

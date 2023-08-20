@@ -46,9 +46,9 @@ struct NosturVideoViewur: View {
                         }
                     }
                 }
-                   .centered()
-                   .frame(height: fullWidth ? 600 : 250)
-                   .background(Color("LightGray").opacity(0.2))
+               .centered()
+               .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+               .background(Color("LightGray").opacity(0.2))
             }
             else if isStream {
                 MusicStreamurRepresentable(url: url, isPlaying: $isPlaying, isMuted: $isMuted)
@@ -147,20 +147,20 @@ struct NosturVideoViewur: View {
                             }
                     }
                     .centered()
-                    .frame(height: fullWidth ? 600 : 250)
+                    .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     .background(Color("LightGray").opacity(0.2))
                 }
                 else {
                     if videoState == .cancelled {
                         Text("Cancelled")
                             .centered()
-                            .frame(height: fullWidth ? 600 : 250)
+                            .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .background(Color("LightGray").opacity(0.2))
                     }
                     else if videoState == .error {
                         Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
                             .centered()
-                            .frame(height: fullWidth ? 600 : 250)
+                            .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .background(Color("LightGray").opacity(0.2))
                     }
                 }
@@ -168,7 +168,7 @@ struct NosturVideoViewur: View {
             else if videoState == .initial {
                 Text("Tap to load video", comment:"Button to load a video in a post")
                     .centered()
-                    .frame(height: fullWidth ? 600 : 250)
+                    .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     .background(Color("LightGray").opacity(0.2))
                     .highPriorityGesture(
                         TapGesture()
@@ -188,7 +188,7 @@ struct NosturVideoViewur: View {
                     isStream = true
                 }
                 else {
-                    Task {
+                    Task.detached {
                         await loadVideo()
                     }
                 }
@@ -203,28 +203,44 @@ struct NosturVideoViewur: View {
         task = ImageProcessing.shared.video.imageTask(with: url)
         
         if let task {
-            videoState = .loading
+            DispatchQueue.main.async {
+                videoState = .loading
+            }
             for await progress in task.progress {
-                self.percent = Int(ceil(progress.fraction * 100))
+                let percent = Int(ceil(progress.fraction * 100))
+                if percent % 3 == 0 { // only update view every 3 percent for performance
+                    DispatchQueue.main.async {
+                        self.percent = percent
+                    }
+                }
             }
         }
         
         if let response = try? await task?.response {
             if let type = response.container.type, type.isVideo, let asset = response.container.userInfo[.videoAssetKey] as? AVAsset {
-                self.asset = asset
-                videoState = .ready
-                Task {
+                Task.detached {
                     if let videoSize = await getVideoDimensions(asset: asset), let videoLength = await getVideoLength(asset: asset) {
-                        self.scaledDimensions = getScaledVideoDimensions(videoSize: videoSize, availableWidth: videoWidth, maxHeight: 600)
-                        self.videoLength = videoLength
+                        DispatchQueue.main.async {
+                            self.scaledDimensions = Nostur.scaledToFit(videoSize, scale: UIScreen.main.scale, maxWidth: videoWidth, maxHeight: 600)
+                            self.videoLength = videoLength
+                        }
                     }
                     else {
-                        videoState = .error
+                        DispatchQueue.main.async {
+                            videoState = .error
+                        }
+                    }
+                    
+                    DispatchQueue.main.async {
+                        self.asset = asset
+                        videoState = .ready
                     }
                 }
             }
             else {
-                videoState = .error
+                DispatchQueue.main.async {
+                    videoState = .error
+                }
             }
         }
     }
