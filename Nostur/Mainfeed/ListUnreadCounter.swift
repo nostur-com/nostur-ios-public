@@ -25,32 +25,28 @@ struct ListUnreadCounter: View {
     }
     
     var body: some View {
-        if (vmCounter.count > 0) {
-            // TODO: Add mini profile icons
-            HStack {
-                Text(String(vmCounter.count))
-                Image(systemName: "arrow.up")
-            }
-            .frame(minWidth: 30)
-            .padding(10)
-            .fontWeight(.bold)
-            .foregroundColor(.white)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .foregroundColor(Color("AccentColor"))
-                    .opacity(0.85)
-                    .shadow(color: Color.gray.opacity(0.5), radius: 5)
-            )
-            .onTapGesture {
-                sendNotification(.shouldScrollToFirstUnread)
-            }
-            .simultaneousGesture(LongPressGesture().onEnded { _ in
-                sendNotification(.shouldScrollToTop)
-            })
+        // TODO: Add mini profile icons
+        HStack {
+            Text(String(vmCounter.count))
+            Image(systemName: "arrow.up")
         }
-        else {
-            EmptyView()
+        .frame(minWidth: 30)
+        .padding(10)
+        .fontWeight(.bold)
+        .foregroundColor(.white)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .foregroundColor(Color("AccentColor"))
+                .opacity(0.85)
+                .shadow(color: Color.gray.opacity(0.5), radius: 5)
+        )
+        .opacity(vmCounter.count > 0 ? 1.0 : 0)
+        .onTapGesture {
+            sendNotification(.shouldScrollToFirstUnread)
         }
+        .simultaneousGesture(LongPressGesture().onEnded { _ in
+            sendNotification(.shouldScrollToTop)
+        })
     }
 }
 
@@ -61,7 +57,7 @@ struct Previews_ListUnreadCounter_PreviewsWrapper: View {
     var body: some View {
         VStack {
             ListUnreadCounter(vm: lvm)
-
+            
             Button("Add +1") {
                 lvm.lvmCounter.count += 1
             }
