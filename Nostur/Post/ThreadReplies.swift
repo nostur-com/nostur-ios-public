@@ -14,7 +14,7 @@ struct ThreadReplies: View {
     @State var showNotWoT = false
     
     var body: some View {
-        LazyVStack {
+        LazyVStack(spacing: 10) {
             ForEach(nrPost.groupedRepliesSorted) { reply in
                 PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
             }
