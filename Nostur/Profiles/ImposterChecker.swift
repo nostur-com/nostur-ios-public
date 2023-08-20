@@ -45,6 +45,8 @@ func compareImages(image1: UIImage, image2: UIImage) -> CGFloat {
 }
 
 func pfpsAreSimilar(imposter:String, real:String, threshold:Double = 0.1) async -> Bool {
+    guard imposter != real else { return true } // if urls are the same we don't need to check the actual images
+    
     var impostorImage:UIImage?
     var realImage:UIImage?
     
