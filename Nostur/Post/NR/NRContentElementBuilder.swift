@@ -8,6 +8,8 @@
 import Foundation
 import UIKit
 
+typealias FastTag = (String, String, String?, String?)
+
 class NRContentElementBuilder {
     
     static let shared = NRContentElementBuilder()
@@ -37,7 +39,8 @@ class NRContentElementBuilder {
                 
                 if !matchString.matchingStrings(regex: Self.imageUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
-                        result.append(ContentElement.image(url))
+                        let dimensions:CGSize? = findImetaDimensions(event, url: matchString)
+                        result.append(ContentElement.image(MediaContent(url: url, dimensions: dimensions)))
                     }
                     else {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
@@ -45,7 +48,8 @@ class NRContentElementBuilder {
                 }
                 else if !matchString.matchingStrings(regex: Self.videoUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
-                        result.append(ContentElement.video(url))
+                        let dimensions:CGSize? = findImetaDimensions(event, url: matchString)
+                        result.append(ContentElement.video(MediaContent(url: url, dimensions: dimensions)))
                     }
                     else {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
@@ -245,8 +249,8 @@ enum ContentElement: Hashable, Identifiable {
     case noteHex(String)
     case lnbc(String)
     case link(String, URL)
-    case image(URL)
-    case video(URL)
+    case image(MediaContent)
+    case video(MediaContent)
     case linkPreview(URL)
     case postPreviewImage(UIImage)
     case nevent1(ShareableIdentifier)
@@ -254,6 +258,15 @@ enum ContentElement: Hashable, Identifiable {
 }
 
 import MarkdownUI
+
+// For text notes
+struct MediaContent: Hashable {
+    func hash(into hasher: inout Hasher) {
+        return hasher.combine(url)
+    }
+    var url:URL
+    var dimensions:CGSize?
+}
 
 // For text notes
 struct AttributedStringWithPs: Hashable {
@@ -279,4 +292,78 @@ struct MarkdownContentWithPs: Hashable {
     var output:MarkdownContent
     var pTags:[Ptag]
     var event:Event
+}
+
+
+func findImetaDimensions(_ event:Event, url:String) -> CGSize? {
+    // Find any tag that is 'imeta' and has matching 'url', spec is unclear about order, so check every imeta value:
+    // fastTags only supports tags with 3 values, so too bad if there are more.
+    let imetaTag:FastTag? = event.fastTags.first(where: { tag in
+        
+        guard tag.0 == "imeta" else { return false }
+        
+        let parts = tag.1.split(separator: " ", maxSplits: 1)
+        if parts.count == 2 {
+            if (String(parts[0]) == "url" && String(parts[1]) == url) {
+                return true
+            }
+        }
+        
+        if let parts = tag.2?.split(separator: " ", maxSplits: 1) {
+            if parts.count == 2 {
+                if (String(parts[0]) == "url" && String(parts[1]) == url) {
+                    return true
+                }
+            }
+        }
+        
+        if let parts = tag.3?.split(separator: " ", maxSplits: 1) {
+            if parts.count == 2 {
+                if (String(parts[0]) == "url" && String(parts[1]) == url) {
+                    return true
+                }
+            }
+        }
+        
+        return false
+    })
+    
+    guard let imetaTag = imetaTag else { return nil }
+    
+    // check every value in found imeta tag for 'dim'
+    let parts = imetaTag.1.split(separator: " ", maxSplits: 1)
+    if parts.count == 2 {
+        if (String(parts[0]) == "dim") {
+            let dim = parts[1].split(separator: "x", maxSplits: 1)
+            if dim.count == 2 {
+                if let width = Int(dim[0]), let height = Int(dim[1]) {
+                    return CGSize(width: width, height: height)
+                }
+            }
+        }
+    }
+    
+    if let parts = imetaTag.2?.split(separator: " ", maxSplits: 1), parts.count == 2 {
+        if (String(parts[0]) == "dim") {
+            let dim = parts[1].split(separator: "x", maxSplits: 1)
+            if dim.count == 2 {
+                if let width = Int(dim[0]), let height = Int(dim[1]) {
+                    return CGSize(width: width, height: height)
+                }
+            }
+        }
+    }
+    
+    if let parts = imetaTag.3?.split(separator: " ", maxSplits: 1), parts.count == 2 {
+        if (String(parts[0]) == "dim") {
+            let dim = parts[1].split(separator: "x", maxSplits: 1)
+            if dim.count == 2 {
+                if let width = Int(dim[0]), let height = Int(dim[1]) {
+                    return CGSize(width: width, height: height)
+                }
+            }
+        }
+    }
+
+    return nil
 }

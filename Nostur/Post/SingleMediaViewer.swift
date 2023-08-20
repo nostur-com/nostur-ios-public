@@ -17,7 +17,7 @@ struct SingleMediaViewer: View {
     let isFollowing:Bool
     var fullWidth:Bool = false
     var forceShow = false
-    var contentPadding:CGFloat = 10.0
+    var contentPadding:CGFloat = 0.0
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
 
@@ -32,7 +32,7 @@ struct SingleMediaViewer: View {
                     }
                 }
                    .centered()
-                   .frame(height: fullWidth ? 600 : 250)
+                   .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                    .background(Color("LightGray").opacity(0.2))
             }
             else if imagesShown || forceShow {
@@ -43,7 +43,7 @@ struct SingleMediaViewer: View {
                     if state.error != nil {
                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                             .centered()
-                            .frame(height: fullWidth ? 600 : 250)
+                            .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .background(Color("LightGray").opacity(0.2))
                             .onAppear {
                                 L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
@@ -63,16 +63,14 @@ struct SingleMediaViewer: View {
                             GIFImage(data: data)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(height: 250)
-//                                .hCentered()
-//                                .background(Color(.secondarySystemBackground))
+                                .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                                 .onTapGesture {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
                                 }
                         }
                     }
                     else if let image = state.image {
-                        VStack(alignment: .center, spacing:0) {
+                        VStack(alignment: .center, spacing: 0) {
                             if fullWidth {
                                 image
                                     .interpolation(.none)
@@ -88,12 +86,8 @@ struct SingleMediaViewer: View {
                                     .interpolation(.none)
                                     .resizable()
                                     .scaledToFit()
-//                                    .background(.green)
-                                    .frame(height: 250)
-//                                    .background(.red)
+                                    .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                                     .hCentered()
-//                                    .hCentered()
-//                                    .background(Color(.secondarySystemBackground))
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
                                     }
@@ -119,11 +113,11 @@ struct SingleMediaViewer: View {
                                 }
                         }
                         .centered()
-                        .frame(height: fullWidth ? 600 : 250)
+                        .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     }
                     else {
                         Color(.secondarySystemBackground)
-                            .frame(height: fullWidth ? 600 : 250)
+                            .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     }
                 }
                 .pipeline(ImageProcessing.shared.content)
@@ -131,8 +125,7 @@ struct SingleMediaViewer: View {
             else {
                 Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
                    .centered()
-                   .frame(height: fullWidth ? 600 : 250)
-//                   .background(Color(.secondarySystemBackground))
+                   .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                    .highPriorityGesture(
                        TapGesture()
                            .onEnded { _ in
@@ -170,6 +163,7 @@ struct SingleMediaViewer_Previews: PreviewProvider {
                 ImageProcessing.shared.content.cache.removeAll()
             }
         }
+        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
 
@@ -180,19 +174,19 @@ struct Gif_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadMedia()
         }) {
-            ScrollView {
-                LazyVStack {
-                    if let nrPost = PreviewFetcher.fetchNRPost("8d49bc0204aad2c0e8bb292b9c99b7dc1bdd6c520a877d908724c27eb5ab8ce8") {
+            SmoothListMock {
+                if let nrPost = PreviewFetcher.fetchNRPost("8d49bc0204aad2c0e8bb292b9c99b7dc1bdd6c520a877d908724c27eb5ab8ce8") {
+                    Box {
                         PostRowDeletable(nrPost: nrPost)
-                            .boxShadow()
                     }
-                    if let nrPost = PreviewFetcher.fetchNRPost("1c0ba51ba48e5228e763f72c5c936d610088959fe44535f9c861627287fe8f6d") {
+                      
+                }
+                if let nrPost = PreviewFetcher.fetchNRPost("1c0ba51ba48e5228e763f72c5c936d610088959fe44535f9c861627287fe8f6d") {
+                    Box {
                         PostRowDeletable(nrPost: nrPost)
-                            .boxShadow()
                     }
                 }
             }
-            .background(Color("ListBackground"))
         }
     }
 }
@@ -214,14 +208,28 @@ func getGifDimensions(data: Data) -> CGSize? {
     return CGSize(width: width, height: height)
 }
 
+import Combine
 
 struct ImageProgressView: View {
-    @ObservedObject var progress: FetchImage.Progress
+    let progress: FetchImage.Progress
+    @State var percent:Int = 0
+    @State var subscriptions = Set<AnyCancellable>()
 
     var body: some View {
         ProgressView()
-        if (progress.fraction != 0) {
-            Text(Int(ceil(progress.fraction * 100)), format: .percent)
+            .onAppear {
+                progress.objectWillChange
+                    .sink { _ in
+                        if Int(progress.fraction * 100) % 3 == 0 {
+                            if Int(ceil(progress.fraction * 100)) != percent {
+                                percent = Int(ceil(progress.fraction * 100))
+                            }
+                        }
+                    }
+                    .store(in: &subscriptions)
+            }
+        if (percent != 0) {
+            Text(percent, format: .percent)
         }
     }
 }
