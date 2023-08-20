@@ -227,7 +227,6 @@ struct Search: View {
                             fr.predicate = NSPredicate(format: "id = %@", noteHex)
                             fr.fetchLimit = 1
                             DataProvider.shared().bg.perform {
-                                guard self.nrPosts.isEmpty else { return }
                                 if let result = try? DataProvider.shared().bg.fetch(fr).first {
                                     let nrPost = NRPost(event: result)
                                     DispatchQueue.main.async {
@@ -351,7 +350,6 @@ struct Search: View {
                             fr.fetchLimit = 1
                             DataProvider.shared().bg.perform {
                                 if let result = try? DataProvider.shared().bg.fetch(fr).first {
-                                    guard !self.nrPosts.isEmpty else { return }
                                     let nrPost = NRPost(event: result)
                                     DispatchQueue.main.async {
                                         self.nrPosts = [nrPost]
@@ -395,7 +393,6 @@ struct Search: View {
                         fr.fetchLimit = 1
                         DataProvider.shared().bg.perform {
                             if let result = try? DataProvider.shared().bg.fetch(fr).first {
-                                guard !self.nrPosts.isEmpty else { return }
                                 let nrPost = NRPost(event: result)
                                 DispatchQueue.main.async {
                                     self.nrPosts = [nrPost]
