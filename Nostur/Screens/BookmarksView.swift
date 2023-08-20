@@ -56,12 +56,7 @@ struct BookmarksView: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                if vBookmark.kind == 30023 {
-                                    navigateTo(ArticlePath(id: vBookmark.id, navigationTitle: vBookmark.articleTitle ?? "Article"))
-                                }
-                                else {
-                                    navigateTo(vBookmark)
-                                }
+                                navigateTo(vBookmark)
                             }
                             .id(vBookmark.id)
                             .onDelete {
