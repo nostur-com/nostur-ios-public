@@ -76,12 +76,18 @@ struct ProfileZaps: View {
                     .foregroundColor(.gray)
                     .font(.system(size: 20))
             }
-            LazyVStack {
+            LazyVStack(spacing: 10) {
                 ForEach(nrPosts) { nrPost in
                     PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
-                        .roundedBoxShadow()
-                        .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         .id(nrPost.id)
+                        .padding(10)
+                        .background(nrPost.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
+                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            navigateTo(nrPost)
+                        }
                 }
                 if nrPosts.isEmpty {
                     ProgressView()
