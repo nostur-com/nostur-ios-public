@@ -106,11 +106,11 @@ struct PostHeader: View {
                         .padding(.top, 3)
                         .layoutPriority(2)
                 }
-                else if (contact.nip05verified) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .foregroundColor(Color("AccentColor"))
-                        .layoutPriority(3)
-                }
+//                else if (contact.nip05verified) {
+//                    Image(systemName: "checkmark.seal.fill")
+//                        .foregroundColor(Color("AccentColor"))
+//                        .layoutPriority(3)
+//                }
                 
                 if (singleLine) {
                     Ago(nrPost.createdAt, agoText: nrPost.ago)
@@ -169,8 +169,6 @@ struct PostHeader: View {
 struct PreviewHeaderView: View {
     
     var authorName:String
-    var username:String
-    var nip05verified = false
     var singleLine:Bool = true
     
     var body: some View {
@@ -184,17 +182,8 @@ struct PreviewHeaderView: View {
                         .lineLimit(1)
                         .layoutPriority(2)
                     
-                    if (nip05verified) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(Color("AccentColor"))
-                            .layoutPriority(3)
-                    }
-                    
-                    
-                    
                     if (singleLine) {
                         Group {
-                            Text(verbatim:"@\(username)").layoutPriority(1)
                             Text(verbatim:" · ") //
                             Text(verbatim:"1s")
                                 .layoutPriority(2)
@@ -205,7 +194,7 @@ struct PreviewHeaderView: View {
                 }
             }
             if (!singleLine) {
-                Text(verbatim: "@\(username) · 1s")
+                Text(verbatim: "1s")
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }
@@ -239,7 +228,7 @@ struct NoteHeaderView_Previews: PreviewProvider {
             pe.loadPosts()
         }) {
             VStack {
-                PreviewHeaderView(authorName: "Fabian", username: "fabian")
+                PreviewHeaderView(authorName: "Fabian")
                 
                 if let p = PreviewFetcher.fetchNRPost("953dbf6a952f43f70dbb4d6432593ba5b7f149a786d1750e4aa4cef40522c0a0") {
                     NoteHeaderView(nrPost: p)
