@@ -73,22 +73,26 @@ struct PostDetailView: View {
         GeometryReader { geometry in
             ScrollViewReader { proxy in
                 ScrollView {
-                    PostAndParent(nrPost: nrPost,  navTitleHidden:navTitleHidden)
-                        .onAppear {
-                            guard !didLoad else { return }
-                            didLoad = true
+                    VStack(spacing: 10) { // 10 for space between (parents+detail) and replies
+                        PostAndParent(nrPost: nrPost,  navTitleHidden:navTitleHidden)
+                        
+                            // Around parents + detail (not replies)
+                            .padding(10)
+                            .background(Color.systemBackground)
+                        
+                            
+                        
+                        // MARK: REPLIES TO OUR MAIN NOTE
+                        ThreadReplies(nrPost: nrPost)
+                            .background(Color.brown)
+                        
+                        // If there are less than 5 replies, put some empty space so our detail note is at top of screen
+                        if (nrPost.replies.count < 5) {
+                            Rectangle().frame(height: 400)
+                                .background(Color("ListBackground"))
+                                .foregroundColor(Color("ListBackground"))
                         }
-                        .onReceive(receiveNotification(.scrollToDetail)) { notification in
-                            guard !didScroll else { return }
-                            let detailId = notification.object as! String
-                            didScroll = true
-                            withAnimation {
-                                proxy.scrollTo(detailId, anchor: .top)
-                            }
-                        }
-                        .navigationTitle(nrPost.replyToId != nil ? String(localized:"Thread", comment:"Navigation title when viewing a Thread") : String(localized:"Post.noun", comment: "Navigation title when viewing a Post"))
-                        .navigationBarTitleDisplayMode(.inline)
-                        .navigationBarHidden(navTitleHidden)
+                    }
                 }
                 .simultaneousGesture(
                        DragGesture().onChanged({
@@ -99,6 +103,21 @@ struct PostDetailView: View {
                                sendNotification(.scrollingDown)
                            }
                        }))
+                .onAppear {
+                    guard !didLoad else { return }
+                    didLoad = true
+                }
+                .onReceive(receiveNotification(.scrollToDetail)) { notification in
+                    guard !didScroll else { return }
+                    let detailId = notification.object as! String
+                    didScroll = true
+                    withAnimation {
+                        proxy.scrollTo(detailId, anchor: .top)
+                    }
+                }
+                .navigationTitle(nrPost.replyToId != nil ? String(localized:"Thread", comment:"Navigation title when viewing a Thread") : String(localized:"Post.noun", comment: "Navigation title when viewing a Post"))
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarHidden(navTitleHidden)
             }
         }
     }
@@ -120,17 +139,15 @@ struct PostAndParent: View {
     
     var isParent = false
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-    var geoHeight:CGFloat
     let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     
     @ObservedObject var settings:SettingsStore = .shared
     @State private var timerTask: Task<Void, Never>?
     @State var didLoad = false
     
-    init(nrPost: NRPost, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
+    init(nrPost: NRPost, isParent:Bool = false, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
         self.isParent = isParent
-        self.geoHeight = geoHeight
         self.navTitleHidden = navTitleHidden
         self.connect = connect
     }
@@ -145,10 +162,14 @@ struct PostAndParent: View {
                     
                     if replyTo.kind == 30023 {
                         ArticleView(replyTo, isParent:true, isDetail: true, fullWidth: true)
+                            .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
+                            .background(Color(.secondarySystemBackground))
                     }
                     else {
                         let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
                         PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
+//                            .padding(10)
+                            .background(Color.systemBackground)
                     }
                 }
                 else {
@@ -176,19 +197,19 @@ struct PostAndParent: View {
             }
             // OUR (DETAIL) REPLY:
             // MARK: DETAIL NOTE
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 0) {
                 if nrPost.deletedById == nil {
                     if isParent {
                         ParentPost(nrPost: nrPost, connect:connect)
-                            .padding(.horizontal, 10)
-                            .background(Color.systemBackground)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(nrPost)
+                            }
                     }
                     else {
                         DetailPost(nrPost: nrPost)
                             .id(nrPost.id)
-                            .padding(.top, 10)
-                            .padding(.horizontal, 10)
-                            .background(Color.systemBackground)
+                            .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
                             .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
                     }
                 }
@@ -196,23 +217,7 @@ struct PostAndParent: View {
                     Text("_Post deleted by \(nrPost.anyName)_", comment: "Message shown when a post is deleted by (name)")
                         .hCentered()
                 }
-                
-                if (!isParent) {
-                    // MARK: REPLIES TO OUR MAIN NOTE
-                    ThreadReplies(nrPost: nrPost)
-                        .padding(.top, 10)
-                        .background(Color("ListBackground"))
-                    
-                    // If there are less than 5 replies, put some empty space so our detail note is at top of screen
-                    if (nrPost.replies.count < 5) {
-                        let height = geoHeight - 280
-                        Rectangle().frame(height: (height < 280 ? 400 : height))
-                            .background(Color("ListBackground"))
-                            .foregroundColor(Color("ListBackground"))
-                    }
-                }
             }
-            .background(Color("ListBackground"))
             .id(nrPost.id)
             .onAppear {
                 guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
@@ -254,22 +259,28 @@ struct PostAndParent: View {
                     }
                 }
             }
-            .padding(.top, nrPost.replyTo == nil ? 10.0 : 0)
         }
     }
 }
 
 struct ParentPost: View {
     @ObservedObject var nrPost:NRPost
+    @ObservedObject var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var dim:DIMENSIONS
     let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     var connect:ThreadConnectDirection? = nil
     @State var showMiniProfile = false
     
+    init(nrPost: NRPost, connect: ThreadConnectDirection? = nil) {
+        self.nrPost = nrPost
+        self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
+        self.connect = connect
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
-            if nrPost.blocked {
+            if postRowDeletableAttributes.blocked {
                 HStack {
                     Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
                     Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
@@ -339,12 +350,9 @@ struct ParentPost: View {
                         switch nrPost.kind {
                         case 30023:
                             ArticleView(nrPost, isDetail: false, fullWidth: settings.fullWidthImages, hideFooter: false)
+                                .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
                                 .padding(.bottom, 10)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 15)
-                                        .stroke(.regularMaterial, lineWidth: 1)
-                                )
-                                .padding(.bottom, 10)
+                                .background(Color(.secondarySystemBackground))
                         case 9802: // highlight
                             HighlightRenderer(nrPost: nrPost)
                                 .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
@@ -381,10 +389,7 @@ struct ParentPost: View {
                 }
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            navigateTo(nrPost)
-        }
+        // tapGesture is in PostAndParent()
     }
 }
 
@@ -466,10 +471,7 @@ struct DetailPost: View {
             switch nrPost.kind {
             case 30023:
                 ArticleView(nrPost, isDetail: true, fullWidth: settings.fullWidthImages, hideFooter: false)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(.regularMaterial, lineWidth: 1)
-                    )
+                    .background(Color(.secondarySystemBackground))
             case 9802:
                 HighlightRenderer(nrPost: nrPost)
                     .padding(.top, 3)
