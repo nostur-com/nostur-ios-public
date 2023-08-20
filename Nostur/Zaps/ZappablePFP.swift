@@ -8,10 +8,10 @@
 import SwiftUI
 import Combine
 
-// PFP with anmation when zapped
+// PFP with animation when zapped
 struct ZappablePFP: View {
     let pubkey:String
-    var contact:Contact?
+    var contact:NRContact?
     var size:CGFloat = 50.0
     var zapEtag:String?
     @State private var isZapped:Bool = false
@@ -22,7 +22,7 @@ struct ZappablePFP: View {
 
     var body: some View {
         ZStack {
-            PFP(pubkey: pubkey, contact: contact, size: size)
+            PFP(pubkey: pubkey, nrContact: contact, size: size)
             if isZapped {
                 Circle()
                     .stroke(lineWidth: 4.5)
@@ -60,7 +60,7 @@ struct ZappablePFP: View {
         }
         .onAppear {
             guard let contact = contact else { return }
-            contact.zapStateChanged
+            contact.mainContact.zapStateChanged
                 .sink { (zapState, zapEtag) in
                     if let zapState = zapState,
                        let zapEtag = zapEtag,
@@ -79,10 +79,10 @@ struct ZappablePFP: View {
 
 struct ZappablePreviews: View {
     
-    @State var contact1 = PreviewFetcher.fetchContact()
-    @State var contact2 = PreviewFetcher.fetchContact()
-    @State var contact3 = PreviewFetcher.fetchContact()
-    @State var contact4 = PreviewFetcher.fetchContact()
+    @State var contact1 = PreviewFetcher.fetchNRContact()
+    @State var contact2 = PreviewFetcher.fetchNRContact()
+    @State var contact3 = PreviewFetcher.fetchNRContact()
+    @State var contact4 = PreviewFetcher.fetchNRContact()
     
     @State var zapped1 = false
     @State var zapped2 = false

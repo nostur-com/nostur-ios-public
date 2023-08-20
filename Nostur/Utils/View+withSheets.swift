@@ -414,7 +414,7 @@ private struct WithSheets: ViewModifier {
 struct MiniProfileSheetInfo: Identifiable, Equatable {
     let id = UUID()
     let pubkey: String
-    var contact: Contact?
+    var contact: NRContact?
     let zapEtag: String
     let location: CGPoint
     
