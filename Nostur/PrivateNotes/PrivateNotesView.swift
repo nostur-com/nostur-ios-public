@@ -47,7 +47,7 @@ struct PrivateNotesView: View {
 //        let _ = Self._printChanges()
         ScrollView {
             if !privateNotes.isEmpty {
-                LazyVStack {
+                LazyVStack(spacing: 10) {
                     ForEach(privateNotes) { pnInfo in
                         PrivateNoteRow(note: pnInfo.note, nrPost: pnInfo.nrPost)
                             .onDelete {

@@ -29,7 +29,7 @@ struct NoteById: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             if let nrPost {
                 PostDetailView(nrPost: nrPost)
             }
@@ -104,7 +104,7 @@ struct PostDetailView: View {
     }
 }
 
-let THREAD_LINE_OFFSET = 34.0
+let THREAD_LINE_OFFSET = 24.0
 
 // Renders reply, and parent
 // the parent is another PostAndParent
@@ -121,7 +121,7 @@ struct PostAndParent: View {
     var isParent = false
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     var geoHeight:CGFloat
-    let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + (DIMENSIONS.POST_ROW_PFP_HPADDING*2)
+    let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     
     @ObservedObject var settings:SettingsStore = .shared
     @State private var timerTask: Task<Void, Never>?
@@ -137,7 +137,7 @@ struct PostAndParent: View {
     
     var body: some View {
 //        let _ = Self._printChanges()
-        VStack(spacing:0) {
+        VStack(spacing: 10) {
             // MARK: PARENT NOTE
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
             if let replyTo = nrPost.replyTo {
@@ -149,23 +149,6 @@ struct PostAndParent: View {
                     else {
                         let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
                         PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
-                            .background(alignment: .leading) {
-                                ZStack(alignment: .leading) {
-                                    Color.systemBackground
-                                    Color("LightGray")
-                                        .frame(width: 2)
-                                        .offset(x: THREAD_LINE_OFFSET, y: 62)
-                                        .opacity(connect == .bottom || connect == .both ? 1 : 0)
-                                }
-                            }
-                            .background(alignment:.topLeading) {
-                                Color.systemBackground
-                                    .frame(width: DIMENSIONS.ROW_PFP_SPACE - 10)
-                                    .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT + 20)
-                                    .onTapGesture {
-                                        navigateTo(replyTo)
-                                    }
-                            }
                     }
                 }
                 else {
@@ -193,15 +176,18 @@ struct PostAndParent: View {
             }
             // OUR (DETAIL) REPLY:
             // MARK: DETAIL NOTE
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
                 if nrPost.deletedById == nil {
                     if isParent {
                         ParentPost(nrPost: nrPost, connect:connect)
-//                            .background(Color.systemBackground)
+                            .padding(.horizontal, 10)
+                            .background(Color.systemBackground)
                     }
                     else {
                         DetailPost(nrPost: nrPost)
                             .id(nrPost.id)
+                            .padding(.top, 10)
+                            .padding(.horizontal, 10)
                             .background(Color.systemBackground)
                             .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
                     }
@@ -214,6 +200,8 @@ struct PostAndParent: View {
                 if (!isParent) {
                     // MARK: REPLIES TO OUR MAIN NOTE
                     ThreadReplies(nrPost: nrPost)
+                        .padding(.top, 10)
+                        .background(Color("ListBackground"))
                     
                     // If there are less than 5 replies, put some empty space so our detail note is at top of screen
                     if (nrPost.replies.count < 5) {
@@ -222,11 +210,9 @@ struct PostAndParent: View {
                             .background(Color("ListBackground"))
                             .foregroundColor(Color("ListBackground"))
                     }
-                    
-//                    Spacer()
                 }
-                
             }
+            .background(Color("ListBackground"))
             .id(nrPost.id)
             .onAppear {
                 guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
@@ -269,8 +255,6 @@ struct PostAndParent: View {
                 }
             }
             .padding(.top, nrPost.replyTo == nil ? 10.0 : 0)
-            .background(Color.systemBackground)
-//            .frame(width: 400)
         }
     }
 }
@@ -279,27 +263,141 @@ struct ParentPost: View {
     @ObservedObject var nrPost:NRPost
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var dim:DIMENSIONS
-    let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + (DIMENSIONS.POST_ROW_PFP_HPADDING*2)
+    let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     var connect:ThreadConnectDirection? = nil
     @State var showMiniProfile = false
     
     var body: some View {
-        if nrPost.blocked {
-            HStack {
-                Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
-                Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
-                    .buttonStyle(.bordered)
+        VStack(spacing: 0) {
+            if nrPost.blocked {
+                HStack {
+                    Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                    Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
+                        .buttonStyle(.bordered)
+                }
+                .padding(.leading, 8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+                .padding(.vertical, 20)
             }
-            .padding(.leading, 8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-            )
-            .padding(.vertical, 20)
+            else {
+                HStack(alignment:.top, spacing: 10) {
+                    ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+                        .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
+                        .onTapGesture {
+                            if !IS_APPLE_TYRANNY {
+                                navigateTo(ContactPath(key: nrPost.pubkey))
+                            }
+                            else {
+                                withAnimation {
+                                    showMiniProfile = true
+                                }
+                            }
+                        }
+                        .overlay(alignment: .topLeading) {
+                            if (showMiniProfile) {
+                                GeometryReader { geo in
+                                    Color.clear
+                                        .onAppear {
+                                            sendNotification(.showMiniProfile,
+                                                             MiniProfileSheetInfo(
+                                                                pubkey: nrPost.pubkey,
+                                                                contact: nrPost.contact,
+                                                                zapEtag: nrPost.id,
+                                                                location: geo.frame(in: .global).origin
+                                                             )
+                                            )
+                                            showMiniProfile = false
+                                        }
+                                }
+                                  .frame(width: 10)
+                                  .zIndex(100)
+                                  .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                                  .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                                      showMiniProfile = false
+                                  }
+                            }
+                        }
+                    
+                    VStack(alignment:.leading, spacing: 3) {
+                        HStack(alignment: .top) {
+                            NoteHeaderView(nrPost: nrPost, singleLine: true)
+                            Spacer()
+                            EventPrivateNoteToggle(nrPost: nrPost)
+                            LazyNoteMenuButton(nrPost: nrPost)
+                                .offset(y: -5)
+                        }
+                        
+                        // We don't show "Replying to.." unless we can't fetch the parent
+                        if nrPost.replyTo == nil && nrPost.replyToId != nil {
+                            ReplyingToFragmentView(nrPost: nrPost)
+                                .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        }
+                        
+                        switch nrPost.kind {
+                        case 30023:
+                            ArticleView(nrPost, isDetail: false, fullWidth: settings.fullWidthImages, hideFooter: false)
+                                .padding(.bottom, 10)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .stroke(.regularMaterial, lineWidth: 1)
+                                )
+                                .padding(.bottom, 10)
+                        case 9802: // highlight
+                            HighlightRenderer(nrPost: nrPost)
+                                .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        case 1,6,9734: // text, repost, zap request
+                            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20)
+                                .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        case 1063: // File Metadata
+                            NoteTextRenderView(nrPost: nrPost)
+                        default:
+                            Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
+                                .centered()
+                                .frame(maxWidth: .infinity)
+                                .background(Color("LightGray").opacity(0.2))
+                            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 )
+                                .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        }
+                    }
+                }
+                .background(alignment:.leading) {
+                    ZStack(alignment: .leading) {
+                        Color.systemBackground
+                        Color("LightGray")
+                            .frame(width: 2)
+                            .offset(x: THREAD_LINE_OFFSET, y: 50)
+                            .opacity(connect == .bottom || connect == .both ? 1 : 0)
+                    }
+                }
+            
+                if (settings.rowFooterEnabled) {
+                    FooterFragmentView(nrPost: nrPost)
+                        .padding(.leading, INDENT)
+                        .padding(.vertical, 5)
+                        .padding(.trailing, 10)
+                }
+            }
         }
-        else {
-            HStack(alignment:.top, spacing:0) {
-                ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            navigateTo(nrPost)
+        }
+    }
+}
+
+struct DetailPost: View {
+    @ObservedObject var nrPost:NRPost
+    @ObservedObject var settings:SettingsStore = .shared
+    @EnvironmentObject var dim:DIMENSIONS
+    @State var showMiniProfile = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment:.top, spacing: 10) {
+                ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                     .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                     .onTapGesture {
                         if !IS_APPLE_TYRANNY {
@@ -335,207 +433,79 @@ struct ParentPost: View {
                               }
                         }
                     }
-                    .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
+                    .overlay(alignment: .top) {
+                        if nrPost.replyToId != nil {
+                            Color("LightGray")
+                                .frame(width: 2, height: 10)
+                                .offset(y: -10)
+                        }
+                    }
                 
-                VStack(alignment:.leading, spacing:0) {
-                    HStack {
-                        NoteHeaderView(nrPost: nrPost, singleLine: true)
+                VStack(alignment:.leading, spacing: 3) {
+                    HStack(alignment: .top) {
+                        NoteHeaderView(nrPost: nrPost, singleLine: false)
                         Spacer()
                         EventPrivateNoteToggle(nrPost: nrPost)
                         LazyNoteMenuButton(nrPost: nrPost)
-                    }
-                    .padding(.trailing, 10)
-                    
-                    // We don't show "Replying to.." unless we can't fetch the parent
-                    if nrPost.replyTo == nil && nrPost.replyToId != nil {
-                        ReplyingToFragmentView(nrPost: nrPost)
-                            .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                    }
-                    
-                    switch nrPost.kind {
-                    case 30023:
-                        ArticleView(nrPost, isDetail: false, fullWidth: settings.fullWidthImages, hideFooter: false)
-                            .padding(.bottom, 10)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(.regularMaterial, lineWidth: 1)
-                            )
-                            .padding(.bottom, 10)
-                    case 9802: // highlight
-                        HighlightRenderer(nrPost: nrPost)
-                            .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                    case 1,6,9734: // text, repost, zap request
-                        ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20)
-                            .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                    case 1063: // File Metadata
-                        NoteTextRenderView(nrPost: nrPost)
-                    default:
-                        Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                            .centered()
-                            .frame(maxWidth: .infinity)
-                            .background(Color("LightGray").opacity(0.2))
-                        ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 )
-                            .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(nrPost)
-                            }
+                            .offset(x: -5, y: -5)
                     }
                 }
             }
-            .background(alignment:.leading) {
-                ZStack(alignment: .leading) {
-                    Color.systemBackground
-                    Color("LightGray")
-                        .frame(width: 2)
-                        .offset(x: THREAD_LINE_OFFSET, y: 50)
-                        .opacity(connect == .bottom || connect == .both ? 1 : 0)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    sendNotification(.scrollToDetail, nrPost.id)
                 }
-                .onTapGesture {
-                    navigateTo(nrPost)
-                }
-                
-    //            Color.systemBackground
-    //                .frame(width: INDENT)
-    //                .onTapGesture {
-    //                    navigateTo(nrPost)
-    //                }
             }
-        
-            if (settings.rowFooterEnabled) {
-                FooterFragmentView(nrPost: nrPost)
-                    .padding(.leading, INDENT)
-                    .padding(.vertical, 5)
-                    .padding(.trailing, 10)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        navigateTo(nrPost)
-                    }
-            }
-        }
-    }
-}
-
-struct DetailPost: View {
-    @ObservedObject var nrPost:NRPost
-    @ObservedObject var settings:SettingsStore = .shared
-    @EnvironmentObject var dim:DIMENSIONS
-    @State var showMiniProfile = false
-    
-    var body: some View {
-        HStack(alignment:.top, spacing:0) {
-            ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
-                .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
-                .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
-//                .padding(.top, nrPost.replyToId != nil ? 0 : 10)
-                .onTapGesture {
-                    if !IS_APPLE_TYRANNY {
-                        navigateTo(ContactPath(key: nrPost.pubkey))
-                    }
-                    else {
-                        withAnimation {
-                            showMiniProfile = true
-                        }
-                    }
-                }
-                .overlay(alignment: .topLeading) {
-                    if (showMiniProfile) {
-                        GeometryReader { geo in
-                            Color.clear
-                                .onAppear {
-                                    sendNotification(.showMiniProfile,
-                                                     MiniProfileSheetInfo(
-                                                        pubkey: nrPost.pubkey,
-                                                        contact: nrPost.contact?.mainContact,
-                                                        zapEtag: nrPost.id,
-                                                        location: geo.frame(in: .global).origin
-                                                     )
-                                    )
-                                    showMiniProfile = false
-                                }
-                        }
-                          .frame(width: 10)
-                          .zIndex(100)
-                          .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                          .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                              showMiniProfile = false
-                          }
-                    }
-                }
             
-            VStack(alignment:.leading, spacing:0) {
-                HStack {
-                    NoteHeaderView(nrPost: nrPost, singleLine: false)
-                    Spacer()
-                    EventPrivateNoteToggle(nrPost: nrPost)
-                    LazyNoteMenuButton(nrPost: nrPost)
-                }
-                .padding(.trailing, 10)
-            }
-        }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                sendNotification(.scrollToDetail, nrPost.id)
-            }
-        }
-        
-        // We don't show "Replying to.." unless we can't fetch the parent
-        if nrPost.replyTo == nil && nrPost.replyToId != nil {
-            ReplyingToFragmentView(nrPost: nrPost)
-                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-        }
-    
-        switch nrPost.kind {
-        case 30023:
-            ArticleView(nrPost, isDetail: true, fullWidth: settings.fullWidthImages, hideFooter: false)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(.regularMaterial, lineWidth: 1)
-                )
-        case 9802:
-            HighlightRenderer(nrPost: nrPost)
-                .padding(.top, 3)
-                .padding(.bottom, 10)
-                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-        case 1,6,9734:
-            if nrPost.plainTextOnly {
-                NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
-            }
-            else {
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (20)))
+            // We don't show "Replying to.." unless we can't fetch the parent
+            if nrPost.replyTo == nil && nrPost.replyToId != nil {
+                ReplyingToFragmentView(nrPost: nrPost)
                     .padding(.top, 10)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 10)
             }
-        case 1063:
-            if let fileMetadata = nrPost.fileMetadata {
-                Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+        
+            switch nrPost.kind {
+            case 30023:
+                ArticleView(nrPost, isDetail: true, fullWidth: settings.fullWidthImages, hideFooter: false)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 15)
+                            .stroke(.regularMaterial, lineWidth: 1)
+                    )
+            case 9802:
+                HighlightRenderer(nrPost: nrPost)
+                    .padding(.top, 3)
+                    .padding(.bottom, 10)
+                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+            case 1,6,9734:
+                if nrPost.plainTextOnly {
+                    NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
+                }
+                else {
+                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (20)))
+                        .padding(.vertical, 10)
+                }
+            case 1063:
+                if let fileMetadata = nrPost.fileMetadata {
+                    Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                        .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                }
+            default:
+                Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
+                    .centered()
+                    .frame(maxWidth: .infinity)
+                    .background(Color("LightGray").opacity(0.2))
+                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                    .padding(.top, 3)
+                    .padding(.bottom, 10)
                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
             }
-        default:
-            Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                .centered()
-                .frame(maxWidth: .infinity)
-                .background(Color("LightGray").opacity(0.2))
-            ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
-                .padding(.top, 3)
-                .padding(.bottom, 10)
-                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+            
+            DetailFooterFragment(nrPost: nrPost)
+                .padding(.top, 10)
+            FooterFragmentView(nrPost: nrPost)
+                .padding(.vertical, 5)
+                .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
         }
-        
-        DetailFooterFragment(nrPost: nrPost)
-            .padding(.leading, DIMENSIONS.POST_ROW_HPADDING)
-            .background(Color.systemBackground)
-        FooterFragmentView(nrPost: nrPost)
-            .padding(.top, 5)
-            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-            .padding(.bottom, 5)
-            .background(Color.systemBackground)
-            .roundedCorner(10, corners: [.bottomLeft, .bottomRight])
-            .background(Color("ListBackground"))
-            .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
-        
-        
     }
 }
 

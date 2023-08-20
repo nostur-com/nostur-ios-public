@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct PostRowDeletable: View {
-    @ObservedObject var nrPost:NRPost // Need for .deletedById
+    let nrPost:NRPost // Need for .deletedById
+    @ObservedObject var postRowDeletableAttributes: NRPost.PostRowDeletableAttributes
     var hideFooter = true // For rendering in NewReply
     var missingReplyTo = false // For rendering in thread, hide "Replying to.."
     var connect:ThreadConnectDirection? = nil
@@ -19,6 +20,7 @@ struct PostRowDeletable: View {
     
     init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
+        self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
@@ -29,7 +31,7 @@ struct PostRowDeletable: View {
     }
     
     var body: some View {
-        if nrPost.blocked {
+        if postRowDeletableAttributes.blocked {
             HStack {
                 Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
                 Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
@@ -42,7 +44,7 @@ struct PostRowDeletable: View {
             )
             .hCentered()
         }
-        else if nrPost.deletedById == nil {
+        else if postRowDeletableAttributes.deletedById == nil {
             NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped)
         }
         else {

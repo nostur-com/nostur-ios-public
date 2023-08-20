@@ -12,7 +12,8 @@ import SwiftUI
 // Note Full width
 struct Kind1: View {
     @EnvironmentObject var dim:DIMENSIONS
-    @ObservedObject var nrPost:NRPost
+    let nrPost:NRPost
+    @ObservedObject var pfpAttributes: NRPost.PFPAttributes
     let hideFooter:Bool // For rendering in NewReply
     let missingReplyTo:Bool // For rendering in thread
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
@@ -26,6 +27,7 @@ struct Kind1: View {
     
     init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
+        self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
@@ -54,9 +56,8 @@ struct Kind1: View {
     var body: some View {
         
         VStack(spacing: 3) {
-            HStack(alignment: .top, spacing:0) {
-                ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
-                //                PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
+            HStack(alignment: .top, spacing: 10) {
+                ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                     .frame(width: 50, height: 50)
                     .onTapGesture {
                         if !IS_APPLE_TYRANNY {
@@ -76,7 +77,7 @@ struct Kind1: View {
                                         sendNotification(.showMiniProfile,
                                                          MiniProfileSheetInfo(
                                                             pubkey: nrPost.pubkey,
-                                                            contact: nrPost.contact?.mainContact,
+                                                            contact: nrPost.contact,
                                                             zapEtag: nrPost.id,
                                                             location: geo.frame(in: .global).origin
                                                          )
@@ -92,26 +93,13 @@ struct Kind1: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 10)
                 NoteHeaderView(nrPost: nrPost, singleLine: false)
                 Spacer()
                 LazyNoteMenuButton(nrPost: nrPost)
-                    .padding(.horizontal, 20)
             }
-            .background(alignment: .leading) {
-                Color.systemBackground
-                    .padding(.leading, DIMENSIONS.ROW_PFP_SPACE)
-                    .padding(.trailing, 60) // Space for NoteMenu tapping
-                    .onTapGesture {
-                        navigateTo(nrPost)
-                    }
-            }
-            .padding(.bottom, 10)
             VStack(alignment:.leading, spacing: 3) {// Post container
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost)
-                        .contentShape(Rectangle())
-                        .onTapGesture { navigateTo(nrPost) }
                 }
                 if let fileMetadata = nrPost.fileMetadata {
                     Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, fullWidth: true)
@@ -130,30 +118,15 @@ struct Kind1: View {
                         
                     }
                     ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: true, availableWidth: imageWidth)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            navigateTo(nrPost)
-                        }
+
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
                     }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
                     FooterFragmentView(nrPost: nrPost)
-                        .padding(.top, 10)
-                    //                        .frame(idealHeight: 38.0)
-                    //                        .fixedSize(horizontal: false, vertical: true)
-                    //                     Make sure we get the correct size (is now 28.0 + 10.0)
-                    //                        .readSize { newSize in
-                    //                            print("Final Footer size: \(newSize)")
-                    //                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            navigateTo(nrPost)
-                        }
                 }
             }
-            .padding(.horizontal, 10)
         }
     }
 }

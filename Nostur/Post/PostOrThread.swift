@@ -7,76 +7,84 @@
 
 import SwiftUI
 
+struct Box<Content: View>: View {
+    let content: Content
+    var kind:Int = 1
+
+    init(kind:Int = 1, @ViewBuilder _ content:()->Content) {
+        self.kind = kind
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(spacing: 10) {
+            content
+        }
+        .padding(10)
+        .background(kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
+    }
+}
+
 struct PostOrThread: View {
-    @ObservedObject var nrPost: NRPost
+    let nrPost: NRPost
+    @ObservedObject var postOrThreadAttributes: NRPost.PostOrThreadAttributes
     var grouped = false
     var rootId:String? = nil
     @ObservedObject var settings:SettingsStore = .shared
+    
+    init(nrPost: NRPost, grouped: Bool = false, rootId: String? = nil) {
+        self.nrPost = nrPost
+        self.postOrThreadAttributes = nrPost.postOrThreadAttributes
+        self.grouped = grouped
+        self.rootId = rootId
+    }
 
     var body: some View {
-        VStack(spacing:0) {
+        VStack(spacing: 10) {
             ForEach(nrPost.parentPosts) { nrParent in
                 PostRowDeletable(nrPost: nrParent,
                                  missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
                                  connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
-                    .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .id(nrParent.id)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if nrParent.kind == 30023 {
+                        navigateTo(ArticlePath(id: nrParent.id, navigationTitle: nrParent.articleTitle ?? "Article"))
+                    }
+                    else {
+                        navigateTo(nrParent)
+                    }
+                }
             }
             PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
-                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                .fixedSize(horizontal: false, vertical: true)
-                .id(nrPost.id)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if nrPost.isRepost {
+                        if let firstQuote = nrPost.firstQuote {
+                            if firstQuote.kind == 30023 {
+                                navigateTo(ArticlePath(id: firstQuote.id, navigationTitle: firstQuote.articleTitle ?? "Article"))
+                            }
+                            else {
+                                navigateTo(firstQuote)
+                            }
+                        }
+                        else if let firstQuoteId = nrPost.firstQuoteId {
+                            navigateTo(NotePath(id: firstQuoteId))
+                        }
+                    }
+                    else {
+                        if nrPost.kind == 30023 {
+                            navigateTo(ArticlePath(id: nrPost.id, navigationTitle: nrPost.articleTitle ?? "Article"))
+                        }
+                        else {
+                            navigateTo(nrPost)
+                        }
+                    }
+                }
         }
-        .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-        .background(Color.systemBackground)
-        .padding(.vertical, 10)
-        .roundedBoxShadow(backgroundColor: nrPost.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
         .padding(10)
+        .background(nrPost.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
     }
 }
-//
-//struct PostOrThread_Previews: PreviewProvider {
-//    static var previews: some View {
-//        VStack {
-//            let ns:NosturState = .shared
-//            let events = PreviewFetcher.fetchEvents(ns.followingPublicKeys, kind: 1)
-//            
-//            let onlyRootEvents = events
-//                .map {
-//                    $0.parentEvents = Event.getParentEvents($0)
-//                    return $0
-//                }
-//                .filter(onlyRootOrReplyingToFollower)
-//            
-//            let nrPosts = onlyRootEvents.compactMap { NRPost(event: $0) }
-//            
-//            ScrollView {
-//                VStack(spacing: 0) {
-//    //                ForEach(nrPosts) { nrPost in
-//                    ForEach(Array(nrPosts.dropFirst(12))) { nrPost in
-//                        PostOrThread(nrPost: nrPost)
-//                            .overlay {
-//                                GeometryReader { geo in
-//                                    HStack {
-//                                        Spacer()
-//                                        Text("H: \(nrPost.anyName): \(Int(geo.size.height))")
-//                                            .padding(10)
-//                                            .foregroundColor(.white)
-//                                            .background(.red)
-//                                    }
-//                                }
-//                            }
-//                            .boxShadow()
-//                    }
-//                }
-//            }
-//            .background(.gray)
-//        }
-//        .withPreviewEnvironment()
-//    }
-//}
-
 
 func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
     if let replyToPubkey = event.replyTo?.pubkey {

@@ -447,7 +447,8 @@ struct SmoothList: UIViewControllerRepresentable {
                     PostOrThread(nrPost: nrPost)
                 }
                 .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
-                .margins(.all, 0)
+                .margins(.vertical, 10)
+                .margins(.horizontal, 0)
             }
         }()
         
@@ -458,7 +459,8 @@ struct SmoothList: UIViewControllerRepresentable {
                         .hCentered()
                 }
                 .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
-                .margins(.all, 0)
+                .margins(.vertical, 10)
+                .margins(.horizontal, 0)
             }
         }()
     }
@@ -502,6 +504,7 @@ final class CViewHolder {
         }
         
         layout.configuration.scrollDirection = .vertical
+        
         //        let flowLayout = UICollectionViewFlowLayout()
         //        flowLayout.estimatedItemSize = CGSize(width: UIScreen.main.bounds.width - 10, height: 250.0)
         //        flowLayout.scrollDirection = .vertical
@@ -512,7 +515,12 @@ final class CViewHolder {
         collectionView.delegate = coordinator
         collectionView.prefetchDataSource = coordinator
         collectionView.isPrefetchingEnabled = true
-        collectionView.selfSizingInvalidation = .enabledIncludingConstraints
+//        collectionView.selfSizingInvalidation = .enabledIncludingConstraints
+        collectionView.selfSizingInvalidation = .enabled
+        collectionView.isOpaque = true
+        collectionView.dragInteractionEnabled = false
+        collectionView.allowsSelection = false
+        collectionView.allowsFocus = false
         onInitialized(collectionView)
     }
 

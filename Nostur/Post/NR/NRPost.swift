@@ -13,6 +13,46 @@ public typealias NRPostID = String
 // NRPost SHOULD BE CREATED IN BACKGROUND THREAD
 class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
+    class PostOrThreadAttributes: ObservableObject {
+        @Published var parentPosts:[NRPost] = []
+        
+        init(parentPosts:[NRPost] = []) {
+            self.parentPosts = parentPosts
+        }
+    }
+    
+    class PostRowDeletableAttributes: ObservableObject {
+        @Published var blocked = false
+        @Published var deletedById: String? = nil
+
+        init(blocked: Bool = false, deletedById: String? = nil) {
+            self.blocked = blocked
+            self.deletedById = deletedById
+        }
+    }
+    
+    class NoteRowAttributes: ObservableObject {
+        @Published var firstQuote:NRPost? = nil
+        
+        init(firstQuote:NRPost? = nil) {
+            self.firstQuote = firstQuote
+        }
+    }
+    
+    class PFPAttributes: ObservableObject {
+        @Published var contact:NRContact? = nil
+        
+        init(contact:NRContact? = nil) {
+            self.contact = contact
+        }
+    }
+    
+    // Seperate ObservableObjects for view performance optimization
+    var postOrThreadAttributes: PostOrThreadAttributes
+    var postRowDeletableAttributes: PostRowDeletableAttributes
+    var noteRowAttributes: NoteRowAttributes
+    var pfpAttributes: PFPAttributes
+    
     let SPAM_LIMIT_P:Int = 50
  
     static func == (lhs: NRPost, rhs: NRPost) -> Bool {
@@ -39,18 +79,24 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var contentElements:[ContentElement] = [] // NoteRow.Kind1
     var contentElementsDetail:[ContentElement] = [] // PostDetail.Kind1
     
-    var _contact:NRContact?
     var contact:NRContact?  {
-        get { NosturState.shared.nrPostQueue.sync { _contact } }
-        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._contact = newValue } }
+        get { pfpAttributes.contact }
+        set {
+            DispatchQueue.main.async {
+                self.pfpAttributes.contact = newValue
+            }
+        }
     }
     
     var referencedContacts:[NRContact] = []
     
-    private var _parentPosts:[NRPost] = []
     var parentPosts: [NRPost] {
-        get { NosturState.shared.nrPostQueue.sync { _parentPosts } }
-        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._parentPosts = newValue } }
+        get { postOrThreadAttributes.parentPosts }
+        set {
+            DispatchQueue.main.async {
+                self.postOrThreadAttributes.parentPosts = newValue
+            }
+        }
     }
     
     private var _replies: [NRPost] = []
@@ -59,7 +105,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         get { NosturState.shared.nrPostQueue.sync { _replies } }
         set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._replies = newValue } }
     }
-    
     
     private var _repliesToRoot: [NRPost] = [] {
         didSet {
@@ -87,7 +132,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var _replyToRoot:NRPost?
     
     var firstQuoteId:String?
-    var _firstQuote:NRPost?
     
     var replyTo:NRPost?  {
         get { NosturState.shared.nrPostQueue.sync { _replyTo } }
@@ -100,12 +144,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     var firstQuote:NRPost? {
-        get { NosturState.shared.nrPostQueue.sync { _firstQuote } }
-        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._firstQuote = newValue } }
+        get { noteRowAttributes.firstQuote }
+        set {
+            DispatchQueue.main.async {
+                self.noteRowAttributes.firstQuote = newValue
+            }
+        }
     }
   
     var firstE:String? // Needed for muting
-    var deletedById:String?
+    var deletedById:String? {
+        get { postRowDeletableAttributes.deletedById }
+        set {
+            DispatchQueue.main.async {
+                self.postRowDeletableAttributes.deletedById = newValue
+            }
+        }
+    }
     
     let event:Event // Only touch this in BG context!!!
     
@@ -120,7 +175,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var zapState:Event.ZapState?
     var following = false
-    @Published var blocked = false
+    var blocked: Bool {
+        get { postRowDeletableAttributes.blocked }
+        set {
+            DispatchQueue.main.async {
+                self.postRowDeletableAttributes.blocked = newValue
+            }
+        }
+    }
     @Published var cancellationId:UUID? = nil // if set, will show 'undo send' view
     var replied = false
     var liked = false
@@ -167,7 +229,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var mostRecentId:String?
     
     init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isPreview:Bool = false) {
+        var isAwaiting = false
+        
         self.event = event // Only touch this in BG context!!!
+        self.postRowDeletableAttributes = PostRowDeletableAttributes(blocked: Self.isBlocked(pubkey: event.pubkey), deletedById: event.deletedById)
         self.isPreview = isPreview
         self.id = event.id
         self.pubkey = event.pubkey
@@ -175,12 +240,28 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.createdAt = event.date
         self.created_at = event.created_at
         self.ago = event.ago
-        self._parentPosts = withParents ? event.parentEvents.map { NRPost(event: $0) } : []
+        self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: withParents ? event.parentEvents.map { NRPost(event: $0) } : [])
         self._replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
         self._repliesToRoot = []
         self.threadPostsCount = 1 + event.parentEvents.count
         self.isRepost = event.isRepost
-        self.deletedById = event.deletedById
+        
+        self.firstQuoteId = event.firstQuoteId
+        if let firstQuote = event.firstQuote {
+            self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withRepliesCount: withRepliesCount))
+        } // why event.firstQuote_ doesn't work??
+        else if let firstQuoteId = event.firstQuoteId,  let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: DataProvider.shared().bg) {
+            self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withRepliesCount: withRepliesCount))
+        }
+        else if !isAwaiting && event.firstQuoteId != nil {
+            self.noteRowAttributes = NoteRowAttributes()
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005"); isAwaiting = true
+        }
+        else {
+            self.noteRowAttributes = NoteRowAttributes()
+        }
+        
+        
         self.repliesCount = event.repliesCount
         self.mentionsCount = event.mentionsCount
         self.zapsCount = event.zapsCount
@@ -223,11 +304,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         self.following = NosturState.shared.bgFollowingPublicKeys.contains(event.pubkey)
         
-        var isAwaiting = false
+        
         if let contact = event.contact_ {
-            self._contact = NRContact(contact: contact, following: self.following)
+            self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following))
         }
         else {
+            self.pfpAttributes = PFPAttributes()
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.001"); isAwaiting = true
         }
         
@@ -235,10 +317,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.referencedContacts = nrContacts
         
         var missingPs = Set<String>()
-        if self._contact == nil {
+        if self.pfpAttributes.contact == nil {
             missingPs.insert(event.pubkey)
         }
-        else if let c = self._contact, c.metadata_created_at == 0 {
+        else if let c = self.pfpAttributes.contact, c.metadata_created_at == 0 {
             missingPs.insert(event.pubkey)
         }
         let eventContactPs = nrContacts.compactMap({ contact in
@@ -279,17 +361,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.004"); isAwaiting = true
         }
         
-        self.firstQuoteId = event.firstQuoteId
-        if let firstQuote = event.firstQuote {
-            self.firstQuote = NRPost(event: firstQuote, withRepliesCount: withRepliesCount)
-        } // why event.firstQuote_ doesn't work??
-        else if let firstQuoteId = event.firstQuoteId,  let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: DataProvider.shared().bg) {
-            self.firstQuote = NRPost(event: firstQuote, withRepliesCount: withRepliesCount)
-        }
-        else if !isAwaiting && event.firstQuoteId != nil {
-            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005"); isAwaiting = true
-        }
-        
         if event.kind == 9802 {
             self.highlightData = getHighlightData(event: event)
         }
@@ -317,7 +388,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.replied = isReplied()
         self.reposted = isReposted()
         self.hasPrivateNote = _hasPrivateNote()
-        self.blocked = isBlocked()
+        
         
         self.subject = fastTags.first(where: { $0.0 == "subject" })?.1
         if let subject {
@@ -367,9 +438,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         return false
     }
     
-    private func isBlocked() -> Bool {
-        if let account = NosturState.shared.bgAccount {
-            return account.blockedPubkeys_.contains(self.pubkey)
+    private static func isBlocked(pubkey:String) -> Bool {
+        if NosturState.shared.bgAccount != nil {
+            return NosturState.shared.bgAccount?.blockedPubkeys_.contains(pubkey) ?? false
         }
         return false
     }
@@ -717,10 +788,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let self = self else { return }
                     let nrFirstQuote = NRPost(event: firstQuote, withReplyTo: true)
-                    DispatchQueue.main.async {
-                        self.objectWillChange.send()
-                        self.firstQuote = nrFirstQuote
-                    }
+                    self.firstQuote = nrFirstQuote
                 }
             }
             .store(in: &subscriptions)
@@ -731,7 +799,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .receive(on: RunLoop.main)
             .sink { [weak self] deletedById in
                 guard let self = self else { return }
-                self.objectWillChange.send()
                 self.deletedById = deletedById
             }
             .store(in: &subscriptions)
@@ -920,6 +987,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     @MainActor public func unblockFirstQuote() {
         guard firstQuote != nil else { return }
         self.objectWillChange.send()
+        self.noteRowAttributes.objectWillChange.send()
+        self.noteRowAttributes.firstQuote?.blocked = false
         self.firstQuote!.blocked = false
     }
 }

@@ -16,57 +16,51 @@ struct NoteTextRenderView: View {
     }
     
     var body: some View {
-        HStack(alignment: .top) {
+        VStack(spacing: 0) {
             if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
-                VStack {
-                    if viewSize.width > 0 {
-                        Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: viewSize.width)
-                    }
-                    Color.clear.frame(height: 0)
-                       .modifier(SizeModifier())
-                       .onPreferenceChange(SizePreferenceKey.self) { size in
-                           guard size.width > 0 else { return }
-                           viewSize = size
-                       }
+                if viewSize.width > 0 {
+                    Text(String(Int(viewSize.width)))
+                    Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: viewSize.width)
                 }
+                Color.clear.frame(height: 0)
+                   .modifier(SizeModifier())
+                   .onPreferenceChange(SizePreferenceKey.self) { size in
+                       guard size.width > 0 else { return }
+                       viewSize = size
+                   }
             }
             else if nrPost.kind == 9802 {
                 HighlightRenderer(nrPost: nrPost)
             }
             else if ![1,6,30023].contains(nrPost.kind) {
-                VStack {
-                    Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
-                        .hCentered()
-                        .frame(maxWidth: .infinity)
-                        .background(Color("LightGray").opacity(0.2))
-                    if !(nrPost.content ?? "").isEmpty {
-                        Text(nrPost.content ?? "")//.border(.cyan)
-                            .lineLimit(10, reservesSpace: false)
+                Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
+                    .hCentered()
+                    .frame(maxWidth: .infinity)
+                    .background(Color("LightGray").opacity(0.2))
+                if !(nrPost.content ?? "").isEmpty {
+                    Text(nrPost.content ?? "")//.border(.cyan)
+                        .lineLimit(10, reservesSpace: false)
 //                            .textSelection(.enabled)
-                            .multilineTextAlignment(TextAlignment.leading)
-                            .foregroundColor(.primary)
-                            .accentColor(Color("AccentColor"))
-                            .tint(Color("AccentColor"))
-                            .lineSpacing(3)
-                            .padding(.vertical, 5)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                        .multilineTextAlignment(TextAlignment.leading)
+                        .foregroundColor(.primary)
+                        .accentColor(Color("AccentColor"))
+                        .tint(Color("AccentColor"))
+                        .lineSpacing(3)
+                        .padding(.vertical, 5)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             else {
-                VStack {
-                    if viewSize.width > 0 {
-                        ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: viewSize.width)
-                    }
-                    Color.clear.frame(height: 0)
-                       .modifier(SizeModifier())
-                       .onPreferenceChange(SizePreferenceKey.self) { size in
-                           guard size.width > 0 else { return }
-                           viewSize = size
-                       }
+                if viewSize.width > 0 {
+                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: viewSize.width)
                 }
+                Color.clear.frame(height: 0)
+                   .modifier(SizeModifier())
+                   .onPreferenceChange(SizePreferenceKey.self) { size in
+                       guard size.width > 0 else { return }
+                       viewSize = size
+                   }
             }
-            Spacer()
         }
     }
 }

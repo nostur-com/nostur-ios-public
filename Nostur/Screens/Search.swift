@@ -55,21 +55,19 @@ struct Search: View {
                 if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
                     CenteredProgressView()
                 }
-                LazyVStack(spacing: 0) {
+                LazyVStack(spacing: 10) {
                     ForEach(filteredContactSearchResults.prefix(75)) { contact in
                         ProfileRow(contact: contact)
-                            .roundedBoxShadow()
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            .padding(.vertical, 10)
+                            .background(Color.systemBackground)
                     }
                     ForEach(nrPosts.prefix(75)) { nrPost in
                         PostRowDeletable(nrPost: nrPost, missingReplyTo: true)
                             .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                            .roundedBoxShadow()
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            .padding(.vertical, 10)
+                            .padding(10)
+                            .background(Color.systemBackground)
                     }
                 }
+                .padding(.top, 10)
                 .toolbar {
                     if let account = NosturState.shared.account {
                         ToolbarItem(placement: .navigationBarLeading) {
@@ -512,7 +510,10 @@ public final class DebounceObject: ObservableObject {
 
 struct Search_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer {
+        PreviewContainer({ pe in
+            pe.loadPosts()
+            pe.loadContacts()
+        }) {
             NavigationStack {
                 Search()
             }
