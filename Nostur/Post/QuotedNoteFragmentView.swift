@@ -142,19 +142,25 @@ struct QuotedNoteFragmentView_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadPosts()
         }) {
-            VStack {
+            SmoothListMock {
                 // Mention at #[5]
                 if let event0 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe") {
-                    PostRowDeletable(nrPost: event0)
+                    Box {
+                        PostRowDeletable(nrPost: event0)
+                    }
                 }
                 
                 
                 if let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3") {
-                    QuotedNoteFragmentView(nrPost: event1)
+                    Box {
+                        QuotedNoteFragmentView(nrPost: event1)
+                    }
                 }
                 
                 if let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e") {
-                    QuotedNoteFragmentView(nrPost: event2)
+                    Box {
+                        QuotedNoteFragmentView(nrPost: event2)
+                    }
                 }
             }
         }
