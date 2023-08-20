@@ -16,22 +16,13 @@ struct LightningInvoice: View {
     @State var fiatPrice = ""
     @State var cancellationId:UUID? = nil
     @State var activeColor = Color.red
-    
-    var bolt11:Bolt11.Invoice? {
-        Bolt11.decode(string: invoice)
-    }
-    
-    var isExpired:Bool {
-        guard let date = bolt11?.date else { return true }
-        guard let expiry = bolt11?.expiry else { return false }
-        print("isExpired: (\(date) + \(expiry) > \(Date.now) = \((date + expiry) < .now)")
-        return (date + expiry) < .now
-    }
+    @State var isExpired:Bool = false
+    @State var bolt11:Bolt11.Invoice? = nil
     
     var body: some View {
         VStack {
             if let bolt11 = bolt11 {
-                Text("Bitcoin Lightning Invoice ⚡️", comment:"Title oof a card that displays a lightning invoice").font(.caption)
+                Text("Bitcoin Lightning Invoice ⚡️", comment:"Title of a card that displays a lightning invoice").font(.caption)
                 Divider()
                 Text("\(bolt11.amount != nil ? (Double(bolt11.amount!.int64)/divider).clean.description : "any") \(divider == 1 ? "sats" : "BTC") \(fiatPrice)")
                     .font(.title3).padding(.bottom, 10)
@@ -113,23 +104,47 @@ struct LightningInvoice: View {
                                    endPoint: .center).opacity(0.3))
         .cornerRadius(20)
         .task {
-            guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD") else { return }
-            let request = URLRequest(url: url)
-            
-            do {
-                // Fetch the remote data.
-                let (data, _) = try await URLSession.shared.data(for: request)
+            Task {
+                guard let bolt11 = Bolt11.decode(string: invoice) else { return }
                 
-                // Decode data to a CatFact object.
-                let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
-                
-                // Return the fact string value.
-                if let amount = bolt11?.amount {
-                    fiatPrice = String(format: "($%.02f)",(Double(amount.int64) / 100000000 * Double(response.result.XXBTZUSD.c[0])!))
+                if let expiry = bolt11.expiry {
+                    let isExpired = (bolt11.date + expiry) < .now
+                    if isExpired != self.isExpired {
+                        DispatchQueue.main.async {
+                            self.bolt11 = bolt11
+                            self.isExpired = isExpired
+                        }
+                    }
+                    else {
+                        DispatchQueue.main.async {
+                            self.bolt11 = bolt11
+                        }
+                    }
                 }
-            }
-            catch {
-                L.og.debug("could not get price from kraken")
+                else {
+                    DispatchQueue.main.async {
+                        self.bolt11 = bolt11
+                    }
+                }
+            
+                guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD"), let amount = bolt11.amount else { return }
+                let request = URLRequest(url: url)
+                
+                do {
+                    // Fetch the remote data.
+                    let (data, _) = try await URLSession.shared.data(for: request)
+                    
+                    // Decode data to a CatFact object.
+                    let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
+                    
+                    // Return the fact string value.
+                    DispatchQueue.main.async {
+                        self.fiatPrice = String(format: "($%.02f)",(Double(amount.int64) / 100000000 * Double(response.result.XXBTZUSD.c[0])!))
+                    }
+                }
+                catch {
+                    L.og.debug("could not get price from kraken")
+                }
             }
         }
         
