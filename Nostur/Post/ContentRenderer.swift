@@ -26,7 +26,6 @@ struct ContentRenderer: View { // VIEW things
         self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
     }
     
-//    @State var f:FullScreenItem?
     @State private var viewSize: CGSize = .zero
     
     var body: some View {
@@ -40,7 +39,6 @@ struct ContentRenderer: View { // VIEW things
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey)
                             .padding(.vertical, 10)
-//                            .padding(.horizontal, fullWidth ? 10 : 0)
                     }
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
@@ -48,7 +46,6 @@ struct ContentRenderer: View { // VIEW things
                     if let noteHex = hex(noteId) {
                         QuoteById(id: noteHex)
                             .padding(.vertical, 10)
-//                            .padding(.horizontal, fullWidth ? 10 : 0)
                     }
                     else {
                         let _ = L.og.error("🔴🔴🔴🔴 Problem converting \(noteId) to hex")
@@ -57,29 +54,13 @@ struct ContentRenderer: View { // VIEW things
                 case .noteHex(let hex):
                     QuoteById(id: hex)
                         .padding(.vertical, 10)
-//                        .padding(.horizontal, fullWidth ? 10 : 0)
                 case .code(let code): // For text notes
                     Text(verbatim: code)
                         .font(.system(.body, design: .monospaced))
-//                        .padding(.horizontal, fullWidth ? 10 : 0)
-                        .onTapGesture {
-                            guard !isDetail else { return }
-                            navigateTo(nrPost)
-                        }
                 case .text(let attributedStringWithPs): // For text notes
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
-//                        .padding(.horizontal, fullWidth ? 10 : 0)
-                        .onTapGesture {
-                            guard !isDetail else { return }
-                            navigateTo(nrPost)
-                        }
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs)
-//                        .padding(.horizontal, fullWidth ? 20 : 0)
-                        .onTapGesture {
-                            guard !isDetail else { return }
-                            navigateTo(nrPost)
-                        }
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, nrPost:nrPost)
                         .padding(.vertical, 10)
@@ -93,7 +74,6 @@ struct ContentRenderer: View { // VIEW things
                 case .linkPreview(let url):
                     // TODO: do no link preview if restrictAutoDownload...
                     LinkPreviewView(url: url)
-//                        .padding(.horizontal, fullWidth ? 10 : 0)
                         .padding(.vertical, 10)
                 case .postPreviewImage(let uiImage):
                     Image(uiImage: uiImage)

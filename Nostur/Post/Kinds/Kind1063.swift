@@ -9,8 +9,6 @@ import SwiftUI
 
 struct Kind1063: View {
     
-    let MAX_HEIGHT = 250.0
-    
     @ObservedObject var nrPost:NRPost
     let url:String
     let availableWidth:CGFloat
@@ -39,15 +37,15 @@ struct Kind1063: View {
                     self.height = newHeight
                 }
                 else {
-                    self.height = min(MAX_HEIGHT, newHeight) // Use maximum height of 250 points
+                    self.height = min(DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, newHeight)
                 }
             }
             else {
-                self.height = MAX_HEIGHT
+                self.height = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT
             }
         }
         else {
-            self.height = MAX_HEIGHT
+            self.height = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT
         }
     }
     
@@ -61,8 +59,9 @@ struct Kind1063: View {
             }
             if let height {
                 SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth)
+                    .padding(.horizontal, -10)
                     .frame(height: height)
-//                    .background(.red)
+                    .padding(.vertical, 10)
             }
         }
     }

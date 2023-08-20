@@ -17,14 +17,14 @@ struct HighlightComposer: View {
     var body: some View {
         if let account = ns.account {
             VStack {
-                HStack(alignment: .top, spacing:0) {
+                Divider()
+                HStack(alignment: .top, spacing: 10) {
                     PFP(pubkey: account.publicKey, account: account)
                         .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
-                        .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 
                     VStack(alignment:.leading, spacing: 3) {
                         HStack { // name + reply + context menu
-                            PreviewHeaderView(authorName: account.display_name, username: account.name, nip05verified: !account.nip05.isEmpty)
+                            PreviewHeaderView(authorName: account.anyName)
                             Spacer()
                         }
 
@@ -67,11 +67,9 @@ struct HighlightComposer: View {
                         )
                         PreviewFooterFragmentView()
                     }
-                    .padding(.trailing, 10)
                 }
-                    .padding(10)
-                    .boxShadow()
-                    .padding(10)
+                .padding(10)
+                Divider()
                 Spacer()
             }
             .padding(.top, 20)

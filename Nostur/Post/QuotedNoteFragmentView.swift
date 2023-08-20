@@ -64,13 +64,10 @@ struct QuotedNoteFragmentView: View {
                     }
                     
                     Spacer()
-                }.frame(height: 40)
+                }
+                .frame(height: 40)
                 VStack(alignment: .leading) {
                     NoteTextRenderView(nrPost: nrPost)
-                    //                    .contentShape(Rectangle())
-                    //                    .onTapGesture {
-                    //                        navigateTo(nrPost)
-                    //                    }
                 }
             }
             .contentShape(Rectangle())

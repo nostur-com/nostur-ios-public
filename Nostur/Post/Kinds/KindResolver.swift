@@ -9,7 +9,7 @@ import SwiftUI
 
 struct KindResolver: View {
     
-    @ObservedObject var nrPost:NRPost
+    let nrPost:NRPost
     var fullWidth:Bool = false
     var hideFooter:Bool = false // For rendering in NewReply
     var missingReplyTo:Bool = false // For rendering in thread
@@ -19,38 +19,19 @@ struct KindResolver: View {
     var grouped:Bool = false
     
     var body: some View {
-        VStack {
-            switch nrPost.kind {
-            case 9802:
-                Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo:missingReplyTo, connect:connect, grouped: grouped)
-                    .padding(.top, 10)
-            case 30023:
-                ArticleView(nrPost, isDetail:isDetail, fullWidth:fullWidth)
-            default:
-                if fullWidth {
-                    Kind1(nrPost: nrPost, hideFooter:false, missingReplyTo: missingReplyTo, isDetail:isDetail, grouped: grouped)
-                        .padding(.top, 10)
-                }
-                else {
-                    Kind1Default(nrPost: nrPost, hideFooter:false, missingReplyTo: missingReplyTo, connect: connect, isDetail:isDetail, grouped: grouped)
-                        .padding(.top, 10)
-                }
+        switch nrPost.kind {
+        case 9802:
+            Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, grouped: grouped)
+        case 30023:
+            ArticleView(nrPost, isDetail: isDetail, fullWidth: fullWidth)
+        default:
+            if fullWidth {
+                Kind1(nrPost: nrPost, hideFooter:false, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped)
+            }
+            else {
+                Kind1Default(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped)
             }
         }
-        .onAppear {
-            if !nrPost.missingPs.isEmpty {
-                DataProvider.shared().bg.perform {
-                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
-                    QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                }
-            }
-        }
-        .onDisappear {
-            if !nrPost.missingPs.isEmpty {
-                QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
-            }
-        }
-        
     }
 }
 

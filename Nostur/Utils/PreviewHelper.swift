@@ -145,7 +145,7 @@ extension PreviewEnvironment {
             self.parseMessages(testSnowden())
         }
     }
-    
+
     func loadReposts() {
         context.performAndWait {
             self.parseMessages(testKind6Events())

@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct NoteRow: View {
-    @ObservedObject var nrPost:NRPost
+    let nrPost:NRPost
+    @ObservedObject var noteRowAttributes:NRPost.NoteRowAttributes
     var hideFooter = true // For rendering in NewReply
     var missingReplyTo = false // For rendering in thread, hide "Replying to.."
     var connect:ThreadConnectDirection? = nil
@@ -22,6 +23,7 @@ struct NoteRow: View {
     
     init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
+        self.noteRowAttributes = nrPost.noteRowAttributes
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
@@ -35,7 +37,7 @@ struct NoteRow: View {
 //        let _ = Self._printChanges()
         VStack (alignment: .leading) {
             if (nrPost.isRepost) {
-                HStack(spacing:4) {
+                HStack(spacing: 4) {
                     Image(systemName: "arrow.2.squarepath")
                         .fontWeight(.bold)
                         .scaleEffect(0.6)
@@ -50,16 +52,12 @@ struct NoteRow: View {
                 .onTapGesture {
                     navigateTo(ContactPath(key: nrPost.pubkey))
                 }
-                .padding(.leading, 40)
+                .padding(.leading, 30)
                 .frame(idealHeight: 20.0)
-                .padding(.top, 10)
                 .fixedSize(horizontal: false, vertical: true)
-                // Fixed size for scrolling performance maybe, use to confirm correct size:
-//                .readSize { newSize in
-//                    print("Repost header size: \(newSize)")
-//                }
+
                 
-                if let firstQuote = nrPost.firstQuote {
+                if let firstQuote = noteRowAttributes.firstQuote {
                     // CASE - WE HAVE REPOSTED POST ALREADY
                     if firstQuote.blocked {
                         HStack {
@@ -78,6 +76,19 @@ struct NoteRow: View {
                     }
                     else {
                         KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
+                            .onAppear {
+                                if !nrPost.missingPs.isEmpty {
+                                    DataProvider.shared().bg.perform {
+                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
+                                        QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+                                    }
+                                }
+                            }
+                            .onDisappear {
+                                if !nrPost.missingPs.isEmpty {
+                                    QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+                                }
+                            }
                     }
                 }
                 else if let firstQuoteId = nrPost.firstQuoteId {
@@ -93,16 +104,22 @@ struct NoteRow: View {
                 }
             }
             else { // IS NOT A REPOST
-                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
+                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped)
+                    .onAppear {
+                        if !nrPost.missingPs.isEmpty {
+                            DataProvider.shared().bg.perform {
+                                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
+                                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+                            }
+                        }
+                    }
+                    .onDisappear {
+                        if !nrPost.missingPs.isEmpty {
+                            QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+                        }
+                    }
             }
         }
-//        .padding(.vertical, 20)
-        // Performance testing
-//        .background(Color.random) // NOTEROW BOX BACKGROUND
-//        .readSize { size in
-//            print("NoteRow size: \(size)")
-//        }
-//        .background(Color.systemBackground) // NOTEROW BOX BACKGROUND
     }
 }
 

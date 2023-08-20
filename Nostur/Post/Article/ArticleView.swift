@@ -59,7 +59,7 @@ struct ArticleView: View {
                     }
                     
                     HStack {
-                        ZappablePFP(pubkey: article.pubkey, contact: article.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id)
+                        ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id)
                             .onTapGesture {
                                 if !IS_APPLE_TYRANNY {
                                     navigateTo(ContactPath(key: article.pubkey))
@@ -78,7 +78,7 @@ struct ArticleView: View {
                                                 sendNotification(.showMiniProfile,
                                                                  MiniProfileSheetInfo(
                                                                     pubkey: article.pubkey,
-                                                                    contact: article.contact?.mainContact,
+                                                                    contact: article.contact,
                                                                     zapEtag: article.id,
                                                                     location: geo.frame(in: .global).origin
                                                                  )
@@ -209,96 +209,139 @@ struct ArticleView: View {
                    }))
         }
         else {
-            VStack(alignment: .leading, spacing:0) {
-                VStack(alignment: .leading, spacing:0) {
-                    HStack(spacing: 0) {
-                        Text(article.articleTitle ?? "")
-                            .font(.custom("Charter-Black", size: 24))
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment:.top, spacing: 0) {
+                    Text(article.articleTitle ?? "")
+                        .font(.custom("Charter-Black", size: 24))
+                        .lineLimit(5)
+                    Spacer()
+                    LazyNoteMenuButton(nrPost: article)
+                }
+                .padding(.bottom, 10)
+                
+                if let image = article.articleImageURL {
+                    SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, isFollowing: article.following, fullWidth: true)
+                        .padding(.horizontal, -10) // on article preview always use full width style
+                        .padding(.vertical, 10)
+                }
+                
+                if let summary = article.articleSummary, !summary.isEmpty {
+                    Markdown(String(summary.prefix(600)))
+                        .lineLimit(15)
+                        .markdownTextStyle() {
+                            FontFamily(.custom("Charter"))
+                            ForegroundColor(Color.primary)
+                            FontSize(18)
+                        }
+                        .markdownTextStyle(\.link) {
+                            ForegroundColor(Color("AccentColor"))
+                        }
+                        .markdownImageProvider(.noImage)
+                        .markdownInlineImageProvider(.noImage)
+                        .padding(.vertical, 10)
+                }
+                else if let content = article.content, !content.isEmpty {
+                    Markdown(String(content.prefix(600)))
+                        .lineLimit(15)
+                        .markdownTextStyle() {
+                            FontFamily(.custom("Charter"))
+                            ForegroundColor(Color.primary)
+                            FontSize(18)
+                        }
+                        .markdownTextStyle(\.link) {
+                            ForegroundColor(Color("AccentColor"))
+                        }
+                        .markdownImageProvider(.noImage)
+                        .markdownInlineImageProvider(.noImage)
+                        .padding(.vertical, 10)
+                }
+                else {
+                    Text("")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 10)
+                }
+                
+                ViewThatFits {
+                    HStack {
                         Spacer()
-                        LazyNoteMenuButton(nrPost: article)
+                        ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id)
+                            .onTapGesture {
+                                if !IS_APPLE_TYRANNY {
+                                    navigateTo(ContactPath(key: article.pubkey))
+                                }
+                                else {
+                                    withAnimation {
+                                        showMiniProfile = true
+                                    }
+                                }
+                            }
+                            .overlay(alignment: .topLeading) {
+                                if (showMiniProfile) {
+                                    GeometryReader { geo in
+                                        Color.clear
+                                            .onAppear {
+                                                sendNotification(.showMiniProfile,
+                                                                 MiniProfileSheetInfo(
+                                                                    pubkey: article.pubkey,
+                                                                    contact: article.contact,
+                                                                    zapEtag: article.id,
+                                                                    location: geo.frame(in: .global).origin
+                                                                 )
+                                                )
+                                                showMiniProfile = false
+                                            }
+                                    }
+                                    .frame(width: 10)
+                                    .zIndex(100)
+                                    .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                                        showMiniProfile = false
+                                    }
+                                }
+                            }
+                        if let contact = article.contact {
+                            Text(contact.anyName)
+                                .foregroundColor(.primary)
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                                .layoutPriority(2)
+                                .onTapGesture {
+                                    navigateTo(ContactPath(key: article.pubkey))
+                                }
+                            
+                            if (contact.nip05verified) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .foregroundColor(Color("AccentColor"))
+                                    .layoutPriority(3)
+                            }
+                        }
+                        else {
+                            Text(article.anyName)
+                                .onAppear {
+                                    DataProvider.shared().bg.perform {
+                                        EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
+                                        QueuedFetcher.shared.enqueue(pTag: article.pubkey)
+                                    }
+                                }
+                                .onDisappear {
+                                    QueuedFetcher.shared.dequeue(pTag: article.pubkey)
+                                }
+                        }
+                        if minutesToRead > 0 {
+                            Text("\(minutesToRead) min read")
+                            Text("·")
+                        }
+                        Text((article.articlePublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
                     }
-                    .padding(.bottom, 10)
-                    //                    .padding(.horizontal, fullWidth ? 10 : 0)
+                    .font(.custom("Charter", size: 18))
+                    .padding(.vertical, 10)
+                    .lineLimit(1)
+                    .foregroundColor(Color.secondary)
                     
-                    if let image = article.articleImageURL {
-                        SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, isFollowing: article.following, fullWidth: true)
-                            .padding(.vertical, 10)
-                    }
-                    
-                    if let summary = article.articleSummary, !summary.isEmpty {
-                        Markdown(String(summary.prefix(600)))
-                            .lineLimit(15)
-                            .markdownTextStyle() {
-                                FontFamily(.custom("Charter"))
-                                ForegroundColor(Color.primary)
-                                FontSize(18)
-                            }
-                            .markdownTextStyle(\.link) {
-                                ForegroundColor(Color("AccentColor"))
-                            }
-                            .markdownImageProvider(.noImage)
-                            .markdownInlineImageProvider(.noImage)
-                            .padding(.vertical, 10)
-                    }
-                    else if let content = article.content, !content.isEmpty {
-                        Markdown(String(content.prefix(600)))
-                            .lineLimit(15)
-                            .markdownTextStyle() {
-                                FontFamily(.custom("Charter"))
-                                ForegroundColor(Color.primary)
-                                FontSize(18)
-                            }
-                            .markdownTextStyle(\.link) {
-                                ForegroundColor(Color("AccentColor"))
-                            }
-                            .markdownImageProvider(.noImage)
-                            .markdownInlineImageProvider(.noImage)
-                            .padding(.vertical, 10)
-                    }
-                    else {
-                        Text("")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 10)
-                    }
-                    
-                    ViewThatFits {
+                    VStack {
                         HStack {
                             Spacer()
-                            ZappablePFP(pubkey: article.pubkey, contact: article.contact?.mainContact, size: 25.0, zapEtag: article.id)
-                                .onTapGesture {
-                                    if !IS_APPLE_TYRANNY {
-                                        navigateTo(ContactPath(key: article.pubkey))
-                                    }
-                                    else {
-                                        withAnimation {
-                                            showMiniProfile = true
-                                        }
-                                    }
-                                }
-                                .overlay(alignment: .topLeading) {
-                                    if (showMiniProfile) {
-                                        GeometryReader { geo in
-                                            Color.clear
-                                                .onAppear {
-                                                    sendNotification(.showMiniProfile,
-                                                                     MiniProfileSheetInfo(
-                                                                        pubkey: article.pubkey,
-                                                                        contact: article.contact?.mainContact,
-                                                                        zapEtag: article.id,
-                                                                        location: geo.frame(in: .global).origin
-                                                                     )
-                                                    )
-                                                    showMiniProfile = false
-                                                }
-                                        }
-                                        .frame(width: 10)
-                                        .zIndex(100)
-                                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                            showMiniProfile = false
-                                        }
-                                    }
-                                }
+                            PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25)
                             if let contact = article.contact {
                                 Text(contact.anyName)
                                     .foregroundColor(.primary)
@@ -327,78 +370,25 @@ struct ArticleView: View {
                                         QueuedFetcher.shared.dequeue(pTag: article.pubkey)
                                     }
                             }
+                        }
+                        HStack {
+                            Spacer()
                             if minutesToRead > 0 {
                                 Text("\(minutesToRead) min read")
                                 Text("·")
                             }
                             Text((article.articlePublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
                         }
-                        .font(.custom("Charter", size: 18))
-                        .padding(.vertical, 10)
-                        .lineLimit(1)
-                        .foregroundColor(Color.secondary)
-                        
-                        VStack {
-                            HStack {
-                                Spacer()
-                                PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25)
-                                if let contact = article.contact {
-                                    Text(contact.anyName)
-                                        .foregroundColor(.primary)
-                                        .fontWeight(.bold)
-                                        .lineLimit(1)
-                                        .layoutPriority(2)
-                                        .onTapGesture {
-                                            navigateTo(ContactPath(key: article.pubkey))
-                                        }
-                                    
-                                    if (contact.nip05verified) {
-                                        Image(systemName: "checkmark.seal.fill")
-                                            .foregroundColor(Color("AccentColor"))
-                                            .layoutPriority(3)
-                                    }
-                                }
-                                else {
-                                    Text(article.anyName)
-                                        .onAppear {
-                                            DataProvider.shared().bg.perform {
-                                                EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
-                                                QueuedFetcher.shared.enqueue(pTag: article.pubkey)
-                                            }
-                                        }
-                                        .onDisappear {
-                                            QueuedFetcher.shared.dequeue(pTag: article.pubkey)
-                                        }
-                                }
-                            }
-                            HStack {
-                                Spacer()
-                                if minutesToRead > 0 {
-                                    Text("\(minutesToRead) min read")
-                                    Text("·")
-                                }
-                                Text((article.articlePublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
-                            }
-                        }
-                        .font(.custom("Charter", size: 18))
-                        .padding(.vertical, 10)
-                        .lineLimit(1)
-                        .foregroundColor(Color.secondary)
                     }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    navigateTo(ArticlePath(id: article.id, navigationTitle: article.articleTitle ?? "Article"))
+                    .font(.custom("Charter", size: 18))
+                    .padding(.vertical, 10)
+                    .lineLimit(1)
+                    .foregroundColor(Color.secondary)
                 }
                 if !hideFooter {
                     FooterFragmentView(nrPost: article)
-                        .padding(.bottom, 10)
-//                        .frame(idealHeight: 38.0)
-//                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(10)
-            .roundedBoxShadow(backgroundColor:Color(.secondarySystemBackground))
         }
     }
 }
@@ -462,17 +452,16 @@ struct Articles_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadArticles()
         }) {
-            ScrollView {
+            SmoothListMock {
                 if let p = PreviewFetcher.fetchNRPost("12c29454fc1f995eb6e08a97f91dff37f891d1de130fbb333b5976f2cca99395") {
-                    PostRowDeletable(nrPost: p, fullWidth: true)
-                        .roundedBoxShadow()
-                        .padding(.horizontal, 0) // NORMAL
-                        .padding(.vertical, 10)
+                    Box(kind:30023) {
+                        PostRowDeletable(nrPost: p, fullWidth: true)
+                    }
                     
-                    PostRowDeletable(nrPost: p)
-                        .roundedBoxShadow()
-                        .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING) // FULL WIDTH
-                        .padding(.vertical, 10)
+                    Box(kind:30023) {
+                        PostRowDeletable(nrPost: p)
+                    }
+                        
                 }
             }
             

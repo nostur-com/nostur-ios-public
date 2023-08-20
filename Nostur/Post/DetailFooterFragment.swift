@@ -86,7 +86,6 @@ struct DetailFooterFragment: View {
             Text("\(nrPost.createdAt.formatted(date: .omitted, time: .shortened)) · \(nrPost.createdAt.formatted(date: .numeric, time: .omitted))")
         }
         .foregroundColor(.gray)
-        .padding(.vertical, 10)
         .padding(.trailing, 10)
         .font(.system(size: 14))
         Divider()
