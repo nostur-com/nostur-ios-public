@@ -12,16 +12,19 @@ class DIMENSIONS: ObservableObject {
     
     static let shared = DIMENSIONS()
     
+    
+    static public let MAX_MEDIA_ROW_HEIGHT = 500.0 // TODO: change based on device?
+    
     static public let POST_MAX_ROW_HEIGHT:CGFloat = 1200.0
     
-    // 428    - 5        - (10 + 50 + 10 ) -         (10) - 5
-    // Screen - Box-left  - (10 + PFP+ 10 ) - (text-right) - Box-right
+    // 428    - 10        - (50)  10      -  (10)         - 10
+    // Screen - Box-left  - (PFP) (Space) -  (text-right) - Box-right
     static public let POST_ROW_HPADDING:CGFloat = 10.0
     static public let POST_ROW_PFP_WIDTH:CGFloat = 50.0
     static public let POST_ROW_PFP_HEIGHT:CGFloat = 50.0
-    static public let POST_ROW_PFP_HPADDING:CGFloat = 10.0
+    static public let POST_PFP_SPACE:CGFloat = 10.0
     static public let KIND1_TRAILING:CGFloat = 10.0
-    static public var ROW_PFP_SPACE:CGFloat { get { Self.POST_ROW_PFP_WIDTH + (2 * Self.POST_ROW_PFP_HPADDING) }}
+    static public var ROW_PFP_SPACE:CGFloat { get { Self.POST_ROW_PFP_WIDTH + (Self.POST_PFP_SPACE) }}
     
     static public let PREVIEW_HEIGHT:CGFloat = 70.0
     
@@ -31,13 +34,13 @@ class DIMENSIONS: ObservableObject {
     
     /// Substracts profile pic space from list width
     func availableNoteRowImageWidth() -> CGFloat {
-        // 10 + ( 10+50+10 ) (availableWidth) + 10 + 10
-        return (listWidth - (Self.POST_ROW_HPADDING * 2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_ROW_PFP_HPADDING * 2))
+        // 10 + ( 50 ) + 10 + (availableWidth) + 10
+        return (listWidth - (Self.POST_ROW_HPADDING) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
     }
     
     // NoteRow but without the profile pic on the side
     func articleRowImageWidth() -> CGFloat {
-        // 10 + ( 10+50+10 ) (availableWidth) + 10 + 10
+        // 10 + (availableWidth) + 10 
         return (listWidth - (Self.POST_ROW_HPADDING * 2))
     }
     
@@ -48,8 +51,8 @@ class DIMENSIONS: ObservableObject {
     
     /// Substracts profile pic space from list width
     func availablePostDetailRowImageWidth() -> CGFloat {
-        //( 10+50+10 ) (availableWidth) + 10
-        return (listWidth - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_ROW_PFP_HPADDING * 2))
+        // ( 50 ) + 10 + (availableWidth) + 10
+        return (listWidth - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
     }
 }
 
