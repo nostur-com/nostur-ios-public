@@ -548,6 +548,10 @@ struct ReplyAndParentView_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
+            pe.parseMessages([
+                ###"["EVENT","485cefc1-2f85-402e-a136-691557f322c8",{"content":"https://youtube.com/shorts/cZenQR8tgV8?feature=share\n\nIf even _she_ is speaking out about Canada's new bill C-11, it's bad. She's a 100% mainstream comedian who got her start during lockdown.","created_at":1680327426,"id":"5988f18416a6d2702a61df9dedc318f18d0d5778a020464222138edab386eee7","kind":1,"pubkey":"ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc","sig":"efad8bf0580ee6a36f6ebd48ab3fba940d9fdc5d5fcf866b6d609ac52c1b24a7acb16277890ea770a8d4328018c1ec7b7ef84e7ffa19b8f9929a36300adc4b33","tags":[["r","https://youtube.com/shorts/cZenQR8tgV8?feature=share"]]}]"###,
+                ###"["EVENT","16dbd7e2-af00-4c7d-9258-f5413d75b95f",{"content":"The fact thay she thinks an “amendment to protect digital creators” makes the bill ok is so childishly naive it hurts. ","created_at":1680333364,"id":"5e80b08b76e81e549c4554e161dfeb67a09da859e4706a989876a5ec42016d9a","kind":1,"pubkey":"b9e76546ba06456ed301d9e52bc49fa48e70a6bf2282be7a1ae72947612023dc","sig":"5c31c120473800d878a5391ad2055b20404a4d97d20c08116f0931737559aea7d8e26febf64f4e24385c637d1e8b84ede32ca498a75190b0aaaba3821ac1bd3a","tags":[["e","5988f18416a6d2702a61df9dedc318f18d0d5778a020464222138edab386eee7"],["p","ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc"]]}]"###,
+                ###"["EVENT","a2533e43-5968-40dd-a986-131e839cbb84",{"content":"Her being publicly against it at all is a win. And the amendment was cancelled.","created_at":1680333872,"id":"a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d","kind":1,"pubkey":"ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc","sig":"a1a46a31a1d11175cfc8452210b436d731f3b8615254ec51063f4124a250cc544e40ab54899b243f7637c5778f093d869a6b9f54e1e30f9b9245c07d6df37b9f","tags":[["e","5988f18416a6d2702a61df9dedc318f18d0d5778a020464222138edab386eee7"],["e","5e80b08b76e81e549c4554e161dfeb67a09da859e4706a989876a5ec42016d9a"],["p","ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc"],["p","b9e76546ba06456ed301d9e52bc49fa48e70a6bf2282be7a1ae72947612023dc"]]}]"###])
         }) {
             NavigationStack {
                 if let xx = PreviewFetcher.fetchNRPost("a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d") {
@@ -558,7 +562,7 @@ struct ReplyAndParentView_Previews: PreviewProvider {
     }
 }
 
-struct ReplyAndParentView2_Previews: PreviewProvider {
+struct YouTubePreviewInDetail_Previews: PreviewProvider {
     static var previews: some View {
         
         PreviewContainer({ pe in
@@ -575,13 +579,15 @@ struct ReplyAndParentView2_Previews: PreviewProvider {
     }
 }
 
-
-struct ReplyAndParentView3_Previews: PreviewProvider {
+struct YouTubeInDetail_Previews: PreviewProvider {
     static var previews: some View {
         
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
+            pe.parseMessages([
+                ###"["EVENT","e24e08cc-9e36-4a54-8a33-1d1fc84ae95c",{"content":"https://youtu.be/QU9kRF9tHPU","created_at":1681073179,"id":"c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49","kind":1,"pubkey":"82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2","sig":"2bec825a1db31653187d221b69965e992a28d5a0913aa286c89fa23606fc41f4ad7b146a4844a136ba2865566c958b509e544c6620e25f329f239a7be0d6f87b","tags":[]}]"###]
+            )
         }) {
             NavigationStack {
                 if let yt = PreviewFetcher.fetchNRPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
@@ -602,6 +608,7 @@ struct ReplyAndParentView4_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
+            pe.loadRepliesAndReactions()
         }) {
             NavigationStack {
                 if let v = PreviewFetcher.fetchNRPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
@@ -619,6 +626,7 @@ struct ReplyAndParentView5_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
+            pe.loadRepliesAndReactions()
         }) {
             NavigationStack {
                 if let lastReply = PreviewFetcher.fetchNRPost("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964") {
@@ -636,6 +644,7 @@ struct ReplyAndParentView6_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
+            pe.loadRepliesAndReactions()
         }) {
             NavigationStack {
                 if let rootWithReplies = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81") {
@@ -652,6 +661,7 @@ struct ReplyAndParentView7_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
+            pe.loadRepliesAndReactions()
         }) {
             NavigationStack {
                 if let v = PreviewFetcher.fetchNRPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
@@ -668,6 +678,7 @@ struct BetterReplies_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
+            pe.loadRepliesAndReactions()
         }) {
             NavigationStack {
                 if let matt = PreviewFetcher.fetchNRPost("e593fc759291a691cd0127643a0b9fac9d92613952845e207eb24332937c59d9") {

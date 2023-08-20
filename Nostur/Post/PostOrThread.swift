@@ -105,9 +105,9 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
             pe.parseMessages(messages)
         }) {
             NavigationStack {
-                ScrollView {
-                    LazyVStack {
-                        if let p = PreviewFetcher.fetchNRPost() {
+                SmoothListMock {
+                    if let p = PreviewFetcher.fetchNRPost() {
+                        Box {
                             PostOrThread(nrPost: p)
                                 .onAppear {
                                     p.loadParents()
@@ -115,7 +115,6 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
                         }
                     }
                 }
-                .background(Color("ListBackground"))
             }
         }
     }

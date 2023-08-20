@@ -17,16 +17,36 @@ struct HashTagInNameTest_Previews: PreviewProvider {
                 #####"["EVENT","XX4",{"pubkey":"460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c","content":"### #Amethyst v0.72.0-APLHA: New Memory Management\n\nThis new version constantly prunes the memory used by downloaded events by deleting them from memory after use. This leads to re-downloading some replies, zaps, and reactions when the user brings an event back into view. The re-downloading will be removed once we finish our local database implementation. \n\n- Adds aggressive memory management to avoid Out of Memory\n- Fixes the Back button leaving the app issue\n- Interns event strings to avoid duplicating memory with hashes and pubkeys\n- Improves search by looking into all tags of all events\n- Improves Tamil Translations by @velram \n- Adds missing translations cs/de/se by nostr:npub1e2yuky03caw4ke3zy68lg0fz3r4gkt94hx4fjmlelacyljgyk79svn3eef\n- Adds cryptographic and base event support for NIP-24 (GiftWraps and Sealed Gossip)\n- Increases confidence requirements for the Translator\n- Refactors the event creation into a Factory\n- Adds new kinds to the hashtag and geotag search feeds\n- Fixes the explainer text of the geohash addon\n- Updates to the latest libraries\n- Removes Leakcanary for debug builds\n- Cleans up unused values in strings\n- Fix: Ignores past version of addressable content in feeds\n- Fix: Avoids showing community definition types in the community feed.\n- Fix: Avoids downloading 1000s of Nostr Connect events that some clients are generating. \n\nDownload:\n- [Play Edition](https://github.com/vitorpamplona/amethyst/releases/download/v0.72.0/amethyst-googleplay-universal-v0.72.0.apk)\n- [F-Droid Edition](https://github.com/vitorpamplona/amethyst/releases/download/v0.72.0/amethyst-fdroid-universal-v0.72.0.apk)","id":"dcfbf61fb232e0e916fc28945a588febcdba4f523ce42959f7f2177364d91b37","created_at":1690905822,"sig":"066d53f80aef5475e22c319142b08df1f096848488cea4910d16f07881d731a3fc60a46b36099ea706c0dd969a16c737d7d6be5e0c39471dc9857049f5445249","kind":1,"tags":[["p","ca89cb11f1c75d5b6622268ff43d2288ea8b2cb5b9aa996ff9ff704fc904b78b"],["t","amethyst"]]}]"#####
             ])
         }) {
-            if let post = PreviewFetcher.fetchNRPost("dcfbf61fb232e0e916fc28945a588febcdba4f523ce42959f7f2177364d91b37") {
-                NoteRow(nrPost: post)
-            }
-            if let post = PreviewFetcher.fetchNRPost("03d933fd31532369184eb307780de3a4b74eefd708a4225f13e0c897fcbd859f") {
-                NoteRow(nrPost: post)
-            }
-            
-            if let post = PreviewFetcher.fetchNRPost("60cae008116dccccdf970e36a8e7e789c2fc10e950cae9eefe1069235bc34faf") {
-                NoteRow(nrPost: post) 
+            SmoothListMock {
+                if let post = PreviewFetcher.fetchNRPost("dcfbf61fb232e0e916fc28945a588febcdba4f523ce42959f7f2177364d91b37") {
+                    PostOrThread(nrPost: post)
+                }
+                if let post = PreviewFetcher.fetchNRPost("03d933fd31532369184eb307780de3a4b74eefd708a4225f13e0c897fcbd859f") {
+                    PostOrThread(nrPost: post)
+                }
+                
+                if let post = PreviewFetcher.fetchNRPost("60cae008116dccccdf970e36a8e7e789c2fc10e950cae9eefe1069235bc34faf") {
+                    PostOrThread(nrPost: post)
+                }
             }
         }
+    }
+}
+
+struct SmoothListMock<Content: View>: View {
+    
+    let content: Content
+    
+    init(@ViewBuilder _ content: ()->Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 10) {
+                content
+            }
+        }
+        .background(Color("ListBackground"))
     }
 }
