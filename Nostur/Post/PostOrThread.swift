@@ -47,12 +47,7 @@ struct PostOrThread: View {
                                  connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    if nrParent.kind == 30023 {
-                        navigateTo(ArticlePath(id: nrParent.id, navigationTitle: nrParent.articleTitle ?? "Article"))
-                    }
-                    else {
-                        navigateTo(nrParent)
-                    }
+                    navigateTo(nrParent)
                 }
             }
             PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
@@ -72,12 +67,7 @@ struct PostOrThread: View {
                         }
                     }
                     else {
-                        if nrPost.kind == 30023 {
-                            navigateTo(ArticlePath(id: nrPost.id, navigationTitle: nrPost.articleTitle ?? "Article"))
-                        }
-                        else {
-                            navigateTo(nrPost)
-                        }
+                        navigateTo(nrPost)
                     }
                 }
         }

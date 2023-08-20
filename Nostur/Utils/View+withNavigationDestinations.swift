@@ -131,7 +131,18 @@ struct NavigationDestination {
 }
 
 func navigateTo(_ path:any Hashable) {
-    sendNotification(.navigateTo, NavigationDestination(destination: path))
+    if (type(of: path) == NRPost.self) {
+        let nrPost = path as! NRPost
+        if nrPost.kind == 30023 {
+            sendNotification(.navigateTo, NavigationDestination(destination: ArticlePath(id: nrPost.id, navigationTitle: nrPost.articleTitle ?? "Article")))
+        }
+        else {
+            sendNotification(.navigateTo, NavigationDestination(destination: path))
+        }
+    }
+    else {
+        sendNotification(.navigateTo, NavigationDestination(destination: path))
+    }
 }
 
 func navigateToOnMain(_ path:any Hashable) {
