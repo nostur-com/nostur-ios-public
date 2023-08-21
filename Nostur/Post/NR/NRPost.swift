@@ -584,6 +584,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     DispatchQueue.main.async {
                         self.objectWillChange.send()
                         self.following = isFollowing
+                        if (isFollowing) {
+                            self.contact?.following = isFollowing
+                            self.contact?.couldBeImposter = 0
+                        }
                     }
                 }
             }

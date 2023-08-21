@@ -67,7 +67,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.zapperPubkey = contact.zapperPubkey
         self.zapState = contact.zapState
         
-        self.following = following ?? false
+        self.following = NosturState.shared.bgFollowingPublicKeys.contains(contact.pubkey)
         self.privateFollow = contact.privateFollow
         listenForChanges()
         isFollowingListener()
@@ -86,6 +86,9 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     DispatchQueue.main.async {
                         self.objectWillChange.send()
                         self.following = isFollowing
+                        if (isFollowing) {
+                            self.couldBeImposter = 0
+                        }
                     }
                 }
             }
@@ -187,16 +190,19 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         guard let account = NosturState.shared.bgAccount else { return }
         self.objectWillChange.send()
         self.following = true
+        self.couldBeImposter = 0
         self.privateFollow = privateFollow
         
         DataProvider.shared().bg.perform {
             self.contact.privateFollow = privateFollow // TODO: need to fix for multi account
+            self.contact.couldBeImposter = 0
             account.addToFollows(self.contact)
             let followingPublicKeys = account.followingPublicKeys
             DataProvider.shared().bgSave()
             
             DispatchQueue.main.async {
-                sendNotification(.followersChanged, account.followingPublicKeys)
+                NosturState.shared.followingPublicKeys = followingPublicKeys
+                sendNotification(.followersChanged, followingPublicKeys)
                 sendNotification(.followingAdded, self.pubkey)
                 NosturState.shared.publishNewContactList()
             }
@@ -216,6 +222,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
             DataProvider.shared().bgSave()
             
             DispatchQueue.main.async {
+                NosturState.shared.followingPublicKeys = followingPublicKeys
                 sendNotification(.followersChanged, account.followingPublicKeys)
                 NosturState.shared.publishNewContactList()
             }

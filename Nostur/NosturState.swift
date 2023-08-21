@@ -218,16 +218,17 @@ final class NosturState : ObservableObject {
 //        self.objectWillChange.send()
         // find existing contact
         if let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) {
+            contact.couldBeImposter = 0
             account.addToFollows(contact)
         }
         else {
             // if nil, create new contact
             let contact = Contact(context: viewContext)
             contact.pubkey = pubkey
+            contact.couldBeImposter = 0
             account.addToFollows(contact)
         }
-
-//        DataProvider.shared().save()
+        followingPublicKeys = _followingPublicKeys
         sendNotification(.followersChanged, account.followingPublicKeys)
         sendNotification(.followingAdded, pubkey)
         self.publishNewContactList()
@@ -236,9 +237,10 @@ final class NosturState : ObservableObject {
     func follow(_ contact:Contact) {
         guard let account = account else { return }
 //        self.objectWillChange.send()
+        contact.couldBeImposter = 0
         account.addToFollows(contact)
         
-//        DataProvider.shared().save()
+        followingPublicKeys = _followingPublicKeys
         sendNotification(.followersChanged, account.followingPublicKeys)
         sendNotification(.followingAdded, contact.pubkey)
         self.publishNewContactList()
@@ -251,7 +253,7 @@ final class NosturState : ObservableObject {
         guard let account = account else { return }
 //        self.objectWillChange.send()
         account.removeFromFollows(contact)
-//        DataProvider.shared().save()
+        followingPublicKeys = _followingPublicKeys
         sendNotification(.followersChanged, account.followingPublicKeys)
         self.publishNewContactList()
     }
@@ -263,7 +265,7 @@ final class NosturState : ObservableObject {
         guard let account = account else { return }
 //        self.objectWillChange.send()
         account.removeFromFollows(contact)
-//        DataProvider.shared().save()
+        followingPublicKeys = _followingPublicKeys
         sendNotification(.followersChanged, account.followingPublicKeys)
         self.publishNewContactList()
     }
