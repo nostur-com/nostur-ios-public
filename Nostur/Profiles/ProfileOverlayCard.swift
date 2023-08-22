@@ -85,7 +85,7 @@ struct ProfileOverlayCard: View {
     @State var customZapId:UUID? = nil
     @State var activeColor = Self.grey
     @State var similarPFP = false
-    @State var backlog = Backlog(timeout: 2.0, auto: true)
+    @State var backlog = Backlog(timeout: 5.0, auto: true)
     @State var lastSeen:String? = nil
     @State var isFollowingYou = false
     
@@ -255,7 +255,29 @@ struct ProfileOverlayCard: View {
         .task {
             let contact = contact.mainContact
             EventRelationsQueue.shared.addAwaitingContact(contact)
-            req(RM.getUserProfileKinds(pubkey: contact.pubkey, kinds: [0]))
+            if (ns.followsYou(contact)) {
+                isFollowingYou = true
+            }
+            
+            let task = ReqTask(
+                reqCommand: { (taskId) in
+                    req(RM.getUserProfileKinds(pubkey: contact.pubkey, subscriptionId: taskId, kinds: [0,3]))
+                },
+                processResponseCommand: { (taskId, _) in
+                    if (ns.followsYou(contact)) {
+                        isFollowingYou = true
+                    }
+                },
+                timeoutCommand: { taskId in
+                    if (ns.followsYou(contact)) {
+                        isFollowingYou = true
+                    }
+                })
+
+            backlog.add(task)
+            task.fetch()
+            
+            
             if (NIP05Verifier.shouldVerify(contact)) {
                 NIP05Verifier.shared.verify(contact)
             }
