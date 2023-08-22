@@ -90,9 +90,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var referencedContacts:[NRContact] = []
     
-    var parentPosts: [NRPost] {
-        get { postOrThreadAttributes.parentPosts }
+    private var _parentPosts: [NRPost] // access from BG only through .parentPosts
+    
+    var parentPosts: [NRPost] { // access from BG only
+        get { _parentPosts }
         set {
+            _parentPosts = newValue
             DispatchQueue.main.async {
                 self.postOrThreadAttributes.parentPosts = newValue
             }
@@ -240,7 +243,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.createdAt = event.date
         self.created_at = event.created_at
         self.ago = event.ago
-        self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: withParents ? event.parentEvents.map { NRPost(event: $0) } : [])
+        let parentPosts = withParents ? event.parentEvents.map { NRPost(event: $0) } : []
+        self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: parentPosts)
+        self._parentPosts = parentPosts
         self._replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
         self._repliesToRoot = []
         self.threadPostsCount = 1 + event.parentEvents.count
@@ -995,6 +1000,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.noteRowAttributes.firstQuote?.blocked = false
         self.firstQuote!.blocked = false
     }
+    
+    private var renderedReplyIds: Set<NRPostID> = []
 }
 
 extension NRPost { // Helpers for grouped replies
@@ -1135,7 +1142,7 @@ extension NRPost { // Helpers for grouped replies
                 L.og.error("_groupRepliesToRoot: We should have an account here");
                 return
             }
-            
+            renderedReplyIds.removeAll()
             let replies = (newReplies.isEmpty ? self.replies : newReplies)
             // Load parents/replyTo
             let groupedThreads = (replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
@@ -1161,20 +1168,46 @@ extension NRPost { // Helpers for grouped replies
             
             // Dictionary to store unique items with highest values
             var uniqueThreads = [NRPostID: NRPost]()
+            
 
             for thread in groupedThreads {
                 if let replyToId = thread.replyToId, replyToId == self.id {
-                    uniqueThreads[thread.id] = thread
-                    continue // replying to root, so handle like normal reply.
+                    // replying to root, but could be rendered also as parent in one of the threads,
+                    // so skip and include in 2nd pass after we checked if its not rendered already
+                    continue
+                }
+                else if let replyToRootId = thread.replyToRootId, thread.replyToId == nil, replyToRootId == self.id {
+                    // replying to root, but could be rendered also as parent in one of the threads,
+                    // so skip and include in 2nd pass after we checked if its not rendered already
+                    continue
                 }
                 
-                let firstId = thread.parentPosts.first?.id ?? thread.id
+                let firstId = thread.event.parentEvents.first?.id ?? thread.id
                 if let existingThread = uniqueThreads[firstId] {
                     if thread.threadPostsCount > existingThread.threadPostsCount {
                         uniqueThreads[firstId] = thread
                     }
                 } else {
                     uniqueThreads[firstId] = thread
+                }
+            }
+            
+            renderedReplyIds = Set(uniqueThreads.keys).union(uniqueThreads.values.reduce(Set<NRPostID>(), { partialResult, nrPost in
+                return partialResult.union(Set(nrPost.event.parentEvents.map { $0.id }))
+            }))
+            
+            // Second pass
+            // Include the direct replies that have not been rendered yet in other threads (renderedIds)
+            for thread in groupedThreads {
+                if let replyToId = thread.replyToId, replyToId == self.id, !renderedReplyIds.contains(thread.id) {
+                    // direct reply
+                    uniqueThreads[thread.id] = thread
+                    renderedReplyIds.insert(thread.id)
+                }
+                else if let replyToRootId = thread.replyToRootId, thread.replyToId == nil, replyToRootId == self.id, !renderedReplyIds.contains(thread.id) {
+                    // direct reply
+                    uniqueThreads[thread.id] = thread
+                    renderedReplyIds.insert(thread.id)
                 }
             }
 
