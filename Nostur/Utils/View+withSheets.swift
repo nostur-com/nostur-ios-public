@@ -148,7 +148,10 @@ private struct WithSheets: ViewModifier {
                     guard let deletePost = self.deletePost else { return }
                     
                     if account.isNC {
-                        let deletion = EventMessageBuilder.makeDeleteEvent(eventId: deletePost.eventId)
+                        var deletion = EventMessageBuilder.makeDeleteEvent(eventId: deletePost.eventId)
+                        deletion.publicKey = account.publicKey
+                        deletion = deletion.withId()
+                        
                         NosturState.shared.nsecBunker?.requestSignature(forEvent: deletion, whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })

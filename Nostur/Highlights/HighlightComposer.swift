@@ -114,7 +114,8 @@ struct HighlightComposer: View {
     }
     
     func send() {
-        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+        guard let account = ns.account else { return }
+        guard account.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
         var nEvent = NEvent(content: highlight.selectedText)
         nEvent.createdAt = NTimestamp.init(date: Date())
         nEvent.kind = .highlight
@@ -122,10 +123,49 @@ struct HighlightComposer: View {
             nEvent.tags.append(NostrTag(["p", selectedAuthor.pubkey]))
         }
         nEvent.tags.append(NostrTag(["r", highlight.url]))
-        
-        if let signedEvent = try? ns.signEvent(nEvent) {
-            Unpublisher.shared.publishNow(signedEvent)
-            dismiss()
+                
+        let cancellationId = UUID()
+        if account.isNC {
+            nEvent.publicKey = account.publicKey
+            nEvent = nEvent.withId()
+            
+            // Save unsigned event:
+            DataProvider.shared().bg.perform {
+                let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
+                savedEvent.cancellationId = cancellationId
+                DispatchQueue.main.async {
+                    sendNotification(.newPostSaved, savedEvent)
+                }
+                DataProvider.shared().bgSave()
+                dismiss()
+                DispatchQueue.main.async {
+                    NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
+                        DataProvider.shared().bg.perform {
+                            savedEvent.sig = signedEvent.signature
+                            savedEvent.flags = "awaiting_send"
+                            savedEvent.cancellationId = cancellationId
+                            savedEvent.updateNRPost.send(savedEvent)
+                            DispatchQueue.main.async {
+                                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
+                            }
+                        }
+                    })
+                }
+            }
+        }
+        else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
+            DataProvider.shared().bg.perform {
+                let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
+                savedEvent.cancellationId = cancellationId
+                DataProvider.shared().bgSave()
+                dismiss()
+                if ([1,6,9802,30023].contains(savedEvent.kind)) {
+                    DispatchQueue.main.async {
+                        sendNotification(.newPostSaved, savedEvent)
+                    }
+                }
+            }
+            _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
         }
     }
 }

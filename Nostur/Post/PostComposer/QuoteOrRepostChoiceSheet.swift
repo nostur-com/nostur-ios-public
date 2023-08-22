@@ -19,22 +19,63 @@ struct QuoteOrRepostChoiceSheet: View {
         // repost
         VStack(alignment: .leading, spacing: 5) {
             Button {
-                guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+                guard let account = ns.account else { return }
+                guard account.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                 if (ns.account != nil) {
                     
                     // 1. create repost
-                    let repost = EventMessageBuilder.makeRepost(original: originalEvent, embedOriginal: true)
+                    var repost = EventMessageBuilder.makeRepost(original: originalEvent, embedOriginal: true)
                     
-                    // 2. sign that event with account keys
-                    guard let signedRepost = try? ns.signEvent(repost) else {
-                        L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
-                        return
+                    let cancellationId = UUID()
+                    if account.isNC {
+                        repost.publicKey = account.publicKey
+                        repost = repost.withId()
+                        
+                        // Save unsigned event:
+                        DataProvider.shared().bg.perform {
+                            let savedEvent = Event.saveEvent(event: repost, flags: "nsecbunker_unsigned")
+                            savedEvent.cancellationId = cancellationId
+                            DispatchQueue.main.async {
+                                sendNotification(.newPostSaved, savedEvent)
+                            }
+                            DataProvider.shared().bgSave()
+                            dismiss()
+                            DispatchQueue.main.async {
+                                NosturState.shared.nsecBunker?.requestSignature(forEvent: repost, whenSigned: { signedEvent in
+                                    DataProvider.shared().bg.perform {
+                                        savedEvent.sig = signedEvent.signature
+                                        savedEvent.flags = "awaiting_send"
+                                        savedEvent.cancellationId = cancellationId
+                                        savedEvent.updateNRPost.send(savedEvent)
+                                        DispatchQueue.main.async {
+                                            Unpublisher.shared.publishNow(originalEvent.toNEvent()) // publish original
+                                            _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
+                                            
+                                            sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: originalEvent.id))
+                                        }
+                                    }
+                                })
+                            }
+                        }
                     }
-                    
-                    up.publishNow(originalEvent.toNEvent()) // publish original
-                    up.publishNow(signedRepost) // publish repost
-                    sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: originalEvent.id))
-                    dismiss()
+                    else if let signedEvent = try? NosturState.shared.signEvent(repost) {
+                        DataProvider.shared().bg.perform {
+                            let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
+                            savedEvent.cancellationId = cancellationId
+                            
+                            DataProvider.shared().bgSave()
+                            dismiss()
+                            if ([1,6,9802,30023].contains(savedEvent.kind)) {
+                                DispatchQueue.main.async {
+                                    sendNotification(.newPostSaved, savedEvent)
+                                }
+                            }
+                        }
+                        Unpublisher.shared.publishNow(originalEvent.toNEvent()) // publish original
+                        _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
+                        
+                        sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: originalEvent.id))
+                    }
                 }
             } label: { Label(String(localized:"Repost", comment:"Button to Repost a post"), systemImage: "arrow.2.squarepath").padding(.vertical, 5) }
             
