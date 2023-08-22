@@ -98,9 +98,11 @@ struct FooterFragmentView: View {
                         let impactMed = UIImpactFeedbackGenerator(style: .medium)
                         impactMed.impactOccurred()
                         
-                        let likeNEvent = nrPost.like()
+                        var likeNEvent = nrPost.like()
                         
                         if account.isNC {
+                            likeNEvent.publicKey = account.publicKey
+                            likeNEvent = likeNEvent.withId()
                             unpublishLikeId = UUID()
                             NosturState.shared.nsecBunker?.requestSignature(forEvent: likeNEvent, whenSigned: { signedEvent in
                                 if let unpublishLikeId = self.unpublishLikeId {

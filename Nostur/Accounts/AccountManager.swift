@@ -106,17 +106,31 @@ class AccountManager {
         newKind3Event.kind = .contactList
 
         do {
-            let keys = try NKeys(privateKeyHex: pk)
-            let newKind0EventSigned = try newKind0Event.sign(keys)
-            let newKind3EventSigned = try newKind3Event.sign(keys)
-            
             if (account.picture.prefix(30) == "https://profilepics.nostur.com") || (account.banner.prefix(30) == "https://profilepics.nostur.com") {
                 print("Sending delete PFP and BANNER request")
                 deletePFPandBanner(pk: pk, pubkey: account.publicKey)
             }
             
-            Unpublisher.shared.publishNow(newKind0EventSigned)
-            Unpublisher.shared.publishNow(newKind3EventSigned)
+            if account.isNC {
+                newKind0Event.publicKey = account.publicKey
+                newKind0Event = newKind0Event.withId()
+                NosturState.shared.nsecBunker?.requestSignature(forEvent: newKind0Event, whenSigned: { signedEvent in
+                    Unpublisher.shared.publishNow(signedEvent)
+                })
+                
+                newKind3Event.publicKey = account.publicKey
+                newKind3Event = newKind3Event.withId()
+                NosturState.shared.nsecBunker?.requestSignature(forEvent: newKind3Event, whenSigned: { signedEvent in
+                    Unpublisher.shared.publishNow(signedEvent)
+                })
+            }
+            else {
+                let newKind0EventSigned = try NosturState.shared.signEvent(newKind0Event)
+                let newKind3EventSigned = try NosturState.shared.signEvent(newKind3Event)
+                
+                Unpublisher.shared.publishNow(newKind0EventSigned)
+                Unpublisher.shared.publishNow(newKind3EventSigned)
+            }
             
             // delete key from keychain
             deletePrivateKey(forPublicKeyHex: account.publicKey)
@@ -201,9 +215,16 @@ class AccountManager {
                     newKind3Event.tags.append(NostrTag(["t", tag]))
                 }
                 
-                let newKind3EventSigned = try newKind3Event.sign(keys)
-                
-                return newKind3EventSigned
+                if account.isNC {
+                    newKind3Event.publicKey = account.publicKey
+                    newKind3Event = newKind3Event.withId()
+                    return newKind3Event
+                }
+                else {
+                    let newKind3EventSigned = try newKind3Event.sign(keys)
+                    
+                    return newKind3EventSigned
+                }
             }
             catch {
                 L.og.error("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
@@ -234,6 +255,9 @@ func publishMetadataEvent(_ account:Account) throws {
         var newKind0Event = NEvent(content: setMetadataContent)
         
         if account.isNC {
+            newKind0Event.publicKey = account.publicKey
+            newKind0Event = newKind0Event.withId()
+            
             NosturState.shared.nsecBunker?.requestSignature(forEvent: newKind0Event, whenSigned: { signedEvent in
                 L.og.debug("Going to publish \(signedEvent.wrappedEventJson())")
                 _ = Event.saveEventFromMain(event: signedEvent)

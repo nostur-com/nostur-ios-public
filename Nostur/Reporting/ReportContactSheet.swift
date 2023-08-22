@@ -52,7 +52,11 @@ struct ReportContactSheet: View {
                 Button(String(localized: "Report.verb", comment: "Button to publish report")) {
                     guard let account = NosturState.shared.account else { return }
                     if account.isNC {
-                        let report = EventMessageBuilder.makeReportContact(pubkey: contact.pubkey, type: reason, note: comment)
+                        var report = EventMessageBuilder.makeReportContact(pubkey: contact.pubkey, type: reason, note: comment)
+                        
+                        report.publicKey = account.publicKey
+                        report = report.withId()
+                        
                         NosturState.shared.nsecBunker?.requestSignature(forEvent: report, whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })
