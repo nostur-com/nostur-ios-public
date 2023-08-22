@@ -79,12 +79,12 @@ class InstantFeed {
                 guard let self = self else { return }
                 if let account = try? Account.fetchAccount(publicKey: pubkey, context: bg), !account.follows_.isEmpty {
                     L.og.notice("🟪 Using account.follows")
-                    self.pubkeys = Set(account.follows_.map { $0.pubkey } + [account.publicKey])
+                    self.pubkeys = Set(((account.follows_.map { $0.pubkey }) + [account.publicKey]))
                 }
                 else if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: self.bg) {
                     L.og.notice("🟪 Found clEvent in database")
                     if let pubkey = self.pubkey {
-                        self.pubkeys = Set(clEvent.fastPs.map { $0.1 } + [pubkey])
+                        self.pubkeys = Set(((clEvent.fastPs.map { $0.1 }) + [pubkey]))
                     }
                     else {
                         self.pubkeys = Set(clEvent.fastPs.map { $0.1 })

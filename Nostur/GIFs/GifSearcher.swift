@@ -18,7 +18,7 @@ struct GifSearcher: View {
     @State var autocompleteResults:[String] = []
     @State var _suggestionResults:[String] = []
     var bothResults:[String] {
-        autocompleteResults + _suggestionResults.filter { !autocompleteResults.contains($0) }
+        (autocompleteResults + (_suggestionResults.filter { !autocompleteResults.contains($0) }))
     }
     var onSelect:(String) -> ()
     
