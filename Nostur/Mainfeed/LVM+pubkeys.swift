@@ -18,7 +18,6 @@ extension LVM {
     // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
     func fetchRealtimeSinceNow(subscriptionId:String) {
         guard !pubkeys.isEmpty else { return }
-        guard self.pubkeysPrefixString != "" else { return }
         let now = NTimestamp(date: Date.now)
         
         var filters:[Filters] = []
@@ -45,14 +44,12 @@ extension LVM {
         if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
             req(message, activeSubscriptionId: subscriptionId)
         }
-        //        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: subscriptionId, since: now), activeSubscriptionId: subscriptionId)
     }
     
     // FETCHES ALL NEW, UNTIL NOW
     func fetchNewestUntilNow(subscriptionId:String) {
         let now = NTimestamp(date: Date.now)
         guard !pubkeys.isEmpty else { return }
-        guard self.pubkeysPrefixString != "" else { return }
         
         
         var filters:[Filters] = []
@@ -79,15 +76,10 @@ extension LVM {
         if let message = CM(type: .REQ, subscriptionId: "CATCHUP-" + subscriptionId, filters: filters).json() {
             req(message)
         }
-        
-        
-        //        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "CATCHUP-" + subscriptionId, until: now))
     }
     
     func fetchNewerSince(subscriptionId:String, since: NTimestamp) {
         guard !pubkeys.isEmpty else { return }
-        guard self.pubkeysPrefixString != "" else { return }
-        
         
         var filters:[Filters] = []
         
@@ -113,16 +105,10 @@ extension LVM {
         if let message = CM(type: .REQ, subscriptionId: "RESUME-" + subscriptionId, filters: filters).json() {
             req(message)
         }
-        
-        
-        
-        
-        //        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "RESUME-" + subscriptionId, since: since))
     }
     
     func fetchNextPage() {
         guard !pubkeys.isEmpty else { return }
-        guard self.pubkeysPrefixString != "" else { return }
         guard let last = self.nrPostLeafs.last else { return }
         let until = NTimestamp(date: last.createdAt)
         
@@ -150,12 +136,6 @@ extension LVM {
         if let message = CM(type: .REQ, subscriptionId: "PAGE-" + UUID().uuidString, filters: filters).json() {
             req(message)
         }
-        
-        
-        //        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString,
-        //                                  limit: 100,
-        //                                  subscriptionId: "PAGE-" + UUID().uuidString,
-        //                                  until: until))
     }
     
     var hashtagRegex:String? {

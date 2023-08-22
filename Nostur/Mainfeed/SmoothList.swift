@@ -405,7 +405,6 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             else {
-                
                 lvm.isAtTop = true
                 
                 if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {

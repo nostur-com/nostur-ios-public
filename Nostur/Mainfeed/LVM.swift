@@ -110,11 +110,6 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    // for performance, .map .prefix(10) can maybe cause microhang with many pubkeys
-    var pubkeysPrefixString:String {
-        "[" + pubkeys.map {  "\"" +  $0.prefix(10) + "\"" }.joined(separator: ",") + "]"
-    }
-    
     var viewIsVisible:Bool {
         if isDeck { return true }
         if id.prefix(5) == "List-" {
