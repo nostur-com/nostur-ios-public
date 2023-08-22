@@ -77,6 +77,8 @@ class FollowingGuardian: ObservableObject {
                 L.og.info("receiveNotification(.newFollowingListFromRelay): added: \(added)")
                 
                 self.followNewContacts(added: added, account: account)
+                let tagsRelay = nEvent.tTags()
+                self.followTags(tagsRelay, account: account)
                 
                 if !removed.isEmpty {
                     sendNotification(.requestConfirmationChangedFollows, removed)
@@ -108,6 +110,15 @@ class FollowingGuardian: ObservableObject {
         }
         sendNotification(.followersChanged, account.followingPublicKeys)
         DataProvider.shared().save()
+    }
+    
+    func followTags(_ tags:[String], account:Account) {
+        guard !tags.isEmpty else { return }
+        account.objectWillChange.send()
+        for tag in tags {
+            account.followingHashtags.insert(tag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        sendNotification(.followersChanged, account.followingPublicKeys)
     }
     
     func restoreFollowing(removed:Set<String>, republish:Bool = true) {

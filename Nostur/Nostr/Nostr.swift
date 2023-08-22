@@ -339,6 +339,10 @@ struct NEvent: Codable {
         tags.filter { $0.type == "p" } .map { $0.pubkey }
     }
     
+    func tTags() -> [String] {
+        tags.filter { $0.type == "t" } .map { $0.value }
+    }
+    
     func eTags() -> [String] {
         tags.filter { $0.type == "e" } .map { $0.id }
     }

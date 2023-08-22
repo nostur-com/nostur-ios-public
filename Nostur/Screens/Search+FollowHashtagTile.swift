@@ -9,22 +9,25 @@ import SwiftUI
 
 struct FollowHashtagTile: View {
     public var hashtag:String
+    private var hashtagNormalized:String {
+        hashtag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     @ObservedObject public var account:Account
     var body: some View {
         HStack {
-            Text(String(format:"#%@", hashtag))
+            Text(String(format:"#%@", hashtagNormalized))
                 .fontWeight(.bold)
                 .lineLimit(1)
             Spacer()
             Group {
-                if account.followingHashtags.contains(hashtag) {
+                if account.followingHashtags.contains(hashtagNormalized) {
                     Button("Unfollow") {
-                        unfollow(hashtag)
+                        unfollow(hashtagNormalized)
                     }
                 }
                 else {
                     Button("Follow") {
-                        follow(hashtag)
+                        follow(hashtagNormalized)
                     }
                 }
             }
@@ -36,10 +39,12 @@ struct FollowHashtagTile: View {
     
     func follow(_ hashtag:String) {
         account.followingHashtags.insert(hashtag)
+        NosturState.shared.publishNewContactList()
     }
     
     func unfollow(_ hashtag:String) {
         account.followingHashtags.remove(hashtag)
+        NosturState.shared.publishNewContactList()
     }
 }
 

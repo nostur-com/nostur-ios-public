@@ -57,6 +57,7 @@ struct FeedSettings: View {
                             guard let account = NosturState.shared.account else { return }
                             account.followingHashtags = Set(hashtags)
                             needsReload = true
+                            NosturState.shared.publishNewContactList()
                         })
                         .frame(height: 200)
                     }
