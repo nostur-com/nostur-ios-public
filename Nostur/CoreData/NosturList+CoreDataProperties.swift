@@ -59,7 +59,7 @@ extension NosturList {
     var subscriptionId:String {
         let id = id?.uuidString ?? "UNKNOWN"
         let idLength = id.count
-        return "List-" + String(id.prefix(min(idLength,18)))
+        return ("List-" + String(id.prefix(min(idLength,18))))
     }
 }
 

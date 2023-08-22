@@ -158,7 +158,7 @@ struct DirectMessages: View {
                                 }
                                 .listStyle(.plain)
                                 .onAppear {
-                                    sendNotification(.updateDMsCount, requestsTotalUnread + onlyMostRecentAcceptedTotalUnread)
+                                    sendNotification(.updateDMsCount, (requestsTotalUnread + onlyMostRecentAcceptedTotalUnread))
                                 }
                             }
                             else {
@@ -219,7 +219,7 @@ struct DirectMessages: View {
     }
     
     func markAllAsRead() {
-        sendNotification(.updateDMsCount, requestsTotalUnread + 0)
+        sendNotification(.updateDMsCount, requestsTotalUnread)
         onlyMostRecentAll.filter { $0.value.1 == true && $0.value.2 > 0 }
             .forEach { (key: String, value: ([Event], Bool, Int, Int64, Event)) in
                 if let last = value.0.last {
@@ -236,7 +236,7 @@ struct DirectMessages: View {
         guard let latestRootDMcreatedAt = onlyMostRecentRequests.map({ $0.1 }).max() else { return }
         
         account.lastSeenDMRequestCreatedAt = latestRootDMcreatedAt
-        sendNotification(.updateDMsCount, 0 + onlyMostRecentAcceptedTotalUnread)
+        sendNotification(.updateDMsCount, onlyMostRecentAcceptedTotalUnread)
     }
 }
 

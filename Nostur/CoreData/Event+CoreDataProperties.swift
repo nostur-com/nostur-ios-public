@@ -57,7 +57,7 @@ extension Event {
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
     
-    var aTag:String { String(kind) + ":" + pubkey  + ":" + dTag }
+    var aTag:String { (String(kind) + ":" + pubkey  + ":" + dTag) }
     
     // For events with multiple versions (like NIP-33)
     // Most recent version should be nil
@@ -189,7 +189,7 @@ extension Event {
             if let replyTo = fixRelations ? currentEvent?.replyTo__ : currentEvent?.replyTo {
                 parentEvents.append(replyTo)
                 currentEvent = replyTo
-                i = i + 1
+                i = (i + 1)
             }
             else {
                 currentEvent = nil
@@ -483,7 +483,7 @@ extension Event {
             if let reactingToEvent = try context.fetch(request).first {
                 //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
 //                reactingToEvent.objectWillChange.send()
-                reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
+                reactingToEvent.repliesCount = (reactingToEvent.repliesCount + 1)
             }
         }
         let replyToRootEtag = TagsHelpers(tags).replyToRootEtag()
@@ -498,7 +498,7 @@ extension Event {
             if let reactingToEvent = try context.fetch(request).first {
                 //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
 //                reactingToEvent.objectWillChange.send()
-                reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
+                reactingToEvent.repliesCount = (reactingToEvent.repliesCount + 1)
             }
         }
         
@@ -531,13 +531,13 @@ extension Event {
                     request.fetchLimit = 1
                     
                     if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
-                        reactingToEvent.likesCount = reactingToEvent.likesCount + 1
+                        reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                         reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
                     }
                     else if let reactingToEvent = try context.fetch(request).first {
-                        reactingToEvent.likesCount = reactingToEvent.likesCount + 1
+                        reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                         reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
@@ -609,8 +609,8 @@ extension Event {
         }
                 
         if let zappedEvent = zap.zappedEvent {
-            zappedEvent.zapTally = zappedEvent.zapTally + Int64(zap.naiveSats)
-            zappedEvent.zapsCount = zappedEvent.zapsCount + 1
+            zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
+            zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
             zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
         }
         return true
@@ -629,7 +629,7 @@ extension Event {
                 if let reactingToEvent = try context.fetch(request).first {
 //                    reactingToEvent.objectWillChange.send()
                     //                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
-                    reactingToEvent.mentionsCount = reactingToEvent.mentionsCount + 1
+                    reactingToEvent.mentionsCount = (reactingToEvent.mentionsCount + 1)
                     
                 }
             }

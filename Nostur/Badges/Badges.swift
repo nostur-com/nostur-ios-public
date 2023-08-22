@@ -134,7 +134,7 @@ extension Event {
     // ALL THE P's this BADGE AWARD is awarding
     var awardedTo:[NostrTag] {
         return badgeAwards.reduce([]) { partialResult, award in
-            return partialResult + award.tags().filter { $0.type == "p" }
+            return (partialResult + (award.tags().filter { $0.type == "p" }))
         }
     }
     

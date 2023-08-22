@@ -341,8 +341,8 @@ extension Contact : Identifiable {
                 if let zapperPubkey = contact.zapperPubkey,
                     zapperPubkey == zap.pubkey,
                     let zappedEvent = zap.zappedEvent {
-                    zappedEvent.zapTally = zappedEvent.zapTally + Int64(zap.naiveSats)
-                    zappedEvent.zapsCount = zappedEvent.zapsCount + 1
+                    zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
+                    zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
                     zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
                     L.og.info("⚡️👍 zap \(zap.id) verified after fetching contact \(contact.pubkey)")
                 }

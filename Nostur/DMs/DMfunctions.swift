@@ -23,8 +23,8 @@ func computeOnlyMostRecentAll(sent:[Event],received:[Event],pubkey:String) -> [S
                     recent[contactPubkey] = ([dm], true, 0, dm.created_at, dm) // sent so consider accepted
                 }
                 else {
-                    let dms = recent[contactPubkey]!.0 + [dm]
-                    let unread = recent[contactPubkey]!.2 + 0 // +0 because sent by me.
+                    let dms = (recent[contactPubkey]!.0 + [dm])
+                    let unread = (recent[contactPubkey]!.2 + 0) // +0 because sent by me.
                     recent[contactPubkey] = (dms, true, unread, recent[contactPubkey]!.3, recent[contactPubkey]!.4) // maybe this dict key was received before, but now also responded so consider accepted
                 }
             }
@@ -38,8 +38,8 @@ func computeOnlyMostRecentAll(sent:[Event],received:[Event],pubkey:String) -> [S
             else {
                 let current = recent[dm.pubkey]
                 let count = dm.created_at > current?.0.first?.lastSeenDMCreatedAt ?? 0 ? 1 : 0
-                let dms = current!.0 + [dm]
-                let unread = current!.2 + count // check rootDM.lastSeenDMCreatedAt for +1 or +0
+                let dms = (current!.0 + [dm])
+                let unread = (current!.2 + count) // check rootDM.lastSeenDMCreatedAt for +1 or +0
                 let isAccepted = current!.1 || (current?.0.first?.dmAccepted ?? false)
                 recent[dm.pubkey] = (dms, isAccepted, unread, recent[dm.pubkey]!.3, recent[dm.pubkey]!.4)
             }
@@ -84,7 +84,7 @@ func computeOnlyMostRecentRequests(_ onlyMostRecentAll:[String: ([Event], Bool, 
 func computeOnlyMostRecentAcceptedTotalUnread(_ onlyMostRecentAccepted:[(Event, Int)]) -> Int {
     onlyMostRecentAccepted.reduce(0) { (partialResult, recentDMtuple) in
         let (_, unread) = recentDMtuple
-        return partialResult + unread
+        return (partialResult + unread)
     }
 }
 
@@ -92,7 +92,7 @@ func computeRequestTotalUnread(_ onlyMostRecentRequests:[(Event, Int64)], lastSe
     return onlyMostRecentRequests.reduce(0) { (partialResult, requestDMtuple) in
         let (_, createdAt) = requestDMtuple
         if (createdAt > lastSeenDMRequestCreatedAt) {
-            return partialResult + 1
+            return (partialResult + 1)
         }
         return partialResult
     }
