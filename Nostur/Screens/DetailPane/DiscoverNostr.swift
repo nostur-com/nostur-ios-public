@@ -27,6 +27,11 @@ struct DiscoverNostr: View {
                         Text("[#grownostr](nostur:t:grownostr)")
                     }
                     HStack {
+                        Text("[#asknostr](nostur:t:asknostr)")
+                        Text("[#beerstr](nostur:t:beerstr)")
+                        Text("[#winestr](nostur:t:winestr)")
+                    }
+                    HStack {
                         Text("[#bitcoin](nostur:t:bitcoin)")
                         Text("[#music](nostur:t:music)")
                         Text("[#memes](nostur:t:memes)")
