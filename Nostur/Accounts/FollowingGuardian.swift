@@ -94,6 +94,7 @@ class FollowingGuardian: ObservableObject {
         for pubkey in added {
             let contact = Contact.fetchByPubkey(pubkey, context: context)
             if let contact {
+                contact.couldBeImposter = 0
                 account.addToFollows(contact)
             }
             else {
@@ -101,6 +102,7 @@ class FollowingGuardian: ObservableObject {
                 newContact.pubkey = pubkey
                 newContact.metadata_created_at = 0
                 newContact.updated_at = 0
+                newContact.couldBeImposter = 0
                 account.addToFollows(newContact)
             }
         }
@@ -114,6 +116,7 @@ class FollowingGuardian: ObservableObject {
         for pubkey in removed {
             let contact = Contact.fetchByPubkey(pubkey, context: context)
             if let contact {
+                contact.couldBeImposter = 0
                 account.addToFollows(contact)
             }
             else {
@@ -121,6 +124,7 @@ class FollowingGuardian: ObservableObject {
                 newContact.pubkey = pubkey
                 newContact.metadata_created_at = 0
                 newContact.updated_at = 0
+                newContact.couldBeImposter = 0
                 account.addToFollows(newContact)
             }
         }
