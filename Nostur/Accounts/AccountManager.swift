@@ -197,6 +197,10 @@ class AccountManager {
                     newKind3Event.tags.append(NostrTag(["p", contact.pubkey]))
                 }
                 
+                for tag in account.followingHashtags {
+                    newKind3Event.tags.append(NostrTag(["t", tag]))
+                }
+                
                 let newKind3EventSigned = try newKind3Event.sign(keys)
                 
                 return newKind3EventSigned
