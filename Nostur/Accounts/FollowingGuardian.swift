@@ -141,11 +141,7 @@ class FollowingGuardian: ObservableObject {
         }
         
         guard republish else { return }
-        guard let clEvent = try? AccountManager.createContactListEvent(account: account) else {
-            L.og.error("🔴🔴 Could not create new clEvent")
-            return
-        }
-        _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
+        NosturState.shared.publishNewContactList()
     }
     
     func removeFollowing(_ pubkeys:Set<String>) {

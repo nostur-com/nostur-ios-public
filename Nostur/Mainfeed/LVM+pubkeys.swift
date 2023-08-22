@@ -36,7 +36,7 @@ extension LVM {
         if !hashtags.isEmpty {
             let followingHashtagsFilter = Filters(
                 kinds: FOLLOWING_EVENT_KINDS,
-                tagFilter: TagFilter(tag:"t", values: Array(hashtags)),
+                tagFilter: TagFilter(tag:"t", values: Array(hashtags).map { $0.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }),
                 since: now.timestamp, limit: 5000)
             filters.append(followingHashtagsFilter)
         }
