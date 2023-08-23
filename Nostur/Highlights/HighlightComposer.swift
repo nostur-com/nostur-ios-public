@@ -13,103 +13,110 @@ struct HighlightComposer: View {
     var highlight:NewHighlight
     @State var selectedAuthor:Contact?
     @State var isAuthorSelectionShown = false
+    @State var activeAccount:Account? = nil
     
     var body: some View {
-        if let account = ns.account {
-            VStack {
-                Divider()
-                HStack(alignment: .top, spacing: 10) {
-                    PFP(pubkey: account.publicKey, account: account)
-                        .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
+        VStack(spacing: 0) {
+            if let account = activeAccount {
+                VStack {
+                    Divider()
+                    HStack(alignment: .top, spacing: 10) {
+                        PostAccountSwitcher(activeAccount: account, onChange: { account in
+                            activeAccount = account
+                        })
 
-                    VStack(alignment:.leading, spacing: 3) {
-                        HStack { // name + reply + context menu
-                            PreviewHeaderView(authorName: account.anyName)
-                            Spacer()
-                        }
+                        VStack(alignment:.leading, spacing: 3) {
+                            HStack { // name + reply + context menu
+                                PreviewHeaderView(authorName: account.anyName)
+                                Spacer()
+                            }
 
-                        
-                        VStack {
-                            Text(highlight.selectedText)
-                                .italic()
-                                .padding(20)
-                                .overlay(alignment:.topLeading) {
-                                    Image(systemName: "quote.opening")
-                                        .foregroundColor(Color.secondary)
-                                }
-                                .overlay(alignment:.bottomTrailing) {
-                                    Image(systemName: "quote.closing")
-                                        .foregroundColor(Color.secondary)
-                                }
                             
-                            if let selectedAuthor = selectedAuthor {
+                            VStack {
+                                Text(highlight.selectedText)
+                                    .italic()
+                                    .padding(20)
+                                    .overlay(alignment:.topLeading) {
+                                        Image(systemName: "quote.opening")
+                                            .foregroundColor(Color.secondary)
+                                    }
+                                    .overlay(alignment:.bottomTrailing) {
+                                        Image(systemName: "quote.closing")
+                                            .foregroundColor(Color.secondary)
+                                    }
+                                
+                                if let selectedAuthor = selectedAuthor {
+                                    HStack {
+                                        Spacer()
+                                        PFP(pubkey: selectedAuthor.pubkey, contact: selectedAuthor, size: 20)
+                                        Text(selectedAuthor.authorName)
+                                    }
+                                    .padding(.trailing, 40)
+                                }
                                 HStack {
                                     Spacer()
-                                    PFP(pubkey: selectedAuthor.pubkey, contact: selectedAuthor, size: 20)
-                                    Text(selectedAuthor.authorName)
+                                    if let md = try? AttributedString(markdown:"[\(highlight.url)](\(highlight.url))") {
+                                        Text(md)
+                                            .lineLimit(1)
+                                            .font(.caption)
+                                    }
                                 }
                                 .padding(.trailing, 40)
                             }
-                            HStack {
-                                Spacer()
-                                if let md = try? AttributedString(markdown:"[\(highlight.url)](\(highlight.url))") {
-                                    Text(md)
-                                        .lineLimit(1)
-                                        .font(.caption)
+                            .padding(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(.regularMaterial, lineWidth: 1)
+                            )
+                            PreviewFooterFragmentView()
+                        }
+                    }
+                    .padding(10)
+                    Divider()
+                    Spacer()
+                }
+                .padding(.top, 20)
+                .navigationTitle(String(localized:"Share highlight", comment:"Navigation title for screen to Share a Highlighted Text"))
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
+                    ToolbarItem(placement: .primaryAction) {
+                        HStack {
+                            if selectedAuthor != nil {
+                                Button(String(localized:"Remove author", comment: "Button to Remove author from Highlight")) { selectedAuthor = nil }
+                            }
+                            else {
+                                Button(String(localized:"Include author", comment: "Button to include author in Highlight")) { isAuthorSelectionShown = true }
+                            }
+                            Button(String(localized:"Post.verb", comment: "Button to post a highlight")) { send() }
+                                .buttonStyle(.borderedProminent)
+                        }
+                    }
+                }
+                .sheet(isPresented: $isAuthorSelectionShown) {
+                    NavigationStack {
+                        ContactsSearch(followingPubkeys:NosturState.shared.followingPublicKeys,
+                                       prompt: "Search", onSelectContact: { selectedContact in
+                            selectedAuthor = selectedContact
+                            isAuthorSelectionShown = false
+                        })
+                        .equatable()
+                        .navigationTitle(String(localized:"Find author", comment:"Navigation title of Find author screen"))
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel") {
+                                    isAuthorSelectionShown = false
                                 }
                             }
-                            .padding(.trailing, 40)
-                        }
-                        .padding(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 15)
-                                .stroke(.regularMaterial, lineWidth: 1)
-                        )
-                        PreviewFooterFragmentView()
-                    }
-                }
-                .padding(10)
-                Divider()
-                Spacer()
-            }
-            .padding(.top, 20)
-            .navigationTitle(String(localized:"Share highlight", comment:"Navigation title for screen to Share a Highlighted Text"))
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    HStack {
-                        if selectedAuthor != nil {
-                            Button(String(localized:"Remove author", comment: "Button to Remove author from Highlight")) { selectedAuthor = nil }
-                        }
-                        else {
-                            Button(String(localized:"Include author", comment: "Button to include author in Highlight")) { isAuthorSelectionShown = true }
-                        }
-                        Button(String(localized:"Post.verb", comment: "Button to post a highlight")) { send() }
-                            .buttonStyle(.borderedProminent)
-                    }
-                }
-            }
-            .sheet(isPresented: $isAuthorSelectionShown) {
-                NavigationStack {
-                    ContactsSearch(followingPubkeys:NosturState.shared.followingPublicKeys,
-                                   prompt: "Search", onSelectContact: { selectedContact in
-                        selectedAuthor = selectedContact
-                        isAuthorSelectionShown = false
-                    })
-                    .equatable()
-                    .navigationTitle(String(localized:"Find author", comment:"Navigation title of Find author screen"))
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") {
-                                isAuthorSelectionShown = false
-                            }
                         }
                     }
                 }
             }
+        }
+        .onAppear {
+            activeAccount = NosturState.shared.account
         }
     }
     

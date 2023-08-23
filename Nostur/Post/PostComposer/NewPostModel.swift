@@ -28,6 +28,7 @@ public final class NewPostModel: ObservableObject {
     @Published var gifSheetShown = false
     
     @Published var contactSearchResults:[Contact] = []
+    @Published var activeAccount:Account? = nil
     
     var filteredContactSearchResults:[Contact] {
         guard let wot = NosturState.shared.wot else {
@@ -94,7 +95,7 @@ public final class NewPostModel: ObservableObject {
     }
     
     private func _sendNow(urls:[String], pastedImages:[UIImage], replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = activeAccount else { return }
         guard account.privateKey != nil else { NosturState.shared.readOnlyAccountSheetShown = true; return }
         let publicKey = account.publicKey
         var nEvent = nEvent ?? NEvent(content: "")
@@ -189,7 +190,7 @@ public final class NewPostModel: ObservableObject {
     }
     
     public func showPreview(quotingEvent:Event? = nil) {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = activeAccount else { return }
         var nEvent = nEvent ?? NEvent(content: "")
         
         nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
