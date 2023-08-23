@@ -311,6 +311,7 @@ private struct WithSheets: ViewModifier {
                         .foregroundColor(Color.secondary)
                     }
                     .frame(width: 600)
+                    .padding(10)
                     .roundedBoxShadow()
                     .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                     .padding(.vertical, 10)
@@ -331,17 +332,15 @@ private struct WithSheets: ViewModifier {
                     .debounce(for: 0.35, scheduler: RunLoop.main)
                     .sink {
                         guard let uiImage = renderer.uiImage else { return }
-                        guard let pngData = uiImage.pngData() else { return }
                         
                         // Trigger the share sheet
-                        self.sharablePostImage = ShareablePostImage(pngData: pngData)
+                        self.sharablePostImage = ShareablePostImage(image: uiImage, title: "Screenshot", subtitle: "Screenshot")
                         screenshotRenderer = nil
                     }
                 
             }
             .sheet(item: $sharablePostImage) { sharablePostImage in
-                let item = NSItemProvider(item: sharablePostImage.pngData as NSData, typeIdentifier: "public.png")
-                ActivityView(activityItems: [item])
+                ActivityView(activityItems: [sharablePostImage])
             }
             
         // Share post weblink
@@ -431,9 +430,54 @@ struct EventNotification: Identifiable {
     let event:Event // bg
 }
 
-struct ShareablePostImage: Identifiable {
+import LinkPresentation
+import UniformTypeIdentifiers
+
+final class ShareablePostImage: NSObject, UIActivityItemSource, Identifiable {
     let id = UUID()
-    let pngData:Data
+    private let image: UIImage
+    private var pngData: Data?
+    private let title: String
+    private let subtitle: String?
+
+    init(image: UIImage, title: String, subtitle: String? = nil) {
+        self.image = image
+        self.pngData = image.pngData()
+        self.title = title
+        self.subtitle = subtitle
+
+        super.init()
+    }
+
+    func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any {
+        return title
+    }
+
+    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
+        if pngData != nil {
+            return pngData
+        }
+        return image
+    }
+    
+    func activityViewController(_ activityViewController: UIActivityViewController, dataTypeIdentifierForActivityType activityType: UIActivity.ActivityType?) -> String {
+        if pngData != nil {
+            return UTType.png.identifier
+        }
+        return UTType.jpeg.identifier
+    }
+
+    func activityViewControllerLinkMetadata(_ activityViewController: UIActivityViewController) -> LPLinkMetadata? {
+        let metadata = LPLinkMetadata()
+
+        metadata.iconProvider = NSItemProvider(object: self.image)
+        metadata.title = title
+        if let subtitle = subtitle {
+            metadata.originalURL = URL(fileURLWithPath: subtitle)
+        }
+
+        return metadata
+    }
 }
 
 struct ShareableWeblink: Identifiable {
