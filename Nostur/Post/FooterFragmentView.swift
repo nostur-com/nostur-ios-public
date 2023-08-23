@@ -153,7 +153,8 @@ struct FooterFragmentView: View {
                 }
                 
             }
-            if (nrPost.pubkey == NosturState.shared.activeAccountPublicKey) {
+            if (isOwnPost) {
+                
                 if (nrPost.relays == "" && (nrPost.cancellationId != nil || nrPost.flags == "nsecbunker_unsigned" || nrPost.flags == "awaiting_send")) {
                     HStack {
                         if nrPost.flags == "nsecbunker_unsigned" {
@@ -200,6 +201,12 @@ struct FooterFragmentView: View {
         }
         .foregroundColor(Self.grey)
         .font(.system(size: 14))        
+    }
+    
+    var isOwnPost:Bool {
+        if nrPost.pubkey == NosturState.shared.activeAccountPublicKey { return true }
+        guard let account = NosturState.shared.accounts.first(where: { $0.publicKey == nrPost.pubkey }) else { return false }
+        return account.privateKey != nil
     }
 }
 
