@@ -24,46 +24,48 @@ struct NewPost: View {
     
     var body: some View {
         VStack(spacing:0) {
-            if let account = ns.account {
+            if let account = vm.activeAccount {
                 VStack {
                     HStack(alignment: .top) {
-                        PFP(pubkey: account.publicKey, account: account)
-                            HighlightedTextEditor(
-                                text: $vm.text,
-                                pastedImages: $vm.pastedImages,
-                                shouldBecomeFirstResponder: true,
-                                highlightRules: NewPostModel.rules,
-                                photoPickerTapped: {
-                                    ipm.photoPickerShown = true
-                                },
-                                gifsTapped: {
-                                    vm.gifSheetShown = true
-                                }
-                            )
-                            .introspect { editor in
-                                if (vm.textView == nil) {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                                        vm.textView = editor.textView
-                                    }
-                                }
+                        PostAccountSwitcher(activeAccount: account, onChange: { account in
+                            vm.activeAccount = account
+                        })
+                        HighlightedTextEditor(
+                            text: $vm.text,
+                            pastedImages: $vm.pastedImages,
+                            shouldBecomeFirstResponder: true,
+                            highlightRules: NewPostModel.rules,
+                            photoPickerTapped: {
+                                ipm.photoPickerShown = true
+                            },
+                            gifsTapped: {
+                                vm.gifSheetShown = true
                             }
-                            .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
-                            .onChange(of: ipm.newImage) { newImage in
-                                if let newImage { vm.pastedImages.append(newImage) }
-                            }
-                            .background(alignment:.topLeading) {
-                                Text(PLACEHOLDER).foregroundColor(.gray)
-                                    .opacity(vm.text == "" ? 1 : 1)
-                                    .offset(x: 5.0, y: 4.0)
-                            }
-                            .sheet(isPresented: $vm.gifSheetShown) {
-                                NavigationStack {
-                                    GifSearcher { gifUrl in
-                                        vm.text += gifUrl + "\n"
-                                    }
+                        )
+                        .introspect { editor in
+                            if (vm.textView == nil) {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                    vm.textView = editor.textView
                                 }
                             }
-                            AnyStatus(filter: "NewPost")
+                        }
+                        .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
+                        .onChange(of: ipm.newImage) { newImage in
+                            if let newImage { vm.pastedImages.append(newImage) }
+                        }
+                        .background(alignment:.topLeading) {
+                            Text(PLACEHOLDER).foregroundColor(.gray)
+                                .opacity(vm.text == "" ? 1 : 1)
+                                .offset(x: 5.0, y: 4.0)
+                        }
+                        .sheet(isPresented: $vm.gifSheetShown) {
+                            NavigationStack {
+                                GifSearcher { gifUrl in
+                                    vm.text += gifUrl + "\n"
+                                }
+                            }
+                        }
+                        AnyStatus(filter: "NewPost")
                     }
                     HStack {
                         ImagePreviews(pastedImages: $vm.pastedImages)
@@ -85,7 +87,7 @@ struct NewPost: View {
                             }
                             .buttonStyle(.borderless)
                             .disabled(vm.uploading)
-
+                            
                         }
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button { vm.gifSheetShown = true } label: {
@@ -128,7 +130,7 @@ struct NewPost: View {
                         PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(dismiss:dismiss) }, uploading: $vm.uploading)
                     }
                 }
-
+                
                 if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {
                     ScrollView {
                         LazyVStack {
@@ -146,12 +148,16 @@ struct NewPost: View {
                 ProgressView()
             }
         }
+        .onAppear {
+            vm.activeAccount = NosturState.shared.account
+        }
     }
 }
 
 struct NewNote_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
+            pe.loadAccounts()
             pe.loadPosts()
             pe.loadContacts()
         }) {

@@ -26,7 +26,7 @@ struct NewReply: View {
     
     var body: some View {
         VStack(spacing:0) {
-            if let account = ns.account, let replyToNRPost {
+            if let account = vm.activeAccount, let replyToNRPost {
                 ScrollViewReader { proxy in
                     ScrollView {
                         VStack {
@@ -37,8 +37,10 @@ struct NewReply: View {
                                 Spacer()
                             }
                             HStack(alignment: .top, spacing: 0) {
-                                PFP(pubkey: account.publicKey, account: account)
-                                    .padding(.horizontal, 10)
+                                PostAccountSwitcher(activeAccount: account, onChange: { account in
+                                    vm.activeAccount = account
+                                })
+                                .padding(.horizontal, 10)
                                 HighlightedTextEditor(
                                     text: $vm.text,
                                     pastedImages: $vm.pastedImages,
@@ -235,6 +237,9 @@ struct NewReply: View {
             else {
                 ProgressView()
             }
+        }
+        .onAppear {
+            vm.activeAccount = NosturState.shared.account
         }
         .task {
             DataProvider.shared().bg.perform {
