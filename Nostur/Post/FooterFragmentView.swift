@@ -111,7 +111,7 @@ struct FooterFragmentView: View {
                             })
                         }
                         else {
-                            guard let signedEvent = try? NosturState.shared.signEvent(likeNEvent) else {
+                            guard let signedEvent = try? account.signEvent(likeNEvent) else {
                                 L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
                                 return
                             }

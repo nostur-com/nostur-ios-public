@@ -64,7 +64,7 @@ struct PaymentAmountSelector: View {
                         })
                     }
                     else {
-                        let signedZapRequestNote = try ns.signEvent(zapRequestNote)
+                        let signedZapRequestNote = try account.signEvent(zapRequestNote)
                         
                         let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                         

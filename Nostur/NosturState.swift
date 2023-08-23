@@ -316,47 +316,6 @@ final class NosturState : ObservableObject {
         }
     }
     
-    func signEvent(_ event:NEvent) throws -> NEvent {
-        guard account != nil, account?.privateKey != nil else {
-            if (account == nil) { L.og.error("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴") }
-            if (account?.privateKey == nil) { L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴") }
-            throw "account or keys missing, could not sign"
-        }
-        
-        var eventToSign = event
-        do {
-            let keys = try NKeys(privateKeyHex: account!.privateKey!)
-            let signedEvent = try eventToSign.sign(keys)
-            return signedEvent
-        }
-        catch {
-            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
-            throw "Could not sign event"
-        }
-    }
-    
-    func signEventBg(_ event:NEvent) throws -> NEvent {
-        guard let account = self.account?.toBG() else {
-            L.og.error("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴")
-            throw "account missing, could not sign"
-        }
-        guard let pk = account.privateKey else {
-            L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴")
-            throw "keys missing, could not sign"
-        }
-        
-        var eventToSign = event
-        do {
-            let keys = try NKeys(privateKeyHex: pk)
-            let signedEvent = try eventToSign.sign(keys)
-            return signedEvent
-        }
-        catch {
-            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
-            throw "Could not sign event"
-        }
-    }
-    
     func followsYou(_ contact:Contact) -> Bool {
         guard let clEvent = contact.clEvent else { return false }
         guard let account = account else { return false }
@@ -412,10 +371,11 @@ final class NosturState : ObservableObject {
     
     func report(_ event:Event, reportType:ReportType, note:String = "", includeProfile:Bool = false) -> NEvent? {
         guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
+        guard let account = account else { return nil }
         
         let report = EventMessageBuilder.makeReportEvent(pubkey: event.pubkey, eventId: event.id, type: reportType, note: note, includeProfile: includeProfile)
 
-        guard let signedEvent = try? signEvent(report) else {
+        guard let signedEvent = try? account.signEvent(report) else {
             L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
             return nil
         }
@@ -424,10 +384,11 @@ final class NosturState : ObservableObject {
     
     func reportContact(pubkey:String, reportType:ReportType, note:String = "") -> NEvent? {
         guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
+        guard let account = account else { return nil }
         
         let report = EventMessageBuilder.makeReportContact(pubkey: pubkey, type: reportType, note: note)
 
-        guard let signedEvent = try? signEvent(report) else {
+        guard let signedEvent = try? account.signEvent(report) else {
             L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
             return nil
         }
@@ -436,10 +397,11 @@ final class NosturState : ObservableObject {
     
     func deletePost(_ eventId:String) -> NEvent? {
         guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
+        guard let account = account else { return nil }
         
         let deletion = EventMessageBuilder.makeDeleteEvent(eventId: eventId)
 
-        guard let signedEvent = try? signEvent(deletion) else {
+        guard let signedEvent = try? account.signEvent(deletion) else {
             L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
             return nil
         }

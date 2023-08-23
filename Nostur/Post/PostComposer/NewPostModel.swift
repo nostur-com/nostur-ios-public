@@ -149,7 +149,7 @@ public final class NewPostModel: ObservableObject {
                 }
             }
         }
-        else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
+        else if let signedEvent = try? account.signEvent(nEvent) {
             DataProvider.shared().bg.perform {
                 let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
                 savedEvent.cancellationId = cancellationId

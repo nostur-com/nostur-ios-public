@@ -83,7 +83,7 @@ struct BadgesReceivedView: View {
     func publishSelection(_ selection:[Event]) {
         // argument is badge definition. (KIND:30009)
         // we need the badge award
-        
+        guard let account = ns.account else { return }
         let selectedAwarded = badgeAwardsToMe // [KIND:8]
                     .filter {
                         selection // [KIND:30009]
@@ -95,7 +95,7 @@ struct BadgesReceivedView: View {
         let newProfileBadges = createProfileBadges(awards: selectedAwarded)
 
         do {
-            guard let newProfileBadgesSigned = try? ns.signEvent(newProfileBadges) else { throw "could not create newProfileBadgesSigned " }
+            guard let newProfileBadgesSigned = try? account.signEvent(newProfileBadges) else { throw "could not create newProfileBadgesSigned " }
             _ = Event.saveEventFromMain(event: newProfileBadgesSigned)
             DataProvider.shared().bgSave()
             up.publishNow(newProfileBadgesSigned)

@@ -114,7 +114,7 @@ struct HighlightComposer: View {
     }
     
     func send() {
-        guard let account = ns.account else { return }
+        guard let account = activeAccount else { return }
         guard account.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
         var nEvent = NEvent(content: highlight.selectedText)
         nEvent.createdAt = NTimestamp.init(date: Date())
@@ -153,7 +153,7 @@ struct HighlightComposer: View {
                 }
             }
         }
-        else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
+        else if let signedEvent = try? account.signEvent(nEvent) {
             DataProvider.shared().bg.perform {
                 let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
                 savedEvent.cancellationId = cancellationId
