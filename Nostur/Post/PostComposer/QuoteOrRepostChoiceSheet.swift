@@ -58,7 +58,7 @@ struct QuoteOrRepostChoiceSheet: View {
                             }
                         }
                     }
-                    else if let signedEvent = try? NosturState.shared.signEvent(repost) {
+                    else if let signedEvent = try? account.signEvent(repost) {
                         DataProvider.shared().bg.perform {
                             let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
                             savedEvent.cancellationId = cancellationId

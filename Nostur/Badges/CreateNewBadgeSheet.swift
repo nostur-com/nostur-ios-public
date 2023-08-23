@@ -64,10 +64,11 @@ struct CreateNewBadgeSheet: View {
         .onAppear { focusedField = .badgeCode }
     }
     func createBadge() {
+        guard let account = ns.account else { return }
         let newBadge = createBadgeDefinition(badgeCode, name: name, description: description, image1024: image1024, thumb256: image256)
         
         do {    
-            guard let newBadgeSigned = try? ns.signEvent(newBadge) else { throw "could not create newBadgeSigned " }
+            guard let newBadgeSigned = try? account.signEvent(newBadge) else { throw "could not create newBadgeSigned " }
             _ = Event.saveEventFromMain(event: newBadgeSigned)
             DataProvider.shared().bgSave()
             up.publishNow(newBadgeSigned)

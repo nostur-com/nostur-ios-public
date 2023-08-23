@@ -231,8 +231,9 @@ class Zap {
                     })
                 }
                 else {
+                    guard let account = NosturState.shared.bgAccount else { return }
                     let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
-                    if let signedZapRequestNote = try? NosturState.shared.signEventBg(zapRequestNote) {
+                    if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {
                         Task {
                             if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedZapRequestNote) {
                                 

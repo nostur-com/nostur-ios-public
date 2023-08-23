@@ -31,6 +31,7 @@ struct NewDMComposer: View {
             ChatInputField(message: $message) {
                 // Create and send DM (via unpublisher?)
                 guard let pk = ns.account?.privateKey else { ns.readOnlyAccountSheetShown = true; return }
+                guard let account = ns.account else { return }
                 guard let theirPubkey = toPubkey else { return }
                 var nEvent = NEvent(content: message)
                 nEvent.kind = .directMessage
@@ -44,7 +45,7 @@ struct NewDMComposer: View {
                 nEvent.content = encrypted
                 nEvent.tags.append(NostrTag(["p", theirPubkey]))
                 
-                if let signedEvent = try? ns.signEvent(nEvent) {
+                if let signedEvent = try? account.signEvent(nEvent) {
                     //                        print(signedEvent.wrappedEventJson())
                     up.publishNow(signedEvent)
                     //                        noteCancellationId = up.publish(signedEvent)

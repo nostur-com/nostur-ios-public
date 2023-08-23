@@ -125,8 +125,8 @@ class AccountManager {
                 })
             }
             else {
-                let newKind0EventSigned = try NosturState.shared.signEvent(newKind0Event)
-                let newKind3EventSigned = try NosturState.shared.signEvent(newKind3Event)
+                let newKind0EventSigned = try account.signEvent(newKind0Event)
+                let newKind3EventSigned = try account.signEvent(newKind3Event)
                 
                 Unpublisher.shared.publishNow(newKind0EventSigned)
                 Unpublisher.shared.publishNow(newKind3EventSigned)

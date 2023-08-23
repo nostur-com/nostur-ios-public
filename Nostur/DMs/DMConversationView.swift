@@ -137,6 +137,7 @@ struct DMConversationView: View {
                                             ChatInputField(message: $text) {
                                                 // Create and send DM (via unpublisher?)
                                                 guard let pk = ns.account?.privateKey else { ns.readOnlyAccountSheetShown = true; return }
+                                                guard let account = ns.account else { return }
                                                 guard let theirPubkey = self.theirPubkey else { return }
                                                 var nEvent = NEvent(content: text)
                                                 if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
@@ -152,7 +153,7 @@ struct DMConversationView: View {
                                                 nEvent.tags.append(NostrTag(["p", theirPubkey]))
                                                 
                                                 
-                                                if let signedEvent = try? ns.signEvent(nEvent) {
+                                                if let signedEvent = try? account.signEvent(nEvent) {
                                                     //                        print(signedEvent.wrappedEventJson())
                                                     up.publishNow(signedEvent)
                                                     //                        noteCancellationId = up.publish(signedEvent)

@@ -114,14 +114,14 @@ struct BadgeDetailView: View {
         .sheet(isPresented: $awardToPeopleIsShown) {
             NavigationStack {
                 ContactsSearch(followingPubkeys: NosturState.shared.followingPublicKeys, prompt: "Search contacts", onSelectContacts: { selectedContacts in
-                    
+                    guard let account = ns.account else { return }
                     awardToPeopleIsShown = false
                     guard !selectedContacts.isEmpty else { return }
                     let newBadgeAwards = createBadgeAward(ns.account!.publicKey,
                                                           badgeCode: nBadge.badgeCode!.definition,
                                                           pubkeys: selectedContacts.map { $0.pubkey })
                     do {
-                        guard let newBadgeAwardsSigned = try? ns.signEvent(newBadgeAwards) else { throw "could not create newBadgeAwardsSigned " }
+                        guard let newBadgeAwardsSigned = try? account.signEvent(newBadgeAwards) else { throw "could not create newBadgeAwardsSigned " }
                         _ = Event.saveEventFromMain(event: newBadgeAwardsSigned)
                         DataProvider.shared().bgSave()
                         up.publishNow(newBadgeAwardsSigned)

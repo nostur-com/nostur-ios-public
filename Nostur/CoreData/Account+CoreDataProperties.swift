@@ -272,4 +272,45 @@ extension Account : Identifiable {
     func toBG() -> Account? {
         DataProvider.shared().bg.object(with: self.objectID) as? Account
     }
+    
+    
+    func signEvent(_ event:NEvent) throws -> NEvent {
+        guard let privateKey = self.privateKey else {
+            L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴")
+            throw "account or keys missing, could not sign"
+        }
+        
+        var eventToSign = event
+        do {
+            let keys = try NKeys(privateKeyHex: privateKey)
+            let signedEvent = try eventToSign.sign(keys)
+            return signedEvent
+        }
+        catch {
+            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
+            throw "Could not sign event"
+        }
+    }
+    
+    func signEventBg(_ event:NEvent) throws -> NEvent {
+        guard let account = self.toBG() else {
+            L.og.error("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴")
+            throw "account missing, could not sign"
+        }
+        guard let pk = account.privateKey else {
+            L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴")
+            throw "keys missing, could not sign"
+        }
+        
+        var eventToSign = event
+        do {
+            let keys = try NKeys(privateKeyHex: pk)
+            let signedEvent = try eventToSign.sign(keys)
+            return signedEvent
+        }
+        catch {
+            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
+            throw "Could not sign event"
+        }
+    }
 }
