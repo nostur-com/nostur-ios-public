@@ -128,6 +128,9 @@ struct NotificationsPosts: View {
             let blockedPubkeys = notification.object as! [String]
             fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.id)  }
         }
+        .onReceive(receiveNotification(.muteListUpdated)) { _ in
+            fl.nrPosts = fl.nrPosts.filter(notMuted)
+        }
         .simultaneousGesture(
                DragGesture().onChanged({
                    if 0 < $0.translation.height {
