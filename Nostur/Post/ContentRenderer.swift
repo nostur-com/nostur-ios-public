@@ -60,6 +60,10 @@ struct ContentRenderer: View { // VIEW things
                     if let noteHex = hex(noteId) {
                         QuoteById(id: noteHex)
                             .padding(.vertical, 10)
+                            .onTapGesture {
+                                guard !isDetail else { return }
+                                navigateTo(nrPost)
+                            }
                     }
                     else {
                         let _ = L.og.error("🔴🔴🔴🔴 Problem converting \(noteId) to hex")
@@ -68,13 +72,29 @@ struct ContentRenderer: View { // VIEW things
                 case .noteHex(let hex):
                     QuoteById(id: hex)
                         .padding(.vertical, 10)
+                        .onTapGesture {
+                            guard !isDetail else { return }
+                            navigateTo(nrPost)
+                        }
                 case .code(let code): // For text notes
                     Text(verbatim: code)
                         .font(.system(.body, design: .monospaced))
+                        .onTapGesture {
+                            guard !isDetail else { return }
+                            navigateTo(nrPost)
+                        }
                 case .text(let attributedStringWithPs): // For text notes
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
+                        .onTapGesture {
+                            guard !isDetail else { return }
+                            navigateTo(nrPost)
+                        }
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs)
+                        .onTapGesture {
+                            guard !isDetail else { return }
+                            navigateTo(nrPost)
+                        }
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, nrPost:nrPost)
                         .padding(.vertical, 10)
@@ -141,6 +161,10 @@ struct ContentRenderer: View { // VIEW things
                         .frame(maxWidth: .infinity, alignment: .center)
                 default:
                     EmptyView()
+                        .onTapGesture {
+                            guard !isDetail else { return }
+                            navigateTo(nrPost)
+                        }
                 }
             }
         }
