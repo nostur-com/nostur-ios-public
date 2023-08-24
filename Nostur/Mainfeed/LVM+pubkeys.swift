@@ -165,10 +165,10 @@ extension Event {
         fr.fetchLimit = 25
         if let hashtagRegex = hashtagRegex {
             if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at >= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at >= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
             }
         }
         else {
@@ -190,11 +190,14 @@ extension Event {
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 25
         if let hashtagRegex = hashtagRegex {
+            
+            let after = until.created_at - (8 * 3600) // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
+            
             if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at <= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN {1,6,9802,30023} AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, pubkeys, hashtagRegex)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at <= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN {1,6,9802,30023} AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffPoint, pubkeys, hashtagRegex)
             }
         }
         else {
@@ -222,10 +225,10 @@ extension Event {
         frBefore.fetchLimit = 25
         if let hashtagRegex = hashtagRegex {
             if hideReplies {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
             }
             else {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, pubkeys, hashtagRegex)
             }
         }
         else {
