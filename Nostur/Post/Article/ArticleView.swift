@@ -486,6 +486,9 @@ extension Event {
     
     var articlePublishedAt:Date? {
         if let p = fastTags.first(where: { $0.0 == "published_at" })?.1, let timestamp = TimeInterval(p) {
+            if timestamp > 1000000000000 { // fix for buggy clients using microseconds for published_at
+                return Date(timeIntervalSince1970: timestamp / 1000)
+            }
             return Date(timeIntervalSince1970: timestamp)
         }
         return nil
