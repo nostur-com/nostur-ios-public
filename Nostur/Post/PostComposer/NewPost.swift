@@ -87,7 +87,7 @@ struct NewPost: View {
                             }
                             .buttonStyle(.borderless)
                             .disabled(vm.uploading)
-                            
+
                         }
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button { vm.gifSheetShown = true } label: {
@@ -130,7 +130,7 @@ struct NewPost: View {
                         PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(dismiss:dismiss) }, uploading: $vm.uploading)
                     }
                 }
-                
+
                 if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {
                     ScrollView {
                         LazyVStack {
