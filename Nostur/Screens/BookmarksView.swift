@@ -51,7 +51,7 @@ struct BookmarksView: View {
                     ForEach(vBookmarks) { vBookmark in
                         PostRowDeletable(nrPost: vBookmark, missingReplyTo: true)
                             .padding(10)
-                            .background(Color.systemBackground)
+                            .background(vBookmark.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
                             .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                             .fixedSize(horizontal: false, vertical: true)
                             .contentShape(Rectangle())

@@ -28,7 +28,7 @@ struct NoteMinimalContentView: View {
                         }
                     }
                 }
-                .padding(.trailing, 10)
+//                .padding(.trailingx, 10)
             }
         }
     }

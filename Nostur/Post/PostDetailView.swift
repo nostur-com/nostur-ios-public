@@ -344,7 +344,7 @@ struct ParentPost: View {
                         // We don't show "Replying to.." unless we can't fetch the parent
                         if nrPost.replyTo == nil && nrPost.replyToId != nil {
                             ReplyingToFragmentView(nrPost: nrPost)
-                                .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+//                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         }
                         
                         switch nrPost.kind {
@@ -355,10 +355,10 @@ struct ParentPost: View {
                                 .background(Color(.secondarySystemBackground))
                         case 9802: // highlight
                             HighlightRenderer(nrPost: nrPost)
-                                .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+//                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         case 1,6,9734: // text, repost, zap request
                             ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20)
-                                .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+//                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         case 1063: // File Metadata
                             NoteTextRenderView(nrPost: nrPost)
                         default:
@@ -367,7 +367,7 @@ struct ParentPost: View {
                                 .frame(maxWidth: .infinity)
                                 .background(Color("LightGray").opacity(0.2))
                             ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 )
-                                .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+//                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         }
                     }
                 }
@@ -385,7 +385,7 @@ struct ParentPost: View {
                     FooterFragmentView(nrPost: nrPost)
                         .padding(.leading, INDENT)
                         .padding(.vertical, 5)
-                        .padding(.trailing, 10)
+//                        .padding(.trailingx, 10)
                 }
             }
         }

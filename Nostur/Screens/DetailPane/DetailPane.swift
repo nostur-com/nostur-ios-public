@@ -24,7 +24,7 @@ struct DetailPane: View {
                 .modifier(SizeModifier())
                 .onPreferenceChange(SizePreferenceKey.self) { size in
                     guard size.width > 0 else { return }
-                    dim.listWidth = size.width
+                    dim.listWidth = (size.width - (DIMENSIONS.BOX_PADDING*2))
                     L.og.info("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
                 }
             ScrollViewReader { proxy in
@@ -105,11 +105,11 @@ struct DetailPane: View {
                     DetailTab(tab:tab)
 //                        .padding(.vertical, 10)
 //                        .background(Color.systemBackground)
-                        .roundedCorner(10, corners: [.topLeft, .topRight])
+//                        .roundedCorner(10, corners: [.topLeft, .topRight])
 //                        .padding(.horizontal, 0)
                         .opacity(tm.selected == tab ? 1 : 0)
                         .id(tab.id)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, DIMENSIONS.BOX_PADDING)
                         .onPreferenceChange(TabTitlePreferenceKey.self) { title in
                             guard !title.isEmpty else { return }
                             tm.selected?.navigationTitle = title

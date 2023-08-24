@@ -20,9 +20,10 @@ struct SingleMediaViewer: View {
     var contentPadding:CGFloat = 0.0
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
+//    @State var actualSize:CGSize? = nil
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
                 VStack {
                     Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")
@@ -31,8 +32,8 @@ struct SingleMediaViewer: View {
                         loadNonHttpsAnyway = true
                     }
                 }
-                   .centered()
-                   .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                   .centered()
+                   .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                    .background(Color("LightGray").opacity(0.2))
             }
             else if imagesShown || forceShow {
@@ -42,8 +43,8 @@ struct SingleMediaViewer: View {
                     
                     if state.error != nil {
                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                            .centered()
-                            .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                            .centered()
+                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .background(Color("LightGray").opacity(0.2))
                             .onAppear {
                                 L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
@@ -58,12 +59,34 @@ struct SingleMediaViewer: View {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
                                 }
                                 .padding(.horizontal, -contentPadding)
+//                                .readSize { size in
+//                                    actualSize = size
+//                                }
+//                                .overlay(alignment: .bottomTrailing) {
+//                                    if let actualSize = actualSize {
+//                                        Text("Size: \(actualSize.debugDescription)")
+//                                            .background(.black)
+//                                            .foregroundColor(.white)
+//                                            .fontWeight(.bold)
+//                                    }
+//                                }
                         }
                         else {
                             GIFImage(data: data)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                                .readSize { size in
+//                                    actualSize = size
+//                                }
+//                                .overlay(alignment: .bottomTrailing) {
+//                                    if let actualSize = actualSize {
+//                                        Text("Size: \(actualSize.debugDescription)")
+//                                            .background(.black)
+//                                            .foregroundColor(.white)
+//                                            .fontWeight(.bold)
+//                                    }
+//                                }
+                                .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                                 .onTapGesture {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
                                 }
@@ -76,6 +99,18 @@ struct SingleMediaViewer: View {
                                     .interpolation(.none)
                                     .resizable()
                                     .scaledToFit()
+//                                    .readSize { size in
+//                                        actualSize = size
+//                                    }
+//                                    .overlay(alignment: .bottomTrailing) {
+//                                        if let actualSize = actualSize {
+//                                            Text("Size: \(actualSize.debugDescription)")
+//                                                .background(.black)
+//                                                .foregroundColor(.white)
+//                                                .fontWeight(.bold)
+//                                        }
+//                                    }
+                                    .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
                                     .padding(.horizontal, -contentPadding)
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
@@ -86,8 +121,19 @@ struct SingleMediaViewer: View {
                                     .interpolation(.none)
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                                    .hCentered()
+//                                    .readSize { size in
+//                                        actualSize = size
+//                                    }
+//                                    .overlay(alignment: .bottomTrailing) {
+//                                        if let actualSize = actualSize {
+//                                            Text("Size: \(actualSize.debugDescription)")
+//                                                .background(.black)
+//                                                .foregroundColor(.white)
+//                                                .fontWeight(.bold)
+//                                        }
+//                                    }
+                                    .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                                    .hCentered()
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
                                     }
@@ -112,12 +158,12 @@ struct SingleMediaViewer: View {
                                     imagesShown = false
                                 }
                         }
-                        .centered()
-                        .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                        .centered()
+                        .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     }
                     else {
                         Color(.secondarySystemBackground)
-                            .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     }
                 }
                 .pipeline(ImageProcessing.shared.content)
@@ -125,7 +171,7 @@ struct SingleMediaViewer: View {
             else {
                 Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
                    .centered()
-                   .frame(height: fullWidth ? 600 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                   .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                    .highPriorityGesture(
                        TapGesture()
                            .onEnded { _ in

@@ -32,6 +32,7 @@ struct NosturVideoViewur: View {
     @State var isMuted = false
     @State var didStart = false
     @State var isStream = false
+//    @State var actualSize:CGSize? = nil
     
     var body: some View {
         VStack {
@@ -98,6 +99,17 @@ struct NosturVideoViewur: View {
             else if videoShown {
                 if let asset, let scaledDimensions, let videoLength = videoLength {
                     VideoViewurRepresentable(asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
+//                        .readSize { size in
+//                            actualSize = size
+//                        }
+//                        .overlay(alignment: .bottomTrailing) {
+//                            if let actualSize = actualSize {
+//                                Text("Size: \(actualSize.debugDescription)")
+//                                    .background(.black)
+//                                    .foregroundColor(.white)
+//                                    .fontWeight(.bold)
+//                            }
+//                        }
                         .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                         .padding(.horizontal, fullWidth ? -contentPadding : 0)
                         .overlay(alignment:.bottomLeading) {
@@ -221,7 +233,7 @@ struct NosturVideoViewur: View {
                 Task.detached {
                     if let videoSize = await getVideoDimensions(asset: asset), let videoLength = await getVideoLength(asset: asset) {
                         DispatchQueue.main.async {
-                            self.scaledDimensions = Nostur.scaledToFit(videoSize, scale: UIScreen.main.scale, maxWidth: videoWidth, maxHeight: 600)
+                            self.scaledDimensions = Nostur.scaledToFit(videoSize, scale: UIScreen.main.scale, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             self.videoLength = videoLength
                         }
                     }

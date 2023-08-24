@@ -27,9 +27,23 @@ struct ContentRenderer: View { // VIEW things
     }
     
     @State private var viewSize: CGSize = .zero
+//    @State var actualSize:CGSize? = nil
     
     var body: some View {
         VStack(alignment:.leading, spacing:0) {
+//            Color.red
+//                .frame(height: 30)
+//                .readSize { size in
+//                    actualSize = size
+//                }
+//                .overlay(alignment: .bottomTrailing) {
+//                    if let actualSize = actualSize {
+//                        Text("Size: \(actualSize.debugDescription)")
+//                            .background(.black)
+//                            .foregroundColor(.white)
+//                            .fontWeight(.bold)
+//                    }
+//                }
             ForEach(contentElements) { contentElement in
                 switch contentElement {
                 case .nevent1(let identifier):
@@ -67,26 +81,47 @@ struct ContentRenderer: View { // VIEW things
                 case .video(let mediaContent):
                     if let dimensions = mediaContent.dimensions {
                         let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                        Text("Available width X1:\(availableWidth)")
                         NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+//                            .readSize { size in
+//                                print("Available width X1 readSize \(scaledDimensions) >> \(size) - \(mediaContent.url)")
+//                            }
                             .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .allowsHitTesting(false)
                     }
                     else {
+//                        Text("Available width X2:\(availableWidth)")
                         NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
 //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                            .readSize { size in
+//                                print("Available width readSize X2 \(size) - \(mediaContent.url)")
+//                            }
                             .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .allowsHitTesting(false)
                     }
                     
                 case .image(let mediaContent):
                     if let dimensions = mediaContent.dimensions {
                         let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                        Text("Available width Y1:\(availableWidth)")
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, forceShow: nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+//                            .readSize { size in
+//                                print("Available width Y1 readSize \(size) - \(mediaContent.url)")
+//                            }
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                     }
                     else {
+//                        Text("Available width Y2:\(availableWidth)")
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, forceShow: nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+//                            .readSize { size in
+//                                print("Available width Y2 readSize \(size) - \(mediaContent.url)")
+//                            }
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                     }

@@ -446,7 +446,7 @@ struct SmoothList: UIViewControllerRepresentable {
                     PostOrThread(nrPost: nrPost)
                 }
                 .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
-                .margins(.vertical, 10)
+                .margins(.vertical, 5)
                 .margins(.horizontal, 0)
             }
         }()
@@ -458,7 +458,7 @@ struct SmoothList: UIViewControllerRepresentable {
                         .hCentered()
                 }
                 .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
-                .margins(.vertical, 10)
+                .margins(.vertical, 5)
                 .margins(.horizontal, 0)
             }
         }()
