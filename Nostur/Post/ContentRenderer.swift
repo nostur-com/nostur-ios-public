@@ -110,7 +110,6 @@ struct ContentRenderer: View { // VIEW things
 //                            }
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
-                            .allowsHitTesting(false)
                     }
                     else {
 //                        Text("Available width X2:\(availableWidth)")
@@ -121,7 +120,6 @@ struct ContentRenderer: View { // VIEW things
 //                            }
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
-                            .allowsHitTesting(false)
                     }
                     
                 case .image(let mediaContent):
