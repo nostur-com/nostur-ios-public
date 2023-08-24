@@ -15,8 +15,6 @@ struct LazyNoteMenuButton: View {
         Image(systemName: "ellipsis")
             .fontWeight(.bold)
             .foregroundColor(Self.color)
-            .padding(.top, 7)
-            .padding(.bottom, 6)
             .padding(.leading, 10)
             .contentShape(Rectangle())
             .onTapGesture {

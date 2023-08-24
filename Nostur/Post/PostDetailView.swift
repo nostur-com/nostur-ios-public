@@ -84,14 +84,6 @@ struct PostDetailView: View {
                         
                         // MARK: REPLIES TO OUR MAIN NOTE
                         ThreadReplies(nrPost: nrPost)
-                            .background(Color.brown)
-                        
-                        // If there are less than 5 replies, put some empty space so our detail note is at top of screen
-                        if (nrPost.replies.count < 5) {
-                            Rectangle().frame(height: 400)
-                                .background(Color("ListBackground"))
-                                .foregroundColor(Color("ListBackground"))
-                        }
                     }
                 }
                 .simultaneousGesture(
@@ -452,7 +444,6 @@ struct DetailPost: View {
                         Spacer()
                         EventPrivateNoteToggle(nrPost: nrPost)
                         LazyNoteMenuButton(nrPost: nrPost)
-                            .offset(x: -5, y: -5)
                     }
                 }
             }
@@ -505,8 +496,8 @@ struct DetailPost: View {
                 .padding(.top, 10)
             FooterFragmentView(nrPost: nrPost)
                 .padding(.vertical, 5)
-                .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                 .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
+            Divider()
         }
     }
 }
