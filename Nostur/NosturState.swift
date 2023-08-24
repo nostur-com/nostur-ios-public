@@ -90,11 +90,19 @@ final class NosturState : ObservableObject {
         get { account?.publicKey }
     }
     
+    private var accounts_:[Account] = [] // Cache for result of Account.fetchRequest()
     var accounts:[Account] {
         get {
-            let r = Account.fetchRequest()
-            return (try? viewContext.fetch(r) ) ?? []
+            if !accounts_.isEmpty {
+                return self.accounts_
+            }
+            self.loadAccounts()
+            return self.accounts_
         }
+    }
+    public func loadAccounts() {
+        let r = Account.fetchRequest()
+        self.accounts_ = (try? viewContext.fetch(r) ) ?? []
     }
     
     func setAccount(account:Account? = nil) {
@@ -169,7 +177,7 @@ final class NosturState : ObservableObject {
     init() {
         self.container = DataProvider.shared().container
         self.viewContext = self.container.viewContext
-        
+        self.loadAccounts()
         if (activeAccountPublicKey != "") {
             if let account = try? Account.fetchAccount(publicKey: activeAccountPublicKey, context: viewContext) {
                 self.setAccount(account: account)
@@ -359,9 +367,11 @@ final class NosturState : ObservableObject {
             sendNotification(.clearNavigation)
             setAccount(account: nil)
             viewContext.delete(account)
+            self.loadAccounts()
         }
         else {
             viewContext.delete(account)
+            self.loadAccounts()
             if account == self.account {
                 setAccount(account: accounts.last)
             }

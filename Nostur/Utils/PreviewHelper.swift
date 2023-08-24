@@ -90,7 +90,7 @@ extension PreviewEnvironment {
             account.about = "Creatur of Nostur"
             account.picture = "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972"
             account.banner = "https://profilepics.nostur.com/banner_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/banner.jpg?1682440972"
-            
+            NosturState.shared.loadAccounts()
             NosturState.shared.setAccount(account: account)
 //            return account
         }
@@ -124,6 +124,7 @@ extension PreviewEnvironment {
             account3.publicKey = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320"
             account3.name = "Explorer"
             account3.about = "Third account"
+            NosturState.shared.loadAccounts()
         }
     }
     
