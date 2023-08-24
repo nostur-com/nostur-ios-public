@@ -338,9 +338,6 @@ struct ProfileOverlayCard: View {
             backlog.add(reqTask)
             reqTask.fetch()
         }
-        .onDisappear {
-            contact.zapState = .none
-        }
     }
 }
 

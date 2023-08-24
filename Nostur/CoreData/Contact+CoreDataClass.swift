@@ -16,7 +16,7 @@ public class Contact: NSManagedObject {
     
     var zapStateChanged = PassthroughSubject<(ZapState?, ZapEtag?), Never>()
         
-    enum ZapState:String {
+    public enum ZapState:String {
         case initiated = "INITIATED"
         case nwcConfirmed = "NWC_CONFIRMED"
         case zapReceiptConfirmed = "ZAP_RECEIPT_CONFIRMED"
