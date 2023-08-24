@@ -44,7 +44,7 @@ class LVM: NSObject, ObservableObject {
     var performingLocalOlderFetch = false
     var leafsAndParentIdsOnScreen:Set<String> = [] // Should always be in sync with nrPostLeafs
     var leafIdsOnScreen:Set<String> = []
-    var onScreenSeen:Set<NRPostID> = []
+    var onScreenSeen:Set<NRPostID> = [] // other .id trackers are in sync with nrPostLeafs. This one keeps track even after nrPostLeafs changed
     var alreadySkipped = false
     var danglingObjectIds:Set<NRPostID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
     
@@ -84,6 +84,7 @@ class LVM: NSObject, ObservableObject {
             lvmCounter.count = 0
             instantFinished = false
             nrPostLeafs = []
+            onScreenSeen = []
             leafIdsOnScreen = []
             leafsAndParentIdsOnScreen = []
             startInstantFeed()
@@ -94,6 +95,7 @@ class LVM: NSObject, ObservableObject {
         lvmCounter.count = 0
         instantFinished = false
         nrPostLeafs = []
+        onScreenSeen = []
         leafIdsOnScreen = []
         leafsAndParentIdsOnScreen = []
         startInstantFeed()
@@ -103,6 +105,7 @@ class LVM: NSObject, ObservableObject {
         didSet {
             guard oldValue != hideReplies else { return }
             nrPostLeafs = []
+            onScreenSeen = []
             leafIdsOnScreen = []
             leafsAndParentIdsOnScreen = []
             self.performLocalFetch()
@@ -310,6 +313,7 @@ class LVM: NSObject, ObservableObject {
                     self.initialIndex = self.getRestoreScrollIndex(newLeafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
                     L.sl.info("⭐️ LVM.initialIndex: \(self.name) \(self.initialIndex) - \(taskId)")
                     self.nrPostLeafs = newLeafThreads
+                    self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
                 }
             }
             else {
@@ -339,6 +343,7 @@ class LVM: NSObject, ObservableObject {
             // ADD TO THE END (OLDER POSTS, NEXT PAGE)
             performingLocalOlderFetch = false
             self.nrPostLeafs = self.nrPostLeafs + onlyNew
+            self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
         }
         else {
             // ADD TO THE TOP, NEW POSTS.
@@ -351,11 +356,13 @@ class LVM: NSObject, ObservableObject {
             if self.isAtTop && dropCount > 5 { // No need to drop all the time, do in batches of 5, or 10? // Data race in Nostur.LVM.isAtTop.setter : Swift.Bool at 0x112b87480 (Thread 1)
                 let nrPostLeafsWithNewTruncated = nrPostLeafsWithNew.dropLast(dropCount)
                 self.nrPostLeafs = Array(nrPostLeafsWithNewTruncated)
+                self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
                 L.lvm.info("\(self.id) \(self.name) safeInsert() dropped \(dropCount) from end ");
             }
             else {
                 if !Set(nrPostLeafsWithNew.map{ $0.id }).subtracting(Set(self.nrPostLeafs.map { $0.id })).isEmpty {
                     self.nrPostLeafs = nrPostLeafsWithNew
+                    self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
                 }
                 else {
                     L.lvm.debug("\(self.id) \(self.name) safeInsert() no new items in Set. skipped ");
@@ -441,8 +448,11 @@ class LVM: NSObject, ObservableObject {
                     L.lvm.info("😈😈 timeoutCommand dng id: \(d.id)")
                 }
                 
-                DispatchQueue.main.async {
-                    self.putNewThreadsOnScreen(danglers, leafIdsOnScreen: self.leafIdsOnScreen, currentNRPostLeafs: self.nrPostLeafs, older: older)
+                let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
+                let danglingEvents = danglers.map { $0.event }
+                
+                DataProvider.shared().bg.perform {
+                    self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt)
                 }
             })
 
@@ -468,12 +478,6 @@ class LVM: NSObject, ObservableObject {
             }
         }
         return (danglers:danglers, threads:threads)
-    }
-    
-    func leafThreadsToFlatNRPosts(_ leafThreads:[NRPost]) -> [NRPost] {
-        return leafThreads.flatMap { nrPost in
-            [nrPost] + nrPost.parentPosts
-        }
     }
     
     func fetchRelated(_ recentNRPosts:ArraySlice<NRPost>) {
@@ -521,7 +525,22 @@ class LVM: NSObject, ObservableObject {
             // structure is: parentPosts: [root, reply, reply, reply, replyTo] post: ThisPost
             if let replyTo = post.parentPosts.last {
                 // always keep at least 1 parent (replyTo)
-                truncatedPost.parentPosts = post.parentPosts.dropLast(1).filter { !renderedIds.contains($0.id) && !onScreenSeen.contains($0.id) } + [replyTo]
+                
+                // keep parents until we have already seen one, don't traverse further
+                var parentsKeep:[NRPost] = []
+                
+                // dropLast because we always add at least 1 reply back with: + [replyTo]
+                for parent in post.parentPosts.dropLast(1).reversed() {
+                    if !renderedIds.contains(parent.id) && !onScreenSeen.contains(parent.id) {
+                        parentsKeep.insert(parent, at: 0)
+                    }
+                    else {
+                        break
+                    }
+                }
+                // parentsKeep is now parentPosts with parents we have seen and older removed
+                // so we don't have gaps like before when using just .filter { }
+                truncatedPost.parentPosts = (parentsKeep + [replyTo]) // add back the replyTo, so we don't have dangling replies.
             }
             truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count
             truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
@@ -539,7 +558,7 @@ class LVM: NSObject, ObservableObject {
         }
         
         let onScreenLeafIds = onScreen.map { $0.id }
-        let onScreenAllIds = onScreen.flatMap { [$0.id] + $0.parentPosts.map { $0.id } }
+//        let onScreenAllIds = onScreen.flatMap { [$0.id] + $0.parentPosts.map { $0.id } }
         
         
         // First do same as first fetch
@@ -556,8 +575,7 @@ class LVM: NSObject, ObservableObject {
             let truncatedPost = post
             // structure is: parentPosts: [root, reply, reply, reply, replyTo] post: ThisPost
             if let replyTo = post.parentPosts.last {
-                // always keep at least 1 parent (replyTo)
-                truncatedPost.parentPosts = post.parentPosts.dropLast(1).filter { !onScreenAllIds.contains($0.id) } + [replyTo]
+                truncatedPost.parentPosts = [replyTo]
             }
             truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count
             truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
@@ -1019,6 +1037,7 @@ extension LVM {
                 lvmCounter.count = 0
                 instantFinished = false
                 nrPostLeafs = []
+                onScreenSeen = []
                 leafIdsOnScreen = []
                 leafsAndParentIdsOnScreen = []
                 startInstantFeed()
@@ -1048,6 +1067,7 @@ extension LVM {
                     lvmCounter.count = 0
                     instantFinished = false
                     nrPostLeafs = []
+                    onScreenSeen = []
                     leafIdsOnScreen = []
                     leafsAndParentIdsOnScreen = []
                     startInstantFeed()
@@ -1110,6 +1130,7 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 self.nrPostLeafs = self.nrPostLeafs.filter(notMuted)
+                self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
             }
             .store(in: &subscriptions)
         
@@ -1118,6 +1139,7 @@ extension LVM {
                 guard let self = self else { return }
                 let blockedPubkeys = notification.object as! [String]
                 self.nrPostLeafs = self.nrPostLeafs.filter({ !blockedPubkeys.contains($0.pubkey) })
+                self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
             }
             .store(in: &subscriptions)
         
@@ -1126,6 +1148,7 @@ extension LVM {
                 guard let self = self else { return }
                 let words = notification.object as! [String]
                 self.nrPostLeafs = self.nrPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
+                self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
             }
             .store(in: &subscriptions)
     }
@@ -1172,11 +1195,11 @@ extension LVM {
                     self.lastReadId = eventId
                 }
                 
-                // Put onScreenSeen, so when when a new leaf for a long thread is inserted at top, it won't show all the parents you already seen again
-                DataProvider.shared().bg.perform { [weak self] in
-                    guard let self = self else { return }
-                    self.onScreenSeen.insert(eventId)
-                }
+//                // Put onScreenSeen, so when when a new leaf for a long thread is inserted at top, it won't show all the parents you already seen again
+//                DataProvider.shared().bg.perform { [weak self] in
+//                    guard let self = self else { return }
+//                    self.onScreenSeen.insert(eventId)
+//                }
             }
             .store(in: &subscriptions)
     }
@@ -1488,7 +1511,7 @@ func notMutedWords(in text: String, mutedWords: [String]) -> Bool {
 
 func notMuted(_ nrPost:NRPost) -> Bool {
     let mutedRootIds = NosturState.shared.account?.mutedRootIds_ ?? []
-    return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "NIL")
+    return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "NIL") && !mutedRootIds.contains(nrPost.replyToId ?? "NIL")
 }
 
 
