@@ -24,6 +24,7 @@ struct NosturApp: App {
     private var mp:MessageParser = .shared
     private var zpvq:ZapperPubkeyVerificationQueue = .shared
     private var nip05verifier:NIP05Verifier = .shared
+    private var ip:ImageProcessing = .shared
     
     var body: some Scene {
         WindowGroup {
