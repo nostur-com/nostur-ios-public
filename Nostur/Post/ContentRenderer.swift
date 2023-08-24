@@ -109,6 +109,7 @@ struct ContentRenderer: View { // VIEW things
                         let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
 //                        Text("Available width Y1:\(availableWidth)")
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, forceShow: nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .readSize { size in
 //                                print("Available width Y1 readSize \(size) - \(mediaContent.url)")
