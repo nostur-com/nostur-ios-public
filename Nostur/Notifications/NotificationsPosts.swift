@@ -53,15 +53,11 @@ struct NotificationsPosts: View {
                             .background(Color.systemBackground)
                             .id(pNotification.id)
                     case .POST:
-                        PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true)
-                            .padding(10)
-                            .background(pNotification.post!.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
-                            .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                            .id(pNotification.id)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(pNotification.post!)
-                            }
+                        Box(nrPost: pNotification.post!) {
+                            PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true)
+                        }
+                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                        .id(pNotification.id)
                     }
                 }
                 VStack {

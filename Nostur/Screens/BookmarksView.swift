@@ -49,24 +49,20 @@ struct BookmarksView: View {
             if !vBookmarks.isEmpty {
                 LazyVStack(spacing: 10) {
                     ForEach(vBookmarks) { vBookmark in
-                        PostRowDeletable(nrPost: vBookmark, missingReplyTo: true)
-                            .padding(10)
-                            .background(vBookmark.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
-                            .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(vBookmark)
+                        Box(nrPost: vBookmark) {
+                            PostRowDeletable(nrPost: vBookmark, missingReplyTo: true)
+                        }
+                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .id(vBookmark.id)
+                        .onDelete {
+                            vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
+                            
+                            DataProvider.shared().bg.perform {
+                                vBookmark.event.bookmarkedBy = []
+                                DataProvider.shared().bgSave()
                             }
-                            .id(vBookmark.id)
-                            .onDelete {
-                                vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
-                                
-                                DataProvider.shared().bg.perform {
-                                    vBookmark.event.bookmarkedBy = []
-                                    DataProvider.shared().bgSave()
-                                }
-                            }
+                        }
                     }
                     Spacer()
                 }

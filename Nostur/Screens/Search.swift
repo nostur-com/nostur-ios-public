@@ -61,10 +61,10 @@ struct Search: View {
                             .background(Color.systemBackground)
                     }
                     ForEach(nrPosts.prefix(75)) { nrPost in
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true)
-                            .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                            .padding(10)
-                            .background(Color.systemBackground)
+                        Box(nrPost: nrPost) {
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true)
+                        }
+                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                     }
                 }
                 .padding(.top, 10)

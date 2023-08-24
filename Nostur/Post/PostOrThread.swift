@@ -9,19 +9,73 @@ import SwiftUI
 
 struct Box<Content: View>: View {
     let content: Content
-    var kind:Int = 1
-
-    init(kind:Int = 1, @ViewBuilder _ content:()->Content) {
-        self.kind = kind
+    let kind: Int64
+    let navMode: NavigationMode
+    var nrPost: NRPost? = nil
+    
+    public enum NavigationMode {
+        // Normal onTapGesture on entire view, but this makes Video in UIViewRepresentable not tappable
+        case view
+        
+        // Workaround: make entire background tappable
+        // Then in the individual subviews handle navigation tap
+        // Mostly needed for making the area below pfp on post tapable, cannot do that there without breaking other things. must be done on a wrapper view
+        case background
+    }
+    
+    init(nrPost:NRPost? = nil, navMode:NavigationMode? = .background, @ViewBuilder _ content:()->Content) {
+        self.kind = nrPost?.kind ?? 1
+        self.navMode = navMode ?? .background
+        self.nrPost = nrPost
         self.content = content()
     }
     
     var body: some View {
-        VStack(spacing: 10) {
+        //        VStack(spacing: 10) {
+        //            content
+        //        }
+        if navMode == .view {
             content
+                .padding(kind == 30023 ? 20 : 10)
+                .background(kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    navigate()
+                }
         }
-        .padding(10)
-        .background(kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
+        else {
+            content
+                .padding(kind == 30023 ? 20 : 10)
+                .background {
+                    if kind == 30023 {
+                        Color(.secondarySystemBackground)
+                            .onTapGesture {
+                                navigate()
+                            }
+                    }
+                    else {
+                        Color.systemBackground
+                            .onTapGesture {
+                                navigate()
+                            }
+                    }
+                }
+        }
+    }
+    
+    private func navigate() {
+        guard let nrPost = nrPost else { return }
+        if nrPost.isRepost {
+            if let firstQuote = nrPost.firstQuote {
+                navigateTo(firstQuote)
+            }
+            else if let firstQuoteId = nrPost.firstQuoteId {
+                navigateTo(NotePath(id: firstQuoteId))
+            }
+        }
+        else {
+            navigateTo(nrPost)
+        }
     }
 }
 
@@ -38,44 +92,24 @@ struct PostOrThread: View {
         self.grouped = grouped
         self.rootId = rootId
     }
-
+    
     var body: some View {
         VStack(spacing: 10) {
             ForEach(nrPost.parentPosts) { nrParent in
-                PostRowDeletable(nrPost: nrParent,
-                                 missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
-                                 connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
-                .padding(nrParent.kind == 30023 ? 20 : 0)
-                .background(nrParent.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
-                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 0)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    navigateTo(nrParent)
+                Box(nrPost: nrParent) {
+                    PostRowDeletable(nrPost: nrParent,
+                                     missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
+                                     connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                 }
+                .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
+                //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
             }
-            PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if nrPost.isRepost {
-                        if let firstQuote = nrPost.firstQuote {
-                            if firstQuote.kind == 30023 {
-                                navigateTo(ArticlePath(id: firstQuote.id, navigationTitle: firstQuote.articleTitle ?? "Article"))
-                            }
-                            else {
-                                navigateTo(firstQuote)
-                            }
-                        }
-                        else if let firstQuoteId = nrPost.firstQuoteId {
-                            navigateTo(NotePath(id: firstQuoteId))
-                        }
-                    }
-                    else {
-                        navigateTo(nrPost)
-                    }
-                }
+            
+            Box(nrPost: nrPost) {
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+            }
+            .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
         }
-        .padding(10)
-        .background(nrPost.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
     }
 }
 
