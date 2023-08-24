@@ -196,6 +196,7 @@
 		1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 1F91D8F52A17C55F00C419A3 /* Collections */; };
 		1F91D8F82A186E5200C419A3 /* AnimatedNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */; };
 		1F91D8FB2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */; };
+		1F922FDE2A9775EB00C84867 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F922FDD2A9775EB00C84867 /* Box.swift */; };
 		1F927C6F297DB34A0024F665 /* ThreadWarning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F927C6E297DB3490024F665 /* ThreadWarning.swift */; };
 		1F9499C9299F568900F628B4 /* WelcomeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499C8299F568900F628B4 /* WelcomeSheet.swift */; };
 		1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */; };
@@ -570,6 +571,7 @@
 		1F8B6A732A20C6510060EDB3 /* NRKinds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRKinds.swift; sourceTree = "<group>"; };
 		1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedNumber.swift; sourceTree = "<group>"; };
 		1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapperPubkeyVerificationQueue.swift; sourceTree = "<group>"; };
+		1F922FDD2A9775EB00C84867 /* Box.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		1F927C6E297DB3490024F665 /* ThreadWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadWarning.swift; sourceTree = "<group>"; };
 		1F9499C8299F568900F628B4 /* WelcomeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeSheet.swift; sourceTree = "<group>"; };
 		1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryGuestAccountSheet.swift; sourceTree = "<group>"; };
@@ -772,6 +774,7 @@
 				1F685B502A0D1886009EEC9B /* NR */,
 				1FFED7FD2A39706B00A0B1E8 /* PostComposer */,
 				1F38AFED2A2715250035641E /* Video */,
+				1F922FDD2A9775EB00C84867 /* Box.swift */,
 				1F0088EA29D735080016F111 /* ContentRenderer.swift */,
 				1F20939E2A43FDCA0085E7D2 /* DetailFooterFragment.swift */,
 				1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */,
@@ -1875,6 +1878,7 @@
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
 				1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */,
 				1F7E38EC2A2D9AED00ABAA85 /* DIMENSIONS.swift in Sources */,
+				1F922FDE2A9775EB00C84867 /* Box.swift in Sources */,
 				1FC7A49729F8EFBA00645FEF /* AddRemoveToListsheet.swift in Sources */,
 				1F88491729B537B400145340 /* UITextView.swift in Sources */,
 				1F80EF692A0B680C00FF8F3B /* NewOnboardingTracker.swift in Sources */,

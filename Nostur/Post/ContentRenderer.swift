@@ -280,7 +280,7 @@ struct Kind1ById: View {
 struct ContentRenderer_Previews: PreviewProvider {
     
     static var previews: some View {
-        
+        let _ = ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
