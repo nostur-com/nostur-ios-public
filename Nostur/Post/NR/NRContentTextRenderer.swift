@@ -16,6 +16,7 @@ struct NRContentTextRenderer: View {
     var body: some View {
         Text(text ?? attributedStringWithPs.output)
             .lineSpacing(3)
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
 //            .padding(.horizontal, fullWidth ? 10 : 0)
             .onReceive(
