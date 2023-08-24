@@ -116,6 +116,7 @@ struct ContentRenderer: View { // VIEW things
 //                            }
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
                     else {
 //                        Text("Available width Y2:\(availableWidth)")
@@ -125,6 +126,7 @@ struct ContentRenderer: View { // VIEW things
 //                            }
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
                 case .linkPreview(let url):
                     // TODO: do no link preview if restrictAutoDownload...
@@ -136,6 +138,7 @@ struct ContentRenderer: View { // VIEW things
                         .scaledToFit()
                         .frame(maxWidth: 600)
                         .padding(.top, 10)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 default:
                     EmptyView()
                 }
