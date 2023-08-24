@@ -33,14 +33,11 @@ struct PostPreview: View {
                 }
             AnyStatus()
             PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true)
-                .roundedBoxShadow()
-                .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                .padding(.vertical, 10)
+                .padding(10)
                 .disabled(true)
                 .environmentObject(dim)
             Spacer()
         }
-        .padding(10)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(String(localized:"Back", comment:"Button to go back")) {

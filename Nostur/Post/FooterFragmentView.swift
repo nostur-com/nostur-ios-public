@@ -133,7 +133,7 @@ struct FooterFragmentView: View {
                 if (nrPost.bookmarked) {
                     Image("BookmarkIconActive")
                         .foregroundColor(.orange)
-                        .padding(5)
+                        .padding([.top,.leading,.bottom], 5)
                         .contentShape(Rectangle())
                     //                        .padding(.leading, 10)
                         .onTapGesture {
@@ -142,7 +142,7 @@ struct FooterFragmentView: View {
                 }
                 else {
                     Image("BookmarkIcon")
-                        .padding(5)
+                        .padding([.top,.leading,.bottom], 5)
                     //                        .padding(.leading, 10)
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -153,6 +153,9 @@ struct FooterFragmentView: View {
                 }
                 
             }
+//            .readSize { size in
+//                print("Footer size: \(size)")
+//            }
             if (isOwnPost) {
                 
                 if (nrPost.relays == "" && (nrPost.cancellationId != nil || nrPost.flags == "nsecbunker_unsigned" || nrPost.flags == "awaiting_send")) {
@@ -250,6 +253,7 @@ struct PreviewFooterFragmentView: View {
                 Image("BookmarkIcon")
                     .padding(.vertical, 5)
                     .padding(.leading, 10)
+//                    .padding(.trailing, 5)
                 
             }
         }
@@ -265,7 +269,7 @@ struct FooterFragmentView_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadPosts()
         }) {
-            VStack {
+            VStack(spacing: 0) {
                 
                 PreviewFooterFragmentView()
                 
@@ -273,7 +277,7 @@ struct FooterFragmentView_Previews: PreviewProvider {
                     FooterFragmentView(nrPost: p)
                 }
             }
-            .padding(.horizontal, 20)
+//            .padding(.horizontal, 20)
         }
     }
 }

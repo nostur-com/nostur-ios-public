@@ -13,6 +13,7 @@ class DIMENSIONS: ObservableObject {
     static let shared = DIMENSIONS()
     
     
+    static public let MIN_MEDIA_ROW_HEIGHT = 200.0 // TODO: change based on device?
     static public let MAX_MEDIA_ROW_HEIGHT = 500.0 // TODO: change based on device?
     
     static public let POST_MAX_ROW_HEIGHT:CGFloat = 1200.0
@@ -32,10 +33,12 @@ class DIMENSIONS: ObservableObject {
     
     @Published var listWidth:CGFloat = UIScreen.main.bounds.width // Should override for IS_IPAD / macOS
     
+    static public let BOX_PADDING:CGFloat = 10.0 // TODO: Should start using this everywhere instead if .padding(10)
+    
     /// Substracts profile pic space from list width
     func availableNoteRowImageWidth() -> CGFloat {
         // 10 + ( 50 ) + 10 + (availableWidth) + 10
-        return (listWidth - (Self.POST_ROW_HPADDING) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
+        return (listWidth - (Self.BOX_PADDING*2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
     }
     
     // NoteRow but without the profile pic on the side
@@ -46,13 +49,15 @@ class DIMENSIONS: ObservableObject {
     
     /// No profile pic,  no shadow box padding, only Detail ContentRenderer padding
     func availablePostDetailImageWidth() -> CGFloat {
-        return (listWidth - (Self.POST_ROW_HPADDING * 2))
+        return listWidth
     }
     
     /// Substracts profile pic space from list width
     func availablePostDetailRowImageWidth() -> CGFloat {
         // ( 50 ) + 10 + (availableWidth) + 10
         return (listWidth - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
+        return (listWidth - (Self.BOX_PADDING*2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
+         //   -10    684               -10
     }
 }
 

@@ -9,9 +9,9 @@ import SwiftUI
 
 struct CenteredView: ViewModifier {
     func body(content: Content) -> some View {
-        VStack {
+        VStack(spacing: 0) {
             Spacer()
-            HStack {
+            HStack(spacing: 0) {
                 Spacer()
                 content
                 Spacer()
@@ -23,7 +23,7 @@ struct CenteredView: ViewModifier {
 
 struct VerticallyCenteredView: ViewModifier {
     func body(content: Content) -> some View {
-        VStack {
+        VStack(spacing: 0) {
             Spacer()
             content
             Spacer()
@@ -33,7 +33,7 @@ struct VerticallyCenteredView: ViewModifier {
 
 struct HorizontallyCenteredView: ViewModifier {
     func body(content: Content) -> some View {
-        HStack {
+        HStack(spacing: 0) {
             Spacer()
             content
             Spacer()
