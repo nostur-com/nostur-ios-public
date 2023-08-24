@@ -142,7 +142,7 @@ struct Kind1Default: View {
             if connect == .bottom || connect == .both {
                 Color("LightGray")
                     .frame(width: 2)
-                    .offset(x: THREAD_LINE_OFFSET, y: 18)
+                    .offset(x: THREAD_LINE_OFFSET, y: 20)                
             }
         }        
     }
