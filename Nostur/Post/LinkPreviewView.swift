@@ -26,6 +26,7 @@ struct LinkPreviewView: View {
                                 image.interpolation(.none)
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
+                                    .frame(maxWidth: (DIMENSIONS.PREVIEW_HEIGHT * 2))
                             }
                     }
                     .pipeline(ImageProcessing.shared.content)
