@@ -140,8 +140,13 @@ struct Settings: View {
                         Button(String(localized:"Update", comment:"Button to update WoT")) {
                             guard updatingWoT == false else { return }
                             updatingWoT = true
-                            DataProvider.shared().bg.perform {
-                                NosturState.shared.wot?.loadNormal(force: true)
+                            if NosturState.shared.wot == nil {
+                                NosturState.shared.loadWoT(NosturState.shared.bgAccount)
+                            }
+                            else {
+                                DataProvider.shared().bg.perform {
+                                    NosturState.shared.wot?.loadNormal(force: true)
+                                }
                             }
                         }
                     }

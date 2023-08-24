@@ -269,10 +269,9 @@ class LVM: NSObject, ObservableObject {
         let leafIdsOnScreen = leafIdsOnScreen
         let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
         
-        let appWoTactive = WOT_FILTER_ENABLED()
-        
         context.perform { [weak self] in
             guard let self = self else { return }
+            let appWoTactive = WOT_FILTER_ENABLED()
             var newNRPostLeafs:[NRPost] = []
             var transformedObjectIds = Set<NRPostID>()
             for event in ((self.type == .relays && appWoTactive && self.wotEnabled) ? events.filter { $0.inWoT } : (appWoTactive ? events.filter { $0.inWoT } : events)) {
