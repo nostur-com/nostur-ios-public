@@ -10,6 +10,31 @@ import Combine
 
 class NRContact: ObservableObject, Identifiable, Hashable {
     
+    public class ZappableAttributes: ObservableObject {
+        
+        @Published var isZapped = false
+        
+        var zapState:Contact.ZapState? = nil {
+            didSet {
+                guard zapState != nil else {
+                    DispatchQueue.main.async {
+                        self.isZapped = false
+                    }
+                    return
+                }
+                DispatchQueue.main.async {
+                    self.isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
+                }
+            }
+        }
+        
+        init(zapState: Contact.ZapState? = nil) {
+            self.zapState = zapState
+        }
+    }
+    
+    var zappableAttributes:ZappableAttributes
+    
     static func == (lhs: NRContact, rhs: NRContact) -> Bool {
         lhs.pubkey == rhs.pubkey
     }
@@ -41,7 +66,6 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var following:Bool = false
     var privateFollow:Bool = false
     var zapperPubkey: String?
-    var zapState: Contact.ZapState?
     
     let contact:Contact // Only touch this in BG context!!!
 
@@ -65,10 +89,10 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.lud06 = contact.lud06
         self.lud16 = contact.lud16
         self.zapperPubkey = contact.zapperPubkey
-        self.zapState = contact.zapState
         
         self.following = NosturState.shared.bgFollowingPublicKeys.contains(contact.pubkey)
         self.privateFollow = contact.privateFollow
+        self.zappableAttributes = ZappableAttributes(zapState: contact.zapState)
         listenForChanges()
         isFollowingListener()
         listenForNip05()
@@ -101,11 +125,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.contact.zapStateChanged
             .sink { [weak self] (zapState, _) in
                 guard let self = self else { return }
-                DispatchQueue.main.async {
-                    guard zapState != self.zapState else { return }
-                    self.objectWillChange.send()
-                    self.zapState = zapState
-                }
+                guard zapState != zappableAttributes.zapState else { return }
+                zappableAttributes.zapState = zapState
             }
             .store(in: &subscriptions)
     }
@@ -167,7 +188,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     self.lud06 = lud06
                     self.lud16 = lud16
                     self.zapperPubkey = zapperPubkey
-                    self.zapState = zapState
+                    self.zappableAttributes.zapState = zapState
                 }
             }
             .store(in: &subscriptions)

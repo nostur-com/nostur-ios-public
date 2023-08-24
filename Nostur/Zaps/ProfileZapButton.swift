@@ -45,8 +45,9 @@ struct ProfileZapButton: View {
                             // TODO: MOVE state to contact (maybe increase lightning ring size)
 //                            nrPost.zapState = .cancelled
                             activeColor = Self.grey
-                            contact.zapState = .cancelled
+                            contact.zappableAttributes.isZapped = false
                             DataProvider.shared().bg.perform {
+                                contact.contact.zapState = .cancelled
                                 contact.contact.zapStateChanged.send((.cancelled, zapEtag))
                             }
                             L.og.info("⚡️ Zap cancelled")
@@ -54,7 +55,7 @@ struct ProfileZapButton: View {
                 }
             }
             // TODO elsif zap .failed .overlay error !
-            else if [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(contact.zapState) {
+            else if contact.zappableAttributes.isZapped {
                 HStack {
                     Text("Zapped \(Image(systemName: "bolt.fill"))", comment: "Text in zap button after zapping")
                         .padding(.horizontal, 10)
@@ -140,7 +141,7 @@ struct ProfileZapButton: View {
             activeColor = .yellow
         }
         cancellationId = UUID()
-        contact.zapState = .initiated
+        contact.zappableAttributes.isZapped = true
 
         DataProvider.shared().bg.perform {
             let bgContact = contact.contact

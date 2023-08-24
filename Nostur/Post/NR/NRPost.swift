@@ -177,6 +177,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var relays:String = ""
     
     var zapState:Event.ZapState?
+    var isZapped:Bool {
+        guard zapState != nil else { return false }
+        return [.initiated, .nwcConfirmed, .nwcConfirmed].contains(zapState)
+    }
     var following = false
     var blocked: Bool {
         get { postRowDeletableAttributes.blocked }
@@ -383,7 +387,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.replyingToUsernamesMarkDown = try? AttributedString(markdown: replyingToMarkdown)
         }
         
-        if isZapped() {
+        if hasZapReceipt() {
             self.zapState = .zapReceiptConfirmed
         } else {
             self.zapState = event.zapState
@@ -419,7 +423,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         return false
     }
     
-    private func isZapped() -> Bool {
+    private func hasZapReceipt() -> Bool {
         if let account = NosturState.shared.bgAccount {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at >= %i AND kind == 9734 AND pubkey == %@ AND tagsSerialized CONTAINS %@", created_at, account.publicKey, serializedE(self.id))
