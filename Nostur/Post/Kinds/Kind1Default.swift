@@ -154,13 +154,17 @@ struct Kind1Default_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadPosts()
         }) {
-            VStack {
+            SmoothListMock {
                 if let nrPost = PreviewFetcher.fetchNRPost("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
-                    Kind1Default(nrPost: nrPost)
+                    Box {
+                        Kind1Default(nrPost: nrPost)
+                    }
                 }
                 
                 if let nrPost = PreviewFetcher.fetchNRPost() {
-                    Kind1Default(nrPost: nrPost)
+                    Box {
+                        Kind1Default(nrPost: nrPost)
+                    }
                 }
             }
             .withSheets()

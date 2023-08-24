@@ -52,3 +52,27 @@ struct PostRowDeletable: View {
         }
     }
 }
+
+
+struct PostRowDeletable_Previews: PreviewProvider {
+    static var previews: some View {
+        
+        
+        
+        PreviewContainer({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        }) {
+            NavigationStack {
+                if let example = PreviewFetcher.fetchNRPost() {
+                    let _ = example.blocked = true
+                    SmoothListMock {
+                        Box {
+                            PostRowDeletable(nrPost: example)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

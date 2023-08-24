@@ -63,11 +63,11 @@ struct PaddingsTesting_Previews: PreviewProvider {
                 
                 // ARTICLE
                 if 1 == 2, let p = PreviewFetcher.fetchNRPost("d9af49548ae6445368315c2c01338334337027d89f8db133d1d92e2202fb0bb6") {
-                    Box(kind: 30023) {
+                    Box(nrPost: p) {
                         PostRowDeletable(nrPost: p, fullWidth: true)
                     }
                     
-                    Box(kind: 30023) {
+                    Box(nrPost: p) {
                         PostRowDeletable(nrPost: p)
                     }
                 }
