@@ -142,16 +142,26 @@ extension Account : Identifiable {
     
     var privateKey:String? {
         get {
+            if noPrivateKey { return nil }
             if isNC {
                 return NIP46SecretManager.shared.getSecret(account: self)
             }
-            return AccountManager.shared.getPrivateKeyHex(pubkey: self.publicKey)
+            
+            if let key = AccountManager.shared.getPrivateKeyHex(pubkey: self.publicKey) {
+                noPrivateKey = false
+                return key
+            }
+            else {
+                noPrivateKey = true
+                return nil
+            }
         }
         set(privateKeyHex) {
             guard privateKeyHex != nil else {
                 AccountManager.shared.deletePrivateKey(forPublicKeyHex: self.publicKey)
                 return
             }
+            noPrivateKey = false
             AccountManager.shared.storePrivateKey(privateKeyHex: privateKeyHex!, forPublicKeyHex: self.publicKey)
         }
     }

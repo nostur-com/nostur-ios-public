@@ -17,6 +17,7 @@ struct FastAccountSwitcher: View {
     var fewAccounts:ArraySlice<Account> {
         ns.accounts
             .filter { $0.publicKey != activePubkey }
+            .sorted(by: { $0.privateKey != nil && $1.privateKey == nil })
             .prefix(MAX_ACCOUNTS)
     }
     

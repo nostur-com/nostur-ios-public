@@ -11,4 +11,6 @@ import CoreData
 
 public class Account: NSManagedObject {
 
+    var noPrivateKey = false
+    
 }
