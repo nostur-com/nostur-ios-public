@@ -389,6 +389,10 @@ struct ArticleView: View {
                     FooterFragmentView(nrPost: article)
                 }
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                navigateTo(article)
+            }
         }
     }
 }
