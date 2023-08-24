@@ -1188,6 +1188,9 @@ extension NRPost { // Helpers for grouped replies
                 
                 let firstId = thread.event.parentEvents.first?.id ?? thread.id
                 if let existingThread = uniqueThreads[firstId] {
+                    // TODO:
+                    // if we have a forked thread, then both will have the same firstId
+                    // so keep the longest, and store the shorter one with a new firstId (the last common post on both forks)
                     if thread.threadPostsCount > existingThread.threadPostsCount {
                         uniqueThreads[firstId] = thread
                     }
