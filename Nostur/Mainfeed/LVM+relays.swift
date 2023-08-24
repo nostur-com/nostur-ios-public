@@ -44,6 +44,7 @@ extension LVM {
 extension Event {
     
     static func postsByRelays(_ relays:Set<Relay>, mostRecent:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
+        let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
         let regex = ".*(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
         }.joined(separator: "|") + ").*"
@@ -53,16 +54,17 @@ extension Event {
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 25
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, regex)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, regex)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
         }
         return fr
     }
     
     
     static func postsByRelays(_ relays:Set<Relay>, until:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
+        let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
         let regex = ".*(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
         }.joined(separator: "|") + ").*"
@@ -72,15 +74,16 @@ extension Event {
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 25
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, regex)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, regex)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
         }
         return fr
     }
     
     static func postsByRelays(_ relays:Set<Relay>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false) -> NSFetchRequest<Event> {
+        let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
         let regex = ".*(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
         }.joined(separator: "|") + ").*"
