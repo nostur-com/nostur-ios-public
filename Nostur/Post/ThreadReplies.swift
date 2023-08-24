@@ -33,9 +33,15 @@ struct ThreadReplies: View {
                     .animation(Animation.spring(), value: nrPost.groupedRepliesNotWoT)
                 }
             }
+            // If there are less than 5 replies, put some empty space so our detail note is at top of screen
+            if (nrPost.replies.count < 5) {
+                Rectangle().frame(height: 400)
+                    .background(Color("ListBackground"))
+                    .foregroundColor(Color("ListBackground"))
+            }
             Spacer()
         }
-        .background(Color("ListBackground"))
+        .background(nrPost.replies.isEmpty ? Color.systemBackground : Color("ListBackground"))
         .onAppear {
             guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
             nrPost.loadGroupedReplies()
