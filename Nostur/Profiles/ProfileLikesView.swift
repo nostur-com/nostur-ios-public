@@ -20,16 +20,12 @@ struct ProfileLikesView: View {
     var body: some View {
         LazyVStack(spacing: 10) {
             ForEach(fl.nrPosts) { nrPost in
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
-                    .id(nrPost.id)
-                    .padding(10)
-                    .background(nrPost.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
-                    .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        navigateTo(nrPost)
-                    }
+                Box(nrPost: nrPost) {
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                }
+                .id(nrPost.id)
+                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                .fixedSize(horizontal: false, vertical: true)
             }
             if !fl.nrPosts.isEmpty {
                 Button(String(localized:"Show more", comment: "Button to show more items")) {

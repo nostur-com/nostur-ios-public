@@ -48,15 +48,11 @@ struct NotificationsReactions: View {
         ScrollView {
             LazyVStack(alignment:.leading, spacing: 10) {
                 ForEach(myNotesReactedToAsNRPosts) { nrPost in
-                    VStack(alignment:.leading, spacing: 3) {
-                        ReactionsForThisNote(reactions:reactionsForNote(nrPost.id))
-                        NoteMinimalContentView(nrPost: nrPost)
-                    }
-                    .padding(10)
-                    .background(Color.systemBackground)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        navigateTo(nrPost)
+                    Box(nrPost: nrPost, navMode: .view) {
+                        VStack(alignment:.leading, spacing: 3) {
+                            ReactionsForThisNote(reactions:reactionsForNote(nrPost.id))
+                            NoteMinimalContentView(nrPost: nrPost)
+                        }
                     }
                     .id(nrPost.id)
                 }
