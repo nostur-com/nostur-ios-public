@@ -169,6 +169,7 @@ struct AddExistingAccountSheet: View {
                     if let account = bunkerManager.account {
                         NIP46SecretManager.shared.deleteSecret(account: account)
                         viewContext.delete(account)
+                        NosturState.shared.loadAccounts()
                     }
                 }
             }
@@ -218,6 +219,7 @@ struct AddExistingAccountSheet: View {
         }
 
         try! viewContext.save()
+        NosturState.shared.loadAccounts()
         ns.setAccount(account: account)
         ns.onBoardingIsShown = false
         
@@ -263,6 +265,7 @@ struct AddExistingAccountSheet: View {
         }
         
         try! viewContext.save()
+        NosturState.shared.loadAccounts()
         ns.objectWillChange.send()
         ns.setAccount(account: account)
         ns.onBoardingIsShown = false
@@ -285,6 +288,7 @@ struct AddExistingAccountSheet: View {
         account.id = UUID()
         account.createdAt = Date()
         account.publicKey = pubkey
+        NosturState.shared.loadAccounts()
         bunkerManager.connect(account, token: token)
         return
     }

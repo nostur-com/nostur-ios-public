@@ -26,7 +26,7 @@ class AccountManager {
             account.publicKey = newKeys.publicKeyHex()
             
             try! context.save()
-                
+            NosturState.shared.loadAccounts()
             return account
         }
         return account
@@ -40,7 +40,6 @@ class AccountManager {
                 .get(pubkey)
             return privateKeyHex
         } catch {
-            L.og.error("🔴🔴🔴 could not get key from keychain")
             return nil
         }
     }
@@ -143,9 +142,11 @@ class AccountManager {
                 LVMManager.shared.listVMs.removeAll()
                 NosturState.shared.setAccount(account: nil)
                 DataProvider.shared().viewContext.delete(account)
+                NosturState.shared.loadAccounts()
             }
             else {
                 DataProvider.shared().viewContext.delete(account)
+                NosturState.shared.loadAccounts()
                 let accountsAfterDelete = NosturState.shared.accounts
                 NosturState.shared.setAccount(account:accountsAfterDelete.first)
             }

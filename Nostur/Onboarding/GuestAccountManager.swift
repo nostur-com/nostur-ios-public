@@ -26,6 +26,7 @@ class GuestAccountManager {
             account.about = "Just trying things out"
             account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
             try! context.save()
+            NosturState.shared.loadAccounts()
             return account
         }
     }
