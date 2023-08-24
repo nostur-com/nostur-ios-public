@@ -52,6 +52,7 @@ struct LinkPreviewView: View {
 
             }
             .background(Color("ListBackground"))
+            .fixedSize(horizontal: false, vertical: true)
             .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             .clipShape(RoundedRectangle(cornerRadius: 10.0))
         }

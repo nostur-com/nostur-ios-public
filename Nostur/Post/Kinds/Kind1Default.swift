@@ -124,6 +124,7 @@ struct Kind1Default: View {
                     }
 
                     ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth)
+                        .fixedSize(horizontal: false, vertical: true) // TODO: TEST WITH/WITHOUT
                         .frame(maxWidth: .infinity, alignment:.leading)
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
