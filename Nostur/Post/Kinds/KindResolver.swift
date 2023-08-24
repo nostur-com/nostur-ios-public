@@ -48,24 +48,21 @@ struct KindResolver_Previews: PreviewProvider {
             ])
             pe.loadPosts()
         }) {
-            VStack {
+            SmoothListMock {
                 if let article = PreviewFetcher.fetchNRPost("21b3bd3c5eec98bba15aa0fd32f24f18a0540e70c18ed1ac4f156d41ffc17ce6") {
-                    PostRowDeletable(nrPost: article)
-                        .roundedBoxShadow()
-                        .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                        .padding(.vertical, 10)
+                    Box {
+                        PostRowDeletable(nrPost: article)
+                    }
                 }
                 if let nrPost = PreviewFetcher.fetchNRPost() {
-                    PostRowDeletable(nrPost: nrPost)
-                        .roundedBoxShadow()
-                        .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                        .padding(.vertical, 10)
+                    Box {
+                        PostRowDeletable(nrPost: nrPost)
+                    }
                 }
                 if let article = PreviewFetcher.fetchNRPost("d3f509e5eb6dd06f96d4797969408f5f9c90e9237f012f83130b1fa592b26433") {
-                    PostRowDeletable(nrPost: article)
-                        .roundedBoxShadow()
-                        .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                        .padding(.vertical, 10)
+                    Box {
+                        PostRowDeletable(nrPost: article)
+                    }
                 }
                 Spacer()
             }

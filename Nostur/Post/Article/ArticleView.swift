@@ -454,11 +454,11 @@ struct Articles_Previews: PreviewProvider {
         }) {
             SmoothListMock {
                 if let p = PreviewFetcher.fetchNRPost("12c29454fc1f995eb6e08a97f91dff37f891d1de130fbb333b5976f2cca99395") {
-                    Box(kind:30023) {
+                    Box(nrPost: p) {
                         PostRowDeletable(nrPost: p, fullWidth: true)
                     }
                     
-                    Box(kind:30023) {
+                    Box(nrPost: p) {
                         PostRowDeletable(nrPost: p)
                     }
                         
