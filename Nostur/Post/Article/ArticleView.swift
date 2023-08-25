@@ -221,7 +221,7 @@ struct ArticleView: View {
                 
                 if let image = article.articleImageURL {
                     SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, isFollowing: article.following, fullWidth: true)
-                        .padding(.horizontal, -10) // on article preview always use full width style
+                        .padding(.horizontal, -20) // on article preview always use full width style
                         .padding(.vertical, 10)
                 }
                 
