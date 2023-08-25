@@ -92,9 +92,9 @@ struct Settings: View {
                     Text("We Don't Need No Stinkin' Badges", comment:"Setting on settings screen")
                     Text("Hides badges from profiles and feeds", comment: "Setting on settings screen")
                 }
-                Toggle(isOn: $settings.hideEmojisInNames) {
-                    Text("Hide emojis in names", comment:"Setting on settings screen")
-                }
+//                Toggle(isOn: $settings.hideEmojisInNames) {
+//                    Text("Hide emojis in names", comment:"Setting on settings screen")
+//                }
                 Toggle(isOn: $settings.includeSharedFrom) {
                     Text("Include Nostur caption when sharing posts", comment:"Setting on settings screen")
                     Text("Shows 'Shared from Nostur' caption when sharing post screenshots", comment: "Setting on settings screen")

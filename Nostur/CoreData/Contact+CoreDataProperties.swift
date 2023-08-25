@@ -137,16 +137,18 @@ extension Contact : Identifiable {
         if theName == nil { return authorKey }
         let spamFixedName = String(theName!.prefix(255)) // 255 SPAM LIMIT
         
-        if (SettingsStore.shared.hideEmojisInNames) {
-            return (spamFixedName.unicodeScalars.filter {
-                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
-                !$0.properties.isEmoji  // EMOJIS
-                
-            }.reduce("") { $0 + String($1) })
-        }
-        else {
-            return spamFixedName
-        }
+        return spamFixedName
+        
+//        if (SettingsStore.shared.hideEmojisInNames) {
+//            return (spamFixedName.unicodeScalars.filter {
+//                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+//                !$0.properties.isEmoji  // EMOJIS
+//                
+//            }.reduce("") { $0 + String($1) })
+//        }
+//        else {
+//            return spamFixedName
+//        }
     }
     
     var nip05nameOnly:String? {

@@ -21,7 +21,7 @@ final class SettingsStore: ObservableObject {
         
         static let defaultZapAmount:String = "default_zap_amount"
         static let defaultLightningWallet:String = "default_lightning_wallet"
-        static let hideEmojisInNames:String = "hide_emojis_in_names"
+//        static let hideEmojisInNames:String = "hide_emojis_in_names"
         static let hideBadges:String = "hide_badges"
         static let restrictAutoDownload:String = "restrict_autodownload"
         static let animatedPFPenabled:String = "animated_pfp_enabled"
@@ -93,7 +93,7 @@ final class SettingsStore: ObservableObject {
             Keys.lastMaintenanceTimestamp: 0,
             Keys.replaceNsecWithHunter2: true,
             Keys.defaultZapAmount: 21,
-            Keys.hideEmojisInNames: false,
+//            Keys.hideEmojisInNames: false,
             Keys.hideBadges: false,
             Keys.restrictAutoDownload: false,
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id,
@@ -192,10 +192,10 @@ final class SettingsStore: ObservableObject {
         get { defaults.bool(forKey: Keys.fullWidthImages) }
     }
 
-    var hideEmojisInNames: Bool {
-        set { defaults.set(newValue, forKey: Keys.hideEmojisInNames); objectWillChange.send() }
-        get { defaults.bool(forKey: Keys.hideEmojisInNames) }
-    }
+//    var hideEmojisInNames: Bool {
+//        set { defaults.set(newValue, forKey: Keys.hideEmojisInNames); objectWillChange.send() }
+//        get { defaults.bool(forKey: Keys.hideEmojisInNames) }
+//    }
     
     var restrictAutoDownload: Bool {
         set { defaults.set(newValue, forKey: Keys.restrictAutoDownload); objectWillChange.send() }
