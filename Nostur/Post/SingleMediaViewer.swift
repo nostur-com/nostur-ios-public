@@ -32,7 +32,7 @@ struct SingleMediaViewer: View {
                         loadNonHttpsAnyway = true
                     }
                 }
-//                   .centered()
+                   .centered()
                    .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                    .background(Color("LightGray").opacity(0.2))
             }
@@ -43,7 +43,7 @@ struct SingleMediaViewer: View {
                     
                     if state.error != nil {
                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-//                            .centered()
+                            .centered()
                             .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .background(Color("LightGray").opacity(0.2))
                             .onAppear {
@@ -158,7 +158,7 @@ struct SingleMediaViewer: View {
                                     imagesShown = false
                                 }
                         }
-//                        .centered()
+                        .centered()
                         .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     }
                     else {

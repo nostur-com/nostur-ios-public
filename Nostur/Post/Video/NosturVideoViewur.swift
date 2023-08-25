@@ -159,7 +159,7 @@ struct NosturVideoViewur: View {
                             }
                     }
                     .centered()
-                    .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                    .frame(maxWidth: ((height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT) / 1.7777777778), maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     .background(Color("LightGray").opacity(0.2))
                 }
                 else {
@@ -233,7 +233,7 @@ struct NosturVideoViewur: View {
                 Task.detached {
                     if let videoSize = await getVideoDimensions(asset: asset), let videoLength = await getVideoLength(asset: asset) {
                         DispatchQueue.main.async {
-                            self.scaledDimensions = Nostur.scaledToFit(videoSize, scale: UIScreen.main.scale, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            self.scaledDimensions = Nostur.scaledToFit(videoSize, scale: 1, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             self.videoLength = videoLength
                         }
                     }

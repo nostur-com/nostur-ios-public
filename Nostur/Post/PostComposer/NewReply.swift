@@ -31,6 +31,8 @@ struct NewReply: View {
                     ScrollView {
                         VStack {
                             PostRowDeletable(nrPost: replyToNRPost, hideFooter: true)
+                                .onTapGesture { }
+                                .disabled(true)
                             HStack(spacing:0) {
                                 NewReplyingToFragment(contact: replyToNRPost.contact, pubkey: replyToNRPost.pubkey)
                                     .offset(x:70)
