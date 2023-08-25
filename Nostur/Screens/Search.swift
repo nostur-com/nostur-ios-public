@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import NostrEssentials
 
 struct Search: View {
     @State var nrPosts:[NRPost] = []
@@ -100,6 +101,7 @@ struct Search: View {
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: searchText) { searchString in
                 nrPosts = []
+                let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
                 let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
 
                 if (searchTrimmed.prefix(9) == "nprofile1") {
@@ -272,7 +274,7 @@ struct Search: View {
                 // try @account
                 else if (searchTrimmed.prefix(1) == "@") {
                     searching = true
-                    contacts.nsPredicate = NSPredicate(format: "name BEGINSWITH %@", String(searchTrimmed.dropFirst(1)))
+                    contacts.nsPredicate = NSPredicate(format: "name BEGINSWITH[cd] %@ AND NOT pubkey IN %@", String(searchTrimmed.dropFirst(1)), blockedPubkeys)
                     nrPosts = []
                 }
                 else if (searchTrimmed.prefix(1) == "#") {
@@ -281,7 +283,7 @@ struct Search: View {
                     
                     let fr = Event.fetchRequest()
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                    fr.predicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", serializedT(String(searchTrimmed.dropFirst(1))))
+                    fr.predicate = NSPredicate(format: "kind == 1 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(String(searchTrimmed.dropFirst(1))))
                     fr.fetchLimit = 150
                     DataProvider.shared().bg.perform {
                         if let results = try? DataProvider.shared().bg.fetch(fr) {
@@ -302,7 +304,7 @@ struct Search: View {
                         ))
                     }, processResponseCommand: { taskId, _ in
                         let fr = Event.fetchRequest()
-                        fr.predicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", serializedT(String(searchTrimmed.dropFirst(1))))
+                        fr.predicate = NSPredicate(format: "kind == 1 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(String(searchTrimmed.dropFirst(1))))
                         fr.fetchLimit = 150
                         let existingIds = self.nrPosts.map { $0.id }
                         DataProvider.shared().bg.perform {
@@ -413,11 +415,11 @@ struct Search: View {
                 // search in names/usernames
                 else {
                     searching = false
-                    contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
+                    contacts.nsPredicate = NSPredicate(format: "NOT pubkey IN %@ AND (name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@)", blockedPubkeys, searchTrimmed, searchTrimmed)
                     
                     let fr = Event.fetchRequest()
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                    fr.predicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", searchTrimmed, "lnbc")
+                    fr.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", blockedPubkeys, searchTrimmed, "lnbc")
                     fr.fetchLimit = 150
                     let existingIds = self.nrPosts.map { $0.id }
                     DataProvider.shared().bg.perform {
