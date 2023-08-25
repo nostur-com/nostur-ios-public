@@ -123,6 +123,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     private func listenForZapState() {
         self.contact.zapStateChanged
+            .receive(on: DispatchQueue.global(qos: .utility))
             .sink { [weak self] (zapState, _) in
                 guard let self = self else { return }
                 guard zapState != zappableAttributes.zapState else { return }
@@ -133,6 +134,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     private func listenForNip05() {
         self.contact.nip05updated
+            .receive(on: DispatchQueue.global(qos: .utility))
             .sink { [weak self] isVerified in
                 guard let self = self else { return }
                 DispatchQueue.main.async {
@@ -146,6 +148,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     private func listenForChanges() {
         self.contact.contactUpdated
+            .receive(on: DispatchQueue.global(qos: .utility))
             .sink { [weak self] contact in
                 guard let self = self else { return }
                 
