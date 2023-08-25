@@ -298,10 +298,15 @@ struct Search: View {
                     }
                     
                     let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
-                        req(RM.getHashtag(
-                            hashtag: String(searchTrimmed.dropFirst(1)),
-                            subscriptionId: taskId
-                        ))
+                        var tags = [String(searchTrimmed.dropFirst(1))]
+                        if tags[0] != tags[0].lowercased() {
+                            tags.append(tags[0].lowercased())
+                        }
+                                           
+                        let filters = [Filters(tagFilter: TagFilter(tag: "t", values: tags))]
+                        if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
+                            req(message)
+                        }
                     }, processResponseCommand: { taskId, _ in
                         let fr = Event.fetchRequest()
                         fr.predicate = NSPredicate(format: "kind == 1 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(String(searchTrimmed.dropFirst(1))))
