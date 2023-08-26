@@ -184,17 +184,17 @@ class Importer {
                         continue
                     }
                     
-                    // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
                     var kind6firstQuote:Event?
                     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
                         if event.content == "" {
                             if let firstE = event.firstE() {
+                                // TODO: Should be able to use existingIds here...
                                 kind6firstQuote = try? Event.fetchEvent(id: firstE, context: context)
                             }
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                             if !Event.eventExists(id: noteInNote.id, context: context) { // TODO: check existingIds instead of .eventExists
-                                _ = Event.saveEvent(event: noteInNote, relays: message.relays)
+                                kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays)
                             }
                             else {
                                 Event.updateRelays(noteInNote.id, relays: message.relays)
@@ -247,6 +247,11 @@ class Importer {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
                     }
+//                    if event.kind == .repost {
+//                        do { try _ = Event.updateRepostCountCache(savedEvent, content:event.content, context: context) } catch {
+//                            L.importing.error("🦋🦋🔴🔴🔴 problem updating Repost Count Cache .id \(event.id)")
+//                        }
+//                    }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .zapNote {

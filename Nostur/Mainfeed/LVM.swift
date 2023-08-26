@@ -46,7 +46,7 @@ class LVM: NSObject, ObservableObject {
     var leafIdsOnScreen:Set<String> = []
     var onScreenSeen:Set<NRPostID> = [] // other .id trackers are in sync with nrPostLeafs. This one keeps track even after nrPostLeafs changed
     var alreadySkipped = false
-    var danglingObjectIds:Set<NRPostID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
+    var danglingIds:Set<NRPostID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
     
     let ot:NewOnboardingTracker = .shared
     
@@ -276,6 +276,7 @@ class LVM: NSObject, ObservableObject {
             var transformedObjectIds = Set<NRPostID>()
             for event in ((self.type == .relays && appWoTactive && self.wotEnabled) ? events.filter { $0.inWoT } : (appWoTactive ? events.filter { $0.inWoT } : events)) {
 //                guard !danglingObjectIds.contains(event.objectID) else { continue } // Skip if the post is already on screen
+                guard !danglingIds.contains(event.id) else { continue }
                 guard !leafsAndParentIdsOnScreen.contains(event.id) else {
                     if let existingNRPost = currentNRPostLeafs.first(where: { $0.id == event.id }) {
                         newNRPostLeafs.append(existingNRPost)
@@ -320,9 +321,11 @@ class LVM: NSObject, ObservableObject {
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
-                if !danglers.isEmpty && !self.hideReplies {
+                let newDanglers = danglers.filter { !self.danglingIds.contains($0.id) }
+                if !newDanglers.isEmpty && !self.hideReplies {
                     L.lvm.info("🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
-                    fetchParents(danglers, older:older)
+                    danglingIds = danglingIds.union(newDanglers.map { $0.id })
+                    fetchParents(newDanglers, older:older)
                 }
                 putNewThreadsOnScreen(newLeafThreads, leafIdsOnScreen:leafIdsOnScreen, currentNRPostLeafs: currentNRPostLeafs, older:older)
             }
