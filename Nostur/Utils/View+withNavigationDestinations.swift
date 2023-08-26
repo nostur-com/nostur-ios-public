@@ -134,6 +134,8 @@ struct NavigationDestination {
 }
 
 func navigateTo(_ path:any Hashable) {
+    sendNotification(.scrollingUp) // this makes the tab bars appear for navigating
+    
     if (type(of: path) == NRPost.self) {
         let nrPost = path as! NRPost
         if nrPost.kind == 30023 {
