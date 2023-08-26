@@ -182,7 +182,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var zapState:Event.ZapState?
     var isZapped:Bool {
         guard zapState != nil else { return false }
-        return [.initiated, .nwcConfirmed, .nwcConfirmed].contains(zapState)
+        return [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
     }
     var following = false
     var blocked: Bool {
