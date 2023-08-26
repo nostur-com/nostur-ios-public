@@ -228,4 +228,4 @@ func getImgUrlsFromContent(_ content:String) -> [URL] {
     return urls
 }
 
-let mediaRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:mp4|mov|m3u8|png|jpe?g|gif|webp|bmp)(\\?\\S+){0,1}\\b")
+let mediaRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:mp4|mov|m4a|m3u8|png|jpe?g|gif|webp|bmp)(\\?\\S+){0,1}\\b")
