@@ -497,7 +497,6 @@ struct DetailPost: View {
             FooterFragmentView(nrPost: nrPost)
                 .padding(.vertical, 5)
                 .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
-            Divider()
         }
     }
 }
