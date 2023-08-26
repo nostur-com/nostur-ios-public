@@ -144,9 +144,9 @@ extension LVM {
         : (feed?.followingHashtags ?? [])
         
         if !hashtags.isEmpty {
-            let regex = ".*(" + hashtags.map {
+            let regex = "(" + hashtags.map {
                 NSRegularExpression.escapedPattern(for: serializedT($0))
-            }.joined(separator: "|") + ").*"
+            }.joined(separator: "|") + ")"
             return regex
         }
         

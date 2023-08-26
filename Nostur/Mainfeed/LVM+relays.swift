@@ -45,9 +45,9 @@ extension Event {
     
     static func postsByRelays(_ relays:Set<Relay>, mostRecent:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
         let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
-        let regex = ".*(" + relays.compactMap { $0.url }.map {
+        let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
-        }.joined(separator: "|") + ").*"
+        }.joined(separator: "|") + ")"
         let cutOffPoint = mostRecent.created_at - (15 * 60)
         
         let fr = Event.fetchRequest()
@@ -65,9 +65,9 @@ extension Event {
     
     static func postsByRelays(_ relays:Set<Relay>, until:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
         let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
-        let regex = ".*(" + relays.compactMap { $0.url }.map {
+        let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
-        }.joined(separator: "|") + ").*"
+        }.joined(separator: "|") + ")"
         let cutOffPoint = until.created_at + (1 * 60)
         
         let fr = Event.fetchRequest()
@@ -84,9 +84,9 @@ extension Event {
     
     static func postsByRelays(_ relays:Set<Relay>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false) -> NSFetchRequest<Event> {
         let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
-        let regex = ".*(" + relays.compactMap { $0.url }.map {
+        let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
-        }.joined(separator: "|") + ").*"
+        }.joined(separator: "|") + ")"
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
         
         // Take oldest timestamp: 8 hours ago OR lastAppearedCreatedAt
