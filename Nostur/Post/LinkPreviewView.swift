@@ -53,9 +53,8 @@ struct LinkPreviewView: View {
                         .foregroundColor(.gray)
                 }
                 .padding(5)
-//                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
                 .minimumScaleFactor(0.7)
-
+                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             }
             .background(Color("ListBackground"))
             .fixedSize(horizontal: false, vertical: true)
