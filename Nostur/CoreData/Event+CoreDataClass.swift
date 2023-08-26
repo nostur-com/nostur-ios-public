@@ -13,6 +13,7 @@ import Combine
 
 public class Event: NSManagedObject, Identifiable {
     
+    var repostsDidChange = PassthroughSubject<Int64, Never>()
     var likesDidChange = PassthroughSubject<Int64, Never>()
     var zapsDidChange = PassthroughSubject<(Int64, Int64), Never>()
     var postDeleted = PassthroughSubject<String, Never>()

@@ -40,8 +40,9 @@ struct FooterFragmentView: View {
                     HStack {
                         Image("RepostedIcon")
                             .foregroundColor(.green)
-                        Text("0").opacity(0)
-                        //                        AnimatedNumber(number: nrPost.mentionsCount).opacity(nrPost.mentionsCount == 0 ? 0 : 1)
+                        AnimatedNumber(number: nrPost.repostsCount)
+                            .equatable()
+                            .opacity(nrPost.repostsCount == 0 ? 0 : 1)
                     }
                     .foregroundColor(.green)
                     .padding(5)
@@ -49,8 +50,9 @@ struct FooterFragmentView: View {
                 else {
                     HStack {
                         Image("RepostedIcon")
-                        Text("0").opacity(0)
-                        //                        AnimatedNumber(number: nrPost.mentionsCount).opacity(nrPost.mentionsCount == 0 ? 0 : 1)
+                        AnimatedNumber(number: nrPost.repostsCount)
+                            .equatable()
+                            .opacity(nrPost.repostsCount == 0 ? 0 : 1)
                     }
                     .padding(5)
                     .contentShape(Rectangle())
