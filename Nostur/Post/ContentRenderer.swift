@@ -99,7 +99,8 @@ struct ContentRenderer: View { // VIEW things
                         .padding(.vertical, 10)
                 case .video(let mediaContent):
                     if let dimensions = mediaContent.dimensions {
-                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                        // for video, dimensions are points not pixels? Scale set to 1.0 always
+                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: 1.0, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
 //                        Text("Available width X1:\(availableWidth)")
                         NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
                             .fixedSize(horizontal: false, vertical: true)
