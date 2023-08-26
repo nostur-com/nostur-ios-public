@@ -171,8 +171,7 @@ class InstantFeed {
         Task.detached {
             self.bg.perform { [weak self] in
                 guard let self = self else { return }
-                
-                let getGlobalEventsTask = ReqTask(prefix: "GGET-") { taskId in
+                let getGlobalEventsTask = ReqTask(subscriptionId: "RM.getGlobalFeedEvents-" + UUID().uuidString) { taskId in
                     L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
                     reqP(RM.getGlobalFeedEvents(limit: 200, subscriptionId: taskId), relays: self.relays)
                 } processResponseCommand: { taskId, _ in

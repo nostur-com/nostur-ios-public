@@ -56,7 +56,7 @@ class DIMENSIONS: ObservableObject {
     func availablePostDetailRowImageWidth() -> CGFloat {
         // ( 50 ) + 10 + (availableWidth) + 10
         return (listWidth - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
-        return (listWidth - (Self.BOX_PADDING*2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
+//        return (listWidth - (Self.BOX_PADDING*2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
          //   -10    684               -10
     }
 }

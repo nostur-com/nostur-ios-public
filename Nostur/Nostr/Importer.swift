@@ -47,7 +47,8 @@ class Importer {
             .sink { () in
                 DataProvider.shared().bg.perform {
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
-                    let importedNotification = ImportedNotification(subscriptionIds: self.callbackSubscriptionIds)
+                    let notified = self.callbackSubscriptionIds
+                    let importedNotification = ImportedNotification(subscriptionIds: notified)
                     self.callbackSubscriptionIds = []
                     DispatchQueue.main.async {
                         sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)

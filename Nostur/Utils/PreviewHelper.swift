@@ -92,6 +92,7 @@ extension PreviewEnvironment {
             account.banner = "https://profilepics.nostur.com/banner_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/banner.jpg?1682440972"
             NosturState.shared.loadAccounts()
             NosturState.shared.setAccount(account: account)
+            SettingsStore.shared.webOfTrustLevel = "WOT_OFF"
 //            return account
         }
         return true
