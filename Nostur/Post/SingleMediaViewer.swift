@@ -111,6 +111,7 @@ struct SingleMediaViewer: View {
 //                                        }
 //                                    }
                                     .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
+                                    .fixedSize(horizontal: false, vertical: true)
                                     .padding(.horizontal, -contentPadding)
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
@@ -133,6 +134,7 @@ struct SingleMediaViewer: View {
 //                                        }
 //                                    }
                                     .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                                    .fixedSize(horizontal: false, vertical: true)
 //                                    .hCentered()
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
