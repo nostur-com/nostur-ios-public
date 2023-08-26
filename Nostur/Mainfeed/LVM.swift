@@ -429,6 +429,7 @@ class LVM: NSObject, ObservableObject {
                 guard let self = self else { return }
                 L.lvm.info("😈😈 processResponseCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) dng: \(danglers.count)")
                 let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
+                let idsOnScreen = self.leafsAndParentIdsOnScreen
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let self = self else { return }
                     let danglingEvents = danglers.map { $0.event }
@@ -436,7 +437,7 @@ class LVM: NSObject, ObservableObject {
                         self.setOlderEvents(events: self.filterMutedWords(danglingEvents))
                     }
                     else {
-                        self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt)
+                        self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
                     }
                 }
             },
@@ -450,8 +451,9 @@ class LVM: NSObject, ObservableObject {
                 let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                 let danglingEvents = danglers.map { $0.event }
                 
+                let idsOnScreen = self.leafsAndParentIdsOnScreen
                 DataProvider.shared().bg.perform {
-                    self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt)
+                    self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
                 }
             })
 
@@ -1300,6 +1302,7 @@ extension LVM {
         let ctx = DataProvider.shared().bg
         let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
         let hashtagRegex = self.hashtagRegex
+        let idsOnScreen = self.leafsAndParentIdsOnScreen
         ctx.perform { [weak self] in
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch LVM.id (\(self.uuid)")
@@ -1311,7 +1314,7 @@ extension LVM {
                 
                 
                 guard let posts = try? ctx.fetch(fr) else { return }
-                self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt)
+                self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
             }
             else {
 //                print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
@@ -1320,7 +1323,7 @@ extension LVM {
                     : Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
 
                 guard let posts = try? ctx.fetch(fr) else { return }
-                self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt)
+                self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
             }
         }
     }
@@ -1424,7 +1427,7 @@ extension LVM {
     }
     
     // MARK: FROM DB TO SCREEN STEP 2: FIRST FILTER PASS, GETTING PARENTS AND LIMIT, NOT ON SCREEN YET
-    func setUnorderedEvents(events:[Event], lastCreatedAt:Int64 = 0) {
+    func setUnorderedEvents(events:[Event], lastCreatedAt:Int64 = 0, idsOnScreen: Set<String> = []) {
         if Thread.isMainThread {
             fatalError("Should be bg")
         }
@@ -1440,7 +1443,7 @@ extension LVM {
                         return $0
                     }
                 let newEventIds = getAllEventIds(newUnrenderedEvents)
-                let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count
+                let newCount = newEventIds.subtracting(idsOnScreen).count
                 if newCount > 0 {
                     self.startRenderingSubject.send(newUnrenderedEvents)
                 }
@@ -1456,7 +1459,7 @@ extension LVM {
                     }
 
                 let newEventIds = getAllEventIds(newUnrenderedEvents)
-                let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count
+                let newCount = newEventIds.subtracting(idsOnScreen).count
                 if newCount > 0 {
                     self.startRenderingSubject.send(newUnrenderedEvents)
                 }
