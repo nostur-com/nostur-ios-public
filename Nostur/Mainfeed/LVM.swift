@@ -258,6 +258,17 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
+    private func applyWoTifNeeded(_ events:[Event]) -> [Event] {
+        guard WOT_FILTER_ENABLED() else { return events }  // Return all if globally disabled
+        guard self.type == .relays else { return events.filter { $0.inWoT} } // Return inWoT if following/pubkeys list
+        
+        // if we are here, type is .relays, only filter if the feed specific WoT filter is enabled
+        
+        guard self.wotEnabled else { return events } // Return all if feed specific WoT is not enabled
+        
+        return events.filter { $0.inWoT } // apply WoT filter
+    }
+    
     // MARK: FROM DB TO SCREEN STEP 3:
     private func processPostsInBackground(_ events:[Event], older:Bool = false) { // events are from viewContext
         let taskId = UUID().uuidString
@@ -271,11 +282,10 @@ class LVM: NSObject, ObservableObject {
         
         context.perform { [weak self] in
             guard let self = self else { return }
-            let appWoTactive = WOT_FILTER_ENABLED()
             var newNRPostLeafs:[NRPost] = []
-            for event in ((self.type == .relays && appWoTactive && self.wotEnabled) ? events.filter { $0.inWoT } : (appWoTactive ? events.filter { $0.inWoT } : events)) {
-//                guard !danglingObjectIds.contains(event.objectID) else { continue } // Skip if the post is already on screen
-            for event in filteredEvents {
+            var transformedIds = Set<NRPostID>()
+            
+            for event in events {
                 guard !danglingIds.contains(event.id) else { continue }
                 // Skip if the post is already on screen
                 guard !leafsAndParentIdsOnScreen.contains(event.id) else {
@@ -1437,9 +1447,11 @@ extension LVM {
         }
         var newUnrenderedEvents:[Event]
         
+        let filteredEvents = applyWoTifNeeded(events)
+        
         switch (self.state) {
             case .INIT: // Show last X (FORCED CUTOFF)
-                newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
+                newUnrenderedEvents = filteredEvents.filter(onlyRootOrReplyingToFollower)
                     .prefix(LVM_MAX_VISIBLE)
                     .map {
                         $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0, fixRelations: true)
@@ -1453,7 +1465,7 @@ extension LVM {
                 }
                 
             default:
-                newUnrenderedEvents = events
+                newUnrenderedEvents = filteredEvents
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
                     .map {
