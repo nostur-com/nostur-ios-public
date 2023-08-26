@@ -81,7 +81,9 @@ struct BookmarksView: View {
         .onReceive(receiveNotification(.postAction)) { notification in
             let action = notification.object as! PostActionNotification
             if (action.type == .bookmark  && !action.bookmarked) {
-                vBookmarks = vBookmarks.filter { $0.id != action.eventId }
+                withAnimation {
+                    vBookmarks = vBookmarks.filter { $0.id != action.eventId }
+                }
             }
             else if action.type == .bookmark {
                 self.loadBookmarks()
