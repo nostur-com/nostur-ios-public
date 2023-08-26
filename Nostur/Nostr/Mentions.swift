@@ -186,14 +186,27 @@ func replaceNsecWithHunter2(_ text:String) -> String {
 }
 
 func putHashtagsInTags(_ event:NEvent) -> NEvent {
-    let hashtagMatches = event.content.matchingStrings(regex:"(?<![/\\?]|\\b)(\\#)([^\\s\\[]{2,})\\b")
+    let hashtags = event.content.matchingStrings(regex:"(?<![/\\?]|\\b)(\\#)([^\\s\\[]{2,})\\b")
+        .map { String( $0[0].dropFirst()) }
+    
     var eventWithHashtags = event
-    for index in hashtagMatches.indices {
+    for hashtag in hashtags {
         eventWithHashtags
             .tags
             .append(
-                NostrTag(["t",String(hashtagMatches[index][0].dropFirst())])
+                NostrTag(["t", hashtag])
             )
+        
+        // Also add lowercase tag if it's not already lowercase
+        if hashtag != hashtag.lowercased() {
+            if !hashtags.contains(hashtag.lowercased()) {
+                eventWithHashtags
+                    .tags
+                    .append(
+                        NostrTag(["t", hashtag.lowercased()])
+                    )
+            }
+        }
     }
     return eventWithHashtags
 }
