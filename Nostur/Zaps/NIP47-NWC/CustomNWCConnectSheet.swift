@@ -124,6 +124,13 @@ struct CustomNWCConnectSheet: View {
                             nwcConnectSuccess = true
                         }
                     }
+                    // NIP47 spec says to uses space separator, but Alby uses comma.
+                    else if nwcInfoNotification.methods.split(separator: ",").map({ String($0) }).contains("pay_invoice") {
+                        DispatchQueue.main.async {
+                            ss.activeNWCconnectionId = awaitingConnectionId
+                            nwcConnectSuccess = true
+                        }
+                    }
                     else {
                         L.og.error("⚡️ NWC custom connection, does not support pay_invoice")
                         nwcErrorMessage = String(localized:"This NWC connection does not support payments", comment: "Error message during NWC setup")
