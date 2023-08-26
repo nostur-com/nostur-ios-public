@@ -21,9 +21,9 @@ struct DetailFooterFragment: View {
 
     var body: some View {
         Divider()
-        HStack(spacing: 20) {
+        HStack {
             NavigationLink(value: ViewPath.NoteReactions(id: nrPost.id)) {
-                HStack(spacing:5) {
+                HStack(spacing: 3) {
                     AnimatedNumber(number: nrPost.likesCount)
                         .fontWeight(.bold)
                     Text("reactions", comment: "Label for reactions count, example: (7) reactions")
@@ -37,64 +37,66 @@ struct DetailFooterFragment: View {
                 }
             }
             NavigationLink(value: ViewPath.NoteZaps(id: nrPost.id)) {
-                HStack(spacing:5) {
+                HStack(spacing: 3) {
                     AnimatedNumber(number: nrPost.zapsCount)
                         .fontWeight(.bold)
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
                 }
                 
                 if IS_APPLE_TYRANNY {
-                    HStack(spacing:5) {
+                    HStack(spacing: 3) {
                         AnimatedNumberString(number: tallyString)
                             .fontWeight(.bold)
-                        //                    Text("zaps", comment: "Label for zaps count, example: (4) zaps")
                     }
                     .opacity(nrPost.zapTally != 0 ? 1.0 : 0)
                 }
             }
-            .task {
-                guard let contact = nrPost.contact?.mainContact else { return }
-                guard contact.anyLud else { return }
-                guard contact.zapperPubkey == nil else {
-                    if let zpk = nrPost.contact?.mainContact.zapperPubkey {
-                        reverifyZaps(eventId: nrPost.id, expectedZpk: zpk)
-                    }
-                    return
-                }
-                do {
-                    if let lud16 = contact.lud16, lud16 != "" {
-                        let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                        await MainActor.run {
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                                contact.zapperPubkey = response.nostrPubkey!
-                                L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
-                                reverifyZaps(eventId: nrPost.id, expectedZpk: contact.zapperPubkey!)
-                            }
-                        }
-                    }
-                    else if let lud06 = contact.lud06, lud06 != "" {
-                        let response = try await LUD16.getCallbackUrl(lud06: lud06)
-                        await MainActor.run {
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                                contact.zapperPubkey = response.nostrPubkey!
-                                L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
-                                reverifyZaps(eventId: nrPost.id, expectedZpk: contact.zapperPubkey!)
-                            }
-                        }
-                    }
-                }
-                catch {
-                    L.og.error("problem in lnurlp \(error)")
-                }
-            }
-            
+
             Spacer()
             
-            Text("\(nrPost.createdAt.formatted(date: .omitted, time: .shortened)) · \(nrPost.createdAt.formatted(date: .numeric, time: .omitted))")
+            Text(nrPost.createdAt.formatted(date: .omitted, time: .shortened))
+            Text(nrPost.createdAt.formatted(
+                .dateTime
+                    .day().month(.defaultDigits)
+            ))
         }
         .foregroundColor(.gray)
-//        .padding(.trailing, 10)
         .font(.system(size: 14))
+        .task {
+            guard let contact = nrPost.contact?.mainContact else { return }
+            guard contact.anyLud else { return }
+            guard contact.zapperPubkey == nil else {
+                if let zpk = nrPost.contact?.mainContact.zapperPubkey {
+                    reverifyZaps(eventId: nrPost.id, expectedZpk: zpk)
+                }
+                return
+            }
+            do {
+                if let lud16 = contact.lud16, lud16 != "" {
+                    let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                    await MainActor.run {
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            contact.zapperPubkey = response.nostrPubkey!
+                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                            reverifyZaps(eventId: nrPost.id, expectedZpk: contact.zapperPubkey!)
+                        }
+                    }
+                }
+                else if let lud06 = contact.lud06, lud06 != "" {
+                    let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                    await MainActor.run {
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            contact.zapperPubkey = response.nostrPubkey!
+                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                            reverifyZaps(eventId: nrPost.id, expectedZpk: contact.zapperPubkey!)
+                        }
+                    }
+                }
+            }
+            catch {
+                L.og.error("problem in lnurlp \(error)")
+            }
+        }
         Divider()
     }
 }
