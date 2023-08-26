@@ -134,6 +134,7 @@ class Importer {
                     }
                     
                     if event.kind == .nwcInfo {
+                        _ = existingIds.removeValue(forKey: event.id)
                         guard let nwcConnection = self.nwcConnection else { continue }
                         guard event.publicKey == nwcConnection.walletPubkey else { continue }
                         L.og.info("⚡️ Received 13194 info event, saving methods: \(event.content)")
