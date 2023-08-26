@@ -98,10 +98,10 @@ extension Event {
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         frBefore.fetchLimit = 25
         if hideReplies {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  regex)
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, regex)
         }
         else {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, regex)
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, regex)
         }
         
         let ctx = DataProvider.shared().bg
