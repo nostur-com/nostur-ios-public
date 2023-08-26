@@ -34,6 +34,8 @@ struct NosturVideoViewur: View {
     @State var isStream = false
 //    @State var actualSize:CGSize? = nil
     
+    static let aspect:CGFloat = 16/9
+    
     var body: some View {
         VStack {
             if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
@@ -48,7 +50,7 @@ struct NosturVideoViewur: View {
                     }
                 }
                .centered()
-               .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+               .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
                .background(Color("LightGray").opacity(0.2))
             }
             else if isStream {
@@ -110,7 +112,6 @@ struct NosturVideoViewur: View {
 //                                    .fontWeight(.bold)
 //                            }
 //                        }
-                        .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                         .padding(.horizontal, fullWidth ? -contentPadding : 0)
                         .overlay(alignment:.bottomLeading) {
                             if !didStart {
@@ -147,6 +148,7 @@ struct NosturVideoViewur: View {
                         .onDisappear {
                             isPlaying = false
                         }
+                    .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                 }
                 else if videoState == .loading {
                     HStack(spacing: 5) {
@@ -159,7 +161,7 @@ struct NosturVideoViewur: View {
                             }
                     }
                     .centered()
-                    .frame(maxWidth: ((height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT) / 1.7777777778), maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                    .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
                     .background(Color("LightGray").opacity(0.2))
                 }
                 else {
