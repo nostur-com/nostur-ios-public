@@ -137,7 +137,7 @@ extension Contact : Identifiable {
         if theName == nil { return authorKey }
         let spamFixedName = String(theName!.prefix(255)) // 255 SPAM LIMIT
         
-        return spamFixedName
+        return spamFixedName.trimmingCharacters(in: .whitespacesAndNewlines)
         
 //        if (SettingsStore.shared.hideEmojisInNames) {
 //            return (spamFixedName.unicodeScalars.filter {
