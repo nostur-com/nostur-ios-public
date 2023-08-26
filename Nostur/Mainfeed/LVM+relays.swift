@@ -52,7 +52,9 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 25
+        
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        fr.fetchLimit = 50 // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         if hideReplies {
             fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
         }
@@ -72,7 +74,10 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 25
+
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        fr.fetchLimit = 50 // TODO: Should apply WoT on message parser / receive, before adding to adding to database
+        
         if hideReplies {
             fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
         }
@@ -93,10 +98,13 @@ extension Event {
         // if we don't have lastAppearedCreatedAt. Take 8 hours ago
         let cutOffPoint = lastAppearedCreatedAt == 0 ? hoursAgo : min(lastAppearedCreatedAt, hoursAgo)
         
-        // get 15 events before lastAppearedCreatedAt (or 8 hours ago, if we dont have it)
+        // get 50 events before lastAppearedCreatedAt (or 8 hours ago, if we dont have it)
         let frBefore = Event.fetchRequest()
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        frBefore.fetchLimit = 25
+        
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        frBefore.fetchLimit = 50 // TODO: Should apply WoT on message parser / receive, before adding to adding to database
+        
         if hideReplies {
             frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, regex)
         }
@@ -113,7 +121,10 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 25
+        
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        fr.fetchLimit = 50 // TODO: Should apply WoT on message parser / receive, before adding to adding to database
+        
         if hideReplies {
             fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, regex)
         }
