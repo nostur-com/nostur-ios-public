@@ -189,10 +189,18 @@ class NRTextParser { // TEXT things
             }
 
             replacedString.replaceSubrange(matchRange, with: replacement)
-            range = replacedString.index(after: matchRange.lowerBound)..<replacedString.endIndex
+            
+            // Check if the next index is valid
+            let newStartIndex = replacedString.index(after: matchRange.lowerBound)
+            if newStartIndex < replacedString.endIndex {
+                range = newStartIndex..<replacedString.endIndex
+            } else {
+                break
+            }
         }
         return TextWithPs(text: replacedString, pTags: pTags)
     }
+
 
     private func removeImageLinks(event: Event, text:String) -> String {
         text.replacingOccurrences(of: #"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp|bmp)(\?\S+){0,1}\b"#,
