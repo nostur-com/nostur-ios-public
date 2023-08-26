@@ -196,7 +196,7 @@ struct NosturVideoViewur: View {
         .onAppear {
             videoShown = !SettingsStore.shared.restrictAutoDownload || isFollowing
             if videoShown {
-                if url.absoluteString.suffix(4) == "m3u8" {
+                if url.absoluteString.suffix(4) == "m3u8" || url.absoluteString.suffix(3) == "m4a" {
                     isStream = true
                 }
                 else {
