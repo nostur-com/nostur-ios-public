@@ -774,7 +774,7 @@ class LVM: NSObject, ObservableObject {
         guard self.viewIsVisible else {
             return
         }
-        let isImporting = DataProvider.shared().bg.performAndWait {
+        let isImporting = DataProvider.shared().bg.performAndWait { // TODO: Hang here... need to remove ..AndWait { }
             return Importer.shared.isImporting
         }
         guard !isImporting else { L.lvm.info("\(self.id) \(self.name) ⏳ Still importing, new fetch skipped."); return }

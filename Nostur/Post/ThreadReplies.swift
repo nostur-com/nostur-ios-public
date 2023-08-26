@@ -75,8 +75,7 @@ struct ThreadReplies2_Previews: PreviewProvider {
             pe.loadPosts()
         }) {
             NavigationStack {
-                if let example = PreviewFetcher.fetchEvent(exampleId) {
-                    let nrPost = NRPost(event: example, withReplyTo: false, withParents: false, withReplies: true, plainText: false)
+                if let nrPost = PreviewFetcher.fetchNRPost(exampleId, withReplies: true) {
                     ScrollView {
                         ThreadReplies(nrPost: nrPost)
                     }

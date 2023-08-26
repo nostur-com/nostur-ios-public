@@ -79,7 +79,7 @@ struct ZappablePFP: View {
                         .sink { (zapState, zapEtag) in
                             DispatchQueue.main.async {
                                 if let zapState = zapState,
-                                   let zapEtag = zapEtag,
+//                                   let zapEtag = zapEtag,
                                    [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState) {
                                     isZapped = true
                                 }
