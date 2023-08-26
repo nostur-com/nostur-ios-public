@@ -55,6 +55,19 @@ class Unpublisher {
     }
     
     func publish(_ nEvent:NEvent, cancellationId:UUID? = nil) -> UUID {
+        // if an event with the same id is already in the queue, replace it and reset the timer
+        if queue.first(where: { $0.nEvent.id == nEvent.id }) != nil {
+            queue = queue.filter { $0.nEvent.id != nEvent.id } // remove existing
+            
+            
+            L.og.info("Going to publish event.id after 9 sec: \(nEvent.id) - replaced existing event in queue")
+            let cancellationId = cancellationId ?? UUID()
+            
+            // add the new event
+            queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
+            return cancellationId
+        }
+        
         L.og.info("Going to publish event.id after 9 sec: \(nEvent.id)")
         let cancellationId = cancellationId ?? UUID()
         queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
