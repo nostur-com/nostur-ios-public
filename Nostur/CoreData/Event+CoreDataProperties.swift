@@ -873,21 +873,34 @@ extension Event {
         request.fetchBatchSize = 1
         
         let bg = DataProvider.shared().bg
-        bg.perform { 
-            if let event = try? bg.fetch(request).first {
+        bg.perform {
+            if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id) {
                 let existingRelays = event.relays.split(separator: " ").map { String($0) }
                 let newRelays = relays.split(separator: " ").map { String($0) }
                 let uniqueRelays = Set(existingRelays + newRelays)
                 if uniqueRelays.count > existingRelays.count {
                     event.relays = uniqueRelays.joined(separator: " ")
                     event.relaysUpdated.send(event.relays)
-                    if bg.hasChanges {
-                        do {
-                            try bg.save()
-                        }
-                        catch {
-                            L.og.error("🔴🔴 error updateRelays \(error)")
-                        }
+                    do {
+                        try bg.save()
+                    }
+                    catch {
+                        L.og.error("🔴🔴 error updateRelays \(error)")
+                    }
+                }
+            }
+            else if let event = try? bg.fetch(request).first {
+                let existingRelays = event.relays.split(separator: " ").map { String($0) }
+                let newRelays = relays.split(separator: " ").map { String($0) }
+                let uniqueRelays = Set(existingRelays + newRelays)
+                if uniqueRelays.count > existingRelays.count {
+                    event.relays = uniqueRelays.joined(separator: " ")
+                    event.relaysUpdated.send(event.relays)
+                    do {
+                        try bg.save()
+                    }
+                    catch {
+                        L.og.error("🔴🔴 error updateRelays \(error)")
                     }
                 }
             }
