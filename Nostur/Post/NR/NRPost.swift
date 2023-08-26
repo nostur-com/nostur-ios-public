@@ -201,6 +201,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var hasPrivateNote = false
     var repliesCount:Int64 = 0
     var mentionsCount:Int64 = 0
+    var repostsCount:Int64 = 0
     var likesCount:Int64 = 0
     var zapsCount:Int64 = 0
     var zapTally:Int64 = 0
@@ -276,6 +277,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         self.repliesCount = event.repliesCount
         self.mentionsCount = event.mentionsCount
+        self.repostsCount = event.repostsCount
         self.zapsCount = event.zapsCount
         self.likesCount = event.likesCount
         self.zapTally = event.zapTally
@@ -539,6 +541,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         updateNRPostListener()
         actionListener()
         likesListener()
+        repostsListener()
         zapsListener()
         isFollowingListener()
         unpublishListener()
@@ -633,6 +636,16 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .store(in: &subscriptions)
     }
     
+    private func repostsListener() {
+        event.repostsDidChange
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { [weak self] reposts in
+                guard let self = self else { return }
+                self.objectWillChange.send()
+                self.repostsCount = reposts
+            }
+            .store(in: &subscriptions)
+    }
     
     private func likesListener() {
         event.likesDidChange

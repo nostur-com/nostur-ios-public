@@ -38,6 +38,7 @@ extension Event {
     
     // Counters (cached)
     @NSManaged public var likesCount: Int64 // Cache
+    @NSManaged public var repostsCount: Int64 // Cache
     @NSManaged public var repliesCount: Int64 // Cache
     @NSManaged public var mentionsCount: Int64 // Cache
     @NSManaged public var zapsCount: Int64 // Cache
@@ -547,6 +548,26 @@ extension Event {
                 print("downvote")
             default:
                 break
+        }
+        return true
+    }
+    
+    static func updateRepostCountCache(_ event:Event, content:String, context:NSManagedObjectContext) throws -> Bool {
+        
+        if let firstE = event.firstE() {
+            let request = NSFetchRequest<Event>(entityName: "Event")
+            request.entity = Event.entity()
+            request.predicate = NSPredicate(format: "id == %@", firstE)
+            request.fetchLimit = 1
+            
+            if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+            }
+            else if let repostedEvent = try context.fetch(request).first {
+                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+            }
         }
         return true
     }
@@ -1163,16 +1184,22 @@ extension Event {
             }
         }
         
-        // kind6
+        // kind6 - repost, the reposted post is put in as .firstQuote
         if event.kind == .repost, let firstE = event.firstE() {
             savedEvent.firstQuoteId = firstE
             
-            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
-            if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                savedEvent.firstQuote = firstQuote
-                
-//                firstQuote.objectWillChange.send()
-                firstQuote.mentionsCount += 1
+            
+            
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
+            if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+                savedEvent.firstQuote = repostedEvent
+                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+            }
+            else if let repostedEvent = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                savedEvent.firstQuote = repostedEvent
+                repostedEvent.repostsCount += 1
+                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
             }
         }
         

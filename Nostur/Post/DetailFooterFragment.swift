@@ -29,6 +29,13 @@ struct DetailFooterFragment: View {
                     Text("reactions", comment: "Label for reactions count, example: (7) reactions")
                 }
             }
+            NavigationLink(value: ViewPath.NoteReposts(id: nrPost.id)) {
+                HStack(spacing: 3) {
+                    AnimatedNumber(number: nrPost.repostsCount)
+                        .fontWeight(.bold)
+                    Text("reposts", comment: "Label for reposts count, example: (7) reposts")
+                }
+            }
             NavigationLink(value: ViewPath.NoteZaps(id: nrPost.id)) {
                 HStack(spacing:5) {
                     AnimatedNumber(number: nrPost.zapsCount)

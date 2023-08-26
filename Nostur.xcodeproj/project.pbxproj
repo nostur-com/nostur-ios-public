@@ -102,6 +102,7 @@
 		1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */; };
 		1F4C1C282A07AB090010573F /* NEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4C1C272A07AB090010573F /* NEventView.swift */; };
 		1F4C1C2A2A07B21F0010573F /* NProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4C1C292A07B21F0010573F /* NProfileView.swift */; };
+		1F527CFD2A98CB3100128AD6 /* NoteReposts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F527CFC2A98CB3100128AD6 /* NoteReposts.swift */; };
 		1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */; };
 		1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */; };
 		1F53BEA82A2B7D4700678DC1 /* CustomNWCConnectSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F53BEA72A2B7D4700678DC1 /* CustomNWCConnectSheet.swift */; };
@@ -482,6 +483,7 @@
 		1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F4C1C272A07AB090010573F /* NEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NEventView.swift; sourceTree = "<group>"; };
 		1F4C1C292A07B21F0010573F /* NProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NProfileView.swift; path = Nostur/Profiles/NProfileView.swift; sourceTree = SOURCE_ROOT; };
+		1F527CFC2A98CB3100128AD6 /* NoteReposts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteReposts.swift; sourceTree = "<group>"; };
 		1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountSheet.swift; sourceTree = "<group>"; };
 		1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExistingAccountSheet.swift; sourceTree = "<group>"; };
 		1F53BEA72A2B7D4700678DC1 /* CustomNWCConnectSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNWCConnectSheet.swift; sourceTree = "<group>"; };
@@ -805,6 +807,7 @@
 				1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */,
 				1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */,
 				1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */,
+				1F527CFC2A98CB3100128AD6 /* NoteReposts.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -1896,6 +1899,7 @@
 				1F75257E2996A1AA00477AF2 /* Unpublisher.swift in Sources */,
 				1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */,
 				1F9A55262A3C7FD300F67627 /* DetailTab.swift in Sources */,
+				1F527CFD2A98CB3100128AD6 /* NoteReposts.swift in Sources */,
 				1F45C7ED29EF997200F58772 /* ImgurMediaUploadService.swift in Sources */,
 				1F2E760529F6DF6C00E67CE7 /* EditListTitleSheet.swift in Sources */,
 				1F77AD082A40B96500585E12 /* ArticleView.swift in Sources */,

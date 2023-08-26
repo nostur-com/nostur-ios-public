@@ -196,6 +196,7 @@ class Importer {
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                             if !Event.eventExists(id: noteInNote.id, context: context) { // TODO: check existingIds instead of .eventExists
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays)
+                                kind6firstQuote?.repostsCount = 1
                             }
                             else {
                                 Event.updateRelays(noteInNote.id, relays: message.relays)

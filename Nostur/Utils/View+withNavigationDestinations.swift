@@ -54,6 +54,7 @@ enum ViewPath: Hashable {
     case Blocklist
     case Bookmarks(account:Account)
     case NoteReactions(id:String)
+    case NoteReposts(id:String)
     case NoteZaps(id:String)
     case Settings
     case Lists
@@ -111,6 +112,8 @@ extension View {
                         BookmarksView(account: account)
                     case .NoteReactions(let id):
                         NoteReactions(id: id)
+                    case .NoteReposts(let id):
+                        NoteReposts(id: id)
                     case .NoteZaps(let id):
                         NoteZaps(id: id)
                     case .Settings:
