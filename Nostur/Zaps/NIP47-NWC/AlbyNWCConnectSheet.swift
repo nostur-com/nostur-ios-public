@@ -164,11 +164,28 @@ struct AlbyNWCConnectSheet: View {
                     do {
                         try publishMetadataEvent(account)
                         self.lud16 = lud16
+                        updateZapperPubkey(account)
                     }
                     catch {
                         L.og.error("Error publishing new account kind 0")
                     }
                 }
+            }
+        }
+    }
+    
+    func updateZapperPubkey(_ account:Account) {
+        guard account.lud16 != "" else { return }
+        guard let contact = Contact.fetchByPubkey(account.publicKey, context: DataProvider.shared().viewContext) else { return }
+        guard let contactLud16 = contact.lud16, contactLud16 != account.lud16 else { return }
+        
+        Task {
+            let response = try await LUD16.getCallbackUrl(lud16: account.lud16)
+            if let zapperPubkey = response.nostrPubkey, (response.allowsNostr ?? false) {
+                DispatchQueue.main.async {
+                    contact.zapperPubkey = zapperPubkey
+                }
+                L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
             }
         }
     }
