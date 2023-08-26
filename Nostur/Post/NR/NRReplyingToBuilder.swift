@@ -41,6 +41,9 @@ class NRReplyingToBuilder {
             }
             return String(localized:"Replying to: \(pTagsAsStrings.formatted(.list(type: .and)))", comment:"Shown in a post, Replying to (names)")
         }
+        else {
+            return String(localized:"Replying to...", comment:"Shown in a post when replying but the name is missing")
+        }
         return nil
     }
 
