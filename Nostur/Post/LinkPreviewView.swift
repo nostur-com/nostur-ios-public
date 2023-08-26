@@ -14,6 +14,8 @@ struct LinkPreviewView: View {
     let url:URL
     @State var tags:[String: String] = [:]
     
+    static let aspect:CGFloat = 16/9
+    
     var body: some View {
         Group {
             HStack(alignment: .center, spacing:0) {
@@ -26,18 +28,20 @@ struct LinkPreviewView: View {
                                 image.interpolation(.none)
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
-                                    .frame(maxWidth: (DIMENSIONS.PREVIEW_HEIGHT * 2))
+                                    .frame(maxWidth: (DIMENSIONS.PREVIEW_HEIGHT * Self.aspect))
                             }
                     }
                     .pipeline(ImageProcessing.shared.content)
                 }
                 VStack(alignment:.leading, spacing:0) {
                     if let title = tags["title"] {
-                        Text(title).lineLimit(1)
+                        Text(title).lineLimit(2)
+                            .layoutPriority(1)
                             .fontWeight(.bold)
                     }
                     else if let title = tags["fallback_title"] {
-                        Text(title).lineLimit(1)
+                        Text(title).lineLimit(2)
+                            .layoutPriority(1)
                             .fontWeight(.bold)
                     }
                     if let description = tags["description"] {
@@ -49,7 +53,8 @@ struct LinkPreviewView: View {
                         .foregroundColor(.gray)
                 }
                 .padding(5)
-                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
+//                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
+                .minimumScaleFactor(0.7)
 
             }
             .background(Color("ListBackground"))
@@ -90,5 +95,6 @@ struct LinkPreviewView_Previews: PreviewProvider {
             LinkPreviewView(url: url)
                 .padding(.vertical, 5)
         }
+        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
