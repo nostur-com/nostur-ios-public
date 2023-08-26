@@ -24,7 +24,7 @@ struct DiscoverNostr: View {
                     HStack {
                         Text("[#footstr](nostur:t:footstr)")
                         Text("[#zapathon](nostur:t:zapathon)")
-                        Text("[#grownostr](nostur:t:grownostr)")
+                        Text("[#music](nostur:t:music)")
                     }
                     HStack {
                         Text("[#asknostr](nostur:t:asknostr)")
@@ -33,10 +33,11 @@ struct DiscoverNostr: View {
                     }
                     HStack {
                         Text("[#bitcoin](nostur:t:bitcoin)")
-                        Text("[#music](nostur:t:music)")
+                        Text("[#grownostr](nostur:t:grownostr)")
                         Text("[#memes](nostur:t:memes)")
                     }
                 }
+                .lineLimit(1)
                 .font(.title)
             }
         }
