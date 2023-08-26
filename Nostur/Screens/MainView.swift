@@ -18,6 +18,9 @@ struct MainView: View {
     @EnvironmentObject var sm:SideBarModel
     @ObservedObject var settings:SettingsStore = .shared
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+//    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    
     var body: some View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
@@ -91,7 +94,7 @@ struct MainView: View {
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
-            guard !IS_IPAD else { return }
+            guard !IS_IPAD || horizontalSizeClass == .compact else { return }
             guard selectedTab == "Main" else { return }
             navPath.append(destination.destination)
         }

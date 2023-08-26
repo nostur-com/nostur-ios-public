@@ -39,6 +39,9 @@ struct DirectMessages: View {
     @FetchRequest
     var sent:FetchedResults<Event>
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+//    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    
     var onlyMostRecentAll:[String: ([Event], Bool, Int, Int64, Event)] { // [pubkey: [dm], isAccepted, unreadCount, rootDM.createdAt, rootDM]
         // The final list of contacts (key) and latest dm (value)
         return computeOnlyMostRecentAll(sent: Array(sent), received: Array(received), pubkey: pubkey)
@@ -209,7 +212,7 @@ struct DirectMessages: View {
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
-            guard !IS_IPAD else { return }
+            guard !IS_IPAD || horizontalSizeClass == .compact else { return }
             guard selectedTab == "Messages" else { return }
             navPath.append(destination.destination)
         }
