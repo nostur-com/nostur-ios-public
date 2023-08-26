@@ -513,9 +513,9 @@ struct PreviewFetcher {
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.randomElement()
     }
     
-    static func fetchNRPost(_ id:String? = nil, context:NSManagedObjectContext? = nil, plainText:Bool = false) -> NRPost? {
+    static func fetchNRPost(_ id:String? = nil, context:NSManagedObjectContext? = nil, withReplies:Bool = false, plainText:Bool = false) -> NRPost? {
         if let event = fetchEvent(id) {
-            return NRPost(event: event, plainText: plainText)
+            return NRPost(event: event, withReplies: withReplies, plainText: plainText)
         }
         return nil
     }
