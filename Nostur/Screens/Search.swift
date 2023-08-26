@@ -461,7 +461,7 @@ struct Search: View {
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard type(of: destination.destination) == Nevent1Path.self || type(of: destination.destination) == Nprofile1Path.self || type(of: destination.destination) == HashtagPath.self else { return }
-                guard !IS_IPAD || horizontalSizeClass == .compact else { return }
+//                guard !IS_IPAD || horizontalSizeClass == .compact else { return }
                 guard selectedTab == "Search" else { return }
                 if (type(of: destination.destination) == HashtagPath.self) {
                     navPath.removeLast(navPath.count)
