@@ -82,9 +82,9 @@ struct Maintenance {
                 return newResult
             }
             
-            let regex = ".*(" + ownAccountPubkeys.map {
+            let regex = "(" + ownAccountPubkeys.map {
                 NSRegularExpression.escapedPattern(for: serializedP($0))
-            }.joined(separator: "|") + ").*"
+            }.joined(separator: "|") + ")"
             
             let ownAccountBookmarkIds = allAccounts.reduce([String]()) { partialResult, account in
                 var newResult = Array(partialResult)
