@@ -16,6 +16,9 @@ struct NosturTabsView: View {
     @State var showTabBar = true
     @ObservedObject var ss:SettingsStore = .shared
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+//    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    
     var body: some View {
 //        let _ = Self._printChanges()
         HStack {
@@ -66,7 +69,7 @@ struct NosturTabsView: View {
             .frame(maxWidth: 600)
             .environmentObject(dim)
             .edgesIgnoringSafeArea(.all)
-            if UIDevice.current.userInterfaceIdiom == .pad {
+            if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                 DetailPane()
             }
         }
@@ -126,6 +129,13 @@ struct NosturTabsView: View {
                 showTabBar = false
             }
         }
+//        .overlay(alignment: .topLeading) {
+//            VStack {
+//                Text("h: \(horizontalSizeClass.debugDescription)")
+//                Text("v: \(verticalSizeClass.debugDescription)")
+//                Spacer()
+//            }
+//        }
     }
 
     private func tabTapped(_ tabName:String, oldTab:String) {

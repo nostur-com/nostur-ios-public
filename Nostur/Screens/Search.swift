@@ -40,6 +40,9 @@ struct Search: View {
     @State var backlog = Backlog()
     @ObservedObject var settings:SettingsStore = .shared
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+//    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    
     var isSearchingHashtag:Bool {
         let term = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         return isHashtag(term)
@@ -457,7 +460,8 @@ struct Search: View {
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
-                guard type(of: destination.destination) == Nevent1Path.self || type(of: destination.destination) == Nprofile1Path.self || type(of: destination.destination) == HashtagPath.self || !IS_IPAD else { return }
+                guard type(of: destination.destination) == Nevent1Path.self || type(of: destination.destination) == Nprofile1Path.self || type(of: destination.destination) == HashtagPath.self else { return }
+                guard !IS_IPAD || horizontalSizeClass == .compact else { return }
                 guard selectedTab == "Search" else { return }
                 if (type(of: destination.destination) == HashtagPath.self) {
                     navPath.removeLast(navPath.count)

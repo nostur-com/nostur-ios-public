@@ -16,6 +16,9 @@ struct NotificationsContainer: View {
     @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
     @State var navPath = NavigationPath()
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+//    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    
     var body: some View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
@@ -31,7 +34,7 @@ struct NotificationsContainer: View {
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
-            guard !IS_IPAD else { return }
+            guard !IS_IPAD || horizontalSizeClass == .compact else { return }
             guard selectedTab == "Notifications" else { return }
             navPath.append(destination.destination)
         }

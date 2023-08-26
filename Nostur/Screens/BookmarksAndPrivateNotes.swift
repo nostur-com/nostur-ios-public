@@ -13,6 +13,9 @@ struct BookmarksAndPrivateNotes: View {
     @AppStorage("selected_tab") var selectedTab = "Bookmarks"
     @AppStorage("selected_bookmarkssubtab") var selectedSubTab = "Bookmarks"
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+//    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    
     var body: some View {
         NavigationStack(path: $navPath) {
             VStack(spacing: 0) {
@@ -41,7 +44,7 @@ struct BookmarksAndPrivateNotes: View {
             .navigationBarTitleDisplayMode(.inline)
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
-                guard !IS_IPAD else { return }
+                guard !IS_IPAD || horizontalSizeClass == .compact else { return }
                 guard selectedTab == "Bookmarks" else { return }
                 navPath.append(destination.destination)
             }
