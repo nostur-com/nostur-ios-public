@@ -13,6 +13,9 @@ public typealias NRPostID = String
 // NRPost SHOULD BE CREATED IN BACKGROUND THREAD
 class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
+    // Has some subclass-ObservableObjects to isolate rerendering to specific view attributes:
+    // PostOrThreadAttributes, PostRowDeletableAttributes, NoteRowAttributes, PFPAttributes
+    
     class PostOrThreadAttributes: ObservableObject {
         @Published var parentPosts:[NRPost] = []
         
@@ -170,7 +173,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var missingPs:Set<String> // missing or have no contact info
     var fastTags:[(String, String, String?, String?)] = []
     
-    var isHighlight:Bool { highlightData != nil}
+    var isHighlight:Bool { highlightData != nil }
     var highlightData:KindHightlight?
     var fileMetadata:KindFileMetadata?
     

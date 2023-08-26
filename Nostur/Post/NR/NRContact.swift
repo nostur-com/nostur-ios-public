@@ -123,7 +123,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     private func listenForZapState() {
         self.contact.zapStateChanged
-            .receive(on: DispatchQueue.global(qos: .utility))
+            .subscribe(on: DispatchQueue.global())
             .sink { [weak self] (zapState, _) in
                 guard let self = self else { return }
                 guard zapState != zappableAttributes.zapState else { return }
@@ -134,7 +134,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     private func listenForNip05() {
         self.contact.nip05updated
-            .receive(on: DispatchQueue.global(qos: .utility))
+            .subscribe(on: DispatchQueue.global())
             .sink { [weak self] isVerified in
                 guard let self = self else { return }
                 DispatchQueue.main.async {
@@ -148,50 +148,52 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     private func listenForChanges() {
         self.contact.contactUpdated
-            .receive(on: DispatchQueue.global(qos: .utility))
+            .subscribe(on: DispatchQueue.global())
             .sink { [weak self] contact in
                 guard let self = self else { return }
                 
-                let anyName = contact.anyName
-                let fixedName = contact.fixedName
-                let display_name = contact.display_name
-                let name = contact.name
-                let pictureUrl = contact.picture
-                let about = contact.about
-                let couldBeImposter = contact.couldBeImposter
-                
-                let nip05verified = contact.nip05veried
-                let nip05domain = contact.nip05domain
-                let metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
-                let metadata_created_at = contact.metadata_created_at
-                
-                let anyLud = contact.anyLud
-                let lud06 = contact.lud06
-                let lud16 = contact.lud16
-                let zapperPubkey = contact.zapperPubkey
-                let zapState = contact.zapState
-                
-                DispatchQueue.main.async {
-                    self.objectWillChange.send()
+                DataProvider.shared().bg.perform {
+                    let anyName = contact.anyName
+                    let fixedName = contact.fixedName
+                    let display_name = contact.display_name
+                    let name = contact.name
+                    let pictureUrl = contact.picture
+                    let about = contact.about
+                    let couldBeImposter = contact.couldBeImposter
                     
-                    self.anyName = anyName
-                    self.fixedName = fixedName
-                    self.display_name = display_name
-                    self.name = name
-                    self.pictureUrl = pictureUrl
-                    self.about = about
-                    self.couldBeImposter = couldBeImposter
+                    let nip05verified = contact.nip05veried
+                    let nip05domain = contact.nip05domain
+                    let metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
+                    let metadata_created_at = contact.metadata_created_at
                     
-                    self.nip05verified = nip05verified
-                    self.nip05domain = nip05domain
-                    self.metaDataCreatedAt = metaDataCreatedAt
-                    self.metadata_created_at = metadata_created_at
+                    let anyLud = contact.anyLud
+                    let lud06 = contact.lud06
+                    let lud16 = contact.lud16
+                    let zapperPubkey = contact.zapperPubkey
+                    let zapState = contact.zapState
                     
-                    self.anyLud = anyLud
-                    self.lud06 = lud06
-                    self.lud16 = lud16
-                    self.zapperPubkey = zapperPubkey
-                    self.zappableAttributes.zapState = zapState
+                    DispatchQueue.main.async {
+                        self.objectWillChange.send()
+                        
+                        self.anyName = anyName
+                        self.fixedName = fixedName
+                        self.display_name = display_name
+                        self.name = name
+                        self.pictureUrl = pictureUrl
+                        self.about = about
+                        self.couldBeImposter = couldBeImposter
+                        
+                        self.nip05verified = nip05verified
+                        self.nip05domain = nip05domain
+                        self.metaDataCreatedAt = metaDataCreatedAt
+                        self.metadata_created_at = metadata_created_at
+                        
+                        self.anyLud = anyLud
+                        self.lud06 = lud06
+                        self.lud16 = lud16
+                        self.zapperPubkey = zapperPubkey
+                        self.zappableAttributes.zapState = zapState
+                    }
                 }
             }
             .store(in: &subscriptions)
@@ -247,7 +249,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
             
             DispatchQueue.main.async {
                 NosturState.shared.followingPublicKeys = followingPublicKeys
-                sendNotification(.followersChanged, account.followingPublicKeys)
+                sendNotification(.followersChanged, followingPublicKeys)
                 NosturState.shared.publishNewContactList()
             }
         }
