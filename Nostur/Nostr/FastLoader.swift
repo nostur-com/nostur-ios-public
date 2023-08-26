@@ -142,7 +142,7 @@ class FastLoader: ObservableObject {
     // Only for .nrPosts, not .events
     private func _loadNewer(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
         L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewer()")
-        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
+        let cancellationIds:[String: UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         
         let next = Event.fetchRequest()
         next.predicate = predicate

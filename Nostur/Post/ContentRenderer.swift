@@ -26,7 +26,6 @@ struct ContentRenderer: View { // VIEW things
         self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
     }
     
-    @State private var viewSize: CGSize = .zero
 //    @State var actualSize:CGSize? = nil
     
     var body: some View {

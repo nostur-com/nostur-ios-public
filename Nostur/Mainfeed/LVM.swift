@@ -273,10 +273,11 @@ class LVM: NSObject, ObservableObject {
             guard let self = self else { return }
             let appWoTactive = WOT_FILTER_ENABLED()
             var newNRPostLeafs:[NRPost] = []
-            var transformedObjectIds = Set<NRPostID>()
             for event in ((self.type == .relays && appWoTactive && self.wotEnabled) ? events.filter { $0.inWoT } : (appWoTactive ? events.filter { $0.inWoT } : events)) {
 //                guard !danglingObjectIds.contains(event.objectID) else { continue } // Skip if the post is already on screen
+            for event in filteredEvents {
                 guard !danglingIds.contains(event.id) else { continue }
+                // Skip if the post is already on screen
                 guard !leafsAndParentIdsOnScreen.contains(event.id) else {
                     if let existingNRPost = currentNRPostLeafs.first(where: { $0.id == event.id }) {
                         newNRPostLeafs.append(existingNRPost)
@@ -285,20 +286,20 @@ class LVM: NSObject, ObservableObject {
                 } // Skip if the post is already on screen
 
                 let newNRPostLeaf = NRPost(event: event, withParents: hideReplies ? false : true, withRepliesCount: true)
-                transformedObjectIds.insert(newNRPostLeaf.id)
+                transformedIds.insert(newNRPostLeaf.id)
                 newNRPostLeafs.append(newNRPostLeaf)
             }
             
             let added = newNRPostLeafs
 //                .filter(notMuted) // TODO: ADD BACK NOT MUTED IN RIGHT CONTEXT / THREAD
 
-            guard !transformedObjectIds.isEmpty else {
+            guard !transformedIds.isEmpty else {
                 DispatchQueue.main.async {
                     self.performingLocalOlderFetch = false
                 }
                 return
             }
-            L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedObjectIds.count) posts - \(taskId)")
+            L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedIds.count) posts - \(taskId)")
 
             if currentNRPostLeafs.isEmpty {
                 let leafThreads = self.renderLeafs(added, onScreenSeen:self.onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
@@ -546,7 +547,7 @@ class LVM: NSObject, ObservableObject {
                 // so we don't have gaps like before when using just .filter { }
                 truncatedPost.parentPosts = (parentsKeep + [replyTo]) // add back the replyTo, so we don't have dangling replies.
             }
-            truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count
+            truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count // Data race in Nostur.NRPost.threadPostsCount.setter : Swift.Int at 0x10fbe9680 - thread 311
             truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
             renderedIds.append(contentsOf: [truncatedPost.id] + truncatedPost.parentPosts.map { $0.id })
             renderedPosts.append(truncatedPost)
@@ -1523,7 +1524,7 @@ func notMuted(_ nrPost:NRPost) -> Bool {
 
 func threadCount(_ nrPosts:[NRPost]) -> Int {
     nrPosts.reduce(0) { partialResult, nrPost in
-        (partialResult + nrPost.threadPostsCount)
+        (partialResult + nrPost.threadPostsCount) //  Data race in Nostur.NRPost.threadPostsCount.setter : Swift.Int at 0x10fbe9680 - thread 1
     }
 }
 

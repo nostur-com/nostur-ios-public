@@ -197,7 +197,7 @@ struct NotificationsPosts: View {
     
     func saveLastSeenPostCreatedAt() {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Posts" else { return }
-        if let first = fl.nrPosts.first, let account = ns.account {
+        if let first = fl.nrPosts.first {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
                 if let account = NosturState.shared.bgAccount {
