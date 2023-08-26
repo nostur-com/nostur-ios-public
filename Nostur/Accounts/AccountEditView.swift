@@ -247,11 +247,31 @@ extension AccountEditView {
             account.privateKey = keys.privateKeyHex()
         }
         do {
+                        
             try publishMetadataEvent(account)
+            
+            // update zapper pubkey if lud16 changed
+            updateZapperPubkey()
             dismiss()
         }
         catch {
             L.og.error("Error saving account")
+        }
+    }
+    
+    func updateZapperPubkey() {
+        guard account.lud16 != "" else { return }
+        guard let contact = Contact.fetchByPubkey(account.publicKey, context: viewContext) else { return }
+        guard let contactLud16 = contact.lud16, contactLud16 != account.lud16 else { return }
+        
+        Task {
+            let response = try await LUD16.getCallbackUrl(lud16: account.lud16)
+            if let zapperPubkey = response.nostrPubkey, (response.allowsNostr ?? false) {
+                DispatchQueue.main.async {
+                    contact.zapperPubkey = zapperPubkey
+                }
+                L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+            }
         }
     }
     
