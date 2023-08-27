@@ -136,21 +136,35 @@ struct FooterFragmentView: View {
                     Image("BookmarkIconActive")
                         .foregroundColor(.orange)
                         .padding([.top,.leading,.bottom], 5)
-                        .contentShape(Rectangle())
-                    //                        .padding(.leading, 10)
-                        .onTapGesture {
-                            NosturState.shared.removeBookmark(nrPost)
+                        .overlay {
+                            Color.clear
+                                .frame(width: 30)
+                                .offset(x: -10)
+                                .contentShape(Rectangle())
+                                .highPriorityGesture(
+                                            TapGesture()
+                                                .onEnded { _ in
+                                                    NosturState.shared.removeBookmark(nrPost)
+                                                }
+                                        )
                         }
                 }
                 else {
                     Image("BookmarkIcon")
                         .padding([.top,.leading,.bottom], 5)
-                    //                        .padding(.leading, 10)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                            impactMed.impactOccurred()
-                            NosturState.shared.addBookmark(nrPost)
+                        .overlay {
+                            Color.clear
+                                .frame(width: 30)
+                                .offset(x: -10)
+                                .contentShape(Rectangle())
+                                .highPriorityGesture(
+                                            TapGesture()
+                                                .onEnded { _ in
+                                                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                                                    impactMed.impactOccurred()
+                                                    NosturState.shared.addBookmark(nrPost)
+                                                }
+                                        )
                         }
                 }
                 
