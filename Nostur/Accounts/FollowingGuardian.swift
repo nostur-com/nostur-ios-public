@@ -66,7 +66,6 @@ class FollowingGuardian: ObservableObject {
                 guard nEvent.kind == .contactList else { return }
                 guard nEvent.publicKey == NosturState.shared.activeAccountPublicKey else { return }
                 guard let account = NosturState.shared.account else { return }
-                guard account.privateKey != nil else { return }
                 
                 // TODO: Make this work for all accounts, not just active
                 let pubkeysOwn = Set(account.follows?.filter { !$0.privateFollow } .map({ c in c.pubkey }) ?? [])
@@ -79,6 +78,8 @@ class FollowingGuardian: ObservableObject {
                 self.followNewContacts(added: added, account: account)
                 let tagsRelay = nEvent.tTags()
                 self.followTags(tagsRelay, account: account)
+                
+                guard account.privateKey != nil else { return }
                 
                 if !removed.isEmpty {
                     sendNotification(.requestConfirmationChangedFollows, removed)
