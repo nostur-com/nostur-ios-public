@@ -47,7 +47,7 @@ struct DetailPane: View {
                                     }
                                 },
                                 onClose: {
-                                    if (tm.selected == tm.tabs[index]) {
+                                    if (index < tm.tabs.count && tm.selected == tm.tabs[index]) {
                                         if (index != 0) {
                                             tm.selected = tm.tabs[(index - 1)]
                                             if let id = tm.selected?.id {
