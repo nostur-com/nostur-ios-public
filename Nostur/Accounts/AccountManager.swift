@@ -244,10 +244,12 @@ func publishMetadataEvent(_ account:Account) throws {
     
     // create nostr .setMetadata event
     var setMetadataContent = NSetMetadata(name: account.name, about: account.about, picture: account.picture)
-    if account.nip05 != "" { setMetadataContent.nip05 = account.nip05 }
-    if account.lud16 != "" { setMetadataContent.lud16 = account.lud16 }
-    if account.lud06 != "" { setMetadataContent.lud06 = account.lud06 }
-    if account.banner != "" { setMetadataContent.banner = account.banner }
+    
+    setMetadataContent.nip05 = account.nip05 != "" ? account.nip05 : nil
+    setMetadataContent.lud16 = account.lud16 != "" ? account.lud16 : nil
+    setMetadataContent.lud06 = account.lud06 != "" ? account.lud06 : nil
+    setMetadataContent.banner = account.banner != "" ? account.banner : nil
+    
     //        if account.display_name != "" { setMetadataContent.display_name = account.display_name }
     
     do {
