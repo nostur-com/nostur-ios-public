@@ -133,10 +133,12 @@ struct PostHeader: View {
             guard contact.couldBeImposter == -1 else { return }
             guard !contact.following else { return }
             
+            let contactAnyName = contact.anyName.lowercased()
+            
             DataProvider.shared().bg.perform {
                 guard let account = NosturState.shared.bgAccount else { return }
                 guard let similarContact = account.follows_.first(where: {
-                    isSimilar(string1: $0.anyName.lowercased(), string2: contact.anyName.lowercased())
+                    isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
                 guard let cPic = contact.pictureUrl, let wotPic = similarContact.picture else { return }
                 Task.detached(priority: .background) {

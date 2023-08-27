@@ -134,13 +134,13 @@ struct ProfileRow: View {
                 guard contact.metadata_created_at != 0 else { return }
                 guard contact.couldBeImposter == -1 else { return }
                 guard let cPic = contact.picture else { return }
-                let contactAnyName = contact.anyName
+                let contactAnyName = contact.anyName.lowercased()
                 let cPubkey = contact.pubkey
                 
                 DataProvider.shared().bg.perform {
                     guard let account = NosturState.shared.bgAccount else { return }
                     guard let similarContact = account.follows_.first(where: {
-                        isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName.lowercased())
+                        isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                     }) else { return }
                     guard let wotPic = similarContact.picture else { return }
                     
