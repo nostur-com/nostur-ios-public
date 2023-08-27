@@ -28,6 +28,7 @@ struct AccountEditView: View {
     @State var subscriptions = Set<AnyCancellable>()
     @State var newPicture:UIImage?
     @State var newBanner:UIImage?
+    @State var anyLud = ""
     
     var body: some View {
         let shouldDisable = account.privateKey == nil || account.privateKey == ""
@@ -69,19 +70,13 @@ struct AccountEditView: View {
                         }
                         //                    .listRowInsets(EdgeInsets())
                         
-                        Section(header: Text("Lightning Address (LUD-16)", comment: "Label for entering a LUD-16 Lightning Address on Edit Profile screen") ) {
-                            TextField("", text: $account.lud16).keyboardType(.emailAddress).disabled(shouldDisable)
+                        Section(header: Text("Lightning Address (LUD-06/16)", comment: "Label for entering a Lightning Address on Edit Profile screen") ) {
+                            TextField("", text: $anyLud).keyboardType(.emailAddress).disabled(shouldDisable)
                                 .keyboardType(.URL)
                                 .disableAutocorrection(true)
                                 .textInputAutocapitalization(.never)
                         }
                         
-                        Section(header: Text("Lightning Address (LUD-06)", comment: "Label for entering a LUD-06 Lighting Address on Edit Profile screen") ) {
-                            TextField("", text: $account.lud06).keyboardType(.URL).disabled(shouldDisable)
-                                .keyboardType(.URL)
-                                .disableAutocorrection(true)
-                                .textInputAutocapitalization(.never)
-                        }
                         if (newPicture == nil) {
                             Section(header: Text("Profile picture URL", comment: "Label for entering an URL to profile picture on Edit Profile screen") ) {
                                 TextField(String("https://nostur.com/profile.jpg"), text: $account.picture).keyboardType(.URL).disabled(shouldDisable)
@@ -214,6 +209,13 @@ struct AccountEditView: View {
             Button("OK", role: .cancel) { }
         }
         .onAppear {
+            if account.lud16.contains("@") {
+                anyLud = account.lud16
+            }
+            else if !account.lud06.isEmpty {
+                anyLud = account.lud06
+            }
+            
             if (account.privateKey == nil) {
                 let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: account.publicKey))
                 sp.sendMessage(message)
@@ -247,7 +249,18 @@ extension AccountEditView {
             account.privateKey = keys.privateKeyHex()
         }
         do {
-                        
+            if anyLud.contains("@") { // email-like address entered
+                account.lud16 = anyLud.replacingOccurrences(of: "mailto:", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                account.lud06 = ""
+            }
+            else if !anyLud.isEmpty { // lnurl entered
+                account.lud16 = ""
+                account.lud06 = anyLud.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            else { // nothing entered
+                account.lud16 = ""
+                account.lud06 = ""
+            }
             try publishMetadataEvent(account)
             
             // update zapper pubkey if lud16 changed
