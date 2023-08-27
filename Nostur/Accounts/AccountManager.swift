@@ -32,14 +32,19 @@ class AccountManager {
         return account
     }
     
-    func getPrivateKeyHex(pubkey:String) -> String? {
+    func getPrivateKeyHex(pubkey:String, account: Account) -> String? {
         let keychain = Keychain(service: "nostur.com.Nostur")
             .synchronizable(true)
         do {
             let privateKeyHex = try keychain
                 .get(pubkey)
             return privateKeyHex
-        } catch {
+        }
+        catch Status.itemNotFound {
+            account.noPrivateKey = true
+            return nil
+        }
+        catch {
             return nil
         }
     }

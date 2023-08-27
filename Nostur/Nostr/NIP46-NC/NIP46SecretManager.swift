@@ -32,7 +32,12 @@ class NIP46SecretManager {
             let privateKeyHex = try keychain
                 .get(account.publicKey)
             return privateKeyHex
-        } catch {
+        }
+        catch Status.itemNotFound {
+            account.noPrivateKey = true
+            return nil
+        }
+        catch {
             L.og.error("🔴🔴🔴 could not get key from keychain")
             return nil
         }
