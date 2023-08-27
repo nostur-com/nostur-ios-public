@@ -81,12 +81,12 @@ class FollowerNotifier {
                 guard let self = self else { return }
                 let account = notification.object as! Account
                 guard account.privateKey != nil else { return }
-                L.og.info("Checking for new after account switch")
+                L.og.info("Checking for new followers after account switch")
                 let pubkey = account.publicKey
                 
                 self.ctx.perform { [weak self] in
                     guard let self = self else { return }
-                    if let mostRecent = PersistentNotification.fetchPersistentNotification(context: self.ctx) {
+                    if let mostRecent = PersistentNotification.fetchPersistentNotification(type: .newFollowers, context: self.ctx) {
                         let since = NTimestamp(date: mostRecent.createdAt)
                         req(RM.getFollowers(pubkey: pubkey, since: since))
                     }
@@ -108,7 +108,7 @@ class FollowerNotifier {
                 guard nEvent.pTags().contains(NosturState.shared.activeAccountPublicKey) else { return }
                 guard let account = NosturState.shared.account else { return }
                 guard !self.currentFollowerPubkeys.isEmpty else { return }
-                guard account.privateKey != nil else { return }
+//                guard account.privateKey != nil else { return }
                 
                 if !self.currentFollowerPubkeys.contains(nEvent.publicKey) {
                     self.newFollowerPubkeys.insert(nEvent.publicKey)
