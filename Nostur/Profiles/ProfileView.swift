@@ -203,6 +203,7 @@ struct ProfileView: View {
                                 } label: {
                                     Image(systemName: "ellipsis")
                                         .fontWeight(.bold)
+                                        .padding(5)
                                 }
                                 if (ns.followsYou(contact)) {
                                     Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
