@@ -191,12 +191,12 @@ class NRTextParser { // TEXT things
             replacedString.replaceSubrange(matchRange, with: replacement)
             
             // Check if the next index is valid
-            let newStartIndex = replacedString.index(after: matchRange.lowerBound)
-            if newStartIndex < replacedString.endIndex {
-                range = newStartIndex..<replacedString.endIndex
-            } else {
+            if matchRange.lowerBound >= replacedString.endIndex {
                 break
             }
+
+            let newStartIndex = replacedString.index(after: matchRange.lowerBound)
+            range = newStartIndex..<replacedString.endIndex
         }
         return TextWithPs(text: replacedString, pTags: pTags)
     }
