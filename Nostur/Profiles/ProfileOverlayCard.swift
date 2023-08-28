@@ -229,9 +229,11 @@ struct ProfileOverlayCard: View {
             guard let cPic = contact.pictureUrl else { return }
             let contactAnyName = contact.anyName.lowercased()
             let cPubkey = contact.pubkey
+            let currentAccountPubkey = NosturState.shared.activeAccountPublicKey
             
             DataProvider.shared().bg.perform {
                 guard let account = NosturState.shared.bgAccount else { return }
+                guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows_.first(where: {
                     isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
