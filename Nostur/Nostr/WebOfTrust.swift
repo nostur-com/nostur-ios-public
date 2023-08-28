@@ -125,12 +125,12 @@ class WebOfTrust: ObservableObject {
         task.fetch()
     }
     
-    private func regenerateWoTWithFollowsOf(_ pubkey:String) {
+    private func regenerateWoTWithFollowsOf(_ otherPubkey:String) {
         var followsOfPubkey = Set<String>()
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", pubkey)
+            fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", otherPubkey)
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
             if let list = try? DataProvider.shared().bg.fetch(fr).first {
                 followsOfPubkey = followsOfPubkey.union( Set(list.fastPs.map { $0.1 }) )
@@ -141,7 +141,7 @@ class WebOfTrust: ObservableObject {
                 self.followingFollowingPubkeys = newSet
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
             }
-            self.storeData(pubkeys: newSet, pubkey: pubkey)
+            self.storeData(pubkeys: newSet, pubkey: self.pubkey)
         }
     }
     
