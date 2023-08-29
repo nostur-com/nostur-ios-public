@@ -33,6 +33,7 @@
 		1F0A25562A3E139E00178A5C /* WebOfTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A25552A3E139E00178A5C /* WebOfTrust.swift */; };
 		1F0A3C252A0C113700B30D7E /* Kind1063.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A3C242A0C113700B30D7E /* Kind1063.swift */; };
 		1F0A6BDC2A7DF97100258255 /* FeedSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A6BDB2A7DF97100258255 /* FeedSelector.swift */; };
+		1F0F0F622A9CC75300E23BA7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0F0F612A9CC75300E23BA7 /* Theme.swift */; };
 		1F0F0F642A9D220E00E23BA7 /* Themes.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */; };
 		1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F35672A31C76900AA9C41 /* InfoPlist.strings */; };
 		1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F356A2A31C76900AA9C41 /* Localizable.strings */; };
@@ -415,6 +416,7 @@
 		1F0A25552A3E139E00178A5C /* WebOfTrust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebOfTrust.swift; sourceTree = "<group>"; };
 		1F0A3C242A0C113700B30D7E /* Kind1063.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1063.swift; sourceTree = "<group>"; };
 		1F0A6BDB2A7DF97100258255 /* FeedSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSelector.swift; sourceTree = "<group>"; };
+		1F0F0F612A9CC75300E23BA7 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Themes.xcassets; sourceTree = "<group>"; };
 		1F0F35682A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1F0F356B2A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -1861,6 +1863,7 @@
 				1F2DD4302A29F5B70028A062 /* AlbyNWCConnectSheet.swift in Sources */,
 				1F6943B72A2B017500064DBA /* LightningEffect.swift in Sources */,
 				1F20939F2A43FDCA0085E7D2 /* DetailFooterFragment.swift in Sources */,
+				1F0F0F622A9CC75300E23BA7 /* Theme.swift in Sources */,
 				1FD78EEF2A0CB78B003E7B3E /* Kind1Default.swift in Sources */,
 				1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */,
 				1FC78F6729CA18410009C1C7 /* Ago.swift in Sources */,
