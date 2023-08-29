@@ -106,7 +106,7 @@ class FollowerNotifier {
                 let nEvent = notification.object as! NEvent
                 guard nEvent.kind == .contactList else { return }
                 guard nEvent.pTags().contains(NosturState.shared.activeAccountPublicKey) else { return }
-                guard let account = NosturState.shared.account else { return }
+//                guard let account = NosturState.shared.account else { return }
                 guard !self.currentFollowerPubkeys.isEmpty else { return }
 //                guard account.privateKey != nil else { return }
                 

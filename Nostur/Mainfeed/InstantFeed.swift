@@ -117,7 +117,7 @@ class InstantFeed {
                             guard let self = self else { return }
                             guard kind3.pubkey == pubkey else { return }
                             L.og.notice("🟪 Found clEvent already being processed by onboarding task")
-                            self.backlog.remove(getContactListTask)
+                            self.backlog.remove(getContactListTask) // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 5899
                             self.pubkeys = Set(kind3.fastPs.map { $0.1 })
                         }
                 }

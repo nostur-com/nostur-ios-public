@@ -59,12 +59,11 @@ struct NewFollowersNotificationView_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadNewFollowersNotification()
         }) {
-            VStack {
+            SmoothListMock {
                 if let pNotification = PreviewFetcher.fetchPersistentNotification() {
-                    NewFollowersNotificationView(notification: pNotification)
-                        .roundedBoxShadow()
-                        .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                        .padding(.vertical, 10)
+                    Box {
+                        NewFollowersNotificationView(notification: pNotification)
+                    }
                 }
             }
         }
