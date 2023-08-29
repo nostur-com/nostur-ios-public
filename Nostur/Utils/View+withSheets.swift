@@ -306,6 +306,7 @@ private struct WithSheets: ViewModifier {
             .onReceive(receiveNotification(.sharePostScreenshot)) { notification in
                 let nrPost = notification.object as! NRPost
                 nrPost.following = true // Force load image for screenshot...
+                nrPost.isPreview = true // Will hide 'Sent to X relays' in footer
                 
                 let renderer = ImageRenderer(content:
                     VStack(spacing:0) {
@@ -330,7 +331,13 @@ private struct WithSheets: ViewModifier {
                     }
                     .frame(width: 600)
                     .padding(10)
-                    .roundedBoxShadow()
+                    
+                    .background(
+                        RoundedRectangle(cornerRadius: 10.0)
+                            .foregroundColor(theme.background)
+                            .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
+                    )
+                                             
                     .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                     .padding(.vertical, 10)
                     .environmentObject(dim)
