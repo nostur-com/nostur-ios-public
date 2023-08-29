@@ -151,6 +151,9 @@ struct Kind1Default: View {
                     FooterFragmentView(nrPost: nrPost)
                 }
             }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxHeight: isDetail ? 8800 : DIMENSIONS.POST_MAX_ROW_HEIGHT, alignment: .topLeading)
+            .clipped()
         }
         .background(alignment: .leading) {
             if connect == .bottom || connect == .both {
