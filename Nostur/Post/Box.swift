@@ -23,6 +23,8 @@ struct Box<Content: View>: View {
         // Then in the individual subviews handle navigation tap
         // Mostly needed for making the area below pfp on post tapable, cannot do that there without breaking other things. must be done on a wrapper view
         case background
+        
+        case noNavigation // no navigation
     }
     
     init(nrPost:NRPost? = nil, navMode:NavigationMode? = .background, @ViewBuilder _ content:()->Content) {
@@ -43,6 +45,23 @@ struct Box<Content: View>: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     navigate()
+                }
+                .transaction { transaction in
+                    transaction.animation = nil
+                    transaction.disablesAnimations = true
+                }
+        }
+        else if navMode == .noNavigation {
+            content
+                .padding(kind == 30023 ? 20 : 10)
+                .background(kind == 30023 ? theme.secondaryBackground : theme.background)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    
+                }
+                .transaction { transaction in
+                    transaction.animation = nil
+                    transaction.disablesAnimations = true
                 }
         }
         else {

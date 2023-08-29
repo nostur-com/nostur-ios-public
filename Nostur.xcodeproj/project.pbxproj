@@ -249,6 +249,7 @@
 		1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */; };
 		1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */; };
 		1FBE253C2A9DC4F800F60FCF /* NRButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE253B2A9DC4F700F60FCF /* NRButton.swift */; };
+		1FBE253E2A9E5A7400F60FCF /* Settings+ThemePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE253D2A9E5A7400F60FCF /* Settings+ThemePicker.swift */; };
 		1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8221299A6F3D00FB41CE /* LUD16.swift */; };
 		1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */; };
 		1FC0A9512A0F8B9D00F9ABF6 /* ProfileZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */; };
@@ -631,6 +632,7 @@
 		1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FBE253B2A9DC4F700F60FCF /* NRButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NRButton.swift; path = Nostur/ViewFragments/NRButton.swift; sourceTree = "<group>"; };
+		1FBE253D2A9E5A7400F60FCF /* Settings+ThemePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Settings+ThemePicker.swift"; sourceTree = "<group>"; };
 		1FBE8221299A6F3D00FB41CE /* LUD16.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LUD16.swift; sourceTree = "<group>"; };
 		1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentAmountSelector.swift; sourceTree = "<group>"; };
 		1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileZaps.swift; sourceTree = "<group>"; };
@@ -903,6 +905,7 @@
 				1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */,
 				1F21442D29A797B80090E78E /* SettingsStore.swift */,
 				1F810B2D29E65639006B1614 /* TermsAndConditions.swift */,
+				1FBE253D2A9E5A7400F60FCF /* Settings+ThemePicker.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -1865,6 +1868,7 @@
 				1F3309832989819700D4D8CF /* Maintenance.swift in Sources */,
 				1F2DD4302A29F5B70028A062 /* AlbyNWCConnectSheet.swift in Sources */,
 				1F6943B72A2B017500064DBA /* LightningEffect.swift in Sources */,
+				1FBE253E2A9E5A7400F60FCF /* Settings+ThemePicker.swift in Sources */,
 				1F20939F2A43FDCA0085E7D2 /* DetailFooterFragment.swift in Sources */,
 				1F0F0F622A9CC75300E23BA7 /* Theme.swift in Sources */,
 				1FD78EEF2A0CB78B003E7B3E /* Kind1Default.swift in Sources */,
