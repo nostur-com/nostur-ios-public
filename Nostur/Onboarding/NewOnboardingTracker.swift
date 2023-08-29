@@ -181,6 +181,7 @@ class NewOnboardingTracker {
             let existingAndCreatedContacts = self.createContactsFromPs(pTags)
             account.addToFollows(NSSet(array: existingAndCreatedContacts))
             let followingPublicKeys = account.followingPublicKeys
+            NosturState.shared.bgFollowingPublicKeys = followingPublicKeys
             DataProvider.shared().bgSave()
             DispatchQueue.main.async {
                 if NosturState.shared.activeAccountPublicKey == pubkey {
