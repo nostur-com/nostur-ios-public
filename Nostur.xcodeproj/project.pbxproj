@@ -248,6 +248,7 @@
 		1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901E2A85128A007A1550 /* String+StringMetric.swift */; };
 		1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */; };
 		1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */; };
+		1FBE253C2A9DC4F800F60FCF /* NRButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE253B2A9DC4F700F60FCF /* NRButton.swift */; };
 		1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8221299A6F3D00FB41CE /* LUD16.swift */; };
 		1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */; };
 		1FC0A9512A0F8B9D00F9ABF6 /* ProfileZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */; };
@@ -629,6 +630,7 @@
 		1FBB901E2A85128A007A1550 /* String+StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+StringMetric.swift"; sourceTree = "<group>"; };
 		1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1FBE253B2A9DC4F700F60FCF /* NRButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NRButton.swift; path = Nostur/ViewFragments/NRButton.swift; sourceTree = "<group>"; };
 		1FBE8221299A6F3D00FB41CE /* LUD16.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LUD16.swift; sourceTree = "<group>"; };
 		1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentAmountSelector.swift; sourceTree = "<group>"; };
 		1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileZaps.swift; sourceTree = "<group>"; };
@@ -1264,6 +1266,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1FBE253B2A9DC4F700F60FCF /* NRButton.swift */,
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
@@ -1983,6 +1986,7 @@
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
 				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
 				1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */,
+				1FBE253C2A9DC4F800F60FCF /* NRButton.swift in Sources */,
 				1FE4D91D2A5442450064F649 /* SettingsDefaultZapAmount.swift in Sources */,
 				1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */,
 				1F49C80629B8D7EA005C960D /* NewQuoteRepost.swift in Sources */,
