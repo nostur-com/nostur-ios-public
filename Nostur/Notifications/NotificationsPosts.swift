@@ -56,7 +56,6 @@ struct NotificationsPosts: View {
                         Box(nrPost: pNotification.post!) {
                             PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true)
                         }
-                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                         .id(pNotification.id)
                     }
                 }

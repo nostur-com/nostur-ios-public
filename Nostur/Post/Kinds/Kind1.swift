@@ -128,6 +128,9 @@ struct Kind1: View {
                     FooterFragmentView(nrPost: nrPost)
                 }
             }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxHeight: isDetail ? 8800 : DIMENSIONS.POST_MAX_ROW_HEIGHT, alignment: .topLeading)
+            .clipped()
         }
     }
 }
