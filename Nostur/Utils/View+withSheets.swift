@@ -72,6 +72,7 @@ private struct WithSheets: ViewModifier {
             .fullScreenCover(item: $fullImage) { f in
                 FullImageViewer(fullImageURL: f.url)
                     .environmentObject(theme)
+                    .presentationBackground(theme.background)
             }
         
             .onReceive(receiveNotification(.editingPrivateNote)) { notification in
@@ -81,6 +82,7 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $privateNote) { note in
                 EditPrivateNoteSheet(privateNote: note)
                     .environmentObject(theme)
+                    .presentationBackground(theme.background)
             }
            
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
@@ -90,6 +92,7 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $post) { post in
                 NewPrivateNoteSheet(post: post)
                     .environmentObject(theme)
+                    .presentationBackground(theme.background)
             }
              
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
@@ -99,6 +102,7 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $contact) { contact in
                 NewPrivateNoteSheet(contact: contact)
                     .environmentObject(theme)
+                    .presentationBackground(theme.background)
             }
         
             .onReceive(receiveNotification(.reportPost), perform: { notification in
@@ -205,6 +209,7 @@ private struct WithSheets: ViewModifier {
                             .environmentObject(theme)
                     }
                 }
+                .presentationBackground(theme.background)
             }
         
             .sheet(item: $quoteOrRepostEvent) { event in
@@ -217,6 +222,7 @@ private struct WithSheets: ViewModifier {
                             .presentationDragIndicator(.visible)
                     }
                     .environmentObject(theme)
+                    .presentationBackground(theme.background)
                 }
                 else {
                     QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
@@ -225,6 +231,7 @@ private struct WithSheets: ViewModifier {
                         .presentationDetents([.height(200)])
                         .presentationDragIndicator(.visible)
                         .environmentObject(theme)
+                        .presentationBackground(theme.background)
                 }
             }
         
@@ -245,6 +252,7 @@ private struct WithSheets: ViewModifier {
                             .environmentObject(theme)
                     }
                 }
+                .presentationBackground(theme.background)
             }
         
             .onReceive(receiveNotification(.showZapSheet)) { notification in
@@ -276,6 +284,7 @@ private struct WithSheets: ViewModifier {
                         .environmentObject(ns)
                         .environmentObject(theme)
                 }
+                .presentationBackground(theme.background)
             }
         
             // Lazy note context menu (because Menu() on every post is slow???)
@@ -412,7 +421,7 @@ private struct WithSheets: ViewModifier {
                 if let m = miniProfileSheetInfo {
                     ZStack(alignment:.topLeading) {
                         Rectangle()
-                            .fill(.ultraThinMaterial)
+                            .fill(.thinMaterial)
                             .opacity(0.5)
                             .zIndex(50)
                             .onTapGesture {

@@ -8,18 +8,22 @@
 import SwiftUI
 
 struct FeedSettings_Hashtags: View {
+    @EnvironmentObject var theme:Theme
     @State public var hashtags:[String]
     public var onChange:(([String]) -> ())?
     var body: some View {
         List {
             ForEach(hashtags, id:\.self) { tag in
                 Text(String(format:"#%@", tag))
+                    .listRowBackground(theme.background)
             }
             .onDelete { index in
                 hashtags.remove(atOffsets: index)
             }
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(theme.listBackground)
         .onChange(of: hashtags) { newHashtags in
             onChange?(newHashtags)
         }

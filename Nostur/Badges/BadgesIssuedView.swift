@@ -21,11 +21,12 @@ struct BadgesIssuedContainer:View {
         if (ns.account != nil) {
             BadgesIssuedView(pubkey: ns.account!.publicKey)
         }
-        else { Text("No account selected")}
+        else { Text("No account selected") }
     }
 }
 
 struct BadgesIssuedView: View {
+    @EnvironmentObject var theme:Theme
     @State var createNewBadgeSheetShown = false
     @FetchRequest
     var badges:FetchedResults<Event>
@@ -46,8 +47,12 @@ struct BadgesIssuedView: View {
                 NavigationLink(value: Badge(badge)) {
                     BadgeIssuedRow(badge: badge)
                 }
+                .listRowBackground(theme.background)
             }
+            .scrollContentBackground(.hidden)
+            .background(theme.listBackground)
         }
+        .background(theme.listBackground)
         .onAppear {
             // fetch missing badge definitions:
             // or just all...
@@ -74,6 +79,7 @@ struct BadgesIssuedView: View {
 }
 
 struct BadgeIssuedRow: View {
+    @EnvironmentObject var theme:Theme
     var badge:Event
     var nBadge:NEvent { badge.toNEvent() }
     
@@ -139,6 +145,7 @@ struct BadgeIssuedRow: View {
                 Text("Awarded to \(badge.awardedTo.count) people", comment: "Text showing how many badges have been awarded").font(.caption)
             }.padding(10)
         }
+        .background(theme.background)
         .navigationTitle("")
     }
     
