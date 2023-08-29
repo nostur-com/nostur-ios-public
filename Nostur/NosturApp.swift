@@ -25,12 +25,17 @@ struct NosturApp: App {
     private var zpvq:ZapperPubkeyVerificationQueue = .shared
     private var nip05verifier:NIP05Verifier = .shared
     private var ip:ImageProcessing = .shared
+    @StateObject private var theme:Theme = .default
     
     var body: some Scene {
         WindowGroup {
             // Not sure why the preview canvas is loading this on every other view so wrap in condition:
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 AppView()
+                    .background(theme.listBackground)
+                    .environmentObject(theme)
+                    .buttonStyle(NRButtonStyle(theme: theme))
+                    .tint(theme.accent)
             }
         }
         .onChange(of: scenePhase) { newScenePhase in
