@@ -21,59 +21,109 @@ struct FeedSettings: View {
                 showFeedSettings = false
             }
             .overlay(alignment: .top) {
-                VStack(alignment: .leading) {
-                    Text("Settings for \(lvm.pubkey != nil ? String(localized: "Following") : lvm.name)")
-                        .fontWeight(.bold)
-                        .hCentered()
-                    Toggle(isOn: $lvm.hideReplies.not) {
-                        Text("Show replies")
-                    }
-                    if lvm.type == .relays {
-                        Toggle(isOn: $lvm.wotEnabled) {
-                            Text("Web of Trust filter")
+                Box {
+                    VStack(alignment: .leading) {
+                        Text("App theme")
+                            .fontWeight(.bold)
+                            .hCentered()
+                        HStack {
+                            Spacer()
+                            Color("defaultAccentColor")
+                                .frame(width: 25, height: 25)
+                                .onTapGesture {
+                                    Theme.default.loadDefault()
+                                    showFeedSettings = false
+                                }
+                            Color("purpleAccentColor")
+                                .frame(width: 25, height: 25)
+                                .onTapGesture {
+                                    Theme.default.loadPurple()
+                                    showFeedSettings = false
+                                }
+                            Color("redAccentColor")
+                                .frame(width: 25, height: 25)
+                                .onTapGesture {
+                                    Theme.default.loadRed()
+                                    showFeedSettings = false
+                                }
+                            Color("greenAccentColor")
+                                .frame(width: 25, height: 25)
+                                .onTapGesture {
+                                    Theme.default.loadGreen()
+                                    showFeedSettings = false
+                                }
+                            Color("blueAccentColor")
+                                .frame(width: 25, height: 25)
+                                .onTapGesture {
+                                    Theme.default.loadBlue()
+                                    showFeedSettings = false
+                                }
+                            Color("pinkAccentColor")
+                                .frame(width: 25, height: 25)
+                                .onTapGesture {
+                                    Theme.default.loadPink()
+                                    showFeedSettings = false
+                                }
+                            Color("orangeAccentColor")
+                                .frame(width: 25, height: 25)
+                                .onTapGesture {
+                                    Theme.default.loadOrange()
+                                    showFeedSettings = false
+                                }
+                            Spacer()
                         }
-                    }
-                    Group {
+                        .padding(.bottom, 15)
+                        Text("Settings for \(lvm.pubkey != nil ? String(localized: "Following") : lvm.name)")
+                            .fontWeight(.bold)
+                            .hCentered()
+                        Toggle(isOn: $lvm.hideReplies.not) {
+                            Text("Show replies")
+                        }
                         if lvm.type == .relays {
-                            Button("Configure relays...") {
-                                guard let list = list else { return }
-                                navigateToOnMain(list)
+                            Toggle(isOn: $lvm.wotEnabled) {
+                                Text("Web of Trust filter")
                             }
                         }
-                        else if lvm.pubkey == nil && lvm.id != "Explore" {
-                            Button("Configure contacts...") {
-                                guard let list = list else { return }
-                                navigateToOnMain(list)
+                        Group {
+                            if lvm.type == .relays {
+                                Button("Configure relays...") {
+                                    guard let list = list else { return }
+                                    navigateToOnMain(list)
+                                }
+                            }
+                            else if lvm.pubkey == nil && lvm.id != "Explore" {
+                                Button("Configure contacts...") {
+                                    guard let list = list else { return }
+                                    navigateToOnMain(list)
+                                }
                             }
                         }
-                    }
-                    .padding(.vertical, 5)
-                    
-                    if lvm.pubkey != nil, let account = NosturState.shared.account, !account.followingHashtags.isEmpty {
-                       
-                        Text("Included hashtags:")
-                            .padding(.top, 20)
-                        FeedSettings_Hashtags(hashtags: Array(account.followingHashtags), onChange: { hashtags in
-                            guard let account = NosturState.shared.account else { return }
-                            account.followingHashtags = Set(hashtags)
-                            needsReload = true
-                            NosturState.shared.publishNewContactList()
-                        })
-                        .frame(height: 200)
-                    }
-                    if lvm.pubkey == nil, let list = list, !list.followingHashtags.isEmpty {
+                        .padding(.vertical, 5)
                         
-                        Text("Included hashtags:")
-                            .padding(.top, 20)
-                        FeedSettings_Hashtags(hashtags: Array(list.followingHashtags), onChange: { hashtags in
-                            list.followingHashtags = Set(hashtags)
-                            needsReload = true
-                        })
-                        .frame(height: 200)
+                        if lvm.pubkey != nil, let account = NosturState.shared.account, !account.followingHashtags.isEmpty {
+                           
+                            Text("Included hashtags:")
+                                .padding(.top, 20)
+                            FeedSettings_Hashtags(hashtags: Array(account.followingHashtags), onChange: { hashtags in
+                                guard let account = NosturState.shared.account else { return }
+                                account.followingHashtags = Set(hashtags)
+                                needsReload = true
+                                NosturState.shared.publishNewContactList()
+                            })
+                            .frame(height: 200)
+                        }
+                        if lvm.pubkey == nil, let list = list, !list.followingHashtags.isEmpty {
+                            
+                            Text("Included hashtags:")
+                                .padding(.top, 20)
+                            FeedSettings_Hashtags(hashtags: Array(list.followingHashtags), onChange: { hashtags in
+                                list.followingHashtags = Set(hashtags)
+                                needsReload = true
+                            })
+                            .frame(height: 200)
+                        }
                     }
                 }
-                .padding(10)
-                .roundedBoxShadow()
                 .padding(20)
                 .ignoresSafeArea()
                 .offset(y: 1.0)
