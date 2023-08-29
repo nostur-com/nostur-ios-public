@@ -10,6 +10,7 @@ import Nuke
 import NukeUI
 
 struct ProfileView: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var settings:SettingsStore = .shared
@@ -71,7 +72,7 @@ struct ProfileView: View {
                                         PFP(pubkey: contact.pubkey, contact: contact, size: 25)
                                             .overlay(
                                                 Circle()
-                                                    .strokeBorder(Color.systemBackground, lineWidth: 1)
+                                                    .strokeBorder(theme.background, lineWidth: 1)
                                             )
                                         Text("\(contact.authorName) ").font(.headline)
                                     }
@@ -99,7 +100,7 @@ struct ProfileView: View {
                                     PFP(pubkey: contact.pubkey, contact: contact, size: DIMENSIONS.PFP_BIG)
                                         .overlay(
                                             Circle()
-                                                .strokeBorder(Color.systemBackground, lineWidth: 3)
+                                                .strokeBorder(theme.background, lineWidth: 3)
                                         )
                                         .onTapGesture {
                                             if (contact.picture != nil) {
@@ -243,7 +244,7 @@ struct ProfileView: View {
                 ProfileTabs(contact: contact, selectedSubTab: $selectedSubTab)
             }
         }
-        .background(Color.systemBackground)
+        .background(theme.background)
         .preference(key: TabTitlePreferenceKey.self, value: contact.anyName)
         .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in
             let nEvent = notification.object as! NEvent

@@ -60,6 +60,7 @@ struct DetailFooterFragment: View {
                     .day().month(.defaultDigits)
             ))
         }
+        .buttonStyle(.plain)
         .foregroundColor(.gray)
         .font(.system(size: 14))
         .task {

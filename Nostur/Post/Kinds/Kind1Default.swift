@@ -9,6 +9,7 @@ import SwiftUI
 
 // Note 1 default (not full-width)
 struct Kind1Default: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
     let nrPost:NRPost
     @ObservedObject var pfpAttributes: NRPost.PFPAttributes
@@ -58,7 +59,8 @@ struct Kind1Default: View {
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
-                        Color("LightGray")
+                        theme.lineColor
+                            .opacity(0.2)
                             .frame(width: 2, height: 20)
                             .offset(x:0, y: -10)
                     }
@@ -124,7 +126,7 @@ struct Kind1Default: View {
                         Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a 'kind X' post is not yet supported"), systemImage: "exclamationmark.triangle.fill")
                             .hCentered()
                             .frame(maxWidth: .infinity)
-                            .background(Color("LightGray").opacity(0.2))
+                            .background(theme.lineColor.opacity(0.2))
                     }
                     if let subject = nrPost.subject {
                         Text(subject)
@@ -152,8 +154,9 @@ struct Kind1Default: View {
         }
         .background(alignment: .leading) {
             if connect == .bottom || connect == .both {
-                Color("LightGray")
+                theme.lineColor
                     .frame(width: 2)
+                    .opacity(0.2)
                     .offset(x: THREAD_LINE_OFFSET, y: 20)                
             }
         }        

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ReportContactSheet: View {
+    @EnvironmentObject var theme:Theme
     @Environment(\.dismiss) var dismiss
     let contact:Contact
     @State var reason = ReportType.impersonation
@@ -15,13 +16,14 @@ struct ReportContactSheet: View {
     
     var body: some View {
         VStack {
-            ContactSearchResultRow(contact: contact)
-                .padding()
-                .disabled(true)
-                .opacity(0.8)
-                .roundedBoxShadow()
-                .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                .padding(.vertical, 10)
+            Box {
+                ContactSearchResultRow(contact: contact)
+            }
+            .padding(10)
+            .background(theme.listBackground)
+            .disabled(true)
+            .opacity(0.9)
+                
             
             Form {
                 Section(header: Text("Report Information", comment: "Heading when entering Report details"), footer: VStack {

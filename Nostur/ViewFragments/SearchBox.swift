@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SearchBox: View {
-    
+    @EnvironmentObject var theme:Theme
     @StateObject var debounceObject = DebounceObject()
     var prompt:String
     @Binding var text:String
@@ -21,7 +21,7 @@ struct SearchBox: View {
         .padding(.leading, 25)
         .padding(.trailing, 25)
         .background {
-            Color("ListBackground").opacity(0.5)
+            theme.listBackground.opacity(0.5)
                 .overlay(alignment:.leading) {
                     Image(systemName: "magnifyingglass")
                         .imageScale(.medium)

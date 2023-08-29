@@ -32,6 +32,7 @@ struct PrivateNoteInfo: Identifiable {
 }
 
 struct PrivateNotesView: View {
+    @EnvironmentObject var theme:Theme
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     let account: Account
@@ -50,12 +51,12 @@ struct PrivateNotesView: View {
                 LazyVStack(spacing: 10) {
                     ForEach(privateNotes) { pnInfo in
                         PrivateNoteRow(note: pnInfo.note, nrPost: pnInfo.nrPost)
+                            .background(theme.background)
                             .onDelete {
                                 privateNotes = privateNotes.filter { $0.note.id != pnInfo.note.id }
                                 viewContext.delete(pnInfo.note)
                                 DataProvider.shared().save()
                             }
-                        Divider()
                     }
                     Spacer()
                 }
@@ -66,6 +67,7 @@ struct PrivateNotesView: View {
                     .padding(.top, 40)
             }
         }
+        .background(theme.listBackground)
         .overlay(alignment:.topTrailing) {
             AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
                 .padding(.horizontal)

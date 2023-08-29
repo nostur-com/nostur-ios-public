@@ -20,6 +20,7 @@ struct BadgesReceivedContainer:View {
 }
 
 struct BadgesReceivedView: View {
+    @EnvironmentObject var theme:Theme
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
@@ -58,7 +59,7 @@ struct BadgesReceivedView: View {
             Button {
                 publishSelection(Array(selection))
             } label: { Text("Publish selected badges on profile") }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                 .disabled(selection.isEmpty)
             
             Spacer()

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ThreadReplies: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var nrPost:NRPost
     @EnvironmentObject var ns:NosturState
     @State var timer:Timer? = nil
@@ -37,13 +38,11 @@ struct ThreadReplies: View {
             }
             // If there are less than 5 replies, put some empty space so our detail note is at top of screen
             if (nrPost.replies.count < 5) {
-                Rectangle().frame(height: 400)
-                    .background(Color("ListBackground"))
-                    .foregroundColor(Color("ListBackground"))
+                theme.listBackground.frame(height: 400)
             }
             Spacer()
         }
-        .background(nrPost.replies.isEmpty ? Color.systemBackground : Color("ListBackground"))
+        .background(theme.listBackground)
         .onAppear {
             guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
             nrPost.loadGroupedReplies()

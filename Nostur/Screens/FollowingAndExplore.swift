@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 
 struct FollowingAndExplore: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var account:Account
     @ObservedObject var ss:SettingsStore = .shared
@@ -97,7 +98,8 @@ struct FollowingAndExplore: View {
                             selectedSubTab = "Explore"
                         } label: {
                             Text("Explore", comment: "Button to go to the Explore tab")
-                        }.buttonStyle(.borderedProminent)
+                        }
+                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                         Spacer()
                     }
                 }

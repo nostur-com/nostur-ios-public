@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct ReplyingToFragmentView: View {
-    
+    @EnvironmentObject var theme:Theme
     @ObservedObject var nrPost:NRPost
     
     var body: some View {
@@ -17,7 +17,7 @@ struct ReplyingToFragmentView: View {
             if let rendered = nrPost.replyingToUsernamesMarkDown {
                 Text(rendered)
                         .fontWeight(.light)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(theme.secondary)
                         .frame(maxWidth:.infinity, alignment: .leading)
                 }
         }

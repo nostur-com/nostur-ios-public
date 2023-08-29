@@ -10,7 +10,7 @@ import CoreData
 import Combine
 
 struct NotificationsReactions: View {
-    
+    @EnvironmentObject var theme:Theme
     @StateObject var fl = FastLoader()
     @State var didLoad = false
     @State var backlog = Backlog()
@@ -80,7 +80,7 @@ struct NotificationsReactions: View {
                         }
                         .padding(.bottom, 40)
                         .buttonStyle(.bordered)
-                        .tint(.accentColor)
+//                        .tint(.accentColor)
                     }
                     else {
                         ProgressView()
@@ -89,7 +89,7 @@ struct NotificationsReactions: View {
                 .hCentered()
             }
         }
-        .background(Color("ListBackground"))
+        .background(theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             load()

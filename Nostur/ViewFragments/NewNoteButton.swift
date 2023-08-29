@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NewNoteButton: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var ns:NosturState
     @Binding var showingNewNote:Bool
     
@@ -19,6 +20,7 @@ struct NewNoteButton: View {
             Image(systemName: "plus.circle.fill")
                 .resizable()
                 .scaledToFit()
+                .foregroundColor(theme.accent)
                 .background(Circle().foregroundColor(Color.white))
                 .frame(width: 45, height: 45)
         }

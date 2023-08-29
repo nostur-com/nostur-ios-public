@@ -17,7 +17,7 @@ struct ZapInfo: Identifiable {
 }
 
 struct NotificationsZaps: View {
-
+    @EnvironmentObject var theme:Theme
     let er:ExchangeRateModel = .shared // Not Observed for performance
 
     @ObservedObject var settings:SettingsStore = .shared
@@ -70,7 +70,7 @@ struct NotificationsZaps: View {
                     case .NOTIFICATION:
                         ZapNotificationView(notification: pNotification.notification!)
                             .padding(10)
-                            .background(Color.systemBackground)
+                            .background(theme.background)
                             .id(pNotification.id)
                     case .ZAP:
                         VStack {
@@ -84,7 +84,7 @@ struct NotificationsZaps: View {
                             }
                         }
                         .padding(10)
-                        .background(Color.systemBackground)
+                        .background(theme.background)
                         .id(pNotification.id)
                     }
                 }
@@ -114,7 +114,7 @@ struct NotificationsZaps: View {
                         }
                         .padding(.bottom, 40)
                         .buttonStyle(.bordered)
-                        .tint(.accentColor)
+//                        .tint(.accentColor)
                     }
                     else {
                         ProgressView()
@@ -123,7 +123,7 @@ struct NotificationsZaps: View {
                 .hCentered()
             }
         }
-        .background(Color("ListBackground"))
+        .background(theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             load()

@@ -9,7 +9,7 @@ import SwiftUI
 import CoreData
 
 struct NotificationsPosts: View {
-     
+    @EnvironmentObject var theme:Theme
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var ns:NosturState
     @StateObject var fl = FastLoader()
@@ -50,7 +50,7 @@ struct NotificationsPosts: View {
                     case .NOTIFICATION:
                         NewFollowersNotificationView(notification: pNotification.notification!)
                             .padding(10)
-                            .background(Color.systemBackground)
+                            .background(theme.background)
                             .id(pNotification.id)
                     case .POST:
                         Box(nrPost: pNotification.post!) {
@@ -67,7 +67,7 @@ struct NotificationsPosts: View {
                         }
                         .padding(.bottom, 40)
                         .buttonStyle(.bordered)
-                        .tint(.accentColor)
+//                        .tint(.accentColor)
                     }
                     else {
                         ProgressView()
@@ -76,7 +76,7 @@ struct NotificationsPosts: View {
                 .hCentered()
             }
         }
-        .background(Color("ListBackground"))
+        .background(theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             load()

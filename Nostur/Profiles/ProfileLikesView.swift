@@ -9,7 +9,7 @@ import SwiftUI
 import CoreData
 
 struct ProfileLikesView: View {
-    
+    @EnvironmentObject var theme:Theme
     let pubkey:String
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var ns:NosturState
@@ -40,7 +40,7 @@ struct ProfileLikesView: View {
                 }
                     .hCentered()
                     .buttonStyle(.bordered)
-                    .tint(.accentColor)
+//                    .tint(.accentColor)
                 
             }
             else {
@@ -50,7 +50,7 @@ struct ProfileLikesView: View {
                 .frame(minHeight: 800)
         }
         .padding(.top, 5)
-        .background(Color("ListBackground"))
+        .background(theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             didLoad = true

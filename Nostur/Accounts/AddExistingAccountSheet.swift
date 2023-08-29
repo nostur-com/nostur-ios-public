@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct AddExistingAccountSheet: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) private var dismiss
@@ -16,7 +17,6 @@ struct AddExistingAccountSheet: View {
     @State var invalidKey = false
     
     var offerTryOut = false
-    var accentColor: Color = Color("AccentColor")
     var grayBackground: Color = Color.gray.opacity(0.2)
     var isNsecbunkerKey:Bool { key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#").count == 2 && key.split(separator: "#")[1].count == 64 }
     
@@ -77,7 +77,7 @@ struct AddExistingAccountSheet: View {
                         }
                     }
                     .frame(maxWidth: 300)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                     .disabled(bunkerManager.state == .connecting || (bunkerManager.isSelfHostedNsecBunker && bunkerManager.invalidSelfHostedAddress))
                     
                     if isNsecbunkerKey {

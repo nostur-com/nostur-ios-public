@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MainView: View {
+    @EnvironmentObject var theme:Theme
     @State var fg:FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @State var fn:FollowerNotifier = .shared 
     @AppStorage("selected_tab") var selectedTab = "Main"
@@ -26,6 +27,7 @@ struct MainView: View {
         NavigationStack(path: $navPath) {
             if let account {
                 FollowingAndExplore(account: account)
+                    .background(theme.listBackground)
                     .withNavigationDestinations()
                     .overlay(alignment: .bottomTrailing) {
                         NewNoteButton(showingNewNote: $showingNewNote)
@@ -62,17 +64,20 @@ struct MainView: View {
                             }
                         }
                         ToolbarItem(placement: .principal) {
-                            Image("NosturLogo")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height:30)
-                                .clipShape(Circle())
-                                .onTapGesture {
-                                    sendNotification(.shouldScrollToTop)
-                                }
+                            HStack {
+                                Image("NosturLogo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(height:30)
+                                    .clipShape(Circle())
+                                    .onTapGesture {
+                                        sendNotification(.shouldScrollToTop)
+                                    }
+                            }
                         }
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Image(systemName: "gearshape")
+                                .foregroundColor(theme.accent)
                                 .onTapGesture {
                                     sendNotification(.showFeedToggles)
                                 }

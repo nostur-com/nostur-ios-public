@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct ListViewContainer: View {
-    
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var vm:LVM
     
     var body: some View {
-        SmoothList(lvm: vm, dim: dim)
+        SmoothList(lvm: vm, dim: dim, theme:theme)
             .overlay(alignment: .topTrailing) {
                 ListUnreadCounter(vm: vm)
                     .padding(.trailing, 10)

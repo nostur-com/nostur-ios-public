@@ -59,6 +59,7 @@ struct NoteById: View {
 }
 
 struct PostDetailView: View {
+    @EnvironmentObject var theme:Theme
     let nrPost:NRPost
     var navTitleHidden:Bool = false
     @State var didLoad = false
@@ -78,13 +79,14 @@ struct PostDetailView: View {
                         
                             // Around parents + detail (not replies)
                             .padding(10)
-                            .background(Color.systemBackground)
+                            .background(theme.background)
                         
                             
                         
                         // MARK: REPLIES TO OUR MAIN NOTE
                         ThreadReplies(nrPost: nrPost)
                     }
+                    .background(theme.listBackground)
                 }
                 .simultaneousGesture(
                        DragGesture().onChanged({
@@ -121,6 +123,7 @@ let THREAD_LINE_OFFSET = 24.0
 // the parent is another PostAndParent
 // so it recursively renders up to the root
 struct PostAndParent: View {
+    @EnvironmentObject var theme:Theme
     var sp:SocketPool = .shared
     @ObservedObject var nrPost:NRPost
     @Environment(\.managedObjectContext) var viewContext
@@ -161,7 +164,7 @@ struct PostAndParent: View {
                         let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
                         PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
 //                            .padding(10)
-                            .background(Color.systemBackground)
+                            .background(theme.background)
                     }
                 }
                 else {
@@ -181,7 +184,7 @@ struct PostAndParent: View {
                         EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
                         QueuedFetcher.shared.enqueue(id: replyToId)
                     }
-                    .background(Color.systemBackground)
+                    .background(theme.background)
                     .onDisappear {
                         timerTask?.cancel()
                         timerTask = nil
@@ -260,6 +263,7 @@ struct ParentPost: View {
     @ObservedObject var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var dim:DIMENSIONS
+    @EnvironmentObject var theme:Theme
     let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     var connect:ThreadConnectDirection? = nil
     @State var showMiniProfile = false
@@ -357,7 +361,7 @@ struct ParentPost: View {
                             Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
                                 .centered()
                                 .frame(maxWidth: .infinity)
-                                .background(Color("LightGray").opacity(0.2))
+                                .background(theme.lineColor.opacity(0.2))
                             ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 )
 //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         }
@@ -365,8 +369,8 @@ struct ParentPost: View {
                 }
                 .background(alignment:.leading) {
                     ZStack(alignment: .leading) {
-                        Color.systemBackground
-                        Color("LightGray")
+                        theme.background
+                        theme.lineColor.opacity(0.2)
                             .frame(width: 2)
                             .offset(x: THREAD_LINE_OFFSET, y: 50)
                             .opacity(connect == .bottom || connect == .both ? 1 : 0)
@@ -386,6 +390,7 @@ struct ParentPost: View {
 }
 
 struct DetailPost: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var nrPost:NRPost
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var dim:DIMENSIONS
@@ -432,7 +437,8 @@ struct DetailPost: View {
                     }
                     .overlay(alignment: .top) {
                         if nrPost.replyToId != nil {
-                            Color("LightGray")
+                            theme.lineColor
+                                .opacity(0.2)
                                 .frame(width: 2, height: 10)
                                 .offset(y: -10)
                         }
@@ -485,7 +491,7 @@ struct DetailPost: View {
                 Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
                     .centered()
                     .frame(maxWidth: .infinity)
-                    .background(Color("LightGray").opacity(0.2))
+                    .background(theme.lineColor.opacity(0.2))
                 ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
                     .padding(.top, 3)
                     .padding(.bottom, 10)

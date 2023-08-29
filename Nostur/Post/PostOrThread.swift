@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PostOrThread: View {
+    @EnvironmentObject var theme:Theme
     let nrPost: NRPost
     @ObservedObject var postOrThreadAttributes: NRPost.PostOrThreadAttributes
     var grouped = false
@@ -38,7 +39,9 @@ struct PostOrThread: View {
             }
             .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
         }
-        .background(nrPost.kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground) // Still need .background here, normally use Box, but this is for between Boxes
+        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background) // Still need .background here, normally use Box, but this is for between Boxes
+//        .padding(.top, 10)
+        .background(theme.listBackground)
     }
 }
 

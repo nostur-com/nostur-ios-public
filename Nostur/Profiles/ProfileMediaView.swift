@@ -62,7 +62,7 @@ struct ProfileMediaView: View {
 }
 
 struct MediaThumb: View {
-    
+    @EnvironmentObject var theme:Theme
     let url:URL
     let squareSize:CGFloat
     @State var priority:ImageRequest.Priority = .normal
@@ -81,7 +81,7 @@ struct MediaThumb: View {
                 Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                     .centered()
                     .frame(width:squareSize, height:squareSize)
-                    .background(Color("LightGray").opacity(0.2))
+                    .background(theme.lineColor.opacity(0.2))
                     .onAppear {
                         print("Failed to load image: \(state.error?.localizedDescription ?? "")")
                     }
@@ -101,7 +101,7 @@ struct MediaThumb: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width:squareSize, height:squareSize)
-                    .background(Color("LightGray").opacity(0.2))
+                    .background(theme.lineColor.opacity(0.2))
                     .clipped()
                     .contentShape(Path(CGRect(x: 0, y: 0, width: squareSize, height: squareSize)))
                     .onTapGesture {
@@ -117,10 +117,10 @@ struct MediaThumb: View {
                 }
                 .centered()
                 .frame(width:squareSize, height:squareSize)
-                .background(Color("LightGray"))
+                .background(theme.lineColor)
             }
             else {
-                Color("LightGray").opacity(0.2)
+                theme.lineColor.opacity(0.2)
             }
         }
         .pipeline(ImageProcessing.shared.content)

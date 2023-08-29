@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileTabs: View {
-    
+    @EnvironmentObject var theme:Theme
     @ObservedObject var contact:Contact
     var pubkey:String { contact.pubkey }
     @Binding var selectedSubTab:String
@@ -104,7 +104,7 @@ struct ProfileTabs: View {
                 .frame(width: dim.listWidth)
             }
             .padding(.top, 10)
-            .background(Color.systemBackground)
+            .background(theme.background)
         }
     }
 }

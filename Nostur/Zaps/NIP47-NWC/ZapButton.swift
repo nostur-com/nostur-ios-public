@@ -9,14 +9,14 @@ import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ZapButton: View {
+    @EnvironmentObject var theme: Theme
     let er:ExchangeRateModel = .shared // Not Observed for performance
     var tally:Int64 // SATS (1000 SATS ~= 20 cent)
     @ObservedObject var nrPost:NRPost
     @ObservedObject var ss:SettingsStore = .shared
     @State var cancellationId:UUID? = nil
     @State var customZapId:UUID? = nil
-    @State var activeColor = Self.grey
-    static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
+    @State var activeColor = Theme.default.footerButtons
     
     var tallyString:String {
         if (er.bitcoinPrice != 0.0) {
@@ -30,7 +30,7 @@ struct ZapButton: View {
         if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty, let contact = nrPost.contact?.contact {
             if let cancellationId {
                 HStack {
-                    Image("BoltIconActive").foregroundColor(activeColor)
+                    Image("BoltIconActive").foregroundColor(theme.footerButtons)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .onTapGesture {
@@ -39,7 +39,7 @@ struct ZapButton: View {
                             NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
                             self.cancellationId = nil
                             nrPost.zapState = .cancelled
-                            activeColor = Self.grey
+                            activeColor = theme.footerButtons
                             L.og.info("⚡️ Zap cancelled")
                         }
                     AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)

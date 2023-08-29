@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct DetailTab: View {
+    @EnvironmentObject var theme:Theme
     @State var navPath = NavigationPath()
     let tm:DetailTabsModel = .shared
     @ObservedObject var tab:TabModel
@@ -16,7 +17,7 @@ struct DetailTab: View {
         NavigationStack(path: $navPath) {
             if let nrPost = tab.nrPost {
                 ZStack {
-                    Color("ListBackground")
+                    theme.listBackground
                         .ignoresSafeArea()
                     PostDetailView(nrPost: nrPost, navTitleHidden: true)
                         .withNavigationDestinations()
@@ -24,7 +25,7 @@ struct DetailTab: View {
             }
             else if let contact = tab.contact {
                 ZStack {
-                    Color("ListBackground")
+                    theme.listBackground
                         .ignoresSafeArea()
                     ProfileView(contact:contact, tab: tab.profileTab)
                         .withNavigationDestinations()
@@ -32,7 +33,7 @@ struct DetailTab: View {
             }
             else if let notePathId = tab.notePath?.id {
                 ZStack {
-                    Color("ListBackground")
+                    theme.listBackground
                         .ignoresSafeArea()
                     NoteById(id: notePathId)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations()
@@ -41,7 +42,7 @@ struct DetailTab: View {
             }
             else if let naddr1 = tab.naddr1?.naddr1 {
                 ZStack {
-                    Color("ListBackground")
+                    theme.listBackground
                         .ignoresSafeArea()
                     ArticleByNaddr(naddr1: naddr1)
                         .withNavigationDestinations()
@@ -50,7 +51,7 @@ struct DetailTab: View {
             }
             else if let articleId = tab.articlePath?.id {
                 ZStack {
-                    Color("ListBackground")
+                    theme.listBackground
                         .ignoresSafeArea()
                     ArticleById(id: articleId)
                         .withNavigationDestinations()
@@ -59,7 +60,7 @@ struct DetailTab: View {
             }
             else if let contactPubkey = tab.contactPath?.key {
                 ZStack {
-                    Color("ListBackground")
+                    theme.listBackground
                         .ignoresSafeArea()
                     ProfileByPubkey(pubkey: contactPubkey, tab: tab.contactPath?.tab)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations()

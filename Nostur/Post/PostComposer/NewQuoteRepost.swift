@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 
 struct NewQuoteRepost: View {
+    @EnvironmentObject var theme:Theme
     let PLACEHOLDER = String(localized: "Add comment", comment: "Placeholder when typing a new reply")
     var quotingEvent:Event
     
@@ -143,7 +144,7 @@ struct NewQuoteRepost: View {
                                 Text("Post.verb", comment: "Button to post (publish) a new reply")
                             }
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                         .cornerRadius(20)
                         .disabled(vm.uploading)
                     }

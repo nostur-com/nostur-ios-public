@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NosturTabsView: View {
+    @EnvironmentObject var theme:Theme
     @StateObject private var dim = DIMENSIONS()
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
@@ -73,7 +74,8 @@ struct NosturTabsView: View {
                 DetailPane()
             }
         }
-        .background(Color("ListBackground"))
+        .contentShape(Rectangle())
+        .background(theme.listBackground)
         .withLightningEffect()
         .onChange(of: selectedTab) { newValue in
             if !IS_CATALYST {

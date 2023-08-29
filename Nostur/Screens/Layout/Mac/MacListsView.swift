@@ -94,13 +94,14 @@ struct ColumnViewWrapper: View {
 }
 
 struct ColumnView: View {
+    @EnvironmentObject var theme:Theme
     let availableFeeds:[NosturList]
     @Binding var selectedFeed:NosturList?
     @Binding var lvm:LVM?
     
     var body: some View {
         ZStack {
-            Color("ListBackground")
+            theme.listBackground
             VStack {
                 FeedSelector(feeds: availableFeeds, selected: $selectedFeed)
                     .padding(.top, 10)

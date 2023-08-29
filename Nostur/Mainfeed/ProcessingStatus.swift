@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProcessingStatus: View {
-    
+    @EnvironmentObject var theme:Theme
     @State var message:String? = nil
     @State var socketMessage:String? = nil
     @State var connectedMessage:String? = nil
@@ -24,7 +24,7 @@ struct ProcessingStatus: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Capsule().fill(Color("AccentColor")))
+                    .background(Capsule().fill(theme.accent))
                     .clipShape(Capsule())
             }
             if let socketMessage {

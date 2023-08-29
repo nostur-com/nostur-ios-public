@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct NRContentTextRenderer: View {
-    
+    @EnvironmentObject var theme:Theme
     let attributedStringWithPs:AttributedStringWithPs
     let fullWidth = false
     @State var text:AttributedString? = nil
     
     var body: some View {
         Text(text ?? attributedStringWithPs.output)
+//            .tint(theme.accent)
             .lineSpacing(3)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NosturListsView: View {
+    @EnvironmentObject var theme:Theme
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)])
@@ -31,7 +32,10 @@ struct NosturListsView: View {
                         
                     }
             }
+            .listRowBackground(theme.background)
         }
+        .scrollContentBackground(.hidden)
+        .background(theme.listBackground)
         
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {

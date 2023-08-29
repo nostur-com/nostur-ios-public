@@ -19,6 +19,7 @@ import CoreData
 
 // Posts on user profile screen
 struct ProfileZaps: View {
+    @EnvironmentObject var theme:Theme
     let er:ExchangeRateModel = .shared
     
     let pubkey:String
@@ -93,7 +94,7 @@ struct ProfileZaps: View {
         }
         .frame(minHeight: 800)
         .padding(.top, 5)
-        .background(Color("ListBackground"))
+        .background(theme.listBackground)
         .task {
             guard !didLoad else { return }
             didLoad = true

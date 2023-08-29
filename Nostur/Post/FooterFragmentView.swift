@@ -8,9 +8,7 @@
 import SwiftUI
 
 struct FooterFragmentView: View {
-    
-    static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
-
+    @EnvironmentObject var theme:Theme
     @ObservedObject var nrPost:NRPost
     var isDetail = false
     @State var unpublishLikeId:UUID? = nil
@@ -23,7 +21,7 @@ struct FooterFragmentView: View {
             HStack {
                 HStack {
                     Image(nrPost.replied ? "ReplyIconActive" : "ReplyIcon")
-                        .foregroundColor(nrPost.replied ? Color("AccentColor") : Self.grey)
+                        .foregroundColor(nrPost.replied ? Color("AccentColor") : theme.footerButtons)
                     AnimatedNumber(number: nrPost.repliesCount)
                         .equatable()
                         .opacity(nrPost.repliesCount == 0 ? 0 : 1)
@@ -197,7 +195,7 @@ struct FooterFragmentView: View {
                         Button("Undo") {
                             nrPost.unpublish()
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                         .foregroundColor(Color.white)
                         .opacity(nrPost.flags == "nsecbunker_unsigned" ? 0 : 1.0)
                     }
@@ -220,7 +218,7 @@ struct FooterFragmentView: View {
                 }
             }
         }
-        .foregroundColor(Self.grey)
+        .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))        
     }
     
@@ -234,7 +232,7 @@ struct FooterFragmentView: View {
 
 struct PreviewFooterFragmentView: View {
     
-    static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
+    @EnvironmentObject var theme:Theme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -275,7 +273,7 @@ struct PreviewFooterFragmentView: View {
                 
             }
         }
-        .foregroundColor(Self.grey)
+        .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))
         
         

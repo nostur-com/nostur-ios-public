@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BookmarksAndPrivateNotes: View {
-    
+    @EnvironmentObject var theme:Theme
     @State var navPath = NavigationPath()
     @AppStorage("selected_tab") var selectedTab = "Bookmarks"
     @AppStorage("selected_bookmarkssubtab") var selectedSubTab = "Bookmarks"
@@ -37,7 +37,7 @@ struct BookmarksAndPrivateNotes: View {
                         Text("🥪")
                 }
             }
-            .padding(.top, 5)
+            .background(theme.listBackground)
             .withNavigationDestinations()
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)

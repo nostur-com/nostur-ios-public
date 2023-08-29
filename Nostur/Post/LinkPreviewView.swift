@@ -11,6 +11,7 @@ import NukeUI
 import HTMLEntities
 
 struct LinkPreviewView: View {
+    @EnvironmentObject var theme:Theme
     let url:URL
     @State var tags:[String: String] = [:]
     
@@ -56,7 +57,7 @@ struct LinkPreviewView: View {
                 .minimumScaleFactor(0.7)
                 .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             }
-            .background(Color("ListBackground"))
+            .background(theme.listBackground)
             .fixedSize(horizontal: false, vertical: true)
             .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             .clipShape(RoundedRectangle(cornerRadius: 10.0))

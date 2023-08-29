@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct LazyNoteMenuButton: View {
+    @EnvironmentObject var theme:Theme
     var nrPost:NRPost
-    static let color = Color(red: 113/255, green: 118/255, blue: 123/255)
     
     var body: some View {
         Image(systemName: "ellipsis")
             .fontWeight(.bold)
-            .foregroundColor(Self.color)
+            .foregroundColor(theme.footerButtons)
             .padding(.leading, 15)
             .padding(.bottom, 11)
             .contentShape(Rectangle())

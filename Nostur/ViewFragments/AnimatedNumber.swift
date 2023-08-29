@@ -106,7 +106,7 @@ struct AnimatedNumberPreviewContainer: View {
         VStack {
             AnimatedNumber(number: number)
             Button("+1") { number += 25 }
-            .buttonStyle(.borderedProminent)
+                .buttonStyle(.borderedProminent)
             .offset(y:10)
             Spacer()
         }

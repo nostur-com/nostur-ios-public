@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct EditNosturList: View {
-    
+    @EnvironmentObject var theme:Theme
     @ObservedObject var list:NosturList
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
@@ -35,7 +35,10 @@ struct EditNosturList: View {
                     }
                     
                 }
+                .listRowBackground(theme.background)
         }
+        .scrollContentBackground(.hidden)
+        .background(theme.listBackground)
         .listStyle(.plain)
         .navigationTitle("\(list.name ?? "feed")")
         .navigationBarTitleDisplayMode(.inline)
