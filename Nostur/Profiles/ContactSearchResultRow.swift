@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContactSearchResultRow: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var contact:Contact
     var onSelect:(() -> Void)?
     
@@ -44,7 +45,7 @@ struct ContactSearchResultRow: View {
                             else if (contact.nip05veried) {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
-                                    .foregroundColor(Color("AccentColor"))
+                                    .foregroundColor(theme.accent)
                             }
                             
                             if let fixedName = contact.fixedName, fixedName != contact.anyName {

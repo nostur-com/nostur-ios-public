@@ -190,7 +190,7 @@ struct DMConversationView: View {
                                                     Group {
                                                         Image(systemName: "checkmark.seal.fill")
                                                         Text(contact.nip05domain).font(.footnote)
-                                                    }.foregroundColor(Color("AccentColor"))
+                                                    }.foregroundColor(theme.accent)
                                                 }
                                             }
                                             if (ns.followsYou(contact)) {

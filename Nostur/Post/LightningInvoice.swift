@@ -51,7 +51,7 @@ struct LightningInvoice: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
                             .foregroundColor(isExpired ? Color.gray : Color.white)
-                            .background(isExpired ? Color.gray.opacity(0.5) : Color("AccentColor"))
+                            .background(isExpired ? Color.gray.opacity(0.5) : theme.accent)
                             .cornerRadius(8)
                             .frame(minWidth: 150)
                             .overlay(

@@ -42,7 +42,7 @@ struct ProfileBanner: View {
                             else {
                                 HStack {
                                     LinearGradient(
-                                        gradient: Gradient(colors: [theme.background, Color("AccentColor")]),
+                                        gradient: Gradient(colors: [theme.background, theme.accent]),
                                         startPoint: .bottom,
                                         endPoint: .top
                                     )
@@ -54,7 +54,7 @@ struct ProfileBanner: View {
                         else {
                             HStack {
                                 LinearGradient(
-                                    gradient: Gradient(colors: [theme.background, Color("AccentColor")]),
+                                    gradient: Gradient(colors: [theme.background, theme.accent]),
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )
@@ -79,7 +79,7 @@ struct ProfileBanner: View {
                         else {
                             HStack {
                                 LinearGradient(
-                                    gradient: Gradient(colors: [theme.background, Color("AccentColor")]),
+                                    gradient: Gradient(colors: [theme.background, theme.accent]),
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )

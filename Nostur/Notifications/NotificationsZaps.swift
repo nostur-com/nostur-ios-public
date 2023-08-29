@@ -278,6 +278,7 @@ struct NotificationsZaps: View {
 }
 
 struct PostZap: View {
+    @EnvironmentObject var theme:Theme
     let er:ExchangeRateModel = .shared // Not Observed for performance
     @ObservedObject var nrPost:NRPost
     var zaps:[Event]
@@ -286,7 +287,7 @@ struct PostZap: View {
         HStack(alignment: .top) {
             VStack {
                 Image(systemName: "bolt.fill")
-                    .foregroundColor(Color("AccentColor"))
+                    .foregroundColor(theme.accent)
                 Text(Double(nrPost.zapTally).satsFormatted)
                     .font(.title2)
                 if (er.bitcoinPrice != 0.0) {
@@ -316,6 +317,7 @@ struct PostZap: View {
 }
 
 struct ProfileZap: View {
+    @EnvironmentObject var theme:Theme
     let er:ExchangeRateModel = .shared // Not Observed for performance
     @EnvironmentObject var ns:NosturState
     
@@ -326,7 +328,7 @@ struct ProfileZap: View {
         HStack(alignment: .top) {
             VStack {
                 Image(systemName: "bolt.fill")
-                    .foregroundColor(Color("AccentColor"))
+                    .foregroundColor(theme.accent)
                 Text(zap.naiveSats.satsFormatted)
                     .font(.title2)
                 if (er.bitcoinPrice != 0.0) {

@@ -62,6 +62,7 @@ struct MinimalQuotedNoteFragment: View {
     }
     
     struct NameAndNip: View {
+        @EnvironmentObject var theme:Theme
         @ObservedObject var contact:NRContact // for rendering nip check (after just verified) etc
  
         var body: some View {
@@ -73,7 +74,7 @@ struct MinimalQuotedNoteFragment: View {
             
             if (contact.nip05verified) {
                 Image(systemName: "checkmark.seal.fill")
-                    .foregroundColor(Color("AccentColor"))
+                    .foregroundColor(theme.accent)
                     .layoutPriority(3)
             }
         }

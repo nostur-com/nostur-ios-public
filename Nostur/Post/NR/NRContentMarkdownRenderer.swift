@@ -11,7 +11,7 @@ import NukeUI
 
 // Same as NRContentTextRenderer, but with Markdown instead of AttributedString
 struct NRContentMarkdownRenderer: View {
-    
+    @EnvironmentObject var theme:Theme
     let markdownContentWithPs:MarkdownContentWithPs
     let fullWidth = false
     @State var text:MarkdownContent? = nil
@@ -25,7 +25,7 @@ struct NRContentMarkdownRenderer: View {
                 FontSize(22)
             }
             .markdownTextStyle(\.link) {
-                ForegroundColor(Color("AccentColor"))
+                ForegroundColor(theme.accent)
             }
             .markdownImageProvider(.nukeImage)
             .markdownInlineImageProvider(.nukeImage)

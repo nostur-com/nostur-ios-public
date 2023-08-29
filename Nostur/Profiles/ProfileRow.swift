@@ -39,6 +39,7 @@ struct ProfileCardByPubkey: View {
 }
 
 struct ProfileRow: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var ns:NosturState
     @ObservedObject var fg:FollowingGuardian = .shared
     let sp:SocketPool = .shared
@@ -80,7 +81,7 @@ struct ProfileRow: View {
                             else if (contact.nip05veried) {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
-                                    .foregroundColor(Color("AccentColor"))
+                                    .foregroundColor(theme.accent)
                             }
                         }
                         if let fixedName = contact.fixedName, fixedName != contact.anyName {

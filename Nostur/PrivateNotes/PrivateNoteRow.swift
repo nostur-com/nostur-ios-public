@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PrivateNoteRow: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var note: PrivateNote
     var nrPost: NRPost?
     @EnvironmentObject var ns:NosturState
@@ -52,7 +53,7 @@ struct PrivateNoteRow: View {
                         .layoutPriority(2)
                     if (contact.nip05veried) {
                         Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(Color("AccentColor"))
+                            .foregroundColor(theme.accent)
                             .layoutPriority(3)
                     }
                     Text(contact.about ?? "").lineLimit(1)

@@ -143,7 +143,7 @@ struct ProfileView: View {
                                     Group {
                                         Image(systemName: "checkmark.seal.fill")
                                         Text(contact.nip05domain).font(.footnote)
-                                    }.foregroundColor(Color("AccentColor"))
+                                    }.foregroundColor(theme.accent)
                                 }
                             }
                             if let fixedName = contact.fixedName, fixedName != contact.anyName {

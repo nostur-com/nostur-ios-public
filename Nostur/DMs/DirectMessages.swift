@@ -27,6 +27,7 @@ struct DirectMessagesContainer: View {
 }
 
 struct DirectMessages: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var nm:NotificationsManager
     @State var navPath = NavigationPath()
     @AppStorage("selected_tab") var selectedTab = "Messages"
@@ -136,7 +137,7 @@ struct DirectMessages: View {
                                     }
                                     Rectangle()
                                         .frame(height: 3)
-                                        .background(Color("AccentColor"))
+                                        .background(theme.accent)
                                         .opacity(tab == "Accepted" ? 1 : 0.15)
                                 }
                             }

@@ -21,7 +21,7 @@ struct FooterFragmentView: View {
             HStack {
                 HStack {
                     Image(nrPost.replied ? "ReplyIconActive" : "ReplyIcon")
-                        .foregroundColor(nrPost.replied ? Color("AccentColor") : theme.footerButtons)
+                        .foregroundColor(nrPost.replied ? theme.accent : theme.footerButtons)
                     AnimatedNumber(number: nrPost.repliesCount)
                         .equatable()
                         .opacity(nrPost.repliesCount == 0 ? 0 : 1)

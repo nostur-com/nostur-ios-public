@@ -149,7 +149,7 @@ struct ProfileOverlayCard: View {
                         else if (contact.nip05verified) {
                             Image(systemName: "checkmark.seal.fill")
                                 .font(.title)
-                                .foregroundColor(Color("AccentColor"))
+                                .foregroundColor(theme.accent)
                         }
                         
                         if (isFollowingYou) {

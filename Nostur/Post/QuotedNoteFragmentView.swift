@@ -109,6 +109,7 @@ struct QuotedNoteFragmentView: View {
     }
     
     struct NameAndNip: View {
+        @EnvironmentObject var theme:Theme
         @ObservedObject var contact:NRContact
         var body: some View {
             Text(contact.anyName) // Name
@@ -118,7 +119,7 @@ struct QuotedNoteFragmentView: View {
                 .lineLimit(1)
             if (contact.nip05verified) {
                 Image(systemName: "checkmark.seal.fill")
-                    .foregroundColor(Color("AccentColor"))
+                    .foregroundColor(theme.accent)
                     .layoutPriority(3)
             }
         }
