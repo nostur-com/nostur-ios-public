@@ -49,6 +49,9 @@ struct Settings: View {
     @State var contentSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
     @State var bannerSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
     @State var badgesSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
+    
+    @AppStorage("app_theme") var selectedTheme = "default"
+    @State var appTheme = "default"
 
     var body: some View {
 
@@ -56,6 +59,8 @@ struct Settings: View {
 
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Group {
+                    ThemePicker(selectedTheme: $appTheme)
+
                     Toggle(isOn: $settings.fullWidthImages) {
                         Text("Enable full width pictures", comment:"Setting on settings screen")
                     }
@@ -444,6 +449,7 @@ struct Settings: View {
         .scrollContentBackground(.hidden)
         .background(theme.listBackground)
         .onAppear {
+            appTheme = selectedTheme
             let bg = DataProvider.shared().container.newBackgroundContext()
             bg.perform {
                 let r = Event.fetchRequest()
