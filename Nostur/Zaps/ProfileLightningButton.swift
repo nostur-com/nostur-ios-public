@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ProfileLightningButton: View {
+    @EnvironmentObject var theme:Theme
     var sp:SocketPool = .shared
     let er:ExchangeRateModel = .shared
     @EnvironmentObject var ns:NosturState
@@ -33,7 +34,7 @@ struct ProfileLightningButton: View {
         }
         .frame(width: 40, height: 30)
         .font(.caption.weight(.heavy))
-        .background(Color("BackgroundColor"))
+        .background(theme.background)
         .cornerRadius(20)
         .overlay {
             RoundedRectangle(cornerRadius: 20)
@@ -112,7 +113,7 @@ struct ProfileLightningButton_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
         }) {
-            VStack {
+            SmoothListMock {
                 if let contact = PreviewFetcher.fetchContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
                     ProfileLightningButton(contact: contact)
                 }

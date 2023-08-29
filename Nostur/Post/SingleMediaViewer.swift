@@ -10,6 +10,7 @@ import NukeUI
 import Nuke
 
 struct SingleMediaViewer: View {
+    @EnvironmentObject var theme:Theme
     let url:URL
     let pubkey:String
     var height:CGFloat?
@@ -34,7 +35,7 @@ struct SingleMediaViewer: View {
                 }
                    .centered()
                    .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                   .background(Color("LightGray").opacity(0.2))
+                   .background(theme.lineColor.opacity(0.2))
             }
             else if imagesShown || forceShow {
                 LazyImage(request: ImageRequest(url: url,
@@ -45,7 +46,7 @@ struct SingleMediaViewer: View {
                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                             .centered()
                             .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            .background(Color("LightGray").opacity(0.2))
+                            .background(theme.lineColor.opacity(0.2))
                             .onAppear {
                                 L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
                             }

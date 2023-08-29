@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 
 struct NewReply: View {
+    @EnvironmentObject var theme:Theme
     let PLACEHOLDER = String(localized:"Enter your reply", comment: "Placeholder when typing a reply")
     
     var replyTo:Event
@@ -211,7 +212,7 @@ struct NewReply: View {
                                 Text("Post.verb", comment: "Button to post (publish) a new post")
                             }
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                         .cornerRadius(20)
                         .disabled(vm.uploading || vm.text.isEmpty)
                     }
@@ -255,14 +256,14 @@ struct NewReply: View {
 }
 
 struct NewReplyingToFragment: View {
-
+    @EnvironmentObject var theme: Theme
     var contact:NRContact?
     var pubkey:String
     
     var body: some View {
         HStack(spacing:1) {
             Text("Replying to ")
-                .foregroundColor(.secondary)
+                .foregroundColor(theme.secondary)
                 .font(.system(size: 13))
                 .fontWeight(.light)
             Group {
@@ -272,9 +273,10 @@ struct NewReplyingToFragment: View {
                 else {
                     Text("@\(String(pubkey.prefix(5)))")
                 }
-            }.foregroundColor(.accentColor)
-                .font(.system(size: 13))
-                .fontWeight(.light)
+            }
+            .foregroundColor(theme.accent)
+            .font(.system(size: 13))
+            .fontWeight(.light)
         }
     }
 }

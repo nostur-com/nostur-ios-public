@@ -10,7 +10,7 @@ import CoreData
 
 // Posts on user profile screen
 struct ProfileNotesView: View {
-    
+    @EnvironmentObject var theme:Theme
     let pubkey:String
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var ns:NosturState
@@ -41,7 +41,7 @@ struct ProfileNotesView: View {
                 }
                 .hCentered()
                 .buttonStyle(.bordered)
-                .tint(.accentColor)
+//                .tint(.accentColor)
             }
             else {
                 CenteredProgressView()
@@ -50,7 +50,7 @@ struct ProfileNotesView: View {
                 .frame(minHeight: 800)
         }
         .padding(.top, 5)
-        .background(Color("ListBackground"))
+        .background(theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             didLoad = true

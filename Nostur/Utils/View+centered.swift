@@ -41,30 +41,6 @@ struct HorizontallyCenteredView: ViewModifier {
     }
 }
 
-struct BoxShadow: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(
-                Rectangle()
-                    .foregroundColor(Color("BackgroundColor"))
-                    .shadow(color: Color.gray.opacity(0.25), radius: 5)
-            )
-    }
-}
-
-struct RoundedBoxShadow: ViewModifier {
-    var backgroundColor:Color = Color.systemBackground
-    static let shadowColor = Color("ShadowColor").opacity(0.25)
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: 10.0)
-                    .foregroundColor(backgroundColor)
-                    .shadow(color: Self.shadowColor, radius: 5)
-            )
-    }
-}
-
 extension View {
     func centered() -> some View {
         modifier(CenteredView())
@@ -74,13 +50,5 @@ extension View {
     }
     func hCentered() -> some View {
         modifier(HorizontallyCenteredView())
-    }
-    
-    func boxShadow() -> some View {
-        modifier(BoxShadow())
-    }
-    
-    func roundedBoxShadow(backgroundColor:Color = Color.systemBackground) -> some View {
-        modifier(RoundedBoxShadow(backgroundColor:backgroundColor))
     }
 }

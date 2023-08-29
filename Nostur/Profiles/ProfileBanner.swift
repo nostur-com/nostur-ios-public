@@ -10,6 +10,7 @@ import NukeUI
 import Nuke
 
 struct ProfileBanner: View {
+    @EnvironmentObject var theme:Theme
     var banner:String?
     var width:CGFloat
     var offset:CGFloat
@@ -41,7 +42,7 @@ struct ProfileBanner: View {
                             else {
                                 HStack {
                                     LinearGradient(
-                                        gradient: Gradient(colors: [Color.systemBackground, Color("AccentColor")]),
+                                        gradient: Gradient(colors: [theme.background, Color("AccentColor")]),
                                         startPoint: .bottom,
                                         endPoint: .top
                                     )
@@ -53,7 +54,7 @@ struct ProfileBanner: View {
                         else {
                             HStack {
                                 LinearGradient(
-                                    gradient: Gradient(colors: [Color.systemBackground, Color("AccentColor")]),
+                                    gradient: Gradient(colors: [theme.background, Color("AccentColor")]),
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )
@@ -78,7 +79,7 @@ struct ProfileBanner: View {
                         else {
                             HStack {
                                 LinearGradient(
-                                    gradient: Gradient(colors: [Color.systemBackground, Color("AccentColor")]),
+                                    gradient: Gradient(colors: [theme.background, Color("AccentColor")]),
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )
@@ -92,7 +93,7 @@ struct ProfileBanner: View {
             else {
                 HStack {
                     LinearGradient(
-                        gradient: Gradient(colors: [Color.systemBackground, Color("AccentColor")]),
+                        gradient: Gradient(colors: [theme.background, theme.accent]),
                         startPoint: .bottom,
                         endPoint: .top
                     )

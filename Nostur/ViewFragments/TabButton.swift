@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TabButton: View {
-    
+    @EnvironmentObject var theme:Theme
     var action:() -> Void
     var title:String = ""
     var selected:Bool = false
@@ -16,9 +16,10 @@ struct TabButton: View {
     
     var body: some View {
         Button { action() } label: {
-            VStack(spacing:0) {
+            VStack(spacing: 0) {
                 HStack {
                     Text(title).lineLimit(1)
+                        .foregroundColor(theme.accent)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 8)
                         .padding(.bottom, 5)
@@ -27,17 +28,17 @@ struct TabButton: View {
                             .font(.footnote)
                             .foregroundColor(.white)
                             .padding(.horizontal,6)
-                            .background(Capsule().foregroundColor(.red))
+                            .background(Capsule().foregroundColor(theme.badge))
                             .offset(x:-4, y: 0)
                     }
                 }
-                Rectangle()
+                theme.accent
                     .frame(height: 3)
-                    .background(Color("AccentColor"))
+//                    .background(theme.accent)
                     .opacity(selected ? 1 : 0.15)
             }
+            .contentShape(Rectangle())
         }
-        .contentShape(Rectangle())
     }
 }
 
@@ -69,6 +70,9 @@ struct TabButton_Previews: PreviewProvider {
                     print("dede")
                 }, title: "testing!", selected: true)
                           
+            }
+            .onAppear {
+                Theme.default.loadPink()
             }
         }
     }

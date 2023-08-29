@@ -12,7 +12,7 @@ import NukeUI
 //import AVFoundation
 
 struct FullImageViewer: View {
-    
+    @EnvironmentObject var theme:Theme
     @Environment(\.dismiss) var dismiss
     //    @Binding var fullImageIsShown:Bool
     var fullImageURL:URL
@@ -82,7 +82,7 @@ struct FullImageViewer: View {
                     if state.error != nil {
                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                             .centered()
-                            .background(Color("LightGray").opacity(0.2))
+                            .background(theme.lineColor.opacity(0.2))
                             .onAppear {
                                 print("Failed to load image: \(state.error?.localizedDescription ?? "")")
                             }
@@ -130,10 +130,10 @@ struct FullImageViewer: View {
                                 .padding(10)
                         }
                         .centered()
-                        .background(Color("LightGray"))
+                        .background(theme.lineColor)
                     }
                     else {
-                        Color("LightGray").opacity(0.2)
+                        theme.lineColor.opacity(0.2)
                     }
                 }
                 .pipeline(ImageProcessing.shared.content)

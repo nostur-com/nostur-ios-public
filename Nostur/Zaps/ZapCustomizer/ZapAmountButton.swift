@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ZapAmountButton: View {
+    @EnvironmentObject var theme:Theme
     let er:ExchangeRateModel = .shared
     let amount:Double
     let isSelected:Bool
@@ -24,7 +25,7 @@ struct ZapAmountButton: View {
     
     var body: some View {
         Circle()
-            .strokeBorder(isSelected ? .orange : .systemBackground, lineWidth: 5)
+            .strokeBorder(isSelected ? .orange : theme.background, lineWidth: 5)
             .background(Circle().fill(.orange))
             .frame(width: 75, height: 75)
             .overlay(alignment: .center) {

@@ -19,6 +19,7 @@ public class PreviewEnvironment {
     let dim:DIMENSIONS = .shared
     let ss:SettingsStore = .shared
     let sm = SideBarModel()
+    let theme:Theme = .default
     
     static let shared = PreviewEnvironment()
         
@@ -433,6 +434,9 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.sm)
                     .environmentObject(pe.tm)
                     .environmentObject(pe.dim)
+                    .environmentObject(pe.theme)
+                    .buttonStyle(NRButtonStyle(theme: pe.theme))
+                    .tint(pe.theme.accent)
             }
             else {
                 EmptyView()

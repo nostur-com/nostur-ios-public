@@ -11,6 +11,7 @@ import CoreData
 import Nuke
 
 struct Settings: View {
+    @EnvironmentObject var theme: Theme
     @EnvironmentObject var ns: NosturState
     @ObservedObject var settings: SettingsStore = .shared
     let er: ExchangeRateModel = .shared
@@ -100,6 +101,7 @@ struct Settings: View {
                     Text("Shows 'Shared from Nostur' caption when sharing post screenshots", comment: "Setting on settings screen")
                 }
             }
+            .listRowBackground(theme.background)
             
             Group {
                 Section(header: Text("Spam filtering", comment:"Setting heading on settings screen")) {
@@ -151,6 +153,7 @@ struct Settings: View {
                         }
                     }
                 }
+                .listRowBackground(theme.background)
                 
                 Section(header: Text("Image uploading", comment:"Setting heading on settings screen")) {
                     VStack {
@@ -163,6 +166,7 @@ struct Settings: View {
                         }
                     }
                 }
+                .listRowBackground(theme.background)
             }
             
             Group {
@@ -204,6 +208,7 @@ struct Settings: View {
                         }
                     }
                 }
+                .listRowBackground(theme.background)
                 
                 Section(header: Text("Data export")) {
                     Button("Save to file...") {
@@ -222,6 +227,7 @@ struct Settings: View {
                             }
                     }
                 }
+                .listRowBackground(theme.background)
                 
                 Section(header: Text("Relays", comment: "Relay settings heading")) {
                     RelaysView()
@@ -248,6 +254,7 @@ struct Settings: View {
                         }
                     }
                 }
+                .listRowBackground(theme.background)
                 
                 Section(header: Text("Caches", comment: "Settings heading")) {
                     HStack {
@@ -331,6 +338,7 @@ struct Settings: View {
                         }
                     }
                 }
+                .listRowBackground(theme.background)
                 
             }
             
@@ -340,6 +348,7 @@ struct Settings: View {
                     Text("Turn off to save battery life and trust the relays for the authenticity of messages", comment:"Setting on settings screen")
                 }
             }
+            .listRowBackground(theme.background)
             
 //            Section(header: Text("Dev")) {
 //                Toggle(isOn: $devToggle) {
@@ -410,12 +419,14 @@ struct Settings: View {
 //                    }
 //                }
 //            }
+//            .listRowBackground(theme.background)
 //                Section(header: Text("Private key protector")) {
 //                    Toggle(isOn: $settings.replaceNsecWithHunter2Enabled) {
 //                        Text("Don't allow nsec in posts")
 //                        Text("Replaces any \"nsec1...\" in new posts with \"hunter2\" ")
 //                    }
 //                }
+//                .listRowBackground(theme.background)
             if ns.account?.privateKey != nil && !(ns.account?.isNC ?? false) {
                 Section(header: Text("Account", comment: "Heading for section to delete account")) {
                     Button(role: .destructive) {
@@ -424,11 +435,14 @@ struct Settings: View {
                         Label(String(localized:"Delete account", comment: "Button to delete account"), systemImage: "trash")
                     }                    
                 }
+                .listRowBackground(theme.background)
             }
         }
         .sheet(isPresented: $showDefaultZapAmountSheet) {
             SettingsDefaultZapAmount()
         }
+        .scrollContentBackground(.hidden)
+        .background(theme.listBackground)
         .onAppear {
             let bg = DataProvider.shared().container.newBackgroundContext()
             bg.perform {

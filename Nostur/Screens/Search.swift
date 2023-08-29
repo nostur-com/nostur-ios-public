@@ -10,6 +10,7 @@ import Combine
 import NostrEssentials
 
 struct Search: View {
+    @EnvironmentObject var theme:Theme
     @State var nrPosts:[NRPost] = []
 
     @FetchRequest(
@@ -62,7 +63,7 @@ struct Search: View {
                 LazyVStack(spacing: 10) {
                     ForEach(filteredContactSearchResults.prefix(75)) { contact in
                         ProfileRow(contact: contact)
-                            .background(Color.systemBackground)
+                            .background(theme.background)
                     }
                     ForEach(nrPosts.prefix(75)) { nrPost in
                         Box(nrPost: nrPost) {
@@ -98,7 +99,7 @@ struct Search: View {
                         .padding(.bottom, 10)
                 }
             }
-            .background(Color("ListBackground"))
+            .background(theme.listBackground)
             .withNavigationDestinations()
             .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)

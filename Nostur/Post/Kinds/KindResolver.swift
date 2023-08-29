@@ -66,7 +66,7 @@ struct KindResolver_Previews: PreviewProvider {
                 }
                 Spacer()
             }
-            .background(Color("ListBackground"))
+            .background(Theme.default.listBackground)
         }
     }
 }

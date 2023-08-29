@@ -14,6 +14,7 @@ import Combine
 import PhotosUI
 
 struct NewPost: View {
+    @EnvironmentObject var theme:Theme
     let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var ns:NosturState
@@ -119,7 +120,7 @@ struct NewPost: View {
                                 Text("Post.verb", comment: "Button to post (publish) a new post")
                             }
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                         .cornerRadius(20)
                         .disabled(vm.uploading || vm.text.isEmpty)
                         

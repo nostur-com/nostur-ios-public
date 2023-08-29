@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct Box<Content: View>: View {
+    @EnvironmentObject var theme:Theme
+    
     let content: Content
     let kind: Int64
     let navMode: NavigationMode
@@ -37,7 +39,7 @@ struct Box<Content: View>: View {
         if navMode == .view {
             content
                 .padding(kind == 30023 ? 20 : 10)
-                .background(kind == 30023 ? Color(.secondarySystemBackground) : Color.systemBackground)
+                .background(kind == 30023 ? theme.secondaryBackground : theme.background)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     navigate()
@@ -48,13 +50,13 @@ struct Box<Content: View>: View {
                 .padding(kind == 30023 ? 20 : 10)
                 .background {
                     if kind == 30023 {
-                        Color(.secondarySystemBackground)
+                        theme.secondaryBackground
                             .onTapGesture {
                                 navigate()
                             }
                     }
                     else {
-                        Color.systemBackground
+                        theme.background
                             .onTapGesture {
                                 navigate()
                             }

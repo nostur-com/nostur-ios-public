@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct QuotedNoteFragmentView: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var accountState:NosturState
     @State var viewSize:CGSize = .zero
     
@@ -29,7 +30,7 @@ struct QuotedNoteFragmentView: View {
             .padding(.leading, 8)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
             )
             .hCentered()
         }
@@ -85,12 +86,12 @@ struct QuotedNoteFragmentView: View {
             )
             .padding(10)
             .background(
-                Color.systemBackground
+                theme.background
                     .cornerRadius(15)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
-                    .stroke(.regularMaterial, lineWidth: 1)
+                    .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
             )
             .onAppear {
                 if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {

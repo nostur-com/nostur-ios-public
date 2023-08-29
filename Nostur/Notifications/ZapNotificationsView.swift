@@ -86,12 +86,9 @@ struct ZapNotificationView_Previews: PreviewProvider {
         }) {
             VStack {
                 if let pNotification = PreviewFetcher.fetchPersistentNotification() {
-                    ZapNotificationView(notification: pNotification)
-                        .padding(10)
-                        .background(Color.systemBackground)
-                        .boxShadow()
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 10)
+                    Box {
+                        ZapNotificationView(notification: pNotification)
+                    }
                 }
             }
         }

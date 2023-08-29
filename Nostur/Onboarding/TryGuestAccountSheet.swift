@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TryGuestAccountSheet: View {
-    
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var ns:NosturState
     let sp:SocketPool = .shared
     @Environment(\.dismiss) private var dismiss
@@ -33,7 +33,7 @@ struct TryGuestAccountSheet: View {
                     .frame(maxWidth: .infinity)
             }
             .controlSize(.large)
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
         }
         .frame(maxWidth: 300)
         .onAppear {

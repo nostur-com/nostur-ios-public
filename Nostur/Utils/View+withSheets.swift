@@ -17,6 +17,7 @@ public extension View {
 }
 
 private struct WithSheets: ViewModifier {
+    @EnvironmentObject var theme:Theme
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var dim:DIMENSIONS
@@ -70,6 +71,7 @@ private struct WithSheets: ViewModifier {
             }
             .fullScreenCover(item: $fullImage) { f in
                 FullImageViewer(fullImageURL: f.url)
+                    .environmentObject(theme)
             }
         
             .onReceive(receiveNotification(.editingPrivateNote)) { notification in
@@ -78,6 +80,7 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $privateNote) { note in
                 EditPrivateNoteSheet(privateNote: note)
+                    .environmentObject(theme)
             }
            
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
@@ -86,6 +89,7 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $post) { post in
                 NewPrivateNoteSheet(post: post)
+                    .environmentObject(theme)
             }
              
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
@@ -94,6 +98,7 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $contact) { contact in
                 NewPrivateNoteSheet(contact: contact)
+                    .environmentObject(theme)
             }
         
             .onReceive(receiveNotification(.reportPost), perform: { notification in
@@ -105,6 +110,7 @@ private struct WithSheets: ViewModifier {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(dim)
                         .environmentObject(ns)
+                        .environmentObject(theme)
                 }
             })
         
@@ -115,6 +121,7 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $reportContact, content: { reportContact in
                 NavigationStack {
                     ReportContactSheet(contact: reportContact.contact)
+                        .environmentObject(theme)
                 }
             })
             
@@ -189,11 +196,13 @@ private struct WithSheets: ViewModifier {
                                 .environmentObject(ns)
                                 .environmentObject(dim)
                         }
+                        .environmentObject(theme)
                     }
                     else {
                         NewReply(replyTo: eventNotification.event)
                             .environmentObject(ns)
                             .environmentObject(dim)
+                            .environmentObject(theme)
                     }
                 }
             }
@@ -207,6 +216,7 @@ private struct WithSheets: ViewModifier {
                             .presentationDetents([.height(200)])
                             .presentationDragIndicator(.visible)
                     }
+                    .environmentObject(theme)
                 }
                 else {
                     QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
@@ -214,6 +224,7 @@ private struct WithSheets: ViewModifier {
                         .environmentObject(dim)
                         .presentationDetents([.height(200)])
                         .presentationDragIndicator(.visible)
+                        .environmentObject(theme)
                 }
             }
         
@@ -225,11 +236,13 @@ private struct WithSheets: ViewModifier {
                                 .environmentObject(ns)
                                 .environmentObject(dim)
                         }
+                        .environmentObject(theme)
                     }
                     else {
                         NewQuoteRepost(quotingEvent: quotePostEvent)
                             .environmentObject(ns)
                             .environmentObject(dim)
+                            .environmentObject(theme)
                     }
                 }
             }
@@ -240,6 +253,7 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $paymentInfo) { paymentInfo in
                 PaymentAmountSelector(paymentInfo:paymentInfo)
+                    .environmentObject(theme)
             }
         
             .onReceive(receiveNotification(.addRemoveToListsheet)) { notification in
@@ -248,6 +262,7 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $addRemoveContactFromList) { contact in
                 AddRemoveToListsheet(contact: contact)
+                    .environmentObject(theme)
             }
 
             // New highlight
@@ -259,6 +274,7 @@ private struct WithSheets: ViewModifier {
                 NavigationStack {
                     HighlightComposer(highlight: newHighlight)
                         .environmentObject(ns)
+                        .environmentObject(theme)
                 }
             }
         
@@ -271,6 +287,7 @@ private struct WithSheets: ViewModifier {
                 LazyNoteMenuSheet(nrPost: nrPost)
                     .environmentObject(ns)
                     .presentationDetents([.medium])
+                    .environmentObject(theme)
             }
         
             // Zap customizer sheet
@@ -282,6 +299,7 @@ private struct WithSheets: ViewModifier {
                 ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId)
                     .environmentObject(ns)
                     .presentationDetents([.large])
+                    .environmentObject(theme)
             }
         
             // Share post screenshot
@@ -319,6 +337,7 @@ private struct WithSheets: ViewModifier {
                     .environmentObject(ns)
                     .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                     .environment(\.colorScheme, colorScheme)
+                    .environmentObject(theme)
                 )
 
                 

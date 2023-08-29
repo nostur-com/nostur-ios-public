@@ -11,6 +11,7 @@ import NukeUI
 
 
 struct BadgeDetailView: View {
+    @EnvironmentObject var theme:Theme
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
     let up:Unpublisher = .shared
@@ -103,7 +104,7 @@ struct BadgeDetailView: View {
             
             
             Button { awardToPeopleIsShown = true } label: { Text("Award to people", comment: "Button to award a badge to people") }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
             // award to people
             
             // lazy vstack foreach award p

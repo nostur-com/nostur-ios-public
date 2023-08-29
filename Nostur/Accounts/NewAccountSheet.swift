@@ -10,7 +10,7 @@ import secp256k1
 import Foundation
 
 struct NewAccountSheet: View {
-    
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
     @Environment(\.dismiss) private var dismiss
@@ -52,7 +52,7 @@ struct NewAccountSheet: View {
                     Text("Create")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                 
                 if (ns.accounts.first(where: { $0.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY}) == nil) {
                     NavigationLink {

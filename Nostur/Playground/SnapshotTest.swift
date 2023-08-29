@@ -119,7 +119,7 @@ struct MyCollectionView: UIViewControllerRepresentable {
 //                    .background(Color.random)
 //                    .hCentered()
             }
-            .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
+            .background(Theme.default.listBackground) // Between and around every PostOrThread (NoteRows)
             .margins(.all, 0)
         }
     }()

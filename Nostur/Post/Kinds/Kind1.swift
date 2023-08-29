@@ -11,6 +11,7 @@ import SwiftUI
 
 // Note Full width
 struct Kind1: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
     let nrPost:NRPost
     @ObservedObject var pfpAttributes: NRPost.PFPAttributes
@@ -109,7 +110,7 @@ struct Kind1: View {
                         Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a 'kind X' post is not yet supported"), systemImage: "exclamationmark.triangle.fill")
                             .hCentered()
                             .frame(maxWidth: .infinity)
-                            .background(Color("LightGray").opacity(0.2))
+                            .background(theme.lineColor.opacity(0.2))
                     }
                     if let subject = nrPost.subject {
                         Text(subject)

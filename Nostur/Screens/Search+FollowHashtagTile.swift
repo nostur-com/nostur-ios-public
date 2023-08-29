@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct FollowHashtagTile: View {
+    @EnvironmentObject var theme:Theme
     public var hashtag:String
     private var hashtagNormalized:String {
         hashtag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
@@ -31,10 +32,9 @@ struct FollowHashtagTile: View {
                     }
                 }
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
         }
         .padding(10)
-        .roundedBoxShadow()
     }
     
     func follow(_ hashtag:String) {

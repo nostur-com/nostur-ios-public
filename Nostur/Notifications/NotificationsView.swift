@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 
 struct NotificationsContainer: View {
+    @EnvironmentObject var theme: Theme
     @StateObject private var nm:NotificationsManager = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
@@ -30,6 +31,7 @@ struct NotificationsContainer: View {
                     Text("Select account account first")
                 }
             }
+            .background(theme.listBackground)
             .withNavigationDestinations()
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in

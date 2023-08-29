@@ -9,7 +9,7 @@ import SwiftUI
 import NukeUI
 
 struct GifSearcher: View {
-    
+    @EnvironmentObject var theme:Theme
     @Environment(\.dismiss) var dismiss
     @State var searchTerm = ""
     @State var searchResults:[TenorResult] = []
@@ -49,7 +49,7 @@ struct GifSearcher: View {
 //                                autocompleteResults = []
 //                                suggestionResults = []
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                         }
                     }
                 }

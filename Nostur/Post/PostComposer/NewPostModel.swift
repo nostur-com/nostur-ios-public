@@ -45,11 +45,11 @@ public final class NewPostModel: ObservableObject {
     
     static let rules: [HighlightRule] = [
         HighlightRule(pattern: NewPostModel.mentionRegex, formattingRules: [
-            TextFormattingRule(key: .foregroundColor, value: UIColor(named: "AccentColor")!),
+            TextFormattingRule(key: .foregroundColor, value: UIColor(Theme.default.accent)),
             TextFormattingRule(fontTraits: .traitBold)
         ]),
         HighlightRule(pattern: NewPostModel.typingRegex, formattingRules: [
-            TextFormattingRule(key: .foregroundColor, value: UIColor(named: "AccentColor")!),
+            TextFormattingRule(key: .foregroundColor, value: UIColor(Theme.default.accent)),
             TextFormattingRule(fontTraits: .traitBold)
         ])
     ]

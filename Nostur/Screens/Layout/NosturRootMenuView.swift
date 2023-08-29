@@ -158,6 +158,7 @@ struct NosturRootMenu: View {
 }
 
 struct SideBar: View {
+    @EnvironmentObject var theme:Theme
     let ns:NosturState = .shared
     @EnvironmentObject var sm:SideBarModel
     @ObservedObject var account:Account
@@ -174,7 +175,7 @@ struct SideBar: View {
                     PFP(pubkey: account.publicKey, account: account, size:75)
                         .overlay(
                             Circle()
-                                .strokeBorder(Color.systemBackground, lineWidth: 3)
+                                .strokeBorder(theme.background, lineWidth: 3)
                         )
                         .offset(x: 10, y:37)
                         .onTapGesture {
@@ -199,6 +200,7 @@ struct SideBar: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 25, height: 25)
+                                .foregroundColor(theme.accent)
                         }
                     }
                     .zIndex(20)
@@ -206,80 +208,101 @@ struct SideBar: View {
                 }
                 .zIndex(30)
             List {
-                VStack(alignment: .leading) {
-                    Text("\(account.name)").font(.headline)
-                    Text("**\(account.follows?.count ?? 0)**  Following", comment: "Number of people following").font(.caption)
-                }
+                Group {
+                    VStack(alignment: .leading) {
+                        Text("\(account.name)").font(.headline)
+                        Text("**\(account.follows?.count ?? 0)**  Following", comment: "Number of people following").font(.caption)
+                    }
 
-                Button {
-                    if IS_IPAD {
-                        sm.showSidebar = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            navigateTo(ContactPath(key: account.publicKey))
+                    Button {
+                        if IS_IPAD {
+                            sm.showSidebar = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                navigateTo(ContactPath(key: account.publicKey))
+                            }
                         }
+                        else {
+                            navigateTo(ContactPath(key: account.publicKey))
+                            sm.showSidebar = false
+                        }
+                    } label: {
+                        Label(String(localized:"Profile", comment:"Side bar navigation button"), systemImage: "person")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(theme.accent)
                     }
-                    else {
-                        navigateTo(ContactPath(key: account.publicKey))
-                        sm.showSidebar = false
-                    }
-                } label: {
-                    Label(String(localized:"Profile", comment:"Side bar navigation button"), systemImage: "person")
-                }
-                Button {
-                    if selectedTab != "Main" { selectedTab = "Main" }
-                    navigateToOnMain(ViewPath.Lists)
-                    sm.showSidebar = false
-                } label: {
-                    Label(String(localized:"Feeds", comment:"Side bar navigation button"), systemImage: "list.bullet.rectangle")
-                }
-                Button {
-                    selectedTab = "Bookmarks"
-                    sm.showSidebar = false
-                } label: {
-                    Label(String(localized:"Bookmarks", comment:"Side bar navigation button"), systemImage: "bookmark")
-                }
-                if !account.isNC {
                     Button {
                         if selectedTab != "Main" { selectedTab = "Main" }
-                        navigateToOnMain(ViewPath.Badges)
+                        navigateToOnMain(ViewPath.Lists)
                         sm.showSidebar = false
                     } label: {
-                        Label(String(localized:"Badges", comment:"Side bar navigation button"), systemImage: "medal")
+                        Label(String(localized:"Feeds", comment:"Side bar navigation button"), systemImage: "list.bullet.rectangle")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(theme.accent)
                     }
-                }
-                Button {
-                    if selectedTab != "Main" { selectedTab = "Main" }
-                    navigateToOnMain(ViewPath.Settings)
-                    sm.showSidebar = false
-                } label: {
-                    Label(String(localized:"Settings", comment:"Side bar navigation button"), systemImage: "gearshape")
-                }
-                Button {
-                    if selectedTab != "Main" { selectedTab = "Main" }
-                    navigateToOnMain(ViewPath.Blocklist)
-                    sm.showSidebar = false
-                } label: {
-                    Label(String(localized:"Block list", comment:"Side bar navigation button"), systemImage: "person.badge.minus")
-                }
-                if !account.isNC {
                     Button {
-                        showAnySigner = true
+                        selectedTab = "Bookmarks"
+                        sm.showSidebar = false
                     } label: {
-                        Label(String(localized:"Signer", comment:"Side bar navigation button"), systemImage: "signature")
+                        Label(String(localized:"Bookmarks", comment:"Side bar navigation button"), systemImage: "bookmark")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(theme.accent)
+                    }
+                    if !account.isNC {
+                        Button {
+                            if selectedTab != "Main" { selectedTab = "Main" }
+                            navigateToOnMain(ViewPath.Badges)
+                            sm.showSidebar = false
+                        } label: {
+                            Label(String(localized:"Badges", comment:"Side bar navigation button"), systemImage: "medal")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .foregroundColor(theme.accent)
+                        }
+                    }
+                    Button {
+                        if selectedTab != "Main" { selectedTab = "Main" }
+                        navigateToOnMain(ViewPath.Settings)
+                        sm.showSidebar = false
+                    } label: {
+                        Label(String(localized:"Settings", comment:"Side bar navigation button"), systemImage: "gearshape")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(theme.accent)
+                    }
+                    Button {
+                        if selectedTab != "Main" { selectedTab = "Main" }
+                        navigateToOnMain(ViewPath.Blocklist)
+                        sm.showSidebar = false
+                    } label: {
+                        Label(String(localized:"Block list", comment:"Side bar navigation button"), systemImage: "person.badge.minus")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(theme.accent)
+                    }
+                    if !account.isNC {
+                        Button {
+                            showAnySigner = true
+                        } label: {
+                            Label(String(localized:"Signer", comment:"Side bar navigation button"), systemImage: "signature")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .foregroundColor(theme.accent)
+                        }
+                    }
+    //                Button {} label: {
+    //                    Label(String(localized:About", comment:"Side bar navigation button"), systemImage: "info")
+    //                }
+                    Button {
+                        logoutAccount = account
+                    } label: {
+                        Label(String(localized:"Log out", comment:"Side bar navigation button"), systemImage: "rectangle.portrait.and.arrow.right")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(theme.accent)
                     }
                 }
-//                Button {} label: {
-//                    Label(String(localized:About", comment:"Side bar navigation button"), systemImage: "info")
-//                }
-                Button {
-                    logoutAccount = account
-                } label: {
-                    Label(String(localized:"Log out", comment:"Side bar navigation button"), systemImage: "rectangle.portrait.and.arrow.right")
-                }
+                .listRowBackground(theme.listBackground)
             }
+            .scrollContentBackground(.hidden)
+            .background(theme.listBackground)
             .zIndex(20)
             .listStyle(.plain)
-            .padding(.top, 25)
+            .padding(.top, 45)
             Spacer()
         }
         .edgesIgnoringSafeArea([.top, .leading])
@@ -333,6 +356,7 @@ struct SideBar: View {
                             .cancel(Text("Cancel"))
                         ])
                 }
+        .background(theme.listBackground)
     }
 }
 
@@ -344,6 +368,9 @@ struct NosturRootMenu_Previews: PreviewProvider {
                     
                     NosturRootMenu(account: account)
                 }
+            }
+            .onAppear {
+                Theme.default.loadRed()
             }
         }
     }

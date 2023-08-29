@@ -115,11 +115,14 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
                        
         let photoButton = UIButton(type: .system)
         photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
+        photoButton.tintColor = UIColor(Theme.default.accent)
         photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
         let photos = UIBarButtonItem(customView: photoButton)
     
+    
         let gifButton = UIButton(type: .system)
         gifButton.setImage(UIImage(named: "GifButton"), for: .normal)
+        gifButton.tintColor = UIColor(Theme.default.accent)
     
         gifButton.imageView?.contentMode = .scaleAspectFit
         gifButton.sizeToFit()
@@ -147,7 +150,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     public func updateUIView(_ uiView: UITextView, context: Context) {
         context.coordinator.updatingUIView = true
         
-        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor.systemBackground
+        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Theme.default.background)
         
         let highlightedText = HighlightedTextEditor.getHighlightedText(
             text: text,

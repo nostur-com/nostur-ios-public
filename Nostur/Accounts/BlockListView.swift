@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BlockListView: View {
-    
+    @EnvironmentObject var theme: Theme
     @State var tab = "Blocked"
     
     var body: some View {
@@ -39,12 +39,14 @@ struct BlockListView: View {
             }
             Spacer()
         }
+        .background(theme.listBackground)
         .navigationTitle(tab)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 struct BlockedAccounts:View {
+    @EnvironmentObject var theme: Theme
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     
@@ -54,16 +56,16 @@ struct BlockedAccounts:View {
     var body: some View {
         if let account = ns.account {
             ScrollView {
-                LazyVStack {
+                LazyVStack(spacing: 10) {
                     ForEach(blockedContacts.sorted(by: { $0.authorName < $1.authorName })) { contact in
                         ProfileRow(withoutFollowButton: true, contact: contact)
+                            .background(theme.background)
                             .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
                                 ns.objectWillChange.send()
                                 account.blockedPubkeys_.removeAll(where: { $0 == contact.pubkey })
                                 DataProvider.shared().save()
                                 sendNotification(.blockListUpdated, account.blockedPubkeys_)
                             }
-                        Divider()
                     }
                 }
             }
@@ -87,6 +89,7 @@ struct BlockedAccounts:View {
 }
 
 struct MutedConversations: View {
+    @EnvironmentObject var theme: Theme
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var ns:NosturState
     @StateObject var fl = FastLoader()
@@ -96,19 +99,20 @@ struct MutedConversations: View {
     var body: some View {
         Group {
             if let account = ns.account {
-                LazyVStack() {
+                LazyVStack(spacing: 10) {
                     ForEach(fl.nrPosts) { nrPost in
-                        HStack {
-                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25)
-                                .onTapGesture {
-                                    navigateTo(ContactPath(key: nrPost.pubkey))
-                                }
-                            MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: 1)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .contentShape(Rectangle())
-                                .onTapGesture { navigateTo(nrPost) }
+                        Box {
+                            HStack(spacing: 10) {
+                                PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25)
+                                    .onTapGesture {
+                                        navigateTo(ContactPath(key: nrPost.pubkey))
+                                    }
+                                MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: 1)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { navigateTo(nrPost) }
+                            }
                         }
-                        .padding(10)
                         .id(nrPost.id)
                         .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
                             ns.objectWillChange.send()
@@ -116,7 +120,6 @@ struct MutedConversations: View {
                             fl.nrPosts = fl.nrPosts.filter { $0.id != nrPost.id }
                             DataProvider.shared().save()
                         }
-                        Divider()
                     }
                     Spacer()
                 }

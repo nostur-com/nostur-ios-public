@@ -72,6 +72,7 @@ struct ProfileOverlayCardContainer: View {
 }
 
 struct ProfileOverlayCard: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var contact:NRContact
     var zapEtag:String? // so other clients can still tally zaps
     @EnvironmentObject private var ns:NosturState
@@ -100,127 +101,126 @@ struct ProfileOverlayCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
-            HStack(alignment: .top) {
-                ZappablePFP(pubkey: contact.pubkey, contact: contact, size: DIMENSIONS.PFP_BIG, zapEtag: zapEtag)
-                    .onTapGesture {
-                        navigateTo(ContactPath(key: contact.pubkey))
-                        sendNotification(.dismissMiniProfile)
-                    }
-                
-                Spacer()
-                
-                if contact.anyLud {
-                    ProfileZapButton(contact: contact, zapEtag: zapEtag)
-                }
-                
-                if (!withoutFollowButton) {
-                    Button {
-                        if (contact.following && !contact.privateFollow) {
-                            contact.follow(privateFollow: true)
-                        }
-                        else if (contact.following && contact.privateFollow) {
-                            contact.unfollow()
-                        }
-                        else {
-                            contact.follow()
-                        }
-                    } label: {
-                        FollowButton(isFollowing:contact.following, isPrivateFollowing:contact.privateFollow)
-                    }
-                    .disabled(!fg.didReceiveContactListThisSession)
-                }
-            }
-            
+        Box {
             VStack(alignment: .leading) {
-                HStack(spacing:3) {
-                    Text(contact.anyName).font(.title).foregroundColor(.primary)
-                        .lineLimit(1)
-                    if couldBeImposter {
-                        Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
-                            .padding(.horizontal, 8)
-                            .background(.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                            .layoutPriority(2)
-                    }
-                    else if (contact.nip05verified) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.title)
-                            .foregroundColor(Color("AccentColor"))
+                HStack(alignment: .top) {
+                    ZappablePFP(pubkey: contact.pubkey, contact: contact, size: DIMENSIONS.PFP_BIG, zapEtag: zapEtag)
+                        .onTapGesture {
+                            navigateTo(ContactPath(key: contact.pubkey))
+                            sendNotification(.dismissMiniProfile)
+                        }
+                    
+                    Spacer()
+                    
+                    if contact.anyLud {
+                        ProfileZapButton(contact: contact, zapEtag: zapEtag)
                     }
                     
-                    if (isFollowingYou) {
-                        Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2)
-                            .background(Color.secondary)
-                            .opacity(0.7)
-                            .cornerRadius(13)
-                    }
-                }
-                if let fixedName = contact.fixedName, fixedName != contact.anyName {
-                    HStack {
-                        Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
-                            .lineLimit(1)
-                        Image(systemName: "multiply.circle.fill")
-                            .onTapGesture {
-                                contact.setFixedName(contact.anyName)
+                    if (!withoutFollowButton) {
+                        Button {
+                            if (contact.following && !contact.privateFollow) {
+                                contact.follow(privateFollow: true)
                             }
+                            else if (contact.following && contact.privateFollow) {
+                                contact.unfollow()
+                            }
+                            else {
+                                contact.follow()
+                            }
+                        } label: {
+                            FollowButton(isFollowing:contact.following, isPrivateFollowing:contact.privateFollow)
+                        }
+                        .disabled(!fg.didReceiveContactListThisSession)
                     }
                 }
                 
-                Text(verbatim:lastSeen ?? "Last seen:")
-                    .font(.caption).foregroundColor(.primary)
-                        .lineLimit(1)
-                    .opacity(lastSeen != nil ? 1.0 : 0)
+                VStack(alignment: .leading) {
+                    HStack(spacing:3) {
+                        Text(contact.anyName).font(.title).foregroundColor(.primary)
+                            .lineLimit(1)
+                        if couldBeImposter {
+                            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                                .padding(.horizontal, 8)
+                                .background(.red)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                                .layoutPriority(2)
+                        }
+                        else if (contact.nip05verified) {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.title)
+                                .foregroundColor(Color("AccentColor"))
+                        }
+                        
+                        if (isFollowingYou) {
+                            Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(Color.secondary)
+                                .opacity(0.7)
+                                .cornerRadius(13)
+                        }
+                    }
+                    if let fixedName = contact.fixedName, fixedName != contact.anyName {
+                        HStack {
+                            Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
+                                .lineLimit(1)
+                            Image(systemName: "multiply.circle.fill")
+                                .onTapGesture {
+                                    contact.setFixedName(contact.anyName)
+                                }
+                        }
+                    }
+                    
+                    Text(verbatim:lastSeen ?? "Last seen:")
+                        .font(.caption).foregroundColor(.primary)
+                            .lineLimit(1)
+                        .opacity(lastSeen != nil ? 1.0 : 0)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    navigateTo(ContactPath(key: contact.pubkey))
+                    sendNotification(.dismissMiniProfile)
+                }
+                .padding(.bottom, 10)
+                
+                Text(contact.about ?? "")
+                    .lineLimit(15)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                
+                HStack(spacing:0) {
+                    Button(String(localized:"Posts", comment:"Tab title")) {
+                        navigateTo(ContactPath(key: contact.pubkey, tab:"Posts"))
+                        sendNotification(.dismissMiniProfile)
+                    }
+                    Spacer()
+                    Button(String(localized:"Following", comment:"Tab title")) {
+                        navigateTo(ContactPath(key: contact.pubkey, tab:"Following"))
+                        sendNotification(.dismissMiniProfile)
+                    }
+                    Spacer()
+                    Button(String(localized:"Media", comment:"Tab title")) {
+                        navigateTo(ContactPath(key: contact.pubkey, tab:"Media"))
+                        sendNotification(.dismissMiniProfile)
+                    }
+                    Spacer()
+                    Button(String(localized:"Likes", comment:"Tab title")) {
+                        navigateTo(ContactPath(key: contact.pubkey, tab:"Likes"))
+                        sendNotification(.dismissMiniProfile)
+                    }
+                    Spacer()
+                    Button(String(localized:"Zaps", comment:"Tab title")) {
+                        navigateTo(ContactPath(key: contact.pubkey, tab:"Zaps"))
+                        sendNotification(.dismissMiniProfile)
+                    }
+                }
+                .padding(.top, 10)
+                .background(theme.background)
             }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                navigateTo(ContactPath(key: contact.pubkey))
-                sendNotification(.dismissMiniProfile)
-            }
-            .padding(.bottom, 10)
-            
-            Text(contact.about ?? "")
-                .lineLimit(15)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.leading)
-            
-            HStack(spacing:0) {
-                Button(String(localized:"Posts", comment:"Tab title")) {
-                    navigateTo(ContactPath(key: contact.pubkey, tab:"Posts"))
-                    sendNotification(.dismissMiniProfile)
-                }
-                Spacer()
-                Button(String(localized:"Following", comment:"Tab title")) {
-                    navigateTo(ContactPath(key: contact.pubkey, tab:"Following"))
-                    sendNotification(.dismissMiniProfile)
-                }
-                Spacer()
-                Button(String(localized:"Media", comment:"Tab title")) {
-                    navigateTo(ContactPath(key: contact.pubkey, tab:"Media"))
-                    sendNotification(.dismissMiniProfile)
-                }
-                Spacer()
-                Button(String(localized:"Likes", comment:"Tab title")) {
-                    navigateTo(ContactPath(key: contact.pubkey, tab:"Likes"))
-                    sendNotification(.dismissMiniProfile)
-                }
-                Spacer()
-                Button(String(localized:"Zaps", comment:"Tab title")) {
-                    navigateTo(ContactPath(key: contact.pubkey, tab:"Zaps"))
-                    sendNotification(.dismissMiniProfile)
-                }
-            }
-            .padding(.top, 10)
-            .background(Color.systemBackground)
         }
-        .background(Color.systemBackground)
-        .padding(20)
-        .roundedBoxShadow()
-        .padding(10)
+        .padding(10)        
         .task {
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard !contact.following else { return }

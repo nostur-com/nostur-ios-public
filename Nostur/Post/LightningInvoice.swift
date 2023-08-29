@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct LightningInvoice: View {
+    @EnvironmentObject var theme:Theme
     @Environment(\.openURL) var openURL
     @ObservedObject var ss:SettingsStore = .shared
     var invoice:String
@@ -40,9 +41,9 @@ struct LightningInvoice: View {
                             }
                             self.cancellationId = nil
                         } label: { Text(isExpired ? "Expired" : "Payment attempted").frame(minWidth: 150) }
-                            .buttonStyle(.borderedProminent)
-                            .cornerRadius(20)
-                            .disabled(isExpired)
+                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                        .cornerRadius(20)
+                        .disabled(isExpired)
                     }
                     else {
                         // BUTTON TO PAY INVOICE (DISABLED IF EXPIRED)
@@ -89,9 +90,9 @@ struct LightningInvoice: View {
                             Text("Pay", comment:"Button to pay a lightning invoice").frame(minWidth: 150)
                         }
                     }
-                        .buttonStyle(.borderedProminent)
-                        .cornerRadius(20)
-                        .disabled(isExpired)
+                    .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                    .cornerRadius(20)
+                    .disabled(isExpired)
                 }
             }
             else {

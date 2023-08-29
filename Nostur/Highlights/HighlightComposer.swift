@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct HighlightComposer: View {
+    @EnvironmentObject var theme:Theme
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var ns:NosturState
     var highlight:NewHighlight
@@ -90,7 +91,7 @@ struct HighlightComposer: View {
                                 Button(String(localized:"Include author", comment: "Button to include author in Highlight")) { isAuthorSelectionShown = true }
                             }
                             Button(String(localized:"Post.verb", comment: "Button to post a highlight")) { send() }
-                                .buttonStyle(.borderedProminent)
+                                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                         }
                     }
                 }

@@ -16,6 +16,7 @@ class LVMCounter: ObservableObject {
 }
 
 struct ListUnreadCounter: View {
+    @EnvironmentObject var theme:Theme
     var vm:LVM
     @ObservedObject var vmCounter:LVMCounter
     
@@ -36,7 +37,7 @@ struct ListUnreadCounter: View {
         .foregroundColor(.white)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .foregroundColor(Color("AccentColor"))
+                .foregroundColor(theme.accent)
                 .opacity(0.85)
                 .shadow(color: Color.gray.opacity(0.5), radius: 5)
         )
@@ -73,5 +74,6 @@ struct Previews_ListUnreadCounter_Previews: PreviewProvider {
     static var previews: some View {
         Previews_ListUnreadCounter_PreviewsWrapper()
             .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .environmentObject(Theme.default)
     }
 }

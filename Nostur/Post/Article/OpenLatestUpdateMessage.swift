@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct OpenLatestUpdateMessage: View {
+    @EnvironmentObject var theme:Theme
     var action:(() -> Void)? = nil
     
     var body: some View {
@@ -16,7 +17,7 @@ struct OpenLatestUpdateMessage: View {
             Text("This article has been updated", comment: "Message shown when there is a newer version available of an article")
         
             Button(String(localized: "Open latest", comment: "Button go to latest version of article")) { action?() }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
             
         }
         .padding(.leading, 8)

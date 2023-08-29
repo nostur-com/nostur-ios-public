@@ -9,6 +9,7 @@ import SwiftUI
 import UIKit
 
 struct DetailPane: View {
+    @EnvironmentObject var theme:Theme
     @StateObject private var dim = DIMENSIONS.shared
     @StateObject var tm = DetailTabsModel()
     @State var offsetX = 200.0
@@ -141,7 +142,7 @@ struct DetailPane: View {
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .padding(0)
-        .background(Color("ListBackground"))
+        .background(theme.listBackground)
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
             if type(of: destination.destination) == NRPost.self {

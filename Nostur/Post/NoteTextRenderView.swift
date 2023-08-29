@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NoteTextRenderView: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var nrPost:NRPost
     @State var viewSize:CGSize = .zero
     
@@ -36,15 +37,15 @@ struct NoteTextRenderView: View {
                 Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
                     .hCentered()
                     .frame(maxWidth: .infinity)
-                    .background(Color("LightGray").opacity(0.2))
+                    .background(theme.lineColor.opacity(0.2))
                 if !(nrPost.content ?? "").isEmpty {
                     Text(nrPost.content ?? "")//.border(.cyan)
                         .lineLimit(10, reservesSpace: false)
 //                            .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
                         .foregroundColor(.primary)
-                        .accentColor(Color("AccentColor"))
-                        .tint(Color("AccentColor"))
+//                        .accentColor(Color("AccentColor"))
+//                        .tint(Color("AccentColor"))
                         .lineSpacing(3)
                         .padding(.vertical, 5)
                         .frame(maxWidth: .infinity, alignment: .leading)

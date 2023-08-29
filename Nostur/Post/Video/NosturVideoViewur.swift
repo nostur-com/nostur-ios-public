@@ -13,6 +13,7 @@ import AVFoundation
 
 @MainActor
 struct NosturVideoViewur: View {
+    @EnvironmentObject var theme:Theme
     let url:URL
     let pubkey:String
     var height:CGFloat?
@@ -51,7 +52,7 @@ struct NosturVideoViewur: View {
                 }
                .centered()
                .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
-               .background(Color("LightGray").opacity(0.2))
+               .background(theme.lineColor.opacity(0.2))
             }
             else if isStream {
                 MusicStreamurRepresentable(url: url, isPlaying: $isPlaying, isMuted: $isMuted)
@@ -162,20 +163,20 @@ struct NosturVideoViewur: View {
                     }
                     .centered()
                     .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
-                    .background(Color("LightGray").opacity(0.2))
+                    .background(theme.lineColor.opacity(0.2))
                 }
                 else {
                     if videoState == .cancelled {
                         Text("Cancelled")
                             .centered()
                             .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            .background(Color("LightGray").opacity(0.2))
+                            .background(theme.lineColor.opacity(0.2))
                     }
                     else if videoState == .error {
                         Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
                             .centered()
                             .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            .background(Color("LightGray").opacity(0.2))
+                            .background(theme.lineColor.opacity(0.2))
                     }
                 }
             }
@@ -183,7 +184,7 @@ struct NosturVideoViewur: View {
                 Text("Tap to load video", comment:"Button to load a video in a post")
                     .centered()
                     .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                    .background(Color("LightGray").opacity(0.2))
+                    .background(theme.lineColor.opacity(0.2))
                     .highPriorityGesture(
                         TapGesture()
                             .onEnded { _ in

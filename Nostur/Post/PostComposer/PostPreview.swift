@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PostPreview: View {
+    @EnvironmentObject var theme:Theme
     @StateObject var dim = DIMENSIONS()
     @Environment(\.dismiss) var dismiss
     let nrPost:NRPost
@@ -55,7 +56,7 @@ struct PostPreview: View {
                         Text("Post.verb", comment: "Button to post (publish) a new post")
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                 .cornerRadius(20)
                 .disabled(uploading)
             }

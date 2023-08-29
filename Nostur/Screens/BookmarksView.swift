@@ -24,7 +24,7 @@ struct BookmarksContainer: View {
 }
 
 struct BookmarksView: View {
-
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var ns:NosturState
 
     let account: Account
@@ -66,7 +66,7 @@ struct BookmarksView: View {
                     }
                     Spacer()
                 }
-                .background(Color("ListBackground"))
+                .background(theme.listBackground)
             }
             else {
                 Text("When you bookmark a post it will show up here.")

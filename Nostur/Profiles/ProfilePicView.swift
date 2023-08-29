@@ -74,7 +74,7 @@ struct AccountPFP: View {
 }
 
 struct InnerPFP: View {
-    
+    @EnvironmentObject var theme:Theme
     var pubkey:String
     var pictureUrl:String?
     var size:CGFloat = 50.0
@@ -116,7 +116,7 @@ struct InnerPFP: View {
                 .background(
                     Circle()
                         .strokeBorder(.regularMaterial, lineWidth: 5)
-                        .background(Circle().fill(Color.systemBackground))
+                        .background(Circle().fill(theme.background))
                 )
             }
             else if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
@@ -141,7 +141,7 @@ struct InnerPFP: View {
                             .background(
                                 Circle()
                                     .strokeBorder(.regularMaterial, lineWidth: 5)
-                                    .background(Circle().fill(Color.systemBackground))
+                                    .background(Circle().fill(theme.background))
                             )
                         }
                         else if let image = state.image {
@@ -154,7 +154,7 @@ struct InnerPFP: View {
                                 .background(
                                     Circle()
                                         .strokeBorder(.regularMaterial, lineWidth: 5)
-                                        .background(Circle().fill(Color.systemBackground))
+                                        .background(Circle().fill(theme.background))
                                 )
                         }
                         else {
@@ -163,7 +163,7 @@ struct InnerPFP: View {
                                 .background(
                                     Circle()
                                         .strokeBorder(.black, lineWidth: 5)
-                                        .background(Circle().fill(Color.systemBackground))
+                                        .background(Circle().fill(theme.background))
                                 )
                         }
                     }
@@ -173,7 +173,7 @@ struct InnerPFP: View {
                             .background(
                                 Circle()
                                     .strokeBorder(.regularMaterial, lineWidth: 5)
-                                    .background(Circle().fill(Color.systemBackground))
+                                    .background(Circle().fill(theme.background))
                             )
                     }
                 }
@@ -187,7 +187,7 @@ struct InnerPFP: View {
                 .background(
                     Circle()
                         .strokeBorder(.regularMaterial, lineWidth: 5)
-                        .background(Circle().fill(Color.systemBackground))
+                        .background(Circle().fill(theme.background))
                 )
         }
     }

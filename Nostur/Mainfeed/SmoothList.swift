@@ -25,10 +25,12 @@ struct SmoothList: UIViewControllerRepresentable {
     
     var dim: DIMENSIONS
     var lvm: LVM
+    var theme: Theme
     
-    init(lvm:LVM, dim:DIMENSIONS) {
+    init(lvm:LVM, dim:DIMENSIONS, theme:Theme) {
         self.lvm = lvm
         self.dim = dim
+        self.theme = theme
     }
     
     func makeCoordinator() -> Coordinator {
@@ -90,7 +92,7 @@ struct SmoothList: UIViewControllerRepresentable {
         let collectionViewHolder = CViewHolder(coordinator: coordinator) { uiCollectionView in
             //            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
             uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
-            //            uiCollectionView.backgroundColor = UIColor.yellow // UIColor(named: "ListBackground")
+            uiCollectionView.backgroundColor = UIColor(theme.listBackground) // UIColor(named: "ListBackground")
             viewController.view.addSubview(uiCollectionView)
             
             NSLayoutConstraint.activate([
@@ -445,7 +447,9 @@ struct SmoothList: UIViewControllerRepresentable {
                 cell.contentConfiguration = UIHostingConfiguration {
                     PostOrThread(nrPost: nrPost)
                 }
-                .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
+                .background {
+                    Theme.default.listBackground // This is visible between PostOrThread's. .clear becomes white, so must set color
+                }
                 .margins(.vertical, 5)
                 .margins(.horizontal, 0)
             }
@@ -457,9 +461,11 @@ struct SmoothList: UIViewControllerRepresentable {
                     Text(item)
                         .hCentered()
                 }
-                .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
+                .background {
+                    Color.clear
+                }
                 .margins(.vertical, 5)
-                .margins(.horizontal, 0)
+                .margins(.horizontal, 5)
             }
         }()
     }
@@ -509,7 +515,7 @@ final class CViewHolder {
         //        flowLayout.scrollDirection = .vertical
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = UIColor(named: "ListBackground") // This color flashes visible for a milisecond and is then covered by all other things
+        collectionView.backgroundColor = UIColor.clear // This color flashes visible for a milisecond and is then covered by all other things
         collectionView.allowsSelection = false
         collectionView.delegate = coordinator
         collectionView.prefetchDataSource = coordinator

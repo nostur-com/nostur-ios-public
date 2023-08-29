@@ -9,6 +9,7 @@ import SwiftUI
 
 // Hightlight note
 struct Highlight: View {
+    @EnvironmentObject var theme:Theme
     let nrPost:NRPost
     @ObservedObject var pfpAttributes: NRPost.PFPAttributes
     let hideFooter:Bool // For rendering in NewReply
@@ -37,7 +38,7 @@ struct Highlight: View {
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
-                        Color("LightGray")
+                        theme.lineColor
                             .frame(width: 2, height: 20)
                             .offset(x:0, y: -10)
                     }
@@ -144,7 +145,7 @@ struct Highlight: View {
             .padding(.bottom, 10)
         }
         .background(alignment: .leading) {
-            Color("LightGray")
+            theme.lineColor
                 .frame(width: 2)
                 .offset(x: THREAD_LINE_OFFSET, y: 18)
                 .opacity(connect == .bottom || connect == .both ? 1 : 0)

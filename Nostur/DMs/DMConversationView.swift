@@ -9,6 +9,7 @@ import SwiftUI
 import Algorithms
 
 struct DMConversationView: View {
+    @EnvironmentObject var theme:Theme
     @Namespace var bottom
     
     @EnvironmentObject var ns:NosturState
@@ -167,7 +168,7 @@ struct DMConversationView: View {
                                                 rootDM.objectWillChange.send()
                                                 rootDM.dmAccepted = true
                                             }
-                                            .buttonStyle(.borderedProminent)
+                                            .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                                         }
                                     }
                                     .padding(.vertical, 10)
