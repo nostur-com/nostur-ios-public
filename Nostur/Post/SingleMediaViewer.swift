@@ -59,6 +59,10 @@ struct SingleMediaViewer: View {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
                             .padding(.horizontal, -contentPadding)
+                            .transaction { transaction in
+                                transaction.animation = nil
+                                transaction.disablesAnimations = true
+                            }
 //                                .readSize { size in
 //                                    actualSize = size
 //                                }
