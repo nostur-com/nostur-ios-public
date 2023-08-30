@@ -91,6 +91,11 @@ struct ZappablePFP: View {
                         .store(in: &subscriptions)
                 }
             }
+            .transaction { t in
+                t.animation = nil
+                t.disablesAnimations = true
+            }
+//            .id(pubkey)
     }
 }
 

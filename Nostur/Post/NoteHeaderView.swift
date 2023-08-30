@@ -8,18 +8,21 @@ import SwiftUI
 
 struct NoteHeaderView: View {
     
-    @ObservedObject var nrPost:NRPost
+    let nrPost:NRPost
+    @ObservedObject var pfpAttributes: NRPost.PFPAttributes
     var singleLine:Bool = true
     
     init(nrPost: NRPost, singleLine: Bool = true) {
         self.nrPost = nrPost
+        self.pfpAttributes = nrPost.pfpAttributes
         self.singleLine = singleLine
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
-            if let contact = nrPost.contact {
+            if let contact = pfpAttributes.contact {
                 PostHeader(contact: contact, nrPost:nrPost, singleLine:singleLine)
+//                    .background(Color.random)
             }
             else {
                 PlaceholderPostHeader(nrPost: nrPost, singleLine: singleLine)

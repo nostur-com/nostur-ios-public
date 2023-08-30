@@ -58,7 +58,7 @@ struct Kind1063: View {
                     
             }
             if let height {
-                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth)
+                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload))
                     .padding(.horizontal, -10)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(height: height)

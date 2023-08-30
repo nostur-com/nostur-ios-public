@@ -126,7 +126,7 @@ struct ContentRenderer: View { // VIEW things
                     if let dimensions = mediaContent.dimensions {
                         let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
 //                        Text("Available width Y1:\(availableWidth)")
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, forceShow: nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .readSize { size in
@@ -138,7 +138,7 @@ struct ContentRenderer: View { // VIEW things
                     }
                     else {
 //                        Text("Available width Y2:\(availableWidth)")
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, forceShow: nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
 //                            .readSize { size in
 //                                print("Available width Y2 readSize \(size) - \(mediaContent.url)")
 //                            }
@@ -230,6 +230,10 @@ struct QuoteById: View {
                         req(RM.getEventAndReferences(id: id))
                     }
             }
+        }
+        .transaction { transaction in
+            transaction.animation = nil
+            transaction.disablesAnimations = true
         }
     }
 }
