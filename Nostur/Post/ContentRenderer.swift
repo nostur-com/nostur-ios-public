@@ -12,7 +12,7 @@ import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
-    @ObservedObject var nrPost:NRPost
+    let nrPost:NRPost
     let isDetail:Bool
     let fullWidth:Bool
     let availableWidth:CGFloat
@@ -26,23 +26,8 @@ struct ContentRenderer: View { // VIEW things
         self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
     }
     
-//    @State var actualSize:CGSize? = nil
-    
     var body: some View {
         VStack(alignment:.leading, spacing:0) {
-//            Color.red
-//                .frame(height: 30)
-//                .readSize { size in
-//                    actualSize = size
-//                }
-//                .overlay(alignment: .bottomTrailing) {
-//                    if let actualSize = actualSize {
-//                        Text("Size: \(actualSize.debugDescription)")
-//                            .background(.black)
-//                            .foregroundColor(.white)
-//                            .fontWeight(.bold)
-//                    }
-//                }
             ForEach(contentElements) { contentElement in
                 switch contentElement {
                 case .nevent1(let identifier):
