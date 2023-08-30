@@ -15,176 +15,178 @@ struct SingleMediaViewer: View {
     let pubkey:String
     var height:CGFloat?
     let imageWidth:CGFloat
-    let isFollowing:Bool
     var fullWidth:Bool = false
-    var forceShow = false
+    var autoload = false
     var contentPadding:CGFloat = 0.0
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
 //    @State var actualSize:CGSize? = nil
 
     var body: some View {
-        VStack(spacing: 0) {
-            if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
-                VStack {
-                    Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")
-                    Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
-                        imagesShown = true
-                        loadNonHttpsAnyway = true
-                    }
+        if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
+            VStack {
+                Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")
+                    .frame(maxWidth: .infinity, alignment:.center)
+                Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
+                    imagesShown = true
+                    loadNonHttpsAnyway = true
                 }
-                   .centered()
-                   .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                   .background(theme.lineColor.opacity(0.2))
             }
-            else if imagesShown || forceShow {
-                LazyImage(request: ImageRequest(url: url,
-                                                processors: [.resize(width: imageWidth, upscale: true)],
-                                                userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
-                    
-                    if state.error != nil {
-                        Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                            .centered()
-                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            .background(theme.lineColor.opacity(0.2))
-                            .onAppear {
-                                L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
-                            }
-                    }
-                    else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                        if fullWidth {
-                            GIFImage(data: data)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .onTapGesture {
-                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                }
-                                .padding(.horizontal, -contentPadding)
-//                                .readSize { size in
-//                                    actualSize = size
-//                                }
-//                                .overlay(alignment: .bottomTrailing) {
-//                                    if let actualSize = actualSize {
-//                                        Text("Size: \(actualSize.debugDescription)")
-//                                            .background(.black)
-//                                            .foregroundColor(.white)
-//                                            .fontWeight(.bold)
-//                                    }
-//                                }
-                        }
-                        else {
-                            GIFImage(data: data)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-//                                .readSize { size in
-//                                    actualSize = size
-//                                }
-//                                .overlay(alignment: .bottomTrailing) {
-//                                    if let actualSize = actualSize {
-//                                        Text("Size: \(actualSize.debugDescription)")
-//                                            .background(.black)
-//                                            .foregroundColor(.white)
-//                                            .fontWeight(.bold)
-//                                    }
-//                                }
-                                .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                                .onTapGesture {
-                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                }
-                        }
-                    }
-                    else if let image = state.image {
-                        VStack(alignment: .center, spacing: 0) {
-                            if fullWidth {
-                                image
-                                    .interpolation(.none)
-                                    .resizable()
-                                    .scaledToFit()
-//                                    .readSize { size in
-//                                        actualSize = size
-//                                    }
-//                                    .overlay(alignment: .bottomTrailing) {
-//                                        if let actualSize = actualSize {
-//                                            Text("Size: \(actualSize.debugDescription)")
-//                                                .background(.black)
-//                                                .foregroundColor(.white)
-//                                                .fontWeight(.bold)
-//                                        }
-//                                    }
-                                    .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .padding(.horizontal, -contentPadding)
-                                    .onTapGesture {
-                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                    }
-                            }
-                            else {
-                                image
-                                    .interpolation(.none)
-                                    .resizable()
-                                    .scaledToFit()
-//                                    .readSize { size in
-//                                        actualSize = size
-//                                    }
-//                                    .overlay(alignment: .bottomTrailing) {
-//                                        if let actualSize = actualSize {
-//                                            Text("Size: \(actualSize.debugDescription)")
-//                                                .background(.black)
-//                                                .foregroundColor(.white)
-//                                                .fontWeight(.bold)
-//                                        }
-//                                    }
-                                    .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                                    .fixedSize(horizontal: false, vertical: true)
-//                                    .hCentered()
-                                    .onTapGesture {
-                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                    }
-                            }
-                        }
-                        .overlay(alignment:.topLeading) {
-                            if state.isLoading { // does this conflict with showing preview images??
-                                HStack(spacing: 5) {
-                                    ImageProgressView(progress: state.progress)
-                                    Text("Loading...")
-                                }
-                            }
-                        }
-                    }
-                    else if state.isLoading { // does this conflict with showing preview images??
-                        HStack(spacing: 5) {
-                            ImageProgressView(progress: state.progress)
-                            Image(systemName: "multiply.circle.fill")
-                                .padding(10)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    imagesShown = false
-                                }
-                        }
+            .padding(10)
+            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+            .background(theme.lineColor.opacity(0.2))
+        }
+        else if autoload || imagesShown {
+            LazyImage(request: ImageRequest(url: url,
+                                            processors: [.resize(width: imageWidth, upscale: true)],
+                                            userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
+                
+                if state.error != nil {
+                    Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                         .centered()
                         .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                        .background(theme.lineColor.opacity(0.2))
+                        .onAppear {
+                            L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
+                        }
+                }
+                else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
+                    if fullWidth {
+                        GIFImage(data: data)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .onTapGesture {
+                                sendNotification(.fullScreenView, FullScreenItem(url: url))
+                            }
+                            .padding(.horizontal, -contentPadding)
+//                                .readSize { size in
+//                                    actualSize = size
+//                                }
+//                                .overlay(alignment: .bottomTrailing) {
+//                                    if let actualSize = actualSize {
+//                                        Text("Size: \(actualSize.debugDescription)")
+//                                            .background(.black)
+//                                            .foregroundColor(.white)
+//                                            .fontWeight(.bold)
+//                                    }
+//                                }
                     }
                     else {
-                        Color(.secondarySystemBackground)
-                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                        GIFImage(data: data)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+//                                .readSize { size in
+//                                    actualSize = size
+//                                }
+//                                .overlay(alignment: .bottomTrailing) {
+//                                    if let actualSize = actualSize {
+//                                        Text("Size: \(actualSize.debugDescription)")
+//                                            .background(.black)
+//                                            .foregroundColor(.white)
+//                                            .fontWeight(.bold)
+//                                    }
+//                                }
+                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .onTapGesture {
+                                sendNotification(.fullScreenView, FullScreenItem(url: url))
+                            }
+                            .transaction { transaction in
+                                transaction.animation = nil
+                                transaction.disablesAnimations = true
+                            }
                     }
                 }
-                .pipeline(ImageProcessing.shared.content)
+                else if let image = state.image {
+                    if fullWidth {
+                        image
+                            .interpolation(.none)
+                            .resizable()
+                            .scaledToFit()
+//                                    .readSize { size in
+//                                        actualSize = size
+//                                    }
+//                                    .overlay(alignment: .bottomTrailing) {
+//                                        if let actualSize = actualSize {
+//                                            Text("Size: \(actualSize.debugDescription)")
+//                                                .background(.black)
+//                                                .foregroundColor(.white)
+//                                                .fontWeight(.bold)
+//                                        }
+//                                    }
+                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, -contentPadding)
+                            .onTapGesture {
+                                sendNotification(.fullScreenView, FullScreenItem(url: url))
+                            }
+                            .transaction { transaction in
+                                transaction.animation = nil
+                                transaction.disablesAnimations = true
+                            }
+                            .overlay(alignment:.topLeading) {
+                                if state.isLoading { // does this conflict with showing preview images??
+                                    HStack(spacing: 5) {
+                                        ImageProgressView(progress: state.progress)
+                                        Text("Loading...")
+                                    }
+                                }
+                            }
+                    }
+                    else {
+                        image
+                            .interpolation(.none)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .onTapGesture {
+                                sendNotification(.fullScreenView, FullScreenItem(url: url))
+                            }
+                            .transaction { transaction in
+                                transaction.animation = nil
+                                transaction.disablesAnimations = true
+                            }
+                            .overlay(alignment:.topLeading) {
+                                if state.isLoading { // does this conflict with showing preview images??
+                                    HStack(spacing: 5) {
+                                        ImageProgressView(progress: state.progress)
+                                        Text("Loading...")
+                                    }
+                                }
+                            }
+                    }
+                }
+                else if state.isLoading { // does this conflict with showing preview images??
+                    HStack(spacing: 5) {
+                        ImageProgressView(progress: state.progress)
+                        Image(systemName: "multiply.circle.fill")
+                            .padding(10)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                imagesShown = false
+                            }
+                    }
+                    .centered()
+                    .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                }
+                else {
+                    Color(.secondarySystemBackground)
+                        .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                }
             }
-            else {
-                Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
-                   .centered()
-                   .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                   .highPriorityGesture(
-                       TapGesture()
-                           .onEnded { _ in
-                               imagesShown = true
-                           }
-                   )
-           }
+            .pipeline(ImageProcessing.shared.content)
         }
-        .onAppear {
-            imagesShown = !SettingsStore.shared.restrictAutoDownload || isFollowing
+        else {
+            Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(10)
+                .background(theme.lineColor.opacity(0.2))
+                .highPriorityGesture(
+                   TapGesture()
+                       .onEnded { _ in
+                           imagesShown = true
+                       }
+                )
         }
     }
 }
@@ -206,7 +208,7 @@ struct SingleMediaViewer_Previews: PreviewProvider {
             
             let urlsFromContent = getImgUrlsFromContent(content1)
             
-            SingleMediaViewer(url:urlsFromContent[0],  pubkey: "dunno", imageWidth: UIScreen.main.bounds.width,  isFollowing: true, fullWidth: false)
+            SingleMediaViewer(url:urlsFromContent[0],  pubkey: "dunno", imageWidth: UIScreen.main.bounds.width, fullWidth: false, autoload: true)
             
             Button("Clear cache") {
                 ImageProcessing.shared.content.cache.removeAll()

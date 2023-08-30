@@ -50,11 +50,20 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
+    class ReplyingToAttributes: ObservableObject {
+        @Published var replyingToUsernamesMarkDown:AttributedString? = nil
+        
+        init(replyingToUsernamesMarkDown:AttributedString? = nil) {
+            self.replyingToUsernamesMarkDown = replyingToUsernamesMarkDown
+        }
+    }
+    
     // Seperate ObservableObjects for view performance optimization
     var postOrThreadAttributes: PostOrThreadAttributes
     var postRowDeletableAttributes: PostRowDeletableAttributes
     var noteRowAttributes: NoteRowAttributes
     var pfpAttributes: PFPAttributes
+    var replyingToAttributes: ReplyingToAttributes
     
     let SPAM_LIMIT_P:Int = 50
  
@@ -78,7 +87,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var subject:String?
     var content:String?
     var plainText:String = ""
-    var replyingToUsernamesMarkDown:AttributedString?
     var contentElements:[ContentElement] = [] // NoteRow.Kind1
     var contentElementsDetail:[ContentElement] = [] // PostDetail.Kind1
     
@@ -87,6 +95,15 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         set {
             DispatchQueue.main.async {
                 self.pfpAttributes.contact = newValue
+            }
+        }
+    }
+    
+    var replyingToUsernamesMarkDown:AttributedString?  {
+        get { replyingToAttributes.replyingToUsernamesMarkDown }
+        set {
+            DispatchQueue.main.async {
+                self.replyingToAttributes.replyingToUsernamesMarkDown = newValue
             }
         }
     }
@@ -274,6 +291,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.noteRowAttributes = NoteRowAttributes()
         }
         
+        if let replyingToMarkdown = NRReplyingToBuilder.shared.replyingToUsernamesMarkDownString(event) {
+            self.replyingToAttributes = ReplyingToAttributes(replyingToUsernamesMarkDown: try? AttributedString(markdown: replyingToMarkdown))
+        }
+        else {
+            self.replyingToAttributes = ReplyingToAttributes()
+        }
         
         self.repliesCount = event.repliesCount
         self.mentionsCount = event.mentionsCount
@@ -386,10 +409,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         if let content = event.content {
             self.content = content
             self.imageUrls = getImgUrlsFromContent(content)
-        }
-        
-        if let replyingToMarkdown = NRReplyingToBuilder.shared.replyingToUsernamesMarkDownString(event) {
-            self.replyingToUsernamesMarkDown = try? AttributedString(markdown: replyingToMarkdown)
         }
         
         if hasZapReceipt() {

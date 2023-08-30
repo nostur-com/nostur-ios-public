@@ -62,7 +62,7 @@ struct NRContentMarkdownRenderer: View {
 struct NukeImageProvider: ImageProvider {
   func makeImage(url: URL?) -> some View {
       if let url = url {
-          SingleMediaViewer(url: url, pubkey: "", imageWidth: DIMENSIONS.shared.listWidth, isFollowing: true, fullWidth: true, contentPadding: 20)
+          SingleMediaViewer(url: url, pubkey: "", imageWidth: DIMENSIONS.shared.listWidth, fullWidth: true, autoload: true, contentPadding: 20)
       }
       else {
           EmptyView()

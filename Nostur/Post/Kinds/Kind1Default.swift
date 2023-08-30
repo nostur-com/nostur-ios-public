@@ -109,6 +109,9 @@ struct Kind1Default: View {
                     Spacer()
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(height: 21.0)
+//                .debugDimensions()
                 .transaction { transaction in
                     transaction.animation = nil
                 }
@@ -139,6 +142,7 @@ struct Kind1Default: View {
                         .frame(maxWidth: .infinity, alignment:.leading)
                         .transaction { transaction in
                             transaction.animation = nil
+                            transaction.disablesAnimations = true
                         }
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {

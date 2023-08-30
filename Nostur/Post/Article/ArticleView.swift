@@ -141,7 +141,7 @@ struct ArticleView: View {
                     
                     if let image = article.articleImageURL {
                         //                        Text("imageWidth: \(dim.listWidth.description)")
-                        SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, isFollowing: true, fullWidth: true, forceShow: true, contentPadding: 20)
+                        SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: true, contentPadding: 20)
                             .padding(.vertical, 10)
                         //                            .padding(.horizontal, -20)
                     }
@@ -220,7 +220,7 @@ struct ArticleView: View {
                 .padding(.bottom, 10)
                 
                 if let image = article.articleImageURL {
-                    SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, isFollowing: article.following, fullWidth: true)
+                    SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: (article.following || !SettingsStore.shared.restrictAutoDownload))
                         .padding(.horizontal, -20) // on article preview always use full width style
                         .padding(.vertical, 10)
                 }

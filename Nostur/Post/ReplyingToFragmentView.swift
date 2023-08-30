@@ -10,16 +10,24 @@ import Combine
 
 struct ReplyingToFragmentView: View {
     @EnvironmentObject var theme:Theme
-    @ObservedObject var nrPost:NRPost
+    let nrPost:NRPost
+    @ObservedObject var replyingToAttributes:NRPost.ReplyingToAttributes
     
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+        self.replyingToAttributes = nrPost.replyingToAttributes
+    }
+
     var body: some View {
-        Group {
-            if let rendered = nrPost.replyingToUsernamesMarkDown {
-                Text(rendered)
-                        .fontWeight(.light)
-                        .foregroundColor(theme.secondary)
-                        .frame(maxWidth:.infinity, alignment: .leading)
-                }
+        if let rendered = replyingToAttributes.replyingToUsernamesMarkDown {
+            Text(rendered)
+                    .fontWeight(.light)
+                    .foregroundColor(theme.secondary)
+                    .frame(maxWidth:.infinity, alignment: .leading)
+//                    .background(Color.random)
+        }
+        else {
+            EmptyView()
         }
     }
 }
