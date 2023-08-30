@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NoteZaps: View {
+    @EnvironmentObject var theme:Theme
     let sp:SocketPool = .shared
     let id:String
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
@@ -49,6 +50,7 @@ struct NoteZaps: View {
             
             Spacer()
         }
+        .background(theme.listBackground)
         .task {
             // Fix zaps afterwards??
             // (0, 0) = (tally, count)

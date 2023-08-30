@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NoteReactions: View {
-    
+    @EnvironmentObject var theme:Theme
     let sp:SocketPool = .shared
     
     let id:String
@@ -30,6 +30,7 @@ struct NoteReactions: View {
             }
             Spacer()
         }
+        .background(theme.listBackground)
         .onAppear {
             var missing:[Event] = []
             for reaction in reactions_ {
