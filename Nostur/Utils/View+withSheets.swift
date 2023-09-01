@@ -126,11 +126,11 @@ private struct WithSheets: ViewModifier {
             })
             
             .onReceive(receiveNotification(.requestConfirmationChangedFollows)) { notification in
-                let removed = notification.object as! Set<String>
-                self.removed = RemovedPubkeys(pubkeys: removed)
+                let removed = notification.object as! RemovedPubkeys
+                self.removed = removed
                 self.restoreContactSheet = true
             }
-            .confirmationDialog("It looks like \(removed?.pubkeys.count ?? 0) contacts were removed from your following list, perhaps from another nostr app", isPresented: $restoreContactSheet, titleVisibility: .visible,  actions: {
+            .confirmationDialog("It looks like \(removed?.pubkeys.count ?? 0) contacts were removed from your following list, perhaps from another nostr app\(removed?.namesString != nil ? ": \(removed?.namesString ?? "")" : "")", isPresented: $restoreContactSheet, titleVisibility: .visible,  actions: {
                 Button("Remove \(removed?.pubkeys.count ?? 0) contacts", role: .destructive) {
                     guard let removed = self.removed else { return }
                     FollowingGuardian.shared.removeFollowing(removed.pubkeys)
@@ -514,6 +514,7 @@ struct ShareableWeblink: Identifiable {
 struct RemovedPubkeys: Identifiable {
     let pubkeys:Set<String>
     let id = UUID()
+    var namesString: String?
 }
 
 struct ReportPost: Identifiable {
