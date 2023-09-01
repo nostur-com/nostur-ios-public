@@ -145,7 +145,7 @@ struct ProfileOverlayCard: View {
                 }
                 
                 VStack(alignment: .leading) {
-                    HStack(spacing:3) {
+                    HStack(alignment: .center, spacing: 3) {
                         Text(contact.anyName).font(.title).foregroundColor(.primary)
                             .lineLimit(1)
                         if couldBeImposter {
@@ -156,10 +156,15 @@ struct ProfileOverlayCard: View {
                                 .cornerRadius(8)
                                 .layoutPriority(2)
                         }
-                        else if (contact.nip05verified) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.title)
-                                .foregroundColor(Color("AccentColor"))
+                        else if let nip05domain = contact.nip05domain, contact.nip05verified {
+                            Group {
+                                if let nip05name = contact.nip05nameOnly, nip05name.lowercased() != "_", nip05name.lowercased() != contact.anyName.lowercased() {
+                                    Text(nip05name).font(.footnote)
+                                }
+                                Image(systemName: "at.circle.fill")
+                                Text(nip05domain).font(.footnote)
+                            }
+                            .foregroundColor(theme.accent)
                         }
                         
                         if (isFollowingYou) {
