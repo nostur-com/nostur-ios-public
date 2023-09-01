@@ -141,10 +141,10 @@ struct ProfileView: View {
                                 }
                                 else if (contact.nip05veried) {
                                     Group {
-                                        if let nip05name = contact.nip05nameOnly, nip05name.lowercased() != "_", nip05name != contact.anyName.lowercased() {
+                                        if let nip05name = contact.nip05nameOnly, nip05name.lowercased() != "_", nip05name.lowercased() != contact.anyName.lowercased() {
                                             Text(nip05name).font(.footnote)
                                         }
-                                        Image(systemName: "checkmark.seal.fill")
+                                        Image(systemName: "at.circle.fill")
                                         Text(contact.nip05domain).font(.footnote)
                                     }
                                     .foregroundColor(theme.accent)

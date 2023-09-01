@@ -56,6 +56,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     var nip05verified:Bool
     var nip05domain:String?
+    var nip05nameOnly:String?
     var metaDataCreatedAt:Date
     var metadata_created_at:Int64
     
@@ -82,6 +83,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         
         self.nip05verified = contact.nip05veried
         self.nip05domain = contact.nip05domain
+        self.nip05nameOnly = contact.nip05nameOnly
         self.metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
         self.metadata_created_at = contact.metadata_created_at
         
@@ -135,12 +137,14 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     private func listenForNip05() {
         self.contact.nip05updated
             .subscribe(on: DispatchQueue.global())
-            .sink { [weak self] isVerified in
+            .sink { [weak self] (isVerified, domain, name) in
                 guard let self = self else { return }
                 DispatchQueue.main.async {
                     guard isVerified != self.nip05verified else { return }
                     self.objectWillChange.send()
                     self.nip05verified = isVerified
+                    self.nip05domain = domain
+                    self.nip05nameOnly = name
                 }
             }
             .store(in: &subscriptions)
@@ -163,6 +167,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     
                     let nip05verified = contact.nip05veried
                     let nip05domain = contact.nip05domain
+                    let nip05nameOnly = contact.nip05nameOnly
                     let metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
                     let metadata_created_at = contact.metadata_created_at
                     
@@ -185,6 +190,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                         
                         self.nip05verified = nip05verified
                         self.nip05domain = nip05domain
+                        self.nip05nameOnly = nip05nameOnly
                         self.metaDataCreatedAt = metaDataCreatedAt
                         self.metadata_created_at = metadata_created_at
                         
