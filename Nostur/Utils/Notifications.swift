@@ -305,4 +305,8 @@ extension Notification.Name {
     static var didTapTab: Notification.Name {
         return Notification.Name("didTapTab")
     }
+    
+    static var showingSomeoneElsesFeed: Notification.Name {
+        return Notification.Name("showingSomeoneElsesFeed")
+    }
 }

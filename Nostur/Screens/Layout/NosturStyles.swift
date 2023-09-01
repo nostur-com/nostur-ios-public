@@ -11,19 +11,15 @@ import SwiftUI
 struct NosturButton: ButtonStyle {
     @Environment(\.colorScheme) var colorScheme
 
-    func makeBody(configuration: Configuration) -> some View {
-        
-        let whiteColor = colorScheme == .light ? Color.white : Color.black
-        let blackColor = colorScheme == .light ? Color.black : Color.white
-        
+    func makeBody(configuration: Configuration) -> some View {        
         
         configuration.label
             .lineLimit(1)
             .frame(height: 30)
             .padding(.horizontal, 25)
             .font(.caption.weight(.heavy))
-            .foregroundColor(whiteColor)
-            .background(blackColor)
+            .foregroundColor(Color.white)
+            .background(Color.secondary)
             .cornerRadius(20)
             .overlay {
                 RoundedRectangle(cornerRadius: 15)
