@@ -92,12 +92,13 @@ struct NosturVideoViewur: View {
                         let otherUrl = notification.object as! String
                         if url.absoluteString != otherUrl {
                             isPlaying = false
+                            isMuted = true
                         }
                     }
-                    .onDisappear {
-                        isPlaying = false
-                        isMuted = true
-                    }
+//                    .onDisappear {
+////                        isPlaying = false
+////                        isMuted = true
+//                    }
             }
             else if videoShown {
                 if let asset, let scaledDimensions, let videoLength = videoLength {
