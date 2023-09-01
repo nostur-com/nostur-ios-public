@@ -155,3 +155,7 @@ class DataProvider: ObservableObject {
         return DataProvider.live
     }
 }
+
+func bg() -> NSManagedObjectContext {
+    return DataProvider.shared().bg
+}
