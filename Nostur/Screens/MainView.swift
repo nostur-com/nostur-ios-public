@@ -18,6 +18,7 @@ struct MainView: View {
     @State var showingNewNote = false
     @EnvironmentObject var sm:SideBarModel
     @ObservedObject var settings:SettingsStore = .shared
+    @State var showingOtherContact:NRContact? = nil
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 //    @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -65,14 +66,37 @@ struct MainView: View {
                         }
                         ToolbarItem(placement: .principal) {
                             HStack {
-                                Image("NosturLogo")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(height:30)
-                                    .clipShape(Circle())
-                                    .onTapGesture {
-                                        sendNotification(.shouldScrollToTop)
+                                if let showingOtherContact = showingOtherContact {
+                                    HStack(spacing: 6) {
+                                        PFP(pubkey: showingOtherContact.pubkey, nrContact: showingOtherContact, size: 30)
+                                            .frame(height:30)
+                                            .clipShape(Circle())
+                                            .onTapGesture {
+                                                sendNotification(.shouldScrollToTop)
+                                            }
+                                        
+                                        Image(systemName: "multiply.circle.fill")
+                                            .onTapGesture {
+                                                guard let account = NosturState.shared.account else { return }
+                                                self.showingOtherContact = nil
+                                                LVMManager.shared.followingLVM(forAccount: account)
+                                                    .revertBackToOwnFeed()
+                                            }
                                     }
+                                    .offset(x: 18)
+                                        
+                                }
+                                else {
+                                    Image("NosturLogo")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height:30)
+                                        .clipShape(Circle())
+                                        .onTapGesture {
+                                            print("ok3")
+                                            sendNotification(.shouldScrollToTop)
+                                        }
+                                }
                             }
                         }
                         ToolbarItem(placement: .navigationBarTrailing) {
@@ -84,6 +108,10 @@ struct MainView: View {
                         }
                     }
             }
+        }
+        .onReceive(receiveNotification(.showingSomeoneElsesFeed)) { notification in
+            let nrContact = notification.object as! NRContact
+            showingOtherContact = nrContact
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
             let account = notification.object as! Account
