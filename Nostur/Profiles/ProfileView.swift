@@ -141,9 +141,13 @@ struct ProfileView: View {
                                 }
                                 else if (contact.nip05veried) {
                                     Group {
+                                        if let nip05name = contact.nip05nameOnly, nip05name.lowercased() != "_", nip05name != contact.anyName.lowercased() {
+                                            Text(nip05name).font(.footnote)
+                                        }
                                         Image(systemName: "checkmark.seal.fill")
                                         Text(contact.nip05domain).font(.footnote)
-                                    }.foregroundColor(Color("AccentColor"))
+                                    }
+                                    .foregroundColor(theme.accent)
                                 }
                             }
                             if let fixedName = contact.fixedName, fixedName != contact.anyName {
