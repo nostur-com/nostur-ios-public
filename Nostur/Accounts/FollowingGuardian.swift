@@ -82,8 +82,19 @@ class FollowingGuardian: ObservableObject {
                 guard account.privateKey != nil else { return }
                 
                 if !removed.isEmpty {
-                    sendNotification(.requestConfirmationChangedFollows, removed)
-                    L.og.info("receiveNotification(.newFollowingListFromRelay): removed: \(removed)")
+                    if removed.count < 10 {
+                        bg().perform {
+                            let removedContacts = Contact.fetchByPubkeys(Array(removed), context: bg())
+                            let names = removedContacts.map { String($0.anyName.prefix(30)) }.joined(separator: ", ")
+                            DispatchQueue.main.async {
+                                sendNotification(.requestConfirmationChangedFollows, RemovedPubkeys(pubkeys: removed, namesString: names))
+                            }
+                        }
+                    }
+                    else {
+                        sendNotification(.requestConfirmationChangedFollows, RemovedPubkeys(pubkeys: removed))
+                        L.og.info("receiveNotification(.newFollowingListFromRelay): removed: \(removed)")
+                    }
                 }
             }
             .store(in: &subscriptions)
