@@ -39,11 +39,13 @@ struct FollowHashtagTile: View {
     
     func follow(_ hashtag:String) {
         account.followingHashtags.insert(hashtag)
+        LVMManager.shared.followingLVM(forAccount: account).loadHashtags()
         NosturState.shared.publishNewContactList()
     }
     
     func unfollow(_ hashtag:String) {
         account.followingHashtags.remove(hashtag)
+        LVMManager.shared.followingLVM(forAccount: account).loadHashtags()
         NosturState.shared.publishNewContactList()
     }
 }

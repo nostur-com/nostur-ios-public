@@ -29,10 +29,6 @@ extension LVM {
         
         filters.append(followingContactsFilter)
         
-        let hashtags:Set<String> = self.id == "Following"
-        ? (NosturState.shared.account?.followingHashtags ?? [])
-        : (feed?.followingHashtags ?? [])
-        
         if !hashtags.isEmpty {
             let followingHashtagsFilter = Filters(
                 kinds: FOLLOWING_EVENT_KINDS,
@@ -61,10 +57,6 @@ extension LVM {
         
         filters.append(followingContactsFilter)
         
-        let hashtags:Set<String> = self.id == "Following"
-        ? (NosturState.shared.account?.followingHashtags ?? [])
-        : (feed?.followingHashtags ?? [])
-        
         if !hashtags.isEmpty {
             let followingHashtagsFilter = Filters(
                 kinds: FOLLOWING_EVENT_KINDS,
@@ -88,11 +80,7 @@ extension LVM {
             kinds: FOLLOWING_EVENT_KINDS,
             since: since.timestamp, limit: 5000)
         
-        filters.append(followingContactsFilter)
-        
-        let hashtags:Set<String> = self.id == "Following"
-        ? (NosturState.shared.account?.followingHashtags ?? [])
-        : (feed?.followingHashtags ?? [])
+        filters.append(followingContactsFilter)        
         
         if !hashtags.isEmpty {
             let followingHashtagsFilter = Filters(
@@ -121,10 +109,6 @@ extension LVM {
         
         filters.append(followingContactsFilter)
         
-        let hashtags:Set<String> = self.id == "Following"
-        ? (NosturState.shared.account?.followingHashtags ?? [])
-        : (feed?.followingHashtags ?? [])
-        
         if !hashtags.isEmpty {
             let followingHashtagsFilter = Filters(
                 kinds: FOLLOWING_EVENT_KINDS,
@@ -139,10 +123,6 @@ extension LVM {
     }
     
     var hashtagRegex:String? {
-        let hashtags:Set<String> = self.id == "Following"
-        ? (NosturState.shared.account?.followingHashtags ?? [])
-        : (feed?.followingHashtags ?? [])
-        
         if !hashtags.isEmpty {
             let regex = "(" + hashtags.map {
                 NSRegularExpression.escapedPattern(for: serializedT($0))

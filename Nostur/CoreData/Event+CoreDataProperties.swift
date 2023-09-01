@@ -679,6 +679,10 @@ extension Event {
         fastTags.filter { $0.0 == "e" && $0.1.count == 64 }
     }
     
+    var fastTs:[(String, String, String?, String?)] {
+        fastTags.filter { $0.0 == "t" && !$0.1.isEmpty }
+    }
+    
     
     func tags() -> [NostrTag] {
         let decoder = JSONDecoder()

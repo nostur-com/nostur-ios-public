@@ -92,6 +92,7 @@ class LVM: NSObject, ObservableObject {
     }
     
     @MainActor func reload() {
+        loadHashtags()
         lvmCounter.count = 0
         instantFinished = false
         nrPostLeafs = []
@@ -207,6 +208,14 @@ class LVM: NSObject, ObservableObject {
     var startRenderingOlderSubject = PassthroughSubject<[Event], Never>()
     var didCatchup = false
     var backlog = Backlog(auto: true)
+    
+    var hashtags: Set<String> = []
+    
+    public func loadHashtags() {
+        self.hashtags = self.id == "Following"
+        ? (NosturState.shared.account?.followingHashtags ?? [])
+        : (self.feed?.followingHashtags ?? [])
+    }
     
     private func getAllObjectIds(_ nrPosts:[NRPost]) -> Set<NRPostID> { // called from main thread?
         return nrPosts.reduce(Set<NRPostID>()) { partialResult, nrPost in
@@ -618,7 +627,9 @@ class LVM: NSObject, ObservableObject {
 
         self.id = listId
         super.init()
-
+        
+        self.loadHashtags()
+        
         let ctx = DataProvider.shared().viewContext
         let bg = DataProvider.shared().bg
         if type == .relays {
