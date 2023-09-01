@@ -116,21 +116,31 @@ struct ProfileOverlayCard: View {
                         ProfileZapButton(contact: contact, zapEtag: zapEtag)
                     }
                     
-                    if (!withoutFollowButton) {
-                        Button {
-                            if (contact.following && !contact.privateFollow) {
-                                contact.follow(privateFollow: true)
+                    VStack {
+                        if (!withoutFollowButton) {
+                            Button {
+                                if (contact.following && !contact.privateFollow) {
+                                    contact.follow(privateFollow: true)
+                                }
+                                else if (contact.following && contact.privateFollow) {
+                                    contact.unfollow()
+                                }
+                                else {
+                                    contact.follow()
+                                }
+                            } label: {
+                                FollowButton(isFollowing:contact.following, isPrivateFollowing:contact.privateFollow)
                             }
-                            else if (contact.following && contact.privateFollow) {
-                                contact.unfollow()
-                            }
-                            else {
-                                contact.follow()
-                            }
-                        } label: {
-                            FollowButton(isFollowing:contact.following, isPrivateFollowing:contact.privateFollow)
+                            .disabled(!fg.didReceiveContactListThisSession)
                         }
-                        .disabled(!fg.didReceiveContactListThisSession)
+                        Button("Show feed") {
+                            guard let account = ns.account else { return }
+                            LVMManager.shared.followingLVM(forAccount: account)
+                                .loadSomeonesFeed(contact.pubkey)
+                            sendNotification(.showingSomeoneElsesFeed, contact)
+                            sendNotification(.dismissMiniProfile)
+                        }
+                        .buttonStyle(NosturButton())
                     }
                 }
                 
