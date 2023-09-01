@@ -28,7 +28,7 @@ class LVM: NSObject, ObservableObject {
     @Published var nrPostLeafs:[NRPost] = [] {
         didSet {
             if state != .READY { state = .READY }
-            leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs)
+            leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs) // Data race in Nostur.LVM.leafsAndParentIdsOnScreen.setter : Swift.Set<Swift.String> at 0x10e60b600 - THREAD 1
             leafIdsOnScreen = Set(nrPostLeafs.map { $0.id })
             
             // Pre-fetch next page.
@@ -289,7 +289,7 @@ class LVM: NSObject, ObservableObject {
         let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg
         
         // onScreenIds includes leafs and parents, so all posts.
-        let leafsAndParentIdsOnScreen = leafsAndParentIdsOnScreen
+        let leafsAndParentIdsOnScreen = leafsAndParentIdsOnScreen // Data race in Nostur.LVM.leafsAndParentIdsOnScreen.setter : Swift.Set<Swift.String> at 0x10e60b600 - THREAD 142
         let leafIdsOnScreen = leafIdsOnScreen
         let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
         
