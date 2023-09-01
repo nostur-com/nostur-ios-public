@@ -196,10 +196,12 @@ struct PostAndParent: View {
                 if nrPost.deletedById == nil {
                     if isParent {
                         ParentPost(nrPost: nrPost, connect:connect)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(nrPost)
-                            }
+                            .background(
+                                theme.background
+                                    .onTapGesture {
+                                        navigateTo(nrPost)
+                                    }
+                            )
                     }
                     else {
                         DetailPost(nrPost: nrPost)
@@ -374,6 +376,9 @@ struct ParentPost: View {
                             .frame(width: 2)
                             .offset(x: THREAD_LINE_OFFSET, y: 50)
                             .opacity(connect == .bottom || connect == .both ? 1 : 0)
+                    }
+                    .onTapGesture {
+                        navigateTo(nrPost)
                     }
                 }
             
