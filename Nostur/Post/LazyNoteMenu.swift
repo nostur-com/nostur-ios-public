@@ -159,6 +159,17 @@ struct LazyNoteMenuSheet: View {
                         }
                     }
                     Button {
+                        guard let account = ns.account else { return }
+                        guard let contact = nrPost.contact else { return }
+                        dismiss()
+                        LVMManager.shared.followingLVM(forAccount: account)
+                            .loadSomeonesFeed(nrPost.pubkey)
+                        sendNotification(.showingSomeoneElsesFeed, contact)
+                        sendNotification(.dismissMiniProfile)
+                    } label: {
+                        Label(String(localized:"Show \(nrPost.anyName)'s feed", comment: "Post context menu button to show someone's feed"), systemImage: "rectangle.stack.fill")
+                    }
+                    Button {
                         dismiss()
                         if (nrPost.mainEvent.contact != nil) {
                             ns.follow(nrPost.mainEvent.contact!)
