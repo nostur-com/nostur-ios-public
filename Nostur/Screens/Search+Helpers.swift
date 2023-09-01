@@ -24,6 +24,14 @@ func typeOfSearch(_ searchInput:String) -> TypeOfSearch {
         return .npub1(searchTrimmed)
     }
     else if (searchTrimmed.prefix(1) == "@") {
+        if searchTrimmed.contains(".") {
+            let domain = String(searchTrimmed.dropFirst(1))
+            let name = "_"
+            
+            let url = URL(string: "https://\(domain)/.well-known/nostr.json?name=\(name)")
+            
+            return .nip05(Nip05Parts(nip05url: url, domain: domain, name: name))
+        }
         return .nametag(String(searchTrimmed.dropFirst(1)))
     }
     else if (searchTrimmed.prefix(1) == "#") {
@@ -34,6 +42,16 @@ func typeOfSearch(_ searchInput:String) -> TypeOfSearch {
     }
     else if (searchTrimmed.count == 64) {
         return .hexId(searchTrimmed)
+    }
+    else if searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true).count == 2 {
+        let nip05parts = searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
+            
+        let domain = String(nip05parts[1])
+        let name = String(nip05parts[0])
+        
+        let url = URL(string: "https://\(domain)/.well-known/nostr.json?name=\(name)")
+        
+        return .nip05(Nip05Parts(nip05url: url, domain: domain, name: name))
     }
     
     return .other(searchTrimmed)
@@ -48,7 +66,14 @@ public enum TypeOfSearch {
     case hashtag(String)
     case note1(String)
     case hexId(String)
+    case nip05(Nip05Parts)
     case other(String)
+}
+    
+public struct Nip05Parts {
+    var nip05url:URL?
+    let domain:String
+    let name:String
 }
 
 extension Search {
@@ -391,5 +416,17 @@ extension Search {
             }
         }
     }
+    
+    func nip05Search(_ nip05parts:Nip05Parts) {
+        guard let url = nip05parts.nip05url else { return }
+        Task {
+            let (data, _) = try await URLSession.shared.data(from: url)
 
+            guard let nostrJson = try? JSONDecoder().decode(NostrJson.self, from: data) else { return }
+            
+            guard let pubkey = nostrJson.names[nip05parts.name], !pubkey.isEmpty else { return }
+
+            hexIdSearch(pubkey)
+        }
+    }
 }

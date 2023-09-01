@@ -106,6 +106,7 @@ struct Search: View {
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: searchText) { searchInput in
                 nrPosts = []
+                contacts.nsPredicate = NSPredicate(value: false)
                 switch typeOfSearch(searchInput) {
                 case .nprofile1(let term):
                     nprofileSearch(term)
@@ -123,6 +124,8 @@ struct Search: View {
                     note1Search(term)
                 case .hexId(let term):
                     hexIdSearch(term)
+                case .nip05(let nip05parts):
+                    nip05Search(nip05parts)
                 case .other(let term):
                     otherSearch(term)
                 }
