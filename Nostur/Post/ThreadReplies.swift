@@ -31,7 +31,7 @@ struct ThreadReplies: View {
                 if showNotWoT {
                     ForEach(nrPost.groupedRepliesNotWoT.prefix(50)) { reply in
                         PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
-                            .id(nrPost.id)
+                            .id(reply.id)
                     }
                     .animation(Animation.spring(), value: nrPost.groupedRepliesNotWoT)
                 }
