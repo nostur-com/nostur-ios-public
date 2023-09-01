@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 import CoreData
 import Combine
 
@@ -121,6 +122,9 @@ class LVM: NSObject, ObservableObject {
         }
         return selectedSubTab == id
     }
+    
+    @AppStorage("selected_tab") var sTab = "Main"
+    @AppStorage("selected_subtab") var ssTab = "Following"
     
     // @AppStorage things
     var selectedSubTab = "" {
