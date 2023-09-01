@@ -53,7 +53,9 @@ struct PrivateNotesView: View {
                         PrivateNoteRow(note: pnInfo.note, nrPost: pnInfo.nrPost)
                             .background(theme.background)
                             .onDelete {
-                                privateNotes = privateNotes.filter { $0.note.id != pnInfo.note.id }
+                                withAnimation {
+                                    privateNotes = privateNotes.filter { $0.note.id != pnInfo.note.id }
+                                }
                                 viewContext.delete(pnInfo.note)
                                 DataProvider.shared().save()
                             }
@@ -79,9 +81,11 @@ struct PrivateNotesView: View {
         .onReceive(receiveNotification(.postAction)) { notification in
             let action = notification.object as! PostActionNotification
             if (action.type == .privateNote  && !action.hasPrivateNote) {
-                privateNotes = privateNotes.filter {
-                    $0.note.post == nil ||
-                    $0.note.post!.id != action.eventId
+                withAnimation {
+                    privateNotes = privateNotes.filter {
+                        $0.note.post == nil ||
+                        $0.note.post!.id != action.eventId
+                    }
                 }
             }
             else if action.type == .privateNote {

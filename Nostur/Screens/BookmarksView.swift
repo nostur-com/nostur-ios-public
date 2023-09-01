@@ -56,7 +56,9 @@ struct BookmarksView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .id(vBookmark.id)
                         .onDelete {
-                            vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
+                            withAnimation {
+                                vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
+                            }
                             
                             DataProvider.shared().bg.perform {
                                 vBookmark.event.bookmarkedBy = []
