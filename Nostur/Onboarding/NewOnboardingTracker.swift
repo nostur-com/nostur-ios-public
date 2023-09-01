@@ -181,6 +181,12 @@ class NewOnboardingTracker {
             let existingAndCreatedContacts = self.createContactsFromPs(pTags)
             account.addToFollows(NSSet(array: existingAndCreatedContacts))
             let followingPublicKeys = account.followingPublicKeys
+            
+            let tTags = kind3.fastTs.map { $0.1 }
+            for tag in tTags {
+                account.followingHashtags.insert(tag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+            
             NosturState.shared.bgFollowingPublicKeys = followingPublicKeys
             DataProvider.shared().bgSave()
             DispatchQueue.main.async {
