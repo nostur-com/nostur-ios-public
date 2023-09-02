@@ -80,8 +80,8 @@ struct PostHeaderEvent: View {
                     .layoutPriority(2)
                 
                 if (contact.nip05veried) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .foregroundColor(Color("AccentColor"))
+                    Image(systemName: "at.circle.fill")
+                        .foregroundColor(theme.accent)
                         .layoutPriority(3)
                 }
                 
@@ -126,8 +126,8 @@ struct NameAndNipContact: View {
             .layoutPriority(2)
         
         if (contact.nip05veried) {
-            Image(systemName: "checkmark.seal.fill")
-                .foregroundColor(Color("AccentColor"))
+            Image(systemName: "at.circle.fill")
+                .foregroundColor(theme.accent)
                 .layoutPriority(3)
         }
     }

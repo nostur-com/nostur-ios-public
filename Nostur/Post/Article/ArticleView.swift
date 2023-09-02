@@ -107,8 +107,8 @@ struct ArticleView: View {
                                         }
                                     
                                     if (contact.nip05verified) {
-                                        Image(systemName: "checkmark.seal.fill")
-                                            .foregroundColor(Color("AccentColor"))
+                                        Image(systemName: "at.circle.fill")
+                                            .foregroundColor(theme.accent)
                                             .layoutPriority(3)
                                     }
                                 }
@@ -310,8 +310,8 @@ struct ArticleView: View {
                                 }
                             
                             if (contact.nip05verified) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .foregroundColor(Color("AccentColor"))
+                                Image(systemName: "at.circle.fill")
+                                    .foregroundColor(theme.accent)
                                     .layoutPriority(3)
                             }
                         }
@@ -353,8 +353,8 @@ struct ArticleView: View {
                                     }
                                 
                                 if (contact.nip05verified) {
-                                    Image(systemName: "checkmark.seal.fill")
-                                        .foregroundColor(Color("AccentColor"))
+                                    Image(systemName: "at.circle.fill")
+                                        .foregroundColor(theme.accent)
                                         .layoutPriority(3)
                                 }
                             }

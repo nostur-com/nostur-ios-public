@@ -188,7 +188,7 @@ struct DMConversationView: View {
                                                 Text("\(contact.anyName) ").font(.headline)
                                                 if (contact.nip05veried) {
                                                     Group {
-                                                        Image(systemName: "checkmark.seal.fill")
+                                                        Image(systemName: "at.circle.fill")
                                                         Text(contact.nip05domain).font(.footnote)
                                                     }.foregroundColor(Color("AccentColor"))
                                                 }

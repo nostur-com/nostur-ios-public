@@ -42,7 +42,7 @@ struct ContactSearchResultRow: View {
                                     .layoutPriority(2)
                             }
                             else if (contact.nip05veried) {
-                                Image(systemName: "checkmark.seal.fill")
+                                Image(systemName: "at.circle.fill")
                                     .font(.system(size: 14))
                                     .foregroundColor(Color("AccentColor"))
                             }
