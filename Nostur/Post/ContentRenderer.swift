@@ -27,12 +27,16 @@ struct ContentRenderer: View { // VIEW things
     }
     
     var body: some View {
-        VStack(alignment:.leading, spacing:0) {
+        VStack(alignment:.leading, spacing: 0) {
             ForEach(contentElements) { contentElement in
                 switch contentElement {
-                case .nevent1(let identifier):
-                    NEventView(identifier: identifier)
+                case .nrPost(let nrPost):
+                        EmbeddedPost(nrPost)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.vertical, 10)
+                case .nevent1(let identifier):
+                        NEventView(identifier: identifier)
+                            .padding(.vertical, 10)
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey)
@@ -308,4 +312,44 @@ func scaledToFit(_ dimensions: CGSize, scale screenScale: Double, maxWidth: Doub
     let fittingScale = min(widthRatio, heightRatio)
     
     return CGSize(width: pointWidth * fittingScale, height: pointHeight * fittingScale)
+}
+
+
+struct EmbeddedPost: View {
+    
+    let nrPost:NRPost
+    @ObservedObject var prd:NRPost.PostRowDeletableAttributes
+    
+    init(_ nrPost:NRPost) {
+        self.nrPost = nrPost
+        self.prd = nrPost.postRowDeletableAttributes
+    }
+    
+    var body: some View {
+        VStack {
+            if prd.blocked {
+                HStack {
+                    Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                    Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
+                        .buttonStyle(.bordered)
+                }
+                .padding(.leading, 8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+                .hCentered()
+            }
+            else if nrPost.kind == 30023 {
+                ArticleView(nrPost, hideFooter: true)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 15)
+                            .stroke(.regularMaterial, lineWidth: 1)
+                    )
+            }
+            else {
+                QuotedNoteFragmentView(nrPost: nrPost)
+            }
+        }
+    }
 }

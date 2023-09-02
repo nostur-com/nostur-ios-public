@@ -277,15 +277,33 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.isRepost = event.isRepost
         
         self.firstQuoteId = event.firstQuoteId
-        if let firstQuote = event.firstQuote {
-            self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withRepliesCount: withRepliesCount))
+        if let firstQuote = event.firstQuote, let firstQuoteId = event.firstQuoteId {
+            if firstQuote.kind == 0 {
+                bg().delete(firstQuote)
+                event.firstQuote = nil
+                Importer.shared.existingIds.removeValue(forKey: firstQuoteId)
+                self.noteRowAttributes = NoteRowAttributes()
+                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005a"); isAwaiting = true
+            }
+            else {
+                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withRepliesCount: withRepliesCount))
+            }
         } // why event.firstQuote_ doesn't work??
-        else if let firstQuoteId = event.firstQuoteId,  let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: DataProvider.shared().bg) {
-            self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withRepliesCount: withRepliesCount))
+        else if let firstQuoteId = event.firstQuoteId, let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: DataProvider.shared().bg) {
+            if firstQuote.kind == 0 {
+                bg().delete(firstQuote)
+                event.firstQuote = nil
+                Importer.shared.existingIds.removeValue(forKey: firstQuoteId)
+                self.noteRowAttributes = NoteRowAttributes()
+                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005b"); isAwaiting = true
+            }
+            else {
+                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withRepliesCount: withRepliesCount))
+            }
         }
         else if !isAwaiting && event.firstQuoteId != nil {
             self.noteRowAttributes = NoteRowAttributes()
-            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005"); isAwaiting = true
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005c"); isAwaiting = true
         }
         else {
             self.noteRowAttributes = NoteRowAttributes()
@@ -336,6 +354,25 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.contentElementsDetail = contentElementsDetail
             let (contentElements, previewWeights) = filteredForPreview(contentElementsDetail)
             self.contentElements = contentElements
+            
+            for index in self.contentElements.indices {
+                switch self.contentElements[index] {
+                case .nevent1(let identifier):
+                    guard let id = identifier.eventId else { continue }
+                    guard let event = try? Event.fetchEvent(id: id, context: bg()) else { continue }
+                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
+                case .note1(let noteId):
+                    guard let id = hex(noteId) else { continue }
+                    guard let event = try? Event.fetchEvent(id: id, context: bg()) else { continue }
+                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
+                case .noteHex(let id):
+                    guard let event = try? Event.fetchEvent(id: id, context: bg()) else { continue }
+                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
+                default:
+                    continue
+                }
+            }
+            
             self.previewWeights = previewWeights
         }
         
