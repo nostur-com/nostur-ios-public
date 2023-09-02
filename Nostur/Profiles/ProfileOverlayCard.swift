@@ -148,25 +148,6 @@ struct ProfileOverlayCard: View {
                     HStack(alignment: .center, spacing: 3) {
                         Text(contact.anyName).font(.title).foregroundColor(.primary)
                             .lineLimit(1)
-                        if couldBeImposter {
-                            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
-                                .padding(.horizontal, 8)
-                                .background(.red)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                                .layoutPriority(2)
-                        }
-                        else if let nip05domain = contact.nip05domain, contact.nip05verified {
-                            Group {
-                                if let nip05name = contact.nip05nameOnly, nip05name.lowercased() != "_", nip05name.lowercased() != contact.anyName.lowercased() {
-                                    Text(nip05name).font(.footnote)
-                                }
-                                Image(systemName: "at.circle.fill")
-                                Text(nip05domain).font(.footnote)
-                            }
-                            .foregroundColor(theme.accent)
-                        }
-                        
                         if (isFollowingYou) {
                             Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
                                 .foregroundColor(.white)
@@ -177,6 +158,27 @@ struct ProfileOverlayCard: View {
                                 .cornerRadius(13)
                         }
                     }
+                    
+                    if couldBeImposter {
+                        Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                            .padding(.horizontal, 8)
+                            .background(.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                            .layoutPriority(2)
+                    }
+                    else if let nip05domain = contact.nip05domain, contact.nip05verified {
+                        HStack(spacing: 0) {
+                            if let nip05name = contact.nip05nameOnly, nip05name.lowercased() != "_" {
+                                Text(nip05name).font(.footnote)
+                            }
+                            Image(systemName: "at.circle.fill")
+                            Text(nip05domain).font(.footnote)
+                        }
+                        .lineLimit(1)
+                        .foregroundColor(theme.accent)
+                    }
+                    
                     if let fixedName = contact.fixedName, fixedName != contact.anyName {
                         HStack {
                             Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
