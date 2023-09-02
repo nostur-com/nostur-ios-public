@@ -39,8 +39,7 @@ struct SingleMediaViewer: View {
         else if autoload || imagesShown {
             LazyImage(request: ImageRequest(url: url,
                                             processors: [.resize(width: imageWidth, upscale: true)],
-                                            userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
-                
+                                            userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                 if state.error != nil {
                     Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                         .centered()
@@ -61,7 +60,6 @@ struct SingleMediaViewer: View {
                             .padding(.horizontal, -contentPadding)
                             .transaction { transaction in
                                 transaction.animation = nil
-                                transaction.disablesAnimations = true
                             }
 //                                .readSize { size in
 //                                    actualSize = size
@@ -96,7 +94,6 @@ struct SingleMediaViewer: View {
                             }
                             .transaction { transaction in
                                 transaction.animation = nil
-                                transaction.disablesAnimations = true
                             }
                     }
                 }
@@ -125,7 +122,6 @@ struct SingleMediaViewer: View {
                             }
                             .transaction { transaction in
                                 transaction.animation = nil
-                                transaction.disablesAnimations = true
                             }
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
@@ -148,7 +144,6 @@ struct SingleMediaViewer: View {
                             }
                             .transaction { transaction in
                                 transaction.animation = nil
-                                transaction.disablesAnimations = true
                             }
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??

@@ -412,8 +412,8 @@ private struct WithSheets: ViewModifier {
                 if let m = miniProfileSheetInfo {
                     ZStack(alignment:.topLeading) {
                         Rectangle()
-                            .fill(.ultraThinMaterial)
-                            .opacity(0.5)
+                            .fill(.thinMaterial)
+                            .opacity(0.8)
                             .zIndex(50)
                             .onTapGesture {
                                 miniProfileSheetInfo = nil
