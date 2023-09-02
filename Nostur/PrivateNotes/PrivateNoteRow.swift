@@ -52,7 +52,7 @@ struct PrivateNoteRow: View {
                         .lineLimit(1)
                         .layoutPriority(2)
                     if (contact.nip05veried) {
-                        Image(systemName: "checkmark.seal.fill")
+                        Image(systemName: "at.circle.fill")
                             .foregroundColor(theme.accent)
                             .layoutPriority(3)
                     }
