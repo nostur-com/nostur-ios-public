@@ -186,7 +186,16 @@ struct DMConversationView: View {
                                         if let contact = contact {
                                             HStack(spacing:1) {
                                                 Text("\(contact.anyName) ").font(.headline)
-                                                if (contact.nip05veried) {
+                                                if contact.couldBeImposter == 1 {
+                                                    Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                                                        .padding(.horizontal, 8)
+                                                        .background(.red)
+                                                        .foregroundColor(.white)
+                                                        .cornerRadius(8)
+                                                        .padding(.top, 3)
+                                                        .layoutPriority(2)
+                                                }
+                                                else if (contact.nip05veried) {
                                                     Group {
                                                         Image(systemName: "at.circle.fill")
                                                         Text(contact.nip05domain).font(.footnote)

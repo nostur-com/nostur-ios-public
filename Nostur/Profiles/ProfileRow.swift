@@ -64,25 +64,30 @@ struct ProfileRow: View {
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
-                        HStack(alignment:.top, spacing:3) {
-                            Text(contact.anyName).font(.headline).foregroundColor(.primary)
-                                .lineLimit(1)
-                            
-                            if couldBeImposter {
-                                Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
-                                    .padding(.horizontal, 8)
-                                    .background(.red)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(8)
-                                    .padding(.top, 3)
-                                    .layoutPriority(2)
-                            }
-                            else if (contact.nip05veried) {
-                                Image(systemName: "at.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(Color("AccentColor"))
-                            }
+                        Text(contact.anyName).font(.headline).foregroundColor(.primary)
+                            .lineLimit(1)
+                        
+                        if couldBeImposter {
+                            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                                .padding(.horizontal, 8)
+                                .background(.red)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                                .padding(.top, 3)
+                                .layoutPriority(2)
                         }
+                        else if contact.nip05veried {
+                            HStack(spacing: 0) {
+                                if let nip05name = contact.nip05nameOnly, nip05name.lowercased() != "_", nip05name.lowercased() != contact.anyName.lowercased() {
+                                    Text(nip05name).font(.footnote)
+                                }
+                                Image(systemName: "at.circle.fill")
+                                Text(contact.nip05domain).font(.footnote)
+                            }
+                            .lineLimit(1)
+                            .foregroundColor(theme.accent)
+                        }
+                        
                         if let fixedName = contact.fixedName, fixedName != contact.anyName {
                             HStack {
                                 Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
@@ -93,7 +98,8 @@ struct ProfileRow: View {
                                     }
                             }
                         }
-                    }.multilineTextAlignment(.leading)
+                    }
+                    .multilineTextAlignment(.leading)
                     Spacer()
                     if (!withoutFollowButton) {
                         Button {

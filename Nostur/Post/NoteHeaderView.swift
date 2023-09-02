@@ -218,11 +218,26 @@ struct NameAndNip: View {
             .fontWeight(.bold)
             .lineLimit(1)
             .layoutPriority(2)
+            .onAppear {
+                if contact.metadata_created_at == 0 {
+                    EventRelationsQueue.shared.addAwaitingContact(contact.contact, debugInfo: "NameAndNip.001")
+                    QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
+                }
+            }
+            .onDisappear {
+                if contact.metadata_created_at == 0 {
+                    QueuedFetcher.shared.dequeue(pTag: contact.pubkey)
+                }
+            }
         
-        if (contact.nip05verified) {
-            Image(systemName: "checkmark.seal.fill")
-                .foregroundColor(Color("AccentColor"))
-                .layoutPriority(3)
+        if contact.couldBeImposter == 1 {
+            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                .padding(.horizontal, 8)
+                .background(.red)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+                .padding(.top, 3)
+                .layoutPriority(2)
         }
     }
 }
