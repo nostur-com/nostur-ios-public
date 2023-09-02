@@ -12,6 +12,10 @@ extension LVM {
     public func loadSomeonesFeed(_ someonesPubkey: String) {
         sTab = "Main"
         ssTab = "Following"
+        
+        instantFeed.backlog.clear()
+        backlog.clear()
+        
         pubkeys = []
         hashtags = []
         lvmCounter.count = 0
@@ -117,6 +121,10 @@ extension LVM {
         guard let account = NosturState.shared.account else { return }
         sTab = "Main"
         ssTab = "Following"
+        
+        instantFeed.backlog.clear()
+        backlog.clear()
+        
         self.pubkey = account.publicKey
         self.pubkeys = account.followingPublicKeys
         self.loadHashtags()
