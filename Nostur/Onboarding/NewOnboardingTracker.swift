@@ -178,7 +178,7 @@ class NewOnboardingTracker {
         if let kind3 = Event.fetchReplacableEvent(3, pubkey: pubkey, context: self.bg) {
             didFetchKind3.send(kind3)
             let pTags = kind3.fastPs.map { $0.1 }
-            let existingAndCreatedContacts = self.createContactsFromPs(pTags)
+            let existingAndCreatedContacts = self.createContactsFromPs(pTags, isOwnAccount: account.privateKey != nil)
             account.addToFollows(NSSet(array: existingAndCreatedContacts))
             let followingPublicKeys = account.followingPublicKeys
             
@@ -256,7 +256,7 @@ class NewOnboardingTracker {
         fetchProfilesOfFollowersTask.fetch()
     }
     
-    private func createContactsFromPs(_ pTags:[String]) -> [Contact] {
+    private func createContactsFromPs(_ pTags:[String], isOwnAccount: Bool = false) -> [Contact] {
         var existingAndCreatedContacts = [Contact]()
         for pTag in pTags {
             let contact = Contact.fetchByPubkey(pTag, context: self.bg)
@@ -270,6 +270,7 @@ class NewOnboardingTracker {
             newContact.pubkey = pTag
             newContact.metadata_created_at = 0
             newContact.updated_at = 0
+            newContact.couldBeImposter = isOwnAccount ? 0 : -1 // If we are already following from own account, mark as NOT imposter
             existingAndCreatedContacts.append(newContact)
         }
         return existingAndCreatedContacts
