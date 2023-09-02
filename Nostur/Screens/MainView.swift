@@ -64,41 +64,43 @@ struct MainView: View {
                                     .accessibilityLabel("Account menu")
                             }
                         }
-                        ToolbarItem(placement: .principal) {
-                            HStack {
-                                if let showingOtherContact = showingOtherContact {
-                                    HStack(spacing: 6) {
-                                        PFP(pubkey: showingOtherContact.pubkey, nrContact: showingOtherContact, size: 30)
-                                            .frame(height:30)
-                                            .clipShape(Circle())
-                                            .onTapGesture {
-                                                sendNotification(.shouldScrollToTop)
-                                            }
-                                        
-                                        Image(systemName: "multiply.circle.fill")
-                                            .onTapGesture {
-                                                guard let account = NosturState.shared.account else { return }
-                                                self.showingOtherContact = nil
-                                                LVMManager.shared.followingLVM(forAccount: account)
-                                                    .revertBackToOwnFeed()
-                                            }
-                                    }
-                                    .offset(x: 18)
-                                        
-                                }
-                                else {
-                                    Image("NosturLogo")
-                                        .resizable()
-                                        .scaledToFit()
+                        
+                        if let showingOtherContact = showingOtherContact {
+                            ToolbarItem(placement: .principal) {
+                                HStack(spacing: 6) {
+                                    PFP(pubkey: showingOtherContact.pubkey, nrContact: showingOtherContact, size: 30)
                                         .frame(height:30)
                                         .clipShape(Circle())
                                         .onTapGesture {
-                                            print("ok3")
                                             sendNotification(.shouldScrollToTop)
+                                        }
+                                    
+                                    Image(systemName: "multiply.circle.fill")
+                                        .frame(height:30)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            guard let account = NosturState.shared.account else { return }
+                                            self.showingOtherContact = nil
+                                            LVMManager.shared.followingLVM(forAccount: account)
+                                                .revertBackToOwnFeed()
                                         }
                                 }
                             }
                         }
+                        else {
+                            ToolbarItem(placement: .principal) {
+                                Image("NosturLogo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(height:30)
+                                    .clipShape(Circle())
+                                    .onTapGesture {
+                                        print("ok3")
+                                        sendNotification(.shouldScrollToTop)
+                                    }
+                            }
+                        }
+                        
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Image(systemName: "gearshape")
                                 .foregroundColor(theme.accent)
