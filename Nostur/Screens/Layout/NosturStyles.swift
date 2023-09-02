@@ -16,7 +16,7 @@ struct NosturButton: ButtonStyle {
         configuration.label
             .lineLimit(1)
             .frame(height: 30)
-            .padding(.horizontal, 25)
+            .padding(.horizontal, 15)
             .font(.caption.weight(.heavy))
             .foregroundColor(Color.white)
             .background(Color.secondary)

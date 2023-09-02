@@ -422,7 +422,7 @@ private struct WithSheets: ViewModifier {
                     ZStack(alignment:.topLeading) {
                         Rectangle()
                             .fill(.thinMaterial)
-                            .opacity(0.5)
+                            .opacity(0.8)
                             .zIndex(50)
                             .onTapGesture {
                                 miniProfileSheetInfo = nil

@@ -54,7 +54,6 @@ struct ContentRenderer: View { // VIEW things
                             }
                     }
                     else {
-                        let _ = L.og.error("🔴🔴🔴🔴 Problem converting \(noteId) to hex")
                         EmptyView()
                     }
                 case .noteHex(let hex):
