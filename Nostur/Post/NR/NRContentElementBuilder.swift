@@ -255,6 +255,7 @@ enum ContentElement: Hashable, Identifiable {
     case postPreviewImage(UIImage)
     case nevent1(ShareableIdentifier)
     case nprofile1(ShareableIdentifier)
+    case nrPost(NRPost) // embedded post, already processed for rendering
 }
 
 import MarkdownUI
