@@ -57,6 +57,7 @@ struct Maintenance {
             Self.runUseDtagForReplacableEvents(context: context)
             Self.runInsertFixedNames(context: context)
             Self.runFixArticleReplies(context: context)
+            Self.runFixImposterFalsePositives(context: context)
 //            Self.runTempAlways(context: context)
         }
         // Time based migrations
@@ -581,6 +582,45 @@ struct Maintenance {
         
     }
     
+    // Run once to fix false positives from imposter checking
+    // In older versions right after switching accounts it would put the label
+    // and then cache the result
+    static func runFixImposterFalsePositives(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.fixImposterFalsePositives, context: context) else { return }
+        
+        let frA = Account.fetchRequest()
+        let allAccounts = Array(try! context.fetch(frA))
+        
+        var imposterCacheFixedCount = 0
+        var imposterCacheFollowCount = 0
+        for account in allAccounts {
+            guard account.privateKey != nil else { continue }
+            for contact in account.follows_ {
+                if contact.couldBeImposter == 1 {
+                    contact.couldBeImposter = 0
+                    imposterCacheFixedCount += 1
+                }
+                else if contact.couldBeImposter == -1 {
+                    contact.couldBeImposter = 0
+                    imposterCacheFollowCount += 1
+                }
+            }
+        }
+        
+        L.maintenance.debug("fixImposterFalsePositives: Fixed \(imposterCacheFixedCount) false positives, preset-to-0 \(imposterCacheFollowCount) contacts")
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.fixImposterFalsePositives.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runFixArticleReplies error on save(): \(error)")
+        }
+        
+    }
+    
     static func runTempAlways(context: NSManagedObjectContext) {
 
         let fr = Contact.fetchRequest()
@@ -622,6 +662,9 @@ struct Maintenance {
         
         // Run once to fix replies to existing replacable events
         case fixArticleReplies = "fixArticleReplies"
+        
+        // Run once to fix false positive results incorrectly cached
+        case fixImposterFalsePositives = "fixImposterFalsePositives"
         
     }
 }
