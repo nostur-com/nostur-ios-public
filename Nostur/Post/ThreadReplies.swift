@@ -19,8 +19,8 @@ struct ThreadReplies: View {
             ForEach(nrPost.groupedRepliesSorted.prefix(50)) { reply in
                 PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
                     .id(reply.id)
+                    .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
             }
-            .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
             if !nrPost.groupedRepliesNotWoT.isEmpty {
                 Divider()
                 if WOT_FILTER_ENABLED() && !showNotWoT {
