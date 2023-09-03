@@ -46,7 +46,11 @@ struct QuotedNoteFragmentView: View {
                                 }
                             
                             if let contact = nrPost.contact {
-                                NameAndNip(contact: contact)
+                                Text(contact.anyName) // Name
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1)
                             }
                             else {
                                 Text(verbatim:"Anon")
@@ -108,22 +112,22 @@ struct QuotedNoteFragmentView: View {
         }
     }
     
-    struct NameAndNip: View {
-//        @EnvironmentObject var theme:Theme
-        @ObservedObject var contact:NRContact
-        var body: some View {
-            Text(contact.anyName) // Name
-                .font(.system(size: 14))
-                .foregroundColor(.primary)
-                .fontWeight(.bold)
-                .lineLimit(1)
-//            if (contact.nip05verified) {
-//                Image(systemName: "checkmark.seal.fill")
-//                    .foregroundColor(theme.accent)
-//                    .layoutPriority(3)
-//            }
-        }
-    }
+//    struct NameAndNip: View {
+////        @EnvironmentObject var theme:Theme
+//        @ObservedObject var contact:NRContact
+//        var body: some View {
+//            Text(contact.anyName) // Name
+//                .font(.system(size: 14))
+//                .foregroundColor(.primary)
+//                .fontWeight(.bold)
+//                .lineLimit(1)
+////            if (contact.nip05verified) {
+////                Image(systemName: "checkmark.seal.fill")
+////                    .foregroundColor(theme.accent)
+////                    .layoutPriority(3)
+////            }
+//        }
+//    }
 }
 
 struct QuotedNoteFragmentView_Previews: PreviewProvider {

@@ -134,8 +134,8 @@ extension Contact : Identifiable {
         let name = name != nil && name != "" ? name : nil
         let theName = (displayName ?? name) ?? nip05nameOnly
         
-        if theName == nil { return authorKey }
-        let spamFixedName = String(theName!.prefix(255)) // 255 SPAM LIMIT
+        if theName.isEmpty { return authorKey }
+        let spamFixedName = String(theName.prefix(255)) // 255 SPAM LIMIT
         
         return spamFixedName.trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -151,11 +151,11 @@ extension Contact : Identifiable {
 //        }
     }
     
-    var nip05nameOnly:String? {
-        guard nip05veried else { return nil }
-        guard let parts = nip05?.split(separator: "@"), parts.count >= 2 else { return nil }
-        guard let name = parts[safe: 0] else { return nil }
-        guard !name.isEmpty else { return nil }
+    var nip05nameOnly:String {
+        guard nip05veried else { return "" }
+        guard let parts = nip05?.split(separator: "@"), parts.count >= 2 else { return "" }
+        guard let name = parts[safe: 0] else { return "" }
+        guard !name.isEmpty else { return "" }
         return String(name)
     }
     

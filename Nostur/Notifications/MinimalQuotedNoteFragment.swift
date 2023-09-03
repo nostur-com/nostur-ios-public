@@ -71,9 +71,8 @@ struct MinimalQuotedNoteFragment: View {
                 .fontWeight(.bold)
                 .lineLimit(1)
             
-            if (contact.nip05verified) {
-                Image(systemName: "checkmark.seal.fill")
-                    .foregroundColor(Color("AccentColor"))
+            if contact.nip05verified, let nip05 = contact.nip05 {
+                NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
                     .layoutPriority(3)
             }
         }

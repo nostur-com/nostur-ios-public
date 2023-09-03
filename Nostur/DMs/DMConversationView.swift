@@ -195,11 +195,8 @@ struct DMConversationView: View {
                                                         .padding(.top, 3)
                                                         .layoutPriority(2)
                                                 }
-                                                else if (contact.nip05veried) {
-                                                    Group {
-                                                        Image(systemName: "at.circle.fill")
-                                                        Text(contact.nip05domain).font(.footnote)
-                                                    }.foregroundColor(Color("AccentColor"))
+                                                else if let nip05 = contact.nip05, contact.nip05veried {
+                                                    NostrAddress(nip05: nip05)
                                                 }
                                             }
                                             if (ns.followsYou(contact)) {

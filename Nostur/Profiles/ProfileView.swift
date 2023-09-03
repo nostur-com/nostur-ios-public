@@ -139,15 +139,9 @@ struct ProfileView: View {
                                         .cornerRadius(8)
                                         .layoutPriority(2)
                                 }
-                                else if (contact.nip05veried) {
-                                    Group {
-                                        if let nip05name = contact.nip05nameOnly, nip05name.lowercased() != "_", nip05name.lowercased() != contact.anyName.lowercased() {
-                                            Text(nip05name).font(.footnote)
-                                        }
-                                        Image(systemName: "at.circle.fill")
-                                        Text(contact.nip05domain).font(.footnote)
-                                    }
-                                    .foregroundColor(theme.accent)
+                                else if contact.nip05veried, let nip05 = contact.nip05 {
+                                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
+                                        .layoutPriority(3)
                                 }
                             }
                             if let fixedName = contact.fixedName, fixedName != contact.anyName {

@@ -106,9 +106,8 @@ struct ArticleView: View {
                                             navigateTo(ContactPath(key: article.pubkey))
                                         }
                                     
-                                    if (contact.nip05verified) {
-                                        Image(systemName: "at.circle.fill")
-                                            .foregroundColor(theme.accent)
+                                    if contact.nip05verified, let nip05 = contact.nip05 {
+                                        NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
                                             .layoutPriority(3)
                                     }
                                 }
@@ -309,9 +308,8 @@ struct ArticleView: View {
                                     navigateTo(ContactPath(key: article.pubkey))
                                 }
                             
-                            if (contact.nip05verified) {
-                                Image(systemName: "at.circle.fill")
-                                    .foregroundColor(theme.accent)
+                            if contact.nip05verified, let nip05 = contact.nip05 {
+                                NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
                                     .layoutPriority(3)
                             }
                         }
@@ -352,9 +350,8 @@ struct ArticleView: View {
                                         navigateTo(ContactPath(key: article.pubkey))
                                     }
                                 
-                                if (contact.nip05verified) {
-                                    Image(systemName: "at.circle.fill")
-                                        .foregroundColor(theme.accent)
+                                if contact.nip05verified, let nip05 = contact.nip05 {
+                                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
                                         .layoutPriority(3)
                                 }
                             }
