@@ -10,7 +10,7 @@ import Combine
 
 class InstantFeed {
     typealias CompletionHandler = ([Event]) -> ()
-    var backlog = Backlog(timeout: 30, auto: true)
+    var backlog = Backlog(timeout: 15, auto: true)
     var bg = DataProvider.shared().bg
     var pongReceiver:AnyCancellable?
     var pubkey:Pubkey?
