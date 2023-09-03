@@ -99,9 +99,9 @@ struct Kind1Default: View {
                           }
                     }
                 }
-                .transaction { transaction in
-                    transaction.animation = nil
-                }
+//                .transaction { transaction in
+//                    transaction.animation = nil
+//                }
 
             VStack(alignment:.leading, spacing: 3) { // Post container
                 HStack(alignment: .top) { // name + reply + context menu
@@ -112,17 +112,17 @@ struct Kind1Default: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(height: 21.0)
 //                .debugDimensions()
-                .transaction { transaction in
-                    transaction.animation = nil
-                }
+//                .transaction { transaction in
+//                    transaction.animation = nil
+//                }
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost)
                 }
                 if let fileMetadata = nrPost.fileMetadata {
                     Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth)
-                        .transaction { transaction in
-                            transaction.animation = nil
-                        }
+//                        .transaction { transaction in
+//                            transaction.animation = nil
+//                        }
                 }
                 else {
                     if (nrPost.kind != 1) && (nrPost.kind != 6) {
@@ -140,10 +140,10 @@ struct Kind1Default: View {
                     ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth)
                         .fixedSize(horizontal: false, vertical: true) // TODO: TEST WITH/WITHOUT
                         .frame(maxWidth: .infinity, alignment:.leading)
-                        .transaction { transaction in
-                            transaction.animation = nil
-                            transaction.disablesAnimations = true
-                        }
+//                        .transaction { transaction in
+//                            transaction.animation = nil
+//                            transaction.disablesAnimations = true
+//                        }
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)

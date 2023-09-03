@@ -116,10 +116,10 @@ struct NEventView: View {
                         }
                 }
             }
-            .transaction { transaction in
-                transaction.animation = nil
-                transaction.disablesAnimations = true
-            }
+//            .transaction { transaction in
+//                transaction.animation = nil
+//                transaction.disablesAnimations = true
+//            }
         }
     }
 }
