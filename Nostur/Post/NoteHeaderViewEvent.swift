@@ -80,9 +80,8 @@ struct PostHeaderEvent: View {
                     .lineLimit(1)
                     .layoutPriority(2)
                 
-                if (contact.nip05veried) {
-                    Image(systemName: "at.circle.fill")
-                        .foregroundColor(theme.accent)
+                if contact.nip05veried, let nip05 = contact.nip05 {
+                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
                         .layoutPriority(3)
                 }
                 
@@ -127,9 +126,8 @@ struct NameAndNipContact: View {
             .lineLimit(1)
             .layoutPriority(2)
         
-        if (contact.nip05veried) {
-            Image(systemName: "at.circle.fill")
-                .foregroundColor(theme.accent)
+        if contact.nip05veried, let nip05 = contact.nip05 {
+            NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
                 .layoutPriority(3)
         }
     }

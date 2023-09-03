@@ -145,9 +145,14 @@ struct ProfileOverlayCard: View {
                 }
                 
                 VStack(alignment: .leading) {
-                    HStack(alignment: .center, spacing: 3) {
+                    HStack(alignment: .bottom, spacing: 3) {
                         Text(contact.anyName).font(.title).foregroundColor(.primary)
                             .lineLimit(1)
+                        if let nip05 = contact.nip05, contact.nip05verified, contact.nip05nameOnly.lowercased() == contact.anyName.lowercased() {
+                            NostrAddress(nip05: nip05, shortened: true)
+                                .layoutPriority(3)
+                                .offset(y: -4)
+                        }
                         if (isFollowingYou) {
                             Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
                                 .foregroundColor(.white)
@@ -156,6 +161,7 @@ struct ProfileOverlayCard: View {
                                 .background(Color.secondary)
                                 .opacity(0.7)
                                 .cornerRadius(13)
+                                .offset(y: -4)
                         }
                     }
                     
@@ -167,18 +173,11 @@ struct ProfileOverlayCard: View {
                             .cornerRadius(8)
                             .layoutPriority(2)
                     }
-                    else if let nip05domain = contact.nip05domain, contact.nip05verified {
-                        HStack(spacing: 0) {
-                            if let nip05name = contact.nip05nameOnly, nip05name.lowercased() != "_" {
-                                Text(nip05name).font(.footnote)
-                            }
-                            Image(systemName: "at.circle.fill")
-                            Text(nip05domain).font(.footnote)
-                        }
-                        .lineLimit(1)
-                        .foregroundColor(theme.accent)
+                    else if let nip05 = contact.nip05, contact.nip05verified, contact.nip05nameOnly.lowercased() != contact.anyName.lowercased() {
+                        NostrAddress(nip05: nip05, shortened: false)
+                            .layoutPriority(3)
                     }
-                    
+
                     if let fixedName = contact.fixedName, fixedName != contact.anyName {
                         HStack {
                             Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)

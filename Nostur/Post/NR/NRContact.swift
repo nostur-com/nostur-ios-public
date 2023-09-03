@@ -55,8 +55,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     @Published var couldBeImposter:Int16 = -1 // -1: unchecked, 0:false 1:true
     
     var nip05verified:Bool
-    var nip05domain:String?
-    var nip05nameOnly:String?
+    var nip05:String?
+    var nip05nameOnly:String
     var metaDataCreatedAt:Date
     var metadata_created_at:Int64
     
@@ -82,7 +82,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.couldBeImposter = (following ?? false) ? 0 : contact.couldBeImposter
         
         self.nip05verified = contact.nip05veried
-        self.nip05domain = contact.nip05domain
+        self.nip05 = contact.nip05
         self.nip05nameOnly = contact.nip05nameOnly
         self.metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
         self.metadata_created_at = contact.metadata_created_at
@@ -137,13 +137,13 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     private func listenForNip05() {
         self.contact.nip05updated
             .subscribe(on: DispatchQueue.global())
-            .sink { [weak self] (isVerified, domain, name) in
+            .sink { [weak self] (isVerified, nip05, name) in
                 guard let self = self else { return }
                 DispatchQueue.main.async {
                     guard isVerified != self.nip05verified else { return }
                     self.objectWillChange.send()
                     self.nip05verified = isVerified
-                    self.nip05domain = domain
+                    self.nip05 = nip05
                     self.nip05nameOnly = name
                 }
             }
@@ -166,7 +166,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     let couldBeImposter = contact.couldBeImposter
                     
                     let nip05verified = contact.nip05veried
-                    let nip05domain = contact.nip05domain
+                    let nip05 = contact.nip05
                     let nip05nameOnly = contact.nip05nameOnly
                     let metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
                     let metadata_created_at = contact.metadata_created_at
@@ -189,7 +189,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                         self.couldBeImposter = couldBeImposter
                         
                         self.nip05verified = nip05verified
-                        self.nip05domain = nip05domain
+                        self.nip05 = nip05
                         self.nip05nameOnly = nip05nameOnly
                         self.metaDataCreatedAt = metaDataCreatedAt
                         self.metadata_created_at = metadata_created_at
