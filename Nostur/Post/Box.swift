@@ -46,10 +46,10 @@ struct Box<Content: View>: View {
                 .onTapGesture {
                     navigate()
                 }
-                .transaction { transaction in
-                    transaction.animation = nil
-                    transaction.disablesAnimations = true
-                }
+//                .transaction { transaction in
+//                    transaction.animation = nil
+//                    transaction.disablesAnimations = true
+//                }
         }
         else if navMode == .noNavigation {
             content
@@ -59,10 +59,10 @@ struct Box<Content: View>: View {
                 .onTapGesture {
                     
                 }
-                .transaction { transaction in
-                    transaction.animation = nil
-                    transaction.disablesAnimations = true
-                }
+//                .transaction { transaction in
+//                    transaction.animation = nil
+//                    transaction.disablesAnimations = true
+//                }
         }
         else {
             content

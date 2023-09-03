@@ -58,9 +58,9 @@ struct SingleMediaViewer: View {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
                             .padding(.horizontal, -contentPadding)
-                            .transaction { transaction in
-                                transaction.animation = nil
-                            }
+//                            .transaction { transaction in
+//                                transaction.animation = nil
+//                            }
 //                                .readSize { size in
 //                                    actualSize = size
 //                                }
@@ -92,9 +92,9 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-                            .transaction { transaction in
-                                transaction.animation = nil
-                            }
+//                            .transaction { transaction in
+//                                transaction.animation = nil
+//                            }
                     }
                 }
                 else if let image = state.image {
@@ -120,9 +120,9 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-                            .transaction { transaction in
-                                transaction.animation = nil
-                            }
+//                            .transaction { transaction in
+//                                transaction.animation = nil
+//                            }
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
                                     HStack(spacing: 5) {
@@ -142,9 +142,9 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-                            .transaction { transaction in
-                                transaction.animation = nil
-                            }
+//                            .transaction { transaction in
+//                                transaction.animation = nil
+//                            }
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
                                     HStack(spacing: 5) {
