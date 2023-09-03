@@ -237,7 +237,10 @@ struct ProfileOverlayCard: View {
             }
         }
         .padding(10)
-        .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
+        .background {
+            theme.background
+                .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
+        }
         .task {
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard !contact.following else { return }
