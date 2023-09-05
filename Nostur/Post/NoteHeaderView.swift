@@ -161,8 +161,10 @@ struct PostHeader: View {
                 Task.detached(priority: .background) {
                     let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
                     DispatchQueue.main.async {
+                        guard currentAccountPubkey == NosturState.shared.activeAccountPublicKey else { return }
                         contact.couldBeImposter = similarPFP ? 1 : 0
                         DataProvider.shared().bg.perform {
+                            guard currentAccountPubkey == NosturState.shared.bgAccount?.publicKey else { return }
                             contact.contact.couldBeImposter = similarPFP ? 1 : 0
 //                            DataProvider.shared().bgSave()
                         }
