@@ -80,8 +80,8 @@ final class SocketPool: ObservableObject {
     
     // Called 2.5 seconds after trying to connect
     public func afterConnect() {
-        guard let account = NosturState.shared.account else { return }
-        NosturState.shared.loadWoT(account)
+//        guard let account = NosturState.shared.account else { return }
+//        NosturState.shared.loadWoT(account)
     }
     
     // Called 5.0 seconds after trying to connect

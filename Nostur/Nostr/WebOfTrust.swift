@@ -68,6 +68,7 @@ class WebOfTrust: ObservableObject {
             else {
                 self.allowedKeysCount = self.followingPubkeys.count + self.followingFollowingPubkeys.count
             }
+            sendNotification(.WoTReady, self.pubkey)
         }
     }
     
