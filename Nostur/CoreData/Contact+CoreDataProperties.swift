@@ -335,7 +335,7 @@ extension Contact : Identifiable {
         
         let awaitingZaps = ZapperPubkeyVerificationQueue.shared.getQueuedZaps()
         awaitingZaps.forEach { zap in
-            if (zap.zappedContactPubkey == contact.pubkey) {
+            if (zap.otherPubkey == contact.pubkey) {
                 zap.objectWillChange.send() // Needed for zaps on notification screen
                 if zap.zappedContact == nil {
                     zap.zappedContact = contact

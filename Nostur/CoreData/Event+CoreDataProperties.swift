@@ -283,7 +283,7 @@ extension Event {
 extension Event {
     //    @NSManaged public var zapFromRequestId: String? // We ALWAYS have zapFromRequest (it is IN the 9735, so not needed)
     @NSManaged public var zappedEventId: String?
-    @NSManaged public var zappedContactPubkey: String?
+    @NSManaged public var otherPubkey: String?
     
     @NSManaged public var zapFromRequest: Event?
     @NSManaged public var zappedEvent: Event?
@@ -591,7 +591,7 @@ extension Event {
     
     static func updateZapTallyCache(_ zap:Event, context:NSManagedObjectContext) -> Bool {
         guard let zappedContact = zap.zappedContact else { // NO CONTACT
-            if let zappedPubkey = zap.zappedContactPubkey {
+            if let zappedPubkey = zap.otherPubkey {
                 L.fetching.info("⚡️⏳ missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
                 QueuedFetcher.shared.enqueue(pTag: zappedPubkey)
                 ZapperPubkeyVerificationQueue.shared.addZap(zap)
@@ -607,8 +607,8 @@ extension Event {
         }
         
         // Check if contact matches the zapped event contact
-        if let zappedContactPubkey = zap.zappedContactPubkey, let zappedEvent = zap.zappedEvent {
-            guard zappedContactPubkey == zappedEvent.pubkey else {
+        if let otherPubkey = zap.otherPubkey, let zappedEvent = zap.zappedEvent {
+            guard otherPubkey == zappedEvent.pubkey else {
                 L.og.info("⚡️🔴 zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
                 zap.flags = "zpk_mismatch_event"
                 return false
@@ -1019,7 +1019,7 @@ extension Event {
                 }
                 if let firstP = event.firstP() {
 //                    savedEvent.objectWillChange.send()
-                    savedEvent.zappedContactPubkey = firstP
+                    savedEvent.otherPubkey = firstP
                     savedEvent.zappedContact = Contact.fetchByPubkey(firstP, context: context)
                 }
             }

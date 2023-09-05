@@ -72,6 +72,7 @@
         <attribute name="likesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="likesCount"/>
         <attribute name="mentionsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="mentionsCount"/>
         <attribute name="mostRecentId" optional="YES" attributeType="String"/>
+        <attribute name="otherPubkey" optional="YES" attributeType="String" elementID="otherPubkey"/>
         <attribute name="pubkey" attributeType="String"/>
         <attribute name="reactionToId" optional="YES" attributeType="String"/>
         <attribute name="relays" attributeType="String" defaultValueString=""/>
@@ -83,7 +84,6 @@
         <attribute name="sig" optional="YES" attributeType="String"/>
         <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
         <attribute name="zapFromRequestId" optional="YES" attributeType="String"/>
-        <attribute name="zappedContactPubkey" optional="YES" attributeType="String"/>
         <attribute name="zappedEventId" optional="YES" attributeType="String"/>
         <attribute name="zapsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="zapState" optional="YES" attributeType="String"/>

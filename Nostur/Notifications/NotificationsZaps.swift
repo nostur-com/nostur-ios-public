@@ -93,7 +93,7 @@ struct NotificationsZaps: View {
                         Button("Show more") {
                             guard let account = NosturState.shared.account else { return }
                             fl.predicate = NSPredicate(
-                                format: "zappedContactPubkey == %@" + // ONLY TO ME
+                                format: "otherPubkey == %@" + // ONLY TO ME
                                 "AND kind == 9735 " +
                                 "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
                                 account.publicKey,
@@ -137,7 +137,7 @@ struct NotificationsZaps: View {
             fl.predicate = NSPredicate(
                 format:
                     "created_at >= %i " +
-                    "AND zappedContactPubkey == %@" + // ONLY TO ME
+                    "AND otherPubkey == %@" + // ONLY TO ME
                     "AND kind == 9735 " +
                     "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
                     currentNewestCreatedAt,
@@ -187,7 +187,7 @@ struct NotificationsZaps: View {
                     .uniqued(on: { $0.zappedEventId }) // Deplicated
                     .filter {
                         // Only for me
-                        $0.zappedContactPubkey != nil && $0.zappedContactPubkey == account.publicKey
+                        $0.otherPubkey != nil && $0.otherPubkey == account.publicKey
                     }
                 
                 let p = zapsForMeDeduplicated.map {
@@ -214,7 +214,7 @@ struct NotificationsZaps: View {
         fl.nrPostTransform = false
         fl.predicate = NSPredicate(
             format:
-                "zappedContactPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@",
+                "otherPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@",
             account.publicKey,
             account.blockedPubkeys_
             )
@@ -246,7 +246,7 @@ struct NotificationsZaps: View {
                 let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
-                        "created_at >= %i AND zappedContactPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                        "created_at >= %i AND otherPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
                         currentNewestCreatedAt,
                     account.publicKey,
                     account.blockedPubkeys_

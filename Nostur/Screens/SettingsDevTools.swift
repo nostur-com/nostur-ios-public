@@ -56,7 +56,7 @@ extension Settings {
                 event.firstQuoteId = nil
                 
                 event.zappedEventId = nil
-                event.zappedContactPubkey = nil
+                event.otherPubkey = nil
                 
                 event.reactionToId = nil
             }
@@ -100,7 +100,7 @@ extension Settings {
                         event.zappedEventId = firstE
                     }
                     if let firstP = event.firstP() {
-                        event.zappedContactPubkey = firstP
+                        event.otherPubkey = firstP
                     }
                 }
                     
@@ -599,8 +599,8 @@ extension Settings {
                             let savedZapReq = Event.saveZapRequest(event: nZapReq, context: bg)
                             event.zapFromRequest = savedZapReq
                         }
-                        if (event.zappedContactPubkey != nil) {
-                            event.zappedContact = Contact.fetchByPubkey(event.zappedContactPubkey!, context: bg)
+                        if (event.otherPubkey != nil) {
+                            event.zappedContact = Contact.fetchByPubkey(event.otherPubkey!, context: bg)
                         }
                         if (event.zappedEventId != nil) {
                             event.zappedEvent = try? Event.fetchEvent(id: event.zappedEventId!, context: bg)
