@@ -153,17 +153,18 @@ final class NosturState : ObservableObject {
         guard let account = account ?? self.account else { L.og.error("🕸️🕸️ WebOfTrust: loadWoT. account = nil"); return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
         
-        guard account.followingPublicKeys.count > 10 else {
-            L.og.info("🕸️🕸️ WebOfTrust: Not enough follows to build WoT. Maybe still onboarding and contact list not received yet")
-            return
-        }
-        
         let wotFollowingPubkeys = account.followingPublicKeys.subtracting(account.silentFollows) // We don't include silent follows in WoT
         
         let publicKey = account.publicKey
         DataProvider.shared().bg.perform { [weak self] in
             guard self?.wot?.pubkey != publicKey else { return }
             self?.wot = WebOfTrust(pubkey: publicKey, followingPubkeys: wotFollowingPubkeys)
+            
+            guard wotFollowingPubkeys.count > 10 else {
+                DispatchQueue.main.async { sendNotification(.WoTReady, publicKey) }
+                L.og.info("🕸️🕸️ WebOfTrust: Not enough follows to build WoT. Maybe still onboarding and contact list not received yet")
+                return
+            }
             
             switch SettingsStore.shared.webOfTrustLevel {
                 case SettingsStore.WebOfTrustLevel.off.rawValue:
