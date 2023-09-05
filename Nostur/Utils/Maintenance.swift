@@ -58,6 +58,7 @@ struct Maintenance {
             Self.runInsertFixedNames(context: context)
             Self.runFixArticleReplies(context: context)
             Self.runFixImposterFalsePositives(context: context)
+            Self.runMigrateDMState(context: context)
             Self.runFixImposterFalsePositivesAgain(context: context)
 //            Self.runTempAlways(context: context)
         }
@@ -84,9 +85,9 @@ struct Maintenance {
                 return newResult
             }
             
-            let regex = "(" + ownAccountPubkeys.map {
+            let regex = ".*(" + ownAccountPubkeys.map {
                 NSRegularExpression.escapedPattern(for: serializedP($0))
-            }.joined(separator: "|") + ")"
+            }.joined(separator: "|") + ").*"
             
             let ownAccountBookmarkIds = allAccounts.reduce([String]()) { partialResult, account in
                 var newResult = Array(partialResult)
@@ -659,6 +660,125 @@ struct Maintenance {
         
     }
     
+    // Run once to migrate DM info in "root" DM event to DMState record
+    static func runMigrateDMState(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.migrateDMState, context: context) else { return }
+        
+        let frA = Account.fetchRequest()
+        let allAccounts = Array(try! context.fetch(frA))
+        // This one includes read-only accounts
+        let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
+            var newResult = Array(partialResult)
+                newResult.append(account.publicKey)
+            return newResult
+        }
+        
+        // Need to do per account, because we can have multiple accounts in Nostur, can message eachother,
+        // Each account needs its own conversation state.
+        
+        typealias ConversationKeypair = String // "accountPubkey-contactPubkey"
+        typealias AccountPubkey = String
+        typealias ContactPubkey = String
+        typealias IsAccepted = Bool
+        typealias MarkedReadAt = Date?
+        
+        var dmStates:[ConversationKeypair: (AccountPubkey, ContactPubkey, IsAccepted, MarkedReadAt)] = [:]
+        
+        for account in allAccounts {
+            let sent = Event.fetchRequest()
+            sent.predicate = NSPredicate(format: "kind == 4 AND pubkey == %@", account.publicKey)
+            sent.fetchLimit = 9999
+            sent.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+
+            if let sent = try? context.fetch(sent) {
+                for messageSent in sent {
+                    // sent is always "accepted"
+                    guard var contactPubkey = messageSent.firstP() else { continue }
+                    messageSent.otherPubkey = contactPubkey
+                    
+                    let accountPubkey = messageSent.pubkey
+                    
+                    guard accountPubkey != contactPubkey else { continue }
+                    
+                    let markedReadAt = messageSent.lastSeenDMCreatedAt != 0 ? Date(timeIntervalSince1970: TimeInterval(messageSent.lastSeenDMCreatedAt)) : nil
+                    
+                    // Set or update the DM conversation state, use the most recent markedReadAt (lastSeenDMCreatedAt)
+                    if let existingDMState = dmStates[accountPubkey + "-" + contactPubkey], let newerMarkedReadAt = markedReadAt, newerMarkedReadAt > (existingDMState.3 ?? Date(timeIntervalSince1970: 0) ) {
+                        dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, true, newerMarkedReadAt)
+                    }
+                    else {
+                        dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, true, markedReadAt)
+                    }
+                }
+            }
+            
+            
+            let received = Event.fetchRequest()
+            received.predicate = NSPredicate(
+                format: "kind == 4 AND tagsSerialized CONTAINS %@ AND NOT pubkey == %@", serializedP(account.publicKey), account.publicKey)
+            received.fetchLimit = 9999
+            received.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            
+            if let received = try? context.fetch(received) {
+                for messageReceived in received {
+                    
+                    let contactPubkey = messageReceived.pubkey
+                    guard messageReceived.firstP() == account.publicKey || messageReceived.lastP() == account.publicKey else { continue }
+                    let accountPubkey = account.publicKey
+                    messageReceived.otherPubkey = accountPubkey
+                    
+                    guard accountPubkey != contactPubkey else { continue }
+                    
+                    let didSend = dmStates[accountPubkey + "-" + contactPubkey] != nil
+                    
+                    // received is "accepted" if we manually accepted before, or if we replied
+                    if messageReceived.dmAccepted || didSend {
+                        let markedReadAt = messageReceived.lastSeenDMCreatedAt != 0 ? Date(timeIntervalSince1970: TimeInterval(messageReceived.lastSeenDMCreatedAt)) : nil
+                        
+                        // Set or update the DM conversation state, use the most recent markedReadAt (lastSeenDMCreatedAt)
+                        if let existingDMState = dmStates[accountPubkey + "-" + contactPubkey], let newerMarkedReadAt = markedReadAt, newerMarkedReadAt > (existingDMState.3 ?? Date(timeIntervalSince1970: 0) ) {
+                            dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, true, newerMarkedReadAt)
+                        }
+                        else {
+                            dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, true, markedReadAt)
+                        }
+                    }
+                    else {
+                        let markedReadAt = messageReceived.lastSeenDMCreatedAt != 0 ? Date(timeIntervalSince1970: TimeInterval(messageReceived.lastSeenDMCreatedAt)) : nil
+                        
+                        // Set or update the DM conversation state, use the most recent markedReadAt (lastSeenDMCreatedAt)
+                        if let existingDMState = dmStates[accountPubkey + "-" + contactPubkey], let newerMarkedReadAt = markedReadAt, newerMarkedReadAt > (existingDMState.3 ?? Date(timeIntervalSince1970: 0) ) {
+                            dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, existingDMState.2, newerMarkedReadAt)
+                        }
+                        else {
+                            dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, false, markedReadAt)
+                        }
+                    }
+                }
+            }
+        }
+        
+        for dmState in dmStates {
+            let record = DMState(context: context)
+            record.accountPubkey = dmState.value.0
+            record.contactPubkey = dmState.value.1
+            record.accepted = dmState.value.2
+            record.markedReadAt = dmState.value.3
+        }
+
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migrateDMState.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runMigrateDMState error on save(): \(error)")
+        }
+        
+    }
+    
     static func runTempAlways(context: NSManagedObjectContext) {
 
         let fr = Contact.fetchRequest()
@@ -703,6 +823,8 @@ struct Maintenance {
         
         // Run once to fix false positive results incorrectly cached
         case fixImposterFalsePositives = "fixImposterFalsePositives"
+        
+        case migrateDMState = "runMigrateDMState"
         
         // Need to run it again... false positives still
         case fixImposterFalsePositivesAgain = "fixImposterFalsePositivesAgain"
