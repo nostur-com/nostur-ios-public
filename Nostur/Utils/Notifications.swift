@@ -64,10 +64,6 @@ extension Notification.Name {
         return Notification.Name("updateNotificationsCount")
     }
     
-    static var updateDMsCount: Notification.Name {
-        return Notification.Name("updateDMsCount")
-    }
-    
     static var listStatus: Notification.Name {
         return Notification.Name("listStatus")
     }
@@ -300,6 +296,9 @@ extension Notification.Name {
     
     static var showFeedToggles: Notification.Name {
         return Notification.Name("showFeedToggles")
+    }
+    static var showDMToggles: Notification.Name {
+        return Notification.Name("showDMToggles")
     }
     
     static var didTapTab: Notification.Name {

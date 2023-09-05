@@ -17,6 +17,7 @@ struct AppView: View {
     private var nwcRQ:NWCRequestQueue = .shared
     let ss:SettingsStore = .shared
     @StateObject private var ns:NosturState = .shared
+    @StateObject private var dm:DirectMessageViewModel = .default
     
     @State var isViewDisplayed = false
     @State var isOnboarding = false
@@ -62,6 +63,7 @@ struct AppView: View {
                         }
                         .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                         .environmentObject(ns)
+                        .environmentObject(dm)
                         .onReceive(priceLoop) { time in
                             if (!isViewDisplayed) { return }
                             Task.detached(priority: .low) {

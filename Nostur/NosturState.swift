@@ -73,8 +73,9 @@ final class NosturState : ObservableObject {
     @Published var account:Account? = nil {
         didSet {
             if let account {
-                DataProvider.shared().bg.perform {
-                    self.bgAccount = DataProvider.shared().bg.object(with: account.objectID) as? Account
+                bg().perform {
+                    self.bgAccount = bg().object(with: account.objectID) as? Account
+                    self.bgAccountKeys = Set(Account.fetchAccounts(context: bg()).map { $0.publicKey })
                 }
             }
             else {
@@ -83,6 +84,7 @@ final class NosturState : ObservableObject {
         }
     }
     var bgAccount:Account?
+    var bgAccountKeys:Set<String> = []
     @Published var readOnlyAccountSheetShown:Bool = false
     @Published var rawExplorePubkeys:Set<String> = []
     
@@ -103,6 +105,7 @@ final class NosturState : ObservableObject {
     public func loadAccounts() {
         let r = Account.fetchRequest()
         self.accounts_ = (try? viewContext.fetch(r) ) ?? []
+        self.bgAccountKeys = Set(accounts_.map { $0.publicKey })
     }
     
     func setAccount(account:Account? = nil) {
