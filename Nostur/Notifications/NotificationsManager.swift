@@ -69,10 +69,10 @@ class NotificationsManager: ObservableObject {
             }
             .store(in: &subscriptions)
         
-        // Check relays for newest messages NOW
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-//            self.relayCheckNewestNotifications()
-//        }
+        // Check relays for newest messages NOW // NEEDED ("Notifications") realtime
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            self.relayCheckNewestNotifications()
+        }
         
         // Check relays for since... later
         DispatchQueue.main.asyncAfter(deadline: .now() + 8) { // TODO: Change to event based instead of timer. (after instant feed finished)
@@ -91,12 +91,11 @@ class NotificationsManager: ObservableObject {
     
     func relayCheckSinceNotifications() {
         // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-        guard let account = ns.account else { return }
         guard ns.activeAccountPublicKey != "" else { return }
         guard let since = NosturState.shared.lastNotificationReceivedAt else { return }
     
         let sinceNTimestamp = NTimestamp(date: since)
-        let dmSinceNTimestamp = NTimestamp(timestamp: Int(account.lastSeenDMRequestCreatedAt))
+        let dmSinceNTimestamp = NTimestamp(timestamp: Int(DirectMessageViewModel.default.lastNotificationReceivedAt?.timeIntervalSince1970 ?? 0))
         L.og.info("checking notifications since: \(since.description(with: .current))")
         
         let ago = since.agoString

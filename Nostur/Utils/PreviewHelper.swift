@@ -178,6 +178,12 @@ extension PreviewEnvironment {
             self.parseMessages(testDMs())
         }
     }
+        
+    func loadDMs2() {
+        context.performAndWait {
+            self.parseMessages(testDMs2())
+        }
+    }
     
     
     func loadMedia() {

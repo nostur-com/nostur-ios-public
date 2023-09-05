@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NosturTabsView: View {
     @EnvironmentObject var theme:Theme
+    @EnvironmentObject var dm:DirectMessageViewModel
     @StateObject private var dim = DIMENSIONS()
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
