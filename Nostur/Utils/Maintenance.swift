@@ -239,10 +239,10 @@ struct Maintenance {
             
             // KIND 9735
             // OLDER THAN X DAYS
-            // zappedContactPubkey NOT IN OWN ACCOUNTS
+            // otherPubkey NOT IN OWN ACCOUNTS
             //            context.perform {
             let fr9735 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr9735.predicate = NSPredicate(format: "created_at < %i AND kind == 9735 AND NOT zappedContactPubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
+            fr9735.predicate = NSPredicate(format: "created_at < %i AND kind == 9735 AND NOT otherPubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
             
             let fr9735batchDelete = NSBatchDeleteRequest(fetchRequest: fr9735)
             fr9735batchDelete.resultType = .resultTypeCount
