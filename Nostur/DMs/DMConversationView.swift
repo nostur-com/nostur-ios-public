@@ -78,14 +78,17 @@ struct DMConversationView: View {
     
     var isAccepted:Bool {
         // if possible infer accepted by checking if we responded (mine)
-        rootDM?.dmAccepted ?? false || (!mine.isEmpty)
+        conv.accepted || (!mine.isEmpty)
     }
     
     var allMessagesSorted:[Event] {
         chain(theirs, mine).sorted(by: { $0.created_at < $1.created_at })
     }
+
+    @ObservedObject var conv:Conversation
     
-    init(recentDM:Event, pubkey:String) {
+    init(recentDM:Event, pubkey:String, conv:Conversation) {
+        self.conv = conv
         self.pubkey = pubkey
         self.recentDM = recentDM
         self.theirPubkey = recentDM.pubkey != pubkey
@@ -162,11 +165,18 @@ struct DMConversationView: View {
                                                 }
                                             }
                                         }
-                                        else if let rootDM {
+                                        else if rootDM != nil {
                                             Divider()
                                             Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
-                                                rootDM.objectWillChange.send()
-                                                rootDM.dmAccepted = true
+                                                conv.accepted = true
+                                                bg().perform {
+                                                    conv.dmState.accepted = true
+                                                    conv.dmState.didUpdate.send()
+                                                    DataProvider.shared().bgSave()
+                                                    DispatchQueue.main.async {
+                                                        DirectMessageViewModel.default.reloadAccepted()
+                                                    }
+                                                }
                                             }
                                             .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                                         }
@@ -326,21 +336,21 @@ struct DMConversationView: View {
         }
     }
 }
-
-struct Previews_DMConversationView_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in pe.loadDMs() }) {
-            NavigationStack {
-                let preston = "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204"
-                let recentDM = PreviewFetcher.fetchEvent("96500cec51f30a7bee4bf15984f574550064913ec8d00e164e9efad34a989236")
-                if let recent = recentDM {
-                    DMConversationView(recentDM: recent, pubkey: preston)
-                }
-            }
-        }
-    }
-}
-
-
+//
+//struct Previews_DMConversationView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        
+//        PreviewContainer({ pe in pe.loadDMs() }) {
+//            NavigationStack {
+//                let preston = "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204"
+//                let recentDM = PreviewFetcher.fetchEvent("96500cec51f30a7bee4bf15984f574550064913ec8d00e164e9efad34a989236")
+//                if let recent = recentDM {
+//                    DMConversationView(recentDM: recent, pubkey: preston)
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//
 
