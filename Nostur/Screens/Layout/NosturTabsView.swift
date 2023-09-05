@@ -13,7 +13,6 @@ struct NosturTabsView: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
     @State var unread = 0
-    @State var unreadDMs = 0
     @State var showTabBar = true
     @ObservedObject var ss:SettingsStore = .shared
     
@@ -57,13 +56,6 @@ struct NosturTabsView: View {
                         .tabItem { Image(systemName: "bookmark") }
                         .tag("Bookmarks")
                         .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
-                    
-//                    RelayIntelTest()
-                    
-                    DirectMessagesContainer()
-                        .tabItem { Image(systemName: "envelope.fill") }
-                        .tag("Messages")
-                        .badge(unreadDMs)
                 }
                 .withSheets()
             }
@@ -115,9 +107,6 @@ struct NosturTabsView: View {
         }
         .onReceive(receiveNotification(.updateNotificationsCount)) { notification in
             unread = (notification.object as! Int)
-        }
-        .onReceive(receiveNotification(.updateDMsCount)) { notification in
-            unreadDMs = (notification.object as! Int)
         }
         .onReceive(receiveNotification(.scrollingUp)) { _ in
             guard !IS_CATALYST && ss.autoHideBars else { return }

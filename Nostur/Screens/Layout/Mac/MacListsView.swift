@@ -50,10 +50,6 @@ struct MacListsView: View {
                         BookmarksAndPrivateNotes()
                             .tag("Bookmarks")
                             .toolbar(.hidden, for: .tabBar)
-                        
-                        DirectMessagesContainer()
-                            .tag("Messages")
-                            .toolbar(.hidden, for: .tabBar)
                     }
                 }
                 
