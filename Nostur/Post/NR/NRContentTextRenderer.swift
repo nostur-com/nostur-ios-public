@@ -43,5 +43,8 @@ struct NRContentTextRenderer: View {
                     }
                 }
             }
+//            .transaction { t in
+//                t.animation = nil
+//            }
     }
 }

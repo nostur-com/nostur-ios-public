@@ -49,6 +49,9 @@ struct NoteRow: View {
                         }
                 }
                 .foregroundColor(.gray)
+//                .transaction { t in
+//                    t.animation = nil
+//                }
                 .onTapGesture {
                     navigateTo(ContactPath(key: nrPost.pubkey))
                 }
@@ -118,8 +121,14 @@ struct NoteRow: View {
                             QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
                         }
                     }
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
             }
         }
+//        .transaction { t in
+//            t.animation = nil
+//        }
     }
 }
 

@@ -29,17 +29,45 @@ struct PostOrThread: View {
                     PostRowDeletable(nrPost: nrParent,
                                      missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
                                      connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
                 }
                 .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                 //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
+//                .transaction { t in
+//                    t.animation = nil
+//                }
             }
-            
+
             Box(nrPost: nrPost) {
                 PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
             }
             .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
+            .transaction { t in
+                t.animation = nil
+            }
         }
-        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background) // Still need .background here, normally use Box, but this is for between Boxes
+        .background {
+            if nrPost.kind == 30023 {
+                theme.secondaryBackground
+                    .transaction { t in
+                        t.animation = nil
+                    }
+            }
+            else {
+                theme.background
+                    .transaction { t in
+                        t.animation = nil
+                    }
+            }
+        } // Still need .background here, normally use Box, but this is for between Boxes
+//        .transaction { t in
+//            t.animation = nil
+//        }
     }
 }
 

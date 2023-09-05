@@ -37,6 +37,9 @@ struct NoteHeaderView: View {
                     }
             }
         }
+//        .transaction { t in
+//            t.animation = nil
+//        }
     }
 }
 
@@ -52,6 +55,9 @@ struct PlaceholderPostHeader: View {
                     .fontWeight(.bold)
                     .lineLimit(1)
                     .layoutPriority(2)
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
                     .onTapGesture {
                         navigateTo(ContactPath(key: nrPost.pubkey))
                     }
@@ -96,6 +102,9 @@ struct PostHeader: View {
                     .fontWeight(.bold)
                     .lineLimit(1)
                     .layoutPriority(2)
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
                     .onTapGesture {
                         navigateTo(ContactPath(key: nrPost.pubkey))
                     }
@@ -124,6 +133,9 @@ struct PostHeader: View {
                 }
             }
         }
+//        .transaction { t in
+//            t.animation = nil
+//        }
         .onAppear {
             if contact.metadata_created_at == 0 {
                 EventRelationsQueue.shared.addAwaitingContact(contact.contact, debugInfo: "NoteHeaderView.001")
