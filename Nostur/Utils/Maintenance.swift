@@ -58,6 +58,7 @@ struct Maintenance {
             Self.runInsertFixedNames(context: context)
             Self.runFixArticleReplies(context: context)
             Self.runFixImposterFalsePositives(context: context)
+            Self.runFixImposterFalsePositivesAgain(context: context)
 //            Self.runTempAlways(context: context)
         }
         // Time based migrations
@@ -621,6 +622,43 @@ struct Maintenance {
         
     }
     
+    // Need to run it again... false positives still
+    static func runFixImposterFalsePositivesAgain(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.fixImposterFalsePositivesAgain, context: context) else { return }
+        
+        let frA = Account.fetchRequest()
+        let allAccounts = Array(try! context.fetch(frA))
+        
+        var imposterCacheFixedCount = 0
+        var imposterCacheFollowCount = 0
+        for account in allAccounts {
+            guard account.privateKey != nil else { continue }
+            for contact in account.follows_ {
+                if contact.couldBeImposter == 1 {
+                    contact.couldBeImposter = 0
+                    imposterCacheFixedCount += 1
+                }
+                else if contact.couldBeImposter == -1 {
+                    contact.couldBeImposter = 0
+                    imposterCacheFollowCount += 1
+                }
+            }
+        }
+        
+        L.maintenance.debug("fixImposterFalsePositivesAgain: Fixed \(imposterCacheFixedCount) false positives, preset-to-0 \(imposterCacheFollowCount) contacts")
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.fixImposterFalsePositivesAgain.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runFixArticleReplies error on save(): \(error)")
+        }
+        
+    }
+    
     static func runTempAlways(context: NSManagedObjectContext) {
 
         let fr = Contact.fetchRequest()
@@ -665,6 +703,9 @@ struct Maintenance {
         
         // Run once to fix false positive results incorrectly cached
         case fixImposterFalsePositives = "fixImposterFalsePositives"
+        
+        // Need to run it again... false positives still
+        case fixImposterFalsePositivesAgain = "fixImposterFalsePositivesAgain"
         
     }
 }
