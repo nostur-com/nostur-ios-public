@@ -21,6 +21,9 @@ struct LazyNoteMenuButton: View {
             .onTapGesture {
                 sendNotification(.showNoteMenu, nrPost)
             }
+//            .transaction { t in
+//                t.animation = nil
+//            }
     }
 }
 

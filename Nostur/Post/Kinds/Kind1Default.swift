@@ -63,7 +63,13 @@ struct Kind1Default: View {
                             .opacity(0.2)
                             .frame(width: 2, height: 20)
                             .offset(x:0, y: -10)
+                            .transaction { t in
+                                t.animation = nil
+                            }
                     }
+                }
+                .transaction { t in
+                    t.animation = nil
                 }
                 .onTapGesture {
                     if !IS_APPLE_TYRANNY {
@@ -112,17 +118,17 @@ struct Kind1Default: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(height: 21.0)
 //                .debugDimensions()
-//                .transaction { transaction in
-//                    transaction.animation = nil
-//                }
+                .transaction { t in
+                    t.animation = nil
+                }
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost)
                 }
                 if let fileMetadata = nrPost.fileMetadata {
                     Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth)
-//                        .transaction { transaction in
-//                            transaction.animation = nil
-//                        }
+                        .transaction { transaction in
+                            transaction.animation = nil
+                        }
                 }
                 else {
                     if (nrPost.kind != 1) && (nrPost.kind != 6) {
@@ -140,9 +146,8 @@ struct Kind1Default: View {
                     ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth)
                         .fixedSize(horizontal: false, vertical: true) // TODO: TEST WITH/WITHOUT
                         .frame(maxWidth: .infinity, alignment:.leading)
-//                        .transaction { transaction in
-//                            transaction.animation = nil
-//                            transaction.disablesAnimations = true
+//                        .transaction { t in
+//                            t.animation = nil
 //                        }
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
@@ -164,9 +169,12 @@ struct Kind1Default: View {
                 theme.lineColor
                     .frame(width: 2)
                     .opacity(0.2)
-                    .offset(x: THREAD_LINE_OFFSET, y: 20)                
+                    .offset(x: THREAD_LINE_OFFSET, y: 20)
+                    .transaction { t in
+                        t.animation = nil
+                    }
             }
-        }        
+        }
     }
 }
 

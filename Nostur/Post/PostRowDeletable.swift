@@ -46,6 +46,9 @@ struct PostRowDeletable: View {
         }
         else if postRowDeletableAttributes.deletedById == nil {
             NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped)
+//                .transaction { t in
+//                    t.animation = nil
+//                }
         }
         else {
             Text("_Post deleted by \(nrPost.anyName)_", comment: "Message shown when a post is deleted by (name)").hCentered()

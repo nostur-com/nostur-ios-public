@@ -48,7 +48,6 @@ struct Box<Content: View>: View {
                 }
 //                .transaction { transaction in
 //                    transaction.animation = nil
-//                    transaction.disablesAnimations = true
 //                }
         }
         else if navMode == .noNavigation {
@@ -61,7 +60,6 @@ struct Box<Content: View>: View {
                 }
 //                .transaction { transaction in
 //                    transaction.animation = nil
-//                    transaction.disablesAnimations = true
 //                }
         }
         else {
@@ -70,17 +68,26 @@ struct Box<Content: View>: View {
                 .background {
                     if kind == 30023 {
                         theme.secondaryBackground
+                            .transaction { t in
+                                t.animation = nil
+                            }
                             .onTapGesture {
                                 navigate()
                             }
                     }
                     else {
                         theme.background
+                            .transaction { t in
+                                t.animation = nil
+                            }
                             .onTapGesture {
                                 navigate()
                             }
                     }
                 }
+//                .transaction { t in
+//                    t.animation = nil
+//                }
         }
     }
     

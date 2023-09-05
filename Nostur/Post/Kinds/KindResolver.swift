@@ -30,6 +30,9 @@ struct KindResolver: View {
             }
             else {
                 Kind1Default(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped)
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
             }
         }
     }

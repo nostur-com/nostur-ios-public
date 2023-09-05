@@ -117,7 +117,13 @@ struct InnerPFP: View {
                     Circle()
                         .strokeBorder(.regularMaterial, lineWidth: 5)
                         .background(Circle().fill(theme.background))
+//                        .transaction { t in
+//                            t.animation = nil
+//                        }
                 )
+//                .transaction { t in
+//                    t.animation = nil
+//                }
             }
             else if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                 LazyImage(url: URL(string: pictureUrl)) { state in
@@ -142,7 +148,13 @@ struct InnerPFP: View {
                                 Circle()
                                     .strokeBorder(.regularMaterial, lineWidth: 5)
                                     .background(Circle().fill(theme.background))
+//                                    .transaction { t in
+//                                        t.animation = nil
+//                                    }
                             )
+//                            .transaction { t in
+//                                t.animation = nil
+//                            }
                         }
                         else if let image = state.image {
                             image
@@ -155,7 +167,13 @@ struct InnerPFP: View {
                                     Circle()
                                         .strokeBorder(.regularMaterial, lineWidth: 5)
                                         .background(Circle().fill(theme.background))
+//                                        .transaction { t in
+//                                            t.animation = nil
+//                                        }
                                 )
+//                                .transaction { t in
+//                                    t.animation = nil
+//                                }
                         }
                         else {
                             Circle().foregroundColor(color)
@@ -164,7 +182,13 @@ struct InnerPFP: View {
                                     Circle()
                                         .strokeBorder(.black, lineWidth: 5)
                                         .background(Circle().fill(theme.background))
+//                                        .transaction { t in
+//                                            t.animation = nil
+//                                        }
                                 )
+//                                .transaction { t in
+//                                    t.animation = nil
+//                                }
                         }
                     }
                     else {
@@ -174,11 +198,20 @@ struct InnerPFP: View {
                                 Circle()
                                     .strokeBorder(.regularMaterial, lineWidth: 5)
                                     .background(Circle().fill(theme.background))
+//                                    .transaction { t in
+//                                        t.animation = nil
+//                                    }
                             )
+//                            .transaction { t in
+//                                t.animation = nil
+//                            }
                     }
                 }
                 .priority(.low) // lower prio for animated gif, saves bandwidth?
                 .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+//                .transaction { t in
+//                    t.animation = nil
+//                }
             }
         }
         else {
@@ -188,7 +221,13 @@ struct InnerPFP: View {
                     Circle()
                         .strokeBorder(.regularMaterial, lineWidth: 5)
                         .background(Circle().fill(theme.background))
+//                        .transaction { t in
+//                            t.animation = nil
+//                        }
                 )
+//                .transaction { t in
+//                    t.animation = nil
+//                }
         }
     }
 }
