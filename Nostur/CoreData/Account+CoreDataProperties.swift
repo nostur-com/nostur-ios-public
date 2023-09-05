@@ -71,6 +71,12 @@ extension Account {
         request.fetchBatchSize = 1
         return try context.fetch(request).first
     }
+    
+    static func fetchAccounts(context:NSManagedObjectContext) -> [Account] {
+        let request = NSFetchRequest<Account>(entityName: "Account")
+        request.predicate = NSPredicate(value: true)
+        return (try? context.fetch(request)) ?? []
+    }
 }
 
 // MARK: Generated accessors for follows
