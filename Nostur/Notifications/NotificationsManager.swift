@@ -43,25 +43,10 @@ class NotificationsManager: ObservableObject {
             sendNotification(.updateNotificationsCount, unread)
         }
     }
-    @Published var unreadDMsAccepted:Int = 0 {
-        didSet {
-            sendNotification(.updateDMsCount, unreadDMs)
-        }
-    }
-    @Published var unreadDMRequests:Int = 0 {
-        didSet {
-            sendNotification(.updateDMsCount, unreadDMs)
-        }
-    }
     
     // Notifications tab
     var unread: Int {
         unreadMentions + unreadReactions + unreadZaps
-    }
-    
-    // DMs tab
-    var unreadDMs:Int {
-        unreadDMsAccepted &+ unreadDMRequests
     }
     
 //    let viewContext = DataProvider.shared().viewContext
@@ -81,8 +66,6 @@ class NotificationsManager: ObservableObject {
                 self.unreadMentions = 0
                 self.unreadReactions = 0
                 self.unreadZaps = 0
-                self.unreadDMsAccepted = 0
-                self.unreadDMRequests = 0
             }
             .store(in: &subscriptions)
         
@@ -301,59 +284,6 @@ class NotificationsManager: ObservableObject {
             self.checkForNewPosts()
             self.checkForNewReactions()
             self.checkForNewZaps()
-            self.checkForDMs()
-        }
-    }
-    
-    private func checkForDMs() {
-        guard let account = ns.bgAccount else { return }
-        let pubkey = account.publicKey
-        let blockedPubkeys = account.blockedPubkeys_
-        
-        let receivedFR = Event.fetchRequest()
-        receivedFR.predicate = NSPredicate(
-            format:
-                "kind == 4 " +
-                "AND tagsSerialized CONTAINS %@ " +
-                "AND NOT pubkey IN %@",
-            serializedP(pubkey),
-            blockedPubkeys)
-        receivedFR.fetchLimit = 999
-        receivedFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        
-        
-        let lastSeenDMRequestCreatedAt = account.lastSeenDMRequestCreatedAt
-        
-        do {
-            let received = try context.fetch(receivedFR)
-            
-            let sentFR = Event.fetchRequest()
-            sentFR.predicate = NSPredicate(
-                format: "kind == 4 AND pubkey == %@", pubkey)
-            sentFR.fetchLimit = 999
-            sentFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            let sent = try context.fetch(sentFR)
-            
-            let onlyMostRecentAll = computeOnlyMostRecentAll(sent: sent, received: received, pubkey: pubkey)
-            let onlyMostRecentAccepted = computeOnlyMostRecentAccepted(onlyMostRecentAll)
-            let onlyMostRecentRequests = computeOnlyMostRecentRequests(onlyMostRecentAll)
-            let newUnreadDMsAccepted = computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
-            let newUnreadDMRequests = computeRequestTotalUnread(onlyMostRecentRequests, lastSeenDMRequestCreatedAt:lastSeenDMRequestCreatedAt)
-            
-            
-            DispatchQueue.main.async {
-                // Only set if changed. (else rerender because _nm changed.)
-                if newUnreadDMsAccepted != self.unreadDMsAccepted {
-                    self.unreadDMsAccepted = min(newUnreadDMsAccepted,9999)
-                }
-                
-                if newUnreadDMRequests != self.unreadDMRequests {
-                    self.unreadDMRequests = min(newUnreadDMRequests,9999)
-                }
-            }
-        }
-        catch {
-            L.og.error("🔴🔴 problem checking DM notifications")
         }
     }
     
