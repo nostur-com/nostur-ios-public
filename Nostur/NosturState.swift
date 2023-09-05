@@ -132,7 +132,16 @@ final class NosturState : ObservableObject {
             if sendActiveAccountChangedNotification {
                 FollowingGuardian.shared.didReceiveContactListThisSession = false
                 sendNotification(.activeAccountChanged, account)
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 NosturState.shared.loadWoT(account)
+                if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+                    DirectMessageViewModel.default.load(pubkey: account.publicKey)
+                }
+                else {
+                    DirectMessageViewModel.default.loadAfterWoT()
+                }
             }
         }
     }

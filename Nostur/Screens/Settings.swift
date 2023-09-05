@@ -124,6 +124,9 @@ struct Settings: View {
                                     NosturState.shared.wot?.loadNormal()
                                 }
                             }
+                            else if newValue == SettingsStore.WebOfTrustLevel.off.rawValue {
+                                DirectMessageViewModel.default.load(pubkey: NosturState.shared.activeAccountPublicKey)
+                            }
                         }
                     }
                     Text("Filter by your follows only (strict), or also your follows follows (normal)").font(.caption).foregroundColor(.gray)
@@ -147,8 +150,8 @@ struct Settings: View {
                         Button(String(localized:"Update", comment:"Button to update WoT")) {
                             guard updatingWoT == false else { return }
                             updatingWoT = true
-                            if NosturState.shared.wot == nil {
-                                NosturState.shared.loadWoT(NosturState.shared.bgAccount)
+                            if NosturState.shared.wot == nil, let account = NosturState.shared.account {
+                                NosturState.shared.loadWoT(account)
                             }
                             else {
                                 DataProvider.shared().bg.perform {

@@ -309,4 +309,8 @@ extension Notification.Name {
     static var showingSomeoneElsesFeed: Notification.Name {
         return Notification.Name("showingSomeoneElsesFeed")
     }
+    
+    static var WoTReady: Notification.Name {
+        return Notification.Name("WoTReady")
+    }
 }
