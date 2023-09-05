@@ -56,6 +56,11 @@ struct NosturTabsView: View {
                         .tabItem { Image(systemName: "bookmark") }
                         .tag("Bookmarks")
                         .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
+                    
+                    DMContainer()
+                        .tabItem { Image(systemName: "envelope.fill") }
+                        .tag("Messages")
+                        .badge((dm.unread + dm.newRequests))
                 }
                 .withSheets()
             }
