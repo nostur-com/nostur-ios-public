@@ -268,6 +268,7 @@ struct ProfileOverlayCard: View {
                     }
                     
                     DispatchQueue.main.async {
+                        guard currentAccountPubkey == NosturState.shared.activeAccountPublicKey else { return }
                         self.similarPFP = similarPFP
                         contact.couldBeImposter = similarPFP ? 1 : 0
                     }
