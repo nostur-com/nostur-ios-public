@@ -353,7 +353,7 @@ extension Event {
     
     var noteText: String {
         if kind == 4 {
-            guard let account = NosturState.shared.account, let pk = account.privateKey, let encrypted = content else {
+            guard let account = (Thread.isMainThread ? NosturState.shared.account : NosturState.shared.bgAccount), let pk = account.privateKey, let encrypted = content else {
                 return convertToHieroglyphs(text: "(Encrypted content)")
             }
             if pubkey == account.publicKey, let firstP = self.firstP() {
@@ -776,6 +776,24 @@ extension Event {
         request.fetchLimit = 1
         request.fetchBatchSize = 1
         return try context.fetch(request).first
+    }
+    
+    static func fetchEventsBy(pubkey:String, andKind kind:Int, context:NSManagedObjectContext) -> [Event] {
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == %d", pubkey, kind)
+        return (try? context.fetch(fr)) ?? []
+    }
+    
+    static func fetchMostRecentEventBy(pubkey:String, andOtherPubkey otherPubkey:String? = nil, andKind kind:Int, context:NSManagedObjectContext) -> Event? {
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = otherPubkey != nil
+            ? NSPredicate(format: "pubkey == %@ AND otherPubkey == %@ AND kind == %d", pubkey, otherPubkey!, kind)
+            : NSPredicate(format: "pubkey == %@ AND kind == %d", pubkey, kind)
+        fr.fetchLimit = 1
+        fr.fetchBatchSize = 1
+        return try? context.fetch(fr).first
     }
     
     static func fetchReplacableEvent(_ kind:Int64, pubkey:String, definition:String, context:NSManagedObjectContext) -> Event? {
