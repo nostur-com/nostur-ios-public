@@ -1181,6 +1181,13 @@ extension Event {
                     // if we already track the conversation, consider accepted if we replied to the DM
                     if !dmState.accepted && NosturState.shared.bgAccountKeys.contains(event.publicKey) {
                         dmState.accepted = true
+                        
+                        if let current = dmState.markedReadAt, savedEvent.date > current {
+                            dmState.markedReadAt = savedEvent.date
+                        }
+                        else if dmState.markedReadAt == nil {
+                            dmState.markedReadAt = savedEvent.date
+                        }
                     }
                     // Let DirectMessageViewModel handle view updates
                     DirectMessageViewModel.default.newMessage(dmState)
@@ -1203,6 +1210,7 @@ extension Event {
                         dmState.accountPubkey = event.publicKey
                         dmState.contactPubkey = contactPubkey
                         dmState.accepted = true
+                        dmState.markedReadAt = savedEvent.date
                         // Let DirectMessageViewModel handle view updates
                         DirectMessageViewModel.default.newMessage(dmState)
                     }
