@@ -1173,6 +1173,51 @@ extension Event {
         if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
             savedEvent.addToContacts(NSSet(array: contacts))
+            savedEvent.otherPubkey = event.firstP()
+            
+            if let contactPubkey = savedEvent.otherPubkey { // If we have a DM kind 4, but no p, then something is wrong
+                if let dmState = DMState.fetchExisting(event.publicKey, contactPubkey: contactPubkey, context: context) {
+                    
+                    // if we already track the conversation, consider accepted if we replied to the DM
+                    if !dmState.accepted && NosturState.shared.bgAccountKeys.contains(event.publicKey) {
+                        dmState.accepted = true
+                    }
+                    // Let DirectMessageViewModel handle view updates
+                    DirectMessageViewModel.default.newMessage(dmState)
+                }
+                // Same but account / contact switched, because we support multiple accounts so we need to be able to track both ways
+                else if let dmState = DMState.fetchExisting(contactPubkey, contactPubkey: event.publicKey, context: context) {
+                    
+                    // if we already track the conversation, consider accepted if we replied to the DM
+                    if !dmState.accepted && NosturState.shared.bgAccountKeys.contains(contactPubkey) {
+                        dmState.accepted = true
+                    }
+                    // Let DirectMessageViewModel handle view updates
+                    DirectMessageViewModel.default.newMessage(dmState)
+                }
+                else {
+                    
+                    // if we are sender
+                    if NosturState.shared.bgAccountKeys.contains(event.publicKey) {
+                        let dmState = DMState(context: context)
+                        dmState.accountPubkey = event.publicKey
+                        dmState.contactPubkey = contactPubkey
+                        dmState.accepted = true
+                        // Let DirectMessageViewModel handle view updates
+                        DirectMessageViewModel.default.newMessage(dmState)
+                    }
+                    
+                    // if we are receiver
+                    else if NosturState.shared.bgAccountKeys.contains(contactPubkey) {
+                        let dmState = DMState(context: context)
+                        dmState.accountPubkey = contactPubkey
+                        dmState.contactPubkey = event.publicKey
+                        dmState.accepted = false
+                        // Let DirectMessageViewModel handle view updates
+                        DirectMessageViewModel.default.newMessage(dmState)
+                    }
+                }
+            }
         }
         
         // handle REPOST with normal mentions in .kind 1
