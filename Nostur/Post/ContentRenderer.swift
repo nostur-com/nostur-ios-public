@@ -344,6 +344,11 @@ struct EmbeddedPost: View {
             }
             else if nrPost.kind == 30023 {
                 ArticleView(nrPost, hideFooter: true)
+                    .padding(20)
+                    .background(
+                        Color(.secondarySystemBackground)
+                            .cornerRadius(15)
+                    )
                     .overlay(
                         RoundedRectangle(cornerRadius: 15)
                             .stroke(.regularMaterial, lineWidth: 1)
