@@ -24,6 +24,12 @@ class RelayMessage {
         case FAILED_TO_PARSE_EVENT // Could parse raw websocket but not event
         case DUPLICATE_ID // We already received this message (in cache, not db, db check is later)
         case NOT_IN_WOT // Message not in Web of Trust, we don't want it
+        case MISSING_EVENT
+        case INVALID_SIGNATURE
+        case DUPLICATE_ALREADY_SAVED
+        case DUPLICATE_ALREADY_PARSED
+        case DUPLICATE_ALREADY_RECEIVED
+        case DUPLICATE_UNKNOWN
     }
     
     var relays:String // space seperated relays
@@ -127,7 +133,16 @@ class RelayMessage {
                     }
                 }
                 
-                throw "error.DUPLICATE_ID \(Importer.shared.existingIds[mMessage.id] ?? .UNKNOWN)"
+                if eventState.status == .SAVED  {
+                    throw error.DUPLICATE_ALREADY_SAVED
+                }
+                else if eventState.status == .PARSED {
+                    throw error.DUPLICATE_ALREADY_PARSED
+                }
+                else if eventState.status == .RECEIVED {
+                    throw error.DUPLICATE_ALREADY_RECEIVED
+                }
+                throw error.DUPLICATE_UNKNOWN
             }
             else {
                 updateEventCache(mMessage.id, status: .RECEIVED, relays: relay)
@@ -139,12 +154,11 @@ class RelayMessage {
         }
 
         guard let nEvent = relayMessage.event else {
-            throw "WHERES THE PAYLOAD BRO"
+            throw error.MISSING_EVENT
         }
         
         guard try skipValidation || nEvent.verified() else {
-            print("🟣\(relayMessage)")
-            throw "🔴🔴🔴 NO VALID SIG 🔴🔴🔴 "
+            throw error.INVALID_SIGNATURE
         }
         
         return RelayMessage(relays:relay, type: .EVENT, message: text, subscriptionId: relayMessage.subscription, event: nEvent)
