@@ -97,22 +97,26 @@ class RelayMessage {
                 
                 
             if let eventState = Importer.shared.existingIds[mMessage.id] {
-
-                if eventState == .SAVED {
+                
+                if eventState.status == .SAVED {
                     Importer.shared.callbackSubscriptionIds.insert(mMessage.subscriptionId)
                     Importer.shared.sendReceivedNotification.send()
                     
                     // update from which relays an event id was received, or relay feeds won't work.
-                    Event.updateRelays(mMessage.id, relays: relay)
+                    if let relays = eventState.relays, !relays.contains(relay) {
+                        updateEventCache(mMessage.id, status: .SAVED, relays: relay)
+                        Event.updateRelays(mMessage.id, relays: relay)
+                    }
                 }
                 
-                if eventState == .PARSED {
+                if eventState.status == .PARSED {
                     let sameMessageInQueue = MessageParser.shared.messageBucket.first(where: {
-                         mMessage.id == $0.event?.id && $0.type == .EVENT
+                        mMessage.id == $0.event?.id && $0.type == .EVENT
                     })
                     
                     if let sameMessageInQueue {
                         sameMessageInQueue.relays = sameMessageInQueue.relays + " " + relay
+                        updateEventCache(mMessage.id, status: .PARSED, relays: sameMessageInQueue.relays)
                     }
                 }
                 
@@ -126,7 +130,7 @@ class RelayMessage {
                 throw "error.DUPLICATE_ID \(Importer.shared.existingIds[mMessage.id] ?? .UNKNOWN)"
             }
             else {
-                Importer.shared.existingIds[mMessage.id] = .RECEIVED
+                updateEventCache(mMessage.id, status: .RECEIVED, relays: relay)
             }
         }
     

@@ -10,7 +10,12 @@ import OSLog
 import CoreData
 import Combine
 
-enum EventState {
+struct EventState {
+    let status:ProcessStatus
+    var relays:String?
+}
+
+enum ProcessStatus {
     case UNKNOWN
     case RECEIVED
     case PARSED
@@ -77,11 +82,11 @@ class Importer {
         let fr = Event.fetchRequest()
         fr.fetchLimit = 1000000
 //        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.propertiesToFetch = ["id"]
+        fr.propertiesToFetch = ["id", "relays"]
         DataProvider.shared().bg.performAndWait { [unowned self] in // AndWait because existingIds MUST be in sync with db
             if let results = try? DataProvider.shared().bg.fetch(fr) {
                 self.existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
-                    dict[event.id] = .SAVED
+                    dict[event.id] = EventState(status: .SAVED, relays: event.relays)
                 }
                 L.og.debug("\(self.existingIds.count) existing ids added to cache")
             }
@@ -154,7 +159,7 @@ class Importer {
                         NosturState.shared.lastProfileReceivedAt = Date.now
                     }
                                         
-                    guard existingIds[event.id] != .SAVED else {
+                    guard existingIds[event.id]?.status != .SAVED else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
                         if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {

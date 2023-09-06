@@ -8,6 +8,23 @@
 import Foundation
 import Collections
 
+func updateEventCache(_ id: String, status: ProcessStatus, relays: String? = nil) {
+    if let existing = Importer.shared.existingIds[id], let relays {
+        let existingRelays = (existing.relays ?? "").split(separator: " ").map { String($0) }
+        let newRelays = relays.split(separator: " ").map { String($0) }
+        let uniqueRelays = Set(existingRelays + newRelays)
+        if uniqueRelays.count > existingRelays.count {
+            Importer.shared.existingIds[id] = EventState(status: status, relays: uniqueRelays.joined(separator: " "))
+        }
+        else {
+            Importer.shared.existingIds[id] = EventState(status: status, relays: existing.relays)
+        }
+    }
+    else {
+        Importer.shared.existingIds[id] = EventState(status: status, relays: relays)
+    }
+}
+
 class MessageParser {
     
     static let shared = MessageParser()
@@ -140,7 +157,7 @@ class MessageParser {
                         else {
                             self.messageBucket.append(message)
                             guard let event = message.event else { return }
-                            Importer.shared.existingIds[event.id] = .PARSED
+                            updateEventCache(event.id, status: .PARSED, relays: relayUrl)
                             Importer.shared.addedRelayMessage.send()
                         }
                     }
