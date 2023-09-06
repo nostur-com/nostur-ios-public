@@ -55,5 +55,15 @@ class Conversation: Identifiable, Hashable, ObservableObject {
                 }
             }
             .store(in: &subscriptions)
+        
+        mostRecentEvent.contactUpdated
+            .sink { contact in
+                let nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(contact.pubkey))
+                Task { @MainActor in
+                    self.objectWillChange.send()
+                    self.nrContact = nrContact
+                }
+            }
+            .store(in: &subscriptions)
     }
 }

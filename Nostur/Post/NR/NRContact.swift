@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import CoreData
 
 class NRContact: ObservableObject, Identifiable, Hashable {
     
@@ -259,5 +260,15 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                 NosturState.shared.publishNewContactList()
             }
         }
+    }
+    
+    static func fetch(_ pubkey: String, context:NSManagedObjectContext) -> NRContact? {
+        if Thread.isMainThread {
+            fatalError("Should be bg thread")
+        }
+        guard let contact = Contact.fetchByPubkey(pubkey, context: context) else {
+            return nil
+        }
+        return NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(pubkey))
     }
 }
