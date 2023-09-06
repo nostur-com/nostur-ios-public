@@ -131,7 +131,7 @@ struct Highlight: View {
                 .padding(10)
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
-                        .stroke(.regularMaterial, lineWidth: 1)
+                        .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {

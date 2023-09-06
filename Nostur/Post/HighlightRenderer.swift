@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct HighlightRenderer: View {
-    var nrPost:NRPost
+    @EnvironmentObject var theme:Theme
+    let nrPost:NRPost
     
     var body: some View {
         VStack {
@@ -49,7 +50,7 @@ struct HighlightRenderer: View {
         .padding(10)
         .overlay(
             RoundedRectangle(cornerRadius: 15)
-                .stroke(.regularMaterial, lineWidth: 1)
+                .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
         )
     }
 }
