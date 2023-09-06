@@ -63,7 +63,7 @@ class DirectMessageViewModel: ObservableObject {
                 .store(in: &self.subscriptions)
             
             self._reloadMessageRequestsNotWot
-                .debounce(for: 1.0, scheduler: RunLoop.main)
+                .debounce(for: 1.5, scheduler: RunLoop.main)
                 .sink { [weak self] _ in
                     guard let self else { return }
                     self.loadOutSideWoT()
@@ -82,7 +82,7 @@ class DirectMessageViewModel: ObservableObject {
         self.pubkey = pubkey
         self.loadAcceptedConversations()
         self.loadMessageRequests()
-        self.loadOutSideWoT()
+        self.loadOutSideWoT() // even if we don't show it, we need to load to show how many there are in toggle.
     }
     
     public func loadAfterWoT() {

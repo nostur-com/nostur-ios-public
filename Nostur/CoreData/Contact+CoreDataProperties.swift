@@ -443,6 +443,8 @@ extension Contact : Identifiable {
     static func fetchByPubkey(_ pubkey:String, context:NSManagedObjectContext) -> Contact? {
         let r = Contact.fetchRequest()
         r.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        r.fetchLimit = 1
+        r.fetchBatchSize = 1
         return try? context.fetch(r).first
     }
     
