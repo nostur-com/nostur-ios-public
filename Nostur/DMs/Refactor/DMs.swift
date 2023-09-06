@@ -113,8 +113,10 @@ struct DMs: View {
                             .centered()
                     }
                 case "Requests":
-                    if !vm.requestRows.isEmpty {
-                        DirectMessageRows(pubkey: pubkey, conversationRows: $vm.requestRows)
+                    if !vm.requestRows.isEmpty || vm.showNotWoT {
+                        VStack {
+                            DirectMessageRows(pubkey: pubkey, conversationRows: $vm.requestRows)
+                        }
                     }
                     else {
                         Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
@@ -177,7 +179,7 @@ struct DMs: View {
             }
             .overlay(alignment: .top) {
                 if showDMToggles {
-                    DMSettings(showDMToggles: $showDMToggles)
+                    DMSettings(showDMToggles: $showDMToggles, tab: $tab)
                 }
             }
             .onReceive(receiveNotification(.showDMToggles)) { _ in
@@ -185,7 +187,7 @@ struct DMs: View {
             }
             .onAppear {
                 // do 2 month scan if we have no messages (probably first time)
-                // longer 12 month scan is in settings 
+                // longer 12 month scan is in settings
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     if (DirectMessageViewModel.default.conversationRows.count == 0 && DirectMessageViewModel.default.requestRows.count == 0) {
                         DirectMessageViewModel.default.rescanForMissingDMs(2)

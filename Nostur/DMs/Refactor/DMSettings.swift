@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DMSettings: View {
     @Binding var showDMToggles:Bool
+    @Binding var tab:String
     
     var body: some View {
         Rectangle().fill(.thinMaterial)
@@ -38,6 +39,29 @@ struct DMSettings: View {
                             }
                         }
                         .hCentered()
+                        
+                        if (DirectMessageViewModel.default.newRequestsNotWoT > 0) {
+                            Divider()
+                            HStack {
+                                Text("\(DirectMessageViewModel.default.newRequestsNotWoT) requests outside Web of Trust")
+                                if DirectMessageViewModel.default.showNotWoT {
+                                    Button("Hide") {
+                                        DirectMessageViewModel.default.showNotWoT = false
+                                        DirectMessageViewModel.default.reloadMessageRequests()
+                                        showDMToggles = false
+                                    }
+                                }
+                                else {
+                                    Button("Show") {
+                                        DirectMessageViewModel.default.showNotWoT = true
+                                        tab = "Requests"
+                                        showDMToggles = false
+                                    }
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            
+                        }
                     }
                 }
                 .padding(20)
@@ -55,7 +79,7 @@ struct DMSettings: View {
 struct DMSettings_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
-            DMSettings(showDMToggles: .constant(true))
+            DMSettings(showDMToggles: .constant(true), tab: .constant("Accepted"))
         }
     }
 }
