@@ -18,6 +18,18 @@ class DirectMessageViewModel: ObservableObject {
     
     @Published var conversationRows:[Conversation] = []
     @Published var requestRows:[Conversation] = []
+    @Published var requestRowsNotWoT:[Conversation] = []
+    
+    @Published var showNotWoT = false {
+        didSet {
+            if showNotWoT {
+                requestRows = requestRows + requestRowsNotWoT
+            }
+            else {
+                self.reloadMessageRequests()
+            }
+        }
+    }
      
     var unread:Int {
         conversationRows.reduce(0) { $0 + $1.unread }
@@ -26,12 +38,16 @@ class DirectMessageViewModel: ObservableObject {
         requestRows.reduce(0) { $0 + $1.unread }
     }
     
+    var newRequestsNotWoT:Int {
+        requestRowsNotWoT.count
+    }
+    
     private var subscriptions = Set<AnyCancellable>()
     
     private init() {
         bg().perform {
             self._reloadAccepted
-                .debounce(for: 1.0, scheduler: RunLoop.main)
+                .debounce(for: 2.0, scheduler: RunLoop.main)
                 .sink { [weak self] _ in
                     guard let self else { return }
                     self.loadAcceptedConversations()
@@ -45,6 +61,14 @@ class DirectMessageViewModel: ObservableObject {
                     self.loadMessageRequests()
                 }
                 .store(in: &self.subscriptions)
+            
+            self._reloadMessageRequestsNotWot
+                .debounce(for: 1.0, scheduler: RunLoop.main)
+                .sink { [weak self] _ in
+                    guard let self else { return }
+                    self.loadOutSideWoT()
+                }
+                .store(in: &self.subscriptions)
         }
     }
     
@@ -54,9 +78,11 @@ class DirectMessageViewModel: ObservableObject {
     public func load(pubkey: String) {
         conversationRows = []
         requestRows = []
+        requestRowsNotWoT = []
         self.pubkey = pubkey
         self.loadAcceptedConversations()
         self.loadMessageRequests()
+        self.loadOutSideWoT()
     }
     
     public func loadAfterWoT() {
@@ -102,8 +128,11 @@ class DirectMessageViewModel: ObservableObject {
     private var _reloadAccepted = PassthroughSubject<Void, Never>()
     
 
-    private func reloadMessageRequests() { _reloadMessageRequests.send() }
+    public func reloadMessageRequests() { _reloadMessageRequests.send() }
     private var _reloadMessageRequests = PassthroughSubject<Void, Never>()
+    
+    private func reloadMessageRequestsNotWot() { _reloadMessageRequestsNotWot.send() }
+    private var _reloadMessageRequestsNotWot = PassthroughSubject<Void, Never>()
     
     private func loadAcceptedConversations() {
         guard let pubkey = self.pubkey else { return }
@@ -251,9 +280,66 @@ class DirectMessageViewModel: ObservableObject {
         }
     }
     
+    private func loadOutSideWoT() {
+        guard WOT_FILTER_ENABLED() else { return }
+        guard let wot = NosturState.shared.wot else { return }
+        guard let pubkey = self.pubkey else { return }
+        bg().perform {
+
+            let conversations = DMState.fetchByAccount(pubkey, context: bg())
+                .filter { !$0.accepted }
+                .filter { dmState in
+                    guard let contactPubkey = dmState.contactPubkey else { return false }
+                    return !wot.isAllowed(contactPubkey)
+                }
+            
+            var conversationRows = [Conversation]()
+            
+            for conv in conversations {
+                guard let contactPubkey = conv.contactPubkey
+                else {
+                    L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
+                    continue
+                }
+                
+                // Not just most recent, but all so we can also count unread
+                let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKind: 4, context: bg())
+                    .filter { $0.pTags().contains(where: { $0 == pubkey }) }
+
+                let mostRecent = allReceived.first
+                
+                // Unread count is based on (in the following fallback order):
+                // - Manual markedReadAt date
+                // - Since beginning of time (all)
+                                        
+                let unreadSince = conv.markedReadAt ?? Date(timeIntervalSince1970: 0)
+                
+                let unread = allReceived.filter { $0.date > unreadSince }.count
+                
+                var nrContact:NRContact?
+                
+                if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
+                    nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(contactPubkey))
+                }
+                
+                guard let mostRecent = mostRecent else { continue }
+                
+                conversationRows
+                    .append(Conversation(contactPubkey: contactPubkey, nrContact: nrContact, mostRecentMessage: mostRecent.noteText, mostRecentDate: mostRecent.date, mostRecentEvent: mostRecent, unread: unread, dmState: conv))
+            }
+
+            DispatchQueue.main.async {
+                self.requestRowsNotWoT = conversationRows
+                    .sorted(by: { $0.mostRecentDate > $1.mostRecentDate })
+            }
+        }
+    }
+    
     public func newMessage(_ dmState:DMState) {
         reloadAccepted()
         reloadMessageRequests()
+        reloadMessageRequestsNotWot()
+        
     }
     
     private func monthsAgoRange(_ months:Int) -> (since: Int, until: Int) {
@@ -269,10 +355,7 @@ class DirectMessageViewModel: ObservableObject {
         guard let pubkey else { return }
         
         for i in 0...monthsAgo {
-            
-
             let ago = monthsAgoRange(monthsAgo - i)
-            
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(5 * i)) {
                 self.scanningMonthsAgo = i+1 == (monthsAgo + 1) ? 0 : i+1
                 
