@@ -49,11 +49,11 @@ struct VideoViewurRepresentable: UIViewRepresentable {
         if isPlaying {
             do { try AVAudioSession.sharedInstance().setActive(true) }
             catch { }
-            context.coordinator.avpc?.player?.isMuted = false
+            context.coordinator.avpc?.player?.isMuted = isMuted
             context.coordinator.avpc?.player?.play()
         }
         else {
-            context.coordinator.avpc?.player?.isMuted = true
+            context.coordinator.avpc?.player?.isMuted = isMuted
             context.coordinator.avpc?.player?.pause()
         }
     }
