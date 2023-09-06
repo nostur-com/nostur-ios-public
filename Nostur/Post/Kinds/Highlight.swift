@@ -27,7 +27,7 @@ struct Highlight: View {
         self.grouped = grouped
     }
     
-    let THREAD_LINE_OFFSET = 34.0
+    let THREAD_LINE_OFFSET = 24.0
     
     @State var showMiniProfile = false
     
@@ -145,10 +145,15 @@ struct Highlight: View {
             .padding(.bottom, 10)
         }
         .background(alignment: .leading) {
-            theme.lineColor
-                .frame(width: 2)
-                .offset(x: THREAD_LINE_OFFSET, y: 18)
-                .opacity(connect == .bottom || connect == .both ? 1 : 0)
+            if connect == .bottom || connect == .both {
+                theme.lineColor
+                    .frame(width: 2)
+                    .opacity(0.2)
+                    .offset(x: THREAD_LINE_OFFSET, y: 20)
+                    .transaction { t in
+                        t.animation = nil
+                    }
+            }
         }
     }
 }
