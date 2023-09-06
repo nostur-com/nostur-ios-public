@@ -909,12 +909,6 @@ extension Event {
     }
     
     static func updateRelays(_ id:String, relays: String) {
-        let request = NSFetchRequest<Event>(entityName: "Event")
-        request.entity = Event.entity()
-        request.predicate = NSPredicate(format: "id == %@", id)
-        request.fetchLimit = 1
-        request.fetchBatchSize = 1
-        
         let bg = DataProvider.shared().bg
         bg.perform {
             if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id) {
@@ -932,7 +926,7 @@ extension Event {
                     }
                 }
             }
-            else if let event = try? bg.fetch(request).first {
+            else if let event = try? Event.fetchEvent(id: id, context: bg) {
                 let existingRelays = event.relays.split(separator: " ").map { String($0) }
                 let newRelays = relays.split(separator: " ").map { String($0) }
                 let uniqueRelays = Set(existingRelays + newRelays)
@@ -961,7 +955,6 @@ extension Event {
         let context = DataProvider.shared().bg
         
         let savedEvent = Event(context: context)
-        Importer.shared.existingIds[event.id] = .SAVED
         savedEvent.insertedAt = Date.now
         savedEvent.id = event.id
         savedEvent.kind = Int64(event.kind.id)
@@ -984,6 +977,7 @@ extension Event {
             let uniqueRelays = Set(relays)
             savedEvent.relays = uniqueRelays.joined(separator: " ")
         }
+        updateEventCache(event.id, status: .SAVED, relays: relays)
         
         if event.kind == .profileBadges {
             savedEvent.contact?.objectWillChange.send()
