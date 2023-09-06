@@ -175,8 +175,11 @@ class MessageParser {
             catch RelayMessage.error.FAILED_TO_PARSE_EVENT {
                 L.sockets.notice("🟠 \(relayUrl) Could not parse EVENT: \(text)")
             }
+            catch RelayMessage.error.DUPLICATE_ALREADY_SAVED, RelayMessage.error.DUPLICATE_ALREADY_PARSED {
+                L.sockets.debug("🟡🟡 \(relayUrl) already SAVED/PARSED ")
+            }
             catch {
-                L.sockets.debug("🔴🔴 \(relayUrl) \(error)")
+                L.sockets.info("🔴🔴 \(relayUrl) \(error)")
             }
         }
     }
