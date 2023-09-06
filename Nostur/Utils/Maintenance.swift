@@ -61,6 +61,7 @@ struct Maintenance {
             Self.runMigrateDMState(context: context)
             Self.runFixImposterFalsePositivesAgain(context: context)
 //            Self.runTempAlways(context: context)
+            Self.runFixZappedContactPubkey(context: context)
         }
         // Time based migrations
     
@@ -806,6 +807,43 @@ struct Maintenance {
         
     }
     
+    
+    // Run once to fix ZappedContactPubkey not migrated to otherPubkey, ughh Xcode
+    static func runFixZappedContactPubkey(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.fixZappedContactPubkey, context: context) else { return }
+        
+        // Find all zaps 9735
+        // if otherPubkey is nil:
+        // get it from first P
+        // set otherPubkey
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind == 9735 AND otherPubkey == nil")
+        
+        var fixed = 0
+        if let zaps = try? context.fetch(fr) {
+            L.maintenance.debug("runFixZappedContactPubkey: Found \(zaps.count) zaps without otherPubkey")
+            for zap in zaps {
+                if let firstP = zap.firstP() {
+                    zap.otherPubkey = firstP
+                    zap.zappedContact = Contact.fetchByPubkey(firstP, context: context)
+                    fixed += 1
+                }
+            }
+            L.maintenance.debug("runFixZappedContactPubkey: Fixed \(fixed) otherPubkey in zaps")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.fixZappedContactPubkey.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runFixZappedContactPubkey error on save(): \(error)")
+        }
+        
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -828,6 +866,9 @@ struct Maintenance {
         
         // Need to run it again... false positives still
         case fixImposterFalsePositivesAgain = "fixImposterFalsePositivesAgain"
+        
+        // Need to run it again... false positives still
+        case fixZappedContactPubkey = "fixZappedContactPubkey"
         
     }
 }
