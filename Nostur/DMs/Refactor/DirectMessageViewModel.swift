@@ -353,6 +353,7 @@ class DirectMessageViewModel: ObservableObject {
     
     public func rescanForMissingDMs(_ monthsAgo: Int) {
         guard let pubkey else { return }
+        guard scanningMonthsAgo == 0 else { return }
         
         for i in 0...monthsAgo {
             let ago = monthsAgoRange(monthsAgo - i)
