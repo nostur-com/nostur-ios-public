@@ -1173,6 +1173,7 @@ extension Event {
                 if let dmState = DMState.fetchExisting(event.publicKey, contactPubkey: contactPubkey, context: context) {
                     
                     // if we already track the conversation, consider accepted if we replied to the DM
+                    // DM is sent from one of our current logged in pubkey
                     if !dmState.accepted && NosturState.shared.bgAccountKeys.contains(event.publicKey) {
                         dmState.accepted = true
                         
@@ -1190,7 +1191,7 @@ extension Event {
                 else if let dmState = DMState.fetchExisting(contactPubkey, contactPubkey: event.publicKey, context: context) {
                     
                     // if we already track the conversation, consider accepted if we replied to the DM
-                    if !dmState.accepted && NosturState.shared.bgAccountKeys.contains(contactPubkey) {
+                    if !dmState.accepted && NosturState.shared.bgAccountKeys.contains(event.publicKey) {
                         dmState.accepted = true
                     }
                     // Let DirectMessageViewModel handle view updates
