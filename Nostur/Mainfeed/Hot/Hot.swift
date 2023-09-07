@@ -26,6 +26,9 @@ struct Hot: View {
                             PostOrThread(nrPost: post)
                         }
                     }
+                    .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+                        hotVM.reload()
+                    }
                 }
             }
         }

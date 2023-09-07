@@ -140,6 +140,16 @@ class HotViewModel: ObservableObject {
         self.fetchFromRelays()
     }
     
+    // for after acocunt change
+    public func reload() {
+        self.lastFetch = nil
+        self.posts = [PostID: LikedBy<Pubkey>]()
+        self.backlog.clear()
+        self.follows = NosturState.shared.followingPublicKeys
+        self.hotPosts = []
+        self.fetchFromRelays()
+    }
+    
     private var shouldReload: Bool {
         // Should only refetch since last fetch, if last fetch is more than 10 mins ago
         guard let lastFetch else { return true }
