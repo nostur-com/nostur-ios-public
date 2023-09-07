@@ -47,7 +47,7 @@ class DirectMessageViewModel: ObservableObject {
     private init() {
         bg().perform {
             self._reloadAccepted
-                .debounce(for: 2.0, scheduler: RunLoop.main)
+                .debounce(for: 1.0, scheduler: RunLoop.main)
                 .sink { [weak self] _ in
                     guard let self else { return }
                     self.loadAcceptedConversations()
@@ -55,7 +55,7 @@ class DirectMessageViewModel: ObservableObject {
                 .store(in: &self.subscriptions)
             
             self._reloadMessageRequests
-                .debounce(for: 1.0, scheduler: RunLoop.main)
+                .debounce(for: 0.5, scheduler: RunLoop.main)
                 .sink { [weak self] _ in
                     guard let self else { return }
                     self.loadMessageRequests()
@@ -63,10 +63,20 @@ class DirectMessageViewModel: ObservableObject {
                 .store(in: &self.subscriptions)
             
             self._reloadMessageRequestsNotWot
-                .debounce(for: 1.5, scheduler: RunLoop.main)
+                .debounce(for: 0.5, scheduler: RunLoop.main)
                 .sink { [weak self] _ in
                     guard let self else { return }
                     self.loadOutSideWoT()
+                }
+                .store(in: &self.subscriptions)
+            
+            receiveNotification(.blockListUpdated)
+                .sink { [weak self] _ in
+                    guard let self else { return }
+                    showNotWoT = false
+                    self.reloadAccepted()
+                    self.reloadMessageRequests()
+                    self.reloadMessageRequestsNotWot()
                 }
                 .store(in: &self.subscriptions)
         }
@@ -136,11 +146,13 @@ class DirectMessageViewModel: ObservableObject {
     
     private func loadAcceptedConversations() {
         guard let pubkey = self.pubkey else { return }
+        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        
         bg().perform {
             var lastNotificationReceivedAt:Date? = nil
             
             let conversations = DMState.fetchByAccount(pubkey, context: bg())
-                .filter { $0.accepted }
+                .filter { $0.accepted && !blockedPubkeys.contains($0.contactPubkey ?? "HMMICECREAMSOGOOD") }
             
             var conversationRows = [Conversation]()
             
@@ -211,12 +223,13 @@ class DirectMessageViewModel: ObservableObject {
     
     private func loadMessageRequests() {
         guard let pubkey = self.pubkey else { return }
+        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
         bg().perform {
             
             var lastNotificationReceivedAt:Date? = nil
             
             let conversations = DMState.fetchByAccount(pubkey, context: bg())
-                .filter { !$0.accepted }
+                .filter { !$0.accepted && !blockedPubkeys.contains($0.contactPubkey ?? "HMMICECREAMSOGOOD") }
                 .filter { dmState in
                     if (!WOT_FILTER_ENABLED()) { return true }
                     guard let contactPubkey = dmState.contactPubkey else { return false }
@@ -284,10 +297,11 @@ class DirectMessageViewModel: ObservableObject {
         guard WOT_FILTER_ENABLED() else { return }
         guard let wot = NosturState.shared.wot else { return }
         guard let pubkey = self.pubkey else { return }
+        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
         bg().perform {
 
             let conversations = DMState.fetchByAccount(pubkey, context: bg())
-                .filter { !$0.accepted }
+                .filter { !$0.accepted && !blockedPubkeys.contains($0.contactPubkey ?? "HMMICECREAMSOGOOD") }
                 .filter { dmState in
                     guard let contactPubkey = dmState.contactPubkey else { return false }
                     return !wot.isAllowed(contactPubkey)
