@@ -26,7 +26,7 @@ struct ProfileNotesView: View {
                 }
                 .id(nrPost.id)
                 .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                .fixedSize(horizontal: false, vertical: true)
+//                .fixedSize(horizontal: false, vertical: true)
             }
             if !fl.nrPosts.isEmpty {
                 Button(String(localized:"Show more", comment: "Button to show more items")) {

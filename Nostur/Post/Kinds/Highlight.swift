@@ -92,7 +92,7 @@ struct Highlight: View {
                 VStack {
                     Text(nrPost.content ?? "")
                         .lineLimit(5)
-                        .fixedSize(horizontal: false, vertical: true)
+//                        .fixedSize(horizontal: false, vertical: true)
                         .italic()
                         .padding(20)
                         .overlay(alignment:.topLeading) {

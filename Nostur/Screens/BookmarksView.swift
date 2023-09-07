@@ -52,8 +52,8 @@ struct BookmarksView: View {
                         Box(nrPost: vBookmark) {
                             PostRowDeletable(nrPost: vBookmark, missingReplyTo: true)
                         }
-                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                        .fixedSize(horizontal: false, vertical: true)
+//                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+//                        .fixedSize(horizontal: false, vertical: true)
                         .id(vBookmark.id)
                         .onDelete {
                             withAnimation {

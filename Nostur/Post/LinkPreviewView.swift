@@ -58,7 +58,7 @@ struct LinkPreviewView: View {
                 .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             }
             .background(theme.listBackground)
-            .fixedSize(horizontal: false, vertical: true)
+//            .fixedSize(horizontal: false, vertical: true)
             .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             .clipShape(RoundedRectangle(cornerRadius: 10.0))
         }

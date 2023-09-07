@@ -17,7 +17,7 @@ struct NRContentTextRenderer: View {
         Text(text ?? attributedStringWithPs.output)
 //            .tint(theme.accent)
             .lineSpacing(3)
-            .fixedSize(horizontal: false, vertical: true)
+//            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
 //            .padding(.horizontal, fullWidth ? 10 : 0)
             .onReceive(
