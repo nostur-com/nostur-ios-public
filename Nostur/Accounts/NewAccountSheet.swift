@@ -95,8 +95,7 @@ struct NewAccountSheet: View {
             FollowingGuardian.shared.didReceiveContactListThisSession = true
         }
         catch {
-            print("🔴🔴 could not ns.setAccount")
-            print(error)
+            L.og.error("🔴🔴 could not ns.setAccount \(error)")
         }
     }
 }
