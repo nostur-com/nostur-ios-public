@@ -14,16 +14,33 @@ struct Hot: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_subtab") var selectedSubTab = "Hot"
     
+    @Namespace var top
+    
     var body: some View {
-        ScrollView {
-            if hotVM.hotPosts.isEmpty {
-                CenteredProgressView()
-            }
-            else {
-                LazyVStack(spacing: 10) {
-                    ForEach(hotVM.hotPosts) { post in
-                        Box(nrPost: post) {
-                            PostOrThread(nrPost: post)
+        ScrollViewReader { proxy in
+            ScrollView {
+                if hotVM.hotPosts.isEmpty {
+                    CenteredProgressView()
+                }
+                else {
+                    Color.clear.frame(height: 1).id(top)
+                    LazyVStack(spacing: 10) {
+                        ForEach(hotVM.hotPosts) { post in
+                            Box(nrPost: post) {
+                                PostOrThread(nrPost: post)
+                            }
+                        }
+                    }
+                    .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
+                        guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
+                        withAnimation {
+                            proxy.scrollTo(top)
+                        }
+                    }
+                    .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                        guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
+                        withAnimation {
+                            proxy.scrollTo(top)
                         }
                     }
                     .onReceive(receiveNotification(.activeAccountChanged)) { _ in
