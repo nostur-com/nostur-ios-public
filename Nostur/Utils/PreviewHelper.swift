@@ -523,9 +523,12 @@ struct PreviewFetcher {
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.randomElement()
     }
     
-    static func fetchNRPost(_ id:String? = nil, context:NSManagedObjectContext? = nil, withReplies:Bool = false, plainText:Bool = false) -> NRPost? {
+    static func fetchNRPost(_ id:String? = nil, context:NSManagedObjectContext? = nil, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false) -> NRPost? {
         if let event = fetchEvent(id) {
-            return NRPost(event: event, withReplies: withReplies, plainText: plainText)
+            if (withParents) {
+                event.parentEvents = Event.getParentEvents(event)
+            }
+            return NRPost(event: event, withReplyTo: withReplyTo, withParents: withParents, withReplies: withReplies, plainText: plainText)
         }
         return nil
     }
