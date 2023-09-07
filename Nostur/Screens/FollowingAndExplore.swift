@@ -24,6 +24,7 @@ struct FollowingAndExplore: View {
     var lists:FetchedResults<NosturList>
     @State private var selectedList:NosturList?
     @StateObject private var exploreVM:LVM = LVMManager.shared.exploreLVM()
+    @StateObject private var hotVM = HotViewModel()
     
     @State var tabsOffsetY:CGFloat = 0.0
     
@@ -36,6 +37,9 @@ struct FollowingAndExplore: View {
         }
         if selectedSubTab == "Explore" {
             return String(localized:"Explore", comment:"Tab title for the Explore feed")
+        }
+        if selectedSubTab == "Hot" {
+            return String(localized:"Explore", comment:"Tab title for the Hot feed")
         }
         return String(localized:"Feed", comment:"Tab title for a feed")
     }
@@ -51,6 +55,12 @@ struct FollowingAndExplore: View {
                         action: { selectedSubTab = "Following" },
                         title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
                         selected: selectedSubTab == "Following")
+                    if account.follows_.count > 10 {
+                        TabButton(
+                            action: { selectedSubTab = "Hot" },
+                            title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
+                            selected: selectedSubTab == "Hot")
+                    }
                     Spacer()
                     ForEach(lists) { list in
                         TabButton(
@@ -118,6 +128,13 @@ struct FollowingAndExplore: View {
                 // EXPLORE
                 ListViewContainer(vm: exploreVM)
                     .opacity(selectedSubTab == "Explore" ? 1 : 0)
+                
+                
+                // HOT
+                if account.follows_.count > 10 {
+                    Hot(hotVM: hotVM)
+                        .opacity(selectedSubTab == "Hot" ? 1 : 0)
+                }
             }
             
         }
@@ -132,6 +149,8 @@ struct FollowingAndExplore: View {
                     }
                 case "Explore":
                     FeedSettings(lvm: exploreVM, showFeedSettings: $showFeedSettings)
+                case "Hot":
+                    HotFeedSettings(hotVM: hotVM, showFeedSettings: $showFeedSettings)
                 default:
                     EmptyView()
                 }
@@ -155,9 +174,11 @@ struct FollowingAndExplore: View {
                     lvm.cleanUp()
                 }
             LVMManager.shared.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
-            
-            
             LVMManager.shared.followingLVM(forAccount: newAccount).restoreSubscription()
+            
+            if newAccount.follows_.count <= 10 && selectedSubTab == "Hot" {
+                selectedSubTab = "Following"
+            }
         })
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
