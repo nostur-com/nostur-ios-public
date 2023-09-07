@@ -9,6 +9,7 @@ import SwiftUI
 import Algorithms
 
 struct DMConversationView: View {
+    @Environment(\.dismiss) var dismiss
     @EnvironmentObject var theme:Theme
     @Namespace var bottom
     
@@ -234,6 +235,15 @@ struct DMConversationView: View {
                                                     } label: {
                                                         Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
                                                     }
+                                                    Button {
+                                                        guard let account = NosturState.shared.account else { return }
+                                                        account.blockedPubkeys_ = account.blockedPubkeys_ + [contactPubkey]
+                                                        sendNotification(.blockListUpdated, account.blockedPubkeys_)
+                                                        dismiss()
+                                                    } label: {
+                                                        Label(
+                                                            String(localized:"Block \(contact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
+                                                    }
                                                 } label: {
                                                     Image(systemName: "person.badge.key.fill")
                                                 }
@@ -257,6 +267,15 @@ struct DMConversationView: View {
                                                         UIPasteboard.general.string = Contact.npub(contactPubkey)
                                                     } label: {
                                                         Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
+                                                    }
+                                                    Button {
+                                                        guard let account = NosturState.shared.account else { return }
+                                                        account.blockedPubkeys_ = account.blockedPubkeys_ + [contactPubkey]
+                                                        sendNotification(.blockListUpdated, account.blockedPubkeys_)
+                                                        dismiss()
+                                                    } label: {
+                                                        Label(
+                                                            String(localized:"Block \(String(contactPubkey.prefix(11)))", comment:"Menu action"), systemImage: "slash.circle")
                                                     }
                                                 } label: {
                                                     Image(systemName: "person.badge.key.fill")
