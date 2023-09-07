@@ -40,7 +40,7 @@ extension Contact {
     @NSManaged public var couldBeImposter: Int16 // cache (-1 = unchecked, 1/0 = true/false checked)
 
     var lists_:[NosturList] {
-        get { lists?.allObjects as! [NosturList] }
+        get { (lists?.allObjects as? [NosturList]) ?? [] }
         set { lists = NSSet(array: newValue) }
     }
 }
