@@ -103,9 +103,7 @@ struct Kind1Default: View {
                           }
                     }
                 }
-//                .transaction { transaction in
-//                    transaction.animation = nil
-//                }
+
 
             VStack(alignment:.leading, spacing: 3) { // Post container
                 HStack(alignment: .top) { // name + reply + context menu
@@ -113,7 +111,6 @@ struct Kind1Default: View {
                     Spacer()
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
-                .fixedSize(horizontal: false, vertical: true)
                 .frame(height: 21.0)
 //                .debugDimensions()
                 .transaction { t in
@@ -142,11 +139,7 @@ struct Kind1Default: View {
                     }
 
                     ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth)
-                        .fixedSize(horizontal: false, vertical: true) // TODO: TEST WITH/WITHOUT
                         .frame(maxWidth: .infinity, alignment:.leading)
-//                        .transaction { t in
-//                            t.animation = nil
-//                        }
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
@@ -158,9 +151,6 @@ struct Kind1Default: View {
                     FooterFragmentView(nrPost: nrPost)
                 }
             }
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxHeight: isDetail ? 8800 : DIMENSIONS.POST_MAX_ROW_HEIGHT, alignment: .topLeading)
-            .clipped()
         }
         .background(alignment: .leading) {
             if connect == .bottom || connect == .both {

@@ -57,7 +57,7 @@ struct NoteRow: View {
                 }
                 .padding(.leading, 30)
                 .frame(idealHeight: 20.0)
-                .fixedSize(horizontal: false, vertical: true)
+//                .fixedSize(horizontal: false, vertical: true)
 
                 
                 if let firstQuote = noteRowAttributes.firstQuote {

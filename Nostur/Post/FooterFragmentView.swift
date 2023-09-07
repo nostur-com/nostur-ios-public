@@ -167,7 +167,7 @@ struct FooterFragmentView: View {
                 }
                 
             }
-            .fixedSize(horizontal: false, vertical: true)
+//            .fixedSize(horizontal: false, vertical: true)
             .frame(height: 28)
 //            .readSize { size in
 //                print("Footer size: \(size)")

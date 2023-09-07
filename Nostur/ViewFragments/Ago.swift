@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-struct Ago: View, Equatable {
+struct Ago: View { //, Equatable {
     
-    static func == (lhs: Ago, rhs: Ago) -> Bool {
-        lhs.agoText == rhs.agoText
-    }
-    
+//    static func == (lhs: Ago, rhs: Ago) -> Bool {
+//        lhs.agoText == rhs.agoText
+//    }
+//    
     let date:Date
     
     init(_ date:Date, agoText:String? = nil) {
