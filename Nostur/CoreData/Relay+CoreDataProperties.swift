@@ -26,7 +26,7 @@ extension Relay {
     @NSManaged public var lists: NSSet?
     
     var lists_:[NosturList] {
-        get { lists?.allObjects as! [NosturList] }
+        get { (lists?.allObjects as? [NosturList]) ?? [] }
         set { lists = NSSet(array: newValue) }
     }
 }

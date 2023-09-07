@@ -43,7 +43,7 @@ extension NosturList {
     }
     
     var contacts_:[Contact] {
-        get { contacts?.allObjects as! [Contact] }
+        get { (contacts?.allObjects as? [Contact]) ?? [] }
         set { contacts = NSSet(array: newValue) }
     }
     
