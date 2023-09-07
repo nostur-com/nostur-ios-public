@@ -24,7 +24,7 @@ struct PostOrThread: View {
     
     var body: some View {
         VStack(spacing: 10) {
-            ForEach(nrPost.parentPosts) { nrParent in
+            ForEach(postOrThreadAttributes.parentPosts) { nrParent in
                 Box(nrPost: nrParent) {
                     PostRowDeletable(nrPost: nrParent,
                                      missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
@@ -41,7 +41,7 @@ struct PostOrThread: View {
             }
 
             Box(nrPost: nrPost) {
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
