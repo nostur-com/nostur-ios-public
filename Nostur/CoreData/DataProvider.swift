@@ -139,7 +139,7 @@ class DataProvider: ObservableObject {
                     try self.bg.save()
                 }
                 catch {
-                    L.og.error("🔴🔴 Could not save bgContext")
+                    L.og.error("🔴🔴 Could not save bgContext \(error)")
                 }
             }
         }

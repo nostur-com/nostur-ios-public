@@ -57,7 +57,7 @@ struct NIP47TesterView: View {
                             print(nwcReq.eventJson())
                             
                             guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: walletPubkey, content: nwcReq.content) else {
-                                print("🔴🔴 Could encrypt content")
+                                L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
                             

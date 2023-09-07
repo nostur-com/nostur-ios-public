@@ -194,7 +194,7 @@ struct NIP46TesterView: View {
                             print(ncReq.eventJson())
                             
                             guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: nsecBunkerPubkey, content: ncReq.content) else {
-                                print("🔴🔴 Could encrypt content")
+                                L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
                             
@@ -233,7 +233,7 @@ struct NIP46TesterView: View {
                             print(ncReq.eventJson())
                             
                             guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: nsecBunkerPubkey, content: ncReq.content) else {
-                                print("🔴🔴 Could encrypt content")
+                                L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
                             
@@ -272,7 +272,7 @@ struct NIP46TesterView: View {
                             print(ncReq.eventJson())
                             
                             guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: nsecBunkerPubkey, content: ncReq.content) else {
-                                print("🔴🔴 Could encrypt content")
+                                L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
                             
@@ -316,7 +316,7 @@ struct NIP46TesterView: View {
                             print(ncReq.eventJson())
                             
                             guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: nsecBunkerPubkey, content: ncReq.content) else {
-                                print("🔴🔴 Could encrypt content")
+                                L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
                             

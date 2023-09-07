@@ -105,8 +105,7 @@ extension LightningButton {
                     }
                 }
                 catch {
-                    print("🔴🔴🔴🔴 problem in lnurlp")
-                    print(error)
+                    L.og.error("🔴🔴 problem in lnurlp \(error)")
                 }
             }
         }
