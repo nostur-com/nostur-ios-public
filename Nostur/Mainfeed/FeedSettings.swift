@@ -23,55 +23,7 @@ struct FeedSettings: View {
             .overlay(alignment: .top) {
                 Box {
                     VStack(alignment: .leading) {
-                        Text("App theme")
-                            .fontWeight(.bold)
-                            .hCentered()
-                        HStack {
-                            Spacer()
-                            Color("defaultAccentColor")
-                                .frame(width: 25, height: 25)
-                                .onTapGesture {
-                                    Theme.default.loadDefault()
-                                    showFeedSettings = false
-                                }
-                            Color("purpleAccentColor")
-                                .frame(width: 25, height: 25)
-                                .onTapGesture {
-                                    Theme.default.loadPurple()
-                                    showFeedSettings = false
-                                }
-                            Color("redAccentColor")
-                                .frame(width: 25, height: 25)
-                                .onTapGesture {
-                                    Theme.default.loadRed()
-                                    showFeedSettings = false
-                                }
-                            Color("greenAccentColor")
-                                .frame(width: 25, height: 25)
-                                .onTapGesture {
-                                    Theme.default.loadGreen()
-                                    showFeedSettings = false
-                                }
-                            Color("blueAccentColor")
-                                .frame(width: 25, height: 25)
-                                .onTapGesture {
-                                    Theme.default.loadBlue()
-                                    showFeedSettings = false
-                                }
-                            Color("pinkAccentColor")
-                                .frame(width: 25, height: 25)
-                                .onTapGesture {
-                                    Theme.default.loadPink()
-                                    showFeedSettings = false
-                                }
-                            Color("orangeAccentColor")
-                                .frame(width: 25, height: 25)
-                                .onTapGesture {
-                                    Theme.default.loadOrange()
-                                    showFeedSettings = false
-                                }
-                            Spacer()
-                        }
+                        AppThemeSwitcher(showFeedSettings: $showFeedSettings)
                         .padding(.bottom, 15)
                         Text("Settings for \(lvm.pubkey != nil ? String(localized: "Following") : lvm.name)")
                             .fontWeight(.bold)
