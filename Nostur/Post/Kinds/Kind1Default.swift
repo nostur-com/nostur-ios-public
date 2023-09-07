@@ -11,18 +11,16 @@ import SwiftUI
 struct Kind1Default: View {
     @EnvironmentObject var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
+    @ObservedObject var settings:SettingsStore = .shared
     let nrPost:NRPost
     @ObservedObject var pfpAttributes: NRPost.PFPAttributes
+    
     let hideFooter:Bool // For rendering in NewReply
     let missingReplyTo:Bool // For rendering in thread
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     let isReply:Bool // is reply on PostDetail
     let isDetail:Bool
     let grouped:Bool
-     
-    let sp:SocketPool = .shared
-    let up:Unpublisher = .shared
-    @ObservedObject var settings:SettingsStore = .shared
     
     init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
