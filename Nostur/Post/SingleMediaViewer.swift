@@ -18,6 +18,7 @@ struct SingleMediaViewer: View {
     var fullWidth:Bool = false
     var autoload = false
     var contentPadding:CGFloat = 0.0
+    
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
 //    @State var actualSize:CGSize? = nil
@@ -33,7 +34,7 @@ struct SingleMediaViewer: View {
                 }
             }
             .padding(10)
-            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
             .background(theme.lineColor.opacity(0.2))
         }
         else if autoload || imagesShown {
@@ -43,7 +44,7 @@ struct SingleMediaViewer: View {
                 if state.error != nil {
                     Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                         .centered()
-                        .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                        .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                         .background(theme.lineColor.opacity(0.2))
                         .onAppear {
                             L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
@@ -58,9 +59,7 @@ struct SingleMediaViewer: View {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
                             .padding(.horizontal, -contentPadding)
-//                            .transaction { transaction in
-//                                transaction.animation = nil
-//                            }
+                            .transaction { t in t.animation = nil }
 //                                .readSize { size in
 //                                    actualSize = size
 //                                }
@@ -88,13 +87,11 @@ struct SingleMediaViewer: View {
 //                                            .fontWeight(.bold)
 //                                    }
 //                                }
-                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-//                            .transaction { transaction in
-//                                transaction.animation = nil
-//                            }
+                            .transaction { t in t.animation = nil }
                     }
                 }
                 else if let image = state.image {
@@ -120,9 +117,7 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-//                            .transaction { transaction in
-//                                transaction.animation = nil
-//                            }
+                            .transaction { t in t.animation = nil }
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
                                     HStack(spacing: 5) {
@@ -142,9 +137,7 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-//                            .transaction { transaction in
-//                                transaction.animation = nil
-//                            }
+                            .transaction { t in t.animation = nil }
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
                                     HStack(spacing: 5) {
@@ -166,14 +159,15 @@ struct SingleMediaViewer: View {
                             }
                     }
                     .centered()
-                    .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                    .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                 }
                 else {
                     Color(.secondarySystemBackground)
-                        .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                        .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                 }
             }
             .pipeline(ImageProcessing.shared.content)
+            .transaction { t in t.animation = nil }
         }
         else {
             Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")

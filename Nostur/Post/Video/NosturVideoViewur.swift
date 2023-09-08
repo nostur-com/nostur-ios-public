@@ -151,6 +151,7 @@ struct NosturVideoViewur: View {
                             isPlaying = false
                         }
                     .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+                    .transaction { t in t.animation = nil }
                 }
                 else if videoState == .loading {
                     HStack(spacing: 5) {
@@ -170,13 +171,13 @@ struct NosturVideoViewur: View {
                     if videoState == .cancelled {
                         Text("Cancelled")
                             .centered()
-                            .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .background(theme.lineColor.opacity(0.2))
                     }
                     else if videoState == .error {
                         Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
                             .centered()
-                            .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .background(theme.lineColor.opacity(0.2))
                     }
                 }
@@ -184,7 +185,7 @@ struct NosturVideoViewur: View {
             else if videoState == .initial {
                 Text("Tap to load video", comment:"Button to load a video in a post")
                     .centered()
-                    .frame(maxHeight: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                    .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     .background(theme.lineColor.opacity(0.2))
                     .highPriorityGesture(
                         TapGesture()
@@ -213,6 +214,7 @@ struct NosturVideoViewur: View {
         .onDisappear {
             self.task?.cancel()
         }
+        .transaction { t in t.animation = nil }
     }
     
     func loadVideo() async {
