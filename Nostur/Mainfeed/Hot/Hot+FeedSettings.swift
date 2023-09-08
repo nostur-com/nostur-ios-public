@@ -32,16 +32,12 @@ struct HotFeedSettings: View {
                         Text("Time frame")
                             .frame(maxWidth: .infinity, alignment: .center)
                         Picker("Time frame", selection: $hotVM.ago) {
-                            Text("24h")
-                                .tag(24)
-                            Text("12h")
-                                .tag(12)
-                            Text("8h")
-                                .tag(8)
-                            Text("4h")
-                                .tag(4)
-                            Text("2h")
-                                .tag(2)
+                            Text("48h").tag(48)
+                            Text("24h").tag(24)
+                            Text("12h").tag(12)
+                            Text("8h").tag(8)
+                            Text("4h").tag(4)
+                            Text("2h").tag(2)
                         }
                         .pickerStyle(.segmented)
                         
