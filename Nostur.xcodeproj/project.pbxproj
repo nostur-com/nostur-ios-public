@@ -466,6 +466,9 @@
 		1F21442B29A797930090E78E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		1F21442D29A797B80090E78E /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		1F21CE422A067EC10021E2C7 /* View+onDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+onDelete.swift"; sourceTree = "<group>"; };
+		1F21D67A2AAB69F900CCF3B1 /* Gallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gallery.swift; sourceTree = "<group>"; };
+		1F21D67B2AAB69F900CCF3B1 /* Gallery+FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Gallery+FeedSettings.swift"; sourceTree = "<group>"; };
+		1F21D67C2AAB69FA00CCF3B1 /* GalleryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryViewModel.swift; sourceTree = "<group>"; };
 		1F21DDBD29F0174700C564EF /* NewSocketPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSocketPool.swift; sourceTree = "<group>"; };
 		1F2245B72AA46C6F00C06342 /* NostrAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrAddress.swift; sourceTree = "<group>"; };
 		1F2884A92A77D11D0006766E /* FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSettings.swift; sourceTree = "<group>"; };
@@ -926,6 +929,16 @@
 				1F1F13082AA9D9B000DDED82 /* HotViewModel.swift */,
 			);
 			path = Hot;
+			sourceTree = "<group>";
+		};
+		1F21D6792AAB68F400CCF3B1 /* Gallery */ = {
+			isa = PBXGroup;
+			children = (
+				1F21D67A2AAB69F900CCF3B1 /* Gallery.swift */,
+				1F21D67B2AAB69F900CCF3B1 /* Gallery+FeedSettings.swift */,
+				1F21D67C2AAB69FA00CCF3B1 /* GalleryViewModel.swift */,
+			);
+			path = Gallery;
 			sourceTree = "<group>";
 		};
 		1F25B394297A4FB400A8A5A7 /* Screens */ = {
@@ -1393,6 +1406,7 @@
 		1FB4D3F929BAEAE4004DB537 /* Mainfeed */ = {
 			isa = PBXGroup;
 			children = (
+				1F21D6792AAB68F400CCF3B1 /* Gallery */,
 				1F1F13012AA9A65D00DDED82 /* Hot */,
 				1FDBD89A2A7641F9001D9F34 /* NoiseFilter */,
 				1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */,
