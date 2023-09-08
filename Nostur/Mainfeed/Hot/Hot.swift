@@ -54,6 +54,13 @@ struct Hot: View {
             guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
             hotVM.load()
         }
+        .onReceive(receiveNotification(.scenePhaseActive)) { _ in
+            guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
+            hotVM.hotPosts = []
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { // Reconnect delay
+                hotVM.load()
+            }
+        }
         .onChange(of: selectedSubTab) { newValue in
             guard newValue == "Hot" else { return }
             hotVM.load() // didLoad is checked in .load() so no need here
