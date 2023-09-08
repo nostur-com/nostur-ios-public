@@ -258,6 +258,7 @@
 		1FB6E6FB29E3B827008BE8A6 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6E6FA29E3B827008BE8A6 /* MainView.swift */; };
 		1FB6E6FD29E48109008BE8A6 /* LVMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */; };
 		1FB6E70329E52EF3008BE8A6 /* SmoothList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */; };
+		1FB8BD5C2AAB8D9600FBC15F /* NotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */; };
 		1FBB901F2A85128A007A1550 /* StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901D2A85128A007A1550 /* StringMetric.swift */; };
 		1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901E2A85128A007A1550 /* String+StringMetric.swift */; };
 		1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */; };
@@ -655,6 +656,7 @@
 		1FB6E6FA29E3B827008BE8A6 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LVMManager.swift; sourceTree = "<group>"; };
 		1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothList.swift; sourceTree = "<group>"; };
+		1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettings.swift; sourceTree = "<group>"; };
 		1FBB901D2A85128A007A1550 /* StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringMetric.swift; sourceTree = "<group>"; };
 		1FBB901E2A85128A007A1550 /* String+StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+StringMetric.swift"; sourceTree = "<group>"; };
 		1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1455,6 +1457,7 @@
 				1F7525832997B21D00477AF2 /* NotificationsView.swift */,
 				1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */,
 				1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */,
+				1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */,
 			);
 			path = Notifications;
 			sourceTree = "<group>";
@@ -1807,6 +1810,7 @@
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1F41527F2A95B12800EC63B2 /* PostAccountSwitcher.swift in Sources */,
 				1FEA8D4B29E967B5004A83D3 /* InlineThings.swift in Sources */,
+				1FB8BD5C2AAB8D9600FBC15F /* NotificationSettings.swift in Sources */,
 				1FC0A9552A1094BD00F9ABF6 /* AccountSwitcher.swift in Sources */,
 				1F4186122A7CCF7000626DF3 /* WithNSecBunkerConnection.swift in Sources */,
 				1FCB526F2A530A7F006D08DF /* CommunityImporter.swift in Sources */,
