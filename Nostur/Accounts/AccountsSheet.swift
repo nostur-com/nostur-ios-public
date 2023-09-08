@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AccountsSheet: View {
-    
+    @EnvironmentObject var theme:Theme
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
@@ -44,7 +44,9 @@ struct AccountsSheet: View {
                                 }
                             }
                     }
+                    .listRowBackground(theme.background)
                 }
+                .scrollContentBackground(.hidden)
                 .listStyle(.plain)
                 
                 NavigationLink {
@@ -106,6 +108,7 @@ struct AccountsSheet: View {
                         .cancel(Text("Cancel"))
                     ])
             }
+            .background(theme.background)
         }
     }
 }
