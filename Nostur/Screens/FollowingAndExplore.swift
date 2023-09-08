@@ -55,13 +55,16 @@ struct FollowingAndExplore: View {
                         action: { selectedSubTab = "Following" },
                         title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
                         selected: selectedSubTab == "Following")
+                    Spacer()
                     if account.follows_.count > 10 {
                         TabButton(
                             action: { selectedSubTab = "Hot" },
                             title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
+                            secondaryText: String(format: "%ih", hotVM.ago),
                             selected: selectedSubTab == "Hot")
+                        Spacer()
                     }
-                    Spacer()
+                    
                     ForEach(lists) { list in
                         TabButton(
                             action: {
