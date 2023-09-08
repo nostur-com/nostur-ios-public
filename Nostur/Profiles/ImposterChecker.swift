@@ -68,7 +68,7 @@ func pfpsAreSimilar(imposter:String, real:String, threshold:Double = 0.1) async 
     let mae = compareImages(image1: impostorImage, image2: realImage)
 
     L.og.debug("😎 ImposterChecker - imagesAreSimilar: \(mae)")
-    print("😎 ImposterChecker - imagesAreSimilar: \(mae)")
+//    print("😎 ImposterChecker - imagesAreSimilar: \(mae)")
     if (mae == 0.0) { return false }
     if mae <= threshold {
         return true

@@ -153,7 +153,7 @@ class ProfileModel: ObservableObject {
         return imageSelection.loadTransferable(type: ProfileImage.self) { result in
             DispatchQueue.main.async {
                 guard imageSelection == self.imageSelection else {
-                    print("Failed to get the selected item.")
+//                    print("Failed to get the selected item.")
                     return
                 }
                 switch result {

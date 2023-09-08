@@ -177,7 +177,7 @@ struct AccountEditView: View {
                                     L.og.info("PFP uploaded successfully")
                                 }
                             }, receiveValue: { urls in
-                                print(urls)
+//                                print(urls)
                                 for url in urls {
                                     if url.contains("/banner.") {
                                         account.banner = url
@@ -313,7 +313,7 @@ extension AccountEditView {
             
             for contact in contacts {
                 account.addToFollows(contact)
-                print("Adding to followers: \(contact.name ?? "??")")
+//                print("Adding to followers: \(contact.name ?? "??")")
             }
             try! viewContext.save();
         }

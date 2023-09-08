@@ -143,9 +143,9 @@ class Zap {
         case .INVOICE_FETCHED:
             payInvoice()
         case .NWC_PAY_REQUEST_SENT:
-            print("")
+            L.og.debug("NWC_PAY_REQUEST_SENT")
         case .NWC_INVOICE_PAID:
-            print("")
+            L.og.debug("NWC_INVOICE_PAID")
         case .ERROR:
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }

@@ -95,7 +95,6 @@ struct MainView: View {
                                     .frame(height:30)
                                     .clipShape(Circle())
                                     .onTapGesture {
-                                        print("ok3")
                                         sendNotification(.shouldScrollToTop)
                                     }
                             }

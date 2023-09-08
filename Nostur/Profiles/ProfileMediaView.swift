@@ -83,7 +83,7 @@ struct MediaThumb: View {
                     .frame(width:squareSize, height:squareSize)
                     .background(theme.lineColor.opacity(0.2))
                     .onAppear {
-                        print("Failed to load image: \(state.error?.localizedDescription ?? "")")
+                        L.og.debug("Failed to load image: \(state.error?.localizedDescription ?? "")")
                     }
             }
             else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {

@@ -131,7 +131,7 @@ struct ContactsSearch: View, Equatable {
                     sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
                 }
                 catch {
-                    print("npub1 search fail \(error)")
+                    L.og.debug("npub1 search fail \(error)")
                     searching = false
                 }
             }

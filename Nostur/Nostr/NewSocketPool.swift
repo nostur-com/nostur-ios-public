@@ -844,11 +844,11 @@ class NewWebSocket {
                         L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
                         L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
                         let _ = webSocket.send(text)
-                            .sink(receiveCompletion: {
-                                print($0)
+                            .sink(receiveCompletion: { _ in
+//                                print($0)
                                 L.sockets.info("🟪 WHAT")
                             }, receiveValue: {
-                                print($0)
+//                                print($0)
                                 L.sockets.info("🟪 WHAT OK")
                             })
                         sendNotification(.pong)
@@ -936,7 +936,7 @@ class NewWebSocket {
                             // Handle String message
                             self.delegate?.didReceiveMessage(string)
                         @unknown default:
-                            print("dunno")
+                            L.og.debug("dunno")
                     }
                 })
             

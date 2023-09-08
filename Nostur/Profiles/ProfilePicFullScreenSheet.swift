@@ -42,13 +42,14 @@ struct ProfilePicFullScreenSheet: View {
                     )
                     .simultaneously(with: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
                         .onEnded { value in
-                            print(value.translation)
+                            L.og.debug("ProfilePicFullScreenSheet: \(value.translation.debugDescription)")
                             switch(value.translation.width, value.translation.height) {
                                     //                    case (...0, -30...30):  print("left swipe")
                                     //                    case (0..., -30...30):  print("right swipe")
                                     //                    case (-100...100, ...0):  print("up swipe")
                                 case (-100...100, 0...):  profilePicViewerIsShown = false
-                                default:  print("no clue")
+                                default:
+                                L.og.debug("ProfilePicFullScreenSheet: no clue")
                             }
                         }
                     )

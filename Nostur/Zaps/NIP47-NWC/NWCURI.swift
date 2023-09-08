@@ -42,7 +42,7 @@ struct NWCURI {
     }
     
     var walletPubkey:String? {
-        guard let host = uri.host() else { print(111); return nil }
+        guard let host = uri.host() else { return nil }
         guard host.firstMatch(of: /[0-9a-z]{64}/) != nil else { return nil }
         
         return host

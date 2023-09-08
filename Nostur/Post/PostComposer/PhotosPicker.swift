@@ -80,7 +80,7 @@ class ImagePickerModel: ObservableObject {
         return imageSelection.loadTransferable(type: SelectedImage.self) { result in
             DispatchQueue.main.async {
                 guard imageSelection == self.imageSelection else {
-                    print("Failed to get the selected item.")
+                    L.og.debug("Failed to get the selected item.")
                     return
                 }
                 switch result {

@@ -140,7 +140,7 @@ class ShareableIdentifier: Hashable {
                             throw "EncodingError.invalidPrefix.3"
                     }
                 default:
-                    print("EncodingError.invalidType")
+                    L.og.error("EncodingError.invalidType")
             }
         }
     }

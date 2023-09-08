@@ -345,7 +345,7 @@ extension Search {
             searchTask1.fetch()
         }
         catch {
-            print("note1 search fail \(error)")
+            L.og.debug("note1 search fail \(error)")
             searching = false
         }
     }

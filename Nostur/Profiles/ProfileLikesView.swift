@@ -68,7 +68,7 @@ struct ProfileLikesView: View {
             let fetchNewerLimit = 1000
             let fetchNewerTask = ReqTask(
                 reqCommand: { (taskId) in
-                    print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
+                    L.og.debug("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
                     // Just get max 250 most recent events:
                     req(RM.getAuthorReactions(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
                 },

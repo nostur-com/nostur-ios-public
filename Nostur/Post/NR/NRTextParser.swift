@@ -48,7 +48,7 @@ class NRTextParser { // TEXT things
         }
         catch {
             let finalText = AttributedString(newerTextWithPs.text)
-            print(error)
+            L.og.error("NRTextParser: \(error)")
             let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             return a
         }
@@ -57,7 +57,7 @@ class NRTextParser { // TEXT things
     func parseMD(_ event:Event, text: String) -> MarkdownContentWithPs {
         self.tags = event.fastTags
         
-        print(text)
+//        L.og.debug(text)
 
         // Remove image links
         // because they get rendered as embeds in PostDetail.
@@ -165,7 +165,7 @@ class NRTextParser { // TEXT things
                         }
                     }
                     catch {
-                        print("problem decoding npub")
+                        L.og.debug("problem decoding npub")
                     }
                 case "nprofile1":
                 let nprofile = match.replacingOccurrences(of: "nostr:", with: "")
@@ -182,10 +182,10 @@ class NRTextParser { // TEXT things
                         }
                     }
                     catch {
-                        print("problem decoding nprofile")
+                        L.og.debug("problem decoding nprofile")
                     }
                 default:
-                    print("eeuh")
+                    L.og.debug("eeuh")
             }
 
             replacedString.replaceSubrange(matchRange, with: replacement)

@@ -53,11 +53,11 @@ struct FullImageViewer: View {
                     }
                 }
                 .onEnded { value in
-                    print(value.translation)
+                    L.og.debug("FullimageViewer: \(value.translation.debugDescription)")
                     guard let startTime = gestureStartTime else { return }
                                          let duration = Date().timeIntervalSince(startTime)
                                          let quickSwipeThreshold: TimeInterval = 0.25 // Adjust this value as needed
-                    print(duration)
+                    L.og.debug("FullimageViewer: \(duration)")
                     switch(value.translation.width, value.translation.height) {
                             //                    case (...0, -30...30):  print("left swipe")
                             //                    case (0..., -30...30):  print("right swipe")
@@ -70,7 +70,7 @@ struct FullImageViewer: View {
                                 gestureStartTime = nil
                             }
                         default:
-                            print("no clue")
+                        L.og.debug("no clue")
                             gestureStartTime = nil
                     }
                 }
@@ -84,7 +84,7 @@ struct FullImageViewer: View {
                             .centered()
                             .background(theme.lineColor.opacity(0.2))
                             .onAppear {
-                                print("Failed to load image: \(state.error?.localizedDescription ?? "")")
+                                L.og.debug("Failed to load image: \(state.error?.localizedDescription ?? "")")
                             }
                     }
                     else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
