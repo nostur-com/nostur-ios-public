@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NostrEssentials
+import Combine
 
 typealias PostID = String
 typealias LikedBy = Set
@@ -23,6 +24,7 @@ class HotViewModel: ObservableObject {
     private var follows:Set<Pubkey>
     private var didLoad = false
     private static let POSTS_LIMIT = 250
+    private var subscriptions = Set<AnyCancellable>()
     
     // From DB we always fetch the maximum time frame selected
     private var agoTimestamp:Int {
@@ -65,9 +67,18 @@ class HotViewModel: ObservableObject {
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog = Backlog(timeout: 5.0, auto: true)
         self.follows = NosturState.shared.followingPublicKeys
+        
+        receiveNotification(.blockListUpdated)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                let blockedPubkeys = notification.object as! [String]
+                self.hotPosts = self.hotPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
+            }
+            .store(in: &self.subscriptions)
     }
 
     private func fetchFromDB() {
+        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind == 7 AND pubkey IN %@", agoTimestamp, follows)
         bg().perform {
@@ -93,7 +104,7 @@ class HotViewModel: ObservableObject {
                         L.og.debug("🔝🔝 id:\(postId): \(likes.count)")
                     }
                     if let event = try? Event.fetchEvent(id: postId, context: bg()) {
-                        
+                        guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns
                         guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
                         guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
                         
