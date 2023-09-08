@@ -49,7 +49,7 @@ struct SideStrikeShape: Shape {
     
     func path(in rect: CGRect) -> Path {
         let endLocation = CGPoint(x: rect.width, y: rect.height/2)
-        let _ = print(rect)
+//        let _ = print(rect)
         var path = Path()
         let startX = 0.0
         let startY = rect.height

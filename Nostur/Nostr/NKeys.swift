@@ -26,7 +26,7 @@ struct NKeys {
             publicKey = privateKey.publicKey
         }
         catch {
-            print("Nkeys.init error")
+            L.og.error("Nkeys.init error")
             throw "could not init keys"
         }
     }

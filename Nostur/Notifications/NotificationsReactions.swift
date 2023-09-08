@@ -310,7 +310,7 @@ struct ReactionsForThisNote: View {
             .map { $0.pubkey }
         
         guard !(missingPubkeys + emptyContactPubkeys).isEmpty else { return }
-        print("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
+        L.og.debug("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
         QueuedFetcher.shared.enqueue(pTags:  missingPubkeys + emptyContactPubkeys)
     }
 }

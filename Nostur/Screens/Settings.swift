@@ -230,7 +230,7 @@ struct Settings: View {
                                 case .success(let url):
                                     L.og.info("Saved to \(url)")
                                 case .failure(let error):
-                                    print(error.localizedDescription)
+                                    L.og.debug("Export: \(error.localizedDescription)")
                                 }
                             }
                     }

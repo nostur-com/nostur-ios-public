@@ -165,7 +165,7 @@ struct AnyNEvent: Codable {
     }
     
     func verified() throws -> Bool {
-        print("✍️ VERIFYING SIG ✍️")
+        L.og.debug("✍️ VERIFYING SIG ✍️")
         guard let publicKey = publicKey else { throw "missing pubkey" }
         guard let createdAt = createdAt else { throw "missing createdAt" }
         guard let signature = signature else { throw "missing signature" }

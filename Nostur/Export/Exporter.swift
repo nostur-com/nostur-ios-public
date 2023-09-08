@@ -46,7 +46,7 @@ final class Exporter {
             }
         }
        
-        print("Exported \(jsonl.count) events")
+        L.og.debug("Exported \(jsonl.count) events")
         
         return String(jsonl.joined(separator:"\n")).data(using: .utf8)!
     }

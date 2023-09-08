@@ -46,7 +46,7 @@ struct NProfileView: View {
                         .hCentered()
                         .onAppear {
                             guard let pubkey = identifier.pubkey else {
-                                print("\(identifier.bech32string) has no pubkey")
+                                L.og.debug("\(identifier.bech32string) has no pubkey")
                                 return
                             }
                             L.og.info("🟢 Fetching for NEventView \(pubkey) / \(identifier.bech32string)")

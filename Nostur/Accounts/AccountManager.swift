@@ -111,7 +111,7 @@ class AccountManager {
 
         do {
             if (account.picture.prefix(30) == "https://profilepics.nostur.com") || (account.banner.prefix(30) == "https://profilepics.nostur.com") {
-                print("Sending delete PFP and BANNER request")
+//                print("Sending delete PFP and BANNER request")
                 deletePFPandBanner(pk: pk, pubkey: account.publicKey)
             }
             
@@ -182,8 +182,8 @@ class AccountManager {
                 
                 let newKind0EventSigned = try newKind0Event.sign(keys)
                 
-                print(newKind0EventSigned.eventJson())
-                print(newKind0EventSigned.wrappedEventJson())
+//                print(newKind0EventSigned.eventJson())
+//                print(newKind0EventSigned.wrappedEventJson())
                 
                 return newKind0EventSigned
             }

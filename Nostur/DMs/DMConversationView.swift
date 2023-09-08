@@ -331,7 +331,7 @@ struct DMConversationView: View {
                                     try vc.save()
                                 }
                                 catch {
-                                    print(error)
+                                    L.og.error("DMConversationsView: \(error)")
                                 }
                             }
                         }

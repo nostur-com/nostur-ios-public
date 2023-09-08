@@ -59,7 +59,7 @@ class DataProvider: ObservableObject {
             newError = error as NSError?
         }
         if newError != nil {
-            print("Unresolved error \(newError?.description ?? "")")
+//            print("Unresolved error \(newError?.description ?? "")")
             self.databaseProblem = true
             self.databaseProblemDescription = newError?.userInfo.description ?? ""
             description.url = URL(fileURLWithPath: "/dev/null")

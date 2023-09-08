@@ -30,7 +30,7 @@ struct ImagePreviews: View {
                             .padding(5)
                             .onTapGesture {
                                 _ = pastedImages.remove(at: index)
-                                print("remove: \(index)")
+                                L.og.debug("remove: \(index)")
                             },
                         alignment: .topTrailing
                     )
