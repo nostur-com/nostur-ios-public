@@ -199,7 +199,7 @@ struct QuoteById: View {
                 }
                 else {
                     Color.clear
-                        .frame(height: 150)
+                        .frame(height: 350)
                         .task {
                             DataProvider.shared().bg.perform {
                                 if let eventBG = event.toBG() {
@@ -216,6 +216,7 @@ struct QuoteById: View {
             else {
                 ProgressView()
                     .hCentered()
+                    .frame(height: 350)
                     .onAppear {
                         L.og.info("🟢 Fetching for QuotedNoteFragmentView \(id)")
                         req(RM.getEventAndReferences(id: id))
@@ -263,6 +264,7 @@ struct Kind1ById: View {
         else {
             ProgressView()
                 .hCentered()
+                .frame(height: 350)
                 .onAppear {
                     L.og.info("🟢 Fetching for Kind1ById \(id)")
                     req(RM.getEvent(id: id))
