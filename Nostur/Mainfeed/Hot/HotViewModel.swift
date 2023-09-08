@@ -22,6 +22,7 @@ class HotViewModel: ObservableObject {
     private var backlog:Backlog
     private var follows:Set<Pubkey>
     private var didLoad = false
+    private static let POSTS_LIMIT = 250
     
     // From DB we always fetch the maximum time frame selected
     private var agoTimestamp:Int {
@@ -77,6 +78,7 @@ class HotViewModel: ObservableObject {
                 
                 let sortedByLikes = self.posts
                     .sorted(by: { $0.value.count > $1.value.count })
+                    .prefix(Self.POSTS_LIMIT)
                 
                 var nrPosts:[NRPost] = []
                 for (postId, _) in sortedByLikes {
