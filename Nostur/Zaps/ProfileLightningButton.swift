@@ -42,7 +42,9 @@ struct ProfileLightningButton: View {
         }
         .sheet(isPresented: $payAmountSelectorShown) {
             PaymentAmountSelector(paymentInfo: paymentInfo!)
-        }.opacity((contact?.anyLud ?? false) ? 1 : 0)
+                .presentationBackground(theme.background)
+        }
+        .opacity((contact?.anyLud ?? false) ? 1 : 0)
     }
     
     func buttonTapped() {

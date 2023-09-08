@@ -72,6 +72,7 @@ struct NewQuoteRepost: View {
                                         vm.text += gifUrl + "\n"
                                     }
                                 }
+                                .presentationBackground(theme.background)
                             }
                             AnyStatus(filter: "NewPost")
                         }
@@ -153,6 +154,7 @@ struct NewQuoteRepost: View {
                     NavigationStack {
                         PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(quotingEvent: quotingEvent, dismiss:dismiss) }, uploading: $vm.uploading)
                     }
+                    .presentationBackground(theme.background)
                 }
                 
                 if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {

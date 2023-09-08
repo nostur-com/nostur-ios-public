@@ -65,6 +65,7 @@ struct NewPost: View {
                                     vm.text += gifUrl + "\n"
                                 }
                             }
+                            .presentationBackground(theme.background)
                         }
                         AnyStatus(filter: "NewPost")
                     }
@@ -130,6 +131,7 @@ struct NewPost: View {
                     NavigationStack {
                         PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(dismiss:dismiss) }, uploading: $vm.uploading)
                     }
+                    .presentationBackground(theme.background)
                 }
 
                 if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {

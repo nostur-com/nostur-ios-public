@@ -141,6 +141,7 @@ struct BadgeDetailView: View {
                     }
                 }
             }
+            .presentationBackground(theme.background)
         }
     }
 }

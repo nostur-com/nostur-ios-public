@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ZapCustomizerSheet: View {
+    @EnvironmentObject var theme:Theme
     let name:String
     var customZapId:UUID?
     var supportsZap = false
@@ -157,6 +158,7 @@ struct ZapCustomizerSheet: View {
                 NavigationStack {
                     CustomZapAmountEntry(customAmount: $customAmount)
                 }
+                .presentationBackground(theme.background)
             }
             .onAppear {
                 selectedAmount = SettingsStore.shared.defaultZapAmount

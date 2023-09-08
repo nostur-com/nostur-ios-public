@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NewRelayView: View {
-    
+//    @EnvironmentObject var theme:Theme
     @Environment(\.dismiss) private var dismiss
     @State var url = "wss://"
     
@@ -17,15 +17,15 @@ struct NewRelayView: View {
     var body: some View {
         
         NavigationStack {
-            VStack {
+//            VStack {
                 Form {
                     TextField("wss://relay...", text: $url)
                         .keyboardType(.URL)
                         .disableAutocorrection(true)
                         .textInputAutocapitalization(.never)
                 }
-            }
-            .padding()
+//            }
+//            .padding()
             .navigationTitle(String(localized:"Add relay", comment:"Navigation title for Add relay screen"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -49,5 +49,7 @@ struct NewRelayView: View {
 struct NewRelayView_Previews: PreviewProvider {
     static var previews: some View {
         NewRelayView()
+            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .environmentObject(Theme.default)
     }
 }

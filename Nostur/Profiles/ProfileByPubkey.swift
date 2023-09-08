@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileByPubkey: View {
-    
+    @EnvironmentObject var theme:Theme
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
      
@@ -46,6 +46,7 @@ struct ProfileByPubkey: View {
                 NavigationStack {
                     AccountEditView(account: account)
                 }
+                .presentationBackground(theme.background)
             }
             .onReceive(timeOut) { firedDate in
                 timeOut.upstream.connect().cancel()

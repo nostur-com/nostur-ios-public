@@ -57,7 +57,7 @@ struct RelayRowView: View {
 }
 
 struct RelaysView: View {
-    
+    @EnvironmentObject var theme:Theme
     @State var createRelayPresented = false
     @State var editRelay:Relay?
 
@@ -92,6 +92,7 @@ struct RelaysView: View {
             NavigationStack {
                 RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
             }
+            .presentationBackground(theme.background)
         })
     }    
 }

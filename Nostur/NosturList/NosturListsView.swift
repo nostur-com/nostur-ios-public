@@ -58,6 +58,7 @@ struct NosturListsView: View {
             NavigationStack {
                 NewListSheet()
             }
+            .presentationBackground(theme.background)
         }
     }
 }
