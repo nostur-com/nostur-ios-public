@@ -48,6 +48,7 @@ class HotViewModel: ObservableObject {
     @AppStorage("feed_hot_ago") var ago:Int = 12 {
         didSet {
             logAction("Hot feed time frame changed to \(self.ago)h")
+            backlog.timeout = max(Double(ago / 4), 5.0)
             if ago < oldValue {
                 self.hotPosts = []
                 self.fetchFromDB()
@@ -109,6 +110,7 @@ class HotViewModel: ObservableObject {
     
     private func fetchFromRelays() {
         let reqTask = ReqTask(
+            debounceTime: 0.5,
             subscriptionId: "HOT",
             reqCommand: { taskId in
                 if let cm = NostrEssentials
