@@ -18,5 +18,9 @@ class L {
     static let maintenance = Logger(subsystem: "com.nostur.Nostur", category: "Maintenance")
     static let fetching = Logger(subsystem: "com.nostur.Nostur", category: "Fetching")
     static let lvm = Logger(subsystem: "com.nostur.Nostur", category: "LVM")
+    static let user = Logger(subsystem: "com.nostur.Nostur", category: "User Action")
 }
 
+func logAction(_ message: String) {
+    L.user.info("User: \(message)")
+}
