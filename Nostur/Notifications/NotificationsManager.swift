@@ -15,6 +15,22 @@ class NotificationsManager: ObservableObject {
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
     
+    @AppStorage("notifications_mute_follows") var muteFollows:Bool = false {
+        didSet {
+            sendNotification(.updateNotificationsCount, unread)
+        }
+    }
+    @AppStorage("notifications_mute_reactions") var muteReactions:Bool = false {
+        didSet {
+            sendNotification(.updateNotificationsCount, unread)
+        }
+    }
+    @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false {
+        didSet {
+            sendNotification(.updateNotificationsCount, unread)
+        }
+    }
+    
     let FETCH_LIMIT = 999
     
     static let shared = NotificationsManager()
@@ -46,7 +62,7 @@ class NotificationsManager: ObservableObject {
     
     // Notifications tab
     var unread: Int {
-        unreadMentions + unreadReactions + unreadZaps
+        unreadMentions + (muteReactions ? 0 : unreadReactions) + (muteZaps ? 0 : unreadZaps)
     }
     
 //    let viewContext = DataProvider.shared().viewContext
@@ -142,7 +158,7 @@ class NotificationsManager: ObservableObject {
             .count
         
         let unreadNewFollowers = (try? context.count(for: r3)) ?? 0
-        unreadMentions = unreadMentions + unreadNewFollowers
+        unreadMentions = unreadMentions + (muteFollows ? 0 : unreadNewFollowers)
         DispatchQueue.main.async {
             if unreadMentions != self.unreadMentions {
                 if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {

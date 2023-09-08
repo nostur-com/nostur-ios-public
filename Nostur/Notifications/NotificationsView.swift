@@ -47,6 +47,7 @@ struct NotificationsContainer: View {
 }
 
 struct NotificationsView: View {
+    @EnvironmentObject var theme:Theme
     @Environment(\.managedObjectContext) var viewContext
     @ObservedObject var nm:NotificationsManager = .shared
     @ObservedObject var account:Account
@@ -55,6 +56,9 @@ struct NotificationsView: View {
     @Binding var tab:String
     @ObservedObject var settings:SettingsStore = .shared
     @State var markAsReadDelayer:Timer?
+    @State var showNotificationSettings = false
+    @AppStorage("notifications_mute_reactions") var muteReactions:Bool = false
+    @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -72,14 +76,14 @@ struct NotificationsView: View {
                         tab = "Reactions"
                         nm.unreadReactions = 0
                     }
-                }, title: String(localized: "Reactions", comment:"Title of tab"), selected: tab == "Reactions", unread: nm.unreadReactions)
+                }, title: String(localized: "Reactions", comment:"Title of tab"), selected: tab == "Reactions", unread: nm.unreadReactions, muted: muteReactions)
                 
                 TabButton(action: {
                     withAnimation {
                         tab = "Zaps"
                         nm.unreadZaps = 0
                     }
-                }, title: String(localized: "Zaps", comment:"Title of tab"), selected: tab == "Zaps", unread: nm.unreadZaps)
+                }, title: String(localized: "Zaps", comment:"Title of tab"), selected: tab == "Zaps", unread: nm.unreadZaps, muted: muteZaps)
             }
             
             switch (tab) {
@@ -112,10 +116,24 @@ struct NotificationsView: View {
                     .padding(.bottom, 10)
             }
         }
-        .padding(.top, 5)
-        .navigationTitle(tab)
-        .navigationBarHidden(true)
+//        .padding(.top, 5)
+        .navigationTitle(String(localized: "Notifications"))
+//        .navigationBarHidden(true)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Image(systemName: "gearshape")
+                    .foregroundColor(theme.accent)
+                    .onTapGesture {
+                        showNotificationSettings.toggle()
+                    }
+            }
+        }
+        .overlay(alignment: .top) {
+            if showNotificationSettings {
+                NotificationSettings(showFeedSettings: $showNotificationSettings)
+            }
+        }
     }
     
     func markActiveTabAsRead(_ tab:String) {

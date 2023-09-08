@@ -14,6 +14,7 @@ struct TabButton: View {
     var secondaryText:String? = nil
     var selected:Bool = false
     var unread:Int?
+    var muted:Bool = false
     
     var body: some View {
         Button { action() } label: {
@@ -37,6 +38,7 @@ struct TabButton: View {
                             .foregroundColor(.white)
                             .padding(.horizontal,6)
                             .background(Capsule().foregroundColor(theme.badge))
+                            .opacity(muted ? 0.25 : 1.0)
                             .offset(y: -2)
                     }
                 }
