@@ -38,10 +38,16 @@ class HotViewModel: ObservableObject {
     }
     private var lastFetch:Date?
     
-    @Published var hotPosts:[NRPost] = []
+    @Published var hotPosts:[NRPost] = [] {
+        didSet {
+            guard !hotPosts.isEmpty else { return }
+            L.og.info("Hot feed loaded \(self.hotPosts.count) posts")
+        }
+    }
     
     @AppStorage("feed_hot_ago") var ago:Int = 12 {
         didSet {
+            logAction("Hot feed time frame changed to \(self.ago)h")
             if ago < oldValue {
                 self.hotPosts = []
                 self.fetchFromDB()
@@ -81,7 +87,10 @@ class HotViewModel: ObservableObject {
                     .prefix(Self.POSTS_LIMIT)
                 
                 var nrPosts:[NRPost] = []
-                for (postId, _) in sortedByLikes {
+                for (postId, likes) in sortedByLikes {
+                    if (likes.count > 3) {
+                        L.og.debug("🔝🔝 id:\(postId): \(likes.count)")
+                    }
                     if let event = try? Event.fetchEvent(id: postId, context: bg()) {
                         
                         guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
@@ -118,18 +127,18 @@ class HotViewModel: ObservableObject {
                     self.lastFetch = Date.now
                 }
                 else {
-                    L.og.error("Can't do hot feed?")
+                    L.og.error("Hot feed: Problem generating request")
                 }
             },
             processResponseCommand: { taskId, relayMessage in
                 self.fetchFromDB()
                 self.backlog.clear()
-                L.og.info("HOT: processResponseCommand")
+                L.og.info("Hot feed: ready to process relay response")
             },
             timeoutCommand: { taskId in
                 self.fetchFromDB()
                 self.backlog.clear()
-                L.og.info("HOT: timeoutCommand")
+                L.og.info("Hot feed: timeout ")
             })
 
         backlog.add(reqTask)
