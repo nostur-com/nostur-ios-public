@@ -185,7 +185,6 @@ struct ShareMediaButton: View {
                 let item = NSItemProvider(item: sharableImage.pngData()! as NSData, typeIdentifier: "public.png")
                 ActivityView(activityItems: [item])
             }
-                        
     }
 }
 

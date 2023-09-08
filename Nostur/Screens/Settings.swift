@@ -260,6 +260,7 @@ struct Settings: View {
                                 L.og.error("Unresolved error \(error)")
                             }
                         }
+                        .presentationBackground(theme.background)
                     }
                 }
                 .listRowBackground(theme.background)
@@ -448,6 +449,7 @@ struct Settings: View {
         }
         .sheet(isPresented: $showDefaultZapAmountSheet) {
             SettingsDefaultZapAmount()
+                .presentationBackground(theme.background)
         }
         .scrollContentBackground(.hidden)
         .background(theme.listBackground)
@@ -476,18 +478,21 @@ struct Settings: View {
                 DeleteAccountSheet()
                     .environmentObject(ns)
             }
+            .presentationBackground(theme.background)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
             NavigationStack {
                 AlbyNWCConnectSheet()
                     .environmentObject(ns)
             }
+            .presentationBackground(theme.background)
         }
         .sheet(isPresented: $customNWCsheetShown) {
             NavigationStack {
                 CustomNWCConnectSheet()
                     .environmentObject(ns)
             }
+            .presentationBackground(theme.background)
         }
     }
 }

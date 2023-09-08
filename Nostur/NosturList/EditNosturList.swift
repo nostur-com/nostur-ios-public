@@ -62,6 +62,7 @@ struct EditNosturList: View {
             NavigationStack {
                 EditListTitleSheet(list: list)
             }
+            .presentationBackground(theme.background)
         })
         .sheet(isPresented: $addContactsSheetShown) {
             NavigationStack {
@@ -83,6 +84,7 @@ struct EditNosturList: View {
                     }
                 }
             }
+            .presentationBackground(theme.background)
         }
     }
 }

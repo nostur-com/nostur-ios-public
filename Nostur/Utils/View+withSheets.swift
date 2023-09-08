@@ -112,6 +112,7 @@ private struct WithSheets: ViewModifier {
                         .environmentObject(ns)
                         .environmentObject(theme)
                 }
+                .presentationBackground(theme.background)
             })
         
             .onReceive(receiveNotification(.reportContact), perform: { notification in
@@ -123,6 +124,7 @@ private struct WithSheets: ViewModifier {
                     ReportContactSheet(contact: reportContact.contact)
                         .environmentObject(theme)
                 }
+                .presentationBackground(theme.background)
             })
             
             .onReceive(receiveNotification(.requestConfirmationChangedFollows)) { notification in
@@ -254,6 +256,7 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $paymentInfo) { paymentInfo in
                 PaymentAmountSelector(paymentInfo:paymentInfo)
                     .environmentObject(theme)
+                    .presentationBackground(theme.background)
             }
         
             .onReceive(receiveNotification(.addRemoveToListsheet)) { notification in
@@ -263,6 +266,7 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $addRemoveContactFromList) { contact in
                 AddRemoveToListsheet(contact: contact)
                     .environmentObject(theme)
+                    .presentationBackground(theme.background)
             }
 
             // New highlight
@@ -288,6 +292,7 @@ private struct WithSheets: ViewModifier {
                     .environmentObject(ns)
                     .presentationDetents([.medium])
                     .environmentObject(theme)
+                    .presentationBackground(theme.background)
             }
         
             // Zap customizer sheet
@@ -300,6 +305,7 @@ private struct WithSheets: ViewModifier {
                     .environmentObject(ns)
                     .presentationDetents([.large])
                     .environmentObject(theme)
+                    .presentationBackground(theme.background)
             }
         
             // Share post screenshot

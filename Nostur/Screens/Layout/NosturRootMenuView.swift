@@ -318,12 +318,14 @@ struct SideBar: View {
                     .presentationDetents([.fraction(0.45), .medium, .large])
                     .environmentObject(ns)
             }
+            .presentationBackground(theme.background)
         }
         .sheet(isPresented: $showAnySigner) {
             NavigationStack {
                 AnySigner()
                     .environmentObject(ns)
             }
+            .presentationBackground(theme.background)
         }
         .actionSheet(item: $logoutAccount) { account in
                     ActionSheet(

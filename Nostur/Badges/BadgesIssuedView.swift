@@ -69,6 +69,7 @@ struct BadgesIssuedView: View {
             NavigationStack {
                 CreateNewBadgeSheet()
             }
+            .presentationBackground(theme.background)
         }
     }
 }

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ProfileFollowButton: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var contact:Contact
     @EnvironmentObject var ns:NosturState
     @ObservedObject var fg:FollowingGuardian = .shared
@@ -54,6 +55,7 @@ struct ProfileFollowButton: View {
                 NavigationStack {
                     AccountEditView(account: account)
                 }
+                .presentationBackground(theme.background)
             }
         }
     }

@@ -85,6 +85,7 @@ struct NewReply: View {
                                             vm.text += gifUrl + "\n"
                                         }
                                     }
+                                    .presentationBackground(theme.background)
                                 }
                                 AnyStatus(filter: "NewPost")
                             }
@@ -222,6 +223,7 @@ struct NewReply: View {
                         PostPreview(nrPost: nrPost, sendNow: {
                             vm.sendNow(replyTo: replyTo, dismiss:dismiss) }, uploading: $vm.uploading)
                     }
+                    .presentationBackground(theme.background)
                 }
                 
                 if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {

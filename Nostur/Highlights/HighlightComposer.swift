@@ -113,6 +113,7 @@ struct HighlightComposer: View {
                             }
                         }
                     }
+                    .presentationBackground(theme.background)
                 }
             }
         }

@@ -152,6 +152,7 @@ struct DMs: View {
                 NavigationStack {
                     NewDM(showingNewDM: $showingNewDM, tab: $tab)
                 }
+                .presentationBackground(theme.background)
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
