@@ -121,7 +121,7 @@ struct NotificationsPosts: View {
         }
         .onReceive(receiveNotification(.blockListUpdated)) { notification in
             let blockedPubkeys = notification.object as! [String]
-            fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.id)  }
+            fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
         }
         .onReceive(receiveNotification(.muteListUpdated)) { _ in
             fl.nrPosts = fl.nrPosts.filter(notMuted)
