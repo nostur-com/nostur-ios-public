@@ -122,6 +122,7 @@ struct Kind1: View {
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
+                            .hCentered()
                     }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
