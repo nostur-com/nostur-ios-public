@@ -14,6 +14,7 @@ struct PostPreview: View {
     let nrPost:NRPost
     let sendNow:() -> Void
     @Binding var uploading:Bool
+    @State var postPreviewWidth:CGFloat? = nil
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
@@ -30,13 +31,15 @@ struct PostPreview: View {
                 .modifier(SizeModifier())
                 .onPreferenceChange(SizePreferenceKey.self) { size in
                     guard size.width > 0 else { return }
-                    dim.listWidth = size.width
+                    postPreviewWidth = size.width
                 }
-            AnyStatus()
-            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true)
-                .padding(10)
-                .disabled(true)
-                .environmentObject(dim)
+            if let postPreviewWidth {
+                AnyStatus()
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true)
+                    .padding(10)
+                    .disabled(true)
+                    .environmentObject(DIMENSIONS.embeddedDim(availableWidth: postPreviewWidth - 80.0))
+            }
             Spacer()
         }
         .toolbar {
