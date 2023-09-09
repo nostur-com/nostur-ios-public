@@ -25,6 +25,7 @@ class HotViewModel: ObservableObject {
     private var didLoad = false
     private static let POSTS_LIMIT = 250
     private var subscriptions = Set<AnyCancellable>()
+    private var prefetchedIds = Set<String>()
     
     // From DB we always fetch the maximum time frame selected
     private var agoTimestamp:Int {
@@ -108,7 +109,8 @@ class HotViewModel: ObservableObject {
                         guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
                         guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
                         
-                        nrPosts.append(NRPost(event: event, withParents: true))
+                        // withReplies for miniPFPs
+                        nrPosts.append(NRPost(event: event, withParents: true, withReplies: true))
                     }
                 }
                 
@@ -116,11 +118,31 @@ class HotViewModel: ObservableObject {
                     onComplete?()
                     self.hotPosts = nrPosts
                 }
+                
+                guard SettingsStore.shared.fetchCounts else { return }
+                for nrPost in nrPosts.prefix(5) {
+                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                }
+                let eventIds = nrPosts.prefix(5).map { $0.id }
+                L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+                fetchStuffForLastAddedNotes(ids: eventIds)
+                self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
             }
         }
     }
     
-    private func fetchFromRelays() {
+    public func prefetch(_ post:NRPost) {
+        guard SettingsStore.shared.fetchCounts else { return }
+        guard !self.prefetchedIds.contains(post.id) else { return }
+        guard let index = self.hotPosts.firstIndex(of: post) else { return }
+        guard index % 5 == 0 else { return }
+        
+        let nextIds = self.hotPosts.dropFirst(index - 1).prefix(5).map { $0.id }
+        L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
+        fetchStuffForLastAddedNotes(ids: nextIds)
+        self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
+    }
+    
     private func fetchFromRelays(_ onComplete: (() -> ())? = nil) {
         let reqTask = ReqTask(
             debounceTime: 0.5,

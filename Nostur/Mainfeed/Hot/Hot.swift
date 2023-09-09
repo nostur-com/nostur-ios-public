@@ -19,11 +19,11 @@ struct Hot: View {
     
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView {
-                if hotVM.hotPosts.isEmpty {
-                    CenteredProgressView()
-                }
-                else {
+            if hotVM.hotPosts.isEmpty {
+                CenteredProgressView()
+            }
+            else {
+                ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: 10) {
                         ForEach(hotVM.hotPosts) { post in
@@ -33,6 +33,10 @@ struct Hot: View {
                             .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                             .transaction { t in
                                 t.animation = nil
+                            }
+                            .onBecomingVisible {
+                                // SettingsStore.shared.fetchCounts should be true for below to work
+                                hotVM.prefetch(post)
                             }
                         }
                     }
@@ -56,8 +60,8 @@ struct Hot: View {
                 .refreshable {
                     await hotVM.refresh()
                 }
+                .padding(0)
             }
-            .padding(0)
         }
         .background(theme.listBackground)
         .onAppear {
@@ -85,5 +89,3 @@ struct Hot_Previews: PreviewProvider {
             .environmentObject(Theme.default)
     }
 }
-
-
