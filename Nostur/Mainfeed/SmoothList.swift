@@ -244,24 +244,31 @@ struct SmoothList: UIViewControllerRepresentable {
                     .map { pfpImageRequestFor($0) }
                 )
                 
-                
-                for imageUrl in item.imageUrls.filter({ $0.absoluteString.prefix(7) != "http://" })
-                {
-                    imageRequests.append(ImageRequest(url: imageUrl,
-                                                      processors: [.resize(width: imageWidth, upscale: false)],
-                                                      userInfo: [.scaleKey: UIScreen.main.scale])) // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                for element in item.contentElements {
+                    switch element {
+                    case .image(let mediaContent):
+                        if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                        // SHOULD BE SAME AS IN ContentRenderer:
+                        if let dimensions = mediaContent.dimensions {
+                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                                
+                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                            imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "prefetch"))
+                        }
+                        else {
+                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                            imageRequests.append(makeImageRequest(mediaContent.url, width: imageWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "prefetch (unscaled)"))
+                        }
+                    default:
+                        continue
+                    }
                 }
                 
-                imageRequests.append(contentsOf: item
-                    .parentPosts
-                    .reduce([ImageRequest](), { partialResult, item in
-                        return partialResult + item.imageUrls
-                            .filter { $0.absoluteString.prefix(7) != "http://" }
-                            .map { ImageRequest(url: $0,
-                                                processors: [.resize(width: imageWidth, upscale: false)],
-                                                userInfo: [.scaleKey: UIScreen.main.scale]) } // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                    })
-                )
+                // TODO: do parent posts if replies is enabled (PostOrThread)
+//                for parentPost in item.parentPosts {
+//                    // Same as above
+//                    // for element in parentPost.contentElements { }
+//                }
                 
                 for url in item.linkPreviewURLs.filter({ $0.absoluteString.prefix(7) != "http://" }) {
                     fetchMetaTags(url: url) { result in
@@ -304,24 +311,33 @@ struct SmoothList: UIViewControllerRepresentable {
                     .filter { $0.prefix(7) != "http://" }
                     .map { pfpImageRequestFor($0) }
                 )
+                
+                for element in item.contentElements {
+                    switch element {
+                    case .image(let mediaContent):
+                        if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                        // SHOULD BE SAME AS IN ContentRenderer:
+                        if let dimensions = mediaContent.dimensions {
+                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                                 
-                for imageUrl in item.imageUrls.filter( { $0.absoluteString.prefix(7) != "http://" })
-                {
-                    imageRequests.append(ImageRequest(url: imageUrl,
-                                                      processors: [.resize(width: imageWidth, upscale: false)],
-                                                      userInfo: [.scaleKey: UIScreen.main.scale])) // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                                
+                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                            imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "cancel prefetch"))
+                        }
+                        else {
+                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                            imageRequests.append(makeImageRequest(mediaContent.url, width: imageWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "cancel prefetch (unscaled)"))
+                        }
+                    default:
+                        continue
+                    }
                 }
                 
-                imageRequests.append(contentsOf: item
-                    .parentPosts
-                    .reduce([ImageRequest](), { partialResult, item in
-                        return partialResult + item.imageUrls
-                            .filter { $0.absoluteString.prefix(7) != "http://" }
-                            .map { ImageRequest(url: $0,
-                                                processors: [.resize(width: imageWidth, upscale: false)],
-                                                userInfo: [.scaleKey: UIScreen.main.scale]) } // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                    })
-                )
+                // TODO: do parent posts if replies is enabled (PostOrThread)
+//                for parentPost in item.parentPosts {
+//                    // Same as above
+//                    // for element in parentPost.contentElements { }
+//                }
             }
             if (!imageRequests.isEmpty) {
                 prefetcher.stopPrefetching(with: imageRequests)

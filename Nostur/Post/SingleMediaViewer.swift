@@ -18,6 +18,8 @@ struct SingleMediaViewer: View {
     var fullWidth:Bool = false
     var autoload = false
     var contentPadding:CGFloat = 0.0
+    var contentMode:ImageProcessingOptions.ContentMode = .aspectFit
+    var upscale = false
     
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
@@ -37,9 +39,7 @@ struct SingleMediaViewer: View {
             .background(theme.lineColor.opacity(0.2))
         }
         else if autoload || imagesShown {
-            LazyImage(request: ImageRequest(url: url,
-                                            processors: [.resize(width: imageWidth, upscale: false)],
-                                            userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+            LazyImage(request: makeImageRequest(url, width: imageWidth, height: height, contentMode: contentMode, upscale: upscale, label: "SingleMediaViewer")) { state in
                 if state.error != nil {
                     Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                         .centered()
@@ -54,6 +54,7 @@ struct SingleMediaViewer: View {
                         GIFImage(data: data)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
+                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
@@ -68,7 +69,7 @@ struct SingleMediaViewer: View {
                         GIFImage(data: data)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-//                            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
@@ -254,4 +255,18 @@ struct ImageProgressView: View {
             Text(percent, format: .percent)
         }
     }
+}
+
+// Use this function to make sure the image request is same in SingleImageViewer, SmoothList prefetch and SmoothList cancel prefetch.
+// else Nuke will prefetch wrong request
+func makeImageRequest(_ url:URL, width:CGFloat, height:CGFloat? = nil, contentMode:ImageProcessingOptions.ContentMode = .aspectFit, upscale:Bool = false, label:String = "") -> ImageRequest {
+//    L.og.debug("ImageRequest: \(url.absoluteString), \(width) x \(height ?? -1) \(label)")
+    return ImageRequest(url: url,
+                 processors: [
+                    height != nil
+                    ? .resize(size: CGSize(width: width, height: height!), contentMode: contentMode, upscale: upscale)
+                    : .resize(width: width, upscale: upscale)
+                 ],
+                userInfo: [.scaleKey: UIScreen.main.scale]
+    )
 }
