@@ -188,7 +188,7 @@ struct FooterFragmentView: View {
                                 nrPost.sendNow()
                             }
                             .buttonStyle(.borderless)
-                            .foregroundColor(Color.accentColor)
+                            .foregroundColor(theme.accent)
                             .opacity(nrPost.flags == "nsecbunker_unsigned" ? 0 : 1.0)
                             .padding(.trailing, 5)
                         }

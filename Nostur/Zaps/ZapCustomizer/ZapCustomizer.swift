@@ -130,7 +130,7 @@ struct ZapCustomizerSheet: View {
                         .foregroundColor(Color.white)
                         .fontWeight(.bold)
                         .padding(10)
-                        .background(Color.accentColor)
+                        .background(theme.accent)
                         .clipShape(RoundedRectangle(cornerRadius: 8.0))
                         .frame(maxWidth: 300)
                         .controlSize(.large)
