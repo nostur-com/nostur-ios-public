@@ -48,6 +48,7 @@
 		1F14BA762985984100EACCD5 /* ProfileRelaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */; };
 		1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14CC42299D1D7E00131B8D /* NosturStyles.swift */; };
 		1F14CC45299D432400131B8D /* AccountsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14CC44299D432300131B8D /* AccountsSheet.swift */; };
+		1F1580D32AAD11A100E5CCAA /* View+onBecomingVisible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1580D22AAD11A100E5CCAA /* View+onBecomingVisible.swift */; };
 		1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC482981718700D03FA9 /* BookmarksView.swift */; };
 		1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4A29819CAC00D03FA9 /* Cache.swift */; };
 		1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */; };
@@ -450,6 +451,7 @@
 		1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelaysView.swift; sourceTree = "<group>"; };
 		1F14CC42299D1D7E00131B8D /* NosturStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturStyles.swift; sourceTree = "<group>"; };
 		1F14CC44299D432300131B8D /* AccountsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsSheet.swift; sourceTree = "<group>"; };
+		1F1580D22AAD11A100E5CCAA /* View+onBecomingVisible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+onBecomingVisible.swift"; sourceTree = "<group>"; };
 		1F1ABC482981718700D03FA9 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		1F1ABC4A29819CAC00D03FA9 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsManager.swift; sourceTree = "<group>"; };
@@ -1071,6 +1073,7 @@
 				1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */,
 				1F00337029BEF141007CE040 /* View+withSheets.swift */,
 				1FA477222A780C0E00A4CCD3 /* Binding+not.swift */,
+				1F1580D22AAD11A100E5CCAA /* View+onBecomingVisible.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1865,6 +1868,7 @@
 				1FB130B129C0DB07004AC98D /* NoteRow.swift in Sources */,
 				1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */,
 				1FEC81A32A8FCB8B006FA50C /* DiscoverNostr.swift in Sources */,
+				1F1580D32AAD11A100E5CCAA /* View+onBecomingVisible.swift in Sources */,
 				1FCB52732A533027006D08DF /* Migration+CoreDataProperties.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
 				1F065A9D29A3E9E0003421D3 /* FetchThings.swift in Sources */,
