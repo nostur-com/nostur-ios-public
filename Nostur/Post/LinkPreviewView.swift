@@ -19,16 +19,16 @@ struct LinkPreviewView: View {
     
     var body: some View {
         Group {
-            HStack(alignment: .center, spacing:0) {
+            HStack(alignment: .center, spacing: 5) {
                 if let image = tags["image"], image.prefix(7) != "http://" {
                     LazyImage(
                         request: ImageRequest(url: URL(string:image),
-                                              processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
+                                              processors: [.resize(size: CGSize(width:DIMENSIONS.PREVIEW_HEIGHT * Self.aspect, height:DIMENSIONS.PREVIEW_HEIGHT), upscale: true)],
                         userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
                             if let image = state.image {
                                 image.interpolation(.none)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
+//                                    .resizable()
+//                                    .aspectRatio(contentMode: .fill)
                                     .frame(maxWidth: (DIMENSIONS.PREVIEW_HEIGHT * Self.aspect))
                             }
                     }

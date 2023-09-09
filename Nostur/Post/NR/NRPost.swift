@@ -222,7 +222,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var likesCount:Int64 = 0
     var zapsCount:Int64 = 0
     var zapTally:Int64 = 0
-    var imageUrls:[URL] = [] // SmoothList uses this for prefetching
     var linkPreviewURLs:[URL] = []
     var previewWeights:PreviewWeights?
     var plainTextOnly = false
@@ -445,7 +444,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         if let content = event.content {
             self.content = content
-            self.imageUrls = getImgUrlsFromContent(content)
         }
         
         if hasZapReceipt() {

@@ -14,7 +14,7 @@ class DIMENSIONS: ObservableObject {
     
     
     static public let MIN_MEDIA_ROW_HEIGHT = 200.0 // TODO: change based on device?
-    static public let MAX_MEDIA_ROW_HEIGHT = 500.0 // TODO: change based on device?
+    static public let MAX_MEDIA_ROW_HEIGHT = 600.0 // TODO: change based on device?
     
     static public let POST_MAX_ROW_HEIGHT:CGFloat = 1200.0
     
@@ -58,6 +58,17 @@ class DIMENSIONS: ObservableObject {
         return (listWidth - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
 //        return (listWidth - (Self.BOX_PADDING*2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
          //   -10    684               -10
+    }
+    
+    static func embeddedDim(availableWidth: CGFloat) -> DIMENSIONS {
+        let embeddedDim = DIMENSIONS()
+//        if isArticle {
+//            embeddedDim.listWidth = self.listWidth - (20 * 2)
+//        }
+//        else {
+            embeddedDim.listWidth = availableWidth
+//        }
+        return embeddedDim
     }
 }
 

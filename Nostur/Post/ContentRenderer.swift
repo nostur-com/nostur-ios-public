@@ -32,10 +32,12 @@ struct ContentRenderer: View { // VIEW things
                 switch contentElement {
                 case .nrPost(let nrPost):
                         EmbeddedPost(nrPost)
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
 //                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.vertical, 10)
                 case .nevent1(let identifier):
                         NEventView(identifier: identifier)
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                             .padding(.vertical, 10)
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
@@ -47,6 +49,7 @@ struct ContentRenderer: View { // VIEW things
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         QuoteById(id: noteHex)
+                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                             .padding(.vertical, 10)
                             .onTapGesture {
                                 guard !isDetail else { return }
@@ -58,6 +61,7 @@ struct ContentRenderer: View { // VIEW things
                     }
                 case .noteHex(let hex):
                     QuoteById(id: hex)
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                         .padding(.vertical, 10)
                         .onTapGesture {
                             guard !isDetail else { return }
@@ -152,7 +156,7 @@ struct ContentRenderer: View { // VIEW things
 //                            .debugDimensions()
                         #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -184,7 +188,6 @@ struct ContentRenderer: View { // VIEW things
 }
 
 struct QuoteById: View {
-    
     let id:String
     
     @FetchRequest
@@ -253,49 +256,6 @@ struct QuoteById: View {
     }
 }
 
-struct Kind1ById: View {
-    
-    let id:String
-    let hideFooter:Bool
-    let fullWidth:Bool
-    //    @ObservedObject var vm:EventVM // no vm want fr is not updating after receiving from websocket
-    
-    @FetchRequest
-    var events:FetchedResults<Event>
-    //
-    init(id:String, hideFooter:Bool = true, fullWidth:Bool = false) {
-        self.id = id
-        self.hideFooter = hideFooter
-        self.fullWidth = fullWidth
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "id == %@", id)
-        fr.fetchLimit = 1
-        _events = FetchRequest(fetchRequest: fr)
-    }
-    
-    var body: some View {
-        if let firstEvent = events.first {
-            let nrPost = NRPost(event: firstEvent) // TODO: ????
-            let _ = L.og.info("☠️☠️☠️☠️ NRPost() Kind1ById")
-            if fullWidth {
-                Kind1(nrPost: nrPost, hideFooter:hideFooter)
-            }
-            else {
-                Kind1Default(nrPost: nrPost, hideFooter:hideFooter)
-            }
-        }
-        else {
-            ProgressView()
-                .hCentered()
-                .frame(height: 350)
-                .onAppear {
-                    L.og.info("🟢 Fetching for Kind1ById \(id)")
-                    req(RM.getEvent(id: id))
-                }
-        }
-    }
-}
-
 
 struct ContentRenderer_Previews: PreviewProvider {
     
@@ -343,7 +303,6 @@ func scaledToFit(_ dimensions: CGSize, scale screenScale: Double, maxWidth: Doub
 
 
 struct EmbeddedPost: View {
-    
     let nrPost:NRPost
     @ObservedObject var prd:NRPost.PostRowDeletableAttributes
     
