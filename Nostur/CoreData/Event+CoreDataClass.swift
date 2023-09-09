@@ -51,7 +51,7 @@ public class Event: NSManagedObject, Identifiable {
         // Daily maintenance deletes old events, but these events don't have proper inverse relationship (not needed)
         // But core data seems to cry about it, and crashes when it tries to access a relation that has been deleted
         // Ignoring validation seems to fix it, hopefully it doesn't break other things...
-        let skipValidationFor = ["reactionTo", "replyToRoot", "firstQuote", "zappedFromRequest", "zappedEvent"]
+        let skipValidationFor = ["reactionTo", "replyToRoot", "firstQuote", "zapFromRequest", "zappedEvent"]
         if skipValidationFor.contains(key) {
             // Ignore validation for the relationship
             return
