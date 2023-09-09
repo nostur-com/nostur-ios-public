@@ -9,6 +9,7 @@ import SwiftUI
 
 struct Hot: View {
     @EnvironmentObject var theme:Theme
+    @ObservedObject var settings:SettingsStore = .shared
     @ObservedObject var hotVM:HotViewModel
     
     @AppStorage("selected_tab") var selectedTab = "Main"
@@ -27,10 +28,15 @@ struct Hot: View {
                     LazyVStack(spacing: 10) {
                         ForEach(hotVM.hotPosts) { post in
                             Box(nrPost: post) {
-                                PostOrThread(nrPost: post)
+                                PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                            }
+                            .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
+                            .transaction { t in
+                                t.animation = nil
                             }
                         }
                     }
+                    .padding(0)
                     .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
                         guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
                         withAnimation {
@@ -48,6 +54,7 @@ struct Hot: View {
                     }
                 }
             }
+            .padding(0)
         }
         .background(theme.listBackground)
         .onAppear {
