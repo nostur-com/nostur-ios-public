@@ -18,6 +18,7 @@ struct FeedSettings_Hashtags: View {
             .onDelete { index in
                 hashtags.remove(atOffsets: index)
             }
+            .listRowBackground(theme.background)
         }
         .listStyle(.plain)
         .onChange(of: hashtags) { newHashtags in

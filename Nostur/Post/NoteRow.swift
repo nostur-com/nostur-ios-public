@@ -92,6 +92,9 @@ struct NoteRow: View {
                                     QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
                                 }
                             }
+                            // Extra padding reposted long form, because normal repost/post has 10, but longform uses 20
+                            // so add the extra 10 here
+                            .padding(.horizontal, firstQuote.kind == 30023 ? 10 : 0)
                     }
                 }
                 else if let firstQuoteId = nrPost.firstQuoteId {
