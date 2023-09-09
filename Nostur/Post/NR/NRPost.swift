@@ -58,12 +58,21 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
+    class FooterAttributes: ObservableObject {
+        @Published var replyPFPs:[URL] = []
+        
+        init(replyPFPs:[URL] = []) {
+            self.replyPFPs = replyPFPs
+        }
+    }
+    
     // Seperate ObservableObjects for view performance optimization
     var postOrThreadAttributes: PostOrThreadAttributes
     var postRowDeletableAttributes: PostRowDeletableAttributes
     var noteRowAttributes: NoteRowAttributes
     var pfpAttributes: PFPAttributes
     var replyingToAttributes: ReplyingToAttributes
+    var footerAttributes: FooterAttributes
     
     let SPAM_LIMIT_P:Int = 50
  
@@ -271,6 +280,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: parentPosts)
         self._parentPosts = parentPosts
         self._replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
+        self.repliesCount = max(event.repliesCount, Int64(_replies.count))
+        
+        if withReplies {
+            self.footerAttributes = FooterAttributes(replyPFPs: Array(_replies.compactMap { reply in
+                return NosturState.shared.bgFollowingPFPs[reply.pubkey]
+            }
+            .uniqued(on: ({ $0 }))
+            .prefix(4)))
+        }
+        else {
+            self.footerAttributes = FooterAttributes()
+        }
+        
         self._repliesToRoot = []
         self.threadPostsCount = 1 + event.parentEvents.count
         self.isRepost = event.isRepost
@@ -285,7 +307,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005a"); isAwaiting = true
             }
             else {
-                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withRepliesCount: withRepliesCount))
+                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withReplies: withReplies, withRepliesCount: withRepliesCount))
             }
         } // why event.firstQuote_ doesn't work??
         else if let firstQuoteId = event.firstQuoteId, let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: DataProvider.shared().bg) {
@@ -297,7 +319,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005b"); isAwaiting = true
             }
             else {
-                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withRepliesCount: withRepliesCount))
+                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withReplies: withReplies, withRepliesCount: withRepliesCount))
             }
         }
         else if !isAwaiting && event.firstQuoteId != nil {
@@ -314,8 +336,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         else {
             self.replyingToAttributes = ReplyingToAttributes()
         }
-        
-        self.repliesCount = event.repliesCount
         self.mentionsCount = event.mentionsCount
         self.repostsCount = event.repostsCount
         self.zapsCount = event.zapsCount
@@ -870,7 +890,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .sink { firstQuote in
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let self = self else { return }
-                    let nrFirstQuote = NRPost(event: firstQuote, withReplyTo: true)
+                    let nrFirstQuote = NRPost(event: firstQuote, withReplyTo: true, withReplies: withReplies)
                     self.firstQuote = nrFirstQuote
                 }
             }
@@ -932,6 +952,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         return nrPost
                     }
                     
+                    let replyPFPs = nrReplies
+                        .compactMap { reply in
+                            return NosturState.shared.bgFollowingPFPs[reply.pubkey]
+                        }
+                        .uniqued(on: ({ $0 }))
+                        .prefix(4)
+                    
                     if (withGroupedReplies) {
                         self.groupRepliesToRoot.send(nrReplies)
                     }
@@ -941,6 +968,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                             self.objectWillChange.send()
                             self.repliesCount = Int64(nrReplies.count)
                             self.replies = nrReplies
+                            self.footerAttributes.objectWillChange.send()
+                            self.footerAttributes.replyPFPs = Array(replyPFPs)
                         }
                     }
                 }

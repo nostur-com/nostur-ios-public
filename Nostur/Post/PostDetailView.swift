@@ -505,7 +505,7 @@ struct DetailPost: View {
             
             DetailFooterFragment(nrPost: nrPost)
                 .padding(.top, 10)
-            FooterFragmentView(nrPost: nrPost)
+            FooterFragmentView(nrPost: nrPost, isDetail: true)
                 .padding(.vertical, 5)
                 .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
         }
