@@ -163,13 +163,13 @@ struct NosturVideoViewur: View {
                     if videoState == .cancelled {
                         Text("Cancelled")
                             .centered()
-                            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
                             .background(theme.lineColor.opacity(0.2))
                     }
                     else if videoState == .error {
                         Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
                             .centered()
-                            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                            .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
                             .background(theme.lineColor.opacity(0.2))
                     }
                 }
@@ -177,7 +177,7 @@ struct NosturVideoViewur: View {
             else if videoState == .initial {
                 Text("Tap to load video", comment:"Button to load a video in a post")
                     .centered()
-                    .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                    .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
                     .background(theme.lineColor.opacity(0.2))
                     .highPriorityGesture(
                         TapGesture()

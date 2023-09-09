@@ -62,7 +62,7 @@ struct FeedSettings: View {
                                 needsReload = true
                                 NosturState.shared.publishNewContactList()
                             })
-                            .frame(height: 200)
+                            .frame(height: 375)
                         }
                         if lvm.pubkey == nil, let list = list, !list.followingHashtags.isEmpty {
                             
@@ -72,7 +72,7 @@ struct FeedSettings: View {
                                 list.followingHashtags = Set(hashtags)
                                 needsReload = true
                             })
-                            .frame(height: 200)
+                            .frame(height: 375)
                         }
                     }
                 }
