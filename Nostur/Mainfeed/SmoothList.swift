@@ -248,8 +248,8 @@ struct SmoothList: UIViewControllerRepresentable {
                 for imageUrl in item.imageUrls.filter({ $0.absoluteString.prefix(7) != "http://" })
                 {
                     imageRequests.append(ImageRequest(url: imageUrl,
-                                                      processors: [.resize(width: imageWidth, upscale: true)],
-                                                      userInfo: [.scaleKey: UIScreen.main.scale]))
+                                                      processors: [.resize(width: imageWidth, upscale: false)],
+                                                      userInfo: [.scaleKey: UIScreen.main.scale])) // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
                 }
                 
                 imageRequests.append(contentsOf: item
@@ -258,8 +258,8 @@ struct SmoothList: UIViewControllerRepresentable {
                         return partialResult + item.imageUrls
                             .filter { $0.absoluteString.prefix(7) != "http://" }
                             .map { ImageRequest(url: $0,
-                                                processors: [.resize(width: imageWidth, upscale: true)],
-                                                userInfo: [.scaleKey: UIScreen.main.scale]) }
+                                                processors: [.resize(width: imageWidth, upscale: false)],
+                                                userInfo: [.scaleKey: UIScreen.main.scale]) } // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
                     })
                 )
                 
@@ -308,8 +308,8 @@ struct SmoothList: UIViewControllerRepresentable {
                 for imageUrl in item.imageUrls.filter( { $0.absoluteString.prefix(7) != "http://" })
                 {
                     imageRequests.append(ImageRequest(url: imageUrl,
-                                                      processors: [.resize(width: imageWidth, upscale: true)],
-                                                      userInfo: [.scaleKey: UIScreen.main.scale]))
+                                                      processors: [.resize(width: imageWidth, upscale: false)],
+                                                      userInfo: [.scaleKey: UIScreen.main.scale])) // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
                 }
                 
                 imageRequests.append(contentsOf: item
@@ -318,8 +318,8 @@ struct SmoothList: UIViewControllerRepresentable {
                         return partialResult + item.imageUrls
                             .filter { $0.absoluteString.prefix(7) != "http://" }
                             .map { ImageRequest(url: $0,
-                                                processors: [.resize(width: imageWidth, upscale: true)],
-                                                userInfo: [.scaleKey: UIScreen.main.scale]) }
+                                                processors: [.resize(width: imageWidth, upscale: false)],
+                                                userInfo: [.scaleKey: UIScreen.main.scale]) } // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
                     })
                 )
             }

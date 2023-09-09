@@ -55,6 +55,7 @@ extension View {
 
 struct DebugDimensions: ViewModifier {
     
+    var label:String? = nil
     @State var actualSize:CGSize? = nil
     
     func body(content: Content) -> some View {
@@ -64,11 +65,20 @@ struct DebugDimensions: ViewModifier {
             }
             .overlay(alignment: .bottomTrailing) {
                 if let actualSize {
-                    Text(actualSize.debugDescription)
-                        .font(.caption)
-                        .foregroundColor(.white)
-                        .background(.black)
-                        .fontWeight(.bold)
+                    VStack {
+                        if let label {
+                            Text(label)
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .background(.brown)
+                                .fontWeight(.bold)
+                        }
+                        Text(actualSize.debugDescription)
+                            .font(.caption)
+                            .foregroundColor(.white)
+                            .background(.black)
+                            .fontWeight(.bold)
+                    }
                 }
             }
     }
@@ -84,7 +94,7 @@ extension View {
     func hCentered() -> some View {
         modifier(HorizontallyCenteredView())
     }
-    func debugDimensions() -> some View {
-        modifier(DebugDimensions())
+    func debugDimensions(_ label:String? = nil) -> some View {
+        modifier(DebugDimensions(label: label))
     }
 }
