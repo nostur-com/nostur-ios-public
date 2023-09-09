@@ -53,6 +53,9 @@ struct Hot: View {
                         hotVM.reload()
                     }
                 }
+                .refreshable {
+                    await hotVM.refresh()
+                }
             }
             .padding(0)
         }

@@ -77,7 +77,7 @@ class HotViewModel: ObservableObject {
             .store(in: &self.subscriptions)
     }
 
-    private func fetchFromDB() {
+    private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
         let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind == 7 AND pubkey IN %@", agoTimestamp, follows)
@@ -113,6 +113,7 @@ class HotViewModel: ObservableObject {
                 }
                 
                 DispatchQueue.main.async {
+                    onComplete?()
                     self.hotPosts = nrPosts
                 }
             }
@@ -120,6 +121,7 @@ class HotViewModel: ObservableObject {
     }
     
     private func fetchFromRelays() {
+    private func fetchFromRelays(_ onComplete: (() -> ())? = nil) {
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "HOT",
@@ -144,12 +146,12 @@ class HotViewModel: ObservableObject {
                 }
             },
             processResponseCommand: { taskId, relayMessage in
-                self.fetchFromDB()
+                self.fetchFromDB(onComplete)
                 self.backlog.clear()
                 L.og.info("Hot feed: ready to process relay response")
             },
             timeoutCommand: { taskId in
-                self.fetchFromDB()
+                self.fetchFromDB(onComplete)
                 self.backlog.clear()
                 L.og.info("Hot feed: timeout ")
             })
@@ -172,6 +174,20 @@ class HotViewModel: ObservableObject {
         self.follows = NosturState.shared.followingPublicKeys
         self.hotPosts = []
         self.fetchFromRelays()
+    }
+    
+    // pull to refresh
+    public func refresh() async {
+        self.lastFetch = nil
+        self.posts = [PostID: LikedBy<Pubkey>]()
+        self.backlog.clear()
+        self.follows = NosturState.shared.followingPublicKeys
+        
+        await withCheckedContinuation { continuation in
+            self.fetchFromRelays {
+                continuation.resume()
+            }
+        }
     }
     
     public var shouldReload: Bool {
