@@ -38,7 +38,9 @@ struct DetailPane: View {
                                     let t = tm.tabs[index]
                                     tm.selected = t
                                     if let nrPost = tm.selected?.nrPost {
-                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onSelect")
+                                        bg().perform {
+                                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onSelect")
+                                        }
                                         if nrPost.kind == 30023 {
                                             req(RM.getPREventReferences(aTag: nrPost.aTag, subscriptionId: "REALTIME-DETAIL"))
                                         }
@@ -66,7 +68,9 @@ struct DetailPane: View {
                                             }
                                         }
                                         if let nrPost = tm.selected?.nrPost {
-                                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onClose")
+                                            bg().perform {
+                                                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onClose")
+                                            }
                                             if nrPost.kind == 30023 {
                                                 req(RM.getPREventReferences(aTag: nrPost.aTag, subscriptionId: "REALTIME-DETAIL"))
                                             }
