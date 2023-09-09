@@ -9,11 +9,18 @@ import SwiftUI
 
 struct FooterFragmentView: View {
     @EnvironmentObject var theme:Theme
-    @ObservedObject var nrPost:NRPost
+    @ObservedObject var nrPost:NRPost // TODO: Remove @ObservedObject from nrPost and scope to footerAttributes
+    @ObservedObject var footerAttributes:NRPost.FooterAttributes
     var isDetail = false
     @State var unpublishLikeId:UUID? = nil
     var relaysCount:Int {
         nrPost.relays.split(separator: " ").count
+    }
+    
+    init(nrPost: NRPost, isDetail: Bool = false) {
+        self.nrPost = nrPost
+        self.isDetail = isDetail
+        self.footerAttributes = nrPost.footerAttributes
     }
     
     var body: some View {
@@ -25,6 +32,16 @@ struct FooterFragmentView: View {
                     AnimatedNumber(number: nrPost.repliesCount)
                         .equatable()
                         .opacity(nrPost.repliesCount == 0 ? 0 : 1)
+                    if !isDetail && !footerAttributes.replyPFPs.isEmpty {
+                        ZStack(alignment:.leading) {
+                            ForEach(footerAttributes.replyPFPs.indices, id:\.self) { index in
+                                MiniPFP(pictureUrl: footerAttributes.replyPFPs[index])
+                                    .id(index)
+                                    .zIndex(-Double(index))
+                                    .offset(x:Double(0 + (15*index)))
+                            }
+                        }
+                    }
                 }
                 .padding([.vertical, .trailing], 5)
                 .contentShape(Rectangle())

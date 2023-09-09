@@ -308,7 +308,10 @@ class LVM: NSObject, ObservableObject {
                     continue
                 } // Skip if the post is already on screen
 
-                let newNRPostLeaf = NRPost(event: event, withParents: hideReplies ? false : true, withRepliesCount: true)
+                // If we are not hiding replies, we render leafs + parents --> withParents: true
+                //     and we don't load replies (withReplies) because any reply we follow should already be its own leaf (PostOrThread)
+                // If we are hiding replies (view), we show mini pfp replies instead, for that we need reply info: withReplies: true
+                let newNRPostLeaf = NRPost(event: event, withParents: !hideReplies, withReplies: hideReplies, withRepliesCount: true)
                 transformedIds.insert(newNRPostLeaf.id)
                 newNRPostLeafs.append(newNRPostLeaf)
             }
@@ -1121,7 +1124,10 @@ extension LVM {
                     guard let self = self else { return }
                     guard !self.leafIdsOnScreen.contains(event.id) else { return }
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.showOwnNewPostsImmediately")
-                    let newNRPostLeaf = NRPost(event: event, withParents: true, withRepliesCount: true)
+                    // If we are not hiding replies, we render leafs + parents --> withParents: true
+                    //     and we don't load replies (withReplies) because any reply we follow should already be its own leaf (PostOrThread)
+                    // If we are hiding replies (view), we show mini pfp replies instead, for that we need reply info: withReplies: true
+                    let newNRPostLeaf = NRPost(event: event, withParents: !hideReplies, withReplies: hideReplies, withRepliesCount: true)
                     let cancellationId = event.cancellationId
                     DispatchQueue.main.async {
                         newNRPostLeaf.cancellationId = cancellationId

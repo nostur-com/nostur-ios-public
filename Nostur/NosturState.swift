@@ -54,6 +54,24 @@ final class NosturState : ObservableObject {
         }
     }
     
+    var bgFollowingPFPs:[String: URL] = [:]
+    private func loadFollowingPFPs() {
+        guard let account = account else { return }
+        
+        let followingPFPs:[String: URL] = Dictionary(grouping: account.follows_) { contact in
+            contact.pubkey
+        }
+        .compactMapValues({ contacts in
+            guard let picture = contacts.first?.picture else { return nil }
+            guard picture.prefix(7) != "http://" else { return nil }
+            return URL(string: picture)
+        })
+        
+        bg().perform {
+            self.bgFollowingPFPs = followingPFPs
+        }
+    }
+    
     var bgFollowingPublicKeys:Set<String> = []
     
     var explorePubkeys:Set<String> {
@@ -124,6 +142,7 @@ final class NosturState : ObservableObject {
             activeAccountPublicKey = account.publicKey
             // load state for new account
             followingPublicKeys = _followingPublicKeys
+            self.loadFollowingPFPs()
             lastNotificationReceivedAt = account.lastNotificationReceivedAt
             lastProfileReceivedAt = account.lastProfileReceivedAt
             
@@ -250,6 +269,7 @@ final class NosturState : ObservableObject {
             account.addToFollows(contact)
         }
         followingPublicKeys = _followingPublicKeys
+        self.loadFollowingPFPs()
         sendNotification(.followersChanged, account.followingPublicKeys)
         sendNotification(.followingAdded, pubkey)
         self.publishNewContactList()
@@ -262,6 +282,7 @@ final class NosturState : ObservableObject {
         account.addToFollows(contact)
         
         followingPublicKeys = _followingPublicKeys
+        self.loadFollowingPFPs()
         sendNotification(.followersChanged, account.followingPublicKeys)
         sendNotification(.followingAdded, contact.pubkey)
         self.publishNewContactList()
@@ -275,6 +296,7 @@ final class NosturState : ObservableObject {
 //        self.objectWillChange.send()
         account.removeFromFollows(contact)
         followingPublicKeys = _followingPublicKeys
+        self.loadFollowingPFPs()
         sendNotification(.followersChanged, account.followingPublicKeys)
         self.publishNewContactList()
     }
@@ -287,6 +309,7 @@ final class NosturState : ObservableObject {
 //        self.objectWillChange.send()
         account.removeFromFollows(contact)
         followingPublicKeys = _followingPublicKeys
+        self.loadFollowingPFPs()
         sendNotification(.followersChanged, account.followingPublicKeys)
         self.publishNewContactList()
     }

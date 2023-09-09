@@ -294,3 +294,46 @@ struct ProfilePicView_Previews: PreviewProvider {
         }
     }
 }
+
+
+
+struct MiniPFP: View {
+    var pictureUrl:URL
+    var size:CGFloat = 20.0
+    
+    var body: some View {
+        LazyImage(
+            request:
+                ImageRequest(
+                    url: pictureUrl,
+                    processors: [
+                        .resize(size: CGSize(width: size, height: size),
+                                unit: .points,
+                                contentMode: .aspectFill,
+                                crop: true,
+                                upscale: true)],
+                    userInfo: [.scaleKey: UIScreen.main.scale])
+        ) { state in
+            if let image = state.image {
+                if state.imageContainer?.type == .gif {
+                    image
+                        .interpolation(.none)
+                        .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
+                        .aspectRatio(contentMode: .fill)
+                }
+                else {
+                    image.interpolation(.none)
+                }
+            }
+            else { Color.systemBackground }
+        }
+        .pipeline(ImageProcessing.shared.pfp)
+        .frame(width: size, height: size)
+        .cornerRadius(size/2)
+        .background(
+            Circle()
+                .strokeBorder(.regularMaterial, lineWidth: 5)
+                .background(Circle().fill(Color.systemBackground))
+        )
+    }
+}
