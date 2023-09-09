@@ -89,23 +89,35 @@ struct ContentRenderer: View { // VIEW things
                     if let dimensions = mediaContent.dimensions {
                         // for video, dimensions are points not pixels? Scale set to 1.0 always
                         let scaledDimensions = Nostur.scaledToFit(dimensions, scale: 1.0, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-//                        Text("Available width X1:\(availableWidth)")
+                        
+                        #if DEBUG
+//                        Text(".video.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
+//                            .frame(maxWidth: .infinity)
+//                            .background(.red)
+//                            .foregroundColor(.white)
+//                            .debugDimensions()
+                        #endif
+                        
                         NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
 //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-//                            .readSize { size in
-//                                print("Available width X1 readSize \(scaledDimensions) >> \(size) - \(mediaContent.url)")
-//                            }
+                            .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                     else {
-//                        Text("Available width X2:\(availableWidth)")
+
+                        #if DEBUG
+//                        Text(".video.availableWidth: \(Int(availableWidth))")
+//                            .frame(maxWidth: .infinity)
+//                            .background(.red)
+//                            .foregroundColor(.white)
+//                            .debugDimensions()
+                        #endif
+                        
                         NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
 //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-//                            .readSize { size in
-//                                print("Available width readSize X2 \(size) - \(mediaContent.url)")
-//                            }
+                            .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
@@ -113,23 +125,34 @@ struct ContentRenderer: View { // VIEW things
                 case .image(let mediaContent):
                     if let dimensions = mediaContent.dimensions {
                         let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-//                        Text("Available width Y1:\(availableWidth)")
+
+                        #if DEBUG
+//                        Text(".image.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
+//                            .frame(maxWidth: .infinity)
+//                            .background(.red)
+//                            .foregroundColor(.white)
+//                            .debugDimensions()
+                        #endif
+                        
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
 //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-//                            .readSize { size in
-//                                print("Available width Y1 readSize \(size) - \(mediaContent.url)")
-//                            }
+//                            .clipped()
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                     else {
-//                        Text("Available width Y2:\(availableWidth)")
+
+                        #if DEBUG
+//                        Text(".image.availableWidth: \(Int(availableWidth))")
+//                            .frame(maxWidth: .infinity)
+//                            .background(.red)
+//                            .foregroundColor(.white)
+//                            .debugDimensions()
+                        #endif
+                        
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
-//                            .readSize { size in
-//                                print("Available width Y2 readSize \(size) - \(mediaContent.url)")
-//                            }
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)

@@ -81,7 +81,7 @@ class NukeInlineImageProvider: InlineImageProvider {
         let imageWidth = DIMENSIONS.shared.listWidth
         
         let imageRequest = await ImageRequest(url: url,
-                                          processors: [.resize(width: imageWidth, upscale: true)],
+                                          processors: [.resize(width: imageWidth, upscale: false)],
                                           userInfo: [.scaleKey: UIScreen.main.scale])
         
         let task = ImageProcessing.shared.content.imageTask(with: imageRequest)

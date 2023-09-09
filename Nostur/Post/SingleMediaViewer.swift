@@ -21,7 +21,6 @@ struct SingleMediaViewer: View {
     
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
-//    @State var actualSize:CGSize? = nil
 
     var body: some View {
         if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
@@ -39,7 +38,7 @@ struct SingleMediaViewer: View {
         }
         else if autoload || imagesShown {
             LazyImage(request: ImageRequest(url: url,
-                                            processors: [.resize(width: imageWidth, upscale: true)],
+                                            processors: [.resize(width: imageWidth, upscale: false)],
                                             userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                 if state.error != nil {
                     Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
@@ -60,59 +59,30 @@ struct SingleMediaViewer: View {
                             }
                             .padding(.horizontal, -contentPadding)
                             .transaction { t in t.animation = nil }
-//                                .readSize { size in
-//                                    actualSize = size
-//                                }
-//                                .overlay(alignment: .bottomTrailing) {
-//                                    if let actualSize = actualSize {
-//                                        Text("Size: \(actualSize.debugDescription)")
-//                                            .background(.black)
-//                                            .foregroundColor(.white)
-//                                            .fontWeight(.bold)
-//                                    }
-//                                }
+#if DEBUG
+//                            .opacity(0.25)
+//                            .debugDimensions("GIFImage.fullWidth")
+#endif
                     }
                     else {
                         GIFImage(data: data)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-//                                .readSize { size in
-//                                    actualSize = size
-//                                }
-//                                .overlay(alignment: .bottomTrailing) {
-//                                    if let actualSize = actualSize {
-//                                        Text("Size: \(actualSize.debugDescription)")
-//                                            .background(.black)
-//                                            .foregroundColor(.white)
-//                                            .fontWeight(.bold)
-//                                    }
-//                                }
-                            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
                             .transaction { t in t.animation = nil }
+#if DEBUG
+//                            .opacity(0.25)
+//                            .debugDimensions("GIFImage")
+#endif
                     }
                 }
                 else if let image = state.image {
                     if fullWidth {
                         image
                             .interpolation(.none)
-                            .resizable()
-                            .scaledToFit()
-//                                    .readSize { size in
-//                                        actualSize = size
-//                                    }
-//                                    .overlay(alignment: .bottomTrailing) {
-//                                        if let actualSize = actualSize {
-//                                            Text("Size: \(actualSize.debugDescription)")
-//                                                .background(.black)
-//                                                .foregroundColor(.white)
-//                                                .fontWeight(.bold)
-//                                        }
-//                                    }
-                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
-//                            .fixedSize(horizontal: false, vertical: true)
                             .padding(.horizontal, -contentPadding)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
@@ -126,14 +96,14 @@ struct SingleMediaViewer: View {
                                     }
                                 }
                             }
+#if DEBUG
+//                            .opacity(0.25)
+//                            .debugDimensions("image.fullWidth")
+#endif
                     }
                     else {
                         image
                             .interpolation(.none)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-//                            .fixedSize(horizontal: false, vertical: true)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
@@ -146,6 +116,10 @@ struct SingleMediaViewer: View {
                                     }
                                 }
                             }
+#if DEBUG
+//                            .opacity(0.25)
+//                            .debugDimensions("image")
+#endif
                     }
                 }
                 else if state.isLoading { // does this conflict with showing preview images??
@@ -160,6 +134,10 @@ struct SingleMediaViewer: View {
                     }
                     .centered()
                     .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+#if DEBUG
+//                    .opacity(0.25)
+//                    .debugDimensions("loading")
+#endif
                 }
                 else {
                     Color(.secondarySystemBackground)

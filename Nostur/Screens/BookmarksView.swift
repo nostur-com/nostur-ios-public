@@ -50,7 +50,7 @@ struct BookmarksView: View {
                 LazyVStack(spacing: 10) {
                     ForEach(vBookmarks) { vBookmark in
                         Box(nrPost: vBookmark) {
-                            PostRowDeletable(nrPost: vBookmark, missingReplyTo: true)
+                            PostRowDeletable(nrPost: vBookmark, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                         }
 //                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
 //                        .fixedSize(horizontal: false, vertical: true)

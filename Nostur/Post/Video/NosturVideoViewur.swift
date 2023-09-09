@@ -33,7 +33,6 @@ struct NosturVideoViewur: View {
     @State var isMuted = false
     @State var didStart = false
     @State var isStream = false
-//    @State var actualSize:CGSize? = nil
     
     static let aspect:CGFloat = 16/9
     
@@ -103,17 +102,6 @@ struct NosturVideoViewur: View {
             else if videoShown {
                 if let asset, let scaledDimensions, let videoLength = videoLength {
                     VideoViewurRepresentable(asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
-//                        .readSize { size in
-//                            actualSize = size
-//                        }
-//                        .overlay(alignment: .bottomTrailing) {
-//                            if let actualSize = actualSize {
-//                                Text("Size: \(actualSize.debugDescription)")
-//                                    .background(.black)
-//                                    .foregroundColor(.white)
-//                                    .fontWeight(.bold)
-//                            }
-//                        }
                         .padding(.horizontal, fullWidth ? -contentPadding : 0)
                         .overlay(alignment:.bottomLeading) {
                             if !didStart {
@@ -152,6 +140,10 @@ struct NosturVideoViewur: View {
                         }
                     .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                     .transaction { t in t.animation = nil }
+#if DEBUG
+//                    .opacity(0.25)
+//                    .debugDimensions("videoShown")
+#endif
                 }
                 else if videoState == .loading {
                     HStack(spacing: 5) {

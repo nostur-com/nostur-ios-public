@@ -68,7 +68,7 @@ struct Search: View {
                     }
                     ForEach(nrPosts.prefix(75)) { nrPost in
                         Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                         }
                         .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                     }

@@ -54,7 +54,7 @@ struct NotificationsPosts: View {
                             .id(pNotification.id)
                     case .POST:
                         Box(nrPost: pNotification.post!) {
-                            PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true)
+                            PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                         }
                         .id(pNotification.id)
                     }
