@@ -63,8 +63,9 @@ struct Hot: View {
         }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in
             guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
+            guard hotVM.shouldReload else { return }
             hotVM.hotPosts = []
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { // Reconnect delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { // Reconnect delay
                 hotVM.load()
             }
         }

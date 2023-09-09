@@ -174,7 +174,7 @@ class HotViewModel: ObservableObject {
         self.fetchFromRelays()
     }
     
-    private var shouldReload: Bool {
+    public var shouldReload: Bool {
         // Should only refetch since last fetch, if last fetch is more than 10 mins ago
         guard let lastFetch else { return true }
 
