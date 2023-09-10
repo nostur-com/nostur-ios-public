@@ -25,6 +25,7 @@ struct FollowingAndExplore: View {
     @State private var selectedList:NosturList?
     @StateObject private var exploreVM:LVM = LVMManager.shared.exploreLVM()
     @StateObject private var hotVM = HotViewModel()
+    @StateObject private var articlesVM = ArticlesFeedViewModel()
     
     @State var tabsOffsetY:CGFloat = 0.0
     
@@ -62,6 +63,15 @@ struct FollowingAndExplore: View {
                             title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
                             secondaryText: String(format: "%ih", hotVM.ago),
                             selected: selectedSubTab == "Hot")
+                        Spacer()
+                    }
+                    
+                    if account.follows_.count > 10 {
+                        TabButton(
+                            action: { selectedSubTab = "Articles" },
+                            title: String(localized:"Articles", comment:"Tab title for feed of articles"),
+//                            secondaryText: articlesVM.agoText,
+                            selected: selectedSubTab == "Articles")
                         Spacer()
                     }
                     
@@ -137,7 +147,12 @@ struct FollowingAndExplore: View {
                 if account.follows_.count > 10 {
                     Hot(hotVM: hotVM)
                         .opacity(selectedSubTab == "Hot" ? 1 : 0)
+                    
+                    ArticlesFeed(vm: articlesVM)
+                        .opacity(selectedSubTab == "Articles" ? 1 : 0)
                 }
+                
+                
             }
             
         }
@@ -154,6 +169,8 @@ struct FollowingAndExplore: View {
                     FeedSettings(lvm: exploreVM, showFeedSettings: $showFeedSettings)
                 case "Hot":
                     HotFeedSettings(hotVM: hotVM, showFeedSettings: $showFeedSettings)
+                case "Articles":
+                    ArticleFeedSettings(vm: articlesVM, showFeedSettings: $showFeedSettings)
                 default:
                     EmptyView()
                 }
