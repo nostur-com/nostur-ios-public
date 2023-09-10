@@ -71,7 +71,11 @@ class RelayMessage {
         }
         
         guard text.prefix(9) != ###"["NOTICE""### else {
-            return RelayMessage(relays:relay, type: .NOTICE, message: text)
+            let decoder = JSONDecoder()
+            guard let notice = try? decoder.decode(NMessage.self, from: dataFromString) else {
+                throw error.FAILED_TO_PARSE
+            } // same format as eose, but instead of subscription id it will be the notice text. do proper later
+            return RelayMessage(relays:relay, type: .NOTICE, message: notice.subscription)
         }
         
         guard text.prefix(5) != ###"["OK""### else {
