@@ -107,7 +107,6 @@ struct FullImageViewer: View {
                     else if let image = state.image {
                         image
                             .resizable()
-                            .resizable()
                             .scaledToFit()
                             .scaleEffect(scale)
                             .offset(position)
@@ -130,10 +129,10 @@ struct FullImageViewer: View {
                                 .padding(10)
                         }
                         .centered()
-                        .background(theme.lineColor)
+                        .background(theme.background)
                     }
                     else {
-                        theme.lineColor.opacity(0.2)
+                        theme.background
                     }
                 }
                 .pipeline(ImageProcessing.shared.content)
