@@ -261,6 +261,7 @@ struct Settings: View {
                             }
                         }
                         .presentationBackground(theme.background)
+                        .environmentObject(theme)
                     }
                 }
                 .listRowBackground(theme.background)
@@ -449,6 +450,7 @@ struct Settings: View {
         }
         .sheet(isPresented: $showDefaultZapAmountSheet) {
             SettingsDefaultZapAmount()
+                .environmentObject(theme)
                 .presentationBackground(theme.background)
         }
         .scrollContentBackground(.hidden)
@@ -478,6 +480,7 @@ struct Settings: View {
                 DeleteAccountSheet()
                     .environmentObject(ns)
             }
+            .environmentObject(theme)
             .presentationBackground(theme.background)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
@@ -485,6 +488,7 @@ struct Settings: View {
                 AlbyNWCConnectSheet()
                     .environmentObject(ns)
             }
+            .environmentObject(theme)
             .presentationBackground(theme.background)
         }
         .sheet(isPresented: $customNWCsheetShown) {
@@ -492,6 +496,7 @@ struct Settings: View {
                 CustomNWCConnectSheet()
                     .environmentObject(ns)
             }
+            .environmentObject(theme)
             .presentationBackground(theme.background)
         }
     }

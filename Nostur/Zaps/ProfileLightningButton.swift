@@ -42,6 +42,7 @@ struct ProfileLightningButton: View {
         }
         .sheet(isPresented: $payAmountSelectorShown) {
             PaymentAmountSelector(paymentInfo: paymentInfo!)
+                .environmentObject(theme)
                 .presentationBackground(theme.background)
         }
         .opacity((contact?.anyLud ?? false) ? 1 : 0)
