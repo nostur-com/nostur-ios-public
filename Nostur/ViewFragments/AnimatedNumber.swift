@@ -6,36 +6,28 @@
 //
 
 import SwiftUI
+import Combine
 
-struct AnimatedNumber: View, Equatable {
+struct AnimatedNumber: View {
     
-    static func == (lhs: AnimatedNumber, rhs: AnimatedNumber) -> Bool {
-        lhs.number == rhs.number
-    }
+    let numberHeight: CGFloat = 18.0
+    let number: Int
+    @State private var currentNumber = 0
+    @State private var nextNumber = 0
+    @State private var offset: CGFloat = 0.0
+    @State private var cancellables = Set<AnyCancellable>()
     
-    
-    let numberHeight = 18.0
-    let number:Int
-    @State var currentNumber = 0
-    @State var nextNumber = 0
-    @State var offset = 0.0
-    @State var timer:Timer?
-    
-    init(number:Int) {
-        self.number = number
-    }
-    
-    init(number:Int64) {
+    init<T: BinaryInteger>(number: T) {
         self.number = Int(number)
     }
     
     var body: some View {
-        Text(verbatim: String(currentNumber))
-            .overlay(alignment:.bottom) {
-                Text(verbatim: String(nextNumber))
-                    .offset(y:numberHeight)
+        Text(String(currentNumber))
+            .overlay(alignment: .bottom) {
+                Text(String(nextNumber))
+                    .offset(y: numberHeight)
             }
-            .offset(y:offset)
+            .offset(y: offset)
             .frame(height: numberHeight)
             .clipped()
             .onAppear {
@@ -45,16 +37,25 @@ struct AnimatedNumber: View, Equatable {
                 guard currentNumber != newNumber else { return }
                 nextNumber = newNumber
                 
-                timer?.invalidate()
-                timer = Timer(timeInterval: 0.35, repeats: false, block: { timer in
-                    currentNumber = nextNumber
-                    offset = 0.0
-                })
-                timer?.fire()
+                // Cancel previous timer
+                cancellables.removeAll()
+                
+                // Start new timer
+                Just(())
+                    .delay(for: .seconds(0.35), scheduler: RunLoop.main)
+                    .sink { _ in
+                        currentNumber = nextNumber
+                        offset = 0.0
+                    }
+                    .store(in: &cancellables)
                 
                 withAnimation(.linear(duration: 0.3)) {
                     offset -= numberHeight
                 }
+            }
+            .onDisappear {
+                // Cancel all subscriptions (timers in this case)
+                cancellables.removeAll()
             }
     }
 }
