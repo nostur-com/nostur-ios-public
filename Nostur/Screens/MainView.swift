@@ -36,10 +36,15 @@ struct MainView: View {
                             .padding([.trailing], 25)
                     }
                     .overlay(alignment: .bottom) {
-                        if settings.statusBubble {
-                            ProcessingStatus()
-                                .opacity(0.85)
-                                .padding(.bottom, 10)
+                        VStack {
+                            #if DEBUG
+                            AnyStatus(filter: "RELAY_NOTICE")
+                            #endif
+                            if settings.statusBubble {
+                                ProcessingStatus()
+                                    .opacity(0.85)
+                                    .padding(.bottom, 10)
+                            }
                         }
                     }
                     .sheet(isPresented: $showingNewNote) {

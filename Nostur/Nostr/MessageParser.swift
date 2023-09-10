@@ -50,6 +50,11 @@ class MessageParser {
                     }
                 case .NOTICE:
                     L.sockets.notice("\(relayUrl): \(message.message)")
+                    #if DEBUG
+                        DispatchQueue.main.async {
+                            sendNotification(.anyStatus, (String(format:"Notice: %@: %@", relayUrl.replacingOccurrences(of: "wss://", with: ""), message.message), "RELAY_NOTICE"))
+                        }
+                    #endif
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }

@@ -47,7 +47,7 @@ struct AnyStatus: View {
         self.dismissTask = Task {
             // dismiss message after 2.1 seconds
             do {
-                try await Task.sleep(nanoseconds: 2_100_000_000)
+                try await Task.sleep(nanoseconds: 5_100_000_000)
                 withAnimation {
                     self.message = nil
                 }
