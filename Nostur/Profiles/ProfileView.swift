@@ -297,6 +297,7 @@ struct ProfileView: View {
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!, isFollowing: ns.isFollowing(contact.pubkey))
+                .environmentObject(theme)
         }
         .task {
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
