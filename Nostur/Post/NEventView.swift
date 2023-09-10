@@ -70,7 +70,7 @@ struct NEventView: View {
                 }
                 else if let event = events.first {
                     CenteredProgressView()
-                        .frame(height: 350)
+                        .frame(height: 150)
                         .task {
                             DataProvider.shared().bg.perform {
                                 let bgEvent = DataProvider.shared().bg.object(with: event.objectID) as! Event
@@ -84,7 +84,7 @@ struct NEventView: View {
                 }
                 else {
                     CenteredProgressView()
-                        .frame(height: 350)
+                        .frame(height: 150)
                         .onAppear {
                             guard let eventId = identifier.eventId else {
                                 L.og.info("\(identifier.bech32string) has no eventId")

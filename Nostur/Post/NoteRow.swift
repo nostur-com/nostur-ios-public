@@ -57,6 +57,7 @@ struct NoteRow: View {
                 }
                 .padding(.leading, 30)
                 .frame(idealHeight: 20.0)
+                .transaction { t in t.animation = nil }
 //                .fixedSize(horizontal: false, vertical: true)
 
                 

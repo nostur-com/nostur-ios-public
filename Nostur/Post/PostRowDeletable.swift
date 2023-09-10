@@ -43,6 +43,7 @@ struct PostRowDeletable: View {
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
             )
             .hCentered()
+            .transaction { t in t.animation = nil }
         }
         else if postRowDeletableAttributes.deletedById == nil {
             NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped)

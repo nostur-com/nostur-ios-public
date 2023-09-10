@@ -32,23 +32,31 @@ struct ContentRenderer: View { // VIEW things
                 switch contentElement {
                 case .nrPost(let nrPost):
                         EmbeddedPost(nrPost)
+                        .frame(minHeight: 150)
+                        .transaction { t in t.animation = nil }
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
 //                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.vertical, 10)
                 case .nevent1(let identifier):
                         NEventView(identifier: identifier)
+                        .frame(minHeight: 150)
+                        .transaction { t in t.animation = nil }
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                             .padding(.vertical, 10)
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey)
+                            .transaction { t in t.animation = nil }
                             .padding(.vertical, 10)
                     }
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
+                        .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         QuoteById(id: noteHex)
+                            .frame(minHeight: 150)
+                            .transaction { t in t.animation = nil }
                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                             .padding(.vertical, 10)
                             .onTapGesture {
@@ -61,6 +69,8 @@ struct ContentRenderer: View { // VIEW things
                     }
                 case .noteHex(let hex):
                     QuoteById(id: hex)
+                        .frame(minHeight: 150)
+                        .transaction { t in t.animation = nil }
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                         .padding(.vertical, 10)
                         .onTapGesture {
@@ -225,7 +235,7 @@ struct QuoteById: View {
                 }
                 else {
                     Color.clear
-                        .frame(height: 350)
+                        .frame(height: 150)
                         .task {
                             DataProvider.shared().bg.perform {
                                 if let eventBG = event.toBG() {
@@ -242,7 +252,7 @@ struct QuoteById: View {
             else {
                 ProgressView()
                     .hCentered()
-                    .frame(height: 350)
+                    .frame(height: 150)
                     .onAppear {
                         L.og.info("🟢 Fetching for QuotedNoteFragmentView \(id)")
                         req(RM.getEventAndReferences(id: id))

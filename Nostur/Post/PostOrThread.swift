@@ -47,9 +47,9 @@ struct PostOrThread: View {
 //                    }
             }
             .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-            .transaction { t in
-                t.animation = nil
-            }
+//            .transaction { t in
+//                t.animation = nil
+//            }
         }
         .background {
             if nrPost.kind == 30023 {
