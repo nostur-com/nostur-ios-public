@@ -15,18 +15,16 @@ extension Date {
     static let secondsInYear = secondsInDay * 365.0
     
     var agoString: String {
-        let timeInterval = Date().timeIntervalSince(self)
-        
-        if timeInterval >= Self.secondsInYear {
-            return String.localizedStringWithFormat("%dy", Int(timeInterval / Self.secondsInYear))
-        } else if timeInterval >= Self.secondsInDay {
-            return String.localizedStringWithFormat("%dd", Int(timeInterval / Self.secondsInDay))
-        } else if timeInterval >= Self.secondsInHour {
-            return String.localizedStringWithFormat("%dh", Int(timeInterval / Self.secondsInHour))
-        } else if timeInterval >= Self.secondsInMinute {
-            return String.localizedStringWithFormat("%dm", Int(timeInterval / Self.secondsInMinute))
+        if -timeIntervalSinceNow >= Self.secondsInYear {
+            return String.localizedStringWithFormat("%dy", Int(-timeIntervalSinceNow / Self.secondsInYear))
+        } else if -timeIntervalSinceNow >= Self.secondsInDay {
+            return String.localizedStringWithFormat("%dd", Int(-timeIntervalSinceNow / Self.secondsInDay))
+        } else if -timeIntervalSinceNow >= Self.secondsInHour {
+            return String.localizedStringWithFormat("%dh", Int(-timeIntervalSinceNow / Self.secondsInHour))
+        } else if -timeIntervalSinceNow >= Self.secondsInMinute {
+            return String.localizedStringWithFormat("%dm", Int(-timeIntervalSinceNow / Self.secondsInMinute))
         } else {
-            return String.localizedStringWithFormat("%ds", Int(timeInterval))
+            return String.localizedStringWithFormat("%ds", Int(-timeIntervalSinceNow))
         }
     }
 }

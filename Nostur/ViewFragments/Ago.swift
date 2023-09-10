@@ -14,20 +14,20 @@ struct Ago: View { //, Equatable {
 //    }
 //    
     let date:Date
+    @State var agoText:String
     
     init(_ date:Date, agoText:String? = nil) {
         self.date = date
-        self.agoText = agoText // Shaving miliseconds, so we dont have to .agoString again, already did it when creating NRPost()
+        _agoText = State(initialValue: agoText ?? date.agoString)
     }
     
     init(_ timestamp:Int64) {
         self.date = Date(timeIntervalSince1970: Double(timestamp))
+        _agoText = State(initialValue: date.agoString)
     }
     
-    @State var agoText:String? = nil
-    
     var body: some View {
-        Text(verbatim: (agoText ?? date.agoString))
+        Text(verbatim: agoText)
             .onReceive(NosturState.shared.agoTimer) { _ in
                 if date.agoString != agoText {
                     agoText = date.agoString
@@ -45,5 +45,6 @@ struct Ago_Previews: PreviewProvider {
             Ago(Date.now - (48 * 3600))
             Ago(Date.now - (148 * 3600))
         }
+        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
