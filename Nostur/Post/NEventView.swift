@@ -63,9 +63,11 @@ struct NEventView: View {
                                 RoundedRectangle(cornerRadius: 15)
                                     .stroke(.regularMaterial, lineWidth: 1)
                             )
+//                            .debugDimensions("NEventViewInner.ArticleView")
                     }
                     else {
                         QuotedNoteFragmentView(nrPost: nrPost)
+//                            .debugDimensions("NEventViewInner.QuotedNoteFragmentView")
                     }
                 }
                 else if let event = events.first {
