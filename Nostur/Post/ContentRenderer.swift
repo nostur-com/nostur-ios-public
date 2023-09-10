@@ -228,9 +228,11 @@ struct QuoteById: View {
                                 RoundedRectangle(cornerRadius: 15)
                                     .stroke(.regularMaterial, lineWidth: 1)
                             )
+//                            .debugDimensions("QuoteById.ArticleView")
                     }
                     else {
                         QuotedNoteFragmentView(nrPost: nrPost)
+//                            .debugDimensions("QuoteById.QuotedNoteFragmentView")
                     }
                 }
                 else {
@@ -347,9 +349,11 @@ struct EmbeddedPost: View {
                         RoundedRectangle(cornerRadius: 15)
                             .stroke(.regularMaterial, lineWidth: 1)
                     )
+//                    .debugDimensions("EmbeddedPost.QuotedNoteFragmentView")
             }
             else {
                 QuotedNoteFragmentView(nrPost: nrPost)
+//                    .debugDimensions("EmbeddedPost.QuotedNoteFragmentView")
             }
         }
     }
