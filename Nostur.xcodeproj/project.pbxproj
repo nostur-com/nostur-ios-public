@@ -42,7 +42,6 @@
 		1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F35672A31C76900AA9C41 /* InfoPlist.strings */; };
 		1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F356A2A31C76900AA9C41 /* Localizable.strings */; };
 		1F12422A2A1CB0BC003AC591 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1242292A1CB0BC003AC591 /* Logger.swift */; };
-		1F1472DE29A71F6C00197393 /* NoteHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1472DD29A71F6C00197393 /* NoteHeader.swift */; };
 		1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA6D29854B8E00EACCD5 /* ContactList.swift */; };
 		1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */; };
 		1F14BA762985984100EACCD5 /* ProfileRelaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */; };
@@ -445,7 +444,6 @@
 		1F0F356D2A31DFB700AA9C41 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1F0F356F2A31E54900AA9C41 /* ci_post_clone.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ci_post_clone.sh; sourceTree = "<group>"; };
 		1F1242292A1CB0BC003AC591 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
-		1F1472DD29A71F6C00197393 /* NoteHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeader.swift; sourceTree = "<group>"; };
 		1F14BA6D29854B8E00EACCD5 /* ContactList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactList.swift; sourceTree = "<group>"; };
 		1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRow.swift; sourceTree = "<group>"; };
 		1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelaysView.swift; sourceTree = "<group>"; };
@@ -833,7 +831,6 @@
 				1FB6E6ED29E308E2008BE8A6 /* LinkPreviewThings.swift */,
 				1FB6E6EF29E30909008BE8A6 /* LinkPreviewView.swift */,
 				1F4C1C272A07AB090010573F /* NEventView.swift */,
-				1F1472DD29A71F6C00197393 /* NoteHeader.swift */,
 				1FB130B229C0E5A4004AC98D /* NoteHeaderView.swift */,
 				1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */,
 				1FC268C629A2CC4F00A2B577 /* NoteReactions.swift */,
@@ -1912,7 +1909,6 @@
 				1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */,
 				1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */,
 				1FF8BD1229D41BBD00C8C96A /* SingleMediaViewer.swift in Sources */,
-				1F1472DE29A71F6C00197393 /* NoteHeader.swift in Sources */,
 				1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */,
 				1FB6E6EE29E308E2008BE8A6 /* LinkPreviewThings.swift in Sources */,
 				1F71E8B229EB4E4900B99340 /* NosturList+CoreDataClass.swift in Sources */,
