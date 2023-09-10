@@ -30,7 +30,7 @@ struct FooterFragmentView: View {
                     Image(nrPost.replied ? "ReplyIconActive" : "ReplyIcon")
                         .foregroundColor(nrPost.replied ? Color("AccentColor") : theme.footerButtons)
                     AnimatedNumber(number: nrPost.repliesCount)
-                        .equatable()
+//                        .equatable()
                         .opacity(nrPost.repliesCount == 0 ? 0 : 1)
                     if !isDetail && !footerAttributes.replyPFPs.isEmpty {
                         ZStack(alignment:.leading) {
@@ -56,7 +56,7 @@ struct FooterFragmentView: View {
                         Image("RepostedIcon")
                             .foregroundColor(.green)
                         AnimatedNumber(number: nrPost.repostsCount)
-                            .equatable()
+//                            .equatable()
                             .opacity(nrPost.repostsCount == 0 ? 0 : 1)
                     }
                     .foregroundColor(.green)
@@ -66,7 +66,7 @@ struct FooterFragmentView: View {
                     HStack {
                         Image("RepostedIcon")
                         AnimatedNumber(number: nrPost.repostsCount)
-                            .equatable()
+//                            .equatable()
                             .opacity(nrPost.repostsCount == 0 ? 0 : 1)
                     }
                     .padding(5)
@@ -83,7 +83,7 @@ struct FooterFragmentView: View {
                         Image("LikeIconActive")
                             .foregroundColor(.red)
                         AnimatedNumber(number: nrPost.likesCount)
-                            .equatable()
+//                            .equatable()
                             .opacity(nrPost.likesCount == 0 ? 0 : 1)
                     }
                     .foregroundColor(.red)
@@ -100,7 +100,7 @@ struct FooterFragmentView: View {
                     HStack {
                         Image("LikeIcon")
                         AnimatedNumber(number: nrPost.likesCount)
-                            .equatable()
+//                            .equatable()
                             .opacity(nrPost.likesCount == 0 ? 0 : 1)
                     }
                     .padding(5)
