@@ -13,6 +13,9 @@
 /* Message shown when a post is from a blocked account */
 "_Post from blocked account hidden_" = "_Geblokkeerd bericht verborgen_";
 
+/* Error message. don't translate the (nostur:e:...) part */
+"[Zap](nostur:e:%@) failed.\n%@" = "[Zap](nostur:e:%@) mislukt.\n%@";
+
 /* Message when (name) and X others are now following yoru */
 "**%@** and %lld others are now following you" = "**%@** en %lld anderen volgen je nu";
 
@@ -58,8 +61,29 @@
 /* No comment provided by engineer. */
 "%lld min read" = "%lld min leestijd";
 
+/* No comment provided by engineer. */
+"%lld requests outside Web of Trust" = "%lld verzoeken buiten Web of Trust";
+
 /* Follow/Unfollow button when the state is 'Following silent' */
 "🤫 Following" = "🤫 Volgend";
+
+/* No comment provided by engineer. */
+"2h" = "2u";
+
+/* No comment provided by engineer. */
+"4h" = "4u";
+
+/* No comment provided by engineer. */
+"8h" = "8u";
+
+/* No comment provided by engineer. */
+"12h" = "12u";
+
+/* No comment provided by engineer. */
+"24h" = "24u";
+
+/* No comment provided by engineer. */
+"48h" = "48u";
 
 /* Button to accept terms and conditions */
 "Accept" = "Accepteer";
@@ -97,11 +121,11 @@
 /* Placeholder when typing a new reply */
 "Add comment" = "Jouw reactie";
 
-/* Navigation title of sheet to add contacts to list */
+/* Navigation title of sheet to add contacts to feed */
 "Add contacts" = "Voeg contacten toe";
 
-/* Navigation title for screen where you can add contacts to a List */
-"Add contacts to list" = "Voeg contacten toe";
+/* Navigation title for screen where you can add contacts to a feed */
+"Add contacts to feed" = "Voeg contacten toe";
 
 /* Button to add an existing account
 Navigation title for Add Existing Account screen */
@@ -119,11 +143,11 @@ Navigation title for Add Existing Account screen */
 /* Post context menu button */
 "Add/Remove %@ from lists" = "Voeg toe/Verwijder %@ van lijsten";
 
-/* Navigation title for screen to add or remove contacts to List */
-"Add/Remove from list" = "Voeg toe/Verwijder van lijst";
+/* Navigation title for screen to add or remove contacts to a feed */
+"Add/Remove from feed" = "Toevoegen/Verwijderen van feed";
 
 /* Menu action */
-"Add/Remove from lists" = "Voeg toe/Verwijder van lijsten";
+"Add/Remove from feeds" = "Toevoegen/Verwijderen van feeds";
 
 /* Menu choice to filter by All */
 "All" = "Alles";
@@ -139,6 +163,9 @@ Navigation title for Add Existing Account screen */
 
 /* No comment provided by engineer. */
 "Amount (satoshis)" = "Bedrag (in satoshis)";
+
+/* No comment provided by engineer. */
+"App theme" = "App thema";
 
 /* Confirmation text when you want to delete your account */
 "Are you sure you want to delete your account?\n" = "Weet je zeker dat je je account wilt verwijderen?";
@@ -174,11 +201,11 @@ Navigation title of Bagdes screen */
 /* Label for entering a bio about yourself on Edit Profile screen */
 "Bio" = "Bio";
 
-/* Title oof a card that displays a lightning invoice */
+/* Title of a card that displays a lightning invoice */
 "Bitcoin Lightning Invoice ⚡️" = "Bitcoin Lightning Factuur ⚡️";
 
-/* Post context menu action to Block (name)
-Menu action */
+/* Menu action
+Post context menu action to Block (name) */
 "Block %@" = "Blokkeer %@";
 
 /* Side bar navigation button */
@@ -186,6 +213,9 @@ Menu action */
 
 /* Title of tab where Blocked users are listed */
 "Blocked" = "Geblokkeerd";
+
+/* No comment provided by engineer. */
+"Blue" = "Blauw";
 
 /* Navigation title for Bookmarks screen
 Side bar navigation button
@@ -207,6 +237,9 @@ Tab to switch to bookmarks */
 /* No comment provided by engineer. */
 "Choose content for this column" = "Kies inhoud voor kolom";
 
+/* No comment provided by engineer. */
+"Choose feed" = "Kies feed";
+
 /* Setting on settings screen */
 "Choose which wallet to use for zapping" = "Kies welke app om te zappen";
 
@@ -221,6 +254,12 @@ Tab to switch to bookmarks */
 
 /* Button to close this screen */
 "Close" = "Sluiten";
+
+/* No comment provided by engineer. */
+"Configure contacts..." = "Stel contacten in...";
+
+/* No comment provided by engineer. */
+"Configure relays..." = "Stel relays in...";
 
 /* Title of sheet that asks the user to confirm logout action
 Action sheet title */
@@ -302,8 +341,8 @@ Button to create a new account */
 Button to create a new badge */
 "Create new badge" = "Nieuw medialle";
 
-/* Button to create a new List */
-"Create new list" = "Nieuw lijst";
+/* Button to create a new feed */
+"Create new feed" = "Nieuw Feed";
 
 /* No comment provided by engineer. */
 "Create test keys" = "Nieuwe test sleutels";
@@ -312,10 +351,16 @@ Button to create a new badge */
 "Custom" = "Aangepast";
 
 /* No comment provided by engineer. */
-"Custom List" = "Lijst";
+"Custom Feed" = "Aangepaste Feed";
 
 /* No comment provided by engineer. */
 "Data export" = "Data exporteren";
+
+/* No comment provided by engineer. */
+"Default zap amount" = "Standaard zap bedrag";
+
+/* No comment provided by engineer. */
+"Default zap amount:" = "Standaard zap bedrag:";
 
 /* Post context menu action to Delete a post
 Button to delete */
@@ -326,7 +371,7 @@ Navigation title of Delete account screen */
 "Delete account" = "Account verwijderen";
 
 /* No comment provided by engineer. */
-"Delete list %@" = "Verwijder lijst %@";
+"Delete feed %@" = "Verwijder feed %@";
 
 /* Sheet title */
 "Delete private note" = "Verwijder privé notitie";
@@ -350,6 +395,9 @@ Button to disconnect from relay */
 /* Relay status when disconnected */
 "Disconnected" = "Geen verbinding";
 
+/* No comment provided by engineer. */
+"Discover Nostr" = "Ontdek Nostr";
+
 /* Setting heading on settings screen */
 "Display" = "Weergave";
 
@@ -358,9 +406,6 @@ Button to disconnect from relay */
 
 /* No comment provided by engineer. */
 "Done" = "Klaar";
-
-/* In context menu, to take the user to edit list screen */
-"Edit List" = "Bewerk lijst";
 
 /* Navigation title for screen to edit muted word */
 "Edit muted word" = "Bewerk gedempte woorden";
@@ -376,6 +421,9 @@ Navigation title for Edit Profile screen */
 "Edit relay" = "Bewerk relay";
 
 /* No comment provided by engineer. */
+"Edit relays feed" = "Relays feed aanpassen";
+
+/* No comment provided by engineer. */
 "Edit title" = "Bewerk titel";
 
 /* Setting on settings screen */
@@ -383,6 +431,9 @@ Navigation title for Edit Profile screen */
 
 /* Setting on settings screen */
 "Enable full width pictures" = "Schermvullende foto's inschakelen";
+
+/* No comment provided by engineer. */
+"Enable Web of Trust filter" = "Web of Trust filter ingeschakeld";
 
 /* Label for field to enter a nostr json event */
 "Enter JSON" = "Voer JSON in";
@@ -415,6 +466,9 @@ Navigation title for Edit Profile screen */
 "Error: could not find contact pubkey" = "Kon contact pubkey niet vinden";
 
 /* No comment provided by engineer. */
+"Example" = "Voorbeeld";
+
+/* No comment provided by engineer. */
 "Expired" = "Verlopen";
 
 /* Tab title for the Explore feed */
@@ -431,6 +485,16 @@ Navigation title for Edit Profile screen */
 
 /* Tab title for a feed */
 "Feed" = "Feed";
+
+/* No comment provided by engineer. */
+"Feed content" = "Feed inhoud";
+
+/* Header for a feed setting */
+"Feed settings" = "Feed instellingen";
+
+/* Side bar navigation button
+Navigation title for Feeds screen */
+"Feeds" = "Feeds";
 
 /* Setting on settings screen */
 "Fetch counts on timeline" = "Tellers op tijdlijn";
@@ -470,19 +534,25 @@ Label shown when someone follows you */
 "Follows you" = "Volgt jou";
 
 /* No comment provided by engineer. */
+"Green" = "Groen";
+
+/* No comment provided by engineer. */
 "Hashtag" = "Hashtag";
 
 /* Short label for the word 'hexadecimal' */
 "hex" = "hex";
 
-/* Setting on settings screen */
-"Hide emojis in names" = "Verberg emojis in namen";
+/* No comment provided by engineer. */
+"Hide" = "Verberg";
 
-/* Setting in context menu to hide replies from the feed */
-"Hide replies" = "Verberg reacties";
+/* Setting on settings screen */
+"Hide tab bars when scrolling" = "Verberg balken tijdens scrollen";
 
 /* Setting on settings screen */
 "Hides badges from profiles and feeds" = "Verberg medailles van profielen en feeds";
+
+/* Tab title for feed of hot/popular posts */
+"Hot" = "Hot";
 
 /* Label for post identifier (ID) */
 "ID" = "ID";
@@ -511,6 +581,9 @@ Label shown when someone follows you */
 /* Setting on settings screen */
 "Include Nostur caption when sharing posts" = "Nostur voetnoot bijsluiten bij delen bericht";
 
+/* No comment provided by engineer. */
+"Included hashtags:" = "Opgenomen hashtags:";
+
 /* Message shown when user has entered an invalid key */
 "Invalid key" = "Ongeldige sleutel";
 
@@ -521,7 +594,7 @@ Label shown when someone follows you */
 "Issued" = "Uitgegeven";
 
 /* No comment provided by engineer. */
-"It looks like %lld contacts were removed from your following list, perhaps from another nostr app" = "Het lijkt erop dat %lld contacten zijn verwijderd van je volgend-lijst, mischien vanuit een andere nostr app";
+"It looks like %lld contacts were removed from your following list, perhaps from another nostr app%@" = "Het lijkt er op dat %lld contacten zijn verwijderd van je volglijst, misschien vanuit aan andere nostr app %@";
 
 /* No comment provided by engineer. */
 "It's up to relays and other apps to honor your request" = "Het is aan de relays om je verzoek te honoreren";
@@ -533,14 +606,17 @@ Label shown when someone follows you */
 Message shown when a post kind (X) is not yet supported */
 "kind %@ type not (yet) supported" = "kind %@ type (nog) niet ondersteund";
 
+/* No comment provided by engineer. */
+"kind: %@" = "kind: %2";
+
+/* Label on profile showing when last seen, example: Last seen: 10m ago */
+"Last seen: %@ ago" = "Laatst gezien: %@ geleden";
+
 /* Button to start using Nostur, during onboarding */
 "Let's go!" = "Laten we beginnen!";
 
-/* Label for entering a LUD-06 Lighting Address on Edit Profile screen */
-"Lightning Address (LUD-06)" = "Lightning-adres (LUD-06)";
-
-/* Label for entering a LUD-16 Lightning Address on Edit Profile screen */
-"Lightning Address (LUD-16)" = "Lightning-adres (LUD-16)";
+/* Label for entering a Lightning Address on Edit Profile screen */
+"Lightning Address (LUD-06/16)" = "Lightningadres (LUD-06/15)";
 
 /* Setting on settings screen */
 "Lightning wallet" = "Lightning-portemonnee";
@@ -550,10 +626,6 @@ Message shown when a post kind (X) is not yet supported */
 
 /* No comment provided by engineer. */
 "List" = "Lijst";
-
-/* Side bar navigation button
-Navigation title for Lists screen */
-"Lists" = "Lijsten";
 
 /* Setting on settings screen */
 "Loading indicator" = "Laadindicator";
@@ -584,11 +656,23 @@ informational message */
 /* Navigation title for DMs (Direct Messages) */
 "Messages" = "Privé berichten";
 
+/* No comment provided by engineer. */
+"Missing mesages?" = "Ontbrekende berichten?";
+
 /* Heading above posts which received the most zaps */
 "Most received recently on" = "Recent meest ontvangen op";
 
 /* Post context menu action to mute conversation */
 "Mute conversation" = "Conversatie dempen";
+
+/* No comment provided by engineer. */
+"Mute new followers notifications" = "Demp nieuwe volger notificaties";
+
+/* No comment provided by engineer. */
+"Mute reaction notifications" = "Demp nieuwe reactie notificaties";
+
+/* No comment provided by engineer. */
+"Mute zap notifications" = "Demp nieuwe zap notificaties";
 
 /* Title of tab where Muted conversations are listed */
 "Muted conversations" = "Gedempte conversaties";
@@ -600,8 +684,8 @@ Label for input field for badge name on Badge creation screen */
 /* Navigation title for a new Direct Message */
 "New direct message" = "Nieuw privé bericht";
 
-/* Navigation title for screen to create a new List */
-"New list" = "Nieuw lijst";
+/* Navigation title for screen to create a new feed */
+"New feed" = "Nieuw feed";
 
 /* Navigation title for a new Direct Message */
 "New message" = "Nieuw privé bericht";
@@ -630,17 +714,17 @@ Label for input field for badge name on Badge creation screen */
 /* Label for entering a NIP-05 username on Edit Profile screen */
 "Nostr address (NIP-05)" = "Nostr-adres (NIP-05)";
 
-/* Informational message on the DM screen */
-"Note: The contents of DMs is encrypted but the metadata is not. Who you send a messages to and when is public." = "Notitie: De inhoud van PB's is versleuteld maar de metadata niet. Aan wie je een bericht verstuurd en wanneer is openbaar.";
-
 /* Informational message on Add Existing Account screen */
 "Note: You can also add someone elses public key to try out Nostur from their perspective." = "Notitie: Je kan ook iemand anders publieke sleutel gebruiken om Nostur te proberen vanuit zijn/haar perspectief.";
 
 /* No comment provided by engineer. */
+"Notification settings" = "Notificatie instellingen";
+
+/* No comment provided by engineer. */
 "Notifications" = "Notificaties";
 
-/* Showing time ago when it is 'now' or 'just now' */
-"now" = "nu";
+/* No comment provided by engineer. */
+"nsecBunker appears offline, post will be saved but not published" = "nsecBunker lijkt offline, bericht wordt opgeslagen maar niet verstuurd";
 
 /* Menu item in choice list */
 "Nudity" = "Naaktheid";
@@ -651,8 +735,17 @@ Label for input field for badge name on Badge creation screen */
 /* Setting on settings screen */
 "Only auto-download images in new posts from people you follow\nToggle off to download from all" = "Alleen afbeeldingen automatisch downloaden van personen die je volgt";
 
+/* No comment provided by engineer. */
+"Only show content from your follows or follows-follows" = "Toon alleen berichten van volgend en volgend-van-volgend";
+
 /* Button go to latest version of article */
 "Open latest" = "Open nieuwste";
+
+/* No comment provided by engineer. */
+"Orange" = "Oranje";
+
+/* No comment provided by engineer. */
+"P" = "";
 
 /* No comment provided by engineer. */
 "Pay" = "Betalen";
@@ -660,11 +753,17 @@ Label for input field for badge name on Badge creation screen */
 /* No comment provided by engineer. */
 "Payment attempted" = "Betaling geprobeerd";
 
-/* Toggle to pin/unpin a list on tab bar */
+/* Toggle to pin/unpin a feed on tab bar */
 "Pin on tab bar" = "Pin vast als tab";
 
 /* No comment provided by engineer. */
+"Pink" = "Roze";
+
+/* No comment provided by engineer. */
 "Please choose account first" = "Kies eerst een account";
+
+/* Label shown on a profile */
+"possible imposter" = "mogelijke bedrieger";
 
 /* The word "post" when used as post #1, post #2 and post #3. */
 "post" = "bericht";
@@ -692,6 +791,12 @@ Title of tab */
 
 /* No comment provided by engineer. */
 "Posts containing this will be filtered from your feed" = "Berichten met dit worden gefilterd van je feed";
+
+/* No comment provided by engineer. */
+"Posts from contacts" = "Berichten van contacten";
+
+/* No comment provided by engineer. */
+"Posts from relays" = "Berichten van relays";
 
 /* Preview button when creating a new post
 Preview button when creating a new reply */
@@ -752,6 +857,9 @@ Tab to switch to private notes */
 /* Label for toggle to publish to this relay */
 "Publish to this relay" = "Publiceer naar deze relay";
 
+/* No comment provided by engineer. */
+"Purple" = "Paars";
+
 /* Button to Quote a post */
 "Quote post" = "Citeer bericht";
 
@@ -785,6 +893,15 @@ Tab to switch to private notes */
 /* Heading for list of relays received from */
 "Received from:" = "Ontvangen vanuit:";
 
+/* No comment provided by engineer. */
+"Recheck" = "Controleer opnieuw";
+
+/* No comment provided by engineer. */
+"Red" = "Rood";
+
+/* Header for a feed setting */
+"Relay selection" = "Relay keuze";
+
 /* Relay settings header */
 "Relay settings" = "Relay instellingen";
 
@@ -793,6 +910,9 @@ Tab to switch to private notes */
 
 /* Relay settings heading */
 "Relays" = "Relays";
+
+/* No comment provided by engineer. */
+"Relays:" = "";
 
 /* Toggle on zap screen to set selected amount as default for all zaps */
 "Remember this amount for all zaps" = "Onthoud dit bedrag voor alle zaps";
@@ -815,11 +935,15 @@ Tab to switch to private notes */
 /* Shown in a post, Replying to (X) people */
 "Replying to %lld people" = "Antwoord op %lld personen";
 
-/* Shown in a post, Replying to (names) */
+/* Shown when replying to an article (Replying to: (article title)
+Shown in a post, Replying to (names) */
 "Replying to: %@" = "Antwoord op: %@";
 
 /* Shown in a post, Replying: (names) and (x) others */
 "Replying to: %@ and %lld others" = "Antwoord op: %@ en %lld anderen";
+
+/* Shown in a post when replying but the name is missing */
+"Replying to..." = "Antwoord op...";
 
 /* Menu action */
 "Report %@" = "Melden maken voor %@";
@@ -843,11 +967,17 @@ Button to publish report */
 /* Button to Repost a post */
 "Repost" = "Herplaatsen";
 
+/* Label for reposts count, example: (7) reposts */
+"reposts" = "herplaatsingen";
+
 /* No comment provided by engineer. */
 "Request delete" = "Verwijderverzoek";
 
 /* Tab title for DM (Direct Message) requests */
 "Requests" = "Verzoeken";
+
+/* No comment provided by engineer. */
+"Rescan" = "Scan opnieuw";
 
 /* No comment provided by engineer. */
 "Restore %lld contacts" = "Herstel %lld contacten";
@@ -866,6 +996,12 @@ Button to publish report */
 
 /* No comment provided by engineer. */
 "Save to file..." = "Opslaan als...";
+
+/* No comment provided by engineer. */
+"Scanning relays for messages %lld/12 months ago..." = "Bezig met scannen voor berichten op relays %lld/12 maanden geleden...";
+
+/* Post context menu button */
+"screenshot" = "schermafdruk";
 
 /* Navigation title for Search screen */
 "Search" = "Zoeken";
@@ -904,6 +1040,9 @@ Button to publish report */
 "Send DM to" = "Stuur PB naar";
 
 /* No comment provided by engineer. */
+"Send now" = "Stuur nu";
+
+/* No comment provided by engineer. */
 "Send payment test" = "Stuur betaling test";
 
 /* Title of sheet showing zap options when sending sats (satoshis) */
@@ -911,6 +1050,9 @@ Button to publish report */
 
 /* No comment provided by engineer. */
 "Send to: %@" = "Stuur naar: %@";
+
+/* No comment provided by engineer. */
+"Sending post..." = "Verzenden...";
 
 /* No comment provided by engineer. */
 "Sending to: %@" = "Versturen naar: %@";
@@ -924,11 +1066,17 @@ Button to publish report */
 /* Side bar navigation button */
 "Settings" = "Instellingen";
 
+/* No comment provided by engineer. */
+"Settings for %@" = "Instellingen voor %@";
+
+/* No comment provided by engineer. */
+"Settings for: Hot" = "Instellingen voor: Hot";
+
 /* Navigation title for screen to Share a Highlighted Text */
 "Share highlight" = "Markering delen";
 
 /* Post context menu button */
-"Share post" = "Deel bericht";
+"Share link" = "Deel link";
 
 /* No comment provided by engineer. */
 "Shared from **Nostur**" = "Gedeeld vanuit **Nostur**";
@@ -936,8 +1084,14 @@ Button to publish report */
 /* Button to show more items in a post */
 "Show" = "Toon";
 
+/* Post context menu button to show someone's feed */
+"Show %@'s feed" = "Toon %@'s feed";
+
 /* Button to show the blocked content anyway */
 "Show anyway" = "Toon alsnog";
+
+/* No comment provided by engineer. */
+"Show feed" = "Toon feed";
 
 /* Button to show more items */
 "Show more" = "Toon meer";
@@ -945,7 +1099,7 @@ Button to publish report */
 /* Setting on settings screen */
 "Show post stats on timeline" = "Toon bericht statistieken in feed";
 
-/* Setting in context menu to show replies in the feed */
+/* No comment provided by engineer. */
 "Show replies" = "Toon reacties";
 
 /* Setting on settings screen */
@@ -965,6 +1119,9 @@ Button to publish report */
 
 /* No comment provided by engineer. */
 "Signing as" = "Ondertekend als";
+
+/* No comment provided by engineer. */
+"Signing post..." = "Bericht ondertekenen...";
 
 /* Button to skip creating account and login as guest
 Button to skip adding account and use the guest account instead */
@@ -988,6 +1145,9 @@ Button to skip adding account and use the guest account instead */
 /* Menu item in choice list */
 "Spam" = "Spam";
 
+/* Header for a feed setting */
+"Spam filter" = "Spamfilter";
+
 /* Setting heading on settings screen */
 "Spam filtering" = "Spamfilter";
 
@@ -1010,10 +1170,19 @@ Button to skip adding account and use the guest account instead */
 "The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself" = "Het gast account volgt al een aantal mensen. Je kan berichten lezen en profielen bekijken maar je kan niks plaatsen totdat je zelf een account aanmaakt";
 
 /* No comment provided by engineer. */
+"The Hot feed shows posts most liked by people you follow in the last %lld hours" = "De Hot feed toont berichten meest leuk gevonden door jouw volglijst";
+
+/* No comment provided by engineer. */
 "There are %lld new communities" = "Er zijn %lld nieuwe communities";
 
 /* Error message */
 "There was a problem, could not send sats" = "Er was een probleem, sats konden niet verzonden worden";
+
+/* Message shown when there is a newer version available of an article */
+"This article has been updated" = "Artikel is bijgewerkt";
+
+/* No comment provided by engineer. */
+"This gives more screen space when scrolling" = "Meer ruimte tijdens scrollen";
 
 /* Error message during NWC setup */
 "This NWC connection does not support payments" = "Deze NWC verbinding ondersteund geen betalingen";
@@ -1039,11 +1208,15 @@ Button to skip adding account and use the guest account instead */
 /* Label for input field for badge image on Badge creation screen */
 "Thumbnail URL (256x256)" = "Miniatuur URL (256x256)";
 
-/* Header for entering title of a List */
+/* No comment provided by engineer. */
+"Time frame" = "Tijdsvak";
+
+/* Header for entering title of a feed */
 "Title" = "Titel";
 
-/* Placeholder for input field to enter title of a List */
-"Title of your list" = "Titel van je lijst";
+/* Placeholder for input field to enter title of a List
+Placeholder for input field to enter title of a feed */
+"Title of your feed" = "Titel van je feed";
 
 /* No comment provided by engineer. */
 "Total: %lld" = "Totaal: %lld";
@@ -1065,6 +1238,12 @@ Button to skip adding account and use the guest account instead */
 
 /* Error message */
 "Unable to decode lightning invoice" = "Kon lightning factuur niet verwerken";
+
+/* No comment provided by engineer. */
+"Undo" = "Ongedaan maken";
+
+/* No comment provided by engineer. */
+"Unfollow" = "Ontvolg";
 
 /* List of unverified zaps */
 "Unverified zaps" = "Niet-geverifiëerde zaps";
@@ -1110,6 +1289,9 @@ Button to skip adding account and use the guest account instead */
 
 /* (No Comment) */
 "WOT_STRICT" = "Strict";
+
+/* Placeholder for entering a relay URL */
+"wss://nostr.relay.url.here" = "wss://nostr.relay.url.hier";
 
 /* No comment provided by engineer. */
 "You are not following anyone yet, visit the explore tab and follow some people" = "Je volgt nog niemand, bekijk de Ontdek tab en volg een aantal mensen";

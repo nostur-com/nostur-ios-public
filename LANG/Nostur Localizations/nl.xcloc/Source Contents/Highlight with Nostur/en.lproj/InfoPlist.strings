@@ -1,6 +1,6 @@
 /* Bundle display name */
-"CFBundleDisplayName" = "Share highlight with Nostur";
+"CFBundleDisplayName" = "Share selected text with Nostur";
 /* Bundle name */
-"CFBundleName" = "Share highlight with Nostur";
+"CFBundleName" = "Share selected text with Nostur";
 /* Copyright (human-readable) */
 "NSHumanReadableCopyright" = "";
