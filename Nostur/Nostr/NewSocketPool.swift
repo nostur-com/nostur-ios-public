@@ -833,9 +833,11 @@ class NewWebSocket {
                     switch completion {
                     case .failure(let error):
                         // Handle the failure case
+                        #if DEBUG
                         let _url = self.url
                         let _error = error
                         L.sockets.info("🟪 \(_url) Ping Failure: \(_error), trying to reconnect")
+                        #endif
                         DispatchQueue.main.async {
                             self.connect(andSend:text)
                         }
@@ -966,12 +968,16 @@ final class EphemeralSocketPool: ObservableObject {
     
     static let shared = EphemeralSocketPool()
     
-    @Published var sockets:[String : NewEphemeralClient] = [:]
+    private var sockets:[String : NewEphemeralClient] = [:]
     
     func addSocket(url:String) -> NewEphemeralClient {
         let urlLower = url.lowercased()
         removeAfterDelay(urlLower)
-        if (!sockets.keys.contains(urlLower)) {
+        
+        if let socket = sockets[urlLower] {
+            return socket
+        }
+        else {
             let urlURL:URL = URL(string: urlLower) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
             var request = URLRequest(url: urlURL)
             request.timeoutInterval = 15
@@ -986,9 +992,6 @@ final class EphemeralSocketPool: ObservableObject {
             sockets[urlLower] = managedClient
             return managedClient
         }
-        else {
-            return sockets[urlLower]!
-        }
     }
     
     private func removeAfterDelay(_ url:String) {
@@ -998,7 +1001,9 @@ final class EphemeralSocketPool: ObservableObject {
             }) {
                 L.sockets.info("Removing ephemeral relay \(url)")
                 socket.value.disconnect()
-                self?.sockets.removeValue(forKey: url)
+                if (self?.sockets.keys.contains(url) ?? false) {
+                    self?.sockets.removeValue(forKey: url)
+                }
             }
         }
     }
