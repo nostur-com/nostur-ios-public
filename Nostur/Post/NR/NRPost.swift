@@ -559,15 +559,16 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func getHighlightData(event: Event) -> KindHightlight {
+        let highlightAuthorPubkey = event.fastTags.first(where: { $0.0 == "p" } )?.1
         var hlNrContact:NRContact?
-        if let contact = event.contacts?.first {
+        if let contact = event.contacts?.first(where: { $0.pubkey == highlightAuthorPubkey } ) {
             hlNrContact = NRContact(contact: contact)
         }
         return KindHightlight(
-            highlightAuthorPubkey: event.fastTags.first(where: { $0.0 == "p" } )?.1,
-            highlightAuthorPicture: event.contacts?.first?.picture,
+            highlightAuthorPubkey: highlightAuthorPubkey,
+            highlightAuthorPicture: hlNrContact?.pictureUrl,
             highlightAuthorIsFollowing: hlNrContact?.following ?? false,
-            highlightAuthorName: event.contacts?.first?.authorName,
+            highlightAuthorName: hlNrContact?.anyName,
             highlightUrl: event.fastTags.first(where: { $0.0 == "r" } )?.1,
             highlightNrContact: hlNrContact
         )
