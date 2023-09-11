@@ -23,7 +23,7 @@ class HotViewModel: ObservableObject {
     private var backlog:Backlog
     private var follows:Set<Pubkey>
     private var didLoad = false
-    private static let POSTS_LIMIT = 250
+    private static let POSTS_LIMIT = 75
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
     
@@ -54,12 +54,12 @@ class HotViewModel: ObservableObject {
             backlog.timeout = max(Double(ago / 4), 5.0)
             if ago < oldValue {
                 self.hotPosts = []
-                self.fetchFromDB()
+                self.fetchPostsFromDB()
             }
             else {
                 self.hotPosts = []
                 lastFetch = nil // need to fetch further back, so remove lastFetch
-                self.fetchFromRelays()
+                self.fetchLikesFromRelays()
             }
         }
     }
@@ -77,73 +77,9 @@ class HotViewModel: ObservableObject {
             }
             .store(in: &self.subscriptions)
     }
-
-    private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "created_at > %i AND kind == 7 AND pubkey IN %@", agoTimestamp, follows)
-        bg().perform {
-            if let likes = try? bg().fetch(fr) {
-                for like in likes {
-                    guard let reactionToId = like.reactionToId else { continue }
-                    if self.posts[reactionToId] != nil {
-                        self.posts[reactionToId]!.insert(like.pubkey)
-                    }
-                    else {
-                        self.posts[reactionToId] = LikedBy([like.pubkey])
-                    }
-                }
-                
-                
-                let sortedByLikes = self.posts
-                    .sorted(by: { $0.value.count > $1.value.count })
-                    .prefix(Self.POSTS_LIMIT)
-                
-                var nrPosts:[NRPost] = []
-                for (postId, likes) in sortedByLikes {
-                    if (likes.count > 3) {
-                        L.og.debug("🔝🔝 id:\(postId): \(likes.count)")
-                    }
-                    if let event = try? Event.fetchEvent(id: postId, context: bg()) {
-                        guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns
-                        guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
-                        guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
-                        
-                        // withReplies for miniPFPs
-                        nrPosts.append(NRPost(event: event, withParents: true, withReplies: true))
-                    }
-                }
-                
-                DispatchQueue.main.async {
-                    onComplete?()
-                    self.hotPosts = nrPosts
-                }
-                
-                guard SettingsStore.shared.fetchCounts else { return }
-                for nrPost in nrPosts.prefix(5) {
-                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
-                }
-                let eventIds = nrPosts.prefix(5).map { $0.id }
-                L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
-                fetchStuffForLastAddedNotes(ids: eventIds)
-                self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
-            }
-        }
-    }
     
-    public func prefetch(_ post:NRPost) {
-        guard SettingsStore.shared.fetchCounts else { return }
-        guard !self.prefetchedIds.contains(post.id) else { return }
-        guard let index = self.hotPosts.firstIndex(of: post) else { return }
-        guard index % 5 == 0 else { return }
-        
-        let nextIds = self.hotPosts.dropFirst(index - 1).prefix(5).map { $0.id }
-        L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
-        fetchStuffForLastAddedNotes(ids: nextIds)
-        self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
-    }
-    
-    private func fetchFromRelays(_ onComplete: (() -> ())? = nil) {
+    // STEP 1: FETCH LIKES FROM FOLLOWS FROM RELAYS
+    private func fetchLikesFromRelays(_ onComplete: (() -> ())? = nil) {
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "HOT",
@@ -168,12 +104,77 @@ class HotViewModel: ObservableObject {
                 }
             },
             processResponseCommand: { taskId, relayMessage in
-                self.fetchFromDB(onComplete)
+                self.backlog.clear()
+                self.fetchLikesFromDB(onComplete)
+
+                L.og.info("Hot feed: ready to process relay response")
+            },
+            timeoutCommand: { taskId in
+                self.backlog.clear()
+                self.fetchLikesFromDB(onComplete)
+                L.og.info("Hot feed: timeout ")
+            })
+
+        backlog.add(reqTask)
+        reqTask.fetch()
+    }
+    
+    // STEP 2: FETCH RECEIVED LIKES FROM DB, SORT MOST LIKED POSTS (WE ONLY HAVE IDs HERE)
+    private func fetchLikesFromDB(_ onComplete: (() -> ())? = nil) {
+        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "created_at > %i AND kind == 7 AND pubkey IN %@", agoTimestamp, follows)
+        bg().perform {
+            guard let likes = try? bg().fetch(fr) else { return }
+            for like in likes {
+                guard let reactionToId = like.reactionToId else { continue }
+                if self.posts[reactionToId] != nil {
+                    self.posts[reactionToId]!.insert(like.pubkey)
+                }
+                else {
+                    self.posts[reactionToId] = LikedBy([like.pubkey])
+                }
+            }
+            
+            self.fetchPostsFromRelays()
+        }
+    }
+    
+    // STEP 3: FETCH MOST LIKED POSTS FROM RELAYS
+    private func fetchPostsFromRelays(onComplete: (() -> ())? = nil) {
+        let ids = Set(self.posts.keys)
+        guard !ids.isEmpty else {
+            L.og.debug("fetchPostsFromRelays: empty ids")
+            return
+        }
+        let reqTask = ReqTask(
+            debounceTime: 0.5,
+            subscriptionId: "HOT-POSTS",
+            reqCommand: { taskId in
+                if let cm = NostrEssentials
+                            .ClientMessage(type: .REQ,
+                                           subscriptionId: taskId,
+                                           filters: [
+                                            Filters(
+                                                ids: ids,
+                                                limit: 9999
+                                            )
+                                           ]
+                            ).json() {
+                    req(cm)
+//                    self.lastFetch = Date.now
+                }
+                else {
+                    L.og.error("Hot feed: Problem generating posts request")
+                }
+            },
+            processResponseCommand: { taskId, relayMessage in
+                self.fetchPostsFromDB(onComplete)
                 self.backlog.clear()
                 L.og.info("Hot feed: ready to process relay response")
             },
             timeoutCommand: { taskId in
-                self.fetchFromDB(onComplete)
+                self.fetchPostsFromDB(onComplete)
                 self.backlog.clear()
                 L.og.info("Hot feed: timeout ")
             })
@@ -182,10 +183,67 @@ class HotViewModel: ObservableObject {
         reqTask.fetch()
     }
     
+    // STEP 4: FETCH RECEIVED POSTS FROM DB, SORT BY MOST LIKED AND PUT ON SCREEN
+    private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
+        let ids = Set(self.posts.keys)
+        guard !ids.isEmpty else {
+            L.og.debug("fetchPostsFromDB: empty ids")
+            return
+        }
+        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        bg().perform {
+            let sortedByLikes = self.posts
+                .sorted(by: { $0.value.count > $1.value.count })
+                .prefix(Self.POSTS_LIMIT)
+            
+            var nrPosts:[NRPost] = []
+            for (postId, likes) in sortedByLikes {
+                if (likes.count > 3) {
+                    L.og.debug("🔝🔝 id:\(postId): \(likes.count)")
+                }
+                if let event = try? Event.fetchEvent(id: postId, context: bg()) {
+                    guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns
+                    guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
+                    guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
+                    
+                    // withReplies for miniPFPs
+                    nrPosts.append(NRPost(event: event, withParents: true, withReplies: true))
+                }
+            }
+            
+            DispatchQueue.main.async {
+                onComplete?()
+                self.hotPosts = nrPosts
+            }
+            
+            guard SettingsStore.shared.fetchCounts else { return }
+            for nrPost in nrPosts.prefix(5) {
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+            }
+            let eventIds = nrPosts.prefix(5).map { $0.id }
+            L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+            fetchStuffForLastAddedNotes(ids: eventIds)
+            self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
+        }
+    }
+    
+    
+    public func prefetch(_ post:NRPost) {
+        guard SettingsStore.shared.fetchCounts else { return }
+        guard !self.prefetchedIds.contains(post.id) else { return }
+        guard let index = self.hotPosts.firstIndex(of: post) else { return }
+        guard index % 5 == 0 else { return }
+        
+        let nextIds = self.hotPosts.dropFirst(index - 1).prefix(5).map { $0.id }
+        L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
+        fetchStuffForLastAddedNotes(ids: nextIds)
+        self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
+    }
+    
     public func load() {
         guard shouldReload else { return }
         self.hotPosts = []
-        self.fetchFromRelays()
+        self.fetchLikesFromRelays()
     }
     
     // for after acocunt change
@@ -195,7 +253,7 @@ class HotViewModel: ObservableObject {
         self.backlog.clear()
         self.follows = NosturState.shared.followingPublicKeys
         self.hotPosts = []
-        self.fetchFromRelays()
+        self.fetchLikesFromRelays()
     }
     
     // pull to refresh
@@ -206,7 +264,7 @@ class HotViewModel: ObservableObject {
         self.follows = NosturState.shared.followingPublicKeys
         
         await withCheckedContinuation { continuation in
-            self.fetchFromRelays {
+            self.fetchLikesFromRelays {
                 continuation.resume()
             }
         }
