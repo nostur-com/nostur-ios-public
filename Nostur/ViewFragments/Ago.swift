@@ -18,12 +18,12 @@ struct Ago: View { //, Equatable {
     
     init(_ date:Date, agoText:String? = nil) {
         self.date = date
-        _agoText = State(initialValue: agoText ?? date.agoString)
+        _agoText = State(wrappedValue: agoText ?? date.agoString)
     }
     
     init(_ timestamp:Int64) {
         self.date = Date(timeIntervalSince1970: Double(timestamp))
-        _agoText = State(initialValue: date.agoString)
+        _agoText = State(wrappedValue: date.agoString)
     }
     
     var body: some View {
