@@ -13,9 +13,6 @@ struct FooterFragmentView: View {
     @ObservedObject var footerAttributes:NRPost.FooterAttributes
     var isDetail = false
     @State var unpublishLikeId:UUID? = nil
-    var relaysCount:Int {
-        nrPost.relays.split(separator: " ").count
-    }
     
     init(nrPost: NRPost, isDetail: Bool = false) {
         self.nrPost = nrPost
@@ -184,65 +181,11 @@ struct FooterFragmentView: View {
                 }
                 
             }
-//            .fixedSize(horizontal: false, vertical: true)
             .frame(height: 28)
-//            .readSize { size in
-//                print("Footer size: \(size)")
-//            }
-            if (isOwnPost) {
-                
-                if (nrPost.relays == "" && (nrPost.cancellationId != nil || nrPost.flags == "nsecbunker_unsigned" || nrPost.flags == "awaiting_send")) {
-                    HStack {
-                        if nrPost.flags == "nsecbunker_unsigned" {
-                            Text("Signing post...")
-                        }
-                        else {
-                            Text("Sending post...")
-                        }
-                        Spacer()
-                        if nrPost.flags != "nsecbunker_unsigned" {
-                            Button("Send now") {
-                                nrPost.sendNow()
-                            }
-                            .buttonStyle(.borderless)
-                            .foregroundColor(theme.accent)
-                            .opacity(nrPost.flags == "nsecbunker_unsigned" ? 0 : 1.0)
-                            .padding(.trailing, 5)
-                        }
-                        Button("Undo") {
-                            nrPost.unpublish()
-                        }
-                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
-                        .foregroundColor(Color.white)
-                        .opacity(nrPost.flags == "nsecbunker_unsigned" ? 0 : 1.0)
-                    }
-                    .padding(.bottom, 5)
-                    .foregroundColor(Color.primary)
-                    .fontWeight(.bold)
-                }
-                else if !nrPost.isPreview && nrPost.flags != "awaiting_send" && nrPost.flags != "nsecbunker_unsigned" {
-                    HStack {
-                        if nrPost.flags == "nsecbunker_unsigned" && nrPost.relays != "" {
-                            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
-                        }
-                        else if relaysCount == 0 {
-                            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.yellow)
-                        }
-                        Text("Sent to \(relaysCount) relays", comment:"Message shown in footer of sent post")
-                        Spacer()
-                    }
-                    .padding(.bottom, 5)
-                }
-            }
+            OwnPostFooter(nrPost: nrPost)
         }
         .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))        
-    }
-    
-    var isOwnPost:Bool {
-        if nrPost.pubkey == NosturState.shared.activeAccountPublicKey { return true }
-        guard let account = NosturState.shared.accounts.first(where: { $0.publicKey == nrPost.pubkey }) else { return false }
-        return account.privateKey != nil
     }
 }
 

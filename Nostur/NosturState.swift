@@ -87,7 +87,16 @@ final class NosturState : ObservableObject {
     
     var subscriptions = Set<AnyCancellable>()
 
-    @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
+    @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = "" {
+        didSet {
+            let activeAccountPublicKey = self.activeAccountPublicKey
+            bg().perform {
+                self.bgActiveAccountPublicKey = activeAccountPublicKey
+            }
+        }
+    }
+    
+    var bgActiveAccountPublicKey: String = ""
     @Published var account:Account? = nil {
         didSet {
             if let account {
