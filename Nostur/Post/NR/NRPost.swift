@@ -117,7 +117,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var parentPosts: [NRPost] { // access from BG only
         get { _parentPosts }
         set {
-            _parentPosts = newValue
+            _parentPosts = newValue // Thread 1 - Data race in Nostur.NRPost.parentPosts.setter : Swift.Array<Nostur.NRPost> at 0x112075600
             DispatchQueue.main.async {
                 self.postOrThreadAttributes.parentPosts = newValue
             }
