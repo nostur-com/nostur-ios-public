@@ -12,6 +12,7 @@ import Combine
 ///
 /// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
 struct AppView: View {
+    @EnvironmentObject var theme:Theme
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
     @AppStorage("did_accept_terms") var didAcceptTerms = false
     private var nwcRQ:NWCRequestQueue = .shared
@@ -52,6 +53,7 @@ struct AppView: View {
                     .environmentObject(ns)
                     .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                     .onAppear { isOnboarding = true }
+                
             }
             else {
                 if let account = ns.account {
@@ -60,6 +62,7 @@ struct AppView: View {
                             ReadOnlyAccountInformationSheet()
                                 .presentationDetents([.large])
                                 .environmentObject(ns)
+                                .environmentObject(theme)
                         }
                         .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                         .environmentObject(ns)
@@ -88,6 +91,7 @@ struct AppView: View {
                 isOnboarding = onBoardingIsShown
             }
         }
+        .environmentObject(theme)
     }
     
     func startNosturing() {
