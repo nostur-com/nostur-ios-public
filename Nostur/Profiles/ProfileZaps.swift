@@ -198,7 +198,7 @@ struct ProfileZaps: View {
                     .uniqued(on: { $0.zappedEventId })
                     .compactMap { $0.zappedEvent }
                     .map { NRPost(event: $0) }
-                    .sorted(by: { $0.zapTally > $1.zapTally })
+                    .sorted(by: { $0.footerAttributes.zapTally > $1.footerAttributes.zapTally })
                     .prefix(25)
                 
                 DispatchQueue.main.async {

@@ -57,15 +57,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.replyingToUsernamesMarkDown = replyingToUsernamesMarkDown
         }
     }
-    
-    class FooterAttributes: ObservableObject {
-        @Published var replyPFPs:[URL] = []
-        
-        init(replyPFPs:[URL] = []) {
-            self.replyPFPs = replyPFPs
-        }
-    }
-    
+
     // Seperate ObservableObjects for view performance optimization
     var postOrThreadAttributes: PostOrThreadAttributes
     var postRowDeletableAttributes: PostRowDeletableAttributes
@@ -221,17 +213,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
 
-    var replied = false
-    var liked = false
-    var reposted = false
-    var bookmarked = false
     var hasPrivateNote = false
-    var repliesCount:Int64 = 0
-    var mentionsCount:Int64 = 0
-    var repostsCount:Int64 = 0
-    var likesCount:Int64 = 0
-    var zapsCount:Int64 = 0
-    var zapTally:Int64 = 0
     var linkPreviewURLs:[URL] = []
     var previewWeights:PreviewWeights?
     var plainTextOnly = false
@@ -287,8 +269,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         let parentPosts = withParents ? event.parentEvents.map { NRPost(event: $0) } : []
         self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: parentPosts)
         self._parentPosts = parentPosts
-        self._replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
-        self.repliesCount = max(event.repliesCount, Int64(_replies.count))
+        
+        let replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
+        self._replies = replies
         self.ownPostAttributes = OwnPostAttributes(isOwnPost: NosturState.shared.bgAccountKeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
         
         if withReplies {
@@ -296,10 +279,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 return NosturState.shared.bgFollowingPFPs[reply.pubkey]
             }
             .uniqued(on: ({ $0 }))
-            .prefix(4)))
+            .prefix(4)), event: event)
         }
         else {
-            self.footerAttributes = FooterAttributes()
+            self.footerAttributes = FooterAttributes(event: event)
         }
         
         self._repliesToRoot = []
@@ -345,11 +328,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         else {
             self.replyingToAttributes = ReplyingToAttributes()
         }
-        self.mentionsCount = event.mentionsCount
-        self.repostsCount = event.repostsCount
-        self.zapsCount = event.zapsCount
-        self.likesCount = event.likesCount
-        self.zapTally = event.zapTally
+//        self.mentionsCount = event.mentionsCount
+        
+        
         self.relays = event.relays
         self.fastTags = event.fastTags
         self.plainText = NRTextParser.shared.copyPasteText(event, text: event.content ?? "").text
@@ -479,10 +460,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         } else {
             self.zapState = event.zapState
         }
-        self.bookmarked = isBookmarked()
-        self.liked = isLiked()
-        self.replied = isReplied()
-        self.reposted = isReposted()
+
         self.hasPrivateNote = _hasPrivateNote()
         
         
@@ -496,12 +474,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         setupSubscriptions()
     }
     
-    private func isBookmarked() -> Bool {
-        if let account = NosturState.shared.bgAccount, let bookmarks = account.bookmarks {
-            return bookmarks.contains(event)
-        }
-        return false
-    }
+    
     
     private func _hasPrivateNote() -> Bool {
         if let account = NosturState.shared.bgAccount, let notes = account.privateNotes {
@@ -521,47 +494,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
         return false
     }
-    
-    private func isLiked() -> Bool {
-        if let account = NosturState.shared.bgAccount {
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7", created_at, id, account.publicKey)
-            fr.fetchLimit = 1
-            fr.resultType = .countResultType
-            let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
-            return count > 0
-        }
-        return false
-    }
-    
+
     private static func isBlocked(pubkey:String) -> Bool {
         if NosturState.shared.bgAccount != nil {
             return NosturState.shared.bgAccount?.blockedPubkeys_.contains(pubkey) ?? false
-        }
-        return false
-    }
-    
-    private func isReplied() -> Bool {
-        if let account = NosturState.shared.bgAccount {
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "created_at > %i AND replyToId == %@ AND pubkey == %@ AND kind == 1", created_at, id, account.publicKey)
-            fr.fetchLimit = 1
-            fr.resultType = .countResultType
-            let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
-            return count > 0
-        }
-        return false
-    }
-    
-    private func isReposted() -> Bool {
-        if let account = NosturState.shared.bgAccount {
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "created_at > %i AND repostForId == %@ AND pubkey == %@",
-                                       created_at, id, account.publicKey)
-            fr.fetchLimit = 1
-            fr.resultType = .countResultType
-            let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
-            return count > 0
         }
         return false
     }
@@ -726,10 +662,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private func repostsListener() {
         event.repostsDidChange
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] reposts in
+            .sink { [weak self] reposts in // Int64
                 guard let self = self else { return }
-                self.objectWillChange.send()
-                self.repostsCount = reposts
+                self.footerAttributes.objectWillChange.send()
+                self.footerAttributes.repostsCount = reposts
             }
             .store(in: &subscriptions)
     }
@@ -739,8 +675,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] likes in
                 guard let self = self else { return }
-                self.objectWillChange.send()
-                self.likesCount = likes
+                self.footerAttributes.objectWillChange.send()
+                self.footerAttributes.likesCount = likes
                 
                 // Also update own like (or slow? disbaled)
 //                if !self.liked && isLiked() { // nope. main bg thread mismatch
@@ -755,9 +691,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] (count, tally) in
                 guard let self = self else { return }
-                self.objectWillChange.send()
-                self.zapTally = tally
-                self.zapsCount = count
+                self.footerAttributes.objectWillChange.send()
+                self.footerAttributes.zapTally = tally
+                self.footerAttributes.zapsCount = count
             }
             .store(in: &subscriptions)
         
@@ -781,16 +717,16 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard action.eventId == self.id else { return }
                 
                 DispatchQueue.main.async {
-                    self.objectWillChange.send()
+                    self.footerAttributes.objectWillChange.send()
                     switch action.type {
                     case .bookmark:
-                        self.bookmarked = action.bookmarked
+                        self.footerAttributes.bookmarked = action.bookmarked
                     case .liked:
-                        self.liked = true
+                        self.footerAttributes.liked = true
                     case .replied:
-                        self.replied = true
+                        self.footerAttributes.replied = true
                     case .reposted:
-                        self.reposted = true
+                        self.footerAttributes.reposted = true
                     case .privateNote:
                         self.hasPrivateNote = action.hasPrivateNote
                     }
@@ -978,9 +914,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
                         DispatchQueue.main.async {
                             self.objectWillChange.send()
-                            self.repliesCount = Int64(nrReplies.count)
                             self.replies = nrReplies
+                            
                             self.footerAttributes.objectWillChange.send()
+                            self.footerAttributes.repliesCount = Int64(nrReplies.count)
                             self.footerAttributes.replyPFPs = Array(replyPFPs)
                         }
                     }
@@ -995,8 +932,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.event.repliesUpdated
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { replies in
-                self.objectWillChange.send()
-                self.repliesCount = Int64(replies.count)
+                self.footerAttributes.objectWillChange.send()
+                self.footerAttributes.repliesCount = Int64(replies.count)
             }
             .store(in: &subscriptions)
     }
@@ -1025,8 +962,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
             DispatchQueue.main.async {
                 self.objectWillChange.send()
-                self.repliesCount = Int64(nrReplies.count)
                 self.replies = nrReplies
+                self.footerAttributes.objectWillChange.send()
+                self.footerAttributes.repliesCount = Int64(nrReplies.count)
             }
         }
     }
@@ -1072,8 +1010,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     @MainActor public func like() -> NEvent {
-        self.objectWillChange.send()
-        self.liked = true
+        self.footerAttributes.objectWillChange.send()
+        self.footerAttributes.liked = true
         DataProvider.shared().bg.perform {
             self.event.likesCount += 1
         }
@@ -1082,8 +1020,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     @MainActor public func unlike() {
-        self.objectWillChange.send()
-        self.liked = false
+        self.footerAttributes.objectWillChange.send()
+        self.footerAttributes.liked = false
         DataProvider.shared().bg.perform {
             self.event.likesCount -= 1
         }
@@ -1333,9 +1271,10 @@ extension NRPost { // Helpers for grouped replies
             self.event.repliesCount = Int64(replies.count) // Fix wrong count in db
             DispatchQueue.main.async {
                 self.objectWillChange.send()
-                self.repliesCount = Int64(replies.count)
                 self.replies = replies
                 self.groupedReplies = groupedReplies
+                self.footerAttributes.objectWillChange.send()
+                self.footerAttributes.repliesCount = Int64(replies.count)
             }
         }
     }
