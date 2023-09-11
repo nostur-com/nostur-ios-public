@@ -36,6 +36,8 @@ class FollowerNotifier {
             .debounce(for: .seconds(5), scheduler: RunLoop.main) // Debounce 5 seconds to allow collection of more contact lists during import
             .sink { [weak self] accountPubkey in
                 guard let self = self else { return }
+                // Should still be same account (account switch could have happened in 5 sec)
+                guard NosturState.shared.activeAccountPublicKey == accountPubkey else { return }
                 self._generateNewFollowersNotification(accountPubkey)
             }
             .store(in: &subscriptions)
