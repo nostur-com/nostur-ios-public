@@ -61,6 +61,7 @@ struct FollowersList: View {
                     Image(systemName:"arrow.clockwise.circle.fill")
                         .onTapGesture {
                             req(RM.getFollowers(pubkey: pubkey))
+                            rechecking = true
                         }
                         .help("Recheck")
                 }
