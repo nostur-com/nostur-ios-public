@@ -73,6 +73,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var pfpAttributes: PFPAttributes
     var replyingToAttributes: ReplyingToAttributes
     var footerAttributes: FooterAttributes
+    var ownPostAttributes: OwnPostAttributes
     
     let SPAM_LIMIT_P:Int = 50
  
@@ -203,7 +204,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var highlightData:KindHightlight?
     var fileMetadata:KindFileMetadata?
     
-    var relays:String = ""
+    var relays:String
     
     var zapState:Event.ZapState?
     var isZapped:Bool {
@@ -219,7 +220,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
         }
     }
-    @Published var cancellationId:UUID? = nil // if set, will show 'undo send' view
+
     var replied = false
     var liked = false
     var reposted = false
@@ -234,7 +235,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var linkPreviewURLs:[URL] = []
     var previewWeights:PreviewWeights?
     var plainTextOnly = false
-    var flags:String = ""
+    var flags:String {
+        get { ownPostAttributes.flags }
+        set {
+            DispatchQueue.main.async {
+                self.ownPostAttributes.flags = newValue
+            }
+        }
+    }
     var aTag:String = ""
     var isPreview = false // hide 'Sent to 0 relays' in preview footer
     
@@ -264,7 +272,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var articleImageURL:URL?
     var mostRecentId:String?
     
-    init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isPreview:Bool = false) {
+    init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isPreview:Bool = false, cancellationId:UUID? = nil) {
         var isAwaiting = false
         
         self.event = event // Only touch this in BG context!!!
@@ -281,6 +289,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self._parentPosts = parentPosts
         self._replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
         self.repliesCount = max(event.repliesCount, Int64(_replies.count))
+        self.ownPostAttributes = OwnPostAttributes(isOwnPost: NosturState.shared.bgAccountKeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
         
         if withReplies {
             self.footerAttributes = FooterAttributes(replyPFPs: Array(_replies.compactMap { reply in
@@ -351,7 +360,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.plainTextOnly = plainText
         self.inWoT = event.inWoT
         self.isSpam = event.isSpam
-        self.flags = event.flags
         self.aTag = event.aTag
         
         // article?
@@ -632,32 +640,36 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private func relaysUpdatedListener() {
         event.relaysUpdated
-            .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
+//            .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
             .sink { [weak self] relays in
                 guard let self = self else { return }
-                self.objectWillChange.send()
+//                self.objectWillChange.send()
                 self.relays = relays
+                let relaysCount = relays.split(separator: " ").count
+                DispatchQueue.main.async {
+                    self.ownPostAttributes.objectWillChange.send()
+                    self.ownPostAttributes.relaysCount = relaysCount
+                }
             }
             .store(in: &subscriptions)
     }
     
     private func updateNRPostListener() {
         event.updateNRPost
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+//            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] event in
                 guard let self = self else { return }
                 
-                DataProvider.shared().bg.perform {
-                    let relays = event.relays
-                    let flags = event.flags
-                    let cancellationId = event.cancellationId
+                self.relays = event.relays
+                let relaysCount = event.relays.split(separator: " ").count
+                let flags = event.flags
+                let cancellationId = event.cancellationId
 
-                    DispatchQueue.main.async {
-                        self.objectWillChange.send()
-                        self.relays = relays
-                        self.flags = flags
-                        self.cancellationId = cancellationId
-                    }
+                DispatchQueue.main.async {
+                    self.ownPostAttributes.objectWillChange.send()
+                    self.ownPostAttributes.relaysCount = relaysCount
+                    self.ownPostAttributes.flags = flags
+                    self.ownPostAttributes.cancellationId = cancellationId
                 }
             }
             .store(in: &subscriptions)
@@ -694,8 +706,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard eventId == self.id else { return }
                 
                 DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                    self.cancellationId = nil
+                    self.ownPostAttributes.objectWillChange.send()
+                    self.ownPostAttributes.cancellationId = nil
                 }
             }
             .store(in: &subscriptions)
@@ -948,8 +960,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let self = self else { return }
                     let nrReplies = replies.map { event in
-                        let nrPost = NRPost(event: event)
-                        nrPost.cancellationId = cancellationIds[event.id]
+                        let nrPost = NRPost(event: event, cancellationId: cancellationIds[event.id])
                         return nrPost
                     }
                     
@@ -1079,19 +1090,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     @MainActor public func unpublish() {
-        guard let cancellationId = cancellationId else { return }
+        guard let cancellationId = ownPostAttributes.cancellationId else { return }
         _ = Unpublisher.shared.cancel(cancellationId)
-        self.objectWillChange.send()
-        self.cancellationId = nil
+        self.ownPostAttributes.objectWillChange.send()
+        self.ownPostAttributes.cancellationId = nil
         sendNotification(.unpublishedNRPost, self)
     }
     
     @MainActor public func sendNow() {
-        guard let cancellationId = cancellationId else { return }
+        guard let cancellationId = ownPostAttributes.cancellationId else { return }
         let didSend = Unpublisher.shared.sendNow(cancellationId)
-        self.objectWillChange.send()
-        self.cancellationId = nil
-        self.flags = ""
+        self.ownPostAttributes.objectWillChange.send()
+        self.ownPostAttributes.cancellationId = nil
+        self.ownPostAttributes.flags = ""
         
         if !didSend {
             L.og.info("🔴🔴 Send now failed")
@@ -1185,8 +1196,7 @@ extension NRPost { // Helpers for grouped replies
             let nrRepliesToRoot = repliesToRoot
                 .filter { !Set(account.blockedPubkeys_).contains($0.pubkey) }
                 .map { event in
-                    let nrPost = NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: false)
-                    nrPost.cancellationId = cancellationIds[event.id]
+                    let nrPost = NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[event.id])
                     return nrPost
                 } // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
             self.repliesToRoot = nrRepliesToRoot
@@ -1202,8 +1212,7 @@ extension NRPost { // Helpers for grouped replies
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let self = self else { return }
                     
-                    let nrReply = NRPost(event: reply, withReplyTo: false, withParents: false, withReplies: false, plainText: false) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
-                    nrReply.cancellationId = cancellationIds[nrReply.id]
+                    let nrReply = NRPost(event: reply, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[reply.id]) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
                     self.repliesToRoot.append(nrReply)
                     self.groupRepliesToRoot.send(self.replies)
                 }
