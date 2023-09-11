@@ -211,7 +211,7 @@ public final class NewPostModel: ObservableObject {
             nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
         }
         
-        DataProvider.shared().bg.perform {
+        bg().perform {
             let previewEvent = createPreviewEvent(nEvent)
             if (!self.pastedImages.isEmpty) {
                 previewEvent.previewImages = self.pastedImages
@@ -220,7 +220,7 @@ public final class NewPostModel: ObservableObject {
             DispatchQueue.main.async {
                 self.previewNRPost = nrPost
             }
-            DataProvider.shared().bg.delete(previewEvent)
+            bg().delete(previewEvent)
         }
     }
     
