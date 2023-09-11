@@ -90,10 +90,8 @@ struct ProfileNotesView: View {
                 let event = notification.object as! Event
                 guard event.pubkey == pubkey else { return }
                 EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "ProfileNotesView.newPostSaved")
-                let nrPost = NRPost(event: event)
-                let cancellationId = event.cancellationId
+                let nrPost = NRPost(event: event, cancellationId: event.cancellationId)
                 DispatchQueue.main.async {
-                    nrPost.cancellationId = cancellationId
                     fl.nrPosts.insert(nrPost, at: 0)
                 }
             }

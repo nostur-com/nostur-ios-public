@@ -71,8 +71,7 @@ class FastLoader: ObservableObject {
     
     // How to transform (eg from Event to NRPost)
     var transformer:(_ event:Event) -> NRPost? = { event in
-        var nrPost = NRPost(event: event)
-        nrPost.cancellationId = event.cancellationId
+        var nrPost = NRPost(event: event, cancellationId: event.cancellationId)
         return nrPost
     }
     
