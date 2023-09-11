@@ -180,12 +180,14 @@ class ArticlesFeedViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
+        self.nothingFound = false
         self.articles = []
         self.fetchFromRelays()
     }
     
     // for after acocunt change
     public func reload() {
+        self.nothingFound = false
         self.lastFetch = nil
         self.backlog.clear()
         self.follows = NosturState.shared.followingPublicKeys
@@ -195,6 +197,7 @@ class ArticlesFeedViewModel: ObservableObject {
     
     // pull to refresh
     public func refresh() async {
+        self.nothingFound = false
         self.lastFetch = nil
         self.backlog.clear()
         self.follows = NosturState.shared.followingPublicKeys
