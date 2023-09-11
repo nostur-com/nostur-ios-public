@@ -319,6 +319,7 @@ struct SideBar: View {
                     .environmentObject(ns)
             }
             .presentationBackground(theme.background)
+            .environmentObject(theme)
         }
         .sheet(isPresented: $showAnySigner) {
             NavigationStack {
@@ -326,6 +327,7 @@ struct SideBar: View {
                     .environmentObject(ns)
             }
             .presentationBackground(theme.background)
+            .environmentObject(theme)
         }
         .actionSheet(item: $logoutAccount) { account in
                     ActionSheet(
