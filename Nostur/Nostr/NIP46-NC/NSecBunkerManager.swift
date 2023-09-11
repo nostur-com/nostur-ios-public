@@ -212,8 +212,8 @@ class NSecBunkerManager: ObservableObject {
     }
     
     // Ask nsecBunker for signature for given event, runs whenSigned(..) callback with signed event after
-    public func requestSignature(forEvent event: NEvent, whenSigned: ((NEvent) -> Void)? = nil) {
-        guard let account = Thread.isMainThread ? account : account?.toBG() else { return }
+    public func requestSignature(forEvent event: NEvent, usingAccount: Account? = nil, whenSigned: ((NEvent) -> Void)? = nil) {
+        guard let account = (usingAccount ?? (Thread.isMainThread ? account : account?.toBG())) else { return }
         
         // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead
         guard let sessionPrivateKey = account.privateKey else { return }
