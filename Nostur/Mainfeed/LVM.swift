@@ -1127,10 +1127,8 @@ extension LVM {
                     // If we are not hiding replies, we render leafs + parents --> withParents: true
                     //     and we don't load replies (withReplies) because any reply we follow should already be its own leaf (PostOrThread)
                     // If we are hiding replies (view), we show mini pfp replies instead, for that we need reply info: withReplies: true
-                    let newNRPostLeaf = NRPost(event: event, withParents: !hideReplies, withReplies: hideReplies, withRepliesCount: true)
-                    let cancellationId = event.cancellationId
+                    let newNRPostLeaf = NRPost(event: event, withParents: !hideReplies, withReplies: hideReplies, withRepliesCount: true, cancellationId: event.cancellationId)
                     DispatchQueue.main.async {
-                        newNRPostLeaf.cancellationId = cancellationId
                         self.nrPostLeafs.insert(newNRPostLeaf, at: 0)
                         self.lvmCounter.count = self.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
                     }
