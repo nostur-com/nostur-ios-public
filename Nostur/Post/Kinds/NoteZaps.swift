@@ -64,6 +64,7 @@ struct NoteZaps: View {
                     event.objectWillChange.send()
                     event.zapsCount = tally.1
                     event.zapTally = tally.0
+                    event.zapsDidChange.send((tally.1, tally.0))
                 }
             }
             
