@@ -67,7 +67,7 @@ struct DetailPane: View {
                                                 }
                                             }
                                         }
-                                        if let nrPost = tm.selected?.nrPost {
+                                        if let nrPost = tm.selected?.nrPost, tm.tabs.count > 1  {
                                             bg().perform {
                                                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onClose")
                                             }
