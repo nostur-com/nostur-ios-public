@@ -83,7 +83,9 @@ struct SingleMediaViewer: View {
                 else if let image = state.image {
                     if fullWidth {
                         image
-                            .interpolation(.none)
+                            .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
+//                            .interpolation(.none)
+                            .scaledToFit()
                             .padding(.horizontal, -contentPadding)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
@@ -104,7 +106,10 @@ struct SingleMediaViewer: View {
                     }
                     else {
                         image
-                            .interpolation(.none)
+//                            .interpolation(.none)
+                            .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
+                            .scaledToFit()
+                            
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
