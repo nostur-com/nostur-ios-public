@@ -69,6 +69,9 @@ class NSecBunkerManager: ObservableObject {
                     // SIGNED EVENT RESPONSE
                     if let error = ncResponse.error {
                         L.og.error("🏰 NSECBUNKER error signing event: \(error) ")
+                        DispatchQueue.main.async {
+                            sendNotification(.listStatus, "nsecBunker: \(error)")
+                        }
                         return
                     }
                     guard let result = ncResponse.result else {
