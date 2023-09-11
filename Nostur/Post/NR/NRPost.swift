@@ -272,7 +272,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         let replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
         self._replies = replies
-        self.ownPostAttributes = OwnPostAttributes(isOwnPost: NosturState.shared.bgAccountKeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
+        self.ownPostAttributes = OwnPostAttributes(isOwnPost: NosturState.shared.bgFullAccountKeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
         
         if withReplies {
             self.footerAttributes = FooterAttributes(replyPFPs: Array(_replies.compactMap { reply in
