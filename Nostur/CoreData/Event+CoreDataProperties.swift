@@ -86,7 +86,7 @@ extension Event {
         guard let reactionToId = reactionToId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: reactionToId, context: ctx) {
-            self.objectWillChange.send()
+//            self.objectWillChange.send()
             self.reactionTo = found
             return found
         }
@@ -119,12 +119,8 @@ extension Event {
         guard let replyToId = replyToId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: replyToId, context: ctx) {
-            DispatchQueue.main.async {
-                self.objectWillChange.send()
-                self.replyTo = found
-                found.objectWillChange.send()
-                found.addToReplies(self)
-            }
+            self.replyTo = found
+            found.addToReplies(self)
             return found
         }
         return nil
@@ -140,20 +136,6 @@ extension Event {
         if let found = try? Event.fetchEvent(id: replyToId, context: ctx) {
             self.replyTo = found
             found.addToReplies(self)
-            return found
-        }
-        return nil
-    }
-    
-    var replyToRoot_:Event? {
-        guard replyToRoot == nil else { return replyToRoot }
-        guard let replyToRootId = replyToRootId else { return nil }
-        guard let ctx = managedObjectContext else { return nil }
-        if let found = try? Event.fetchEvent(id: replyToRootId, context: ctx) {
-            DispatchQueue.main.async {
-                self.objectWillChange.send()
-                self.replyToRoot = found
-            }
             return found
         }
         return nil

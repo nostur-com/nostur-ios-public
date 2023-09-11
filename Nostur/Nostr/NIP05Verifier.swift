@@ -63,7 +63,7 @@ class NIP05Verifier {
                     if let nostrJson = try? self.decoder.decode(NostrJson.self, from: data!) {
                         if let pubkey = nostrJson.names[task.name] {
                             if pubkey != "" && pubkey == task.contact.pubkey {
-                                task.contact.objectWillChange.send()
+//                                task.contact.objectWillChange.send()
                                 task.contact.nip05verifiedAt = Date.now
                                 task.contact.nip05updated.send((true, task.contact.nip05 ?? "", task.name))
                                 L.fetching.info("👍 nip05 verified \(task.contact.nip05 ?? "")")
