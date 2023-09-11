@@ -102,7 +102,9 @@ final class NosturState : ObservableObject {
             if let account {
                 bg().perform {
                     self.bgAccount = bg().object(with: account.objectID) as? Account
-                    self.bgAccountKeys = Set(Account.fetchAccounts(context: bg()).map { $0.publicKey })
+                    let accounts = Account.fetchAccounts(context: bg())
+                    self.bgAccountKeys = Set(accounts.map { $0.publicKey })
+                    self.bgFullAccountKeys = Set(accounts.filter { $0.privateKey != nil }.map { $0.publicKey })
                 }
             }
             else {
@@ -112,6 +114,7 @@ final class NosturState : ObservableObject {
     }
     var bgAccount:Account?
     var bgAccountKeys:Set<String> = []
+    var bgFullAccountKeys:Set<String> = []
     @Published var readOnlyAccountSheetShown:Bool = false
     @Published var rawExplorePubkeys:Set<String> = []
     
@@ -133,6 +136,7 @@ final class NosturState : ObservableObject {
         let r = Account.fetchRequest()
         self.accounts_ = (try? viewContext.fetch(r) ) ?? []
         self.bgAccountKeys = Set(accounts_.map { $0.publicKey })
+        self.bgFullAccountKeys = Set(accounts_.filter { $0.privateKey != nil }.map { $0.publicKey })
     }
     
     func setAccount(account:Account? = nil) {
