@@ -571,6 +571,8 @@ class LVM: NSObject, ObservableObject {
                 }
                 // parentsKeep is now parentPosts with parents we have seen and older removed
                 // so we don't have gaps like before when using just .filter { }
+                
+                // Thread 27 -  Data race in Nostur.NRPost.parentPosts.setter : Swift.Array<Nostur.NRPost> at 0x112075600
                 truncatedPost.parentPosts = (parentsKeep + [replyTo]) // add back the replyTo, so we don't have dangling replies.
             }
             truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count // Data race in Nostur.NRPost.threadPostsCount.setter : Swift.Int at 0x10fbe9680 - thread 311
@@ -1519,7 +1521,7 @@ extension LVM {
             }
 
         let newEventIds = getAllEventIds(newUnrenderedEvents)
-        let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count
+        let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count // Thread 105 - Data race in Nostur.LVM.leafsAndParentIdsOnScreen.getter : Swift.Set<Swift.String> at 0x10c479400
         if newCount > 0 {
             self.startRenderingOlderSubject.send(newUnrenderedEvents)
         }

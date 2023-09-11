@@ -121,7 +121,6 @@ class HotViewModel: ObservableObject {
     
     // STEP 2: FETCH RECEIVED LIKES FROM DB, SORT MOST LIKED POSTS (WE ONLY HAVE IDs HERE)
     private func fetchLikesFromDB(_ onComplete: (() -> ())? = nil) {
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind == 7 AND pubkey IN %@", agoTimestamp, follows)
         bg().perform {
