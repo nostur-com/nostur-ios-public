@@ -61,54 +61,56 @@ struct NoteRow: View {
 //                .fixedSize(horizontal: false, vertical: true)
 
                 
-                if let firstQuote = noteRowAttributes.firstQuote {
-                    // CASE - WE HAVE REPOSTED POST ALREADY
-                    if firstQuote.blocked {
-                        HStack {
-                            Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
-                            Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) {
-                                nrPost.unblockFirstQuote()
-                            }
+                VStack(spacing: 0) { // TODO: Replace this VStack with own view
+                    if let firstQuote = noteRowAttributes.firstQuote {
+                        // CASE - WE HAVE REPOSTED POST ALREADY
+                        if firstQuote.blocked {
+                            HStack {
+                                Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                                Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) {
+                                    nrPost.unblockFirstQuote()
+                                }
                                 .buttonStyle(.bordered)
+                            }
+                            .padding(.leading, 8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                            )
+                            .hCentered()
                         }
-                        .padding(.leading, 8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
-                        .hCentered()
-                    }
-                    else {
-                        KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
-                            .onAppear {
-                                if !nrPost.missingPs.isEmpty {
-                                    DataProvider.shared().bg.perform {
-                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
-                                        QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+                        else {
+                            KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
+                                .onAppear {
+                                    if !nrPost.missingPs.isEmpty {
+                                        DataProvider.shared().bg.perform {
+                                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
+                                            QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+                                        }
                                     }
                                 }
-                            }
-                            .onDisappear {
-                                if !nrPost.missingPs.isEmpty {
-                                    QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+                                .onDisappear {
+                                    if !nrPost.missingPs.isEmpty {
+                                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+                                    }
                                 }
-                            }
                             // Extra padding reposted long form, because normal repost/post has 10, but longform uses 20
                             // so add the extra 10 here
-                            .padding(.horizontal, firstQuote.kind == 30023 ? 10 : 0)
+                                .padding(.horizontal, firstQuote.kind == 30023 ? 10 : 0)
+                        }
+                    }
+                    else if let firstQuoteId = nrPost.firstQuoteId {
+                        CenteredProgressView()
+                            .onAppear {
+                                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
+                                QueuedFetcher.shared.enqueue(id: firstQuoteId)
+                            }
+                            .onDisappear {
+                                QueuedFetcher.shared.dequeue(id: firstQuoteId)
+                            }
                     }
                 }
-                else if let firstQuoteId = nrPost.firstQuoteId {
-                    CenteredProgressView()
-                        .frame(height: 250)
-                        .onAppear {
-                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
-                            QueuedFetcher.shared.enqueue(id: firstQuoteId)
-                        }
-                        .onDisappear {
-                            QueuedFetcher.shared.dequeue(id: firstQuoteId)
-                        }
-                }
+                .frame(minHeight: 150)
             }
             else { // IS NOT A REPOST
                 KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped)
