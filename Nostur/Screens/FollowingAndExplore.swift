@@ -26,6 +26,7 @@ struct FollowingAndExplore: View {
     @StateObject private var exploreVM:LVM = LVMManager.shared.exploreLVM()
     @StateObject private var hotVM = HotViewModel()
     @StateObject private var articlesVM = ArticlesFeedViewModel()
+    @StateObject private var galleryVM = GalleryViewModel()
     
     @State var tabsOffsetY:CGFloat = 0.0
     
@@ -41,6 +42,9 @@ struct FollowingAndExplore: View {
         }
         if selectedSubTab == "Hot" {
             return String(localized:"Explore", comment:"Tab title for the Hot feed")
+        }
+        if selectedSubTab == "Gallery" {
+            return String(localized:"Gallery", comment:"Tab title for the Gallery feed")
         }
         return String(localized:"Feed", comment:"Tab title for a feed")
     }
@@ -72,6 +76,15 @@ struct FollowingAndExplore: View {
                             title: String(localized:"Articles", comment:"Tab title for feed of articles"),
 //                            secondaryText: articlesVM.agoText,
                             selected: selectedSubTab == "Articles")
+                        Spacer()
+                    }
+                    
+                    if account.follows_.count > 10 {
+                        TabButton(
+                            action: { selectedSubTab = "Gallery" },
+                            title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
+//                            secondaryText: articlesVM.agoText,
+                            selected: selectedSubTab == "Gallery")
                         Spacer()
                     }
                     
@@ -143,13 +156,16 @@ struct FollowingAndExplore: View {
                     .opacity(selectedSubTab == "Explore" ? 1 : 0)
                 
                 
-                // HOT
+                // HOT/ARTICLES/GALLERY
                 if account.follows_.count > 10 {
                     Hot(hotVM: hotVM)
                         .opacity(selectedSubTab == "Hot" ? 1 : 0)
                     
                     ArticlesFeed(vm: articlesVM)
                         .opacity(selectedSubTab == "Articles" ? 1 : 0)
+                    
+                    Gallery(vm: galleryVM)
+                        .opacity(selectedSubTab == "Gallery" ? 1 : 0)
                 }
                 
                 
@@ -171,6 +187,8 @@ struct FollowingAndExplore: View {
                     HotFeedSettings(hotVM: hotVM, showFeedSettings: $showFeedSettings)
                 case "Articles":
                     ArticleFeedSettings(vm: articlesVM, showFeedSettings: $showFeedSettings)
+                case "Gallery":
+                    GalleryFeedSettings(vm: galleryVM, showFeedSettings: $showFeedSettings)
                 default:
                     EmptyView()
                 }

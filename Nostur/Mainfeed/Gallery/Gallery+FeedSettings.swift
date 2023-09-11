@@ -24,14 +24,14 @@ struct GalleryFeedSettings: View {
                     VStack(alignment: .leading) {
                         AppThemeSwitcher(showFeedSettings: $showFeedSettings)
                             .padding(.bottom, 15)
-                        Text("Settings for: Hot")
+                        Text("Settings for: Gallery")
                             .fontWeight(.bold)
                             .hCentered()
                             .padding(.bottom, 20)
                         
                         Text("Time frame")
                             .frame(maxWidth: .infinity, alignment: .center)
-                        Picker("Time frame", selection: $hotVM.ago) {
+                        Picker("Time frame", selection: $vm.ago) {
                             Text("48h").tag(48)
                             Text("24h").tag(24)
                             Text("12h").tag(12)
@@ -41,7 +41,7 @@ struct GalleryFeedSettings: View {
                         }
                         .pickerStyle(.segmented)
                         
-                        Text("The Hot feed shows posts most liked by people you follow in the last \(hotVM.ago) hours")
+                        Text("The Gallery feed shows pictures most liked by people you follow in the last \(vm.ago) hours")
                             .padding(.top, 20)
                     }
                 }
