@@ -148,7 +148,8 @@ struct HighlightComposer: View {
                 DataProvider.shared().bgSave()
                 dismiss()
                 DispatchQueue.main.async {
-                    NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
+                    NosturState.shared.nsecBunker = NSecBunkerManager(account)
+                    NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
                         DataProvider.shared().bg.perform {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"
