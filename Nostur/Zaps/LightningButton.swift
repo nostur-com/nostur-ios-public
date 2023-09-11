@@ -146,7 +146,7 @@ struct LightningButton_Previews: PreviewProvider {
         }) {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
-                    LightningButton(tally:nrPost.zapTally, nrPost: nrPost)
+                    LightningButton(tally:nrPost.footerAttributes.zapTally, nrPost: nrPost)
                 }
             }
         }

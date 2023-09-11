@@ -279,22 +279,29 @@ struct NotificationsZaps: View {
 
 struct PostZap: View {
     let er:ExchangeRateModel = .shared // Not Observed for performance
-    @ObservedObject var nrPost:NRPost
+    @ObservedObject var nrPost:NRPost // TODO: ...
+    @ObservedObject var footerAttributes:FooterAttributes
     var zaps:[Event]
+    
+    init(nrPost: NRPost, zaps:[Event]) {
+        self.nrPost = nrPost
+        self.footerAttributes = nrPost.footerAttributes
+        self.zaps = zaps
+    }
     
     var body: some View {
         HStack(alignment: .top) {
             VStack {
                 Image(systemName: "bolt.fill")
-                    .foregroundColor(Color("AccentColor"))
-                Text(Double(nrPost.zapTally).satsFormatted)
+                    .foregroundColor(theme.accent)
+                Text(Double(footerAttributes.zapTally).satsFormatted)
                     .font(.title2)
                 if (er.bitcoinPrice != 0.0) {
-                    let fiatPrice = String(format: "$%.02f",(Double(nrPost.zapTally) / 100000000 * Double(er.bitcoinPrice)))
+                    let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(er.bitcoinPrice)))
 
                     Text("\(fiatPrice)")
                         .font(.caption)
-                        .opacity(nrPost.zapTally != 0 ? 0.5 : 0)
+                        .opacity(footerAttributes.zapTally != 0 ? 0.5 : 0)
                 }
             }
             .frame(width:80)

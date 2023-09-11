@@ -48,6 +48,11 @@
 		1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14CC42299D1D7E00131B8D /* NosturStyles.swift */; };
 		1F14CC45299D432400131B8D /* AccountsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14CC44299D432300131B8D /* AccountsSheet.swift */; };
 		1F1580D32AAD11A100E5CCAA /* View+onBecomingVisible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1580D22AAD11A100E5CCAA /* View+onBecomingVisible.swift */; };
+		1F15F0992AAF2EDC0004E706 /* FooterAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F15F0982AAF2EDC0004E706 /* FooterAttributes.swift */; };
+		1F15F09C2AAF2FCC0004E706 /* ReplyButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F15F09B2AAF2FCC0004E706 /* ReplyButton.swift */; };
+		1F15F09E2AAF34F10004E706 /* RepostButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F15F09D2AAF34F10004E706 /* RepostButton.swift */; };
+		1F15F0A02AAF35560004E706 /* LikeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F15F09F2AAF35560004E706 /* LikeButton.swift */; };
+		1F15F0A22AAF35B60004E706 /* BookmarkButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */; };
 		1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC482981718700D03FA9 /* BookmarksView.swift */; };
 		1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4A29819CAC00D03FA9 /* Cache.swift */; };
 		1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */; };
@@ -454,6 +459,11 @@
 		1F14CC42299D1D7E00131B8D /* NosturStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturStyles.swift; sourceTree = "<group>"; };
 		1F14CC44299D432300131B8D /* AccountsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsSheet.swift; sourceTree = "<group>"; };
 		1F1580D22AAD11A100E5CCAA /* View+onBecomingVisible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+onBecomingVisible.swift"; sourceTree = "<group>"; };
+		1F15F0982AAF2EDC0004E706 /* FooterAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FooterAttributes.swift; sourceTree = "<group>"; };
+		1F15F09B2AAF2FCC0004E706 /* ReplyButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyButton.swift; sourceTree = "<group>"; };
+		1F15F09D2AAF34F10004E706 /* RepostButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepostButton.swift; sourceTree = "<group>"; };
+		1F15F09F2AAF35560004E706 /* LikeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LikeButton.swift; sourceTree = "<group>"; };
+		1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkButton.swift; sourceTree = "<group>"; };
 		1F1ABC482981718700D03FA9 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		1F1ABC4A29819CAC00D03FA9 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsManager.swift; sourceTree = "<group>"; };
@@ -820,6 +830,7 @@
 		1F00E8C129C2626500797B78 /* Post */ = {
 			isa = PBXGroup;
 			children = (
+				1F15F09A2AAF2FBB0004E706 /* PostFooter */,
 				1FC0F5A12A4AEAE8004E4DAA /* Article */,
 				1FD78EED2A0CB770003E7B3E /* Kinds */,
 				1F685B502A0D1886009EEC9B /* NR */,
@@ -829,7 +840,6 @@
 				1F0088EA29D735080016F111 /* ContentRenderer.swift */,
 				1F20939E2A43FDCA0085E7D2 /* DetailFooterFragment.swift */,
 				1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */,
-				1FB130BA29C0F9A6004AC98D /* FooterFragmentView.swift */,
 				1F33EC3629B613F800615FB9 /* FullImageViewer.swift */,
 				1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */,
 				1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */,
@@ -927,6 +937,18 @@
 				1F0F356F2A31E54900AA9C41 /* ci_post_clone.sh */,
 			);
 			path = ci_scripts;
+			sourceTree = "<group>";
+		};
+		1F15F09A2AAF2FBB0004E706 /* PostFooter */ = {
+			isa = PBXGroup;
+			children = (
+				1FB130BA29C0F9A6004AC98D /* FooterFragmentView.swift */,
+				1F15F09B2AAF2FCC0004E706 /* ReplyButton.swift */,
+				1F15F09D2AAF34F10004E706 /* RepostButton.swift */,
+				1F15F09F2AAF35560004E706 /* LikeButton.swift */,
+				1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */,
+			);
+			path = PostFooter;
 			sourceTree = "<group>";
 		};
 		1F1F13012AA9A65D00DDED82 /* Hot */ = {
@@ -1140,15 +1162,16 @@
 			isa = PBXGroup;
 			children = (
 				1F8B6A722A20C63E0060EDB3 /* Kinds */,
+				1F15F0982AAF2EDC0004E706 /* FooterAttributes.swift */,
 				1F685B512A0D18D2009EEC9B /* NRContact.swift */,
 				1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */,
+				1F77AD0C2A421DD400585E12 /* NRContentMarkdownRenderer.swift */,
 				1FE9D2992A0E1D2A00256B90 /* NRContentTextRenderer.swift */,
 				1FD78EF82A0CE49D003E7B3E /* NRPost.swift */,
 				1F685B552A0D6E96009EEC9B /* NRReplyingToBuilder.swift */,
 				1FE9D2972A0E104D00256B90 /* NRTextParser.swift */,
 				1F8B6A6E2A20C5DE0060EDB3 /* PreviewWeights.swift */,
 				1F685B572A0D7800009EEC9B /* QueuedFetcher.swift */,
-				1F77AD0C2A421DD400585E12 /* NRContentMarkdownRenderer.swift */,
 			);
 			path = NR;
 			sourceTree = "<group>";
@@ -1815,6 +1838,7 @@
 				1FC0A9512A0F8B9D00F9ABF6 /* ProfileZaps.swift in Sources */,
 				1F88491429B537B400145340 /* TextFormattingRule.swift in Sources */,
 				1FDBD89C2A764224001D9F34 /* NoiseFilter.swift in Sources */,
+				1F15F0992AAF2EDC0004E706 /* FooterAttributes.swift in Sources */,
 				1F740D9C29AF1BF600EFCCA7 /* Badges.swift in Sources */,
 				1F88491329B537B400145340 /* NSFont.swift in Sources */,
 				1F8B6A6F2A20C5DE0060EDB3 /* PreviewWeights.swift in Sources */,
@@ -1898,6 +1922,7 @@
 				1F91D8F82A186E5200C419A3 /* AnimatedNumber.swift in Sources */,
 				1F740DA529AF5F6900EFCCA7 /* ContactsSearch.swift in Sources */,
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
+				1F15F09C2AAF2FCC0004E706 /* ReplyButton.swift in Sources */,
 				1FC2DFF429A9330600C8A9DA /* ProfileLightningButton.swift in Sources */,
 				1F740DA329AF524100EFCCA7 /* BadgeDetailView.swift in Sources */,
 				1F2F54EE2A02904E00B6D7E4 /* FastLoader.swift in Sources */,
@@ -2073,6 +2098,7 @@
 				1F810B3429E670AB006B1614 /* MutedWords+CoreDataProperties.swift in Sources */,
 				1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */,
 				1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */,
+				1F15F0A02AAF35560004E706 /* LikeButton.swift in Sources */,
 				1F685B522A0D18D2009EEC9B /* NRContact.swift in Sources */,
 				1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */,
 				1FF30DEF2A05784F00B0F011 /* SearchBox.swift in Sources */,
@@ -2099,10 +2125,12 @@
 				1FC2DFED29A90F6C00C8A9DA /* NoteMinimalContentView.swift in Sources */,
 				1F7483552A67823300CA7026 /* ImposterChecker.swift in Sources */,
 				1F33096129891C4800D4D8CF /* ProfileLikesView.swift in Sources */,
+				1F15F09E2AAF34F10004E706 /* RepostButton.swift in Sources */,
 				1F740DA729AF61A700EFCCA7 /* ContactSearchResultRow.swift in Sources */,
 				1FC4556529CB75EB00DE3239 /* NewDMComposer.swift in Sources */,
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
 				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
+				1F15F0A22AAF35B60004E706 /* BookmarkButton.swift in Sources */,
 				1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */,
 				1FBE253C2A9DC4F800F60FCF /* NRButton.swift in Sources */,
 				1FE4D91D2A5442450064F649 /* SettingsDefaultZapAmount.swift in Sources */,

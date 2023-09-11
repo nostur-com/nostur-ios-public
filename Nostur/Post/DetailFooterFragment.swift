@@ -9,14 +9,20 @@ import SwiftUI
 
 struct DetailFooterFragment: View {
     let er:ExchangeRateModel = .shared // Not Observed for performance
-    @ObservedObject var nrPost:NRPost
+    @ObservedObject var nrPost:NRPost // TODO: Remvoe observable, only use footerAttributes
+    @ObservedObject var footerAttributes:FooterAttributes
+    
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+        self.footerAttributes = nrPost.footerAttributes
+    }
     
     var tallyString:String {
         if (er.bitcoinPrice != 0.0) {
-            let fiatPrice = String(format: "$%.02f",(Double(nrPost.zapTally) / 100000000 * Double(er.bitcoinPrice)))
+            let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(er.bitcoinPrice)))
             return fiatPrice
         }
-        return String(nrPost.zapTally.formatNumber)
+        return String(footerAttributes.zapTally.formatNumber)
     }
 
     var body: some View {
@@ -24,21 +30,21 @@ struct DetailFooterFragment: View {
         HStack {
             NavigationLink(value: ViewPath.NoteReactions(id: nrPost.id)) {
                 HStack(spacing: 3) {
-                    AnimatedNumber(number: nrPost.likesCount)
+                    AnimatedNumber(number: footerAttributes.likesCount)
                         .fontWeight(.bold)
                     Text("reactions", comment: "Label for reactions count, example: (7) reactions")
                 }
             }
             NavigationLink(value: ViewPath.NoteReposts(id: nrPost.id)) {
                 HStack(spacing: 3) {
-                    AnimatedNumber(number: nrPost.repostsCount)
+                    AnimatedNumber(number: footerAttributes.repostsCount)
                         .fontWeight(.bold)
                     Text("reposts", comment: "Label for reposts count, example: (7) reposts")
                 }
             }
             NavigationLink(value: ViewPath.NoteZaps(id: nrPost.id)) {
                 HStack(spacing: 3) {
-                    AnimatedNumber(number: nrPost.zapsCount)
+                    AnimatedNumber(number: footerAttributes.zapsCount)
                         .fontWeight(.bold)
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
                 }
@@ -48,7 +54,7 @@ struct DetailFooterFragment: View {
                         AnimatedNumberString(number: tallyString)
                             .fontWeight(.bold)
                     }
-                    .opacity(nrPost.zapTally != 0 ? 1.0 : 0)
+                    .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
                 }
             }
 
