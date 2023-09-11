@@ -81,10 +81,6 @@ struct ProfileOverlayCard: View {
     private let sp:SocketPool = .shared
     
     var withoutFollowButton = false
-    
-    @State var cancellationId:UUID? = nil
-    @State var customZapId:UUID? = nil
-    @State var activeColor = Self.grey
     @State var similarPFP = false
     @State var backlog = Backlog(timeout: 5.0, auto: true)
     @State var lastSeen:String? = nil

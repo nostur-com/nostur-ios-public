@@ -20,7 +20,7 @@ struct AddExistingAccountSheet: View {
     var grayBackground: Color = Color.gray.opacity(0.2)
     var isNsecbunkerKey:Bool { key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#").count == 2 && key.split(separator: "#")[1].count == 64 }
     
-    @StateObject var bunkerManager = NSecBunkerManager()
+    @StateObject private var bunkerManager = NSecBunkerManager()
     
     var body: some View {
             ZStack {
