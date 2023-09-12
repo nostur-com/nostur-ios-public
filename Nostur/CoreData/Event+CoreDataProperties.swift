@@ -933,7 +933,7 @@ extension Event {
         }
     }
     
-    static func saveEvent(event:NEvent, relays:String? = nil, flags:String = "") -> Event {
+    static func saveEvent(event:NEvent, relays:String? = nil, flags:String = "", kind6firstQuote:Event? = nil) -> Event {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -1244,19 +1244,20 @@ extension Event {
         // kind6 - repost, the reposted post is put in as .firstQuote
         if event.kind == .repost, let firstE = event.firstE() {
             savedEvent.firstQuoteId = firstE
-            
-            
-            
-            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
-            if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                savedEvent.firstQuote = repostedEvent
-                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
-            }
-            else if let repostedEvent = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                savedEvent.firstQuote = repostedEvent
-                repostedEvent.repostsCount += 1
-                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+            savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
+
+            if savedEvent.firstQuote == nil { // or we fetch it if we dont have it yet
+                // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
+                if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+                    savedEvent.firstQuote = repostedEvent
+                    repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                    repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                }
+                else if let repostedEvent = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                    savedEvent.firstQuote = repostedEvent
+                    repostedEvent.repostsCount += 1
+                    repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                }
             }
         }
         

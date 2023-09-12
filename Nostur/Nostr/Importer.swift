@@ -235,7 +235,7 @@ class Importer {
                         }
                     }
                     
-                    let savedEvent = Event.saveEvent(event: event, relays: message.relays)
+                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote)
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
                         subscriptionIds.insert(subscriptionId)
