@@ -10,24 +10,9 @@ import NostrEssentials
 import CoreData
 import Combine
 
-// Try out fetch from all follows:
-// window: 1 hr (until)
-
-// fetch since: 1 hrs ago (until empty)
-// no full screen of media after 5 sec? 3 * 7 = 21 items
-// since: 2hrs ago (until 1hr ago)
-
-// no full screen of media after 2 sec? 3 * 7 = 21 items
-// since: 3hrs ago (until 2hr ago)
-
-// no full screen of media after 2 sec? 3 * 7 = 21 items
-// since: 4hrs ago (until 3hr ago)
-
-// no full screen of media after 2 sec? 3 * 7 = 21 items
-// since: 5hrs ago (until 4hr ago)
-
 class GalleryViewModel: ObservableObject {
     
+    @Published var state:GalleryState
     private var posts:[PostID: LikedBy<Pubkey>]
     private var backlog:Backlog
     private var follows:Set<Pubkey>
@@ -63,18 +48,27 @@ class GalleryViewModel: ObservableObject {
             logAction("Gallery feed time frame changed to \(self.ago)h")
             backlog.timeout = max(Double(ago / 4), 8.0)
             if ago < oldValue {
-                self.items = []
+                self.state = .loading
                 self.fetchPostsFromDB()
             }
             else {
-                self.items = []
+                self.state = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
                 self.fetchLikesFromRelays()
             }
         }
     }
     
+    var timeoutSeconds:Int { // 10 sec timeout for 1st 8hrs + 1 sec for every 4h after
+        max(10, Int(ceil(Double(10 + ((ago-8)/4)))))
+    }
+    
+    public func timeout() {
+        self.state = .timeout
+    }
+    
     public init() {
+        self.state = .initializing
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog = Backlog(timeout: 5.0, auto: true)
         self.follows = NosturState.shared.followingPublicKeys
@@ -228,18 +222,21 @@ class GalleryViewModel: ObservableObject {
             DispatchQueue.main.async {
                 onComplete?()
                 self.items = items
+                self.state = .ready
             }
         }
     }
     
     public func load() {
         guard shouldReload else { return }
+        self.state = .loading
         self.items = []
         self.fetchLikesFromRelays()
     }
     
     // for after acocunt change
     public func reload() {
+        self.state = .loading
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()
@@ -250,6 +247,7 @@ class GalleryViewModel: ObservableObject {
     
     // pull to refresh
     public func refresh() async {
+        self.state = .loading
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()
@@ -270,6 +268,13 @@ class GalleryViewModel: ObservableObject {
             return true
         }
         return false
+    }
+    
+    public enum GalleryState {
+        case initializing
+        case loading
+        case ready
+        case timeout
     }
 }
 
