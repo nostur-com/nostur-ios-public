@@ -53,7 +53,7 @@ struct ProfileMediaView: View {
                     }
                 }
             case .timeout:
-                VStack {
+                VStack(alignment: .center) {
                     Spacer()
                     Text("Time-out while loading gallery")
                     Button("Try again") { vm.reload() }
