@@ -107,6 +107,7 @@ struct Search: View {
             .onChange(of: searchText) { searchInput in
                 nrPosts = []
                 contacts.nsPredicate = NSPredicate(value: false)
+                navPath.removeLast(navPath.count)
                 switch typeOfSearch(searchInput) {
                 case .nprofile1(let term):
                     nprofileSearch(term)
@@ -160,7 +161,7 @@ struct Search: View {
                     searchText = nprofile1
                 }
                 else {
-                    navPath.removeLast(navPath.count)
+//                    navPath.removeLast(navPath.count)
                     navPath.append(destination.destination)
                 }
             }
