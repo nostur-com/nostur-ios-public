@@ -591,7 +591,7 @@ extension Event {
         // Check if contact matches the zapped event contact
         if let otherPubkey = zap.otherPubkey, let zappedEvent = zap.zappedEvent {
             guard otherPubkey == zappedEvent.pubkey else {
-                L.og.info("⚡️🔴 zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
+                L.og.info("⚡️🔴🔴 zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
                 zap.flags = "zpk_mismatch_event"
                 return false
             }
@@ -600,7 +600,7 @@ extension Event {
         // Check if zapper pubkey matches contacts published zapper pubkey
         if let zappedContact = zap.zappedContact, let zapperPubkey = zappedContact.zapperPubkey {
             guard zap.pubkey == zapperPubkey else {
-                L.og.info("⚡️🔴 zapper pubkey does not match contacts published zapper pubkey. zap: \(zap.id)")
+                L.og.info("⚡️🔴🔴 zapper pubkey does not match contacts published zapper pubkey. zap: \(zap.id)")
                 zap.flags = "zpk_mismatch"
                 return false
             }
@@ -865,7 +865,7 @@ extension Event {
     
     static func saveZapRequest(event:NEvent, context:NSManagedObjectContext) -> Event? {
         if let existingZapReq = try! Event.fetchEvent(id: event.id, context: context) {
-            //                print("🔴 zap req already in db");
+            //                print("🔴🔴 zap req already in db");
             return existingZapReq
         }
         
