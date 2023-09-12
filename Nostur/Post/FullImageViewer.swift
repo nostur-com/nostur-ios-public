@@ -25,7 +25,8 @@ struct FullImageViewer: View {
     @State private var sharableGif:Data? = nil
     @State private var post:NRPost? = nil
     @State private var showMiniProfile = false
-    @State var miniProfileAnimateIn = true
+    @State private var miniProfileAnimateIn = true
+    @State private var mediaPostPreview = true
     
     var body: some View {
         
@@ -99,6 +100,7 @@ struct FullImageViewer: View {
                                         .gesture(magnifyAndDragGesture)
                                         .onTapGesture {
                                             withAnimation {
+                                                mediaPostPreview.toggle()
                                                 scale = 1.0
                                             }
                                         }
@@ -115,6 +117,7 @@ struct FullImageViewer: View {
                                         .gesture(magnifyAndDragGesture)
                                         .onTapGesture {
                                             withAnimation {
+                                                mediaPostPreview.toggle()
                                                 scale = 1.0
                                             }
                                         }
@@ -151,7 +154,7 @@ struct FullImageViewer: View {
             }
         }
         .overlay(alignment: .topLeading) {
-            if let post = post, !showMiniProfile {
+            if let post = post, mediaPostPreview && !showMiniProfile {
                 MediaPostPreview(post, showMiniProfile: $showMiniProfile)
                     .padding(10)
                     .background(.ultraThinMaterial)
