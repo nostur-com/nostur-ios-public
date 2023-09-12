@@ -619,7 +619,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     func connect(_ forceConnectionAttempt:Bool = false) {
         guard self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
             self.skipped = skipped + 1
-            L.sockets.info("🏎️🏎️🔌🔴 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
+            L.sockets.info("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
             return
         }
         if !isConnecting {
@@ -675,7 +675,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         else {
             self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
         }
-        L.sockets.info("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
+        L.sockets.info("🏎️🏎️🔌🔴🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
@@ -1062,7 +1062,7 @@ class NewEphemeralClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDel
             let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
             sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
         }
-        L.sockets.info("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
+        L.sockets.info("🏎️🏎️🔌🔴🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
     }
     
     func didReceiveMessage(_ text:String) {

@@ -63,14 +63,14 @@ class EventRelationsQueue {
         if Thread.isMainThread {
             if isBGevent {
                 ctx.perform { [unowned self] in
-                    guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
+                    guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
                     self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
                     L.og.info("🟢🟢🟢🔴🔴 WRONG THREAD: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
                 }
             }
             else {
                 ctx.perform { [unowned self] in
-                    guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
+                    guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
                     guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
                     self.waitingEvents[privateEvent.id] = QueuedEvent(event: privateEvent, queuedAt: Date.now)
                     L.og.info("🟢🟢🟢🔴🔴 WRONG THREAD+MAINEVENT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
@@ -78,7 +78,7 @@ class EventRelationsQueue {
             }
         }
         else {
-            guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
+            guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
             if isBGevent {
                 self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
                 if self.waitingEvents.count % 25 == 0 {
@@ -91,7 +91,7 @@ class EventRelationsQueue {
             else {
                 guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
                 self.waitingEvents[privateEvent.id] = QueuedEvent(event: privateEvent, queuedAt: Date.now)
-                L.og.info("🟢🟢🟢🟢🔴 WRONG MAINEVENT. addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                L.og.info("🟢🟢🟢🟢🔴🔴 WRONG MAINEVENT. addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
             }
         }
     }
@@ -118,14 +118,14 @@ class EventRelationsQueue {
     public func addAwaitingContact(_ contact:Contact, debugInfo:String? = "") {
         if contact.managedObjectContext == ctx {
             ctx.perform { [unowned self] in
-                guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
+                guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
                 self.waitingContacts[contact.pubkey] = QueuedContact(contact: contact, queuedAt: Date.now)
                 L.og.info("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
             }
         }
         else {
             ctx.perform { [unowned self] in
-                guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
+                guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
                 guard let privateContact = self.ctx.object(with: contact.objectID) as? Contact else { return }
                 self.waitingContacts[privateContact.pubkey] = QueuedContact(contact: privateContact, queuedAt: Date.now)
                 L.og.info("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
