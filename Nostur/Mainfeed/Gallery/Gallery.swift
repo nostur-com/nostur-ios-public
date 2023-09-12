@@ -131,6 +131,8 @@ struct GridItemView: View {
                     .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
                     .scaledToFill()
                     .frame(width: size, height: size)
+                    .clipped()
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         sendNotification(.fullScreenView, FullScreenItem(url: url, event: item.event))
                     }
