@@ -22,7 +22,7 @@ private struct WithSheets: ViewModifier {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var dim:DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
-
+    
     
     // Sheet contents (item based)
     @State var privateNote:PrivateNote? = nil
@@ -57,7 +57,7 @@ private struct WithSheets: ViewModifier {
     // Share post screenshot
     @State private var sharablePostImage:ShareablePostImage? = nil
     @State private var screenshotRenderer:AnyCancellable? = nil
-//    @State private var renderer:ImageRenderer<AnyView>? = nil
+    //    @State private var renderer:ImageRenderer<AnyView>? = nil
     @State private var shareableWeblink:ShareableWeblink? = nil
     
     @State var miniProfileSheetInfo:MiniProfileSheetInfo? = nil
@@ -82,7 +82,7 @@ private struct WithSheets: ViewModifier {
                 EditPrivateNoteSheet(privateNote: note)
                     .environmentObject(theme)
             }
-           
+        
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
                 let id = notification.object as! String
                 post = try! Event.fetchEvent(id: id, context: viewContext)
@@ -91,7 +91,7 @@ private struct WithSheets: ViewModifier {
                 NewPrivateNoteSheet(post: post)
                     .environmentObject(theme)
             }
-             
+        
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
                 let pubkey = notification.object as! String
                 contact = Contact.fetchByPubkey(pubkey, context: viewContext)
@@ -126,7 +126,7 @@ private struct WithSheets: ViewModifier {
                 }
                 .presentationBackground(theme.background)
             })
-            
+        
             .onReceive(receiveNotification(.requestConfirmationChangedFollows)) { notification in
                 let removed = notification.object as! RemovedPubkeys
                 self.removed = removed
@@ -181,7 +181,7 @@ private struct WithSheets: ViewModifier {
                 }
                 replyToEvent = notification.object as? EventNotification
             }
-                       
+        
             .onReceive(receiveNotification(.createNewQuoteOrRepost)) { notification in
                 guard ns.account?.privateKey != nil else {
                     ns.readOnlyAccountSheetShown = true
@@ -268,8 +268,8 @@ private struct WithSheets: ViewModifier {
                     .environmentObject(theme)
                     .presentationBackground(theme.background)
             }
-
-            // New highlight
+        
+        // New highlight
             .onReceive(receiveNotification(.newHighlight)) { notification in
                 let newHighlight = notification.object as! NewHighlight
                 self.newHighlight = newHighlight
@@ -282,7 +282,7 @@ private struct WithSheets: ViewModifier {
                 }
             }
         
-            // Lazy note context menu (because Menu() on every post is slow???)
+        // Lazy note context menu (because Menu() on every post is slow???)
             .onReceive(receiveNotification(.showNoteMenu)) { notification in
                 let nrPost = notification.object as! NRPost
                 self.contextMenuNrPost = nrPost
@@ -295,7 +295,7 @@ private struct WithSheets: ViewModifier {
                     .presentationBackground(theme.background)
             }
         
-            // Zap customizer sheet
+        // Zap customizer sheet
             .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
                 let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
                 self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
@@ -308,51 +308,51 @@ private struct WithSheets: ViewModifier {
                     .presentationBackground(theme.background)
             }
         
-            // Share post screenshot
+        // Share post screenshot
             .onReceive(receiveNotification(.sharePostScreenshot)) { notification in
                 let nrPost = notification.object as! NRPost
                 nrPost.following = true // Force load image for screenshot...
                 nrPost.isPreview = true // Will hide 'Sent to X relays' in footer
                 
                 let renderer = ImageRenderer(content:
-                    VStack(spacing:0) {
-                        if nrPost.kind == 30023 {
-                            ArticleView(nrPost, isDetail: true, fullWidth: false, hideFooter: false)
-                        }
-                        else {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: false, isDetail: true)
-                        }
-                        Group {
-                            if SettingsStore.shared.includeSharedFrom {
-                                Text("Shared from **Nostur**")
-                                Text("A nostr client for iOS & macOS - nostur.com")
-                                    .padding(.bottom, 5)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .padding(.trailing, 10)
-                        .font(.caption)
-                        .multilineTextAlignment(.trailing)
-                        .foregroundColor(Color.secondary)
+                                                VStack(spacing:0) {
+                    if nrPost.kind == 30023 {
+                        ArticleView(nrPost, isDetail: true, fullWidth: false, hideFooter: false)
                     }
+                    else {
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: false, isDetail: true)
+                    }
+                    Group {
+                        if SettingsStore.shared.includeSharedFrom {
+                            Text("Shared from **Nostur**")
+                            Text("A nostr client for iOS & macOS - nostur.com")
+                                .padding(.bottom, 5)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, 10)
+                    .font(.caption)
+                    .multilineTextAlignment(.trailing)
+                    .foregroundColor(Color.secondary)
+                }
                     .frame(width: 600)
                     .padding(10)
-                    
+                                             
                     .background(
                         RoundedRectangle(cornerRadius: 10.0)
                             .foregroundColor(theme.background)
                             .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
                     )
                                              
-                    .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                    .padding(.vertical, 10)
-                    .environmentObject(dim)
-                    .environmentObject(ns)
-                    .environment(\.managedObjectContext, DataProvider.shared().viewContext)
-                    .environment(\.colorScheme, colorScheme)
-                    .environmentObject(theme)
+                        .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                        .padding(.vertical, 10)
+                        .environmentObject(dim)
+                        .environmentObject(ns)
+                        .environment(\.managedObjectContext, DataProvider.shared().viewContext)
+                        .environment(\.colorScheme, colorScheme)
+                        .environmentObject(theme)
                 )
-
+                
                 
                 renderer.scale = 2.0
                 
@@ -374,40 +374,40 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $sharablePostImage) { sharablePostImage in
                 ActivityView(activityItems: [sharablePostImage])
             }
-            
+        
         // Share post weblink
-        .onReceive(receiveNotification(.shareWeblink)) { notification in
-            let nrPost = notification.object as! NRPost
-            
-            let relays = nrPost.relays.split(separator: " ").map { String($0) }
-                .filter {
-                    // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
-                    !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0")
-                }
-                .map { relay in
-                    // first try to put just scheme+hostname as relay. because extra parameters in url can be irrelevant
-                    if let url = URL(string: relay), let scheme = url.scheme, let host = url.host {
-                        return (scheme + "://" + host)
+            .onReceive(receiveNotification(.shareWeblink)) { notification in
+                let nrPost = notification.object as! NRPost
+                
+                let relays = nrPost.relays.split(separator: " ").map { String($0) }
+                    .filter {
+                        // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
+                        !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0")
                     }
-                    else {
-                        return relay
+                    .map { relay in
+                        // first try to put just scheme+hostname as relay. because extra parameters in url can be irrelevant
+                        if let url = URL(string: relay), let scheme = url.scheme, let host = url.host {
+                            return (scheme + "://" + host)
+                        }
+                        else {
+                            return relay
+                        }
                     }
+                
+                if nrPost.kind == 30023 {
+                    guard let sharable = try? ShareableIdentifier(prefix: "naddr", kind: nrPost.kind, pubkey: nrPost.pubkey, dTag: nrPost.mainEvent.dTag, relays: relays) else { return }
+                    let url = "https://nostr.com/\(sharable.bech32string)"
+                    self.shareableWeblink = ShareableWeblink(url: url)
                 }
-
-            if nrPost.kind == 30023 {
-                guard let sharable = try? ShareableIdentifier(prefix: "naddr", kind: nrPost.kind, pubkey: nrPost.pubkey, dTag: nrPost.mainEvent.dTag, relays: relays) else { return }
-                let url = "https://nostr.com/\(sharable.bech32string)"
-                self.shareableWeblink = ShareableWeblink(url: url)
+                else {
+                    guard let sharable = try? ShareableIdentifier(prefix: "nevent", kind: nrPost.kind, pubkey: nrPost.pubkey, eventId: nrPost.id, relays: relays) else { return }
+                    let url = "https://nostr.com/\(sharable.bech32string)"
+                    self.shareableWeblink = ShareableWeblink(url: url)
+                }
             }
-            else {
-                guard let sharable = try? ShareableIdentifier(prefix: "nevent", kind: nrPost.kind, pubkey: nrPost.pubkey, eventId: nrPost.id, relays: relays) else { return }
-                let url = "https://nostr.com/\(sharable.bech32string)"
-                self.shareableWeblink = ShareableWeblink(url: url)
+            .sheet(item: $shareableWeblink) { shareableWeblink in
+                ActivityView(activityItems: [NSURL(string: shareableWeblink.url)!])
             }
-        }
-        .sheet(item: $shareableWeblink) { shareableWeblink in
-            ActivityView(activityItems: [NSURL(string: shareableWeblink.url)!])
-        }
         
             .onReceive(receiveNotification(.showMiniProfile)) { notification in
                 let miniProfileSheetInfo = notification.object as! MiniProfileSheetInfo
@@ -471,20 +471,20 @@ final class ShareablePostImage: NSObject, UIActivityItemSource, Identifiable {
     private var pngData: Data?
     private let title: String
     private let subtitle: String?
-
+    
     init(image: UIImage, title: String, subtitle: String? = nil) {
         self.image = image
         self.pngData = image.pngData()
         self.title = title
         self.subtitle = subtitle
-
+        
         super.init()
     }
-
+    
     func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any {
         return title
     }
-
+    
     func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
         if pngData != nil {
             return pngData
@@ -498,16 +498,16 @@ final class ShareablePostImage: NSObject, UIActivityItemSource, Identifiable {
         }
         return UTType.jpeg.identifier
     }
-
+    
     func activityViewControllerLinkMetadata(_ activityViewController: UIActivityViewController) -> LPLinkMetadata? {
         let metadata = LPLinkMetadata()
-
+        
         metadata.iconProvider = NSItemProvider(object: self.image)
         metadata.title = title
         if let subtitle = subtitle {
             metadata.originalURL = URL(fileURLWithPath: subtitle)
         }
-
+        
         return metadata
     }
 }
