@@ -23,11 +23,25 @@ struct Gallery: View {
     
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView {
-                if vm.items.isEmpty {
-                    CenteredProgressView()
-                }
-                else {
+            switch vm.state {
+            case .initializing:
+                EmptyView()
+            case .loading:
+                CenteredProgressView()
+                    .task(id: "gallery") {
+                        do {
+                            try await Task.sleep(
+                                until: .now + .seconds(vm.timeoutSeconds),
+                                tolerance: .seconds(2),
+                                clock: .continuous
+                            )
+                            vm.timeout()
+                        } catch {
+                            
+                        }
+                    }
+            case .ready:
+                ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     LazyVGrid(columns: gridColumns) {
                         ForEach(vm.items) { item in
@@ -39,21 +53,28 @@ struct Gallery: View {
                         }
                     }
                 }
-            }
-            .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
-                guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
-                withAnimation {
-                    proxy.scrollTo(top)
+                .refreshable {
+                    await vm.refresh()
                 }
-            }
-            .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
-                guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
-                withAnimation {
-                    proxy.scrollTo(top)
+                .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
+                    guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
+                    withAnimation {
+                        proxy.scrollTo(top)
+                    }
                 }
-            }
-            .onReceive(receiveNotification(.activeAccountChanged)) { _ in
-                vm.reload()
+                .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                    guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
+                    withAnimation {
+                        proxy.scrollTo(top)
+                    }
+                }
+            case .timeout:
+                VStack {
+                    Spacer()
+                    Text("Time-out while loading gallery")
+                    Button("Try again") { vm.reload() }
+                    Spacer()
+                }
             }
         }
         .background(theme.listBackground)
@@ -61,9 +82,13 @@ struct Gallery: View {
             guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
             vm.load()
         }
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            vm.reload()
+        }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in
+            guard !IS_CATALYST else { return }
             guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
-            vm.items = []
+            vm.state = .loading
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { // Reconnect delay
                 vm.load()
             }
