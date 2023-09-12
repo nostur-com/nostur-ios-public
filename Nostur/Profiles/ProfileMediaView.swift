@@ -6,134 +6,68 @@
 //
 
 import SwiftUI
-import CoreData
-import Nuke
-import NukeUI
 
 // MEDIA ON USER PROFILE SCREEN
 struct ProfileMediaView: View {
+    private static let MAX_IMAGES_PER_POST = 10
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var dim:DIMENSIONS
     let pubkey:String
-    @StateObject var fl = FastLoader()
-    @State var didLoad = false
-    @State var backlog = Backlog()
+    @StateObject var vm:ProfileGalleryViewModel
     
-    let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
-    
-    var squareSize:CGFloat { CGFloat(Int((dim.listWidth-42)/3)) }
-    
-    @State var imageUrls:[URL] = []
-    
-    var body: some View {
-        VStack {
-            LazyVGrid(columns: columns, spacing: 5) {
-                ForEach(imageUrls.indices, id: \.self) { index in
-                    MediaThumb(imageUrls[index], size: squareSize)
-                }
-                Spacer()
-            }
-            .padding(10)
-            .onAppear {
-                guard !didLoad else { return }
-                didLoad = true
-                fl.nrPostTransform = false
-                fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
-                fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-                fl.loadMore(1000, includeSpam: true)
-            }
-            .onChange(of: fl.events) { events in
-                // Process fl.events to imageUrls:[URL] here, fixes microhang
-                let contentArray = events.compactMap { $0.content }
-                DispatchQueue.global(qos: .userInitiated).async {
-                    let urls = contentArray.flatMap { getImgUrlsFromContent($0) }
-                    DispatchQueue.main.async {
-                        self.imageUrls = urls
-                    }
-                }
-            }
-        }
-        .frame(minHeight: 800)
-    }
-}
-
-struct MediaThumb: View {
-    @EnvironmentObject var theme:Theme
-    let url:URL
-    let squareSize:CGFloat
-    @State var priority:ImageRequest.Priority = .normal
-    
-    init(_ url:URL, size:CGFloat) {
-        self.url = url
-        self.squareSize = size
+    init(pubkey: String) {
+        self.pubkey = pubkey
+        _vm = StateObject(wrappedValue: ProfileGalleryViewModel(pubkey))
     }
     
+    private static let initialColumns = 3
+    @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: initialColumns)
+    
     var body: some View {
-        LazyImage(request:
-                    ImageRequest(url: url,
-                                 processors: [.resize(width: squareSize, upscale: true)],
-                                 userInfo: [.scaleKey: UIScreen.main.scale])) { state in
-            if state.error != nil {
-                Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                    .centered()
-                    .frame(width:squareSize, height:squareSize)
-                    .background(theme.lineColor.opacity(0.2))
-                    .onAppear {
-                        L.og.debug("Failed to load image: \(state.error?.localizedDescription ?? "")")
-                    }
-            }
-            else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                GIFImage(data: data)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width:squareSize, height:squareSize)
-                    .clipped()
-                    .onTapGesture {
-                        sendNotification(.fullScreenView, FullScreenItem(url: url))
-                    }
-            }
-            else if let image = state.image {
-                image
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width:squareSize, height:squareSize)
-                    .background(theme.lineColor.opacity(0.2))
-                    .clipped()
-                    .contentShape(Path(CGRect(x: 0, y: 0, width: squareSize, height: squareSize)))
-                    .onTapGesture {
-                        sendNotification(.fullScreenView, FullScreenItem(url: url))
-                    }
-            }
-            else if state.isLoading { // does this conflict with showing preview images??
-                HStack(spacing: 5) {
-                    ImageProgressView(progress: state.progress)
-                        .onTapGesture {
-                            priority = .veryHigh
+        VStack(spacing: 0) {
+            switch vm.state {
+            case .initializing:
+                EmptyView()
+            case .loading:
+                CenteredProgressView()
+                    .task(id: "profilegallery") {
+                        do {
+                            try await Task.sleep(
+                                until: .now + .seconds(10),
+                                tolerance: .seconds(2),
+                                clock: .continuous
+                            )
+                            vm.state = .timeout
+                        } catch {
+                            
                         }
+                    }
+            case .ready:
+                LazyVGrid(columns: gridColumns) {
+                    ForEach(vm.items) { item in
+                        GeometryReader { geo in
+                            GridItemView(size: geo.size.width, item: item)
+                        }
+                        .clipped()
+                        .aspectRatio(1, contentMode: .fit)
+                    }
                 }
-                .centered()
-                .frame(width:squareSize, height:squareSize)
-                .background(theme.lineColor)
+            case .timeout:
+                VStack {
+                    Spacer()
+                    Text("Time-out while loading gallery")
+                    Button("Try again") { vm.reload() }
+                    Spacer()
+                }
             }
-            else {
-                theme.lineColor.opacity(0.2)
-            }
-        }
-        .pipeline(ImageProcessing.shared.content)
-        .priority(priority)
-        .onDisappear {
-            priority = .low
         }
         .onAppear {
-            priority = .normal
+            vm.load()
         }
+//        .padding(10)
+  
     }
 }
-
 
 struct ProfileMediaView_Previews: PreviewProvider {
     static var previews: some View {
