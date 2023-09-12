@@ -86,6 +86,7 @@ struct Gallery: View {
             vm.reload()
         }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in
+            guard vm.shouldReload else { return }
             guard !IS_CATALYST else { return }
             guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
             vm.state = .loading
@@ -118,7 +119,10 @@ struct GridItemView: View {
                 Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                     .centered()
                     .onAppear {
-                        L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
+                        L.og.error("Failed to load image: \(url.absoluteString) - \(state.error?.localizedDescription ?? "")")
+                    }
+                    .onTapGesture {
+                        navigateTo(NotePath(id: item.event.id))
                     }
             }
             else if let image = state.image {

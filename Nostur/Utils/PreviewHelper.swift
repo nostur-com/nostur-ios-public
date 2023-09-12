@@ -441,6 +441,7 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.tm)
                     .environmentObject(pe.dim)
                     .environmentObject(pe.theme)
+                    .environmentObject(pe.dim)
                     .buttonStyle(NRButtonStyle(theme: pe.theme))
                     .tint(pe.theme.accent)
             }
