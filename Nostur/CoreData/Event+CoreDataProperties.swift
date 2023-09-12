@@ -935,7 +935,7 @@ extension Event {
     
     static func saveEvent(event:NEvent, relays:String? = nil, flags:String = "") -> Event {
         #if DEBUG
-            if Thread.isMainThread {
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
         #endif
