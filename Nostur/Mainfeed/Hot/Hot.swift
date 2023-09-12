@@ -19,10 +19,24 @@ struct Hot: View {
     
     var body: some View {
         ScrollViewReader { proxy in
-            if hotVM.hotPosts.isEmpty {
+            switch hotVM.state {
+            case .initializing:
+                EmptyView()
+            case .loading:
                 CenteredProgressView()
-            }
-            else {
+                    .task(id: "hot") {
+                        do {
+                            try await Task.sleep(
+                                until: .now + .seconds(hotVM.timeoutSeconds),
+                                tolerance: .seconds(2),
+                                clock: .continuous
+                            )
+                            hotVM.timeout()
+                        } catch {
+                            
+                        }
+                    }
+            case .ready:
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: 10) {
@@ -41,26 +55,33 @@ struct Hot: View {
                         }
                     }
                     .padding(0)
-                    .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
-                        guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
-                        withAnimation {
-                            proxy.scrollTo(top)
-                        }
-                    }
-                    .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
-                        guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
-                        withAnimation {
-                            proxy.scrollTo(top)
-                        }
-                    }
-                    .onReceive(receiveNotification(.activeAccountChanged)) { _ in
-                        hotVM.reload()
-                    }
                 }
                 .refreshable {
                     await hotVM.refresh()
                 }
+                .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
+                    guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
+                    withAnimation {
+                        proxy.scrollTo(top)
+                    }
+                }
+                .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                    guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
+                    withAnimation {
+                        proxy.scrollTo(top)
+                    }
+                }
+                .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+                    hotVM.reload()
+                }
                 .padding(0)
+            case .timeout:
+                VStack {
+                    Spacer()
+                    Text("Time-out while loading hot feed")
+                    Button("Try again") { hotVM.reload() }
+                    Spacer()
+                }
             }
         }
         .background(theme.listBackground)
@@ -69,9 +90,10 @@ struct Hot: View {
             hotVM.load()
         }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in
+            guard !IS_CATALYST else { return }
             guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
             guard hotVM.shouldReload else { return }
-            hotVM.hotPosts = []
+            hotVM.state = .loading
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { // Reconnect delay
                 hotVM.load()
             }

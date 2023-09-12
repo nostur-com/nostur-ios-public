@@ -19,6 +19,7 @@ typealias Pubkey = String
 // Sort posts by unique (pubkey) likes
 class HotViewModel: ObservableObject {
     
+    @Published var state:FeedState
     private var posts:[PostID: LikedBy<Pubkey>]
     private var backlog:Backlog
     private var follows:Set<Pubkey>
@@ -53,18 +54,27 @@ class HotViewModel: ObservableObject {
             logAction("Hot feed time frame changed to \(self.ago)h")
             backlog.timeout = max(Double(ago / 4), 5.0)
             if ago < oldValue {
-                self.hotPosts = []
+                self.state  = .loading
                 self.fetchPostsFromDB()
             }
             else {
-                self.hotPosts = []
+                self.state  = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
                 self.fetchLikesFromRelays()
             }
         }
     }
     
+    var timeoutSeconds:Int { // 10 sec timeout for 1st 8hrs + 1 sec for every 4h after
+        max(10, Int(ceil(Double(10 + ((ago-8)/4)))))
+    }
+    
+    public func timeout() {
+        self.state = .timeout
+    }
+    
     public init() {
+        self.state = .initializing
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog = Backlog(timeout: 5.0, auto: true)
         self.follows = NosturState.shared.followingPublicKeys
@@ -213,6 +223,7 @@ class HotViewModel: ObservableObject {
             DispatchQueue.main.async {
                 onComplete?()
                 self.hotPosts = nrPosts
+                self.state = .ready
             }
             
             guard SettingsStore.shared.fetchCounts else { return }
@@ -241,12 +252,14 @@ class HotViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
+        self.state = .loading
         self.hotPosts = []
         self.fetchLikesFromRelays()
     }
     
     // for after acocunt change
     public func reload() {
+        self.state = .loading
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()
@@ -257,6 +270,7 @@ class HotViewModel: ObservableObject {
     
     // pull to refresh
     public func refresh() async {
+        self.state = .loading
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()
@@ -277,5 +291,12 @@ class HotViewModel: ObservableObject {
             return true
         }
         return false
+    }
+    
+    public enum FeedState {
+        case initializing
+        case loading
+        case ready
+        case timeout
     }
 }
