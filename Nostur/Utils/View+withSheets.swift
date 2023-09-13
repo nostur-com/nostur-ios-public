@@ -70,7 +70,7 @@ private struct WithSheets: ViewModifier {
                 fullImage = item
             }
             .fullScreenCover(item: $fullImage) { f in
-                FullImageViewer(fullImageURL: f.url, event: f.event)
+                FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem)
                     .environmentObject(theme)
                     .environmentObject(dim)
                     .presentationBackground(theme.background)
