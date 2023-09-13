@@ -81,13 +81,13 @@ struct NewAccountSheet: View {
             
             guard let newKind0EventSigned = try AccountManager.createMetadataEvent(account: newAccount) else { throw "could not create newKind0EventSigned " }
             
-            _ = Event.saveEventFromMain(event: newKind0EventSigned)
-            Contact.saveOrUpdateContact(event: newKind0EventSigned)
-            DataProvider.shared().bgSave()
-//            try viewContext.save()
+            bg().perform {
+                _ = Event.saveEvent(event: newKind0EventSigned)
+                Contact.saveOrUpdateContact(event: newKind0EventSigned)
+                
+                DataProvider.shared().bgSave()
+            }
             
-            // broadcast to relays
-//            up.publishNow(newKind0EventSigned) // TODO: Publish later? its probably empty now, will fill with follow
             ns.setAccount(account: newAccount)
             ns.onBoardingIsShown = false
             

@@ -268,9 +268,11 @@ func publishMetadataEvent(_ account:Account) throws {
             
             NosturState.shared.nsecBunker?.requestSignature(forEvent: newKind0Event, whenSigned: { signedEvent in
                 L.og.debug("Going to publish \(signedEvent.wrappedEventJson())")
-                _ = Event.saveEventFromMain(event: signedEvent)
-                Contact.saveOrUpdateContact(event: signedEvent)
-                DataProvider.shared().bgSave()
+                bg().perform {
+                    _ = Event.saveEvent(event: signedEvent)
+                    Contact.saveOrUpdateContact(event: signedEvent)
+                    DataProvider.shared().bgSave()
+                }
                 // broadcast to relays
                 Unpublisher.shared.publishNow(signedEvent)
             })
@@ -281,9 +283,11 @@ func publishMetadataEvent(_ account:Account) throws {
                 return
             }
             L.og.debug("Going to publish \(signedEvent.wrappedEventJson())")
-            _ = Event.saveEventFromMain(event: signedEvent)
-            Contact.saveOrUpdateContact(event: signedEvent)
-            DataProvider.shared().bgSave()
+            bg().perform {
+                _ = Event.saveEvent(event: signedEvent)
+                Contact.saveOrUpdateContact(event: signedEvent)
+                DataProvider.shared().bgSave()
+            }
             // broadcast to relays
             Unpublisher.shared.publishNow(signedEvent)
         }
