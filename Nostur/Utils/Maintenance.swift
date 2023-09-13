@@ -59,7 +59,7 @@ struct Maintenance {
             Self.runFixArticleReplies(context: context)
 //            Self.runFixImposterFalsePositives(context: context)
             Self.runMigrateDMState(context: context)
-            Self.runFixImposterFalsePositivesAgain(context: context)
+            Self.runFixImposterFalsePositivesAgainAgain(context: context)
 //            Self.runTempAlways(context: context)
             Self.runFixZappedContactPubkey(context: context)
         }
@@ -434,12 +434,12 @@ struct Maintenance {
             return
         }
         
-        L.maintenance.debug("runUseDtagForReplacableEvents: Found \(replacableEvents.count) replacable events")
+        L.maintenance.info("runUseDtagForReplacableEvents: Found \(replacableEvents.count) replacable events")
         
         for event in replacableEvents {
             event.dTag = event.fastTags.first(where: { $0.0 == "d" })?.1 ?? ""
             if event.dTag != "" {
-                L.maintenance.debug("runUseDtagForReplacableEvents: dTag set to: \(event.dTag) for \(event.id)")
+                L.maintenance.info("runUseDtagForReplacableEvents: dTag set to: \(event.dTag) for \(event.id)")
             }
         }
         
@@ -481,7 +481,7 @@ struct Maintenance {
             return
         }
         
-        L.maintenance.debug("eventsWithoutId: Found \(eventsWithoutId.count) eventsWithoutId")
+        L.maintenance.info("eventsWithoutId: Found \(eventsWithoutId.count) eventsWithoutId")
         
         for event in eventsWithoutId {
             context.delete(event)
@@ -511,7 +511,7 @@ struct Maintenance {
             return
         }
         
-        L.maintenance.debug("runInsertFixedNames: Found \(contacts.count) contacts")
+        L.maintenance.info("runInsertFixedNames: Found \(contacts.count) contacts")
         
         for contact in contacts {
             if contact.anyName != contact.authorKey {
@@ -540,7 +540,7 @@ struct Maintenance {
         fr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"a\",\"30023:")
         
         if let articleReplies = try? context.fetch(fr) {
-            L.maintenance.debug("runFixArticleReplies: Found \(articleReplies.count) article replies")
+            L.maintenance.info("runFixArticleReplies: Found \(articleReplies.count) article replies")
             for reply in articleReplies {
                 let event = reply.toNEvent()
                 
@@ -549,12 +549,12 @@ struct Maintenance {
                     if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
                         reply.replyToId = dbArticle.id
                         reply.replyTo = dbArticle
-                        L.maintenance.debug("runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article already in DB)")
+                        L.maintenance.info("runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article already in DB)")
                     }
                     else {
                         // we don't have the article yet, store aTag in replyToId
                         reply.replyToId = replyToAtag.value
-                        L.maintenance.debug("runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article not in DB)")
+                        L.maintenance.info("runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article not in DB)")
                     }
                 }
                 else if let replyToRootAtag = event.replyToRootAtag() {
@@ -562,12 +562,12 @@ struct Maintenance {
                     if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
                         reply.replyToRootId = dbArticle.id
                         reply.replyToRoot = dbArticle
-                        L.maintenance.debug("runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article already in DB)")
+                        L.maintenance.info("runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article already in DB)")
                     }
                     else {
                         // we don't have the article yet, store aTag in replyToRootId
                         reply.replyToRootId = replyToRootAtag.value
-                        L.maintenance.debug("runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article not in DB)")
+                        L.maintenance.info("runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article not in DB)")
                     }
                 }
                 
@@ -594,44 +594,13 @@ struct Maintenance {
     // In older versions right after switching accounts it would put the label
     // and then cache the result
     static func runFixImposterFalsePositives(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.fixImposterFalsePositives, context: context) else { return }
-        
-        let frA = Account.fetchRequest()
-        let allAccounts = Array(try! context.fetch(frA))
-        
-        var imposterCacheFixedCount = 0
-        var imposterCacheFollowCount = 0
-        for account in allAccounts {
-            guard account.privateKey != nil else { continue }
-            for contact in account.follows_ {
-                if contact.couldBeImposter == 1 {
-                    contact.couldBeImposter = 0
-                    imposterCacheFixedCount += 1
-                }
-                else if contact.couldBeImposter == -1 {
-                    contact.couldBeImposter = 0
-                    imposterCacheFollowCount += 1
-                }
-            }
-        }
-        
-        L.maintenance.debug("fixImposterFalsePositives: Fixed \(imposterCacheFixedCount) false positives, preset-to-0 \(imposterCacheFollowCount) contacts")
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.fixImposterFalsePositives.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runFixArticleReplies error on save(): \(error)")
-        }
-        
+        // removed. no need to run anymore, only run the last one below
     }
     
     // Need to run it again... false positives still
-    static func runFixImposterFalsePositivesAgain(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.fixImposterFalsePositivesAgain, context: context) else { return }
+    // And again - found another bug during new account onboarding
+    static func runFixImposterFalsePositivesAgainAgain(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.fixImposterFalsePositivesAgainAgain, context: context) else { return }
         
         let frA = Account.fetchRequest()
         let allAccounts = Array(try! context.fetch(frA))
@@ -639,23 +608,23 @@ struct Maintenance {
         var imposterCacheFixedCount = 0
         var imposterCacheFollowCount = 0
         for account in allAccounts {
-            guard account.privateKey != nil else { continue }
-            for contact in account.follows_ {
+//            guard account.privateKey != nil else { continue }
+            for contact in account.follows_ { // We are following so can't be imposter
                 if contact.couldBeImposter == 1 {
                     contact.couldBeImposter = 0
                     imposterCacheFixedCount += 1
                 }
-                else if contact.couldBeImposter == -1 {
+                else if contact.couldBeImposter == -1 { // We are following so can't be imposter
                     contact.couldBeImposter = 0
                     imposterCacheFollowCount += 1
                 }
             }
         }
         
-        L.maintenance.debug("fixImposterFalsePositivesAgain: Fixed \(imposterCacheFixedCount) false positives, preset-to-0 \(imposterCacheFollowCount) contacts")
+        L.maintenance.info("fixImposterFalsePositivesAgain: Fixed \(imposterCacheFixedCount) false positives, preset-to-0 \(imposterCacheFollowCount) contacts")
                 
         let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.fixImposterFalsePositivesAgain.rawValue
+        migration.migrationCode = migrationCode.fixImposterFalsePositivesAgainAgain.rawValue
         
         do {
             try context.save()
@@ -786,29 +755,6 @@ struct Maintenance {
     }
     
     static func runTempAlways(context: NSManagedObjectContext) {
-
-        let fr = Contact.fetchRequest()
-        fr.predicate = NSPredicate(value: true)
-        
-        guard let contacts = try? context.fetch(fr) else {
-            L.maintenance.error("runTempAlways: Could not fetch")
-            return
-        }
-        
-        L.maintenance.debug("runTempAlways: Found \(contacts.count) contacts")
-        
-        for contact in contacts {
-            if contact.couldBeImposter != -1 {
-                contact.couldBeImposter = -1
-            }
-        }
-
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runTempAlways error on save(): \(error)")
-        }
         
     }
     
@@ -826,7 +772,7 @@ struct Maintenance {
         
         var fixed = 0
         if let zaps = try? context.fetch(fr) {
-            L.maintenance.debug("runFixZappedContactPubkey: Found \(zaps.count) zaps without otherPubkey")
+            L.maintenance.info("runFixZappedContactPubkey: Found \(zaps.count) zaps without otherPubkey")
             for zap in zaps {
                 if let firstP = zap.firstP() {
                     zap.otherPubkey = firstP
@@ -834,7 +780,7 @@ struct Maintenance {
                     fixed += 1
                 }
             }
-            L.maintenance.debug("runFixZappedContactPubkey: Fixed \(fixed) otherPubkey in zaps")
+            L.maintenance.info("runFixZappedContactPubkey: Fixed \(fixed) otherPubkey in zaps")
         }
                 
         let migration = Migration(context: context)
@@ -870,9 +816,10 @@ struct Maintenance {
         case migrateDMState = "runMigrateDMState"
         
         // Need to run it again... false positives still
-        case fixImposterFalsePositivesAgain = "fixImposterFalsePositivesAgain"
+        // And again - found another bug during new account onboarding
+        case fixImposterFalsePositivesAgainAgain = "fixImposterFalsePositivesAgainAgain"
         
-        // Need to run it again... false positives still
+        // Move zappedContactPubkey to otherContactPubkey
         case fixZappedContactPubkey = "fixZappedContactPubkey"
         
     }
