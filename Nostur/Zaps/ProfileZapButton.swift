@@ -9,6 +9,7 @@ import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ProfileZapButton: View {
+    @Environment(\.dismiss) var dismiss
     @EnvironmentObject var dim:DIMENSIONS
     private let er:ExchangeRateModel = .shared // Not Observed for performance
     
@@ -92,6 +93,7 @@ struct ProfileZapButton: View {
                                            .onEnded { _ in
                                                guard NosturState.shared.account != nil else { return }
                                                guard NosturState.shared.account?.privateKey != nil else {
+                                                   dismiss()
                                                    NosturState.shared.readOnlyAccountSheetShown = true
                                                    return
                                                }
@@ -129,6 +131,7 @@ struct ProfileZapButton: View {
     func triggerZap(strikeLocation:CGPoint, contact:NRContact, zapMessage:String = "", amount:Double? = nil) {
         guard let account = NosturState.shared.account else { return }
         guard NosturState.shared.account?.privateKey != nil else {
+            dismiss()
             NosturState.shared.readOnlyAccountSheetShown = true
             return
         }
