@@ -46,7 +46,7 @@ struct Gallery: View {
                     LazyVGrid(columns: gridColumns) {
                         ForEach(vm.items) { item in
                             GeometryReader { geo in
-                                GridItemView(size: geo.size.width, item: item)
+                                GridItemView(size: geo.size.width, item: item, withPFP: true)
                             }
                             .clipped()
                             .aspectRatio(1, contentMode: .fit)
@@ -111,6 +111,7 @@ struct Gallery_Previews: PreviewProvider {
 struct GridItemView: View {
     let size: Double
     let item: GalleryItem
+    var withPFP = false
     var url:URL { item.url }
     
     var body: some View {
@@ -143,6 +144,12 @@ struct GridItemView: View {
                                 ImageProgressView(progress: state.progress)
                                 Text("Loading...")
                             }
+                        }
+                    }
+                    .overlay(alignment: .bottomLeading) {
+                        if withPFP, let pfpPictureURL = item.pfpPictureURL {
+                            MiniPFP(pictureUrl: pfpPictureURL)
+                                .padding(10)
                         }
                     }
             }
