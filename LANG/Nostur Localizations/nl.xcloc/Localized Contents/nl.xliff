@@ -7,12 +7,12 @@
     <body>
       <trans-unit id="CFBundleDisplayName" xml:space="preserve">
         <source>Share selected text with Nostur</source>
-        <target>Deel markering via Nostur</target>
+        <target>Deel geselecteerde tekst via Nostur</target>
         <note>Bundle display name</note>
       </trans-unit>
       <trans-unit id="CFBundleName" xml:space="preserve">
         <source>Share selected text with Nostur</source>
-        <target>Deel markering via Nostur</target>
+        <target>Deel geselecteerde tekst via Nostur</target>
         <note>Bundle name</note>
       </trans-unit>
       <trans-unit id="NSHumanReadableCopyright" xml:space="preserve">
@@ -189,6 +189,26 @@ This will **wipe** your:
         <source>1) Send screenshot of this error and wait for an update with fix</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="1d" xml:space="preserve">
+        <source>1d</source>
+        <target>1d</target>
+        <note>Short for 1 day (time frame)</note>
+      </trans-unit>
+      <trans-unit id="1m" xml:space="preserve">
+        <source>1m</source>
+        <target>1m</target>
+        <note>Short for 1 month (time frame)</note>
+      </trans-unit>
+      <trans-unit id="1w" xml:space="preserve">
+        <source>1w</source>
+        <target>1w</target>
+        <note>Short for 1 week (time frame)</note>
+      </trans-unit>
+      <trans-unit id="1y" xml:space="preserve">
+        <source>1y</source>
+        <target>1j</target>
+        <note>Short for 1 year (time frame)</note>
+      </trans-unit>
       <trans-unit id="2) Reinstall the app and start fresh" xml:space="preserve">
         <source>2) Reinstall the app and start fresh</source>
         <note>No comment provided by engineer.</note>
@@ -233,6 +253,7 @@ This will **wipe** your:
       </trans-unit>
       <trans-unit id="A nostr client for iOS &amp; macOS - nostur.com" xml:space="preserve">
         <source>A nostr client for iOS &amp; macOS - nostur.com</source>
+        <target>Een nostr client voor iOS &amp; macOS - nostur.com</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Accept" xml:space="preserve">
@@ -389,6 +410,11 @@ Navigation title for Add Existing Account screen</note>
 </source>
         <target>Weet je zeker dat je je account wilt verwijderen?</target>
         <note>Confirmation text when you want to delete your account</note>
+      </trans-unit>
+      <trans-unit id="Articles" xml:space="preserve">
+        <source>Articles</source>
+        <target>Artikelen</target>
+        <note>Tab title for feed of articles</note>
       </trans-unit>
       <trans-unit id="Auto scroll to new posts" xml:space="preserve">
         <source>Auto scroll to new posts</source>
@@ -706,6 +732,11 @@ Button to create a new badge</note>
         <target>Data exporteren</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Day" xml:space="preserve">
+        <source>Day</source>
+        <target>Dag</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Default" xml:space="preserve">
         <source>Default</source>
         <note>No comment provided by engineer.</note>
@@ -998,6 +1029,11 @@ Menu choice to filter by Following</note>
         <note>Label that shows if someone is following you
 Label shown when someone follows you</note>
       </trans-unit>
+      <trans-unit id="Gallery" xml:space="preserve">
+        <source>Gallery</source>
+        <target>Gallerij</target>
+        <note>Tab title for the Gallery feed</note>
+      </trans-unit>
       <trans-unit id="Green" xml:space="preserve">
         <source>Green</source>
         <target>Groen</target>
@@ -1242,6 +1278,11 @@ informational message</note>
         <target>Ontbrekende berichten?</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Month" xml:space="preserve">
+        <source>Month</source>
+        <target>Maand</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Most received recently on" xml:space="preserve">
         <source>Most received recently on</source>
         <target>Recent meest ontvangen op</target>
@@ -1318,6 +1359,11 @@ Label for input field for badge name on Badge creation screen</note>
         <target>Geen account geselecteerd</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="No articles found from your follow list in selected time frame." xml:space="preserve">
+        <source>No articles found from your follow list in selected time frame.</source>
+        <target>Geen artikelen gevonden in je volglijst voor het gekozen tijdsvak</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="No message requests" xml:space="preserve">
         <source>No message requests</source>
         <target>Geen berichtverzoeken</target>
@@ -1342,6 +1388,7 @@ Label for input field for badge name on Badge creation screen</note>
       </trans-unit>
       <trans-unit id="Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public." xml:space="preserve">
         <source>Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public.</source>
+        <target>Berichten zijn versleuteld maar de metadata niet. Wanneer en aan wie je een bericht stuurt is openbaar.</target>
         <note>Informational message on the DM screen</note>
       </trans-unit>
       <trans-unit id="Note: You can also add someone elses public key to try out Nostur from their perspective." xml:space="preserve">
@@ -1454,6 +1501,11 @@ Toggle off to download from all</source>
         <note>Button to post (publish) a new post
 Button to post (publish) a new reply
 Button to post a highlight</note>
+      </trans-unit>
+      <trans-unit id="Posted on %@" xml:space="preserve">
+        <source>Posted on %@</source>
+        <target>Geplaatst op %@</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Posts" xml:space="preserve">
         <source>Posts</source>
@@ -1911,6 +1963,16 @@ Button to publish report</note>
         <target>Instellingen voor %@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Settings for: Articles" xml:space="preserve">
+        <source>Settings for: Articles</source>
+        <target>Instellingen voor: Artikelen</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Settings for: Gallery" xml:space="preserve">
+        <source>Settings for: Gallery</source>
+        <target>Instellingen voor: Gallerij</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Settings for: Hot" xml:space="preserve">
         <source>Settings for: Hot</source>
         <target>Instellingen voor: Hot</target>
@@ -2071,9 +2133,19 @@ Button to skip adding account and use the guest account instead</note>
         <source>Test</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="The Gallery feed shows pictures most liked by people you follow in the last %lld hours" xml:space="preserve">
+        <source>The Gallery feed shows pictures most liked by people you follow in the last %lld hours</source>
+        <target>De Galerij feed toont afbeeldingen meest leuk gevonden door personen die jij volgt in de afgelopen %lld uur</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="The Hot feed shows posts most liked by people you follow in the last %lld hours" xml:space="preserve">
         <source>The Hot feed shows posts most liked by people you follow in the last %lld hours</source>
         <target>De Hot feed toont berichten meest leuk gevonden door jouw volglijst</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="The article feed shows articles from people you follow in the selected time frame" xml:space="preserve">
+        <source>The article feed shows articles from people you follow in the selected time frame</source>
+        <target>Deze feed toont artikelen uit het gekozen tijdsvak van personen die jij volgt</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="The database could not be loaded." xml:space="preserve">
@@ -2158,6 +2230,16 @@ Button to skip adding account and use the guest account instead</note>
         <target>Tijdsvak</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Time-out while loading gallery" xml:space="preserve">
+        <source>Time-out while loading gallery</source>
+        <target>Timeout tijdens laden galerij feed</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Time-out while loading hot feed" xml:space="preserve">
+        <source>Time-out while loading hot feed</source>
+        <target>Timeout tijdens laden Hot feed</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Title" xml:space="preserve">
         <source>Title</source>
         <target>Titel</target>
@@ -2178,6 +2260,11 @@ Placeholder for input field to enter title of a feed</note>
         <source>Try Nostur as guest</source>
         <target>Probeer Nostur as gast</target>
         <note>Heading for message</note>
+      </trans-unit>
+      <trans-unit id="Try again" xml:space="preserve">
+        <source>Try again</source>
+        <target>Probeer opnieuw</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Try guest account" xml:space="preserve">
         <source>Try guest account</source>
@@ -2264,6 +2351,11 @@ Placeholder for input field to enter title of a feed</note>
         <target>Web-of-Trust filter</target>
         <note>Setting on settings screen</note>
       </trans-unit>
+      <trans-unit id="Week" xml:space="preserve">
+        <source>Week</source>
+        <target>Week</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Welcome to **Nostur**" xml:space="preserve">
         <source>Welcome to **Nostur**</source>
         <target>Welkom bij **Nostur**</target>
@@ -2287,6 +2379,11 @@ Placeholder for input field to enter title of a feed</note>
       <trans-unit id="When you bookmark a post it will show up here." xml:space="preserve">
         <source>When you bookmark a post it will show up here.</source>
         <target>Als een een bladwijzer bij een bericht aan zet zal deze hier verschijnen</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Year" xml:space="preserve">
+        <source>Year</source>
+        <target>Jaar</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="You are not following anyone yet, visit the explore tab and follow some people" xml:space="preserve">
@@ -2481,6 +2578,10 @@ Heading</note>
         <source>describe</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="eeuh" xml:space="preserve">
+        <source>eeuh</source>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="eventId: %@" xml:space="preserve">
         <source>eventId: %@</source>
         <note>No comment provided by engineer.</note>
@@ -2511,6 +2612,10 @@ Message shown when a post kind (X) is not yet supported</note>
       <trans-unit id="kind: %@" xml:space="preserve">
         <source>kind: %@</source>
         <target>kind: %2</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="no image" xml:space="preserve">
+        <source>no image</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="non-https media blocked" xml:space="preserve">
