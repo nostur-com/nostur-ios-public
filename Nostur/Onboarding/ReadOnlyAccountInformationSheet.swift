@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ReadOnlyAccountInformationSheet: View {
-    
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var ns:NosturState
     @Environment(\.dismiss) private var dismiss
     
@@ -31,6 +31,7 @@ struct ReadOnlyAccountInformationSheet: View {
                 }
             })
             .padding(20)
+            .background(theme.background)
         }
     }
 }
