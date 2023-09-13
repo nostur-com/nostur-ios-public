@@ -28,6 +28,7 @@ struct LazyNoteMenuButton: View {
 }
 
 struct LazyNoteMenuSheet: View {
+    @EnvironmentObject var theme:Theme
     let nrPost:NRPost
     @EnvironmentObject var ns:NosturState
     @Environment(\.dismiss) var dismiss
@@ -181,55 +182,61 @@ struct LazyNoteMenuSheet: View {
                         Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.fill")
                     }
                 }
+                .foregroundColor(theme.accent)
+                .listRowBackground(theme.background)
                 
-                Button {
-                    dismiss()
-                    if (nrPost.mainEvent.contact == nil) {
-                        // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
-                        _ = DataProvider.shared().newContact(pubkey: nrPost.event.pubkey)
-                        DataProvider.shared().bg.perform {
-                            guard let account = ns.account?.toBG() else { return }
-                            let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
-                            account.blockedPubkeys_ = newBlockedKeys
-                            
-                            DataProvider.shared().bgSave()
-                            DispatchQueue.main.async {
-                                sendNotification(.blockListUpdated, newBlockedKeys)
+                Group {
+                    Button {
+                        dismiss()
+                        if (nrPost.mainEvent.contact == nil) {
+                            // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
+                            _ = DataProvider.shared().newContact(pubkey: nrPost.event.pubkey)
+                            DataProvider.shared().bg.perform {
+                                guard let account = ns.account?.toBG() else { return }
+                                let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
+                                account.blockedPubkeys_ = newBlockedKeys
+                                
+                                DataProvider.shared().bgSave()
+                                DispatchQueue.main.async {
+                                    sendNotification(.blockListUpdated, newBlockedKeys)
+                                }
                             }
                         }
-                    }
-                    else {
-                        DataProvider.shared().bg.perform {
-                            guard let account = ns.account?.toBG() else { return }
-                            let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
-                            account.blockedPubkeys_ = newBlockedKeys
-                            
-                            DataProvider.shared().bgSave()
-                            DispatchQueue.main.async {
-                                sendNotification(.blockListUpdated, newBlockedKeys)
+                        else {
+                            DataProvider.shared().bg.perform {
+                                guard let account = ns.account?.toBG() else { return }
+                                let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
+                                account.blockedPubkeys_ = newBlockedKeys
+                                
+                                DataProvider.shared().bgSave()
+                                DispatchQueue.main.async {
+                                    sendNotification(.blockListUpdated, newBlockedKeys)
+                                }
                             }
                         }
+                    } label: {
+                        Label(String(localized:"Block \(nrPost.anyName)", comment: "Post context menu action to Block (name)"), systemImage: "slash.circle")
                     }
-                } label: {
-                    Label(String(localized:"Block \(nrPost.anyName)", comment: "Post context menu action to Block (name)"), systemImage: "slash.circle")
-                }
-                
-                Button {
-                    dismiss()
-                    L.og.info("Mute conversation")
-                    ns.muteConversation(nrPost)
-                } label: {
-                    Label(String(localized:"Mute conversation", comment: "Post context menu action to mute conversation"), systemImage: "bell.slash.fill")
-                }
-                
-                Button {
-                    dismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                        sendNotification(.reportPost, nrPost)
+                    
+                    Button {
+                        dismiss()
+                        L.og.info("Mute conversation")
+                        ns.muteConversation(nrPost)
+                    } label: {
+                        Label(String(localized:"Mute conversation", comment: "Post context menu action to mute conversation"), systemImage: "bell.slash.fill")
                     }
-                } label: {
-                    Label(String(localized:"Report.verb", comment:"Post context menu action to Report a post or user"), systemImage: "flag")
+                    
+                    Button {
+                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                            sendNotification(.reportPost, nrPost)
+                        }
+                    } label: {
+                        Label(String(localized:"Report.verb", comment:"Post context menu action to Report a post or user"), systemImage: "flag")
+                    }
                 }
+                .foregroundColor(theme.accent)
+                .listRowBackground(theme.background)
                 
                 if (NosturState.shared.activeAccountPublicKey == nrPost.pubkey) {
                     Button {
@@ -240,6 +247,8 @@ struct LazyNoteMenuSheet: View {
                     } label: {
                         Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
                     }
+                    .foregroundColor(theme.accent)
+                    .listRowBackground(theme.background)
                 }
                 
                 Button {
@@ -263,6 +272,8 @@ struct LazyNoteMenuSheet: View {
                         Label(String(localized:"Rebroadcast", comment: "Button to rebroadcast a post"), systemImage: "dot.radiowaves.left.and.right")
                     }
                 }
+                .foregroundColor(theme.accent)
+                .listRowBackground(theme.background)
                 
                 if nrPost.relays != "" {
                     VStack(alignment: .leading) {
@@ -275,9 +286,13 @@ struct LazyNoteMenuSheet: View {
                         ForEach(nrPost.relays.split(separator: " "), id:\.self) { relay in
                             Text(String(relay)).lineLimit(1)
                         }
-                    }.foregroundColor(.gray)
+                    }
+                    .foregroundColor(.gray)
+                    .listRowBackground(theme.background)
                 }
             }
+            .background(theme.background)
+            .scrollContentBackground(.hidden)
             .listStyle(.plain)
             .navigationTitle(String(localized:"Post actions", comment:"Title of sheet showing actions to perform on post"))
             .navigationBarTitleDisplayMode(.inline)
