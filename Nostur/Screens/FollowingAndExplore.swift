@@ -61,32 +61,6 @@ struct FollowingAndExplore: View {
                         title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
                         selected: selectedSubTab == "Following")
                     Spacer()
-                    if account.follows_.count > 10 {
-                        TabButton(
-                            action: { selectedSubTab = "Hot" },
-                            title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
-                            secondaryText: String(format: "%ih", hotVM.ago),
-                            selected: selectedSubTab == "Hot")
-                        Spacer()
-                    }
-                    
-                    if account.follows_.count > 10 {
-                        TabButton(
-                            action: { selectedSubTab = "Articles" },
-                            title: String(localized:"Articles", comment:"Tab title for feed of articles"),
-//                            secondaryText: articlesVM.agoText,
-                            selected: selectedSubTab == "Articles")
-                        Spacer()
-                    }
-                    
-                    if account.follows_.count > 10 {
-                        TabButton(
-                            action: { selectedSubTab = "Gallery" },
-                            title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
-//                            secondaryText: articlesVM.agoText,
-                            selected: selectedSubTab == "Gallery")
-                        Spacer()
-                    }
                     
                     ForEach(lists) { list in
                         TabButton(
@@ -99,12 +73,41 @@ struct FollowingAndExplore: View {
                             selected: selectedSubTab == "List" && selectedList == list )
                         Spacer()
                     }
+                    
+                    if account.follows_.count > 10 {
+                        TabButton(
+                            action: { selectedSubTab = "Hot" },
+                            title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
+                            secondaryText: String(format: "%ih", hotVM.ago),
+                            selected: selectedSubTab == "Hot")
+                        Spacer()
+                    }
+                    
+                    if account.follows_.count > 10 {
+                        TabButton(
+                            action: { selectedSubTab = "Gallery" },
+                            title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
+//                            secondaryText: articlesVM.agoText,
+                            selected: selectedSubTab == "Gallery")
+                        Spacer()
+                    }
+                    
                     TabButton(
                         action: { selectedSubTab = "Explore"},
                         title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
                         selected: selectedSubTab == "Explore")
+                    
+                    if account.follows_.count > 10 {
+                        Spacer()
+                        TabButton(
+                            action: { selectedSubTab = "Articles" },
+                            title: String(localized:"Articles", comment:"Tab title for feed of articles"),
+//                            secondaryText: articlesVM.agoText,
+                            selected: selectedSubTab == "Articles")
+                    }
                 }
-                .frame(width: dim.listWidth, height: max(36.0 + tabsOffsetY,0))
+                .padding(.horizontal, 10)
+                .frame(minWidth: dim.listWidth)
                 .offset(y: tabsOffsetY)
                 .onReceive(receiveNotification(.scrollingUp)) { _ in
                     guard !IS_CATALYST && ss.autoHideBars else { return }
@@ -120,6 +123,7 @@ struct FollowingAndExplore: View {
                 }
                 .toolbar(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
             }
+            .frame(width: dim.listWidth, height: max(36.0 + tabsOffsetY,0))
             
             ZStack {
                 // FOLLOWING
