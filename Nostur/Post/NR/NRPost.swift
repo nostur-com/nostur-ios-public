@@ -944,6 +944,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             repliesListener()
         }
         let ctx = DataProvider.shared().bg
+        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         ctx.perform { [weak self] in
             guard let self = self else { return }
             
@@ -957,8 +958,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     self.event.replies = Set(foundReplies)
                 }
             }
-            
-            let nrReplies = self.event.replies_.map { NRPost(event: $0) }
+            let nrReplies = self.event.replies_.map { NRPost(event: $0, cancellationId: cancellationIds[$0.id]) }
             self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
             DispatchQueue.main.async {
                 self.objectWillChange.send()
