@@ -285,12 +285,14 @@ struct GalleryItem: Identifiable, Equatable {
     let pubkey:String // for blocklist filtering
     let url:URL
     let event:Event // bg
+    var pfpPictureURL:URL?
         
     init(url:URL, event:Event) {
         self.url = url
         self.event = event
         self.id = UUID()
         self.pubkey = event.pubkey
+        self.pfpPictureURL = NosturState.shared.bgFollowingPFPs[event.pubkey]
     }
 
     static func == (lhs: GalleryItem, rhs: GalleryItem) -> Bool {
