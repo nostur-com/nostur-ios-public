@@ -926,13 +926,6 @@ extension Event {
         }
     }
     
-    static func saveEventFromMain(event:NEvent, relays:String? = nil) -> Event {
-        let context = DataProvider.shared().bg
-        return context.performAndWait {
-            Event.saveEvent(event: event, relays: relays)
-        }
-    }
-    
     static func saveEvent(event:NEvent, relays:String? = nil, flags:String = "", kind6firstQuote:Event? = nil) -> Event {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
