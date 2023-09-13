@@ -93,6 +93,7 @@ struct Search: View {
                 }
                 .toolbarBackground(Visibility.visible, for: .navigationBar)
             }
+            .scrollDismissesKeyboard(.immediately)
             .overlay(alignment: .bottom) {
                 if settings.statusBubble {
                     ProcessingStatus()
