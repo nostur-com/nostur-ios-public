@@ -19,14 +19,17 @@ struct CommandResult: Decodable {
         let _ = try container.decode(String.self) // ok
         let id = try container.decode(String.self) // id
         let success = try container.decode(Bool.self) // success
-        let message = try container.decode(String.self) // message
-        
-        values = [id, success, message]
+        if let message = try? container.decode(String.self) { // message
+            values = [id, success, message]
+        }
+        else {
+            values = [id, success]
+        }
     }
     
     var id:String { values[safe: 0] as? String ?? "NOSTUR.ERROR" }
     var success:Bool { values[safe: 1] as? Bool ?? false }
-    var message:String { values[safe: 2] as? String ?? "" }
+    var message:String? { values[safe: 2] as? String }
 }
 
 struct NMessage: Decodable {
