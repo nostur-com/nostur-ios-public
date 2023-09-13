@@ -682,7 +682,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func didReceiveMessage(_ text:String) {
-        L.sockets.info("🟠🟠🏎️🔌 RECEIVED: \(self.url): \(text)")
+        L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url): \(text)")
         self.lastMessageReceivedAt = .now
         MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client:client)
     }
