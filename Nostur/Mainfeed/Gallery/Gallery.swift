@@ -135,7 +135,7 @@ struct GridItemView: View {
                     .clipped()
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        sendNotification(.fullScreenView, FullScreenItem(url: url, event: item.event))
+                        sendNotification(.fullScreenView, FullScreenItem(url: url, galleryItem: item))
                     }
                     .transaction { t in t.animation = nil }
                     .overlay(alignment:.topLeading) {

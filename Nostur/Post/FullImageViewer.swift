@@ -14,7 +14,7 @@ struct FullImageViewer: View {
     @EnvironmentObject var dim:DIMENSIONS
     @Environment(\.dismiss) var dismiss
     var fullImageURL:URL
-    var event:Event? = nil
+    var galleryItem:GalleryItem? = nil
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var position: CGSize = .zero
@@ -145,9 +145,9 @@ struct FullImageViewer: View {
             }
         }
         .onAppear {
-            guard let event = event else { return }
             bg().perform {
-                let nrPost = NRPost(event: event)
+                guard let galleryItem = galleryItem else { return }
+                let nrPost = NRPost(event: galleryItem.event)
                 DispatchQueue.main.async {
                     self.post = nrPost
                 }
@@ -285,7 +285,7 @@ struct MediaPostPreview: View {
 struct FullScreenItem : Identifiable {
     var url:URL
     var id:String { url.absoluteString }
-    var event:Event?
+    var galleryItem:GalleryItem?
 }
 
 struct ShareMediaButton: View {
@@ -355,7 +355,8 @@ struct FullImageViewer_Previews: PreviewProvider {
             if let p = PreviewFetcher.fetchEvent("bf0ca9422b83a35fd3384d4149314bfff9f05e025b5138c9db85d90a41b03ad9"), let content = p.content {
                 let images = getImgUrlsFromContent(content)
                 if let first = images.first {
-                    FullImageViewer(fullImageURL: first, event: p)
+                    let galleryItem = GalleryItem(url: first, event: p)
+                    FullImageViewer(fullImageURL: first, galleryItem: galleryItem)
                 }
                 else {
                     Text("no image")
