@@ -74,6 +74,7 @@ struct ConversationRowView: View {
                         guard contact.metadata_created_at != 0 else { return }
                         guard contact.couldBeImposter == -1 else { return }
                         guard !contact.following else { return }
+                        guard !NewOnboardingTracker.shared.isOnboarding else { return }
                         
                         let contactAnyName = contact.anyName.lowercased()
                         let currentAccountPubkey = NosturState.shared.activeAccountPublicKey
