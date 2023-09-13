@@ -67,6 +67,18 @@
 /* Follow/Unfollow button when the state is 'Following silent' */
 "🤫 Following" = "🤫 Volgend";
 
+/* Short for 1 day (time frame) */
+"1d" = "1d";
+
+/* Short for 1 month (time frame) */
+"1m" = "1m";
+
+/* Short for 1 week (time frame) */
+"1w" = "1w";
+
+/* Short for 1 year (time frame) */
+"1y" = "1j";
+
 /* No comment provided by engineer. */
 "2h" = "2u";
 
@@ -84,6 +96,9 @@
 
 /* No comment provided by engineer. */
 "48h" = "48u";
+
+/* No comment provided by engineer. */
+"A nostr client for iOS & macOS - nostur.com" = "Een nostr client voor iOS & macOS - nostur.com";
 
 /* Button to accept terms and conditions */
 "Accept" = "Accepteer";
@@ -169,6 +184,9 @@ Navigation title for Add Existing Account screen */
 
 /* Confirmation text when you want to delete your account */
 "Are you sure you want to delete your account?\n" = "Weet je zeker dat je je account wilt verwijderen?";
+
+/* Tab title for feed of articles */
+"Articles" = "Artikelen";
 
 /* Setting on settings screen */
 "Auto scroll to new posts" = "Scroll automatisch naar nieuwe berichten";
@@ -357,6 +375,9 @@ Button to create a new badge */
 "Data export" = "Data exporteren";
 
 /* No comment provided by engineer. */
+"Day" = "Dag";
+
+/* No comment provided by engineer. */
 "Default zap amount" = "Standaard zap bedrag";
 
 /* No comment provided by engineer. */
@@ -533,6 +554,9 @@ Menu choice to filter by Following */
 Label shown when someone follows you */
 "Follows you" = "Volgt jou";
 
+/* Tab title for the Gallery feed */
+"Gallery" = "Gallerij";
+
 /* No comment provided by engineer. */
 "Green" = "Groen";
 
@@ -659,6 +683,9 @@ informational message */
 /* No comment provided by engineer. */
 "Missing mesages?" = "Ontbrekende berichten?";
 
+/* No comment provided by engineer. */
+"Month" = "Maand";
+
 /* Heading above posts which received the most zaps */
 "Most received recently on" = "Recent meest ontvangen op";
 
@@ -705,6 +732,9 @@ Label for input field for badge name on Badge creation screen */
 /* No comment provided by engineer. */
 "No account selected " = "Geen account geselecteerd";
 
+/* No comment provided by engineer. */
+"No articles found from your follow list in selected time frame." = "Geen artikelen gevonden in je volglijst voor het gekozen tijdsvak";
+
 /* Shown on the DM requests view when there aren't any message requests to show */
 "No message requests" = "Geen berichtverzoeken";
 
@@ -713,6 +743,9 @@ Label for input field for badge name on Badge creation screen */
 
 /* Label for entering a NIP-05 username on Edit Profile screen */
 "Nostr address (NIP-05)" = "Nostr-adres (NIP-05)";
+
+/* Informational message on the DM screen */
+"Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public." = "Berichten zijn versleuteld maar de metadata niet. Wanneer en aan wie je een bericht stuurt is openbaar.";
 
 /* Informational message on Add Existing Account screen */
 "Note: You can also add someone elses public key to try out Nostur from their perspective." = "Notitie: Je kan ook iemand anders publieke sleutel gebruiken om Nostur te proberen vanuit zijn/haar perspectief.";
@@ -784,6 +817,9 @@ Label for input field for badge name on Badge creation screen */
 Button to post (publish) a new reply
 Button to post a highlight */
 "Post.verb" = "Stuur";
+
+/* No comment provided by engineer. */
+"Posted on %@" = "Geplaatst op %@";
 
 /* Tab title
 Title of tab */
@@ -1070,6 +1106,12 @@ Button to publish report */
 "Settings for %@" = "Instellingen voor %@";
 
 /* No comment provided by engineer. */
+"Settings for: Articles" = "Instellingen voor: Artikelen";
+
+/* No comment provided by engineer. */
+"Settings for: Gallery" = "Instellingen voor: Gallerij";
+
+/* No comment provided by engineer. */
 "Settings for: Hot" = "Instellingen voor: Hot";
 
 /* Navigation title for screen to Share a Highlighted Text */
@@ -1166,6 +1208,12 @@ Button to skip adding account and use the guest account instead */
 /* Button to load a video in a post */
 "Tap to load video" = "Druk om video te laden";
 
+/* No comment provided by engineer. */
+"The article feed shows articles from people you follow in the selected time frame" = "Deze feed toont artikelen uit het gekozen tijdsvak van personen die jij volgt";
+
+/* No comment provided by engineer. */
+"The Gallery feed shows pictures most liked by people you follow in the last %lld hours" = "De Galerij feed toont afbeeldingen meest leuk gevonden door personen die jij volgt in de afgelopen %lld uur";
+
 /* Message during onboarding about the Guest Account */
 "The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself" = "Het gast account volgt al een aantal mensen. Je kan berichten lezen en profielen bekijken maar je kan niks plaatsen totdat je zelf een account aanmaakt";
 
@@ -1211,6 +1259,12 @@ Button to skip adding account and use the guest account instead */
 /* No comment provided by engineer. */
 "Time frame" = "Tijdsvak";
 
+/* No comment provided by engineer. */
+"Time-out while loading gallery" = "Timeout tijdens laden galerij feed";
+
+/* No comment provided by engineer. */
+"Time-out while loading hot feed" = "Timeout tijdens laden Hot feed";
+
 /* Header for entering title of a feed */
 "Title" = "Titel";
 
@@ -1220,6 +1274,9 @@ Placeholder for input field to enter title of a feed */
 
 /* No comment provided by engineer. */
 "Total: %lld" = "Totaal: %lld";
+
+/* No comment provided by engineer. */
+"Try again" = "Probeer opnieuw";
 
 /* Button to try the guest account */
 "Try guest account" = "Probeer gast account";
@@ -1266,6 +1323,9 @@ Placeholder for input field to enter title of a feed */
 /* Setting on settings screen */
 "Web of Trust filter" = "Web-of-Trust filter";
 
+/* No comment provided by engineer. */
+"Week" = "Week";
+
 /* Welcoming the user to the app */
 "Welcome to **Nostur**" = "Welkom bij **Nostur**";
 
@@ -1292,6 +1352,9 @@ Placeholder for input field to enter title of a feed */
 
 /* Placeholder for entering a relay URL */
 "wss://nostr.relay.url.here" = "wss://nostr.relay.url.hier";
+
+/* No comment provided by engineer. */
+"Year" = "Jaar";
 
 /* No comment provided by engineer. */
 "You are not following anyone yet, visit the explore tab and follow some people" = "Je volgt nog niemand, bekijk de Ontdek tab en volg een aantal mensen";
