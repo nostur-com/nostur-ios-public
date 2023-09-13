@@ -107,7 +107,7 @@ final class SettingsStore: ObservableObject {
             Keys.fetchCounts: false,
             Keys.webOfTrustLevel: WebOfTrustLevel.normal.rawValue,
             Keys.includeSharedFrom: true,
-            Keys.autoHideBars: true
+            Keys.autoHideBars: false
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
