@@ -251,6 +251,8 @@ struct ProfileOverlayCard: View {
             guard contact.metadata_created_at != 0 else { return }
             guard contact.couldBeImposter == -1 else { return }
             guard let cPic = contact.pictureUrl else { return }
+            guard !NewOnboardingTracker.shared.isOnboarding else { return }
+            
             let contactAnyName = contact.anyName.lowercased()
             let cPubkey = contact.pubkey
             let currentAccountPubkey = NosturState.shared.activeAccountPublicKey
