@@ -188,6 +188,7 @@ public final class NewPostModel: ObservableObject {
             }
         }
         dismiss()
+        sendNotification(.didSend)
     }
     
     public func showPreview(quotingEvent:Event? = nil) {

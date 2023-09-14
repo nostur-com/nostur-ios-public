@@ -29,6 +29,7 @@ struct FollowingAndExplore: View {
     @StateObject private var galleryVM = GalleryViewModel()
     
     @State var tabsOffsetY:CGFloat = 0.0
+    @State var didSend = false
     
     var navigationTitle:String {
         if selectedSubTab == "List" {
@@ -127,7 +128,7 @@ struct FollowingAndExplore: View {
             
             ZStack {
                 // FOLLOWING
-                if (account.followingPublicKeys.count <= 1) {
+                if (account.followingPublicKeys.count <= 1 && !didSend) {
                     VStack {
                         Spacer()
                         Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -141,6 +142,9 @@ struct FollowingAndExplore: View {
                         }
                         .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                         Spacer()
+                    }
+                    .onReceive(receiveNotification(.didSend)) { _ in
+                        didSend = true
                     }
                 }
                 else {

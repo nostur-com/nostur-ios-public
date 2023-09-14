@@ -311,5 +311,8 @@ extension Notification.Name {
     
     static var WoTReady: Notification.Name {
         return Notification.Name("WoTReady")
+    }    
+    static var didSend: Notification.Name {
+        return Notification.Name("didSend")
     }
 }
