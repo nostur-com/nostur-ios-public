@@ -27,7 +27,11 @@ func uploadImage(image: UIImage, maxWidth:CGFloat = 1800.0) -> AnyPublisher<Stri
     
     let usePNG = false // hasTransparency(image: image) // TODO: Disabled for now
     
-    guard let imageData = usePNG ? scaledImage.pngData() : scaledImage.jpegData(compressionQuality: 0.85) else {
+//    guard let imageData = usePNG ? scaledImage.pngData() : scaledImage.jpegData(compressionQuality: 0.85) else {
+//        return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
+//    }
+    
+    guard let imageData = scaledImage.jpegData(compressionQuality: 0.85) else {
         return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
     }
     
