@@ -4,7 +4,7 @@
 
 **Nostur**: a social media oriented client for nostr, see https://nostur.com for a list of features or to download releases.
 
-![](https://nostur.com/screenshots/c/nostur-ui.png)
+![](https://nostur.com/screenshots/160/nostur-release.jpg)
 
 ## Dependencies
 
