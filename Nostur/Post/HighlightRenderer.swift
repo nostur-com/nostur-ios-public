@@ -14,6 +14,7 @@ struct HighlightRenderer: View {
     var body: some View {
         VStack {
             Text(nrPost.content ?? "")
+                .fixedSize(horizontal: false, vertical: true)
                 .italic()
                 .padding(20)
                 .overlay(alignment:.topLeading) {
