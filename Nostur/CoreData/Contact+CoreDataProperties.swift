@@ -307,9 +307,9 @@ extension Contact : Identifiable {
     }
     
     static func updateRelatedEvents(_ contact:Contact) {
-        if contact.nip05 != nil && !contact.nip05veried {
-            NIP05Verifier.shared.verify(contact)
-        }
+//        if contact.nip05 != nil && !contact.nip05veried {
+//            NIP05Verifier.shared.verify(contact)
+//        }
         
         let name = (contact.display_name ?? "") != "" ? contact.display_name : contact.name
         PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: name)

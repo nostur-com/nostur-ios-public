@@ -944,11 +944,11 @@ extension LVM {
                     
                     guard !contacts.isEmpty else { return }
                     
-                    L.fetching.info("☑️ Checking nip05 for \(contacts.count) contacts")
-                    for contact in contacts {
-                        EventRelationsQueue.shared.addAwaitingContact(contact)
-                        NIP05Verifier.shared.verify(contact)
-                    }
+//                    L.fetching.info("☑️ Checking nip05 for \(contacts.count) contacts")
+//                    for contact in contacts {
+//                        EventRelationsQueue.shared.addAwaitingContact(contact)
+//                        NIP05Verifier.shared.verify(contact)
+//                    }
                 }
             }
             .store(in: &subscriptions)
