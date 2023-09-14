@@ -642,7 +642,7 @@ struct Maintenance {
         let frA = Account.fetchRequest()
         let allAccounts = Array(try! context.fetch(frA))
         // This one includes read-only accounts
-        let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
+        _ = allAccounts.reduce([String]()) { partialResult, account in
             var newResult = Array(partialResult)
                 newResult.append(account.publicKey)
             return newResult
@@ -668,7 +668,7 @@ struct Maintenance {
             if let sent = try? context.fetch(sent) {
                 for messageSent in sent {
                     // sent is always "accepted"
-                    guard var contactPubkey = messageSent.firstP() else { continue }
+                    guard let contactPubkey = messageSent.firstP() else { continue }
                     messageSent.otherPubkey = contactPubkey
                     
                     let accountPubkey = messageSent.pubkey
