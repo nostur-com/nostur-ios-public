@@ -20,7 +20,6 @@ struct NoteTextRenderView: View {
         VStack(spacing: 0) {
             if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
                 if viewSize.width > 0 {
-                    Text(String(Int(viewSize.width)))
                     Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: viewSize.width)
                 }
                 Color.clear.frame(height: 0)
