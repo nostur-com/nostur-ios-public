@@ -753,10 +753,18 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
-                if self.replyToId != nil {
-                    self.rerenderReplyingToFragment()
+                if self.kind == 6 {
+                    DispatchQueue.main.async {
+                        self.objectWillChange.send()
+                        self.repostedHeader = String(localized:"\(self.contact?.anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
+                    }
                 }
-                self.rebuildContentElements()
+                else {
+                    if self.replyToId != nil {
+                        self.rerenderReplyingToFragment()
+                    }
+                    self.rebuildContentElements()
+                }
             }
             .store(in: &subscriptions)
        
