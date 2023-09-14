@@ -30,6 +30,7 @@ struct Highlight: View {
     let THREAD_LINE_OFFSET = 24.0
     
     @State var showMiniProfile = false
+    @State var lineLimit = 25
     
     var body: some View {
         
@@ -91,7 +92,12 @@ struct Highlight: View {
                 }
                 VStack {
                     Text(nrPost.content ?? "")
-                        .lineLimit(5)
+                        .lineLimit(lineLimit)
+                        .onTapGesture(perform: {
+                            withAnimation {
+                                lineLimit = 150
+                            }
+                        })
 //                        .fixedSize(horizontal: false, vertical: true)
                         .italic()
                         .padding(20)
