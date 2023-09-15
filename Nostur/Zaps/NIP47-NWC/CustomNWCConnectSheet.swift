@@ -212,7 +212,7 @@ struct CustomNWCConnectSheet_Previews: PreviewProvider {
         NavigationStack {
             CustomNWCConnectSheet()
         }
-        .previewDevice("iPhone 14")
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }
 

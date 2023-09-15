@@ -69,6 +69,6 @@ struct SearchBox_Previews: PreviewProvider {
                 }
             }
         }
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

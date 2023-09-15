@@ -110,7 +110,7 @@ struct LightingEffectTester: View {
 struct LightningEffect_Previews: PreviewProvider {
     static var previews: some View {
         LightingEffectTester()
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }
 

@@ -66,7 +66,7 @@ struct GifSearcher: View {
                                             .resizable()
                                             .aspectRatio(contentMode: .fit)
                                             .hCentered()
-                                            .background(Color("LightGray").opacity(0.2))
+                                            .background(theme.lineColor.opacity(0.2))
                                             .onTapGesture {
                                                 if let url = gifResult.media_formats["gif"]?.url {
                                                     onSelect(url)
@@ -89,7 +89,7 @@ struct GifSearcher: View {
                                                 .resizable()
                                                 .aspectRatio(contentMode: .fit)
                                                 .hCentered()
-                                                .background(Color("LightGray").opacity(0.2))
+                                                .background(theme.lineColor.opacity(0.2))
                                                 .onTapGesture {
                                                     if let url = gifResult.media_formats["gif"]?.url {
                                                         onSelect(url)
@@ -217,13 +217,11 @@ struct GifSearcher: View {
     }
 }
 
-struct TenorTester_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            GifSearcher { gifURL in
-                print("Gif selected: \(gifURL)")
-            }
+#Preview("Tenor") {
+    NavigationStack {
+        GifSearcher { gifURL in
+            print("Gif selected: \(gifURL)")
         }
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
+    .environmentObject(Theme.default)
 }

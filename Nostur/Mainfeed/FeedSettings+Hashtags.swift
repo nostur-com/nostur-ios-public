@@ -30,7 +30,7 @@ struct FeedSettings_Hashtags: View {
 struct FeedSettings_Hashtags_Previews: PreviewProvider {
     static var previews: some View {
         FeedSettings_Hashtags(hashtags:["apple", "banana", "cherry"])
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }
 

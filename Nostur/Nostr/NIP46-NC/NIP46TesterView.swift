@@ -350,6 +350,6 @@ struct NIP46TesterView: View {
 struct NIP46TesterView_Previews: PreviewProvider {
     static var previews: some View {
         NIP46TesterView()
-            .previewDevice("iPhone 14")
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

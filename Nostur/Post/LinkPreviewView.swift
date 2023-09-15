@@ -95,6 +95,6 @@ struct LinkPreviewView_Previews: PreviewProvider {
             LinkPreviewView(url: url)
                 .padding(.vertical, 5)
         }
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

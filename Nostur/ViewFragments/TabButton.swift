@@ -55,102 +55,100 @@ struct TabButton: View {
     }
 }
 
-struct TabButton_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer {
-            VStack(spacing: 0) {
-                
-                // MANY TABS
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing:0) {
-                        Group {
-                            TabButton(action: {
-                                print("dede")
-                            }, title: "Following", selected:true)
-                            Spacer()
-                            
-                            TabButton(action: {
-                                print("dede")
-                            }, title: "Quality")
-                            Spacer()
-                            
-                            TabButton(action: {
-                                print("dede")
-                            }, title: "Hot", secondaryText: "4h")
-                            Spacer()
-                            
-                            TabButton(action: {
-                                print("dede")
-                            }, title: "Gallery")
-                            Spacer()
-                        }
-                        Group {
-                            TabButton(action: {
-                                print("dede")
-                            }, title: "Explore")
-                            Spacer()
-                            
-                            TabButton(action: {
-                                print("dede")
-                            }, title: "Articles")
-                            Spacer()
-                            
-                            TabButton(action: {
-                                print("dede")
-                            }, title: "Popular")
-                        }
-                    }
-                    .padding(.horizontal, 10)
-                    .frame(minWidth: UIScreen.main.bounds.width)
-                }
-                
-                Divider()
-                
-                // LESS TABS
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing:0) {
+#Preview("Tab buttons") {
+    PreviewContainer {
+        VStack(spacing: 0) {
+            
+            // MANY TABS
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing:0) {
+                    Group {
                         TabButton(action: {
                             print("dede")
-                        }, title: "Following")
-
+                        }, title: "Following", selected:true)
                         Spacer()
-
+                        
+                        TabButton(action: {
+                            print("dede")
+                        }, title: "Quality")
+                        Spacer()
+                        
+                        TabButton(action: {
+                            print("dede")
+                        }, title: "Hot", secondaryText: "4h")
+                        Spacer()
+                        
+                        TabButton(action: {
+                            print("dede")
+                        }, title: "Gallery")
+                        Spacer()
+                    }
+                    Group {
                         TabButton(action: {
                             print("dede")
                         }, title: "Explore")
+                        Spacer()
+                        
+                        TabButton(action: {
+                            print("dede")
+                        }, title: "Articles")
+                        Spacer()
+                        
+                        TabButton(action: {
+                            print("dede")
+                        }, title: "Popular")
                     }
-                    .padding(.horizontal, 10)
-                    .frame(minWidth: UIScreen.main.bounds.width)
-                }
-                
-
-                Divider()
-                
-                // NO SPACERS
-                HStack(spacing: 2) {
-                    TabButton(action: {
-                        print("dede")
-                    }, title: "Following")
-                    
-                    TabButton(action: {
-                        print("dede")
-                    }, title: "Hot", secondaryText: "4h")
-                    
-                    TabButton(action: {
-                        print("dede")
-                    }, title: "Globalish", unread:3)
-                    
-                    TabButton(action: {
-                        print("dede")
-                    }, title: "testing!", selected: true)
                 }
                 .padding(.horizontal, 10)
                 .frame(minWidth: UIScreen.main.bounds.width)
             }
-            .frame(width: UIScreen.main.bounds.width)
-            .onAppear {
-                Theme.default.loadPink()
+            
+            Divider()
+            
+            // LESS TABS
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing:0) {
+                    TabButton(action: {
+                        print("dede")
+                    }, title: "Following")
+
+                    Spacer()
+
+                    TabButton(action: {
+                        print("dede")
+                    }, title: "Explore")
+                }
+                .padding(.horizontal, 10)
+                .frame(minWidth: UIScreen.main.bounds.width)
             }
+            
+
+            Divider()
+            
+            // NO SPACERS
+            HStack(spacing: 2) {
+                TabButton(action: {
+                    print("dede")
+                }, title: "Following")
+                
+                TabButton(action: {
+                    print("dede")
+                }, title: "Hot", secondaryText: "4h")
+                
+                TabButton(action: {
+                    print("dede")
+                }, title: "Globalish", unread:3)
+                
+                TabButton(action: {
+                    print("dede")
+                }, title: "testing!", selected: true)
+            }
+            .padding(.horizontal, 10)
+            .frame(minWidth: UIScreen.main.bounds.width)
+        }
+        .frame(width: UIScreen.main.bounds.width)
+        .onAppear {
+            Theme.default.loadPink()
         }
     }
 }

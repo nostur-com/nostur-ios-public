@@ -105,7 +105,7 @@ struct Settings_ThemePicker_Previews: PreviewProvider {
                 }
             }
         }
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
         .environmentObject(DIMENSIONS.shared)
         .environmentObject(Theme.default)
     }

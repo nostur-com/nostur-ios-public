@@ -196,6 +196,6 @@ class RelayCensorshipResistor {
 struct RelayCensorshipResistorTest_Previews: PreviewProvider {
     static var previews: some View {
         RelayCensorshipResistorTest()
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

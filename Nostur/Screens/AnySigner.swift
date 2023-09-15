@@ -90,7 +90,7 @@ struct AnySigner_Previews: PreviewProvider {
         NavigationStack {
             AnySigner()
         }
-        .previewDevice("iPhone 14")
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }
 

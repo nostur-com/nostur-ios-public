@@ -59,6 +59,6 @@ struct ZapAmountButton_Previews: PreviewProvider {
             ZapAmountButton(1000, isSelected: false)
             ZapAmountButton(5000, isSelected: true)
         }
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

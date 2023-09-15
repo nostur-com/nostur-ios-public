@@ -64,20 +64,17 @@ struct ThreadReplies: View {
         
 }
 
-struct ThreadReplies2_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        let exampleId = "2e7119c8135375060ab0f3e40646869f7337ab86de32574ab1bf57dcd2a93754"
-        
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-        }) {
-            NavigationStack {
-                if let nrPost = PreviewFetcher.fetchNRPost(exampleId, withReplies: true) {
-                    ScrollView {
-                        ThreadReplies(nrPost: nrPost)
-                    }
+#Preview("Grouped replies") {
+    let exampleId = "2e7119c8135375060ab0f3e40646869f7337ab86de32574ab1bf57dcd2a93754"
+    
+    return PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+    }) {
+        NavigationStack {
+            if let nrPost = PreviewFetcher.fetchNRPost(exampleId, withReplies: true) {
+                ScrollView {
+                    ThreadReplies(nrPost: nrPost)
                 }
             }
         }

@@ -73,7 +73,7 @@ struct Previews_ListUnreadCounter_PreviewsWrapper: View {
 struct Previews_ListUnreadCounter_Previews: PreviewProvider {
     static var previews: some View {
         Previews_ListUnreadCounter_PreviewsWrapper()
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
             .environmentObject(Theme.default)
     }
 }

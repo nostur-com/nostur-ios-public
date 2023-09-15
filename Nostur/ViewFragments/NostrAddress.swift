@@ -70,7 +70,7 @@ struct NostrAddress_Previews: PreviewProvider {
                 NostrAddress(nip05: "fabian@x@nostur.com")
             }
         }
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
             .environmentObject(Theme.default)
     }
 }

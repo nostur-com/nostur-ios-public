@@ -85,6 +85,6 @@ struct BalloonView_Previews: PreviewProvider {
             Spacer()
         }
         .environmentObject(Theme.default)
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }
