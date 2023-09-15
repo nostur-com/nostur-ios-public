@@ -19,7 +19,7 @@ struct TabButton: View {
     var body: some View {
         Button { action() } label: {
             VStack(spacing: 0) {
-                HStack(alignment: .bottom, spacing: 3) {
+                HStack(alignment: .bottom, spacing: 1) {
                     Text(title).lineLimit(1)
 //                        .layoutPriority(1)
                         .foregroundColor(theme.accent)
@@ -27,7 +27,7 @@ struct TabButton: View {
                         
                     if let secondaryText {
                         Text(secondaryText).lineLimit(1)
-//                            .font(.footnote)
+                            .font(.caption)
                             .foregroundColor(theme.accent.opacity(0.5))
 //                            .frame(maxWidth: .infinity)
                         
