@@ -70,13 +70,8 @@ struct Kind1Default: View {
                     t.animation = nil
                 }
                 .onTapGesture {
-                    if !IS_APPLE_TYRANNY {
-                        navigateTo(ContactPath(key: nrPost.pubkey))
-                    }
-                    else {
-                        withAnimation {
-                            showMiniProfile = true
-                        }
+                    withAnimation {
+                        showMiniProfile = true
                     }
                 }
                 .overlay(alignment: .topLeading) {
