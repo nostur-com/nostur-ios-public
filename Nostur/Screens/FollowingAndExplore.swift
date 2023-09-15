@@ -88,7 +88,7 @@ struct FollowingAndExplore: View {
                         TabButton(
                             action: { selectedSubTab = "Gallery" },
                             title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
-//                            secondaryText: articlesVM.agoText,
+                            secondaryText: String(format: "%ih", galleryVM.ago),
                             selected: selectedSubTab == "Gallery")
                         Spacer()
                     }
