@@ -61,13 +61,8 @@ struct Kind1: View {
                 ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                     .frame(width: 50, height: 50)
                     .onTapGesture {
-                        if !IS_APPLE_TYRANNY {
-                            navigateTo(ContactPath(key: nrPost.pubkey))
-                        }
-                        else {
-                            withAnimation {
-                                showMiniProfile = true
-                            }
+                        withAnimation {
+                            showMiniProfile = true
                         }
                     }
                     .overlay(alignment: .topLeading) {
