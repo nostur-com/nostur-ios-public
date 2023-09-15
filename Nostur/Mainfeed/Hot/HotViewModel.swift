@@ -25,6 +25,7 @@ class HotViewModel: ObservableObject {
     private var follows:Set<Pubkey>
     private var didLoad = false
     private static let POSTS_LIMIT = 75
+    private static let REQ_IDS_LIMIT = 500 // (strfry default)
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
     
@@ -45,7 +46,7 @@ class HotViewModel: ObservableObject {
     @Published var hotPosts:[NRPost] = [] {
         didSet {
             guard !hotPosts.isEmpty else { return }
-            L.og.info("Hot feed loaded \(self.hotPosts.count) posts")
+            L.og.info("Hot feed: loaded \(self.hotPosts.count) posts")
         }
     }
     
@@ -151,45 +152,67 @@ class HotViewModel: ObservableObject {
     
     // STEP 3: FETCH MOST LIKED POSTS FROM RELAYS
     private func fetchPostsFromRelays(onComplete: (() -> ())? = nil) {
-        let ids = Set(self.posts.keys)
-        guard !ids.isEmpty else {
-            L.og.debug("fetchPostsFromRelays: empty ids")
-            return
-        }
-        let reqTask = ReqTask(
-            debounceTime: 0.5,
-            subscriptionId: "HOT-POSTS",
-            reqCommand: { taskId in
-                if let cm = NostrEssentials
-                            .ClientMessage(type: .REQ,
-                                           subscriptionId: taskId,
-                                           filters: [
-                                            Filters(
-                                                ids: ids,
-                                                limit: 9999
-                                            )
-                                           ]
-                            ).json() {
-                    req(cm)
-//                    self.lastFetch = Date.now
+        
+        // Skip ids we already have, so we can fit more into the default 500 limit
+        let posts = self.posts
+        bg().perform {
+            let onlyNewIds = posts.keys
+                .filter { postId in
+                    Importer.shared.existingIds[postId] == nil
                 }
-                else {
-                    L.og.error("Hot feed: Problem generating posts request")
-                }
-            },
-            processResponseCommand: { taskId, relayMessage in
-                self.fetchPostsFromDB(onComplete)
-                self.backlog.clear()
-                L.og.info("Hot feed: ready to process relay response")
-            },
-            timeoutCommand: { taskId in
-                self.fetchPostsFromDB(onComplete)
-                self.backlog.clear()
-                L.og.info("Hot feed: timeout ")
-            })
+            
+            let sortedByLikes = posts
+                .filter({ el in
+                    onlyNewIds.contains(el.key)
+                })
+                .sorted(by: { $0.value.count > $1.value.count })
+                .prefix(Self.REQ_IDS_LIMIT)
+        
+            let ids = Set(sortedByLikes.map { (postId, likedBy) in postId })
 
-        backlog.add(reqTask)
-        reqTask.fetch()
+            guard !ids.isEmpty else {
+                L.og.debug("Hot feed: fetchPostsFromRelays: empty ids")
+                return
+            }
+            
+            L.og.debug("Hot feed: fetching \(ids.count) posts, skipped \(posts.count - ids.count) duplicates")
+            
+            let reqTask = ReqTask(
+                debounceTime: 0.5,
+                subscriptionId: "HOT-POSTS",
+                reqCommand: { taskId in
+                    if let cm = NostrEssentials
+                                .ClientMessage(type: .REQ,
+                                               subscriptionId: taskId,
+                                               filters: [
+                                                Filters(
+                                                    ids: ids,
+                                                    limit: 9999
+                                                )
+                                               ]
+                                ).json() {
+                        req(cm)
+    //                    self.lastFetch = Date.now
+                    }
+                    else {
+                        L.og.error("Hot feed: Problem generating posts request")
+                    }
+                },
+                processResponseCommand: { taskId, relayMessage in
+                    self.fetchPostsFromDB(onComplete)
+                    self.backlog.clear()
+                    L.og.info("Hot feed: ready to process relay response")
+                },
+                timeoutCommand: { taskId in
+                    self.fetchPostsFromDB(onComplete)
+                    self.backlog.clear()
+                    L.og.info("Hot feed: timeout ")
+                })
+
+            self.backlog.add(reqTask)
+            reqTask.fetch()
+           
+        }
     }
     
     // STEP 4: FETCH RECEIVED POSTS FROM DB, SORT BY MOST LIKED AND PUT ON SCREEN
