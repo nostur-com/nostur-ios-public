@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 
 let PREVIEW_ACCOUNT_ID = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+let PREVIEW_DEVICE = "iPhone 15"
 
 public class PreviewEnvironment {
     
@@ -424,7 +425,7 @@ struct PreviewContainer<Content: View>: View {
     
     init(_ setup:PreviewSetup? = nil, previewDevice:PreviewDevice? = nil, @ViewBuilder content: @escaping () -> Content) {
         self.setup = setup
-        self.previewDevice = previewDevice ?? PreviewDevice(rawValue: "iPhone 14")
+        self.previewDevice = previewDevice ?? PreviewDevice(rawValue: PREVIEW_DEVICE)
         self.content = content
     }
     

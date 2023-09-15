@@ -46,6 +46,6 @@ struct NRButton_Previews: PreviewProvider {
                 
         }
         .buttonStyle(NRButtonStyle(theme: Theme.default))
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

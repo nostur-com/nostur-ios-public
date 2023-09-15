@@ -41,6 +41,6 @@ struct EditableReplyingTo: View {
 struct EditableReplyingTo_Previews: PreviewProvider {
     static var previews: some View {
         EditableReplyingTo()
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

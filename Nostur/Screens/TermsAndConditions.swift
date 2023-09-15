@@ -73,6 +73,6 @@ For any questions, please contact feedback@nostur.com.
 struct TermsAndConditions_Previews: PreviewProvider {
     static var previews: some View {
         TermsAndConditions()
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

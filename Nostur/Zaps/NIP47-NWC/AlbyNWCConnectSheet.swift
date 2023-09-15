@@ -214,7 +214,7 @@ struct AlbyNWCConnectSheet_Previews: PreviewProvider {
         NavigationStack {
             AlbyNWCConnectSheet()
         }
-        .previewDevice("iPhone 14")
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }
 

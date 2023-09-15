@@ -45,6 +45,6 @@ struct Ago_Previews: PreviewProvider {
             Ago(Date.now - (48 * 3600))
             Ago(Date.now - (148 * 3600))
         }
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

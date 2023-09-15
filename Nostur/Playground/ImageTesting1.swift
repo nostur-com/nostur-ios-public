@@ -96,6 +96,6 @@ func getCacheDirectoryPath() -> URL {
 struct ImageTesting1_Previews: PreviewProvider {
     static var previews: some View {
         ImageTesting1()
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

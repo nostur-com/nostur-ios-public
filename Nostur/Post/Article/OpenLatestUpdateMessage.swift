@@ -34,6 +34,6 @@ struct OpenLatestUpdateMessage: View {
 struct OpenLatestUpdateMessage_Previews: PreviewProvider {
     static var previews: some View {
         OpenLatestUpdateMessage()
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

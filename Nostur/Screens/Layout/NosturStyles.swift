@@ -83,6 +83,6 @@ struct FollowButton_Previews: PreviewProvider {
             FollowButton(isFollowing: true, isPrivateFollowing: true)
                 .disabled(true)
         }
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

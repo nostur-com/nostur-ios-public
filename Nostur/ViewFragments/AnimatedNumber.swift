@@ -118,6 +118,6 @@ struct AnimatedNumber_Previews: PreviewProvider {
     
     static var previews: some View {
         AnimatedNumberPreviewContainer()
-        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

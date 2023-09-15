@@ -164,22 +164,22 @@ struct Highlight: View {
     }
 }
 
-struct Highlight_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.parseMessages([
-                ###"["EVENT","cf4f2b0a-9f24-4ca3-815c-f486b19ff9fe",{"content":"Shifting your mindset from waiting for things to be easy to embracing and understanding that fulfilling endeavors will always be challenging by default will be one of the better quality-of-life adjustments you can make in your thinking.","created_at":1682730290,"id":"6e00b687cdb567eda5093d54e6f73577ecae928f00a85c3b09dddbf2da52adc1","kind":9802,"pubkey":"0b963191ab21680a63307aedb50fd7b01392c9c6bef79cd0ceb6748afc5e7ffd","sig":"bb38b1b9318d8f30255ce0f71a95b42e1cd7aab8992b12e3736f78de4ec74d018e396620fb132e6701eca4824eb6e59e8e2d29929225d14f6f9983266bfa8eee","tags":[["r","https://habla.news/a/naddr1qqxnzd3cxy6rxvf5x5en2d3jqy2hwumn8ghj7un9d3shjtnyv9kh2uewd9hj7qghwaehxw309a3xjarrda5kuetj9eek7cmfv9kz7qg6waehxw309ac82unpwe5kgcfwdehhxarj9ekxzmny9uqkvamnwvaz7tmxd9k8getj9ehx7um5wgh8w6twv5hkuur4vgchqam5wfe8jer50yun2uf4vdjhxvr5ddknyu3hdp4hzen98948w7rgd4kk2ef40pmkkefkvu6xc73hxpkrwumy8pcxvdt58a38ymmpv33kzum58468yat9qyghwumn8ghj7mn0wd68ytnhd9hx2tczyp58rkxlp4p952c8anwrpga48law79xe45jh8lq4gf556e22jwtvzqcyqqq823cj04eew"],["a","30023:6871d8df0d425a2b07ecdc30a3b53ffaef14d9ad2573fc1542694d654a9396c1:1681431453562"],["p","0b963191ab21680a63307aedb50fd7b01392c9c6bef79cd0ceb6748afc5e7ffd"]]}]"###
-            ])
-        }) {
-            SmoothListMock {
-                if let nrPost = PreviewFetcher.fetchNRPost("6e00b687cdb567eda5093d54e6f73577ecae928f00a85c3b09dddbf2da52adc1") {
-                    Box {
-                        Highlight(nrPost: nrPost)
-                    }
-                    
-                    Box {
-                        Highlight(nrPost: nrPost)
-                    }
+#Preview {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.parseMessages([
+            ###"["EVENT","HL",{"pubkey":"fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52","content":"I looked you in the eye. “The meaning of life, the reason I made this whole universe, is for you to mature.”\n\n“You mean mankind? You want us to mature?”\n\n“No, just you. I made this whole universe for you. With each new life you grow and mature and become a larger and greater intellect.”","id":"d639ebbb2383d41bdcd9f73fe8a3d992ddd1fc2ef930d5dbe0149c6a1901568d","created_at":1694642512,"sig":"6ecdb176065691918340c703e84df03a477509d103e32848bb022165ae0a986fec5492fa542a02ba54173d4624414cae5159403a53336ac5f22c6ed5bb48dd70","kind":9802,"tags":[["r","https://xpressenglish.com/our-stories/the-egg-weir/"],["context","I looked you in the eye. “The meaning of life, the reason I made this whole universe, is for you to mature.” “You mean mankind? You want us to mature?” “No, just you. I made this whole universe for you. With each new life you grow and mature and become a larger and greater intellect.”"],["t","books"],["t","the egg"],["alt","\"I looked you in the eye. “The meaning of life, the reason I made this whole universe, is for you to mature.”\n\n“You mean mankind? You want us to mature?”\n\n“No, just you. I made this whole universe for you. With each new life you grow and mature and become a larger and greater intellect.”\"\n\nThis is a highlight created on https://highlighter.com"]]}]"###,
+            ###"["EVENT","cf4f2b0a-9f24-4ca3-815c-f486b19ff9fe",{"content":"Shifting your mindset from waiting for things to be easy to embracing and understanding that fulfilling endeavors will always be challenging by default will be one of the better quality-of-life adjustments you can make in your thinking.","created_at":1682730290,"id":"6e00b687cdb567eda5093d54e6f73577ecae928f00a85c3b09dddbf2da52adc1","kind":9802,"pubkey":"0b963191ab21680a63307aedb50fd7b01392c9c6bef79cd0ceb6748afc5e7ffd","sig":"bb38b1b9318d8f30255ce0f71a95b42e1cd7aab8992b12e3736f78de4ec74d018e396620fb132e6701eca4824eb6e59e8e2d29929225d14f6f9983266bfa8eee","tags":[["r","https://habla.news/a/naddr1qqxnzd3cxy6rxvf5x5en2d3jqy2hwumn8ghj7un9d3shjtnyv9kh2uewd9hj7qghwaehxw309a3xjarrda5kuetj9eek7cmfv9kz7qg6waehxw309ac82unpwe5kgcfwdehhxarj9ekxzmny9uqkvamnwvaz7tmxd9k8getj9ehx7um5wgh8w6twv5hkuur4vgchqam5wfe8jer50yun2uf4vdjhxvr5ddknyu3hdp4hzen98948w7rgd4kk2ef40pmkkefkvu6xc73hxpkrwumy8pcxvdt58a38ymmpv33kzum58468yat9qyghwumn8ghj7mn0wd68ytnhd9hx2tczyp58rkxlp4p952c8anwrpga48law79xe45jh8lq4gf556e22jwtvzqcyqqq823cj04eew"],["a","30023:6871d8df0d425a2b07ecdc30a3b53ffaef14d9ad2573fc1542694d654a9396c1:1681431453562"],["p","0b963191ab21680a63307aedb50fd7b01392c9c6bef79cd0ceb6748afc5e7ffd"]]}]"###
+        ])
+    }) {
+        SmoothListMock {
+            if let nrPost = PreviewFetcher.fetchNRPost("6e00b687cdb567eda5093d54e6f73577ecae928f00a85c3b09dddbf2da52adc1") {
+                Box {
+                    Highlight(nrPost: nrPost)
+                }
+                
+                Box {
+                    Highlight(nrPost: nrPost)
                 }
             }
         }

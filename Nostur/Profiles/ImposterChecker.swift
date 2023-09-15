@@ -93,7 +93,7 @@ struct ImposterTesterView: View {
 struct Previews_ImpostorChecker_Previews: PreviewProvider {
     static var previews: some View {
         ImposterTesterView()
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }
 

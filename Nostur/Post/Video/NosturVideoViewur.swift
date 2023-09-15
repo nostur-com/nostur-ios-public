@@ -276,6 +276,6 @@ struct NosturVideoViewur_Previews: PreviewProvider {
         let urlsFromContent = getImgUrlsFromContent(content1)
         
         NosturVideoViewur(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, isFollowing: true)
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }
