@@ -451,6 +451,10 @@ class LVM: NSObject, ObservableObject {
                 guard let self = self else { return }
                 L.lvm.info("😈😈 reqCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) - dng: \(danglers.count)")
                 let danglerIds = danglers.compactMap { $0.replyToId }
+                    .filter { postId in
+                        Importer.shared.existingIds[postId] == nil
+                    }
+                
                 if !danglerIds.isEmpty {
                     req(RM.getEvents(ids: danglerIds, subscriptionId: taskId))
                 }
