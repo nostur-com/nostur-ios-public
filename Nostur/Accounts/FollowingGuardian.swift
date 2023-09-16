@@ -119,6 +119,8 @@ class FollowingGuardian: ObservableObject {
                 newContact.couldBeImposter = 0
                 account.addToFollows(newContact)
             }
+            NosturState.shared.followingPublicKeys = NosturState.shared._followingPublicKeys
+            NosturState.shared.loadFollowingPFPs()
         }
         sendNotification(.followersChanged, account.followingPublicKeys)
         DataProvider.shared().save()
