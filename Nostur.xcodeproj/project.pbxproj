@@ -104,6 +104,7 @@
 		1F33EC3929B6849800615FB9 /* Centered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33EC3829B6849800615FB9 /* Centered.swift */; };
 		1F38AFF12A27166C0035641E /* VideoHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF02A27166C0035641E /* VideoHelpers.swift */; };
 		1F38AFF42A2789C80035641E /* MacListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF32A2789C70035641E /* MacListsView.swift */; };
+		1F39756D2AB5A229004F9D77 /* NIP42.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F39756C2AB5A229004F9D77 /* NIP42.swift */; };
 		1F39756F2AB622C1004F9D77 /* MultiFollowSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */; };
 		1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C3F9529755D4C00E813FD /* NosturState.swift */; };
 		1F3D4BB72A25CC140084F939 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3D4BB62A25CC140084F939 /* AppView.swift */; };
@@ -519,6 +520,7 @@
 		1F33EC3829B6849800615FB9 /* Centered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Centered.swift; sourceTree = "<group>"; };
 		1F38AFF02A27166C0035641E /* VideoHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoHelpers.swift; sourceTree = "<group>"; };
 		1F38AFF32A2789C70035641E /* MacListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacListsView.swift; sourceTree = "<group>"; };
+		1F39756C2AB5A229004F9D77 /* NIP42.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP42.swift; sourceTree = "<group>"; };
 		1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiFollowSheet.swift; sourceTree = "<group>"; };
 		1F3C3F9529755D4C00E813FD /* NosturState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NosturState.swift; path = Nostur/NosturState.swift; sourceTree = "<group>"; };
 		1F3D4BB62A25CC140084F939 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppView.swift; path = Nostur/AppView.swift; sourceTree = "<group>"; };
@@ -1092,6 +1094,14 @@
 			path = Mac;
 			sourceTree = "<group>";
 		};
+		1F39756B2AB5A20D004F9D77 /* NIP42-AUTH */ = {
+			isa = PBXGroup;
+			children = (
+				1F39756C2AB5A229004F9D77 /* NIP42.swift */,
+			);
+			path = "NIP42-AUTH";
+			sourceTree = "<group>";
+		};
 		1F45C7EE29EF998D00F58772 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -1189,6 +1199,7 @@
 			isa = PBXGroup;
 			children = (
 				1F37571429672AB6007D210A /* DummyData */,
+				1F39756B2AB5A20D004F9D77 /* NIP42-AUTH */,
 				1F995EF12A4DDFE5002227B3 /* NIP46-NC */,
 				1F8B1348297B34D7002EB8CF /* Bech32.swift */,
 				1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */,
@@ -2121,6 +2132,7 @@
 				1F88490F29B537B400145340 /* URL.swift in Sources */,
 				1FB130B529C0E8D8004AC98D /* ReplyingToFragmentView.swift in Sources */,
 				1F45C7E829EE8FF100F58772 /* BannerPicPicker.swift in Sources */,
+				1F39756D2AB5A229004F9D77 /* NIP42.swift in Sources */,
 				1F1F13052AA9BE8C00DDED82 /* Hot+FeedSettings.swift in Sources */,
 				1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */,
 				1FC0F5A52A4AEB2E004E4DAA /* ArticleByNaddr.swift in Sources */,
