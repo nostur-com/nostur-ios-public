@@ -28,3 +28,17 @@ public class Contact: NSManagedObject {
 }
 
 public typealias ZapEtag = String
+
+extension Contact {
+    func bgContact() -> Contact? {
+        if Thread.isMainThread {
+            L.og.info("🔴🔴🔴 toBG() should be in bg already, switching now but should fix code")
+            return DataProvider.shared().bg.performAndWait {
+                return DataProvider.shared().bg.object(with: self.objectID) as? Contact
+            }
+        }
+        else {
+            return DataProvider.shared().bg.object(with: self.objectID) as? Contact
+        }
+    }
+}

@@ -256,44 +256,55 @@ struct ProfileView: View {
             }
         }
         .task {
-            if (NIP05Verifier.shouldVerify(contact)) {
-                NIP05Verifier.shared.verify(contact)
+            bg().perform {
+                guard let contact = contact.bgContact() else { return }
+                if (NIP05Verifier.shouldVerify(contact)) {
+                    NIP05Verifier.shared.verify(contact)
+                }
             }
         }
         .task {
-            guard contact.anyLud else { return }
-            do {
+            bg().perform {
+                guard let contact = contact.bgContact(), contact.anyLud else { return }
+                
                 if let lud16 = contact.lud16, lud16 != "" {
-                    let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                    await MainActor.run {
+                    Task {
+                        guard let response = try? await LUD16.getCallbackUrl(lud16: lud16) else { return }
                         if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            contact.zapperPubkey = response.nostrPubkey!
-                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                            await bg().perform {
+                                contact.zapperPubkey = response.nostrPubkey!
+                                L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                            }
                         }
                     }
                 }
                 else if let lud06 = contact.lud06, lud06 != "" {
-                    let response = try await LUD16.getCallbackUrl(lud06: lud06)
-                    await MainActor.run {
+                    Task {
+                        guard let response = try? await LUD16.getCallbackUrl(lud06: lud06) else { return }
                         if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            contact.zapperPubkey = response.nostrPubkey!
-                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                            await bg().perform {
+                                contact.zapperPubkey = response.nostrPubkey!
+                                L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                            }
                         }
                     }
                 }
-            }
-            catch {
-                L.og.error("problem in lnurlp \(error)")
+                
             }
         }
         .onChange(of: contact.nip05) { nip05 in
-            if (NIP05Verifier.shouldVerify(contact)) {
-                NIP05Verifier.shared.verify(contact)
+            bg().perform {
+                guard let contact = contact.bgContact() else { return }
+                if (NIP05Verifier.shouldVerify(contact)) {
+                    NIP05Verifier.shared.verify(contact)
+                }
             }
         }
         .task {
-            EventRelationsQueue.shared.addAwaitingContact(contact)
-            req(RM.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008,10002]))
+            bg().perform {
+                EventRelationsQueue.shared.addAwaitingContact(contact)
+                req(RM.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008,10002]))
+            }
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!, isFollowing: ns.isFollowing(contact.pubkey))

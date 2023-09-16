@@ -76,24 +76,24 @@ class NIP05Verifier {
     }
     
     public func verify(_ contact: Contact) {
-#if DEBUG
-if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-    return
-}
-#endif
-        if contact.managedObjectContext == DataProvider.shared().bg {
-            self.verifySubject.send(contact)
+        if Thread.isMainThread {
+            fatalError("Should call from bg")
         }
         
-        DataProvider.shared().bg.perform { [unowned self] in
-            if let privateContact = DataProvider.shared().bg.object(with: contact.objectID) as? Contact {
-                L.fetching.info("  nip05: going to verify \(privateContact.nip05 ?? "") for \(privateContact.pubkey)")
-                self.verifySubject.send(privateContact)
-            }
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return
         }
+        #endif
+        
+        L.fetching.info("nip05: going to verify \(contact.nip05 ?? "") for \(contact.pubkey)")
+        self.verifySubject.send(contact)
     }
     
     static func shouldVerify(_ contact: Contact) -> Bool {
+        if Thread.isMainThread {
+            fatalError("Should call from bg")
+        }
         guard contact.nip05 != nil else { return false }
         return (contact.nip05verifiedAt == nil || (contact.nip05verifiedAt != nil) && (contact.nip05verifiedAt! < Self.fourWeeksAgo))
     }
