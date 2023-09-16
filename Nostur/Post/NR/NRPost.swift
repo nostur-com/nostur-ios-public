@@ -506,7 +506,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         let highlightAuthorPubkey = event.fastTags.first(where: { $0.0 == "p" } )?.1
         var hlNrContact:NRContact?
         if let contact = event.contacts?.first(where: { $0.pubkey == highlightAuthorPubkey } ) {
-            hlNrContact = NRContact(contact: contact)
+            hlNrContact = NRContact(contact: contact, following: self.following)
         }
         return KindHightlight(
             highlightAuthorPubkey: highlightAuthorPubkey,
@@ -801,7 +801,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self = self else { return }
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let contact = self?.event.contact else { return }
-                    let nrContact = NRContact(contact: contact)
+                    let nrContact = NRContact(contact: contact, following: self?.following ?? false)
                     DispatchQueue.main.async {
                         self?.objectWillChange.send()
                         self?.contact = nrContact

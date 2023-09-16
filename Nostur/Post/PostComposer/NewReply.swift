@@ -97,7 +97,7 @@ struct NewReply: View {
                         }
                     }
                     .onAppear {
-                        textHeight = 250
+                        textHeight = 300
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                             withAnimation {
                                 proxy.scrollTo(textfield)

@@ -232,11 +232,9 @@ struct NotificationsReactions: View {
         mr.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@ AND reactionTo == nil", serializedP(account.publicKey))
 
         Task.detached(priority: .medium) {
-            let ctx = DataProvider.shared().bg
-            DataProvider.shared().bg.perform {
-                if let danglingReactions = try? ctx.fetch(mr) {
+            bg().perform {
+                if let danglingReactions = try? bg().fetch(mr) {
                     danglingReactions
-//                        .filter { $0.reactionTo == nil }
                         .forEach { reaction in
                             _ = reaction.reactionTo_ // this lazy load fixes the relation
                         }
