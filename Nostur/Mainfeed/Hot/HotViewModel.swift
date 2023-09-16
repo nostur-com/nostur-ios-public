@@ -172,6 +172,13 @@ class HotViewModel: ObservableObject {
 
             guard !ids.isEmpty else {
                 L.og.debug("Hot feed: fetchPostsFromRelays: empty ids")
+                if (posts.count > 0) {
+                    L.og.debug("Hot feed: but we can render the duplicates")
+                    DispatchQueue.main.async {
+                        self.fetchPostsFromDB(onComplete)
+                        self.backlog.clear()
+                    }
+                }
                 return
             }
             
