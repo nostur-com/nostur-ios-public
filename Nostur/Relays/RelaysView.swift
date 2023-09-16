@@ -72,7 +72,7 @@ struct RelaysView: View {
 
     func socketForRelay(relay: Relay) -> NewManagedClient {
         guard let socket = sp.sockets[relay.objectID.uriRepresentation().absoluteString] else {
-            let addedSocket = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url ?? "wss://localhost:123456/invalid_relay_url", read: relay.read, write: relay.write)
+            let addedSocket = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url ?? "wss://localhost:123456/invalid_relay_url", read: relay.read, write: relay.write, excludedPubkeys: relay.excludedPubkeys)
             return addedSocket
         }
         return socket

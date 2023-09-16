@@ -49,7 +49,7 @@ final class SocketPool: ObservableObject {
                 
                 // CONNECT TO RELAYS
                 for relay in relays {
-                    _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read:relay.read, write: relay.write)
+                    _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read:relay.read, write: relay.write, excludedPubkeys: relay.excludedPubkeys)
                 }
                 // If we have NWC relays, connect to those too
                 if !activeNWCconnectionId.isEmpty, let nwc = NWCConnection.fetchConnection(activeNWCconnectionId, context: DataProvider.shared().viewContext) {
@@ -105,9 +105,9 @@ final class SocketPool: ObservableObject {
         for relay in relays {
             guard let relayUrl = relay.url else { continue }
             guard socketByUrl(relayUrl) == nil else { continue }
-        
+            
             // Add connection socket if we don't already have it from our normal connections
-            _ = SocketPool.shared.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relayUrl, read:true, write: false)
+            _ = SocketPool.shared.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relayUrl, read:true, write: false, excludedPubkeys: relay.excludedPubkeys)
         }
         
         // .connect() to the given relays
@@ -164,7 +164,7 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func addSocket(relayId:String, url:String, read:Bool = true, write: Bool = false) -> NewManagedClient {
+    func addSocket(relayId:String, url:String, read:Bool = true, write: Bool = false, excludedPubkeys:Set<String> = []) -> NewManagedClient {
         if (!sockets.keys.contains(relayId)) {
             let urlURL:URL = URL(string: url) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
             var request = URLRequest(url: urlURL)
@@ -174,7 +174,7 @@ final class SocketPool: ObservableObject {
             
             let client = NewWebSocket(url: url)
             
-            let managedClient = NewManagedClient(relayId: relayId, url: url, client:client, read: read, write: write)
+            let managedClient = NewManagedClient(relayId: relayId, url: url, client:client, read: read, write: write, excludedPubkeys: excludedPubkeys)
             
             client.delegate = managedClient
             
@@ -266,7 +266,7 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<Relay> = []) {
+    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<Relay> = [], accountPubkey:String? = nil) {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             print("Canvas.sendMessage: \(message.type) \(message.message)")
             return
@@ -303,6 +303,10 @@ final class SocketPool: ObservableObject {
                         managedClient.client.sendMessage(message.message)
                     }
                     else if message.type == .EVENT {
+                        if let accountPubkey = accountPubkey, managedClient.excludedPubkeys.contains(accountPubkey) {
+                            L.sockets.info("sendMessage: \(accountPubkey) excluded from \(managedClient.url) - not publishing here isNC:\(managedClient.isNC.description) - isNWC: \(managedClient.isNWC.description)")
+                            continue
+                        }
                         if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                             managedClient.connect()
                         }
@@ -351,6 +355,10 @@ final class SocketPool: ObservableObject {
                         managedClient.client.sendMessage(message.message)
                     }
                     else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
+                        if let accountPubkey = accountPubkey, managedClient.excludedPubkeys.contains(accountPubkey) {
+                            L.sockets.info("sendMessage: \(accountPubkey) excluded from \(managedClient.url) - not publishing here isNC:\(managedClient.isNC.description) - isNWC: \(managedClient.isNWC.description) ")
+                            continue
+                        }
                         if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                             managedClient.connect()
                         }
@@ -362,7 +370,7 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func sendMessageAfterPing(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<Relay> = []) {
+    func sendMessageAfterPing(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<Relay> = [], accountPubkey:String? = nil) {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             print("Canvas.sendMessage: \(message.type) \(message.message)")
             return
@@ -409,6 +417,10 @@ final class SocketPool: ObservableObject {
                         managedClient.client.sendMessageAfterPing(message.message)
                     }
                     else if message.type == .EVENT {
+                        if let accountPubkey = accountPubkey, managedClient.excludedPubkeys.contains(accountPubkey) {
+                            L.sockets.info("sendMessage: \(accountPubkey) excluded from \(managedClient.url) - not publishing here isNC:\(managedClient.isNC.description) - isNWC: \(managedClient.isNWC.description) ")
+                            continue
+                        }
                         if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                             managedClient.connect()
                         }
@@ -451,6 +463,10 @@ final class SocketPool: ObservableObject {
                         managedClient.client.sendMessage(message.message)
                     }
                     else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
+                        if let accountPubkey = accountPubkey, managedClient.excludedPubkeys.contains(accountPubkey) {
+                            L.sockets.info("sendMessage: \(accountPubkey) excluded from \(managedClient.url) - not publishing here isNC:\(managedClient.isNC.description) - isNWC: \(managedClient.isNWC.description) ")
+                            continue
+                        }
                         if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                             managedClient.connect()
                         }
@@ -589,6 +605,8 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     @Published var read = true
     @Published var write = false
     
+    var excludedPubkeys:Set<String>
+    
     var activeSubscriptions:[String] {
         get {
             return SocketPool.shared.connectionQueue.sync {
@@ -602,7 +620,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         }
     }
     
-    init(relayId: String, url: String, client:NewWebSocket, read: Bool = true, write: Bool = false, isNWC:Bool = false, isNC:Bool = false) {
+    init(relayId: String, url: String, client:NewWebSocket, read: Bool = true, write: Bool = false, isNWC:Bool = false, isNC:Bool = false, excludedPubkeys:Set<String> = []) {
         self.relayId = relayId
         self.url = url.lowercased()
         self.read = read
@@ -610,6 +628,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         self.client = client
         self.isNWC = isNWC
         self.isNC = isNC
+        self.excludedPubkeys = excludedPubkeys
     }
     
     func didReceivePong() {

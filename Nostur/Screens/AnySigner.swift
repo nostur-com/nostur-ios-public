@@ -16,8 +16,8 @@ struct AnySigner: View {
     @State var signedNEvent:AnyNEvent? = nil
     
     func publish() {
-        if let eventJson = signedNEvent?.wrappedEventJson() {
-            SocketPool.shared.sendMessage(ClientMessage(message: eventJson))
+        if let signedNEvent = signedNEvent {
+            SocketPool.shared.sendMessage(ClientMessage(message: signedNEvent.wrappedEventJson()), accountPubkey: signedNEvent.publicKey)
         }
     }
 

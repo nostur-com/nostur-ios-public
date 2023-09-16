@@ -203,7 +203,7 @@ class NSecBunkerManager: ObservableObject {
             req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: bunkerManagedPublicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
             
             // Send connection request
-            SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()))
+            SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey)
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) { // Must wait until connected to bunker relay
@@ -257,7 +257,7 @@ class NSecBunkerManager: ObservableObject {
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()))
+        SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey)
     }
     
     
@@ -295,12 +295,13 @@ class NSecBunkerManager: ObservableObject {
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()))
+        SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey)
     }
     
     private func handleSignedEvent(eventString:String) {
         L.og.info("🏰 NSECBUNKER signed event received, ready to publish: \(eventString)")
-        SocketPool.shared.sendMessage(ClientMessage(message: "[\"EVENT\",\(eventString)"))
+        let accountPubkey = parsePubkey(eventString)
+        SocketPool.shared.sendMessage(ClientMessage(message: "[\"EVENT\",\(eventString)"), accountPubkey: accountPubkey)
     }
     
     enum STATE {
@@ -309,4 +310,15 @@ class NSecBunkerManager: ObservableObject {
         case connected
         case error
     }
+}
+
+func parsePubkey(_ eventString:String) -> String? {
+    guard let dataFromString = eventString.data(using: .utf8, allowLossyConversion: false) else {
+        return nil
+    }
+    let decoder = JSONDecoder()
+    if let mMessage = try? decoder.decode(MinimalMessage.self, from: dataFromString) {
+        return mMessage.pubkey
+    }
+    return nil
 }

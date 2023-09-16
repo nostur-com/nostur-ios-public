@@ -29,6 +29,18 @@ extension Relay {
         get { (lists?.allObjects as? [NosturList]) ?? [] }
         set { lists = NSSet(array: newValue) }
     }
+    
+    @NSManaged public var excludedPubkeys_: String?
+    
+    var excludedPubkeys:Set<String> {
+        get {
+            guard let pubkeysString = excludedPubkeys_ else { return [] }
+            return Set(pubkeysString.split(separator: " ", omittingEmptySubsequences: true).map { String($0) })
+        }
+        set { 
+            excludedPubkeys_ = newValue.joined(separator: " ")
+        }
+    }
 }
 
 // MARK: Generated accessors for contacts
