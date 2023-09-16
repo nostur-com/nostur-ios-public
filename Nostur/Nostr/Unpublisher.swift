@@ -47,8 +47,9 @@ class Unpublisher {
     
     // Removes any existing ofType from the queue, before adding this one
     // For example after rapid follow/unfollow, creates new clEvents, only publish the last one
+    // Also, we can have multiple of same type from different accounts, so check if pubkey is the same too before removing
     func publishLast(_ nEvent:NEvent, ofType: Unpublisher.type) -> UUID {
-        queue.removeAll(where: { $0.type == ofType })
+        queue.removeAll(where: { $0.type == ofType && nEvent.publicKey == $0.nEvent.publicKey })
         let cancellationId = UUID()
         queue.append(Unpublished(type: ofType, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
         return cancellationId

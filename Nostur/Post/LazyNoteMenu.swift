@@ -34,6 +34,7 @@ struct LazyNoteMenuSheet: View {
     @Environment(\.dismiss) var dismiss
     let up:Unpublisher = .shared
     let NEXT_SHEET_DELAY = 0.05
+    @State var followToggles = false
     
     var body: some View {
         NavigationStack {
@@ -173,13 +174,21 @@ struct LazyNoteMenuSheet: View {
                     } label: {
                         Label(String(localized:"Show \(nrPost.anyName)'s feed", comment: "Post context menu button to show someone's feed"), systemImage: "rectangle.stack.fill")
                     }
-                    Button {
-                        dismiss()
-                        if (nrPost.mainEvent.contact != nil) {
-                            ns.follow(nrPost.mainEvent.contact!)
+                    HStack {
+                        Button {
+                            dismiss()
+                            if (nrPost.mainEvent.contact != nil) {
+                                ns.follow(nrPost.mainEvent.contact!)
+                            }
+                        } label: {
+                            Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.fill")
                         }
-                    } label: {
-                        Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.fill")
+                        .buttonStyle(.plain)
+                        Spacer()
+                        Divider()
+                        Button { followToggles = true } label: {
+                            Image(systemName: "chevron.right")
+                        }
                     }
                 }
                 .foregroundColor(theme.accent)
@@ -306,13 +315,19 @@ struct LazyNoteMenuSheet: View {
                     
                 }
             }
+            .navigationDestination(isPresented: $followToggles) {
+                MultiFollowSheet(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
+            }
         }
     }
 }
 
 struct LazyNoteMenuSheet_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer({ pe in pe.loadPosts() }) {
+        PreviewContainer({ pe in
+            pe.loadAccounts()
+            pe.loadPosts()
+        }) {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost() {
                     LazyNoteMenuSheet(nrPost:nrPost)
@@ -322,17 +337,15 @@ struct LazyNoteMenuSheet_Previews: PreviewProvider {
     }
 }
 
-struct LazyNoteMenu_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadPosts()
-        }) {
-            VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost() {
-                    LazyNoteMenuButton(nrPost:nrPost)
-                }
-                Color.clear.withSheets()
+#Preview {
+    PreviewContainer({ pe in
+        pe.loadPosts()
+    }) {
+        VStack {
+            if let nrPost = PreviewFetcher.fetchNRPost() {
+                LazyNoteMenuButton(nrPost:nrPost)
             }
+            Color.clear.withSheets()
         }
     }
 }
