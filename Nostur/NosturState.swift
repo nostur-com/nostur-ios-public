@@ -55,7 +55,7 @@ final class NosturState : ObservableObject {
     }
     
     var bgFollowingPFPs:[String: URL] = [:]
-    private func loadFollowingPFPs() {
+    public func loadFollowingPFPs() {
         guard let account = account else { return }
         
         let followingPFPs:[String: URL] = Dictionary(grouping: account.follows_) { contact in
