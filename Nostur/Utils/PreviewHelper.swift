@@ -127,6 +127,26 @@ extension PreviewEnvironment {
             account3.publicKey = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320"
             account3.name = "Explorer"
             account3.about = "Third account"
+            
+            
+            let account4keys = NKeys.newKeys()
+            let account4 = Account(context: self.context)
+            account4.createdAt = Date()
+            account4.id = UUID()
+            account4.publicKey = account4keys.publicKeyHex()
+            account4.privateKey = account4keys.privateKeyHex()
+            account4.name = "The Poster"
+            account4.about = "4th account, with private key"
+            
+            let account5keys = NKeys.newKeys()
+            let account5 = Account(context: self.context)
+            account5.createdAt = Date()
+            account5.id = UUID()
+            account5.publicKey = account5keys.publicKeyHex()
+            account5.privateKey = account5keys.privateKeyHex()
+            account5.name = "Alt"
+            account5.about = "5th account, with private kay"
+            
             NosturState.shared.loadAccounts()
         }
     }
