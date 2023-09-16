@@ -30,6 +30,7 @@ struct TryGuestAccountSheet: View {
                 tryGuestAccount()
             } label: {
                 Text("Let's go!", comment: "Button to start using Nostur, during onboarding")
+                    .padding(.vertical, 10)
                     .frame(maxWidth: .infinity)
             }
             .controlSize(.large)

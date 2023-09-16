@@ -23,6 +23,7 @@ struct WelcomeSheet: View {
                     NewAccountSheet()
                 } label: {
                     Text("Create new account", comment: "Button to start creating a new account")
+                        .padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))

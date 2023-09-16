@@ -66,13 +66,16 @@ struct AddExistingAccountSheet: View {
                     } label: {
                         if bunkerManager.state == .connecting {
                             ProgressView()
+                                .padding(.vertical, 10)
                         }
                         else if (isNsecbunkerKey) {
                             Text("Add (nsecBunker)")
+                                .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity)
                         }
                         else {
                             Text("Add")
+                                .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity)
                         }
                     }
