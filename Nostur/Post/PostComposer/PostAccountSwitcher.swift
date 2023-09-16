@@ -22,18 +22,23 @@ struct PostAccountSwitcher: View {
     }
     
     var body: some View {
-        VStack(spacing: 5) {
-            ForEach(accounts.indices, id:\.self) { index in
-                PFP(pubkey: accounts[index].publicKey, account: accounts[index])
-                    .onTapGesture {
-                        accountTapped(accounts[index])
+        Color.clear
+            .frame(width: 50, height: 50)
+            .overlay(alignment: .topLeading) {
+                VStack(spacing: 2) {
+                    ForEach(accounts.indices, id:\.self) { index in
+                        PFP(pubkey: accounts[index].publicKey, account: accounts[index])
+                            .onTapGesture {
+                                accountTapped(accounts[index])
+                            }
+                            .opacity(index == 0 || expanded ? 1.0 : 0.2)
+                            .zIndex(-Double(index))
+                            .offset(y: expanded || (index == 0) ? 0 : (Double(index) * -48.0))
+                            .animation(.easeOut(duration: 0.2), value: expanded)
                     }
-                    .opacity(index == 0 || expanded ? 1.0 : 0.2)
-                    .zIndex(-Double(index))
-                    .offset(y: expanded || (index == 0) ? 0 : (Double(index) * -48.0))
-                    .animation(.easeOut(duration: 0.2), value: expanded)
+                }
+                .fixedSize()
             }
-        }
     }
     
     func accountTapped(_ account:Account) {
