@@ -1090,7 +1090,7 @@ extension NRPost { // Helpers for grouped replies
         // With WoT enabeled with add filter nr 5.
         return groupedReplies
             // 5. People outside WoT last
-            .filter { $0.inWoT || $0.pubkey == self.pubkey }
+            .filter { $0.inWoT || NosturState.shared.bgAccountKeys.contains($0.pubkey) }
         
             // 4. Everything else in WoT last, newest at bottom
             .sorted(by: { $0.created_at < $1.created_at })
@@ -1110,7 +1110,7 @@ extension NRPost { // Helpers for grouped replies
     
     var groupedRepliesNotWoT:[NRPost] { // Read from bottom to top.
         return groupedReplies
-            .filter { !$0.inWoT && $0.pubkey != self.pubkey}
+            .filter { !$0.inWoT && !NosturState.shared.bgAccountKeys.contains($0.pubkey)}
             .sorted(by: { $0.created_at < $1.created_at })
     }
     
