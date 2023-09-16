@@ -50,6 +50,7 @@ struct NewAccountSheet: View {
                     }
                 } label: {
                     Text("Create")
+                        .padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
