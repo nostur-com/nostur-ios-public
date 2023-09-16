@@ -51,10 +51,8 @@ struct WelcomeSheet: View {
     }
 }
 
-struct WelcomeSheet_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer {
-            WelcomeSheet(offerTryOut: true)
-        }
+#Preview {
+    PreviewContainer {
+        WelcomeSheet(offerTryOut: true)
     }
 }
