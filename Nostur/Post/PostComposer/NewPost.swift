@@ -69,9 +69,24 @@ struct NewPost: View {
                         }
                         AnyStatus(filter: "NewPost")
                     }
-                    HStack {
-                        ImagePreviews(pastedImages: $vm.pastedImages)
-                            .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
+                    if !vm.pastedImages.isEmpty {
+                        HStack {
+                            ImagePreviews(pastedImages: $vm.pastedImages)
+                                .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
+                        }
+                    }
+                    if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {
+                        ScrollView {
+                            LazyVStack {
+                                ForEach(vm.filteredContactSearchResults) { contact in
+                                    ContactSearchResultRow(contact: contact, onSelect: {
+                                        vm.selectContactSearchResult(contact)
+                                    })
+                                }
+                            }
+                        }
+                        .frame(minHeight: 200)
+                        .padding()
                     }
                 }
                 .padding(10)
@@ -133,19 +148,6 @@ struct NewPost: View {
                     }
                     .presentationBackground(theme.background)
                 }
-
-                if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {
-                    ScrollView {
-                        LazyVStack {
-                            ForEach(vm.filteredContactSearchResults) { contact in
-                                ContactSearchResultRow(contact: contact, onSelect: {
-                                    vm.selectContactSearchResult(contact)
-                                })
-                            }
-                        }
-                    }
-                    .padding()
-                }
             }
             else {
                 ProgressView()
@@ -164,8 +166,13 @@ struct NewNote_Previews: PreviewProvider {
             pe.loadPosts()
             pe.loadContacts()
         }) {
-            NavigationStack {
-                NewPost()
+            VStack {
+                Button("New Post") { }
+                    .sheet(isPresented: .constant(true)) {
+                        NavigationStack {
+                            NewPost()
+                        }
+                    }
             }
         }
     }
