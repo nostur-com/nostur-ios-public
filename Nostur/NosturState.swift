@@ -375,7 +375,7 @@ final class NosturState : ObservableObject {
     
     func followsYou(_ contact:Contact) -> Bool {
         guard let clEvent = contact.clEvent else { return false }
-        guard let account = account else { return false }
+        guard let account = Thread.isMainThread ? account : bgAccount else { return false }
         return !clEvent.fastTags.filter { $0.0 == "p" && $0.1 == account.publicKey }.isEmpty
     }
     

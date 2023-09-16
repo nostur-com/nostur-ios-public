@@ -283,62 +283,81 @@ struct ProfileOverlayCard: View {
             }
         }
         .task {
-            let contact = contact.mainContact
-            EventRelationsQueue.shared.addAwaitingContact(contact)
-            if (ns.followsYou(contact)) {
-                isFollowingYou = true
-            }
+            let contact = contact.contact
             
-            let task = ReqTask(
-                reqCommand: { (taskId) in
-                    req(RM.getUserProfileKinds(pubkey: contact.pubkey, subscriptionId: taskId, kinds: [0,3]))
-                },
-                processResponseCommand: { (taskId, _) in
-                    if (ns.followsYou(contact)) {
+            bg().perform {
+                EventRelationsQueue.shared.addAwaitingContact(contact)
+                if (ns.followsYou(contact)) {
+                    DispatchQueue.main.async {
                         isFollowingYou = true
                     }
-                },
-                timeoutCommand: { taskId in
-                    if (ns.followsYou(contact)) {
-                        isFollowingYou = true
-                    }
-                })
+                }
+                
+                let task = ReqTask(
+                    reqCommand: { (taskId) in
+                        req(RM.getUserProfileKinds(pubkey: contact.pubkey, subscriptionId: taskId, kinds: [0,3]))
+                    },
+                    processResponseCommand: { (taskId, _) in
+                        bg().perform {
+                            if (ns.followsYou(contact)) {
+                                DispatchQueue.main.async {
+                                    isFollowingYou = true
+                                }
+                            }
+                        }
+                    },
+                    timeoutCommand: { taskId in
+                        bg().perform {
+                            if (ns.followsYou(contact)) {
+                                DispatchQueue.main.async {
+                                    isFollowingYou = true
+                                }
+                            }
+                        }
+                    })
 
-            backlog.add(task)
-            task.fetch()
-            
-            
-            if (NIP05Verifier.shouldVerify(contact)) {
-                NIP05Verifier.shared.verify(contact)
-            }
-            guard contact.anyLud else { return }
-            do {
-                if let lud16 = contact.lud16, lud16 != "" {
-                    let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                    await MainActor.run {
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            contact.zapperPubkey = response.nostrPubkey!
-                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                backlog.add(task)
+                task.fetch()
+                
+                if (NIP05Verifier.shouldVerify(contact)) {
+                    NIP05Verifier.shared.verify(contact)
+                }
+             
+                guard contact.anyLud else { return }
+                let lud16orNil = contact.lud16
+                let lud06orNil = contact.lud06
+                Task {
+                    do {
+                        if let lud16 = lud16orNil, lud16 != "" {
+                            let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                                await bg().perform {
+                                    contact.zapperPubkey = response.nostrPubkey!
+                                    L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                                }
+                            }
+                        }
+                        else if let lud06 = lud06orNil, lud06 != "" {
+                            let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                                await bg().perform {
+                                    contact.zapperPubkey = response.nostrPubkey!
+                                    L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                                }
+                            }
                         }
                     }
-                }
-                else if let lud06 = contact.lud06, lud06 != "" {
-                    let response = try await LUD16.getCallbackUrl(lud06: lud06)
-                    await MainActor.run {
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            contact.zapperPubkey = response.nostrPubkey!
-                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
-                        }
+                    catch {
+                        L.og.error("problem in lnurlp \(error)")
                     }
                 }
-            }
-            catch {
-                L.og.error("problem in lnurlp \(error)")
             }
         }
-        .onChange(of: contact.mainContact.nip05) { nip05 in
-            if (NIP05Verifier.shouldVerify(contact.mainContact)) {
-                NIP05Verifier.shared.verify(contact.mainContact)
+        .onChange(of: contact.nip05) { _ in
+            bg().perform {
+                if (NIP05Verifier.shouldVerify(contact.contact)) {
+                    NIP05Verifier.shared.verify(contact.contact)
+                }
             }
         }
         .task {
