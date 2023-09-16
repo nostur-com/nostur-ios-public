@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct Repost: View {
+    @EnvironmentObject var theme:Theme
     let nrPost:NRPost
     @ObservedObject var noteRowAttributes:NRPost.NoteRowAttributes
     var hideFooter = true // For rendering in NewReply
@@ -69,6 +70,9 @@ struct Repost: View {
                     // so add the extra 10 here
                         .padding(.horizontal, firstQuote.kind == 30023 ? 10 : 0)
                 }
+            }
+            else {
+                theme.background
             }
         }
         .transaction { t in t.animation = nil }
