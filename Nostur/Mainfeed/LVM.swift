@@ -1128,6 +1128,7 @@ extension LVM {
                 let context = DataProvider.shared().bg
                 context.perform { [weak self] in
                     guard let self = self else { return }
+                    guard let pubkey = self.pubkey, event.pubkey == pubkey else { return }
                     guard !self.leafIdsOnScreen.contains(event.id) else { return }
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.showOwnNewPostsImmediately")
                     // If we are not hiding replies, we render leafs + parents --> withParents: true
