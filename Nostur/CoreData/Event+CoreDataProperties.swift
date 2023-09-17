@@ -735,7 +735,7 @@ extension Event {
                 return nil
             }
             
-            return tags.filter { $0.type == "p" } .map { $0.pubkey }
+            return tags.filter { $0.type == "p" && $0.pubkey.count == 64 } .map { $0.pubkey }
         }
         else {
             return nil
