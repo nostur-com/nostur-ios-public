@@ -12,9 +12,10 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     var id:UUID
     var notePath:NotePath?
     var contactPath:ContactPath?
+    var nrContactPath:NRContactPath?
     var event:Event?
     var nrPost:NRPost?
-    var contact:Contact?
+    var nrContact:NRContact?
     var naddr1:Naddr1Path?
     var articlePath:ArticlePath?
     var profileTab:String?
@@ -27,22 +28,17 @@ class TabModel: ObservableObject, Identifiable, Equatable {
         }
     }
     
-    init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil, nrPost:NRPost? = nil, naddr1:Naddr1Path? = nil, articlePath:ArticlePath? = nil, profileTab:String? = nil) {
+    init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, nrContactPath:NRContactPath? = nil, event:Event? = nil, nrContact:NRContact? = nil, nrPost:NRPost? = nil, naddr1:Naddr1Path? = nil, articlePath:ArticlePath? = nil, profileTab:String? = nil) {
         self.id = UUID()
         self.notePath = notePath
         self.contactPath = contactPath
+        self.nrContactPath = nrContactPath
         self.event = event
-        self.contact = contact
+        self.nrContact = nrContact
         self.nrPost = nrPost
         self.naddr1 = naddr1
         self.articlePath = articlePath
         self.profileTab = profileTab
-        
-        if (contactPath != nil) {
-            if let contactFromCache = Contact.fetchByPubkey(contactPath!.key, context: DataProvider.shared().container.viewContext) {
-                self.contact = contactFromCache
-            }
-        }
         self.configureNavigationTitle()
     }
     
@@ -69,7 +65,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
                 return
             }
         }
-        if let contact = self.contact {
+        if let contact = self.nrContact {
             navigationTitle = contact.anyName
             return
         }

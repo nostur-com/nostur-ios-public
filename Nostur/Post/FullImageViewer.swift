@@ -240,7 +240,12 @@ struct MediaPostPreview: View {
                         .lineLimit(1)
                         .layoutPriority(2)
                         .onTapGesture {
-                            navigateTo(ContactPath(key: nrPost.pubkey))
+                            if let nrContact = pfpAttributes.contact {
+                                navigateTo(nrContact)
+                            }
+                            else {
+                                navigateTo(ContactPath(key: nrPost.pubkey))
+                            }
                         }
                     
                     if contact.nip05verified, let nip05 = contact.nip05 {

@@ -46,7 +46,12 @@ struct Highlight: View {
                 }
                 .onTapGesture {
                     if !IS_APPLE_TYRANNY {
-                        navigateTo(ContactPath(key: nrPost.pubkey))
+                        if let nrContact = pfpAttributes.contact {
+                            navigateTo(nrContact)
+                        }
+                        else {
+                            navigateTo(ContactPath(key: nrPost.pubkey))
+                        }
                     }
                     else {
                         withAnimation {

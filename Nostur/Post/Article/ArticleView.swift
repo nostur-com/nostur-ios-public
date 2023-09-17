@@ -62,7 +62,12 @@ struct ArticleView: View {
                         ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id)
                             .onTapGesture {
                                 if !IS_APPLE_TYRANNY {
-                                    navigateTo(ContactPath(key: article.pubkey))
+                                    if let nrContact = article.pfpAttributes.contact {
+                                        navigateTo(nrContact)
+                                    }
+                                    else {
+                                        navigateTo(ContactPath(key: article.pubkey))
+                                    }
                                 }
                                 else {
                                     withAnimation {
@@ -103,7 +108,7 @@ struct ArticleView: View {
                                         .lineLimit(1)
                                         .layoutPriority(2)
                                         .onTapGesture {
-                                            navigateTo(ContactPath(key: article.pubkey))
+                                            navigateTo(contact)
                                         }
                                     
                                     if contact.nip05verified, let nip05 = contact.nip05 {
@@ -266,7 +271,12 @@ struct ArticleView: View {
                         ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id)
                             .onTapGesture {
                                 if !IS_APPLE_TYRANNY {
-                                    navigateTo(ContactPath(key: article.pubkey))
+                                    if let nrContact = article.contact {
+                                        navigateTo(nrContact)
+                                    }
+                                    else {
+                                        navigateTo(ContactPath(key: article.pubkey))
+                                    }
                                 }
                                 else {
                                     withAnimation {
@@ -305,7 +315,7 @@ struct ArticleView: View {
                                 .lineLimit(1)
                                 .layoutPriority(2)
                                 .onTapGesture {
-                                    navigateTo(ContactPath(key: article.pubkey))
+                                    navigateTo(contact)
                                 }
                             
                             if contact.nip05verified, let nip05 = contact.nip05 {
@@ -347,7 +357,7 @@ struct ArticleView: View {
                                     .lineLimit(1)
                                     .layoutPriority(2)
                                     .onTapGesture {
-                                        navigateTo(ContactPath(key: article.pubkey))
+                                        navigateTo(contact)
                                     }
                                 
                                 if contact.nip05verified, let nip05 = contact.nip05 {

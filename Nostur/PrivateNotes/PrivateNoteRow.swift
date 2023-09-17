@@ -34,7 +34,12 @@ struct PrivateNoteRow: View {
                 HStack {
                     PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25)
                         .onTapGesture {
-                            navigateTo(ContactPath(key: nrPost.pubkey))
+                            if let nrContact = nrPost.contact {
+                                navigateTo(nrContact)
+                            }
+                            else {
+                                navigateTo(ContactPath(key: nrPost.pubkey))
+                            }
                         }
                     MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: 1)
                         .frame(maxWidth: .infinity, alignment: .leading)

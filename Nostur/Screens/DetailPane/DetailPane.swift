@@ -198,10 +198,17 @@ struct DetailPane: View {
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
+            }     
+            else if type(of: destination.destination) == NRContactPath.self {
+                let c = destination.destination as! NRContactPath
+                let tab = TabModel(nrContactPath: c, profileTab:c.tab)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
             }
-            else if type(of: destination.destination) == Contact.self {
-                let c = destination.destination as! Contact
-                let tab = TabModel(contact: c)
+            else if type(of: destination.destination) == NRContact.self {
+                let c = destination.destination as! NRContact
+                let tab = TabModel(nrContact: c)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return

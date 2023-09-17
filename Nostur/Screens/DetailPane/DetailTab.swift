@@ -23,11 +23,11 @@ struct DetailTab: View {
                         .withNavigationDestinations()
                 }
             }
-            else if let contact = tab.contact {
+            else if let nrContact = tab.nrContact {
                 ZStack {
                     theme.listBackground
                         .ignoresSafeArea()
-                    ProfileView(contact:contact, tab: tab.profileTab)
+                    ProfileView(nrContact:nrContact, tab: tab.profileTab)
                         .withNavigationDestinations()
                 }
             }
@@ -63,6 +63,15 @@ struct DetailTab: View {
                     theme.listBackground
                         .ignoresSafeArea()
                     ProfileByPubkey(pubkey: contactPubkey, tab: tab.contactPath?.tab)//.opacity(tm.selected == tab ? 1 : 0)
+                        .withNavigationDestinations()
+                }
+                
+            }
+            else if let nrContact = tab.nrContactPath?.nrContact {
+                ZStack {
+                    theme.listBackground
+                        .ignoresSafeArea()
+                    ProfileView(nrContact:nrContact, tab: tab.profileTab)
                         .withNavigationDestinations()
                 }
                 

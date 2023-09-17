@@ -104,7 +104,7 @@ struct ProfileOverlayCard: View {
                     ZappablePFP(pubkey: contact.pubkey, contact: contact, size: DIMENSIONS.PFP_BIG, zapEtag: zapEtag)
                         .onTapGesture {
                             dismiss()
-                            navigateTo(ContactPath(key: contact.pubkey))
+                            navigateTo(contact)
                             sendNotification(.dismissMiniProfile)
                         }
                     
@@ -196,7 +196,7 @@ struct ProfileOverlayCard: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     dismiss()
-                    navigateTo(ContactPath(key: contact.pubkey))
+                    navigateTo(contact)
                     sendNotification(.dismissMiniProfile)
                 }
                 .padding(.bottom, 10)
@@ -209,31 +209,31 @@ struct ProfileOverlayCard: View {
                 HStack(spacing:0) {
                     Button(String(localized:"Posts", comment:"Tab title")) {
                         dismiss()
-                        navigateTo(ContactPath(key: contact.pubkey, tab:"Posts"))
+                        navigateTo(NRContactPath(nrContact: contact, tab:"Posts"))
                         sendNotification(.dismissMiniProfile)
                     }
                     Spacer()
                     Button(String(localized:"Following", comment:"Tab title")) {
                         dismiss()
-                        navigateTo(ContactPath(key: contact.pubkey, tab:"Following"))
+                        navigateTo(NRContactPath(nrContact: contact, tab:"Following"))
                         sendNotification(.dismissMiniProfile)
                     }
                     Spacer()
                     Button(String(localized:"Media", comment:"Tab title")) {
                         dismiss()
-                        navigateTo(ContactPath(key: contact.pubkey, tab:"Media"))
+                        navigateTo(NRContactPath(nrContact: contact, tab:"Media"))
                         sendNotification(.dismissMiniProfile)
                     }
                     Spacer()
                     Button(String(localized:"Likes", comment:"Tab title")) {
                         dismiss()
-                        navigateTo(ContactPath(key: contact.pubkey, tab:"Likes"))
+                        navigateTo(NRContactPath(nrContact: contact, tab:"Likes"))
                         sendNotification(.dismissMiniProfile)
                     }
                     Spacer()
                     Button(String(localized:"Zaps", comment:"Tab title")) {
                         dismiss()
-                        navigateTo(ContactPath(key: contact.pubkey, tab:"Zaps"))
+                        navigateTo(NRContactPath(nrContact: contact, tab:"Zaps"))
                         sendNotification(.dismissMiniProfile)
                     }
                 }

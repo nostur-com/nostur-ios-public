@@ -49,7 +49,7 @@ struct ConversationRowView: View {
                                 .lineLimit(1)
                                 .layoutPriority(2)
                                 .onTapGesture {
-                                    navigateTo(ContactPath(key: contact.pubkey))
+                                    navigateTo(contact)
                                 }
                             
                             if contact.couldBeImposter == 1 {

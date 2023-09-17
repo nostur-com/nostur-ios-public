@@ -297,7 +297,12 @@ struct ParentPost: View {
                         .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                         .onTapGesture {
                             if !IS_APPLE_TYRANNY {
-                                navigateTo(ContactPath(key: nrPost.pubkey))
+                                if let nrContact = nrPost.contact {
+                                    navigateTo(nrContact)
+                                }
+                                else {
+                                    navigateTo(ContactPath(key: nrPost.pubkey))
+                                }
                             }
                             else {
                                 withAnimation {
@@ -408,7 +413,12 @@ struct DetailPost: View {
                     .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                     .onTapGesture {
                         if !IS_APPLE_TYRANNY {
-                            navigateTo(ContactPath(key: nrPost.pubkey))
+                            if let nrContact = nrPost.contact {
+                                navigateTo(nrContact)
+                            }
+                            else {
+                                navigateTo(ContactPath(key: nrPost.pubkey))
+                            }
                         }
                         else {
                             withAnimation {

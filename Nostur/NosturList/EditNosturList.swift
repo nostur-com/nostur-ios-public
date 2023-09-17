@@ -23,7 +23,7 @@ struct EditNosturList: View {
         List(list.contacts_) { contact in
             ContactSearchResultRow(contact: contact)
                 .padding()
-                .onTapGesture { navigateTo(contact) }
+                .onTapGesture { navigateTo(ContactPath(key: contact.pubkey)) }
                 .listRowInsets(EdgeInsets())
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {

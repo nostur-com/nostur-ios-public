@@ -19,6 +19,12 @@ struct ContactPath: Hashable {
     var tab:String? = nil
 }
 
+struct NRContactPath: Hashable {
+    var nrContact:NRContact
+    var navigationTitle:String? = nil
+    var tab:String? = nil
+}
+
 struct HashtagPath: Hashable {
     var hashTag:String
     var navigationTitle:String? = nil
@@ -87,9 +93,12 @@ extension View {
             }
             .navigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key, tab:path.tab)
+            }            
+            .navigationDestination(for: NRContactPath.self) { path in
+                ProfileView(nrContact: path.nrContact, tab:path.tab)
             }
-            .navigationDestination(for: Contact.self) { contact in
-                ProfileView(contact: contact)
+            .navigationDestination(for: NRContact.self) { nrContact in
+                ProfileView(nrContact: nrContact)
             }
             .navigationDestination(for: Badge.self) { badge in
                 BadgeDetailView(badge: badge.badge)

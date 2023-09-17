@@ -106,7 +106,7 @@ struct PostHeader: View {
 //                        t.animation = nil
 //                    }
                     .onTapGesture {
-                        navigateTo(ContactPath(key: nrPost.pubkey))
+                        navigateTo(contact)
                     }
                 
                 if contact.couldBeImposter == 1 {

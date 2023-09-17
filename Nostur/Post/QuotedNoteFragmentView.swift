@@ -42,7 +42,12 @@ struct QuotedNoteFragmentView: View {
                             // profile image
                             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20)
                                 .onTapGesture {
-                                    navigateTo(ContactPath(key: nrPost.pubkey))
+                                    if let nrContact = nrPost.contact {
+                                        navigateTo(nrContact)
+                                    }
+                                    else {
+                                        navigateTo(ContactPath(key: nrPost.pubkey))
+                                    }
                                 }
                             
                             if let contact = nrPost.contact {
