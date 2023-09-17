@@ -189,7 +189,7 @@ class ProfilePostsViewModel: ObservableObject {
         
         guard index % 5 == 0 else { return }
         
-        let nextIds = self.posts.dropFirst(index - 1).prefix(5).map { $0.id }
+        let nextIds = self.posts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
         guard !nextIds.isEmpty else { return }
         L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
         fetchStuffForLastAddedNotes(ids: nextIds)
