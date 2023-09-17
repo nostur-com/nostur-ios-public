@@ -77,6 +77,10 @@ func fetchEvents(pubkeysString:String, amount:Int? = 5000, since:Int64? = nil, s
 }
 
 func fetchStuffForLastAddedNotes(ids:[String]) {
+    guard !ids.isEmpty else {
+        L.og.error("🔴🔴 fetchStuffForLastAddedNotes, ids is empty, fix it.")
+        return
+    }
     req(RM.getEventReferences(ids: ids, subscriptionId: "VIEWING-"+UUID().uuidString))
 }
 

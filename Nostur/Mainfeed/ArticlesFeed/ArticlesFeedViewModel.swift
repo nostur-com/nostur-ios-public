@@ -116,11 +116,13 @@ class ArticlesFeedViewModel: ObservableObject {
                 }
             }
             
+            guard !sortedByPublishedAt.isEmpty else { return }
+            
             guard SettingsStore.shared.fetchCounts else { return }
-            for nrPost in nrPosts.prefix(5) {
+            for nrPost in sortedByPublishedAt.prefix(5) {
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
             }
-            let eventIds = nrPosts.prefix(5).map { $0.id }
+            let eventIds = sortedByPublishedAt.prefix(5).map { $0.id }
             L.fetching.info("🔢 Fetching counts for \(eventIds.count) articles")
             fetchStuffForLastAddedNotes(ids: eventIds)
             self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
@@ -134,6 +136,7 @@ class ArticlesFeedViewModel: ObservableObject {
         guard index % 5 == 0 else { return }
         
         let nextIds = self.articles.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
+        guard !nextIds.isEmpty else { return }
         L.fetching.info("🔢 Fetching counts for \(nextIds.count) articles")
         fetchStuffForLastAddedNotes(ids: nextIds)
         self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
