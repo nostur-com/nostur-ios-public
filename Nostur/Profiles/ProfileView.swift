@@ -10,19 +10,20 @@ import Nuke
 import NukeUI
 
 struct ProfileView: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var dim:DIMENSIONS
-    @ObservedObject var settings:SettingsStore = .shared
-    @ObservedObject var nrContact:NRContact
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var ns:NosturState
+    @EnvironmentObject private var dim:DIMENSIONS
+    @ObservedObject private var settings:SettingsStore = .shared
+    @ObservedObject private var nrContact:NRContact
     let pubkey:String
     var tab:String?
     
-    @State var profilePicViewerIsShown = false
-    @State var selectedSubTab = "Posts"
-    @State var backlog = Backlog(timeout: 4.0, auto: true)
-    @State var lastSeen:String? = nil
-    @State var isFollowingYou = false
+    @State private var profilePicViewerIsShown = false
+    @State private var selectedSubTab = "Posts"
+    @State private var backlog = Backlog(timeout: 4.0, auto: true)
+    @State private var lastSeen:String? = nil
+    @State private var isFollowingYou = false
+    @State private var editingAccount:Account?
     
     init(nrContact:NRContact, tab:String? = nil) {
         UIScrollView.appearance().bounces = false
@@ -120,20 +121,42 @@ struct ProfileView: View {
                                     ProfileLightningButton(contact: nrContact.mainContact)
                                 }
                                 
-                                Button {
-                                    if (nrContact.following && !nrContact.privateFollow) {
-                                        nrContact.follow(privateFollow: true)
+                                if pubkey == NosturState.shared.activeAccountPublicKey {
+                                    Button {
+                                        guard NosturState.shared.account?.privateKey != nil else {
+                                            NosturState.shared.readOnlyAccountSheetShown = true;
+                                            return
+                                        }
+                                        if let account = NosturState.shared.account {
+                                            editingAccount = account
+                                        }
+                                    } label: {
+                                        Text("Edit profile", comment: "Button to edit own profile")
                                     }
-                                    else if (nrContact.following && nrContact.privateFollow) {
-                                        nrContact.unfollow()
+                                    .buttonStyle(NosturButton())
+                                    .sheet(item: $editingAccount) { account in
+                                        NavigationStack {
+                                            AccountEditView(account: account)
+                                        }
+                                        .presentationBackground(theme.background)
                                     }
-                                    else {
-                                        nrContact.follow()
-                                    }
-                                } label: {
-                                    FollowButton(isFollowing:nrContact.following, isPrivateFollowing:nrContact.privateFollow)
                                 }
+                                else {
+                                    Button {
+                                        if (nrContact.following && !nrContact.privateFollow) {
+                                            nrContact.follow(privateFollow: true)
+                                        }
+                                        else if (nrContact.following && nrContact.privateFollow) {
+                                            nrContact.unfollow()
+                                        }
+                                        else {
+                                            nrContact.follow()
+                                        }
+                                    } label: {
+                                        FollowButton(isFollowing:nrContact.following, isPrivateFollowing:nrContact.privateFollow)
+                                    }
                                     .padding(.trailing, 10)
+                                }
                             }
                             .padding(.top, 10)
                             
