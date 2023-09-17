@@ -8,7 +8,6 @@
 import SwiftUI
 import NostrEssentials
 import CoreData
-import Combine
 
 // Copy pasta from GalleryViewModel and adjusted for just a single profile
 // No need to sort by likes, gather all media from a pubkey
@@ -20,7 +19,6 @@ class ProfileGalleryViewModel: ObservableObject {
     private var didLoad = false
     private static let POSTS_LIMIT = 300
     private static let MAX_IMAGES_PER_POST = 10
-    private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
         
     @Published var items:[GalleryItem] = [] {

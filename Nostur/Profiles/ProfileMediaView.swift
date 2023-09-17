@@ -9,14 +9,9 @@ import SwiftUI
 
 // MEDIA ON USER PROFILE SCREEN
 struct ProfileMediaView: View {
-    private static let MAX_IMAGES_PER_POST = 10
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var dim:DIMENSIONS
-    let pubkey:String
-    @StateObject var vm:ProfileGalleryViewModel
+    @StateObject private var vm:ProfileGalleryViewModel
     
     init(pubkey: String) {
-        self.pubkey = pubkey
         _vm = StateObject(wrappedValue: ProfileGalleryViewModel(pubkey))
     }
     
@@ -63,9 +58,7 @@ struct ProfileMediaView: View {
         }
         .onAppear {
             vm.load()
-        }
-//        .padding(10)
-  
+        }  
     }
 }
 
