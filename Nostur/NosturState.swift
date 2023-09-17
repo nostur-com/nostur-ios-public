@@ -118,10 +118,6 @@ final class NosturState : ObservableObject {
     @Published var readOnlyAccountSheetShown:Bool = false
     @Published var rawExplorePubkeys:Set<String> = []
     
-    var pubkey:String? {
-        get { account?.publicKey }
-    }
-    
     private var accounts_:[Account] = [] // Cache for result of Account.fetchRequest()
     var accounts:[Account] {
         get {

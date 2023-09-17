@@ -10,8 +10,6 @@ import SwiftUI
 struct QuotedNoteFragmentView: View {
     @EnvironmentObject var theme:Theme
     @EnvironmentObject var accountState:NosturState
-    @State var viewSize:CGSize = .zero
-    
     @ObservedObject var nrPost:NRPost
     @ObservedObject var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
     
