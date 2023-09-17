@@ -9,60 +9,29 @@ import SwiftUI
 
 struct ProfileTabs: View {
     @EnvironmentObject var theme:Theme
-    @ObservedObject var contact:Contact
-    var pubkey:String { contact.pubkey }
+    @ObservedObject var nrContact:NRContact
+    var pubkey:String { nrContact.pubkey }
     @Binding var selectedSubTab:String
     @EnvironmentObject var dim:DIMENSIONS
-    
-    @FetchRequest
-    var clEvents:FetchedResults<Event>
-    
-    init(contact: Contact, selectedSubTab:Binding<String>) {
-        self.contact = contact
-        self._selectedSubTab = selectedSubTab
-        let cl = Event.fetchRequest()
-        cl.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        cl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 3", contact.pubkey)
-        _clEvents = FetchRequest(fetchRequest: cl)
-    }
-    
+
     var body: some View {
         Section {
             VStack {
                 switch selectedSubTab {
                     case "Posts":
-                        ProfileNotesView(pubkey: pubkey)
+                        ProfilePostsView(pubkey: pubkey)
                     case "Following":
-                        LazyVStack {
-                            if !clEvents.isEmpty, let pubkeys = clEvents.first!.contactPubkeys() {
-                                
-                                let silentFollows = clEvents.first!.pubkey == NosturState.shared.pubkey ? NosturState.shared.account?.follows_.filter { $0.privateFollow }.map { $0.pubkey } : []
-                                
-                                ContactList(pubkeys: pubkeys, silent:silentFollows)
-                            }
-                            else {
-                                HStack {
-                                    Spacer()
-                                    ProgressView()
-                                        .padding(50)
-                                    Spacer()
-                                        .onAppear {
-                                            L.og.info("🟢 ProfileView.onAppear no clEvent so REQ.3: \(pubkey)")
-                                            req(RM.getAuthorContactsList(pubkey: pubkey))
-                                        }
-                                }
-                            }
-                        }
+                        ProfileFollowingList(pubkey: pubkey)
                     case "Media":
                         ProfileMediaView(pubkey: pubkey)
                     case "Likes":
                         ProfileLikesView(pubkey: pubkey)
                     case "Zaps":
-                        ProfileZaps(pubkey: pubkey, contact: contact)
+                        ProfileZaps(pubkey: pubkey, contact: nrContact.mainContact)
                     case "Followers":
                         VStack {
                             Text("Followers", comment: "Heading").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
-                            FollowersList(pubkey: contact.pubkey)
+                            FollowersList(pubkey: nrContact.pubkey)
                         }
                     default:
                         Text("🥪")
@@ -116,8 +85,8 @@ struct ProfileTabs_Previews: PreviewProvider {
             pe.loadContacts()
         }) {
             ScrollView {
-                if let contact = PreviewFetcher.fetchContact(f) {
-                    ProfileTabs(contact: contact, selectedSubTab: .constant("Posts"))
+                if let nrContact = PreviewFetcher.fetchNRContact(f) {
+                    ProfileTabs(nrContact: nrContact, selectedSubTab: .constant("Posts"))
                 }
             }
         }
