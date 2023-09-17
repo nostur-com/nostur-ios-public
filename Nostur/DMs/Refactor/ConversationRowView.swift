@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct ConversationRowView: View {
-    @ObservedObject var conv:Conversation
-    var unread:Int { conv.unread }
+    @ObservedObject private var conv:Conversation
+    private var unread:Int { conv.unread }
     
     init(_ conv: Conversation) {
         self.conv = conv
