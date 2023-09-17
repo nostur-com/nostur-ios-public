@@ -47,8 +47,8 @@ class Importer {
     
     func sendReceivedNotifications() {
         sendReceivedNotification
-            .debounce(for: .seconds(0.3), scheduler: DispatchQueue.global())
-            .throttle(for: 1.5, scheduler: DispatchQueue.global(), latest: true)
+            .debounce(for: .seconds(0.15), scheduler: DispatchQueue.global())
+            .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
             .sink { () in
                 DataProvider.shared().bg.perform {
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
@@ -65,10 +65,10 @@ class Importer {
     
     func triggerImportWhenRelayMessagesAreAdded() {
         addedRelayMessage
-            .debounce(for: .seconds(0.3), scheduler: DispatchQueue.global())
-            .throttle(for: 1.5, scheduler: DispatchQueue.global(), latest: true)
+            .debounce(for: .seconds(0.15), scheduler: DispatchQueue.global())
+            .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
             .sink { () in
-                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 1.5 seconds), but sends first after debounce (0.3)")
+                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.5 seconds), but sends first after debounce (0.15)")
                 self.importEvents()
             }
             .store(in: &subscriptions)
