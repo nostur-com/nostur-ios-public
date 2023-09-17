@@ -32,17 +32,19 @@ struct ContentRenderer: View { // VIEW things
                 switch contentElement {
                 case .nrPost(let nrPost):
                         EmbeddedPost(nrPost)
-                        .frame(minHeight: 150)
+                        .frame(minHeight: 75)
                         .transaction { t in t.animation = nil }
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
 //                        .fixedSize(horizontal: false, vertical: true)
+//                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
                 case .nevent1(let identifier):
                         NEventView(identifier: identifier)
-                        .frame(minHeight: 150)
+                        .frame(minHeight: 75)
                         .transaction { t in t.animation = nil }
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
-                            .padding(.vertical, 10)
+//                        .debugDimensions("NEventView")
+                        .padding(.vertical, 10)
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey)
@@ -55,7 +57,7 @@ struct ContentRenderer: View { // VIEW things
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         QuoteById(id: noteHex)
-                            .frame(minHeight: 150)
+                            .frame(minHeight: 75)
                             .transaction { t in t.animation = nil }
                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                             .padding(.vertical, 10)
@@ -69,7 +71,7 @@ struct ContentRenderer: View { // VIEW things
                     }
                 case .noteHex(let hex):
                     QuoteById(id: hex)
-                        .frame(minHeight: 150)
+                        .frame(minHeight: 75)
                         .transaction { t in t.animation = nil }
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                         .padding(.vertical, 10)
