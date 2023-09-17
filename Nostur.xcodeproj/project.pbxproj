@@ -328,6 +328,11 @@
 		1FCB52772A5369BB006D08DF /* Communities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCB52762A5369BB006D08DF /* Communities.swift */; };
 		1FCC2F292A19275200202EFA /* NIP05Verifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCC2F282A19275200202EFA /* NIP05Verifier.swift */; };
 		1FCC2F2D2A1B2CD100202EFA /* ImageTesting1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCC2F2C2A1B2CD100202EFA /* ImageTesting1.swift */; };
+		1FCCAC982AB6D41000B3F00A /* ProfilePostsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC972AB6D41000B3F00A /* ProfilePostsViewModel.swift */; };
+		1FCCAC9A2AB6D6B000B3F00A /* ProfilePostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC992AB6D6B000B3F00A /* ProfilePostsView.swift */; };
+		1FCCAC9C2AB7477E00B3F00A /* FetchVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC9B2AB7477E00B3F00A /* FetchVM.swift */; };
+		1FCCAC9E2AB747CF00B3F00A /* ProfileFollowingCount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC9D2AB747CF00B3F00A /* ProfileFollowingCount.swift */; };
+		1FCCACA02AB7562500B3F00A /* ProfileFollowingList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC9F2AB7562500B3F00A /* ProfileFollowingList.swift */; };
 		1FCDDEBC2A480AA2002EDEEC /* SettingsDevTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */; };
 		1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */; };
 		1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCEA0B62999413C00A309DC /* Double+clean.swift */; };
@@ -743,6 +748,11 @@
 		1FCB52762A5369BB006D08DF /* Communities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Communities.swift; sourceTree = "<group>"; };
 		1FCC2F282A19275200202EFA /* NIP05Verifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05Verifier.swift; sourceTree = "<group>"; };
 		1FCC2F2C2A1B2CD100202EFA /* ImageTesting1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageTesting1.swift; sourceTree = "<group>"; };
+		1FCCAC972AB6D41000B3F00A /* ProfilePostsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePostsViewModel.swift; sourceTree = "<group>"; };
+		1FCCAC992AB6D6B000B3F00A /* ProfilePostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePostsView.swift; sourceTree = "<group>"; };
+		1FCCAC9B2AB7477E00B3F00A /* FetchVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchVM.swift; sourceTree = "<group>"; };
+		1FCCAC9D2AB747CF00B3F00A /* ProfileFollowingCount.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileFollowingCount.swift; sourceTree = "<group>"; };
+		1FCCAC9F2AB7562500B3F00A /* ProfileFollowingList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileFollowingList.swift; sourceTree = "<group>"; };
 		1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDevTools.swift; sourceTree = "<group>"; };
 		1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayCensorshipResistorTest.swift; sourceTree = "<group>"; };
 		1FCEA0B62999413C00A309DC /* Double+clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+clean.swift"; sourceTree = "<group>"; };
@@ -1204,6 +1214,7 @@
 				1F8B1348297B34D7002EB8CF /* Bech32.swift */,
 				1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */,
 				1F065A9C29A3E9E0003421D3 /* FetchThings.swift */,
+				1FCCAC9B2AB7477E00B3F00A /* FetchVM.swift */,
 				1F75211A2986D45D00C43DF0 /* Importer.swift */,
 				1FC82F3129AE0C0700B81CE5 /* Mentions.swift */,
 				1F7521182986D44E00C43DF0 /* MessageParser.swift */,
@@ -1617,10 +1628,13 @@
 				1F7483542A67823300CA7026 /* ImposterChecker.swift */,
 				1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */,
 				1FC7A49A29F95AD400645FEF /* ProfileByPubkey.swift */,
+				1FCCAC9D2AB747CF00B3F00A /* ProfileFollowingCount.swift */,
+				1FCCAC9F2AB7562500B3F00A /* ProfileFollowingList.swift */,
 				1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */,
 				1F33096029891C4800D4D8CF /* ProfileLikesView.swift */,
 				1F210B0529F853BB00159814 /* ProfileMediaView.swift */,
 				1F1D99412A03AACF0024055B /* ProfileNotesView.swift */,
+				1FCCAC992AB6D6B000B3F00A /* ProfilePostsView.swift */,
 				1FE31EE02A587D78008A4A6F /* ProfileOverlayCard.swift */,
 				1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */,
 				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
@@ -1632,6 +1646,7 @@
 				1F65121A29C75AC9009FD4AE /* ProfileView.swift */,
 				1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */,
 				1FF209152AB0A92800876DB2 /* ProfileGalleryViewModel.swift */,
+				1FCCAC972AB6D41000B3F00A /* ProfilePostsViewModel.swift */,
 			);
 			path = Profiles;
 			sourceTree = "<group>";
@@ -1846,6 +1861,7 @@
 				1F9A55242A3C7EE400F67627 /* View+roundedCorner.swift in Sources */,
 				1F3E135929C8B11F00D076EA /* Event+PrivateNotes.swift in Sources */,
 				1FB4FCD629B87D3D0034D03A /* ImageProcessing.swift in Sources */,
+				1FCCAC9C2AB7477E00B3F00A /* FetchVM.swift in Sources */,
 				1F995EF52A4DE349002227B3 /* NIP46TesterView.swift in Sources */,
 				1FE31EE72A588AC8008A4A6F /* ZappablePFP.swift in Sources */,
 				1F00337129BEF141007CE040 /* View+withSheets.swift in Sources */,
@@ -1856,10 +1872,12 @@
 				1F20F4C32AAE330F002D8886 /* ArticlesFeedViewModel.swift in Sources */,
 				1F9499C9299F568900F628B4 /* WelcomeSheet.swift in Sources */,
 				1F08CA0A2A5067C2004A3494 /* CommunityFilters.swift in Sources */,
+				1FCCACA02AB7562500B3F00A /* ProfileFollowingList.swift in Sources */,
 				1FC0A9512A0F8B9D00F9ABF6 /* ProfileZaps.swift in Sources */,
 				1F88491429B537B400145340 /* TextFormattingRule.swift in Sources */,
 				1FDBD89C2A764224001D9F34 /* NoiseFilter.swift in Sources */,
 				1F15F0992AAF2EDC0004E706 /* FooterAttributes.swift in Sources */,
+				1FCCAC9A2AB6D6B000B3F00A /* ProfilePostsView.swift in Sources */,
 				1F740D9C29AF1BF600EFCCA7 /* Badges.swift in Sources */,
 				1F88491329B537B400145340 /* NSFont.swift in Sources */,
 				1F8B6A6F2A20C5DE0060EDB3 /* PreviewWeights.swift in Sources */,
@@ -2020,6 +2038,7 @@
 				1FB130BB29C0F9A6004AC98D /* FooterFragmentView.swift in Sources */,
 				1FC4556129CB677F00DE3239 /* NewDMButton.swift in Sources */,
 				1F3309832989819700D4D8CF /* Maintenance.swift in Sources */,
+				1FCCAC9E2AB747CF00B3F00A /* ProfileFollowingCount.swift in Sources */,
 				1F2DD4302A29F5B70028A062 /* AlbyNWCConnectSheet.swift in Sources */,
 				1F6943B72A2B017500064DBA /* LightningEffect.swift in Sources */,
 				1FBE253E2A9E5A7400F60FCF /* Settings+ThemePicker.swift in Sources */,
@@ -2151,6 +2170,7 @@
 				1F45C7F129EF9A2C00F58772 /* NostrimgMediaUploadService.swift in Sources */,
 				1FC2DFED29A90F6C00C8A9DA /* NoteMinimalContentView.swift in Sources */,
 				1F7483552A67823300CA7026 /* ImposterChecker.swift in Sources */,
+				1FCCAC982AB6D41000B3F00A /* ProfilePostsViewModel.swift in Sources */,
 				1F33096129891C4800D4D8CF /* ProfileLikesView.swift in Sources */,
 				1F15F09E2AAF34F10004E706 /* RepostButton.swift in Sources */,
 				1F740DA729AF61A700EFCCA7 /* ContactSearchResultRow.swift in Sources */,

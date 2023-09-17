@@ -56,7 +56,7 @@ struct NewPrivateNoteSheet: View {
                         do {
                             guard let account = ns.account else { return }
                             guard post != nil || contact != nil else { return }
-                            ns.objectWillChange.send()
+//                            ns.objectWillChange.send()
                             post?.objectWillChange.send()
                             contact?.objectWillChange.send()
                             if let post {

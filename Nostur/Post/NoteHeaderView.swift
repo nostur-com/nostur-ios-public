@@ -59,7 +59,12 @@ struct PlaceholderPostHeader: View {
 //                        t.animation = nil
 //                    }
                     .onTapGesture {
-                        navigateTo(ContactPath(key: nrPost.pubkey))
+                        if let nrContact = nrPost.contact {
+                            navigateTo(nrContact)
+                        }
+                        else {
+                            navigateTo(ContactPath(key: nrPost.pubkey))
+                        }
                     }
                 
                 if (singleLine) {
