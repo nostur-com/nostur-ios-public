@@ -36,7 +36,10 @@ struct ProfileTabs: View {
                     default:
                         Text("🥪")
                 }
+                Spacer()
             }
+            .background(theme.listBackground)
+            .frame(minHeight: 800)
         } header: {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing:0) {
