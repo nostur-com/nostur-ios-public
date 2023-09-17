@@ -9,12 +9,12 @@ import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ProfileZapButton: View {
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var dim:DIMENSIONS
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var dim:DIMENSIONS
     private let er:ExchangeRateModel = .shared // Not Observed for performance
     
     @ObservedObject var contact:NRContact
-    var zapEtag: String?
+    public var zapEtag: String?
     
     @ObservedObject private var ss:SettingsStore = .shared
     @State private var cancellationId:UUID? = nil

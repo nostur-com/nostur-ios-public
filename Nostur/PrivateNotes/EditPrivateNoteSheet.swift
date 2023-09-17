@@ -46,9 +46,9 @@ struct EditPrivateNoteSheet: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         do {
-                            ns.objectWillChange.send()
-                            privateNote.post?.objectWillChange.send()
-                            privateNote.contact?.objectWillChange.send()
+//                            ns.objectWillChange.send()
+//                            privateNote.post?.objectWillChange.send()
+//                            privateNote.contact?.objectWillChange.send()
                             try viewContext.save()
                             if let post = privateNote.post {
                                 sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: post.id, hasPrivateNote: true))
@@ -64,9 +64,9 @@ struct EditPrivateNoteSheet: View {
                     title: Text("Delete private note", comment: "Sheet title"),
                     buttons: [
                         .destructive(Text("Delete", comment: "Button to delete"), action: {
-                            ns.objectWillChange.send()
-                            privateNote.post?.objectWillChange.send()
-                            privateNote.contact?.objectWillChange.send()
+//                            ns.objectWillChange.send()
+//                            privateNote.post?.objectWillChange.send()
+//                            privateNote.contact?.objectWillChange.send()
                             dismiss()
                             
                             if let post = privateNote.post {

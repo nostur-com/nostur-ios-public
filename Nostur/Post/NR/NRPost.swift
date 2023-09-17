@@ -728,6 +728,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     case .reposted:
                         self.footerAttributes.reposted = true
                     case .privateNote:
+                        self.objectWillChange.send()
                         self.hasPrivateNote = action.hasPrivateNote
                     }
                 }

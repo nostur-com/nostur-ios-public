@@ -60,6 +60,7 @@ struct ContentRenderer: View { // VIEW things
                             .frame(minHeight: 75)
                             .transaction { t in t.animation = nil }
                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
+//                            .debugDimensions("QuoteById.note1")
                             .padding(.vertical, 10)
                             .onTapGesture {
                                 guard !isDetail else { return }
@@ -74,6 +75,7 @@ struct ContentRenderer: View { // VIEW things
                         .frame(minHeight: 75)
                         .transaction { t in t.animation = nil }
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
+//                        .debugDimensions("QuoteById.noteHex")
                         .padding(.vertical, 10)
                         .onTapGesture {
                             guard !isDetail else { return }
@@ -154,6 +156,7 @@ struct ContentRenderer: View { // VIEW things
 //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                             .clipped()
+//                            .debugDimensions("SingleMediaViewer.sd")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -169,6 +172,7 @@ struct ContentRenderer: View { // VIEW things
                         #endif
                         
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
+//                            .debugDimensions("SingleMediaViewer")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
