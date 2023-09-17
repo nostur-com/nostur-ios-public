@@ -144,6 +144,7 @@ struct Highlight: View {
                     RoundedRectangle(cornerRadius: 15)
                         .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
                 )
+                .padding(.vertical, 10)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     navigateTo(nrPost)

@@ -358,6 +358,7 @@ struct ParentPost: View {
                                 .background(Color(.secondarySystemBackground))
                         case 9802: // highlight
                             HighlightRenderer(nrPost: nrPost)
+                                .padding(.vertical, 10)
 //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         case 1,6,9734: // text, repost, zap request
                             ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20)
