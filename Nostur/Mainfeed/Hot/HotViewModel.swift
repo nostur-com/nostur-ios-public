@@ -275,7 +275,7 @@ class HotViewModel: ObservableObject {
         guard let index = self.hotPosts.firstIndex(of: post) else { return }
         guard index % 5 == 0 else { return }
         
-        let nextIds = self.hotPosts.dropFirst(index - 1).prefix(5).map { $0.id }
+        let nextIds = self.hotPosts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
         guard !nextIds.isEmpty else { return }
         L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
         fetchStuffForLastAddedNotes(ids: nextIds)
