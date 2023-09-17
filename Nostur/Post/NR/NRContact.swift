@@ -52,6 +52,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var display_name:String?
     var name:String?
     var pictureUrl:String?
+    var banner:String?
     var about:String?
     @Published var couldBeImposter:Int16 = -1 // -1: unchecked, 0:false 1:true
     
@@ -68,6 +69,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var following:Bool = false
     var privateFollow:Bool = false
     var zapperPubkey: String?
+    var hasPrivateNote = false
     
     let contact:Contact // Only touch this in BG context!!!
 
@@ -79,6 +81,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.display_name = contact.display_name
         self.name = contact.name
         self.pictureUrl = contact.picture
+        self.banner = contact.banner
         self.about = contact.about
         self.couldBeImposter = (following ?? false) ? 0 : contact.couldBeImposter
         
@@ -96,10 +99,20 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.following = NosturState.shared.bgFollowingPublicKeys.contains(contact.pubkey)
         self.privateFollow = contact.privateFollow
         self.zappableAttributes = ZappableAttributes(zapState: contact.zapState)
+        
+        self.hasPrivateNote = _hasPrivateNote()
+        
         listenForChanges()
         isFollowingListener()
         listenForNip05()
         listenForZapState()
+    }
+    
+    private func _hasPrivateNote() -> Bool {
+        if let account = NosturState.shared.bgAccount, let notes = account.privateNotes {
+            return notes.first(where: { $0.contact == self.contact }) != nil
+        }
+        return false
     }
     
     private func isFollowingListener() {
@@ -163,6 +176,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     let display_name = contact.display_name
                     let name = contact.name
                     let pictureUrl = contact.picture
+                    let banner = contact.banner
                     let about = contact.about
                     let couldBeImposter = contact.couldBeImposter
                     
@@ -186,6 +200,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                         self.display_name = display_name
                         self.name = name
                         self.pictureUrl = pictureUrl
+                        self.banner = banner
                         self.about = about
                         self.couldBeImposter = couldBeImposter
                         
