@@ -14,53 +14,35 @@ struct ProfileView: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var settings:SettingsStore = .shared
-    @ObservedObject var contact:Contact
+    @ObservedObject var nrContact:NRContact
     let pubkey:String
     var tab:String?
     
-    @FetchRequest
-    var relayEvents:FetchedResults<Event>
-    
-    @FetchRequest
-    var kind0Events:FetchedResults<Event>
-    
     @State var profilePicViewerIsShown = false
-    @State var limit = 10
-    @State var tabOffset = 0.0
     @State var selectedSubTab = "Posts"
     @State var backlog = Backlog(timeout: 4.0, auto: true)
     @State var lastSeen:String? = nil
+    @State var isFollowingYou = false
     
-    init(contact:Contact, tab:String? = nil) {
-        self.contact = contact
-        self.pubkey = contact.pubkey
+    init(nrContact:NRContact, tab:String? = nil) {
+        UIScrollView.appearance().bounces = false
+        self.nrContact = nrContact
+        self.pubkey = nrContact.pubkey
         self.tab = tab
-        
-        
-        let rl = Event.fetchRequest()
-        rl.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        rl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 10002", pubkey)
-        _relayEvents = FetchRequest(fetchRequest: rl)
-        
-        let kind0 = Event.fetchRequest()
-        kind0.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind0.predicate = NSPredicate(format: "pubkey == %@ AND kind == 0", pubkey)
-        
-        _kind0Events = FetchRequest(fetchRequest: kind0)
     }
     
     @State var similarPFP = false
     
     var couldBeImposter:Bool {
         guard let account = NosturState.shared.account else { return false }
-        guard account.publicKey != contact.pubkey else { return false }
-        guard !ns.isFollowing(contact) else { return false }
-        guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
+        guard account.publicKey != nrContact.pubkey else { return false }
+        guard !nrContact.following else { return false }
+        guard nrContact.couldBeImposter == -1 else { return nrContact.couldBeImposter == 1 }
         return similarPFP
     }
     
     var body: some View {
-        //        let _ = Self._printChanges()
+        let _ = Self._printChanges()
         ScrollView {
             Color.clear.background( // GeometryReader in .background so it does not mess up layout
                 GeometryReader { toolbarGEO in
@@ -69,12 +51,12 @@ struct ProfileView: View {
                             ToolbarItem(placement: .navigationBarLeading) {
                                 VStack {
                                     HStack(spacing:2) {
-                                        PFP(pubkey: contact.pubkey, contact: contact, size: 25)
+                                        PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: 25)
                                             .overlay(
                                                 Circle()
                                                     .strokeBorder(theme.background, lineWidth: 1)
                                             )
-                                        Text("\(contact.authorName) ").font(.headline)
+                                        Text("\(nrContact.anyName) ").font(.headline)
                                     }
                                     .offset(y: 160 + (max(-160,toolbarGEO.frame(in:.global).minY)))
                                 }.frame(height: 40).clipped()
@@ -82,7 +64,19 @@ struct ProfileView: View {
                             
                             ToolbarItem(placement: .navigationBarTrailing) {
                                 VStack {
-                                    ProfileFollowButton(contact: contact)
+                                    Button {
+                                        if (nrContact.following && !nrContact.privateFollow) {
+                                            nrContact.follow(privateFollow: true)
+                                        }
+                                        else if (nrContact.following && nrContact.privateFollow) {
+                                            nrContact.unfollow()
+                                        }
+                                        else {
+                                            nrContact.follow()
+                                        }
+                                    } label: {
+                                        FollowButton(isFollowing:nrContact.following, isPrivateFollowing:nrContact.privateFollow)
+                                    }
                                         .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
                                 }.frame(height: 40).clipped()
                                     .layoutPriority(2)
@@ -95,15 +89,15 @@ struct ProfileView: View {
                 Section {
                     VStack {
                         GeometryReader { geoBanner in
-                            ProfileBanner(banner: contact.banner, width: dim.listWidth, offset: geoBanner.frame(in:.global).minY)
+                            ProfileBanner(banner: nrContact.banner, width: dim.listWidth, offset: geoBanner.frame(in:.global).minY)
                                 .overlay(alignment: .bottomLeading, content: {
-                                    PFP(pubkey: contact.pubkey, contact: contact, size: DIMENSIONS.PFP_BIG)
+                                    PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
                                         .overlay(
                                             Circle()
                                                 .strokeBorder(theme.background, lineWidth: 3)
                                         )
                                         .onTapGesture {
-                                            if (contact.picture != nil) {
+                                            if (nrContact.pictureUrl != nil) {
                                                 profilePicViewerIsShown = true
                                             }
                                         }
@@ -116,21 +110,35 @@ struct ProfileView: View {
                         VStack(alignment: .leading) {
                             HStack(alignment:.top) {
                                 if (!settings.hideBadges) {
-                                    ProfileBadgesContainer(pubkey: contact.pubkey)
+                                    ProfileBadgesContainer(pubkey: nrContact.pubkey)
                                         .offset(x: 85, y: 0)
                                 }
                                 
                                 Spacer()
                                 
-                                ProfileLightningButton(contact: contact)
+                                if nrContact.anyLud {
+                                    ProfileLightningButton(contact: nrContact.mainContact)
+                                }
                                 
-                                ProfileFollowButton(contact: contact)
+                                Button {
+                                    if (nrContact.following && !nrContact.privateFollow) {
+                                        nrContact.follow(privateFollow: true)
+                                    }
+                                    else if (nrContact.following && nrContact.privateFollow) {
+                                        nrContact.unfollow()
+                                    }
+                                    else {
+                                        nrContact.follow()
+                                    }
+                                } label: {
+                                    FollowButton(isFollowing:nrContact.following, isPrivateFollowing:nrContact.privateFollow)
+                                }
                                     .padding(.trailing, 10)
                             }
                             .padding(.top, 10)
                             
                             HStack(spacing:0) {
-                                Text("\(contact.anyName) ").font(.system(size: 24, weight:.bold))
+                                Text("\(nrContact.anyName) ").font(.system(size: 24, weight:.bold))
                                 if couldBeImposter {
                                     Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
                                         .padding(.horizontal, 8)
@@ -139,18 +147,18 @@ struct ProfileView: View {
                                         .cornerRadius(8)
                                         .layoutPriority(2)
                                 }
-                                else if contact.nip05veried, let nip05 = contact.nip05 {
-                                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
+                                else if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
                                         .layoutPriority(3)
                                 }
                             }
-                            if let fixedName = contact.fixedName, fixedName != contact.anyName {
+                            if let fixedName = nrContact.fixedName, fixedName != nrContact.anyName {
                                 HStack {
                                     Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
                                         .lineLimit(1)
                                     Image(systemName: "multiply.circle.fill")
                                         .onTapGesture {
-                                            contact.fixedName = contact.anyName
+                                            nrContact.setFixedName(nrContact.anyName)
                                         }
                                 }
                             }
@@ -161,24 +169,32 @@ struct ProfileView: View {
                                 .opacity(lastSeen != nil ? 1.0 : 0)
                             
                             HStack {
-                                //                                Text("@\(contact.username)").foregroundColor(.secondary)
-                                ContactPrivateNoteToggle(contact: contact)
+                                ContactPrivateNoteToggle(contact: nrContact.mainContact)
                                 Menu {
                                     Button {
-                                        UIPasteboard.general.string = contact.npub
+                                        UIPasteboard.general.string = npub(nrContact.pubkey)
                                     } label: {
                                         Label(String(localized:"Copy npub", comment:"Menu action"), systemImage: "doc.on.clipboard")
                                     }
-                                    if let kind0 = kind0Events.first {
-                                        Button {
-                                            UIPasteboard.general.string = kind0.toNEvent().eventJson()
-                                        } label: {
-                                            Label(String(localized:"Copy profile source", comment:"Menu action"), systemImage: "doc.on.clipboard")
+                                    Button {
+                                        bg().perform {
+                                            let kind0 = Event.fetchRequest()
+                                            kind0.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                                            kind0.predicate = NSPredicate(format: "pubkey == %@ AND kind == 0", nrContact.pubkey)
+                                            
+                                            if let event = try? bg().fetch(kind0).first {
+                                                let json = event.toNEvent().eventJson()
+                                                DispatchQueue.main.async {
+                                                    UIPasteboard.general.string = json
+                                                }
+                                            }
                                         }
+                                    } label: {
+                                        Label(String(localized:"Copy profile source", comment:"Menu action"), systemImage: "doc.on.clipboard")
                                     }
                                     
                                     Button {
-                                        sendNotification(.addRemoveToListsheet, contact)
+                                        sendNotification(.addRemoveToListsheet, nrContact.mainContact)
                                     } label: {
                                         Label(String(localized:"Add/Remove from feeds", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
                                     }
@@ -186,16 +202,16 @@ struct ProfileView: View {
                                     
                                     Button {
                                         ns.objectWillChange.send()
-                                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [contact.pubkey]
+                                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [nrContact.pubkey]
                                         sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
                                     } label: {
                                         Label(
-                                            String(localized:"Block \(contact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
+                                            String(localized:"Block \(nrContact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
                                     }
                                     Button {
-                                        sendNotification(.reportContact, contact)
+                                        sendNotification(.reportContact, nrContact.mainContact)
                                     } label: {
-                                        Label(String(localized:"Report \(contact.anyName)", comment:"Menu action"), systemImage: "flag")
+                                        Label(String(localized:"Report \(nrContact.anyName)", comment:"Menu action"), systemImage: "flag")
                                     }
                                     
                                     
@@ -204,7 +220,7 @@ struct ProfileView: View {
                                         .fontWeight(.bold)
                                         .padding(5)
                                 }
-                                if (ns.followsYou(contact)) {
+                                if (isFollowingYou) {
                                     Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 7)
@@ -212,21 +228,15 @@ struct ProfileView: View {
                                         .background(Color.secondary)
                                         .opacity(0.7)
                                         .cornerRadius(13)
+                                        .offset(y: -4)
                                 }
                             }
                             
-                            Text("\(String(contact.about ?? ""))\n")
+                            Text("\(String(nrContact.about ?? ""))\n")
                                 .lineLimit(20)
                             
-                            HStack(alignment: .center, spacing:0) {
-                                if contact.followingPubkeys.isEmpty {
-                                    ProgressView()
-                                        .padding(.horizontal, 7)
-                                }
-                                else {
-                                    Text("**\(contact.followingPubkeys.count)** ")
-                                }
-                                Text("Following  ", comment: "Label for Following count")
+                            HStack(alignment: .center, spacing: 10) {
+                                ProfileFollowingCount(pubkey: pubkey)
                                 
                                 Text("**♾️** Followers", comment: "Label for followers count")
                                     .onTapGesture {
@@ -239,17 +249,17 @@ struct ProfileView: View {
                         .padding(.top, 120)
                     }
                 }
-                ProfileTabs(contact: contact, selectedSubTab: $selectedSubTab)
+                ProfileTabs(nrContact: nrContact, selectedSubTab: $selectedSubTab)
             }
         }
         .background(theme.background)
-        .preference(key: TabTitlePreferenceKey.self, value: contact.anyName)
-        .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in
-            let nEvent = notification.object as! NEvent
-            if nEvent.publicKey == contact.pubkey {
-                contact.objectWillChange.send()
-            }
-        }
+        .preference(key: TabTitlePreferenceKey.self, value: nrContact.anyName)
+//        .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in // TODO: MOVE TO FOLLOWING LIST TAB
+//            let nEvent = notification.object as! NEvent
+//            if nEvent.publicKey == contact.pubkey {
+//                contact.objectWillChange.send()
+//            }
+//        }
         .onAppear {
             if let tab = tab {
                 selectedSubTab = tab
@@ -257,64 +267,29 @@ struct ProfileView: View {
         }
         .task {
             bg().perform {
-                guard let contact = contact.bgContact() else { return }
-                if (NIP05Verifier.shouldVerify(contact)) {
-                    NIP05Verifier.shared.verify(contact)
+                if (NIP05Verifier.shouldVerify(nrContact.contact)) {
+                    NIP05Verifier.shared.verify(nrContact.contact)
                 }
             }
         }
-        .task {
+        .onChange(of: nrContact.nip05) { nip05 in
             bg().perform {
-                guard let contact = contact.bgContact(), contact.anyLud else { return }
-                
-                if let lud16 = contact.lud16, lud16 != "" {
-                    Task {
-                        guard let response = try? await LUD16.getCallbackUrl(lud16: lud16) else { return }
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            await bg().perform {
-                                contact.zapperPubkey = response.nostrPubkey!
-                                L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
-                            }
-                        }
-                    }
+                if (NIP05Verifier.shouldVerify(nrContact.contact)) {
+                    NIP05Verifier.shared.verify(nrContact.contact)
                 }
-                else if let lud06 = contact.lud06, lud06 != "" {
-                    Task {
-                        guard let response = try? await LUD16.getCallbackUrl(lud06: lud06) else { return }
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            await bg().perform {
-                                contact.zapperPubkey = response.nostrPubkey!
-                                L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
-                            }
-                        }
-                    }
-                }
-                
-            }
-        }
-        .onChange(of: contact.nip05) { nip05 in
-            bg().perform {
-                guard let contact = contact.bgContact() else { return }
-                if (NIP05Verifier.shouldVerify(contact)) {
-                    NIP05Verifier.shared.verify(contact)
-                }
-            }
-        }
-        .task {
-            bg().perform {
-                EventRelationsQueue.shared.addAwaitingContact(contact)
-                req(RM.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008,10002]))
             }
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
-            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!, isFollowing: ns.isFollowing(contact.pubkey))
+            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:nrContact.pictureUrl!, isFollowing: nrContact.following)
                 .environmentObject(theme)
         }
         .task {
+            let contact = nrContact
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
+            guard !contact.following else { return }
             guard contact.metadata_created_at != 0 else { return }
-            guard contact.couldBeImposter != 0 else { return } // if its -1 (unknown) or 1 (true), we always re-check on profile view
-            guard let cPic = contact.picture else { return }
+            guard contact.couldBeImposter == -1 else { return }
+            guard let cPic = contact.pictureUrl else { return }
             guard !NewOnboardingTracker.shared.isOnboarding else { return }
             
             let contactAnyName = contact.anyName.lowercased()
@@ -372,6 +347,77 @@ struct ProfileView: View {
             backlog.add(reqTask)
             reqTask.fetch()
         }
+        .task {
+            let contact = nrContact.contact
+            
+            bg().perform {
+                EventRelationsQueue.shared.addAwaitingContact(contact)
+                if (ns.followsYou(contact)) {
+                    DispatchQueue.main.async {
+                        isFollowingYou = true
+                    }
+                }
+                
+                let task = ReqTask(
+                    reqCommand: { (taskId) in
+                        req(RM.getUserProfileKinds(pubkey: contact.pubkey, subscriptionId: taskId, kinds: [0,3,30008,10002]))
+                    },
+                    processResponseCommand: { (taskId, _) in
+                        bg().perform {
+                            if (ns.followsYou(contact)) {
+                                DispatchQueue.main.async {
+                                    isFollowingYou = true
+                                }
+                            }
+                        }
+                    },
+                    timeoutCommand: { taskId in
+                        bg().perform {
+                            if (ns.followsYou(contact)) {
+                                DispatchQueue.main.async {
+                                    isFollowingYou = true
+                                }
+                            }
+                        }
+                    })
+
+                backlog.add(task)
+                task.fetch()
+                
+                if (NIP05Verifier.shouldVerify(contact)) {
+                    NIP05Verifier.shared.verify(contact)
+                }
+             
+                guard contact.anyLud else { return }
+                let lud16orNil = contact.lud16
+                let lud06orNil = contact.lud06
+                Task {
+                    do {
+                        if let lud16 = lud16orNil, lud16 != "" {
+                            let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                                await bg().perform {
+                                    contact.zapperPubkey = response.nostrPubkey!
+                                    L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                                }
+                            }
+                        }
+                        else if let lud06 = lud06orNil, lud06 != "" {
+                            let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                                await bg().perform {
+                                    contact.zapperPubkey = response.nostrPubkey!
+                                    L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                                }
+                            }
+                        }
+                    }
+                    catch {
+                        L.og.error("problem in lnurlp \(error)")
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -390,9 +436,9 @@ struct ProfileView_Previews: PreviewProvider {
             pe.loadContacts()
         }) {
             NavigationStack {
-                if let contact = PreviewFetcher.fetchContact() {
+                if let contact = PreviewFetcher.fetchNRContact() {
                     VStack {
-                        ProfileView(contact: contact)
+                        ProfileView(nrContact: contact)
                     }
                 }
             }
