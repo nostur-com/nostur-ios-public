@@ -922,40 +922,6 @@ extension LVM {
         loadMoreWhenNearBottom()
         throttledCommands()
         fetchCountsForVisibleIndexPaths()
-        fetchNIP05ForVisibleIndexPaths()
-    }
-    
-    func fetchNIP05ForVisibleIndexPaths() {
-        postsAppearedSubject
-            .filter { _ in
-                !ProcessInfo.processInfo.isLowPowerModeEnabled
-            }
-            .throttle(for: .seconds(0.5), scheduler: RunLoop.main, latest: true)
-            .sink { [weak self] nrPostIds in
-                guard let self = self else { return }
-                
-                DataProvider.shared().bg.perform { [weak self] in
-                    guard let self = self else { return }
-                    let contacts = self.nrPostLeafs
-                        .filter { nrPostIds.contains($0.id) }
-                        .compactMap {
-                            if $0.isRepost {
-                                return $0.firstQuote?.event.contact
-                            }
-                            return $0.event.contact
-                        }
-                        .filter { $0.nip05 != nil && !$0.nip05veried }
-                    
-                    guard !contacts.isEmpty else { return }
-                    
-//                    L.fetching.info("☑️ Checking nip05 for \(contacts.count) contacts")
-//                    for contact in contacts {
-//                        EventRelationsQueue.shared.addAwaitingContact(contact)
-//                        NIP05Verifier.shared.verify(contact)
-//                    }
-                }
-            }
-            .store(in: &subscriptions)
     }
     
     func fetchCountsForVisibleIndexPaths() {
