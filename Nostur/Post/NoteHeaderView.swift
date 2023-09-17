@@ -67,7 +67,7 @@ struct PlaceholderPostHeader: View {
                         Text(verbatim:"@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
                         Text(verbatim:" · ") //
                         Ago(nrPost.createdAt, agoText: nrPost.ago)
-//                            .equatable()
+                            .equatable()
                             .layoutPriority(2)
                     }
                     .foregroundColor(.secondary)
@@ -80,7 +80,7 @@ struct PlaceholderPostHeader: View {
                 Text(verbatim:"@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
                 Text(verbatim:" · ") //
                 Ago(nrPost.createdAt, agoText: nrPost.ago)
-//                    .equatable()
+                    .equatable()
                     .layoutPriority(2)
             }
             .foregroundColor(.secondary)
@@ -126,7 +126,7 @@ struct PostHeader: View {
                 
                 if (singleLine) {
                     Ago(nrPost.createdAt, agoText: nrPost.ago)
-//                        .equatable()
+                        .equatable()
                         .layoutPriority(2)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -180,7 +180,7 @@ struct PostHeader: View {
         }
         if (!singleLine) {
             Ago(nrPost.createdAt, agoText: nrPost.ago)
-//                .equatable()
+                .equatable()
                 .layoutPriority(2)
                 .foregroundColor(.secondary)
                 .lineLimit(1)

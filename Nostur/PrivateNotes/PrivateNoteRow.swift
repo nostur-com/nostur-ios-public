@@ -23,6 +23,7 @@ struct PrivateNoteRow: View {
                     }
                 Spacer()
                 Ago(note.createdAt_)
+                    .equatable()
                     .frame(alignment: .trailing)
                     .foregroundColor(.secondary)
                     .padding(.trailing, 5)
