@@ -9,7 +9,6 @@ import SwiftUI
 
 struct NoteRow: View {
     let nrPost:NRPost
-    @ObservedObject var noteRowAttributes:NRPost.NoteRowAttributes
     var hideFooter = true // For rendering in NewReply
     var missingReplyTo = false // For rendering in thread, hide "Replying to.."
     var connect:ThreadConnectDirection? = nil
@@ -23,7 +22,6 @@ struct NoteRow: View {
     
     init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
-        self.noteRowAttributes = nrPost.noteRowAttributes
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
@@ -35,102 +33,27 @@ struct NoteRow: View {
         
     var body: some View {
 //        let _ = Self._printChanges()
-        VStack (alignment: .leading) {
-            if (nrPost.isRepost) {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.2.squarepath")
-                        .fontWeight(.bold)
-                        .scaleEffect(0.6)
-                    Text(nrPost.repostedHeader)
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                        .onTapGesture {
-                            navigateTo(ContactPath(key: nrPost.pubkey))
+        if (nrPost.isRepost) {
+            Repost(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped: grouped)
+        }
+        else { // IS NOT A REPOST
+            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped)
+                .onAppear {
+                    if !nrPost.missingPs.isEmpty {
+                        DataProvider.shared().bg.perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
+                            QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                         }
-                }
-                .foregroundColor(.gray)
-//                .transaction { t in
-//                    t.animation = nil
-//                }
-                .onTapGesture {
-                    navigateTo(ContactPath(key: nrPost.pubkey))
-                }
-                .padding(.leading, 30)
-                .frame(idealHeight: 20.0)
-                .transaction { t in t.animation = nil }
-//                .fixedSize(horizontal: false, vertical: true)
-
-                
-                VStack(spacing: 0) { // TODO: Replace this VStack with own view
-                    if let firstQuote = noteRowAttributes.firstQuote {
-                        // CASE - WE HAVE REPOSTED POST ALREADY
-                        if firstQuote.blocked {
-                            HStack {
-                                Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
-                                Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) {
-                                    nrPost.unblockFirstQuote()
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                            .padding(.leading, 8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                            )
-                            .hCentered()
-                        }
-                        else {
-                            KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
-                                .onAppear {
-                                    if !nrPost.missingPs.isEmpty {
-                                        DataProvider.shared().bg.perform {
-                                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
-                                            QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                                        }
-                                    }
-                                }
-                                .onDisappear {
-                                    if !nrPost.missingPs.isEmpty {
-                                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
-                                    }
-                                }
-                            // Extra padding reposted long form, because normal repost/post has 10, but longform uses 20
-                            // so add the extra 10 here
-                                .padding(.horizontal, firstQuote.kind == 30023 ? 10 : 0)
-                        }
-                    }
-                    else if let firstQuoteId = nrPost.firstQuoteId {
-                        CenteredProgressView()
-                            .onAppear {
-                                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
-                                QueuedFetcher.shared.enqueue(id: firstQuoteId)
-                            }
-                            .onDisappear {
-                                QueuedFetcher.shared.dequeue(id: firstQuoteId)
-                            }
                     }
                 }
-                .frame(minHeight: 150)
-            }
-            else { // IS NOT A REPOST
-                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped)
-                    .onAppear {
-                        if !nrPost.missingPs.isEmpty {
-                            DataProvider.shared().bg.perform {
-                                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
-                                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                            }
-                        }
+                .onDisappear {
+                    if !nrPost.missingPs.isEmpty {
+                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
                     }
-                    .onDisappear {
-                        if !nrPost.missingPs.isEmpty {
-                            QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
-                        }
-                    }
+                }
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
-            }
         }
 //        .transaction { t in
 //            t.animation = nil
