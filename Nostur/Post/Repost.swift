@@ -75,8 +75,8 @@ struct Repost: View {
                 theme.background
             }
         }
-        .transaction { t in t.animation = nil }
-        .frame(maxWidth: .infinity, minHeight: 150)
+//        .transaction { t in t.animation = nil }
+//        .frame(maxWidth: .infinity, minHeight: 150)
         .overlay {
             if let firstQuoteId = nrPost.firstQuoteId, noteRowAttributes.firstQuote == nil {
                 CenteredProgressView()

@@ -33,29 +33,27 @@ struct NoteRow: View {
         
     var body: some View {
 //        let _ = Self._printChanges()
-        VStack (alignment: .leading) {
-            if (nrPost.isRepost) {
-                Repost(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped: grouped)
-            }
-            else { // IS NOT A REPOST
-                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped)
-                    .onAppear {
-                        if !nrPost.missingPs.isEmpty {
-                            DataProvider.shared().bg.perform {
-                                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
-                                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                            }
+        if (nrPost.isRepost) {
+            Repost(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped: grouped)
+        }
+        else { // IS NOT A REPOST
+            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped)
+                .onAppear {
+                    if !nrPost.missingPs.isEmpty {
+                        DataProvider.shared().bg.perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
+                            QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                         }
                     }
-                    .onDisappear {
-                        if !nrPost.missingPs.isEmpty {
-                            QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
-                        }
+                }
+                .onDisappear {
+                    if !nrPost.missingPs.isEmpty {
+                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
                     }
+                }
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
-            }
         }
 //        .transaction { t in
 //            t.animation = nil

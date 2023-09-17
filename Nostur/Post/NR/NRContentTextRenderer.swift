@@ -10,16 +10,16 @@ import SwiftUI
 struct NRContentTextRenderer: View {
     @EnvironmentObject var theme:Theme
     let attributedStringWithPs:AttributedStringWithPs
-    let fullWidth = false
     @State var text:AttributedString? = nil
+    var isDetail = false
     
     var body: some View {
         Text(text ?? attributedStringWithPs.output)
 //            .tint(theme.accent)
             .lineSpacing(3)
+            .lineLimit(isDetail ? 3000 : 20)
             .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
-            .frame(maxWidth: .infinity, alignment: .leading)
-//            .padding(.horizontal, fullWidth ? 10 : 0)
+            .frame(maxWidth: .infinity, alignment: .leading)    
             .onReceive(
                 receiveNotification(.contactSaved)
                     .map({ notification in
