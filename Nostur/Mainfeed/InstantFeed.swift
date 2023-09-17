@@ -126,41 +126,39 @@ class InstantFeed {
     }
     
     func fetchPostsFromRelays() {
-        Task.detached {
-            self.bg.perform { [weak self] in
-                guard let self = self else { return }
-                guard let pubkeys = self.pubkeys else { return }
-                
-                let getFollowingEventsTask = ReqTask(prefix: "GFET-") { taskId in
-                    L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
-                    reqP(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
-                } processResponseCommand: { taskId, _ in
-                    self.bg.perform { [weak self] in
-                        guard let self = self else { return }
-                        let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
-                        guard let events = try? self.bg.fetch(fr) else {
-                            L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
-                            return
-                        }
-                        guard events.count > 20 else {
-                            L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more. Our pubkey: \(self.pubkey?.short ?? "-") ")
-                            return
-                        }
-                        DispatchQueue.main.async {
-                            self.events = events
-                        }
-                        L.og.notice("🟪 Received \(events.count) posts from relays (found in db)")
+        self.bg.perform { [weak self] in
+            guard let self = self else { return }
+            guard let pubkeys = self.pubkeys else { return }
+            
+            let getFollowingEventsTask = ReqTask(prefix: "GFET-") { taskId in
+                L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
+                reqP(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
+            } processResponseCommand: { taskId, _ in
+                self.bg.perform { [weak self] in
+                    guard let self = self else { return }
+                    let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
+                    guard let events = try? self.bg.fetch(fr) else {
+                        L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
+                        return
                     }
-                } timeoutCommand: { taskId in
-                    if self.events == nil {
-                        L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
-                        self.events = []
+                    guard events.count > 20 else {
+                        L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more. Our pubkey: \(self.pubkey?.short ?? "-") ")
+                        return
                     }
+                    DispatchQueue.main.async {
+                        self.events = events
+                    }
+                    L.og.notice("🟪 Received \(events.count) posts from relays (found in db)")
                 }
-                
-                self.backlog.add(getFollowingEventsTask)
-                getFollowingEventsTask.fetch()
+            } timeoutCommand: { taskId in
+                if self.events == nil {
+                    L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
+                    self.events = []
+                }
             }
+            
+            self.backlog.add(getFollowingEventsTask)
+            getFollowingEventsTask.fetch()
         }
     }
     

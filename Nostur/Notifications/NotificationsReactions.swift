@@ -112,10 +112,12 @@ struct NotificationsReactions: View {
         .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
             let importedSubIds = notification.object as! ImportedNotification
             
-            let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
-            
-            reqTasks.forEach { task in
-                task.process()
+            bg().perform {
+                let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
+                
+                reqTasks.forEach { task in
+                    task.process()
+                }
             }
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in

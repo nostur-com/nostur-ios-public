@@ -277,17 +277,21 @@ class Backlog {
         self.timeout = timeout
         timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
             guard let self = self else { return }
-            guard !self.tasks.isEmpty else { return } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
-            self.removeOldTasks()
+            bg().perform {
+                guard !self.tasks.isEmpty else { return } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
+                self.removeOldTasks()
+            }
         }
         if (auto) {
             receiveNotification(.importedMessagesFromSubscriptionIds)
                 .sink(receiveValue: { [weak self] notification in
                     guard let self = self else { return }
                     let importedNotification = notification.object as! ImportedNotification
-                    let reqTasks = self.tasks(with: importedNotification.subscriptionIds)
-                    for task in reqTasks {
-                        task.process()
+                    bg().perform {
+                        let reqTasks = self.tasks(with: importedNotification.subscriptionIds)
+                        for task in reqTasks {
+                            task.process()
+                        }
                     }
                 })
                 .store(in: &subscriptions)
@@ -297,9 +301,11 @@ class Backlog {
                     guard let self = self else { return }
                     let receivedMessage = notification.object as! RelayMessage
                     guard let subscriptionId = receivedMessage.subscriptionId else { return }
-                    let reqTasks = self.tasks(with: [subscriptionId])
-                    for task in reqTasks {
-                        task.process(receivedMessage)
+                    bg().perform {
+                        let reqTasks = self.tasks(with: [subscriptionId])
+                        for task in reqTasks {
+                            task.process(receivedMessage)
+                        }
                     }
                 }
                 .store(in: &subscriptions)
@@ -316,22 +322,31 @@ class Backlog {
     }
     
     public func clear() {
-        tasks.removeAll()
+        bg().perform {
+            self.tasks.removeAll()
+        }
     }
     
     public func add(_ task:ReqTask) {
-        tasks.insert(task)
+        bg().perform {
+            self.tasks.insert(task)
+        }
     }
     
     public func remove(_ task:ReqTask) {
-        tasks.remove(task)
+        bg().perform {
+            self.tasks.remove(task)
+        }
     }
     
-    public func task(with subscriptionId:String) -> ReqTask? {
-        tasks.first(where: { $0.subscriptionId == subscriptionId })
-    }
+//    public func task(with subscriptionId:String) -> ReqTask? {
+//        tasks.first(where: { $0.subscriptionId == subscriptionId })
+//    }
     
     public func tasks(with subscriptionIds:Set<String>) -> [ReqTask] {
+        if Thread.isMainThread {
+            fatalError("Must call from bg()")
+        }
         return tasks.filter { subscriptionIds.contains($0.subscriptionId) }
     }
 }
