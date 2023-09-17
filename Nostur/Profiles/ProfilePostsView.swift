@@ -17,7 +17,6 @@ struct ProfilePostsView: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
         switch vm.state {
         case .initializing:
             CenteredProgressView()

@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct ProfileByPubkey: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var theme:Theme
     
     let pubkey:String
     var tab:String?
         
-    @State var editingAccount:Account? = nil
-    @StateObject var vm = FetchVM<NRContact>()
+    @State private var editingAccount:Account? = nil
+    @StateObject private var vm = FetchVM<NRContact>()
 
     var body: some View {
         switch vm.state {
@@ -72,12 +72,10 @@ struct ProfileByPubkey: View {
     }
 }
 
-struct ProfileByPubkey_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-        }) {
-            ProfileByPubkey(pubkey: "77bbc321087905d98f941bd9d4cc4d2856fdc0f2f083f3ae167544e1a3b39e91")
-        }
+#Preview {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+    }) {
+        ProfileByPubkey(pubkey: "77bbc321087905d98f941bd9d4cc4d2856fdc0f2f083f3ae167544e1a3b39e91")
     }
 }

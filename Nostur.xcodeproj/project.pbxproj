@@ -333,6 +333,7 @@
 		1FCCAC9C2AB7477E00B3F00A /* FetchVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC9B2AB7477E00B3F00A /* FetchVM.swift */; };
 		1FCCAC9E2AB747CF00B3F00A /* ProfileFollowingCount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC9D2AB747CF00B3F00A /* ProfileFollowingCount.swift */; };
 		1FCCACA02AB7562500B3F00A /* ProfileFollowingList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC9F2AB7562500B3F00A /* ProfileFollowingList.swift */; };
+		1FCCACA22AB764D300B3F00A /* ProfileLikesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCACA12AB764D300B3F00A /* ProfileLikesViewModel.swift */; };
 		1FCDDEBC2A480AA2002EDEEC /* SettingsDevTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */; };
 		1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */; };
 		1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCEA0B62999413C00A309DC /* Double+clean.swift */; };
@@ -753,6 +754,7 @@
 		1FCCAC9B2AB7477E00B3F00A /* FetchVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchVM.swift; sourceTree = "<group>"; };
 		1FCCAC9D2AB747CF00B3F00A /* ProfileFollowingCount.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileFollowingCount.swift; sourceTree = "<group>"; };
 		1FCCAC9F2AB7562500B3F00A /* ProfileFollowingList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileFollowingList.swift; sourceTree = "<group>"; };
+		1FCCACA12AB764D300B3F00A /* ProfileLikesViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ProfileLikesViewModel.swift; path = Nostur/Profiles/ProfileLikesViewModel.swift; sourceTree = SOURCE_ROOT; };
 		1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDevTools.swift; sourceTree = "<group>"; };
 		1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayCensorshipResistorTest.swift; sourceTree = "<group>"; };
 		1FCEA0B62999413C00A309DC /* Double+clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+clean.swift"; sourceTree = "<group>"; };
@@ -1632,6 +1634,7 @@
 				1FCCAC9F2AB7562500B3F00A /* ProfileFollowingList.swift */,
 				1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */,
 				1F33096029891C4800D4D8CF /* ProfileLikesView.swift */,
+				1FCCACA12AB764D300B3F00A /* ProfileLikesViewModel.swift */,
 				1F210B0529F853BB00159814 /* ProfileMediaView.swift */,
 				1F1D99412A03AACF0024055B /* ProfileNotesView.swift */,
 				1FCCAC992AB6D6B000B3F00A /* ProfilePostsView.swift */,
@@ -2142,6 +2145,7 @@
 				1F810B3429E670AB006B1614 /* MutedWords+CoreDataProperties.swift in Sources */,
 				1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */,
 				1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */,
+				1FCCACA22AB764D300B3F00A /* ProfileLikesViewModel.swift in Sources */,
 				1F15F0A42AAF9CAE0004E706 /* Gallery+FeedSettings.swift in Sources */,
 				1F15F0A02AAF35560004E706 /* LikeButton.swift in Sources */,
 				1F685B522A0D18D2009EEC9B /* NRContact.swift in Sources */,

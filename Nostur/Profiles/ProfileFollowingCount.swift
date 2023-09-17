@@ -15,7 +15,7 @@ struct ProfileFollowingCount: View {
     var body: some View {
         switch vm.state {
         case .initializing:
-            Text("Following \(Image(systemName: "hourglass.circle.fill"))", comment: "Label for Following count")
+            Text("\(Image(systemName: "hourglass.circle.fill")) Following", comment: "Label for Following count")
                 .onAppear {
                     vm.setFetchParams((
                         req: {
