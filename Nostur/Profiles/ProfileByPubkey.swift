@@ -9,50 +9,64 @@ import SwiftUI
 
 struct ProfileByPubkey: View {
     @EnvironmentObject var theme:Theme
-    let sp:SocketPool = .shared
-    @EnvironmentObject var ns:NosturState
-     
     
-    var pubkey:String
+    let pubkey:String
     var tab:String?
-    
-    @FetchRequest
-    var contacts:FetchedResults<Contact>
-    
-    let timeOut = Timer.publish(every: 8, on: .main, in: .common).autoconnect()
-    
-    @State var editingAccount:Account?
-    
-    init(pubkey:String, tab:String? = nil) {
-        self.pubkey = pubkey
-        self.tab = tab
         
-        _contacts = FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-            predicate: NSPredicate(format: "pubkey == %@", pubkey)
-        )
-    }
-    
+    @State var editingAccount:Account? = nil
+    @StateObject var vm = FetchVM<NRContact>()
+
     var body: some View {
-        if let contact = contacts.first {
-            ProfileView(contact: contact, tab:tab)
-        }
-        else {
-            ProgressView().onAppear {
-                L.og.info("🟢 ProfileByPubkey.onAppear no contact so REQ.0: \(pubkey)")
-                req(RM.getUserMetadata(pubkey: pubkey))
+        switch vm.state {
+        case .initializing:
+            ProgressView()
+                .onAppear {
+                    vm.setFetchParams((
+                        req: {
+                            bg().perform { // 1. FIRST CHECK LOCAL DB
+                                if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
+                                    let nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(pubkey))
+                                    vm.ready(nrContact) // 2A. DONE
+                                }
+                                else { req(RM.getUserMetadata(pubkey: pubkey)) } // 2B. FETCH IF WE DONT HAVE
+                            }
+                        }, 
+                        onComplete: { relayMessage in
+                            bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
+                                if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
+                                    let nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(pubkey))
+                                    vm.ready(nrContact)
+                                }
+                                else { // 4. OR ELSE WE TIMEOUT
+                                    vm.timeout()
+                                }
+                            }
+                        }
+                    ))
+                    vm.fetch()
+                }
+        case .loading:
+            ProgressView()
+        case .ready(let nrContact):
+            ProfileView(nrContact: nrContact, tab:tab)
+        case .timeout:
+            VStack {
+                Spacer()
+                Text("Time-out")
+                Button("Try again") { vm.state = .loading; vm.fetch() }
+                Spacer()
+            }
+            .onAppear {
+                guard let account = NosturState.shared.account else { return }
+                if account.publicKey == pubkey {
+                    editingAccount = account
+                }
             }
             .sheet(item: $editingAccount) { account in
                 NavigationStack {
                     AccountEditView(account: account)
                 }
                 .presentationBackground(theme.background)
-            }
-            .onReceive(timeOut) { firedDate in
-                timeOut.upstream.connect().cancel()
-                if ns.account?.publicKey == pubkey {
-                    editingAccount = ns.account!
-                }
             }
         }
     }
