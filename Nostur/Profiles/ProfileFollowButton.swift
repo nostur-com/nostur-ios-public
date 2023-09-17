@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct ProfileFollowButton: View {
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var contact:Contact
-    @EnvironmentObject var ns:NosturState
-    @ObservedObject var fg:FollowingGuardian = .shared
-    @State var isFollowing = false
-    @State var editingAccount:Account?
+    @EnvironmentObject private var theme:Theme
+    @ObservedObject public var contact:Contact
+    @EnvironmentObject private var ns:NosturState
+    @ObservedObject private var fg:FollowingGuardian = .shared
+    @State private var isFollowing = false
+    @State private var editingAccount:Account?
     
     var body: some View {
         if (contact.pubkey != ns.account?.publicKey) {
@@ -61,15 +61,13 @@ struct ProfileFollowButton: View {
     }
 }
 
-struct ProfileFollowButton_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-        }) {
-            VStack {
-                if let contact = PreviewFetcher.fetchContact() {
-                    ProfileFollowButton(contact: contact)
-                }
+#Preview("ProfileFollowButton") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+    }) {
+        VStack {
+            if let contact = PreviewFetcher.fetchContact() {
+                ProfileFollowButton(contact: contact)
             }
         }
     }

@@ -91,6 +91,11 @@ class NIP05Verifier {
     }
     
     static func shouldVerify(_ contact: Contact) -> Bool {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return false
+        }
+        #endif
         if Thread.isMainThread {
             fatalError("Should call from bg")
         }

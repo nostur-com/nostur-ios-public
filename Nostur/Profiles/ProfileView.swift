@@ -10,14 +10,15 @@ import Nuke
 import NukeUI
 
 struct ProfileView: View {
+    let pubkey:String
+    var tab:String?
+    
     @EnvironmentObject private var theme:Theme
     @EnvironmentObject private var ns:NosturState
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var settings:SettingsStore = .shared
     @ObservedObject private var nrContact:NRContact
-    let pubkey:String
-    var tab:String?
-    
+
     @State private var profilePicViewerIsShown = false
     @State private var selectedSubTab = "Posts"
     @State private var backlog = Backlog(timeout: 4.0, auto: true)
@@ -444,8 +445,7 @@ struct ProfileView: View {
     }
 }
 
-struct ProfileView_Previews: PreviewProvider {
-    static var previews: some View {
+#Preview("ProfileView") {
         //        let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
 //                        let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
         //        let snowden = PreviewFetcher.fetchContact(pubkey)
@@ -467,4 +467,4 @@ struct ProfileView_Previews: PreviewProvider {
             }
         }
     }
-}
+

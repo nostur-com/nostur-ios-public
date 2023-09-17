@@ -10,14 +10,14 @@ import CoreData
 
 struct NoteById: View {
     
-    let sp:SocketPool = .shared
+    private let sp:SocketPool = .shared
     
-    var id:String
+    private var id:String
     
     @FetchRequest
-    var events:FetchedResults<Event>
+    private var events:FetchedResults<Event>
     
-    @State var nrPost:NRPost? = nil
+    @State private var nrPost:NRPost? = nil
     
     init(id:String) {
         self.id = id
@@ -59,11 +59,11 @@ struct NoteById: View {
 }
 
 struct PostDetailView: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
-    var navTitleHidden:Bool = false
-    @State var didLoad = false
-    @State var didScroll = false
+    @EnvironmentObject private var theme:Theme
+    private let nrPost:NRPost
+    private var navTitleHidden:Bool = false
+    @State private var didLoad = false
+    @State private var didScroll = false
     
     init(nrPost: NRPost, navTitleHidden: Bool = false) {
         self.nrPost = nrPost
@@ -123,22 +123,22 @@ let THREAD_LINE_OFFSET = 24.0
 // the parent is another PostAndParent
 // so it recursively renders up to the root
 struct PostAndParent: View {
-    @EnvironmentObject var theme:Theme
-    var sp:SocketPool = .shared
-    @ObservedObject var nrPost:NRPost
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var dim:DIMENSIONS
+    @EnvironmentObject private var theme:Theme
+    private var sp:SocketPool = .shared
+    @ObservedObject private var nrPost:NRPost
+    @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var ns:NosturState
+    @EnvironmentObject private var dim:DIMENSIONS
     
-    var navTitleHidden:Bool = false
+    private var navTitleHidden:Bool = false
     
-    var isParent = false
-    var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-    let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
+    private var isParent = false
+    private var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+    private let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     
-    @ObservedObject var settings:SettingsStore = .shared
+    @ObservedObject private var settings:SettingsStore = .shared
     @State private var timerTask: Task<Void, Never>?
-    @State var didLoad = false
+    @State private var didLoad = false
     
     init(nrPost: NRPost, isParent:Bool = false, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
@@ -261,14 +261,14 @@ struct PostAndParent: View {
 }
 
 struct ParentPost: View {
-    @ObservedObject var nrPost:NRPost
-    @ObservedObject var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
-    @ObservedObject var settings:SettingsStore = .shared
-    @EnvironmentObject var dim:DIMENSIONS
-    @EnvironmentObject var theme:Theme
-    let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
-    var connect:ThreadConnectDirection? = nil
-    @State var showMiniProfile = false
+    @ObservedObject private var nrPost:NRPost
+    @ObservedObject private var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
+    @ObservedObject private var settings:SettingsStore = .shared
+    @EnvironmentObject private var dim:DIMENSIONS
+    @EnvironmentObject private var theme:Theme
+    private let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
+    private var connect:ThreadConnectDirection? = nil
+    @State private var showMiniProfile = false
     
     init(nrPost: NRPost, connect: ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
@@ -401,11 +401,12 @@ struct ParentPost: View {
 }
 
 struct DetailPost: View {
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var nrPost:NRPost
-    @ObservedObject var settings:SettingsStore = .shared
-    @EnvironmentObject var dim:DIMENSIONS
-    @State var showMiniProfile = false
+    @ObservedObject public var nrPost:NRPost
+    
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var dim:DIMENSIONS
+    @ObservedObject private var settings:SettingsStore = .shared
+    @State private var showMiniProfile = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -524,182 +525,150 @@ struct DetailPost: View {
     }
 }
 
-
-
-
-struct Kind1063detail_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadKind1063()
-        }) {
-            NavigationStack {
-                if let kind1063 = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") {
-                    PostDetailView(nrPost:kind1063)
-                }
+#Preview("Kind1063detail") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadKind1063()
+    }) {
+        NavigationStack {
+            if let kind1063 = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") {
+                PostDetailView(nrPost:kind1063)
             }
         }
     }
 }
 
-struct Kind1063detailQuoted_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.loadKind1063()
-        }) {
-            NavigationStack {
-                if let kind1063q = PreviewFetcher.fetchNRPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
-                    PostDetailView(nrPost:kind1063q)
-                }
+#Preview("Kind1063detailQuoted") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadKind1063()
+    }) {
+        NavigationStack {
+            if let kind1063q = PreviewFetcher.fetchNRPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
+                PostDetailView(nrPost:kind1063q)
             }
         }
     }
 }
 
-struct ReplyAndParentView_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.parseMessages([
-                ###"["EVENT","485cefc1-2f85-402e-a136-691557f322c8",{"content":"https://youtube.com/shorts/cZenQR8tgV8?feature=share\n\nIf even _she_ is speaking out about Canada's new bill C-11, it's bad. She's a 100% mainstream comedian who got her start during lockdown.","created_at":1680327426,"id":"5988f18416a6d2702a61df9dedc318f18d0d5778a020464222138edab386eee7","kind":1,"pubkey":"ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc","sig":"efad8bf0580ee6a36f6ebd48ab3fba940d9fdc5d5fcf866b6d609ac52c1b24a7acb16277890ea770a8d4328018c1ec7b7ef84e7ffa19b8f9929a36300adc4b33","tags":[["r","https://youtube.com/shorts/cZenQR8tgV8?feature=share"]]}]"###,
-                ###"["EVENT","16dbd7e2-af00-4c7d-9258-f5413d75b95f",{"content":"The fact thay she thinks an “amendment to protect digital creators” makes the bill ok is so childishly naive it hurts. ","created_at":1680333364,"id":"5e80b08b76e81e549c4554e161dfeb67a09da859e4706a989876a5ec42016d9a","kind":1,"pubkey":"b9e76546ba06456ed301d9e52bc49fa48e70a6bf2282be7a1ae72947612023dc","sig":"5c31c120473800d878a5391ad2055b20404a4d97d20c08116f0931737559aea7d8e26febf64f4e24385c637d1e8b84ede32ca498a75190b0aaaba3821ac1bd3a","tags":[["e","5988f18416a6d2702a61df9dedc318f18d0d5778a020464222138edab386eee7"],["p","ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc"]]}]"###,
-                ###"["EVENT","a2533e43-5968-40dd-a986-131e839cbb84",{"content":"Her being publicly against it at all is a win. And the amendment was cancelled.","created_at":1680333872,"id":"a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d","kind":1,"pubkey":"ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc","sig":"a1a46a31a1d11175cfc8452210b436d731f3b8615254ec51063f4124a250cc544e40ab54899b243f7637c5778f093d869a6b9f54e1e30f9b9245c07d6df37b9f","tags":[["e","5988f18416a6d2702a61df9dedc318f18d0d5778a020464222138edab386eee7"],["e","5e80b08b76e81e549c4554e161dfeb67a09da859e4706a989876a5ec42016d9a"],["p","ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc"],["p","b9e76546ba06456ed301d9e52bc49fa48e70a6bf2282be7a1ae72947612023dc"]]}]"###])
-        }) {
-            NavigationStack {
-                if let xx = PreviewFetcher.fetchNRPost("a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d") {
-                    PostDetailView(nrPost: xx)
-                }
+#Preview("ReplyAndParentView") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.parseMessages([
+            ###"["EVENT","485cefc1-2f85-402e-a136-691557f322c8",{"content":"https://youtube.com/shorts/cZenQR8tgV8?feature=share\n\nIf even _she_ is speaking out about Canada's new bill C-11, it's bad. She's a 100% mainstream comedian who got her start during lockdown.","created_at":1680327426,"id":"5988f18416a6d2702a61df9dedc318f18d0d5778a020464222138edab386eee7","kind":1,"pubkey":"ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc","sig":"efad8bf0580ee6a36f6ebd48ab3fba940d9fdc5d5fcf866b6d609ac52c1b24a7acb16277890ea770a8d4328018c1ec7b7ef84e7ffa19b8f9929a36300adc4b33","tags":[["r","https://youtube.com/shorts/cZenQR8tgV8?feature=share"]]}]"###,
+            ###"["EVENT","16dbd7e2-af00-4c7d-9258-f5413d75b95f",{"content":"The fact thay she thinks an “amendment to protect digital creators” makes the bill ok is so childishly naive it hurts. ","created_at":1680333364,"id":"5e80b08b76e81e549c4554e161dfeb67a09da859e4706a989876a5ec42016d9a","kind":1,"pubkey":"b9e76546ba06456ed301d9e52bc49fa48e70a6bf2282be7a1ae72947612023dc","sig":"5c31c120473800d878a5391ad2055b20404a4d97d20c08116f0931737559aea7d8e26febf64f4e24385c637d1e8b84ede32ca498a75190b0aaaba3821ac1bd3a","tags":[["e","5988f18416a6d2702a61df9dedc318f18d0d5778a020464222138edab386eee7"],["p","ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc"]]}]"###,
+            ###"["EVENT","a2533e43-5968-40dd-a986-131e839cbb84",{"content":"Her being publicly against it at all is a win. And the amendment was cancelled.","created_at":1680333872,"id":"a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d","kind":1,"pubkey":"ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc","sig":"a1a46a31a1d11175cfc8452210b436d731f3b8615254ec51063f4124a250cc544e40ab54899b243f7637c5778f093d869a6b9f54e1e30f9b9245c07d6df37b9f","tags":[["e","5988f18416a6d2702a61df9dedc318f18d0d5778a020464222138edab386eee7"],["e","5e80b08b76e81e549c4554e161dfeb67a09da859e4706a989876a5ec42016d9a"],["p","ccaa58e37c99c85bc5e754028a718bd46485e5d3cb3345691ecab83c755d48cc"],["p","b9e76546ba06456ed301d9e52bc49fa48e70a6bf2282be7a1ae72947612023dc"]]}]"###])
+    }) {
+        NavigationStack {
+            if let xx = PreviewFetcher.fetchNRPost("a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d") {
+                PostDetailView(nrPost: xx)
             }
         }
     }
 }
 
-struct YouTubePreviewInDetail_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-        }) {
-            NavigationStack {
-                if let yt2 = PreviewFetcher.fetchNRPost("0000014de66e08882bd36b6b7b551a774f85fe752a18070dc8658d7776db7e69") {
-                    PostDetailView(nrPost: yt2)
+#Preview("YouTubePreviewInDetail") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+    }) {
+        NavigationStack {
+            if let yt2 = PreviewFetcher.fetchNRPost("0000014de66e08882bd36b6b7b551a774f85fe752a18070dc8658d7776db7e69") {
+                PostDetailView(nrPost: yt2)
+            }
+            
+        }
+    }
+}
+
+#Preview("YouTubeInDetail") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.parseMessages([
+            ###"["EVENT","e24e08cc-9e36-4a54-8a33-1d1fc84ae95c",{"content":"https://youtu.be/QU9kRF9tHPU","created_at":1681073179,"id":"c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49","kind":1,"pubkey":"82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2","sig":"2bec825a1db31653187d221b69965e992a28d5a0913aa286c89fa23606fc41f4ad7b146a4844a136ba2865566c958b509e544c6620e25f329f239a7be0d6f87b","tags":[]}]"###]
+        )
+    }) {
+        NavigationStack {
+            if let yt = PreviewFetcher.fetchNRPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
+                ScrollView {
+                    PostDetailView(nrPost: yt)
                 }
-                
+            }
+            
+        }
+    }
+}
+
+#Preview("ReplyAndParent4") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadRepliesAndReactions()
+    }) {
+        NavigationStack {
+            if let v = PreviewFetcher.fetchNRPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
+                PostDetailView(nrPost: v)
+            }
+            
+        }
+    }
+}
+
+#Preview("ReplyAndParent5") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadRepliesAndReactions()
+    }) {
+        NavigationStack {
+            if let lastReply = PreviewFetcher.fetchNRPost("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964") {
+                PostDetailView(nrPost: lastReply)
+            }
+            
+        }
+    }
+}
+
+#Preview("ReplyAndParentView6_Previews") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadRepliesAndReactions()
+    }) {
+        NavigationStack {
+            if let rootWithReplies = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81") {
+                PostDetailView(nrPost: rootWithReplies)
             }
         }
     }
 }
 
-struct YouTubeInDetail_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.parseMessages([
-                ###"["EVENT","e24e08cc-9e36-4a54-8a33-1d1fc84ae95c",{"content":"https://youtu.be/QU9kRF9tHPU","created_at":1681073179,"id":"c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49","kind":1,"pubkey":"82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2","sig":"2bec825a1db31653187d221b69965e992a28d5a0913aa286c89fa23606fc41f4ad7b146a4844a136ba2865566c958b509e544c6620e25f329f239a7be0d6f87b","tags":[]}]"###]
-            )
-        }) {
-            NavigationStack {
-                if let yt = PreviewFetcher.fetchNRPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
-                    ScrollView {
-                        PostDetailView(nrPost: yt)
-                    }
-                }
-                
+#Preview("ReplyAndParentView7_Previews") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadRepliesAndReactions()
+    }) {
+        NavigationStack {
+            if let v = PreviewFetcher.fetchNRPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
+                PostDetailView(nrPost: v)
             }
         }
     }
 }
 
-
-struct ReplyAndParentView4_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.loadRepliesAndReactions()
-        }) {
-            NavigationStack {
-                if let v = PreviewFetcher.fetchNRPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
-                    PostDetailView(nrPost: v)
-                }
-                
-            }
-        }
-    }
-}
-
-struct ReplyAndParentView5_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.loadRepliesAndReactions()
-        }) {
-            NavigationStack {
-                if let lastReply = PreviewFetcher.fetchNRPost("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964") {
-                    PostDetailView(nrPost: lastReply)
-                }
-                
-            }
-        }
-    }
-}
-
-struct ReplyAndParentView6_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.loadRepliesAndReactions()
-        }) {
-            NavigationStack {
-                if let rootWithReplies = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81") {
-                    PostDetailView(nrPost: rootWithReplies)
-                }
-            }
-        }
-    }
-}
-
-struct ReplyAndParentView7_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.loadRepliesAndReactions()
-        }) {
-            NavigationStack {
-                if let v = PreviewFetcher.fetchNRPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
-                    PostDetailView(nrPost: v)
-                }
-            }
-        }
-    }
-}
-
-struct BetterReplies_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.loadRepliesAndReactions()
-        }) {
-            NavigationStack {
-                if let matt = PreviewFetcher.fetchNRPost("e593fc759291a691cd0127643a0b9fac9d92613952845e207eb24332937c59d9") {
-                    
-                    PostDetailView(nrPost: matt)
-                }
+#Preview("BetterReplies_Previews") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadRepliesAndReactions()
+    }) {
+        NavigationStack {
+            if let matt = PreviewFetcher.fetchNRPost("e593fc759291a691cd0127643a0b9fac9d92613952845e207eb24332937c59d9") {
+                PostDetailView(nrPost: matt)
             }
         }
     }

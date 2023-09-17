@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct ProfileTabs: View {
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var nrContact:NRContact
-    var pubkey:String { nrContact.pubkey }
-    @Binding var selectedSubTab:String
-    @EnvironmentObject var dim:DIMENSIONS
+    @ObservedObject public var nrContact:NRContact
+    @Binding public var selectedSubTab:String
+    
+    @EnvironmentObject private var theme:Theme
+    private var pubkey:String { nrContact.pubkey }
+    @EnvironmentObject private var dim:DIMENSIONS
 
     var body: some View {
         Section {
@@ -81,16 +82,14 @@ struct ProfileTabs: View {
     }
 }
 
-struct ProfileTabs_Previews: PreviewProvider {
-    static var previews: some View {
-        let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-        PreviewContainer({ pe in
-            pe.loadContacts()
-        }) {
-            ScrollView {
-                if let nrContact = PreviewFetcher.fetchNRContact(f) {
-                    ProfileTabs(nrContact: nrContact, selectedSubTab: .constant("Posts"))
-                }
+#Preview("ProfileTabs") {
+    let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+    return PreviewContainer({ pe in
+        pe.loadContacts()
+    }) {
+        ScrollView {
+            if let nrContact = PreviewFetcher.fetchNRContact(f) {
+                ProfileTabs(nrContact: nrContact, selectedSubTab: .constant("Posts"))
             }
         }
     }

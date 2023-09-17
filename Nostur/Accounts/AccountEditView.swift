@@ -14,21 +14,25 @@ import CryptoKit
 
 struct AccountEditView: View {
     
-    var sp:SocketPool = .shared
+    private var sp:SocketPool = .shared
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.managedObjectContext) var viewContext
-    let up:Unpublisher = .shared
-    @EnvironmentObject var ns:NosturState
-    @ObservedObject var account: Account
-    @State var newPrivateKey = ""
-    @State var contactsPresented = false
-    @State var invalidPrivateKey = false
-    @State var uploading = false
-    @State var uploadError:String?
-    @State var subscriptions = Set<AnyCancellable>()
-    @State var newPicture:UIImage?
-    @State var newBanner:UIImage?
-    @State var anyLud = ""
+    @Environment(\.managedObjectContext) private var viewContext
+    private let up:Unpublisher = .shared
+    @EnvironmentObject private var ns:NosturState
+    @ObservedObject private var account: Account
+    @State private var newPrivateKey = ""
+    @State private var contactsPresented = false
+    @State private var invalidPrivateKey = false
+    @State private var uploading = false
+    @State private var uploadError:String?
+    @State private var subscriptions = Set<AnyCancellable>()
+    @State private var newPicture:UIImage?
+    @State private var newBanner:UIImage?
+    @State private var anyLud = ""
+    
+    init(account: Account) {
+        self.account = account
+    }
     
     var body: some View {
         let shouldDisable = account.privateKey == nil || account.privateKey == ""
@@ -226,7 +230,7 @@ struct AccountEditView: View {
 
 extension AccountEditView {
     
-    func save() {
+    private func save() {
         if newPrivateKey != "" {
             
             guard let nip19 = try? NIP19(displayString: newPrivateKey) else {
@@ -272,7 +276,7 @@ extension AccountEditView {
         }
     }
     
-    func updateZapperPubkey() {
+    private func updateZapperPubkey() {
         guard account.lud16 != "" else { return }
         guard let contact = Contact.fetchByPubkey(account.publicKey, context: viewContext) else { return }
         guard let contactLud16 = contact.lud16, contactLud16 != account.lud16 else { return }
@@ -288,7 +292,7 @@ extension AccountEditView {
         }
     }
     
-    func loadFromRelays() {
+    private func loadFromRelays() {
         // 1. Prefill from cached event (if in cache)
         Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
         Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
@@ -298,7 +302,7 @@ extension AccountEditView {
         sp.sendMessage(message)
     }
     
-    func loadFollowers(account:Account) {
+    private func loadFollowers(account:Account) {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", account.publicKey)
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -319,7 +323,7 @@ extension AccountEditView {
         }
     }
     
-    func updateContacts() { // move this method to somewhere more global maybe
+    private func updateContacts() { // move this method to somewhere more global maybe
         let pubkeys = account.follows?.map { $0.pubkey }
         if (pubkeys != nil) {
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys!)))
@@ -328,16 +332,13 @@ extension AccountEditView {
 }
 
 
-struct AccountView_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        let fab = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-        
-        PreviewContainer {
-            NavigationStack {
-                if let account = PreviewFetcher.fetchAccount(fab, context: DataProvider.shared().container.viewContext) {
-                    AccountEditView(account: account)
-                }     
+#Preview {
+    let fab = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+    
+    return PreviewContainer {
+        NavigationStack {
+            if let account = PreviewFetcher.fetchAccount(fab, context: DataProvider.shared().container.viewContext) {
+                AccountEditView(account: account)
             }
         }
     }
