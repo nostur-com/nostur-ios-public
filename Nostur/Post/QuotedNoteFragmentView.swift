@@ -70,6 +70,7 @@ struct QuotedNoteFragmentView: View {
                             Group {
                                 Text(verbatim: " ·") //
                                 Ago(nrPost.createdAt)
+                                    .equatable()
                             }
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
