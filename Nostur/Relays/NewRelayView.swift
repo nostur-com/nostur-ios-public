@@ -10,7 +10,7 @@ import SwiftUI
 struct NewRelayView: View {
 //    @EnvironmentObject var theme:Theme
     @Environment(\.dismiss) private var dismiss
-    @State var url = "wss://"
+    @State private var url = "wss://"
     
     var onAdd:((_ url:String) -> Void)? = nil
     

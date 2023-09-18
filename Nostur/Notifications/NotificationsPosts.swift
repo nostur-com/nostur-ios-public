@@ -9,18 +9,18 @@ import SwiftUI
 import CoreData
 
 struct NotificationsPosts: View {
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var settings:SettingsStore = .shared
-    @EnvironmentObject var ns:NosturState
-    @StateObject var fl = FastLoader()
-    @State var backlog = Backlog()
-    @State var didLoad = false
+    @EnvironmentObject private var theme:Theme
+    @ObservedObject private var settings:SettingsStore = .shared
+    @EnvironmentObject private var ns:NosturState
+    @StateObject private var fl = FastLoader()
+    @State private var backlog = Backlog()
+    @State private var didLoad = false
     
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
+    @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Posts"
     
     @FetchRequest
-    var pNotifications:FetchedResults<PersistentNotification>
+    private var pNotifications:FetchedResults<PersistentNotification>
     
     init(pubkey: String) {
         let fr = PersistentNotification.fetchRequest()
@@ -29,7 +29,7 @@ struct NotificationsPosts: View {
         _pNotifications = FetchRequest(fetchRequest: fr)
     }
     
-    var notifications:[PostOrNotification] {
+    private var notifications:[PostOrNotification] {
         // combine nrPosts and PersistentNotifications in the list
         return (pNotifications.map { pNot in
             PostOrNotification(id: "NOTIF-" + pNot.id.uuidString , type: .NOTIFICATION, notification: pNot)
@@ -139,7 +139,7 @@ struct NotificationsPosts: View {
                }))
     }
     
-    func load() {
+    private func load() {
         guard let account = NosturState.shared.account else { return }
         didLoad = true
         fl.predicate = NSPredicate(
@@ -162,7 +162,7 @@ struct NotificationsPosts: View {
         fl.loadMore(25)
     }
     
-    func fetchNewer() {
+    private func fetchNewer() {
         guard let account = NosturState.shared.account else { return }
         let fetchNewerTask = ReqTask(
             reqCommand: { (taskId) in
@@ -196,7 +196,7 @@ struct NotificationsPosts: View {
         fetchNewerTask.fetch()
     }
     
-    func saveLastSeenPostCreatedAt() {
+    private func saveLastSeenPostCreatedAt() {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Posts" else { return }
         if let first = fl.nrPosts.first {
             let firstCreatedAt = first.created_at
@@ -211,7 +211,7 @@ struct NotificationsPosts: View {
         }
     }
     
-    func loadMore() {
+    private func loadMore() {
         guard let account = NosturState.shared.account else { return }
         fl.predicate = NSPredicate(
             format: "NOT pubkey IN %@ AND kind == 1 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
@@ -247,16 +247,14 @@ struct NotificationsPosts: View {
     }
 }
 
-struct NotificationsNotes_Previews: PreviewProvider {
-    static var previews: some View {
-        let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadNewFollowersNotification()
-        }) {
-            VStack {
-                NotificationsPosts(pubkey: pubkey)
-            }
+#Preview("NotificationsNotes") {
+    let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+    return PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadNewFollowersNotification()
+    }) {
+        VStack {
+            NotificationsPosts(pubkey: pubkey)
         }
     }
 }

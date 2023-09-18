@@ -10,20 +10,20 @@ import Combine
 
 class InstantFeed {
     typealias CompletionHandler = ([Event]) -> ()
-    var backlog = Backlog(timeout: 15, auto: true)
-    var bg = DataProvider.shared().bg
-    var pongReceiver:AnyCancellable?
-    var pubkey:Pubkey?
-    var onComplete:CompletionHandler?
+    public var backlog = Backlog(timeout: 15, auto: true)
+    private var bg = DataProvider.shared().bg
+    private var pongReceiver:AnyCancellable?
+    private var pubkey:Pubkey?
+    private var onComplete:CompletionHandler?
 
-    var pubkeys:Set<Pubkey>? {
+    private var pubkeys:Set<Pubkey>? {
         didSet {
             if pubkeys != nil {
                 fetchPostsFromRelays()
             }
         }
     }
-    var events:[Event]? {
+    private var events:[Event]? {
         didSet {
             if let events {
                 self.isRunning = false
@@ -32,8 +32,8 @@ class InstantFeed {
             }
         }
     }
-    var relays:Set<Relay> = []
-    var isRunning = false
+    private var relays:Set<Relay> = []
+    public var isRunning = false
     
     public func start(_ pubkey:Pubkey, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(pubkey.short))")
@@ -71,9 +71,9 @@ class InstantFeed {
 //        SocketPool.shared.ping()
 //    }
     
-    var kind3listener:AnyCancellable?
+    private var kind3listener:AnyCancellable?
 
-    func fetchContactListPubkeys(pubkey: Pubkey) {
+    private func fetchContactListPubkeys(pubkey: Pubkey) {
         Task.detached {
             self.bg.perform { [weak self] in
                 guard let self = self else { return }
@@ -125,7 +125,7 @@ class InstantFeed {
         }
     }
     
-    func fetchPostsFromRelays() {
+    private func fetchPostsFromRelays() {
         self.bg.perform { [weak self] in
             guard let self = self else { return }
             guard let pubkeys = self.pubkeys else { return }
@@ -162,7 +162,7 @@ class InstantFeed {
         }
     }
     
-    func fetchPostsFromGlobalishRelays() {
+    private func fetchPostsFromGlobalishRelays() {
         guard !relays.isEmpty else { return }
         let relayCount = relays.count
         
