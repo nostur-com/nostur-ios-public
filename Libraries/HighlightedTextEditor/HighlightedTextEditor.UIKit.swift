@@ -207,6 +207,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         
         public func textViewDidChange(_ textView: UITextView) {
+            textView.backgroundColor = textView.text.isEmpty && textView.markedTextRange == nil ? UIColor.clear : UIColor(Theme.default.background)
+            
             // For Multistage Text Input
             guard textView.markedTextRange == nil else { return }
             
