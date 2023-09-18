@@ -19,20 +19,11 @@ struct MinimalQuotedNoteFragment: View {
                         // profile image
                         PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20)
                         .opacity(0.5)
-                        if let contact = nrPost.contact {
-                            NameAndNip(contact: contact)
-                        }
-                        else {
-                            Text("Anon")
-                                .font(.system(size: 14))
-                                .foregroundColor(.primary)
-                                .fontWeight(.bold)
-                                .lineLimit(1).redacted(reason: .placeholder)
-                            Text("@Anon") //
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary.opacity(0.5))
-                                .redacted(reason: .placeholder)
-                        }
+                        Text(nrPost.anyName) // Name
+                            .font(.system(size: 14))
+                            .foregroundColor(.primary.opacity(0.5))
+                            .fontWeight(.bold)
+                            .lineLimit(1)
                         Text(" · \(nrPost.ago)") //
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
@@ -57,23 +48,6 @@ struct MinimalQuotedNoteFragment: View {
         .onDisappear {
             if (nrPost.contact == nil || nrPost.contact?.metadata_created_at == 0) {
                 QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
-            }
-        }
-    }
-    
-    struct NameAndNip: View {
-        @ObservedObject var contact:NRContact // for rendering nip check (after just verified) etc
- 
-        var body: some View {
-            Text(contact.anyName) // Name
-                .font(.system(size: 14))
-                .foregroundColor(.primary.opacity(0.5))
-                .fontWeight(.bold)
-                .lineLimit(1)
-            
-            if contact.nip05verified, let nip05 = contact.nip05 {
-                NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                    .layoutPriority(3)
             }
         }
     }
