@@ -53,7 +53,7 @@ class RelayMessage {
         self.success = success
     }
     
-    static func parseRelayMessage(text:String, relay:String, skipValidation:Bool = false) throws -> RelayMessage {
+    static func parseRelayMessage(text:String, relay:String) throws -> RelayMessage {
         guard let dataFromString = text.data(using: .utf8, allowLossyConversion: false) else {
             throw error.FAILED_TO_PARSE
         }
@@ -159,10 +159,6 @@ class RelayMessage {
 
         guard let nEvent = relayMessage.event else {
             throw error.MISSING_EVENT
-        }
-        
-        guard try skipValidation || nEvent.verified() else {
-            throw error.INVALID_SIGNATURE
         }
         
         return RelayMessage(relays:relay, type: .EVENT, message: text, subscriptionId: relayMessage.subscription, event: nEvent)

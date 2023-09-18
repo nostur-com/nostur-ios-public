@@ -32,11 +32,18 @@ class MessageParser {
     private var context = DataProvider.shared().bg
     private var sp = SocketPool.shared
     public var messageBucket = Deque<RelayMessage>()
+    public var isSignatureVerificationEnabled = true
+    
+    init() {
+        context.perform {
+            self.isSignatureVerificationEnabled = SettingsStore.shared.isSignatureVerificationEnabled
+        }
+    }
     
     func socketReceivedMessage(text:String, relayUrl:String, client:NewWebSocket) {
         self.context.perform { [unowned self] in
             do {
-                let message = try RelayMessage.parseRelayMessage(text: text, relay: relayUrl, skipValidation: true)
+                let message = try RelayMessage.parseRelayMessage(text: text, relay: relayUrl)
                 
                 switch message.type {
                 case .AUTH:
@@ -71,6 +78,9 @@ class MessageParser {
                         guard let nEvent = message.event else { L.sockets.info("🔴🔴 uhh, where is nEvent "); return }
                         
                         if nEvent.kind == .ncMessage {
+                            guard try !isSignatureVerificationEnabled || nEvent.verified() else {
+                                throw RelayMessage.error.INVALID_SIGNATURE
+                            }
                             // Don't save to database, just handle response directly
                             DispatchQueue.main.async {
                                 sendNotification(.receivedMessage, message)
@@ -79,6 +89,10 @@ class MessageParser {
                         }
                         
                         if nEvent.kind == .nwcResponse {
+                            guard try !isSignatureVerificationEnabled || nEvent.verified() else {
+                                throw RelayMessage.error.INVALID_SIGNATURE
+                            }
+                            
                             let decoder = JSONDecoder()
                             guard let nwcConnection = Importer.shared.nwcConnection else { L.og.error("⚡️ NWC response but nwcConnection missing \(nEvent.eventJson())"); return }
                             guard let pk = nwcConnection.privateKey else { L.og.error("⚡️ NWC response but private key missing \(nEvent.eventJson())"); return }
@@ -182,6 +196,9 @@ class MessageParser {
             }
             catch RelayMessage.error.DUPLICATE_ALREADY_SAVED, RelayMessage.error.DUPLICATE_ALREADY_PARSED {
                 L.sockets.debug("🟡🟡 \(relayUrl) already SAVED/PARSED ")
+            }
+            catch RelayMessage.error.INVALID_SIGNATURE {
+                L.sockets.notice("🔴🔴 \(relayUrl) invalid signature \(text)")
             }
             catch {
                 L.sockets.info("🔴🔴 \(relayUrl) \(error)")

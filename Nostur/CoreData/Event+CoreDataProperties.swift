@@ -851,7 +851,7 @@ extension Event {
             do {
                 
                 // Its note in note, should we verify? is this verified by relays? or zapper? should be...
-                guard try (!SettingsStore.shared.isSignatureVerificationEnabled) || (zapReqNEvent.verified()) else { return nil }
+                guard try (!MessageParser.shared.isSignatureVerificationEnabled) || (zapReqNEvent.verified()) else { return nil }
                 
                 return zapReqNEvent
             }
