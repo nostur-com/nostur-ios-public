@@ -50,8 +50,8 @@ struct ProfileLikesView: View {
                     .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                 }
             }
-            .padding(.top, 10)
-            .background(theme.listBackground)
+//            .padding(.top, 10)
+//            .background(theme.listBackground)
         case .timeout:
             VStack(alignment: .center) {
                 Spacer()

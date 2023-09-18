@@ -64,10 +64,12 @@ struct PostOrThread: View {
                         t.animation = nil
                     }
             }
-        } // Still need .background here, normally use Box, but this is for between Boxes
-//        .transaction { t in
-//            t.animation = nil
-//        }
+        } // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
+        .padding(.top, 10)
+        .background { // This is the background between PostOrThread's.
+            theme.listBackground
+                .transaction { t in t.animation = nil }
+        }
     }
 }
 
