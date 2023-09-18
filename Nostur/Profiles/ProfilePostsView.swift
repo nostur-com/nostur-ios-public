@@ -57,8 +57,8 @@ struct ProfilePostsView: View {
                     .buttonStyle(.bordered)
                 }
             }
-            .padding(.top, 10)
-            .background(theme.listBackground)
+//            .padding(.top, 10)
+//            .background(theme.listBackground)
         case .timeout:
             VStack(alignment: .center) {
                 Spacer()

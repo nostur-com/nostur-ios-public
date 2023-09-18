@@ -93,8 +93,8 @@ struct ProfileZaps: View {
             }
         }
         .frame(minHeight: 800)
-        .padding(.top, 5)
-        .background(theme.listBackground)
+//        .padding(.top, 5)
+//        .background(theme.listBackground)
         .task {
             guard !didLoad else { return }
             didLoad = true

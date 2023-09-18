@@ -39,6 +39,7 @@ struct ProfileTabs: View {
                 }
                 Spacer()
             }
+            .padding(.top, 10)
             .background(theme.listBackground)
             .frame(minHeight: 800)
         } header: {

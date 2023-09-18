@@ -462,18 +462,8 @@ struct SmoothList: UIViewControllerRepresentable {
             .init { cell, indexPath, nrPost in
                 cell.contentConfiguration = UIHostingConfiguration {
                     PostOrThread(nrPost: nrPost)
-//                        .transaction { t in
-//                            t.animation = nil
-//                        }
                 }
-                .background {
-                    Theme.default.listBackground // This is visible between PostOrThread's. .clear becomes white, so must set color
-                        .transaction { t in
-                            t.animation = nil
-                        }
-                }
-                .margins(.vertical, 5)
-                .margins(.horizontal, 0)
+                .margins(.all, 0)
             }
         }()
         
@@ -483,11 +473,7 @@ struct SmoothList: UIViewControllerRepresentable {
                     Text(item)
                         .hCentered()
                 }
-                .background {
-                    Color.clear
-                }
-                .margins(.vertical, 5)
-                .margins(.horizontal, 5)
+                .margins(.all, 0)
             }
         }()
     }
