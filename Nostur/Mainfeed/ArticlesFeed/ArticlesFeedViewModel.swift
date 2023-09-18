@@ -46,11 +46,13 @@ class ArticlesFeedViewModel: ObservableObject {
             logAction("Article feed time frame changed to \(self.ago) days")
             if ago < oldValue {
                 self.articles = []
+                self.follows = NosturState.shared.followingPublicKeys
                 self.fetchFromDB()
             }
             else {
                 self.articles = []
                 lastFetch = nil // need to fetch further back, so remove lastFetch
+                self.follows = NosturState.shared.followingPublicKeys
                 self.fetchFromRelays()
             }
         }
@@ -183,6 +185,7 @@ class ArticlesFeedViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
+        self.follows = NosturState.shared.followingPublicKeys
         self.nothingFound = false
         self.articles = []
         self.fetchFromRelays()
