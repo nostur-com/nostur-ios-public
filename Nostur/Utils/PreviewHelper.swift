@@ -45,7 +45,7 @@ public class PreviewEnvironment {
         // TODO: Should reuse Importer.shared
         context.performAndWait {
             for text in messages {
-                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory", skipValidation: true) else { continue }
+                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory") else { continue }
                 guard var event = message.event else { continue }
                 
                 // FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF

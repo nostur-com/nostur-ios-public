@@ -19,13 +19,13 @@ struct NIP46TesterView: View {
             Button("decode test") {
                 var mmessage:RelayMessage? = nil
                 do {
-                    mmessage = try RelayMessage.parseRelayMessage(text: decodeTestText, relay: "wss://memory", skipValidation: true)
+                    mmessage = try RelayMessage.parseRelayMessage(text: decodeTestText, relay: "wss://memory")
                 }
                 catch {
                     print(error)
                 }
                 guard let message = mmessage else { return }
-//                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1", skipValidation: true) else { print("fail1"); return }
+//                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1") else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
                 guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
@@ -51,14 +51,14 @@ struct NIP46TesterView: View {
             Button("decode test 2") {
                 var mmessage:RelayMessage? = nil
                 do {
-                    mmessage = try RelayMessage.parseRelayMessage(text: decodeTestText2, relay: "wss://memory", skipValidation: true)
+                    mmessage = try RelayMessage.parseRelayMessage(text: decodeTestText2, relay: "wss://memory")
                 }
                 catch {
                     print("ffff")
                     print(error)
                 }
                 guard let message = mmessage else { return }
-//                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1", skipValidation: true) else { print("fail1"); return }
+//                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1") else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
                 guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
@@ -95,14 +95,14 @@ struct NIP46TesterView: View {
             Button("decode test 3") {
                 var mmessage:RelayMessage? = nil
                 do {
-                    mmessage = try RelayMessage.parseRelayMessage(text: decodeTestText3, relay: "wss://memory", skipValidation: true)
+                    mmessage = try RelayMessage.parseRelayMessage(text: decodeTestText3, relay: "wss://memory")
                 }
                 catch {
                     print("ffff")
                     print(error)
                 }
                 guard let message = mmessage else { return }
-//                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1", skipValidation: true) else { print("fail1"); return }
+//                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1") else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
                 guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
@@ -138,14 +138,14 @@ struct NIP46TesterView: View {
             Button("decode ack") {
                 var mmessage:RelayMessage? = nil
                 do {
-                    mmessage = try RelayMessage.parseRelayMessage(text: decodeAck, relay: "wss://memory", skipValidation: true)
+                    mmessage = try RelayMessage.parseRelayMessage(text: decodeAck, relay: "wss://memory")
                 }
                 catch {
                     print("ffff")
                     print(error)
                 }
                 guard let message = mmessage else { return }
-//                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1", skipValidation: true) else { print("fail1"); return }
+//                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1") else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
                 guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {

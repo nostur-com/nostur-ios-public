@@ -107,7 +107,8 @@ final class SettingsStore: ObservableObject {
             Keys.fetchCounts: false,
             Keys.webOfTrustLevel: WebOfTrustLevel.normal.rawValue,
             Keys.includeSharedFrom: true,
-            Keys.autoHideBars: false
+            Keys.autoHideBars: false,
+            Keys.isSignatureVerificationEnabled: true
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -203,7 +204,12 @@ final class SettingsStore: ObservableObject {
     }
     
     var isSignatureVerificationEnabled: Bool {
-        set { defaults.set(newValue, forKey: Keys.isSignatureVerificationEnabled) }
+        set { 
+            defaults.set(newValue, forKey: Keys.isSignatureVerificationEnabled)
+            bg().perform {
+                MessageParser.shared.isSignatureVerificationEnabled = newValue
+            }
+        }
         get { defaults.bool(forKey: Keys.isSignatureVerificationEnabled) }
     }
     

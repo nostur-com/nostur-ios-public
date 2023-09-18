@@ -30,8 +30,6 @@ class Importer {
     var addedRelayMessage = PassthroughSubject<Void, Never>()
     var callbackSubscriptionIds = Set<String>()
     var sendReceivedNotification = PassthroughSubject<Void, Never>()
-
-    var settingsStore = SettingsStore.shared
     
     var existingIds:[String: EventState] = [:]
     
@@ -116,7 +114,6 @@ class Importer {
                 sendNotification(.listStatus, "Processing \(forImportsCount) items...")
             }
             
-            let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
             do {
                 var count = 0
                 var alreadyInDBskipped = 0
@@ -132,9 +129,9 @@ class Importer {
                         continue
                     }
                     
-                    if (isSignatureVerificationEnabled) {
+                    if (MessageParser.shared.isSignatureVerificationEnabled) {
                         guard try event.verified() else {
-                            L.importing.info("😡😡 hey invalid sig yo 😡😡")
+                            L.importing.info("🔴🔴😡😡 hey invalid sig yo 😡😡")
                             continue
                         }
                     }
