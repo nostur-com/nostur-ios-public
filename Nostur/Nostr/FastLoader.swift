@@ -265,10 +265,10 @@ struct ImportedNotification {
 
 class Backlog {
     
-    var tasks = Set<ReqTask>()
-    var timer:Timer?
-    var timeout = 60.0
-    var subscriptions = Set<AnyCancellable>()
+    private var tasks = Set<ReqTask>()
+    private var timer:Timer?
+    public var timeout = 60.0
+    private var subscriptions = Set<AnyCancellable>()
     
     // With auto: true we don't need receiveNotification(.importedMessagesFromSubscriptionIds) on a View's .onReceive
     // the Backlog itself will listen for .importedMessagesFromSubscriptionIds notifications and
@@ -361,19 +361,19 @@ class ReqTask: Identifiable, Hashable {
         hasher.combine(id)
     }
     
-    var prefix:String? = nil
-    let createdAt = Date.now
-    let id:String
-    var subscriptionId:String {
+    private var prefix:String? = nil
+    public let createdAt = Date.now
+    public let id:String
+    public var subscriptionId:String {
         if let prefix = prefix {
             return (prefix + id)
         }
         return id
     }
     
-    let reqCommand:(_ taskId:String) -> Void
-    let timeoutCommand:((_ taskId:String) -> Void)?
-    var didProcess = false
+    private let reqCommand:(_ taskId:String) -> Void
+    private let timeoutCommand:((_ taskId:String) -> Void)?
+    private var didProcess = false
     
     // Use full subscriptionId instead of prefix to have multiple listeners for a task
     // eg. Onboarding + InstantFeed, both having a task with exact subscriptionId: "pubkey-3"
@@ -398,8 +398,8 @@ class ReqTask: Identifiable, Hashable {
         self.reqCommand(subscriptionId)
     }
     
-    var subscriptions = Set<AnyCancellable>()
-    var processSubject = PassthroughSubject<RelayMessage?, Never>()
+    private var subscriptions = Set<AnyCancellable>()
+    private var processSubject = PassthroughSubject<RelayMessage?, Never>()
     
     public func process(_ message:RelayMessage? = nil) {
         self.processSubject.send(message)
