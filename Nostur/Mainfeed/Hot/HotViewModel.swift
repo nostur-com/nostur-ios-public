@@ -56,11 +56,13 @@ class HotViewModel: ObservableObject {
             backlog.timeout = max(Double(ago / 4), 5.0)
             if ago < oldValue {
                 self.state  = .loading
+                self.follows = NosturState.shared.followingPublicKeys
                 self.fetchPostsFromDB()
             }
             else {
                 self.state  = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
+                self.follows = NosturState.shared.followingPublicKeys
                 self.fetchLikesFromRelays()
             }
         }
@@ -284,6 +286,7 @@ class HotViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
+        self.follows = NosturState.shared.followingPublicKeys
         self.state = .loading
         self.hotPosts = []
         self.fetchLikesFromRelays()
