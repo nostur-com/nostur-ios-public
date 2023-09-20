@@ -69,7 +69,8 @@ struct SingleMediaViewer: View {
                         GIFImage(data: data)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
+//                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
+                            .frame(maxHeight: min(DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT))
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
@@ -109,7 +110,7 @@ struct SingleMediaViewer: View {
 //                            .interpolation(.none)
                             .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
                             .scaledToFit()
-                            
+                            .frame(maxHeight: min(DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT))
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
