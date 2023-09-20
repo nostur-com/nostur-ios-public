@@ -38,14 +38,20 @@ struct ProfileMediaView: View {
                         }
                     }
             case .ready:
-                LazyVGrid(columns: gridColumns) {
-                    ForEach(vm.items) { item in
-                        GeometryReader { geo in
-                            GridItemView(size: geo.size.width, item: item)
+                if !vm.items.isEmpty {
+                    LazyVGrid(columns: gridColumns) {
+                        ForEach(vm.items) { item in
+                            GeometryReader { geo in
+                                GridItemView(size: geo.size.width, item: item)
+                            }
+                            .clipped()
+                            .aspectRatio(1, contentMode: .fit)
                         }
-                        .clipped()
-                        .aspectRatio(1, contentMode: .fit)
                     }
+                }
+                else {
+                    Button("Refresh") { vm.reload() }
+                        .centered()
                 }
             case .timeout:
                 VStack(alignment: .center) {
