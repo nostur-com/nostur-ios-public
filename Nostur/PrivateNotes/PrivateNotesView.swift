@@ -8,19 +8,13 @@
 import SwiftUI
 import CoreData
 
+// TODO: REMOVE CONTAINER
 struct PrivateNotesContainer: View {
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var la:LoggedInAccount
 
     var body: some View {
 //        let _ = Self._printChanges()
-        VStack(spacing:0) {
-            if (ns.account != nil) {
-                PrivateNotesView(account: ns.account!)
-            }
-            else {
-                Text("Select account account first", comment: "Message shown when user needs to select account first")
-            }
-        }
+        PrivateNotesView(account: la.account)
     }
 }
 
@@ -32,15 +26,15 @@ struct PrivateNoteInfo: Identifiable {
 }
 
 struct PrivateNotesView: View {
-    @EnvironmentObject var theme:Theme
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    let account: Account
+    @EnvironmentObject private var ns:NRState
+    @EnvironmentObject private var theme:Theme
+    @Environment(\.managedObjectContext) private var viewContext
+    public let account: Account
     
-    @State var privateNotes = [PrivateNoteInfo]()
-    @State var selectedAccount:Account? = nil
+    @State private var privateNotes = [PrivateNoteInfo]()
+    @State private var selectedAccount:Account? = nil
     
-    var accounts:[Account] {
+    private var accounts:[Account] {
         ns.accounts.filter { $0.privateKey != nil }
     }
     
@@ -109,7 +103,7 @@ struct PrivateNotesView: View {
                }))
     }
     
-    func loadPrivateNotes(forAccount account: Account? = nil) {
+    private func loadPrivateNotes(forAccount account: Account? = nil) {
         let fr = PrivateNote.fetchRequest()
         if let account {
             fr.predicate = NSPredicate(format: "by == %@", account)

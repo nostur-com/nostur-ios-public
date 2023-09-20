@@ -18,7 +18,6 @@ struct AccountEditView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     private let up:Unpublisher = .shared
-    @EnvironmentObject private var ns:NosturState
     @ObservedObject private var account: Account
     @State private var newPrivateKey = ""
     @State private var contactsPresented = false

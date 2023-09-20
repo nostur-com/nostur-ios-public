@@ -169,7 +169,7 @@ class ProfileLikesViewModel: ObservableObject {
     
     // STEP 4: FETCH RECEIVED POSTS FROM DB, SORT BY MOST LIKED AND PUT ON SCREEN
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         bg().perform {
             guard !self.likedIds.isEmpty else {
                 L.og.debug("fetchPostsFromDB: empty ids")

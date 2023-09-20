@@ -10,16 +10,15 @@ import CoreData
 import Combine
 
 struct NotificationsReactions: View {
-    @EnvironmentObject var theme:Theme
-    @StateObject var fl = FastLoader()
-    @State var didLoad = false
-    @State var backlog = Backlog()
-    @EnvironmentObject var ns:NosturState
-    @ObservedObject var settings:SettingsStore = .shared
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Reactions"
+    @EnvironmentObject private var theme:Theme
+    @StateObject private var fl = FastLoader()
+    @State private var didLoad = false
+    @State private var backlog = Backlog()
+    @ObservedObject private var settings:SettingsStore = .shared
+    @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Reactions"
     
-    func myNotesReactedTo(_ events:[Event]) -> [Event] {
+    private func myNotesReactedTo(_ events:[Event]) -> [Event] {
         
         var sortingDict:[Event: Int64] = [:] // Event and most recent reaction created_At
         
@@ -37,9 +36,9 @@ struct NotificationsReactions: View {
         return sortingDict.keys.sorted(by: { (sortingDict[$0] ?? 0) > (sortingDict[$1] ?? 0) } )
     }
     
-    @State var myNotesReactedToAsNRPosts:[NRPost] = []
+    @State private var myNotesReactedToAsNRPosts:[NRPost] = []
     
-    func reactionsForNote(_ id:String) -> [Event] {
+    private func reactionsForNote(_ id:String) -> [Event] {
         fl.events.compactMap {  $0.reactionToId == id ? $0 : nil }
     }
     
@@ -59,7 +58,7 @@ struct NotificationsReactions: View {
                 VStack {
                     if !myNotesReactedToAsNRPosts.isEmpty {
                         Button("Show more") {
-                            guard let account = NosturState.shared.account else { return }
+                            guard let account = account() else { return }
                             fl.predicate = NSPredicate(
                                 format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
                                 account.blockedPubkeys_,
@@ -95,7 +94,7 @@ struct NotificationsReactions: View {
             load()
         }
         .onReceive(receiveNotification(.newReactions)) { _ in
-            guard let account = NosturState.shared.account else { return }
+            guard let account = account() else { return }
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
             fl.onComplete = {
                 saveLastSeenReactionCreatedAt() // onComplete from local database
@@ -144,7 +143,7 @@ struct NotificationsReactions: View {
     @State var subscriptions = Set<AnyCancellable>()
     
     func load() {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         didLoad = true
         fl.$events
             .sink { events in
@@ -182,7 +181,7 @@ struct NotificationsReactions: View {
     }
     
     func fetchNewer() {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         let fetchNewerTask = ReqTask(
             reqCommand: { (taskId) in
                 req(RM.getMentions(
@@ -217,7 +216,7 @@ struct NotificationsReactions: View {
         if let first = fl.events.first {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
-                if let account = NosturState.shared.bgAccount {
+                if let account = account() {
                     if account.lastSeenReactionCreatedAt != firstCreatedAt {
                         account.lastSeenReactionCreatedAt = firstCreatedAt
                     }
@@ -228,7 +227,7 @@ struct NotificationsReactions: View {
     }
     
     func fixReactionsWithMissingRelation() {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         let mr = Event.fetchRequest()
         mr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         mr.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@ AND reactionTo == nil", serializedP(account.publicKey))
@@ -248,11 +247,9 @@ struct NotificationsReactions: View {
 }
 
 struct ReactionsForThisNote: View {
-    var reactions:[Event]
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
+    public var reactions:[Event]
     
-    var withoutDuplicates:[Event] { // Author may accidentally like multiple times
+    private var withoutDuplicates:[Event] { // Author may accidentally like multiple times
         reactions
             .reduce(into: [String: Event]()) { result, event in
                 result[event.pubkey] = event
@@ -296,9 +293,9 @@ struct ReactionsForThisNote: View {
         }
     }
     
-    func fetchMissingEventContacts(events:[Event]) {
+    private func fetchMissingEventContacts(events:[Event]) {
         let pubkeys = pubkeys(events)
-        let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
+        let contacts = Contact.fetchByPubkeys(pubkeys, context: DataProvider.shared().viewContext)
         let missingPubkeys = pubkeys.filter {
             contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
         }
@@ -311,7 +308,7 @@ struct ReactionsForThisNote: View {
         
         guard !(missingPubkeys + emptyContactPubkeys).isEmpty else { return }
         L.og.debug("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
-        QueuedFetcher.shared.enqueue(pTags:  missingPubkeys + emptyContactPubkeys)
+        QueuedFetcher.shared.enqueue(pTags: (missingPubkeys + emptyContactPubkeys))
     }
 }
 

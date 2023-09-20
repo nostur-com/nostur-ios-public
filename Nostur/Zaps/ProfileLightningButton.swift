@@ -8,16 +8,13 @@
 import SwiftUI
 
 struct ProfileLightningButton: View {
-    @EnvironmentObject var theme:Theme
-    var sp:SocketPool = .shared
-    let er:ExchangeRateModel = .shared
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject private var theme:Theme
     
-    var contact:Contact?
+    public var contact:Contact?
     
-    @State var isLoading = false
-    @State var payAmountSelectorShown = false
-    @State var paymentInfo:PaymentInfo?
+    @State private var isLoading = false
+    @State private var payAmountSelectorShown = false
+    @State private var paymentInfo:PaymentInfo?
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -48,8 +45,8 @@ struct ProfileLightningButton: View {
         .opacity((contact?.anyLud ?? false) ? 1 : 0)
     }
     
-    func buttonTapped() {
-        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+    private func buttonTapped() {
+        guard isFullAccount() else { showReadOnlyMessage(); return }
         guard (contact?.anyLud ?? false) else { return }
         isLoading = true
         

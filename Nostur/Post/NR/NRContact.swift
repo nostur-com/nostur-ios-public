@@ -96,7 +96,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.lud16 = contact.lud16
         self.zapperPubkey = contact.zapperPubkey
         
-        self.following = NosturState.shared.bgFollowingPublicKeys.contains(contact.pubkey)
+        self.following = isFollowing(contact.pubkey)
         self.privateFollow = contact.privateFollow
         self.zappableAttributes = ZappableAttributes(zapState: contact.zapState)
         
@@ -109,7 +109,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     }
     
     private func _hasPrivateNote() -> Bool {
-        if let account = NosturState.shared.bgAccount, let notes = account.privateNotes {
+        if let account = account(), let notes = account.privateNotes {
             return notes.first(where: { $0.contact == self.contact }) != nil
         }
         return false
@@ -133,6 +133,25 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                 }
             }
             .store(in: &subscriptions)
+        
+//        receiveNotification(.activeAccountChanged)
+//            .subscribe(on: DispatchQueue.global())
+//            .sink { [weak self] _ in
+//                bg().perform {
+//                    guard let self = self else { return }
+//                    let isFollowing = NRState.shared.loggedInAccount?.followingPublicKeys.contains(self.pubkey) ?? false
+//                    if isFollowing != self.following {
+//                        DispatchQueue.main.async {
+//                            self.objectWillChange.send()
+//                            self.following = isFollowing
+//                            if (isFollowing) {
+//                                self.couldBeImposter = 0
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            .store(in: &subscriptions)
     }
     
     var subscriptions = Set<AnyCancellable>()
@@ -234,45 +253,43 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         }
     }
     
-    public func follow(privateFollow: Bool = false) {
-        guard let account = NosturState.shared.bgAccount else { return }
+    @MainActor public func follow(privateFollow: Bool = false) {
         self.objectWillChange.send()
         self.following = true
         self.couldBeImposter = 0
         self.privateFollow = privateFollow
         
-        DataProvider.shared().bg.perform {
+        bg().perform {
+            guard let account = account() else { return }
             self.contact.privateFollow = privateFollow // TODO: need to fix for multi account
             self.contact.couldBeImposter = 0
             account.addToFollows(self.contact)
-            let followingPublicKeys = account.followingPublicKeys
+            let followingPublicKeys = account.getFollowingPublicKeys()
             DataProvider.shared().bgSave()
+            account.publishNewContactList()
             
             DispatchQueue.main.async {
-                NosturState.shared.followingPublicKeys = followingPublicKeys
-                sendNotification(.followersChanged, followingPublicKeys)
+                NRState.shared.loggedInAccount?.reloadFollows()
                 sendNotification(.followingAdded, self.pubkey)
-                NosturState.shared.publishNewContactList()
             }
         }
     }
     
-    public func unfollow() {
-        guard let account = NosturState.shared.bgAccount else { return }
+    @MainActor public func unfollow() {
         self.objectWillChange.send()
         self.following = false
         self.privateFollow = false
         
-        DataProvider.shared().bg.perform {
+        bg().perform {
+            guard let account = account() else { return }
             self.contact.privateFollow = false // TODO: need to fix for multi account
             account.removeFromFollows(self.contact)
-            let followingPublicKeys = account.followingPublicKeys
+            let followingPublicKeys = account.getFollowingPublicKeys()
             DataProvider.shared().bgSave()
+            account.publishNewContactList()
             
             DispatchQueue.main.async {
-                NosturState.shared.followingPublicKeys = followingPublicKeys
-                sendNotification(.followersChanged, followingPublicKeys)
-                NosturState.shared.publishNewContactList()
+                NRState.shared.loggedInAccount?.reloadFollows()
             }
         }
     }
@@ -284,6 +301,6 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         guard let contact = Contact.fetchByPubkey(pubkey, context: context) else {
             return nil
         }
-        return NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(pubkey))
+        return NRContact(contact: contact, following: isFollowing(pubkey))
     }
 }

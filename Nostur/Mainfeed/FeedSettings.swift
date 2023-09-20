@@ -8,11 +8,13 @@
 import SwiftUI
 
 struct FeedSettings: View {
+    @ObservedObject public var lvm:LVM
+    @Binding public var showFeedSettings:Bool
+    public var list:NosturList? = nil
     
-    @ObservedObject var lvm:LVM
-    @Binding var showFeedSettings:Bool
-    var list:NosturList? = nil
-    @State var needsReload = false
+    @EnvironmentObject private var la:LoggedInAccount
+    
+    @State private var needsReload = false
     
     var body: some View {
         Rectangle().fill(.thinMaterial)
@@ -52,15 +54,14 @@ struct FeedSettings: View {
                         }
                         .padding(.vertical, 5)
                         
-                        if lvm.pubkey != nil, let account = NosturState.shared.account, !account.followingHashtags.isEmpty {
+                        if lvm.pubkey != nil, !la.account.followingHashtags.isEmpty {
                            
                             Text("Included hashtags:")
                                 .padding(.top, 20)
-                            FeedSettings_Hashtags(hashtags: Array(account.followingHashtags), onChange: { hashtags in
-                                guard let account = NosturState.shared.account else { return }
-                                account.followingHashtags = Set(hashtags)
+                            FeedSettings_Hashtags(hashtags: Array(la.account.followingHashtags), onChange: { hashtags in
+                                la.account.followingHashtags = Set(hashtags)
                                 needsReload = true
-                                NosturState.shared.publishNewContactList()
+                                la.account.publishNewContactList()
                             })
                             .frame(height: 375)
                         }
@@ -98,22 +99,21 @@ struct FeedSettings: View {
 }
 
 struct FeedSettingsTester: View {
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject private var la:LoggedInAccount
     
     var body: some View {
-        if let account = ns.account {
-            NavigationStack {
-                VStack {
-                    FeedSettings(lvm:LVMManager.shared.followingLVM(forAccount: account), showFeedSettings: .constant(true))
-                    if let list = PreviewFetcher.fetchList() {
-                        FeedSettings(lvm:LVMManager.shared.listLVM(forList: list), showFeedSettings: .constant(true))
-                    }
-                    Spacer()
+        NavigationStack {
+            VStack {
+                FeedSettings(lvm:LVMManager.shared.followingLVM(forAccount: la.account), showFeedSettings: .constant(true))
+                if let list = PreviewFetcher.fetchList() {
+                    FeedSettings(lvm:LVMManager.shared.listLVM(forList: list), showFeedSettings: .constant(true))
                 }
+                Spacer()
             }
-            .onAppear {
-                account.followingHashtags = ["bitcoin","nostr"]
-            }
+        }
+        .onAppear {
+            la.account.followingHashtags = ["bitcoin","nostr"]
+            Theme.default.loadPurple()
         }
     }
 }

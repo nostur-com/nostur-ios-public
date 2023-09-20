@@ -9,82 +9,78 @@ import SwiftUI
 import Combine
 
 struct DeleteAccountSheet: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var ns:NosturState
-    @Environment(\.dismiss) var dismiss
-    @State var remaining = 10
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var la:LoggedInAccount
+    @Environment(\.dismiss) private var dismiss
+    @State private var remaining = 10
     
     
-    let timer = Timer.publish(every: 1, on: .main, in: .common)
-    @State var cancel:Cancellable?
+    private let timer = Timer.publish(every: 1, on: .main, in: .common)
+    @State private var cancel:Cancellable?
     
     
-    func count() {
+    private func count() {
         remaining -= 1
         if remaining <= 0 {
             deleteAccount()
         }
     }
     
-    func deleteAccount() {
-        guard let account = ns.account else { return }
-        AccountManager.shared.wipeAccount(account)
+    private func deleteAccount() {
+        AccountManager.shared.wipeAccount(la.account)
         dismiss()
     }
     
     var body: some View {
         
         VStack {
-            if let account = ns.account {
-                VStack(alignment: .leading) {
-                    Text("Are you sure you want to delete your account?\n", comment: "Confirmation text when you want to delete your account")
-                        .font(.headline)
-                    
-                    HStack {
-                        PFP(pubkey: account.publicKey, account: account)
-                        VStack(alignment:.leading) {
-                            Text("\(ns.account?.display_name ?? "")")
-                            Text("@\(ns.account?.name ?? "")")
-                        }
-                    }
-                    
-                    Text("\nThis will **wipe** your:\n - Public nostr profile\n - Public nostr following list\n", comment:"Confirmation text when you want to delete your account")
-                    
-                    Text("This will **delete** your:\n - Account from Nostur\n - Private key (nsec) from Apple Keychain", comment: "Confirmation text when you want to delete your account")
-                    
-                }
-                .padding(30)
+            VStack(alignment: .leading) {
+                Text("Are you sure you want to delete your account?\n", comment: "Confirmation text when you want to delete your account")
+                    .font(.headline)
                 
-                if (remaining == 10) {
-                    HStack {
-                        Button(role: .none) {
-                            guard let nsec = account.nsec else { return }
-                            UIPasteboard.general.string = nsec
-                        } label: {
-                            Label(String(localized: "Copy private key", comment: "Button to copy your private key to clipboard"), systemImage: "doc.on.doc")
-                        }
-                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
-                        
-                        Button(role: .destructive) {
-                            self.cancel = timer.connect()
-                            remaining -= 1
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                            //                        Image(systemName: "trash")
-                        }
-                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                HStack {
+                    PFP(pubkey: la.account.publicKey, account: la.account)
+                    VStack(alignment:.leading) {
+                        Text("\(la.account.display_name)")
+                        Text("@\(la.account.name)")
                     }
                 }
-                else {
-                    Text("Deleting in \(remaining) seconds", comment: "Text that is counting down when you are deleting your account")
-                    Button(role: .cancel) {
-                        cancel?.cancel()
+                
+                Text("\nThis will **wipe** your:\n - Public nostr profile\n - Public nostr following list\n", comment:"Confirmation text when you want to delete your account")
+                
+                Text("This will **delete** your:\n - Account from Nostur\n - Private key (nsec) from Apple Keychain", comment: "Confirmation text when you want to delete your account")
+                
+            }
+            .padding(30)
+            
+            if (remaining == 10) {
+                HStack {
+                    Button(role: .none) {
+                        guard let nsec = la.account.nsec else { return }
+                        UIPasteboard.general.string = nsec
                     } label: {
-                        Text("Cancel")
+                        Label(String(localized: "Copy private key", comment: "Button to copy your private key to clipboard"), systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                    
+                    Button(role: .destructive) {
+                        self.cancel = timer.connect()
+                        remaining -= 1
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                        //                        Image(systemName: "trash")
                     }
                     .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                 }
-                
+            }
+            else {
+                Text("Deleting in \(remaining) seconds", comment: "Text that is counting down when you are deleting your account")
+                Button(role: .cancel) {
+                    cancel?.cancel()
+                } label: {
+                    Text("Cancel")
+                }
+                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
             }
         }
         .onReceive(timer, perform: { _ in

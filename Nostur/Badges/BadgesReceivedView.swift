@@ -10,33 +10,31 @@ import Nuke
 import NukeUI
 
 struct BadgesReceivedContainer:View {
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var la:LoggedInAccount
     var body: some View {
-        if (ns.account != nil) {
-            BadgesReceivedView(pubkey: ns.account!.publicKey)
-        }
-        else { Text("No account selected ")}
+        BadgesReceivedView(pubkey: la.account.publicKey)
     }
 }
 
 struct BadgesReceivedView: View {
-    @EnvironmentObject var theme:Theme
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    let up:Unpublisher = .shared
-    @State var createNewBadgeSheetShown = false
-    var pubkey:String
-    @FetchRequest
-    var badgeAwards:FetchedResults<Event>
-    @State var selection = Set<Event>()
+    @EnvironmentObject private var theme:Theme
+    @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var la:LoggedInAccount
+
+    @State private var createNewBadgeSheetShown = false
+    private var pubkey:String
     
-    var badgeAwardsToMe:[Event] { // ANY P's of KIND:8 == PUBKEY
+    @FetchRequest
+    private var badgeAwards:FetchedResults<Event>
+    @State private var selection = Set<Event>()
+    
+    private var badgeAwardsToMe:[Event] { // ANY P's of KIND:8 == PUBKEY
         badgeAwards
 //            .filter { $0.pTags().firstIndex(of: pubkey) != nil }
             .filter { ($0.tagsSerialized ?? "").contains(serializedP(pubkey)) } // optimization hack
     }
     
-    var badgesToMeIds:[String] {
+    private var badgesToMeIds:[String] {
         badgeAwardsToMe.compactMap { $0.toNEvent().badgeAtag?.value }
     }
     
@@ -57,6 +55,7 @@ struct BadgesReceivedView: View {
             }
             
             Button {
+                guard isFullAccount() else { showReadOnlyMessage(); return }
                 publishSelection(Array(selection))
             } label: { Text("Publish selected badges on profile") }
                 .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
@@ -84,7 +83,6 @@ struct BadgesReceivedView: View {
     func publishSelection(_ selection:[Event]) {
         // argument is badge definition. (KIND:30009)
         // we need the badge award
-        guard let account = ns.account else { return }
         let selectedAwarded = badgeAwardsToMe // [KIND:8]
                     .filter {
                         selection // [KIND:30009]
@@ -96,12 +94,12 @@ struct BadgesReceivedView: View {
         let newProfileBadges = createProfileBadges(awards: selectedAwarded)
 
         do {
-            guard let newProfileBadgesSigned = try? account.signEvent(newProfileBadges) else { throw "could not create newProfileBadgesSigned " }
+            guard let newProfileBadgesSigned = try? la.account.signEvent(newProfileBadges) else { throw "could not create newProfileBadgesSigned " }
             bg().perform {
                 _ = Event.saveEvent(event: newProfileBadgesSigned)
                 DataProvider.shared().bgSave()
             }
-            up.publishNow(newProfileBadgesSigned)
+            Unpublisher.shared.publishNow(newProfileBadgesSigned)
             self.selection.removeAll()
         }
         catch {

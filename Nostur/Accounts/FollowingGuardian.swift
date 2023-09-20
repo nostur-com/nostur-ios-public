@@ -42,9 +42,9 @@ class FollowingGuardian: ObservableObject {
     }
     
     func checkForUpdatedContactList() {
-        guard !NosturState.shared.activeAccountPublicKey.isEmpty else { return }
+        guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
         L.og.info("Checking for updated contact list")
-        reqP(RM.getAuthorContactsList(pubkey: NosturState.shared.activeAccountPublicKey, subscriptionId: "RM.getAuthorContactsList"))
+        reqP(RM.getAuthorContactsList(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getAuthorContactsList"))
     }
     
     func listenForAccountChanged() {
@@ -64,8 +64,8 @@ class FollowingGuardian: ObservableObject {
             .sink { notification in
                 let nEvent = notification.object as! NEvent
                 guard nEvent.kind == .contactList else { return }
-                guard nEvent.publicKey == NosturState.shared.activeAccountPublicKey else { return }
-                guard let account = NosturState.shared.account else { return }
+                guard nEvent.publicKey == NRState.shared.activeAccountPublicKey else { return }
+                guard let account = NRState.shared.loggedInAccount?.account else { return }
                 
                 // TODO: Make this work for all accounts, not just active
                 let pubkeysOwn = Set(account.follows?.filter { !$0.privateFollow } .map({ c in c.pubkey }) ?? [])
@@ -119,10 +119,8 @@ class FollowingGuardian: ObservableObject {
                 newContact.couldBeImposter = 0
                 account.addToFollows(newContact)
             }
-            NosturState.shared.followingPublicKeys = NosturState.shared._followingPublicKeys
-            NosturState.shared.loadFollowingPFPs()
         }
-        sendNotification(.followersChanged, account.followingPublicKeys)
+        NRState.shared.loggedInAccount?.reloadFollows()
         DataProvider.shared().save()
     }
     
@@ -131,12 +129,13 @@ class FollowingGuardian: ObservableObject {
         account.objectWillChange.send()
         for tag in tags {
             account.followingHashtags.insert(tag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
-        }
-        sendNotification(.followersChanged, account.followingPublicKeys)
+        } // TODO: CHECK FOLLOWING NEW HASHTAGS
+//        sendNotification(.followersChanged, account.followingPublicKeys)
+        LVMManager.shared.followingLVM(forAccount: account).loadHashtags()
     }
     
     func restoreFollowing(removed:Set<String>, republish:Bool = true) {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         let context = DataProvider.shared().viewContext
         for pubkey in removed {
             let contact = Contact.fetchByPubkey(pubkey, context: context)
@@ -155,17 +154,17 @@ class FollowingGuardian: ObservableObject {
         }
         
         guard republish else { return }
-        NosturState.shared.publishNewContactList()
+        account.publishNewContactList()
     }
     
     func removeFollowing(_ pubkeys:Set<String>) {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         for contact in account.follows_ {
             if pubkeys.contains(contact.pubkey) {
                 account.removeFromFollows(contact)
             }
         }
-        sendNotification(.followersChanged, account.followingPublicKeys)
+        NRState.shared.loggedInAccount?.reloadFollows()
         DataProvider.shared().save()
     }
 }

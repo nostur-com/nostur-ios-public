@@ -139,7 +139,7 @@ extension Event {
     
     // TODO: Optimize tagsSerialized / hashtags matching
     static func postsByPubkeys(_ pubkeys:Set<String>, mostRecent:Event, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
-        let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         let cutOffPoint = mostRecent.created_at - (15 * 60)
         
         let fr = Event.fetchRequest()
@@ -166,7 +166,7 @@ extension Event {
     
     
     static func postsByPubkeys(_ pubkeys:Set<String>, until:Event, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
-        let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         let cutOffPoint = until.created_at + (1 * 60)
         
         let fr = Event.fetchRequest()
@@ -195,7 +195,7 @@ extension Event {
     }
     
     static func postsByPubkeys(_ pubkeys:Set<String>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
-        let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
         
         // Take oldest timestamp: 8 hours ago OR lastAppearedCreatedAt

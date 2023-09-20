@@ -9,12 +9,11 @@ import SwiftUI
 
 struct NewNoteButton: View {
     @EnvironmentObject var theme:Theme
-    @EnvironmentObject var ns:NosturState
     @Binding var showingNewNote:Bool
     
     var body: some View {
         Button {
-            guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+            guard isFullAccount() else { showReadOnlyMessage(); return }
             showingNewNote = true
         } label: {
             Image(systemName: "plus.circle.fill")

@@ -31,16 +31,19 @@ public final class NewPostModel: ObservableObject {
     @Published var activeAccount:Account? = nil
     
     var filteredContactSearchResults:[Contact] {
-        guard let wot = NosturState.shared.wot else {
+        let wot = WebOfTrust.shared
+        if WOT_FILTER_ENABLED() {
+            return contactSearchResults
+                // WoT enabled, so put in-WoT before non-WoT
+                .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
+                // Put following before non-following
+                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
+        }
+        else {
             // WoT disabled, just following before non-following
             return contactSearchResults
-                .sorted(by: { NosturState.shared.followingPublicKeys.contains($0.pubkey) && !NosturState.shared.followingPublicKeys.contains($1.pubkey) })
+                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
         }
-        return contactSearchResults
-            // WoT enabled, so put in-WoT before non-WoT
-            .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
-            // Put following before non-following
-            .sorted(by: { NosturState.shared.followingPublicKeys.contains($0.pubkey) && !NosturState.shared.followingPublicKeys.contains($1.pubkey) })
     }
     
     static let rules: [HighlightRule] = [
@@ -96,7 +99,7 @@ public final class NewPostModel: ObservableObject {
     
     private func _sendNow(urls:[String], pastedImages:[UIImage], replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
         guard let account = activeAccount else { return }
-        guard account.privateKey != nil else { NosturState.shared.readOnlyAccountSheetShown = true; return }
+        guard isFullAccount(account) else { showReadOnlyMessage(); return }
         let publicKey = account.publicKey
         var nEvent = nEvent ?? NEvent(content: "")
         nEvent.createdAt = NTimestamp.init(date: Date())
@@ -136,8 +139,7 @@ public final class NewPostModel: ObservableObject {
                 DataProvider.shared().bgSave()
                 
                 DispatchQueue.main.async {
-                    NosturState.shared.nsecBunker = NSecBunkerManager(account)
-                    NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
+                    NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
                         DataProvider.shared().bg.perform {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"
@@ -266,7 +268,7 @@ public final class NewPostModel: ObservableObject {
     }
     
     private func searchContacts(_ mentionTerm:String) {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         let fr = Contact.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)]
         fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)

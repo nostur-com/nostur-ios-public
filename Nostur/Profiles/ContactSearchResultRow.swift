@@ -15,9 +15,9 @@ struct ContactSearchResultRow: View {
     @State var isFollowing = false
     
     var couldBeImposter:Bool {
-        guard let account = NosturState.shared.account else { return false }
+        guard let account = account() else { return false }
         guard account.publicKey != contact.pubkey else { return false }
-        guard !NosturState.shared.isFollowing(contact.pubkey) else { return false }
+        guard !Nostur.isFollowing(contact.pubkey) else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
         return similarPFP
     }
@@ -72,8 +72,11 @@ struct ContactSearchResultRow: View {
                 onSelect()
             }
         }
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            isFollowing = Nostur.isFollowing(contact.pubkey)
+        }
         .task {
-            if (NosturState.shared.isFollowing(contact.pubkey)) {
+            if (Nostur.isFollowing(contact.pubkey)) {
                 isFollowing = true
             }
             else {
@@ -85,10 +88,10 @@ struct ContactSearchResultRow: View {
                 
                 let contactAnyName = contact.anyName.lowercased()
                 let cPubkey = contact.pubkey
-                let currentAccountPubkey = NosturState.shared.activeAccountPublicKey
+                let currentAccountPubkey = NRState.shared.activeAccountPublicKey
                 
                 DataProvider.shared().bg.perform {
-                    guard let account = NosturState.shared.bgAccount else { return }
+                    guard let account = account() else { return }
                     guard account.publicKey == currentAccountPubkey else { return }
                     guard let similarContact = account.follows_.first(where: {
                         isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
@@ -104,7 +107,7 @@ struct ContactSearchResultRow: View {
                         }
                         
                         DispatchQueue.main.async {
-                            guard currentAccountPubkey == NosturState.shared.activeAccountPublicKey else { return }
+                            guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                             self.similarPFP = similarPFP
                             contact.couldBeImposter = similarPFP ? 1 : 0
                         }

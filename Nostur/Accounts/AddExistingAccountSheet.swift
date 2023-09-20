@@ -8,19 +8,25 @@
 import SwiftUI
 
 struct AddExistingAccountSheet: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var ns:NosturState
-    @Environment(\.managedObjectContext) var viewContext
+    
+    init(offerTryOut: Bool = false) {
+        self.offerTryOut = offerTryOut
+    }
+    
+    public var offerTryOut = false
+    
+    @EnvironmentObject private var theme:Theme
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
-    let sp:SocketPool = .shared
-    @State var key = ""
-    @State var invalidKey = false
+
+    @State private var key = ""
+    @State private var invalidKey = false
     
-    var offerTryOut = false
-    var grayBackground: Color = Color.gray.opacity(0.2)
-    var isNsecbunkerKey:Bool { key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#").count == 2 && key.split(separator: "#")[1].count == 64 }
     
-    @StateObject private var bunkerManager = NSecBunkerManager()
+    private var grayBackground: Color = Color.gray.opacity(0.2)
+    private var isNsecbunkerKey:Bool { key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#").count == 2 && key.split(separator: "#")[1].count == 64 }
+    
+    @ObservedObject private var bunkerManager = NSecBunkerManager.shared
     
     var body: some View {
             ZStack {
@@ -58,7 +64,7 @@ struct AddExistingAccountSheet: View {
                             else if (key.prefix(5) == "nsec1") {
                                 addExistingAccount(privkey: nip19.hexString)
                             }
-                            if (!ns.onBoardingIsShown) {
+                            if (!NRState.shared.onBoardingIsShown) {
                                 dismiss()
                             }
                         }
@@ -156,9 +162,8 @@ struct AddExistingAccountSheet: View {
                     }
                     
                     try! viewContext.save()
-                    ns.objectWillChange.send()
-                    ns.setAccount(account: account)
-                    ns.onBoardingIsShown = false
+                    NRState.shared.changeAccount(account)
+                    NRState.shared.onBoardingIsShown = false
                     dismiss()
                     
                     do {
@@ -172,13 +177,13 @@ struct AddExistingAccountSheet: View {
                     if let account = bunkerManager.account {
                         NIP46SecretManager.shared.deleteSecret(account: account)
                         viewContext.delete(account)
-                        NosturState.shared.loadAccounts()
+                        NRState.shared.loadAccounts()
                     }
                 }
             }
     }
     
-    func addExistingAccount(privkey:String) {
+    private func addExistingAccount(privkey:String) {
         guard let keys = try? NKeys(privateKeyHex: privkey) else {
             invalidKey = true
             key = ""
@@ -188,8 +193,8 @@ struct AddExistingAccountSheet: View {
         if let existingAccount = (try? Account.fetchAccount(publicKey: keys.publicKeyHex(), context: viewContext)) {
             existingAccount.privateKey = keys.privateKeyHex()
             existingAccount.isNC = false
-            ns.setAccount(account: existingAccount)
-            ns.onBoardingIsShown = false
+            NRState.shared.changeAccount(existingAccount)
+            NRState.shared.onBoardingIsShown = false
             return
         }
         
@@ -222,9 +227,9 @@ struct AddExistingAccountSheet: View {
         }
 
         try! viewContext.save()
-        NosturState.shared.loadAccounts()
-        ns.setAccount(account: account)
-        ns.onBoardingIsShown = false
+        NRState.shared.loadAccounts()
+        NRState.shared.changeAccount(account)
+        NRState.shared.onBoardingIsShown = false
         
         do {
             try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
@@ -234,10 +239,10 @@ struct AddExistingAccountSheet: View {
         }
     }
     
-    func addExistingReadOnlyAccount(pubkey:String) {
+    private func addExistingReadOnlyAccount(pubkey:String) {
         if let existingAccount = (try? Account.fetchAccount(publicKey: pubkey, context: viewContext)) {
-            ns.setAccount(account: existingAccount)
-            ns.onBoardingIsShown = false
+            NRState.shared.changeAccount(existingAccount)
+            NRState.shared.onBoardingIsShown = false
             return
         }
 
@@ -268,10 +273,9 @@ struct AddExistingAccountSheet: View {
         }
         
         try! viewContext.save()
-        NosturState.shared.loadAccounts()
-        ns.objectWillChange.send()
-        ns.setAccount(account: account)
-        ns.onBoardingIsShown = false
+        NRState.shared.loadAccounts()
+        NRState.shared.changeAccount(account)
+        NRState.shared.onBoardingIsShown = false
         
         do {
             try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
@@ -281,7 +285,7 @@ struct AddExistingAccountSheet: View {
         }
     }
     
-    func addExistingBunkerAccount(pubkey:String, token:String) {
+    private func addExistingBunkerAccount(pubkey:String, token:String) {
         if let existingAccount = (try? Account.fetchAccount(publicKey: pubkey, context: viewContext)) {
             bunkerManager.connect(existingAccount, token: token)
             return
@@ -291,7 +295,7 @@ struct AddExistingAccountSheet: View {
         account.id = UUID()
         account.createdAt = Date()
         account.publicKey = pubkey
-        NosturState.shared.loadAccounts()
+        NRState.shared.loadAccounts()
         bunkerManager.connect(account, token: token)
         return
     }

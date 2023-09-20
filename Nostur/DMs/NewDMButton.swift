@@ -8,8 +8,7 @@
 import SwiftUI
 
 struct NewDMButton: View {
-    @EnvironmentObject var ns:NosturState
-    
+
     @Binding var showingNewDM:Bool
     
     var body: some View {
@@ -18,7 +17,7 @@ struct NewDMButton: View {
             HStack {
                 Spacer()
                 Button {
-                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+                    guard isFullAccount() else { showReadOnlyMessage(); return }
                     showingNewDM = true
                 } label: {
                     ZStack {

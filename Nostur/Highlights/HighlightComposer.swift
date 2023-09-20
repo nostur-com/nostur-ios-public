@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct HighlightComposer: View {
-    @EnvironmentObject var theme:Theme
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var ns:NosturState
-    var highlight:NewHighlight
-    @State var selectedAuthor:Contact?
-    @State var isAuthorSelectionShown = false
-    @State var activeAccount:Account? = nil
+    @EnvironmentObject private var la:LoggedInAccount
+    @EnvironmentObject private var theme:Theme
+    @Environment(\.dismiss) private var dismiss
+    public var highlight:NewHighlight
+    @State private var selectedAuthor:Contact?
+    @State private var isAuthorSelectionShown = false
+    @State private var activeAccount:Account? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -97,7 +97,7 @@ struct HighlightComposer: View {
                 }
                 .sheet(isPresented: $isAuthorSelectionShown) {
                     NavigationStack {
-                        ContactsSearch(followingPubkeys:NosturState.shared.followingPublicKeys,
+                        ContactsSearch(followingPubkeys: follows(),
                                        prompt: "Search", onSelectContact: { selectedContact in
                             selectedAuthor = selectedContact
                             isAuthorSelectionShown = false
@@ -118,13 +118,13 @@ struct HighlightComposer: View {
             }
         }
         .onAppear {
-            activeAccount = NosturState.shared.account
+            activeAccount = la.account
         }
     }
     
     func send() {
         guard let account = activeAccount else { return }
-        guard account.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+        guard isFullAccount(account) else { showReadOnlyMessage(); return }
         var nEvent = NEvent(content: highlight.selectedText)
         nEvent.createdAt = NTimestamp.init(date: Date())
         nEvent.kind = .highlight
@@ -148,8 +148,8 @@ struct HighlightComposer: View {
                 DataProvider.shared().bgSave()
                 dismiss()
                 DispatchQueue.main.async {
-                    NosturState.shared.nsecBunker = NSecBunkerManager(account)
-                    NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
+                    NSecBunkerManager.shared.setAccount(account)
+                    NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
                         DataProvider.shared().bg.perform {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"

@@ -28,13 +28,12 @@ struct LazyNoteMenuButton: View {
 }
 
 struct LazyNoteMenuSheet: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
-    @EnvironmentObject var ns:NosturState
-    @Environment(\.dismiss) var dismiss
-    let up:Unpublisher = .shared
-    let NEXT_SHEET_DELAY = 0.05
-    @State var followToggles = false
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var la:LoggedInAccount
+    public let nrPost:NRPost
+    @Environment(\.dismiss) private var dismiss
+    private let NEXT_SHEET_DELAY = 0.05
+    @State private var followToggles = false
     
     var body: some View {
         NavigationStack {
@@ -164,10 +163,9 @@ struct LazyNoteMenuSheet: View {
                         }
                     }
                     Button {
-                        guard let account = ns.account else { return }
                         guard let contact = nrPost.contact else { return }
                         dismiss()
-                        LVMManager.shared.followingLVM(forAccount: account)
+                        LVMManager.shared.followingLVM(forAccount: la.account)
                             .loadSomeonesFeed(nrPost.pubkey)
                         sendNotification(.showingSomeoneElsesFeed, contact)
                         sendNotification(.dismissMiniProfile)
@@ -176,9 +174,10 @@ struct LazyNoteMenuSheet: View {
                     }
                     HStack {
                         Button {
+                            guard isFullAccount() else { showReadOnlyMessage(); return }
                             dismiss()
                             if (nrPost.mainEvent.contact != nil) {
-                                ns.follow(nrPost.mainEvent.contact!)
+                                la.follow(nrPost.mainEvent.contact!, pubkey: nrPost.pubkey)
                             }
                         } label: {
                             Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.fill")
@@ -199,9 +198,9 @@ struct LazyNoteMenuSheet: View {
                         dismiss()
                         if (nrPost.mainEvent.contact == nil) {
                             // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
-                            _ = DataProvider.shared().newContact(pubkey: nrPost.event.pubkey)
-                            DataProvider.shared().bg.perform {
-                                guard let account = ns.account?.toBG() else { return }
+                            bg().perform {
+                                _ = DataProvider.shared().newContact(pubkey: nrPost.event.pubkey, context: bg())
+                                guard let account = account() else { return }
                                 let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
                                 account.blockedPubkeys_ = newBlockedKeys
                                 
@@ -212,12 +211,12 @@ struct LazyNoteMenuSheet: View {
                             }
                         }
                         else {
-                            DataProvider.shared().bg.perform {
-                                guard let account = ns.account?.toBG() else { return }
+                            bg().perform {
+                                guard let account = account() else { return }
                                 let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
                                 account.blockedPubkeys_ = newBlockedKeys
                                 
-                                DataProvider.shared().bgSave()
+                                bgSave()
                                 DispatchQueue.main.async {
                                     sendNotification(.blockListUpdated, newBlockedKeys)
                                 }
@@ -230,7 +229,7 @@ struct LazyNoteMenuSheet: View {
                     Button {
                         dismiss()
                         L.og.info("Mute conversation")
-                        ns.muteConversation(nrPost)
+                        la.muteConversation(nrPost)
                     } label: {
                         Label(String(localized:"Mute conversation", comment: "Post context menu action to mute conversation"), systemImage: "bell.slash.fill")
                     }
@@ -247,7 +246,7 @@ struct LazyNoteMenuSheet: View {
                 .foregroundColor(theme.accent)
                 .listRowBackground(theme.background)
                 
-                if (NosturState.shared.activeAccountPublicKey == nrPost.pubkey) {
+                if (NRState.shared.activeAccountPublicKey == nrPost.pubkey) {
                     Button {
                         dismiss()
                         DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
@@ -262,19 +261,18 @@ struct LazyNoteMenuSheet: View {
                 
                 Button {
                     dismiss()
-                    guard let account = ns.account else { return }
                     let nEvent = nrPost.mainEvent.toNEvent()                    
                     
-                    if nrPost.pubkey == NosturState.shared.activeAccountPublicKey && nrPost.mainEvent.flags == "nsecbunker_unsigned" && account.isNC {
-                        NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
+                    if nrPost.pubkey == NRState.shared.activeAccountPublicKey && nrPost.mainEvent.flags == "nsecbunker_unsigned" && la.account.isNC {
+                        NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: la.account,  whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })
                     }
                     else {
-                        up.publishNow(nEvent)
+                        Unpublisher.shared.publishNow(nEvent)
                     }
                 } label: {
-                    if nrPost.pubkey == NosturState.shared.activeAccountPublicKey {
+                    if nrPost.pubkey == NRState.shared.activeAccountPublicKey {
                         Label(String(localized:"Rebroadcast (again)", comment: "Button to broadcast own post again"), systemImage: "dot.radiowaves.left.and.right")
                     }
                     else {
@@ -286,7 +284,7 @@ struct LazyNoteMenuSheet: View {
                 
                 if nrPost.relays != "" {
                     VStack(alignment: .leading) {
-                        if let pubkey = ns.account?.publicKey, pubkey == nrPost.pubkey {
+                        if NRState.shared.activeAccountPublicKey == nrPost.pubkey {
                             Text("Sent to:", comment:"Heading for list of relays sent to")
                         }
                         else {

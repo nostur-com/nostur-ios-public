@@ -9,33 +9,32 @@ import SwiftUI
 import Algorithms
 
 struct DMConversationView: View {
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var theme:Theme
-    @Namespace var bottom
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var theme:Theme
+    @Namespace private var bottom
     
-    @EnvironmentObject var ns:NosturState
-    let up:Unpublisher = .shared
+    @EnvironmentObject var la:LoggedInAccount
     
-    let recentDM:Event
-    let pubkey:String
-    let theirPubkey:String?
-    let dateHeaderFormatter:DateFormatter
+    private let recentDM:Event
+    private let pubkey:String
+    private let theirPubkey:String?
+    private let dateHeaderFormatter:DateFormatter
     
-    @State var text:String = ""
-    @State var didLoad = false
-    
-    @FetchRequest
-    var theirs:FetchedResults<Event>
+    @State private var text:String = ""
+    @State private var didLoad = false
     
     @FetchRequest
-    var mine:FetchedResults<Event>
+    private var theirs:FetchedResults<Event>
     
-    var messages:[Event] {
+    @FetchRequest
+    private var mine:FetchedResults<Event>
+    
+    private var messages:[Event] {
         chain(theirs,mine)
             .sorted(by: { $0.created_at < $1.created_at })
     }
     
-    var messagesByDay:[Date: [Event]] {
+    private var messagesByDay:[Date: [Event]] {
         let calendar = Calendar.current
         
         return Dictionary(grouping: messages) { event in
@@ -43,7 +42,7 @@ struct DMConversationView: View {
         }
     }
     
-    var contact:Contact? {
+    private var contact:Contact? {
         guard let rootDM = rootDM else { return nil }
         // contact is in .pubkey or in .firstP (depending on incoming/outgoing DM.
         // if there are multiple P's, we try lastP if firstP is same as pubkey (edge case)
@@ -58,7 +57,7 @@ struct DMConversationView: View {
         }
     }
     
-    var contactPubkey:String? {
+    private var contactPubkey:String? {
         guard let rootDM = rootDM else { return nil }
         // pubkey is .pubkey or .firstP (depending on incoming/outgoing DM.)
         // if there are multiple P's, we try lastP if firstP is same as pubkey (edge case)
@@ -73,20 +72,20 @@ struct DMConversationView: View {
         }
     }
     
-    var rootDM:Event? {
+    private var rootDM:Event? {
         allMessagesSorted.first
     }
     
-    var isAccepted:Bool {
+    private var isAccepted:Bool {
         // if possible infer accepted by checking if we responded (mine)
         conv.accepted || (!mine.isEmpty)
     }
     
-    var allMessagesSorted:[Event] {
+    private var allMessagesSorted:[Event] {
         chain(theirs, mine).sorted(by: { $0.created_at < $1.created_at })
     }
 
-    @ObservedObject var conv:Conversation
+    @ObservedObject private var conv:Conversation
     
     init(recentDM:Event, pubkey:String, conv:Conversation) {
         self.conv = conv
@@ -141,8 +140,7 @@ struct DMConversationView: View {
                                         if isAccepted {
                                             ChatInputField(message: $text) {
                                                 // Create and send DM (via unpublisher?)
-                                                guard let pk = ns.account?.privateKey else { ns.readOnlyAccountSheetShown = true; return }
-                                                guard let account = ns.account else { return }
+                                                guard let pk = la.account.privateKey else { NRState.shared.readOnlyAccountSheetShown = true; return }
                                                 guard let theirPubkey = self.theirPubkey else { return }
                                                 var nEvent = NEvent(content: text)
                                                 if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
@@ -158,9 +156,9 @@ struct DMConversationView: View {
                                                 nEvent.tags.append(NostrTag(["p", theirPubkey]))
                                                 
                                                 
-                                                if let signedEvent = try? account.signEvent(nEvent) {
+                                                if let signedEvent = try? la.account.signEvent(nEvent) {
                                                     //                        print(signedEvent.wrappedEventJson())
-                                                    up.publishNow(signedEvent)
+                                                    Unpublisher.shared.publishNow(signedEvent)
                                                     //                        noteCancellationId = up.publish(signedEvent)
                                                     text = ""
                                                 }
@@ -210,7 +208,7 @@ struct DMConversationView: View {
                                                     NostrAddress(nip05: nip05)
                                                 }
                                             }
-                                            if (ns.followsYou(contact)) {
+                                            if (contact.followsYou()) {
                                                 Text("Follows you", comment: "Label that shows if someone is following you").font(.system(size: 12))
                                                     .foregroundColor(.white)
                                                     .padding(.horizontal, 7)
@@ -236,9 +234,8 @@ struct DMConversationView: View {
                                                         Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
                                                     }
                                                     Button {
-                                                        guard let account = NosturState.shared.account else { return }
-                                                        account.blockedPubkeys_ = account.blockedPubkeys_ + [contactPubkey]
-                                                        sendNotification(.blockListUpdated, account.blockedPubkeys_)
+                                                        la.account.blockedPubkeys_ = la.account.blockedPubkeys_ + [contactPubkey]
+                                                        sendNotification(.blockListUpdated, la.account.blockedPubkeys_)
                                                         dismiss()
                                                     } label: {
                                                         Label(
@@ -269,9 +266,8 @@ struct DMConversationView: View {
                                                         Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
                                                     }
                                                     Button {
-                                                        guard let account = NosturState.shared.account else { return }
-                                                        account.blockedPubkeys_ = account.blockedPubkeys_ + [contactPubkey]
-                                                        sendNotification(.blockListUpdated, account.blockedPubkeys_)
+                                                        la.account.blockedPubkeys_ = la.account.blockedPubkeys_ + [contactPubkey]
+                                                        sendNotification(.blockListUpdated, la.account.blockedPubkeys_)
                                                         dismiss()
                                                     } label: {
                                                         Label(

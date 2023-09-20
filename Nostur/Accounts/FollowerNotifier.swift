@@ -17,12 +17,12 @@ class FollowerNotifier {
     
     static let shared = FollowerNotifier()
     
-    var ctx = DataProvider.shared().bg
-    var currentFollowerPubkeys = Set<String>()
-    var newFollowerPubkeys = Set<String>()
-    var subscriptions = Set<AnyCancellable>()
-    let generateNewFollowersNotification = PassthroughSubject<String, Never>()
-    var checkForNewTimer:Timer?
+    private var ctx = DataProvider.shared().bg
+    private var currentFollowerPubkeys = Set<String>()
+    private var newFollowerPubkeys = Set<String>()
+    private var subscriptions = Set<AnyCancellable>()
+    private let generateNewFollowersNotification = PassthroughSubject<String, Never>()
+    private var checkForNewTimer:Timer?
     
     init() {
 #if DEBUG
@@ -37,7 +37,7 @@ class FollowerNotifier {
             .sink { [weak self] accountPubkey in
                 guard let self = self else { return }
                 // Should still be same account (account switch could have happened in 5 sec)
-                guard NosturState.shared.activeAccountPublicKey == accountPubkey else { return }
+                guard NRState.shared.activeAccountPublicKey == accountPubkey else { return }
                 self._generateNewFollowersNotification(accountPubkey)
             }
             .store(in: &subscriptions)
@@ -51,13 +51,13 @@ class FollowerNotifier {
     }
     
     func checkForUpdatedContactList() {
-        guard !NosturState.shared.activeAccountPublicKey.isEmpty else { return }
+        guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
         L.og.info("Checking for new followers")
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = []
         // Not parsing and filtering tags, but searching for string. Ugly hack but works fast
-        fr.predicate = NSPredicate(format: "kind == 3 AND tagsSerialized CONTAINS %@", serializedP(NosturState.shared.activeAccountPublicKey))
+        fr.predicate = NSPredicate(format: "kind == 3 AND tagsSerialized CONTAINS %@", serializedP(NRState.shared.activeAccountPublicKey))
         
         ctx.perform { [weak self] in
             guard let self = self else { return }
@@ -66,11 +66,11 @@ class FollowerNotifier {
                 self.newFollowerPubkeys.removeAll()
                 if let mostRecent = PersistentNotification.fetchPersistentNotification(context: self.ctx) {
                     let since = NTimestamp(date: mostRecent.createdAt)
-                    req(RM.getFollowers(pubkey: NosturState.shared.activeAccountPublicKey, since: since))
+                    req(RM.getFollowers(pubkey: NRState.shared.activeAccountPublicKey, since: since))
                 }
                 else {
                     let since = Int(Date.now.timeIntervalSince1970 - (3600 * 3*24)) // how long ago  ago
-                    req(RM.getFollowers(pubkey: NosturState.shared.activeAccountPublicKey, since: NTimestamp(timestamp: since)))
+                    req(RM.getFollowers(pubkey: NRState.shared.activeAccountPublicKey, since: NTimestamp(timestamp: since)))
                 }
             }
         }
@@ -107,14 +107,14 @@ class FollowerNotifier {
                 guard let self = self else { return }
                 let nEvent = notification.object as! NEvent
                 guard nEvent.kind == .contactList else { return }
-                guard nEvent.pTags().contains(NosturState.shared.activeAccountPublicKey) else { return }
+                guard nEvent.pTags().contains(NRState.shared.activeAccountPublicKey) else { return }
 //                guard let account = NosturState.shared.account else { return }
                 guard !self.currentFollowerPubkeys.isEmpty else { return }
 //                guard account.privateKey != nil else { return }
                 
                 if !self.currentFollowerPubkeys.contains(nEvent.publicKey) {
                     self.newFollowerPubkeys.insert(nEvent.publicKey)
-                    self.generateNewFollowersNotification.send(NosturState.shared.activeAccountPublicKey)
+                    self.generateNewFollowersNotification.send(NRState.shared.activeAccountPublicKey)
                 }
             }
             .store(in: &subscriptions)
@@ -128,7 +128,7 @@ class FollowerNotifier {
             // Check WoT if enabled
             if WOT_FILTER_ENABLED() {
                 self.newFollowerPubkeys = self.newFollowerPubkeys.filter {
-                    return NosturState.shared.wot?.isAllowed($0) ?? false
+                    return WebOfTrust.shared.isAllowed($0)
                 }
             }
             
@@ -141,7 +141,7 @@ class FollowerNotifier {
                 context: self.ctx
             )
             
-            if let account = NosturState.shared.account?.toBG() {
+            if let account = account() {
                 account.lastFollowerCreatedAt = Int64(Date.now.timeIntervalSince1970) // HM not needed since we use mostRecent (PNotification)
             }
             

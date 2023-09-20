@@ -8,9 +8,8 @@
 import SwiftUI
 
 struct NewDMComposer: View {
-    @EnvironmentObject var ns:NosturState
-    let up:Unpublisher = .shared
-    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject private var la:LoggedInAccount
+    @Environment(\.dismiss) private var dismiss
     @Binding var toPubkey:String?
     @Binding var toContact:Contact?
     @Binding var message:String
@@ -30,8 +29,7 @@ struct NewDMComposer: View {
             // the message
             ChatInputField(message: $message) {
                 // Create and send DM (via unpublisher?)
-                guard let pk = ns.account?.privateKey else { ns.readOnlyAccountSheetShown = true; return }
-                guard let account = ns.account else { return }
+                guard let pk = la.account.privateKey else { NRState.shared.readOnlyAccountSheetShown = true; return }
                 guard let theirPubkey = toPubkey else { return }
                 var nEvent = NEvent(content: message)
                 nEvent.kind = .directMessage
@@ -45,9 +43,9 @@ struct NewDMComposer: View {
                 nEvent.content = encrypted
                 nEvent.tags.append(NostrTag(["p", theirPubkey]))
                 
-                if let signedEvent = try? account.signEvent(nEvent) {
+                if let signedEvent = try? la.account.signEvent(nEvent) {
                     //                        print(signedEvent.wrappedEventJson())
-                    up.publishNow(signedEvent)
+                    Unpublisher.shared.publishNow(signedEvent)
                     //                        noteCancellationId = up.publish(signedEvent)
                     message = ""
                     

@@ -8,25 +8,24 @@
 import SwiftUI
 
 struct MainView: View {
-    @EnvironmentObject var theme:Theme
-    @State var fg:FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
-    @State var fn:FollowerNotifier = .shared 
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_subtab") var selectedSubTab = "Following"
-    @State var navPath = NavigationPath()
-    @State var account:Account?
-    @State var showingNewNote = false
-    @EnvironmentObject var sm:SideBarModel
-    @ObservedObject var settings:SettingsStore = .shared
-    @State var showingOtherContact:NRContact? = nil
+    @EnvironmentObject private var theme:Theme
+    @State private var fg:FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
+    @State private var fn:FollowerNotifier = .shared
+    @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_subtab") private var selectedSubTab = "Following"
+    @State private var navPath = NavigationPath()
+    @State private var account:Account? = nil
+    @State private var showingNewNote = false
+    @EnvironmentObject private var sm:SideBarModel
+    @ObservedObject private var settings:SettingsStore = .shared
+    @State private var showingOtherContact:NRContact? = nil
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-//    @Environment(\.verticalSizeClass) private var verticalSizeClass
     
     var body: some View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
-            if let account {
+            if let account = account {
                 FollowingAndExplore(account: account)
                     .background(theme.listBackground)
                     .withNavigationDestinations()
@@ -49,8 +48,8 @@ struct MainView: View {
                     }
                     .sheet(isPresented: $showingNewNote) {
                         NavigationStack {
-                            if account.isNC, let nsecBunker = NosturState.shared.nsecBunker {
-                                WithNSecBunkerConnection(nsecBunker: nsecBunker) {
+                            if account.isNC {
+                                WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                                     NewPost()
                                 }
                             }
@@ -84,7 +83,7 @@ struct MainView: View {
                                         .frame(height:30)
                                         .contentShape(Rectangle())
                                         .onTapGesture {
-                                            guard let account = NosturState.shared.account else { return }
+                                            guard let account = Nostur.account() else { return }
                                             self.showingOtherContact = nil
                                             LVMManager.shared.followingLVM(forAccount: account)
                                                 .revertBackToOwnFeed()
@@ -128,8 +127,7 @@ struct MainView: View {
             }
         }
         .onAppear {
-            guard let account = NosturState.shared.account else { return }
-            self.account = account
+            self.account = Nostur.account()
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination

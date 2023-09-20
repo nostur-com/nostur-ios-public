@@ -49,14 +49,14 @@ class WebOfTrust: ObservableObject {
     // Keep seperate lists for faster filtering
     
     // follows of follows (NORMAL)
-    private var followingFollowingPubkeys = Set<String>() {
+    private var followingFollowingPubkeys:Set<String> = [] {
         didSet {
             self.updateViewData()
         }
     }
     
     // Only follows (STRICT)
-    private var followingPubkeys:Set<String> {
+    private var followingPubkeys:Set<String> = [] {
         didSet {
             self.updateViewData()
         }

@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct DetailTab: View {
-    @EnvironmentObject var theme:Theme
-    @State var navPath = NavigationPath()
-    let tm:DetailTabsModel = .shared
-    @ObservedObject var tab:TabModel
+    @EnvironmentObject private var theme:Theme
+    @State private var navPath = NavigationPath()
+    private let tm:DetailTabsModel = .shared
+    @ObservedObject public var tab:TabModel
     
     var body: some View {
         NavigationStack(path: $navPath) {

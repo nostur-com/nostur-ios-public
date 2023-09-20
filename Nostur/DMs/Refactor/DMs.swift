@@ -15,7 +15,6 @@ struct DMs: View {
     @State var navPath = NavigationPath()
     @AppStorage("selected_tab") var selectedTab = "Messages"
     @State var tab = "Accepted"
-    @EnvironmentObject var ns:NosturState
     
     let pubkey:String
     @EnvironmentObject var vm:DirectMessageViewModel
@@ -208,20 +207,15 @@ struct DirectMessagesX_Previews: PreviewProvider {
 }
 
 struct DMContainer: View {
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var la:LoggedInAccount
     
     var body: some View {
-        if let account = ns.account {
-            if account.isNC {
-                Text("Direct Messages using a nsecBunker login are not available yet")
-                    .centered()
-            }
-            else {
-                DMs(pubkey: account.publicKey)
-            }
+        if la.account.isNC {
+            Text("Direct Messages using a nsecBunker login are not available yet")
+                .centered()
         }
         else {
-            EmptyView()
+            DMs(pubkey: la.account.publicKey)
         }
     }
 }

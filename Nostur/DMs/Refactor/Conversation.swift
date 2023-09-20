@@ -58,7 +58,7 @@ class Conversation: Identifiable, Hashable, ObservableObject {
         
         mostRecentEvent.contactUpdated
             .sink { contact in
-                let nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(contact.pubkey))
+                let nrContact = NRContact(contact: contact, following: isFollowing(contact.pubkey))
                 Task { @MainActor in
                     self.objectWillChange.send()
                     self.nrContact = nrContact

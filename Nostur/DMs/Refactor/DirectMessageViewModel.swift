@@ -146,7 +146,7 @@ class DirectMessageViewModel: ObservableObject {
     
     private func loadAcceptedConversations() {
         guard let pubkey = self.pubkey else { return }
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         
         bg().perform {
             var lastNotificationReceivedAt:Date? = nil
@@ -197,7 +197,7 @@ class DirectMessageViewModel: ObservableObject {
                 var nrContact:NRContact?
                 
                 if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
-                    nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(contactPubkey))
+                    nrContact = NRContact(contact: contact, following: isFollowing(contactPubkey))
                 }
                 
                 guard let mostRecent = mostRecent else { continue }
@@ -223,7 +223,7 @@ class DirectMessageViewModel: ObservableObject {
     
     private func loadMessageRequests() {
         guard let pubkey = self.pubkey else { return }
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         bg().perform {
             
             var lastNotificationReceivedAt:Date? = nil
@@ -233,7 +233,7 @@ class DirectMessageViewModel: ObservableObject {
                 .filter { dmState in
                     if (!WOT_FILTER_ENABLED()) { return true }
                     guard let contactPubkey = dmState.contactPubkey else { return false }
-                    return NosturState.shared.wot?.isAllowed(contactPubkey) ?? false
+                    return WebOfTrust.shared.isAllowed(contactPubkey)
                 }
             
             var conversationRows = [Conversation]()
@@ -269,7 +269,7 @@ class DirectMessageViewModel: ObservableObject {
                 var nrContact:NRContact?
                 
                 if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
-                    nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(contactPubkey))
+                    nrContact = NRContact(contact: contact, following: isFollowing(contactPubkey))
                 }
                 
                 guard let mostRecent = mostRecent else { continue }
@@ -295,16 +295,15 @@ class DirectMessageViewModel: ObservableObject {
     
     private func loadOutSideWoT() {
         guard WOT_FILTER_ENABLED() else { return }
-        guard let wot = NosturState.shared.wot else { return }
         guard let pubkey = self.pubkey else { return }
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         bg().perform {
 
             let conversations = DMState.fetchByAccount(pubkey, context: bg())
                 .filter { !$0.accepted && !blockedPubkeys.contains($0.contactPubkey ?? "HMMICECREAMSOGOOD") }
                 .filter { dmState in
                     guard let contactPubkey = dmState.contactPubkey else { return false }
-                    return !wot.isAllowed(contactPubkey)
+                    return !WebOfTrust.shared.isAllowed(contactPubkey)
                 }
             
             var conversationRows = [Conversation]()
@@ -333,7 +332,7 @@ class DirectMessageViewModel: ObservableObject {
                 var nrContact:NRContact?
                 
                 if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
-                    nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(contactPubkey))
+                    nrContact = NRContact(contact: contact, following: isFollowing(contactPubkey))
                 }
                 
                 guard let mostRecent = mostRecent else { continue }

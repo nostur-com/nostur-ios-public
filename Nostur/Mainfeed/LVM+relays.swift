@@ -44,7 +44,7 @@ extension LVM {
 extension Event {
     
     static func postsByRelays(_ relays:Set<Relay>, mostRecent:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
-        let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
         }.joined(separator: "|") + ")"
@@ -66,7 +66,7 @@ extension Event {
     
     
     static func postsByRelays(_ relays:Set<Relay>, until:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
-        let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
         }.joined(separator: "|") + ")"
@@ -88,7 +88,7 @@ extension Event {
     }
     
     static func postsByRelays(_ relays:Set<Relay>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false) -> NSFetchRequest<Event> {
-        let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
         }.joined(separator: "|") + ")"

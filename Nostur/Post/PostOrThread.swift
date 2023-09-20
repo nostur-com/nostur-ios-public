@@ -75,7 +75,7 @@ struct PostOrThread: View {
 
 func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
     if let replyToPubkey = event.replyTo?.pubkey {
-        if NosturState.shared.followingPublicKeys.contains(replyToPubkey) {
+        if isFollowing(replyToPubkey) {
             return true
         }
     }

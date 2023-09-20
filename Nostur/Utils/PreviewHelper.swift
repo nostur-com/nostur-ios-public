@@ -78,9 +78,10 @@ public class PreviewEnvironment {
 
 extension PreviewEnvironment {
     
-    func loadAccount() -> Bool {
+    @MainActor func loadAccount() -> Bool {
 //        guard !didLoad else { return false }
 //        didLoad = true
+        NRState.shared.loadAccounts()
         context.performAndWait {
             print("💄💄LOADING ACCOUNT")
             let account = Account(context: self.context)
@@ -92,15 +93,14 @@ extension PreviewEnvironment {
             account.about = "Creatur of Nostur"
             account.picture = "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972"
             account.banner = "https://profilepics.nostur.com/banner_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/banner.jpg?1682440972"
-            NosturState.shared.loadAccounts()
-            NosturState.shared.setAccount(account: account)
+            NRState.shared.loadAccount(account)
             SettingsStore.shared.webOfTrustLevel = "WOT_OFF"
 //            return account
         }
         return true
     }
     
-    func loadAccounts() {
+    @MainActor func loadAccounts() {
         context.performAndWait {
             let account = Account(context: self.context)
             account.createdAt = Date()
@@ -111,8 +111,6 @@ extension PreviewEnvironment {
             account.about = "Creatur of Nostur"
             account.picture = "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972"
             account.banner = "https://profilepics.nostur.com/banner_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/banner.jpg?1682440972"
-            
-            NosturState.shared.setAccount(account: account)
             
             let account2 = Account(context: self.context)
             account2.createdAt = Date()
@@ -146,8 +144,11 @@ extension PreviewEnvironment {
             account5.privateKey = account5keys.privateKeyHex()
             account5.name = "Alt"
             account5.about = "5th account, with private kay"
-            
-            NosturState.shared.loadAccounts()
+        }
+        
+        NRState.shared.loadAccounts()
+        if let account = NRState.shared.accounts.first {
+            NRState.shared.loadAccount(account)
         }
     }
     
@@ -220,7 +221,7 @@ extension PreviewEnvironment {
     }
     
     func loadFollowers() {
-        guard let account = NosturState.shared.account else { L.og.debug("Preview.loadFollowers - missing Account"); return }
+        guard let account = account() else { L.og.debug("Preview.loadFollowers - missing Account"); return }
         context.performAndWait {
             if let clNevent = PreviewFetcher.fetchEvents(account.publicKey, kind: 3, context: context).first?.toNEvent() {
                 
@@ -246,7 +247,7 @@ extension PreviewEnvironment {
     }
     
     func loadNewFollowersNotification() {
-        guard let account = NosturState.shared.account else { L.og.debug("Preview.loadNewFollowersNotification - missing Account"); return }
+        guard let account = account() else { L.og.debug("Preview.loadNewFollowersNotification - missing Account"); return }
         context.performAndWait {
             let followers = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240,32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245,5195320c049ccff15766e070413bbec1c021bca03ee022838724a8ffb680bf3a,3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24,3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24,febbaba219357c6c64adfa2e01789f274aa60e90c289938bfc80dd91facb2899,aff9a9f017f32b2e8b60754a4102db9d9cf9ff2b967804b50e070780aa45c9a8".split(separator: ",").map { String($0) }
             let _ = PersistentNotification.create(pubkey: account.publicKey, followers: followers, context: context)
@@ -254,7 +255,7 @@ extension PreviewEnvironment {
     }
 
     func loadZapsNotifications() {
-        guard let account = NosturState.shared.account else { L.og.debug("Preview.loadZapsNotifications - missing Account"); return }
+        guard let account = account() else { L.og.debug("Preview.loadZapsNotifications - missing Account"); return }
         context.performAndWait {
             let content = "Zap failed for [post](nostur:e:78b8d514554a03dadd366e920768e439d3a45495ca3efa89010229aae823c07c) Something went wrong while paying invoice: not enough balance. Make sure you have at least 1% reserved for potential fees"
             let _ = PersistentNotification.createFailedNWCZap(pubkey: account.publicKey, message: content, context: context)
@@ -272,7 +273,7 @@ extension PreviewEnvironment {
             if let randomTextEvents {
                 for _ in 0..<10 {
                     if let random = randomTextEvents.randomElement() {
-                        NosturState.shared.accounts.randomElement()?
+                        NRState.shared.accounts.randomElement()?
                             .addToBookmarks(random)
                     }
                 }
@@ -292,7 +293,7 @@ extension PreviewEnvironment {
                 for _ in 0..<10 {
                     let privateNote = PrivateNote(context: context)
                     privateNote.content = ["Some more text here, I think I need to fix this in some way or another, I don't know how yet. But this text is a bit longer.","I made a private note here\nYo!","I made a private note here\nWith some more lines\n\nCool", "This is good"].randomElement()!
-                    privateNote.by = NosturState.shared.accounts.randomElement()
+                    privateNote.by = NRState.shared.accounts.randomElement()
                     privateNote.post = randomTextEvents.randomElement()
                     privateNote.createdAt = Date.now
                     privateNote.updatedAt = Date.now
@@ -357,7 +358,7 @@ extension PreviewEnvironment {
     
     // Needs account, some kind = 1 events, and some contacts first
     func loadBlockedAndMuted() {
-        guard let account = NosturState.shared.account else { L.og.debug("Preview.loadBlockedAndMuted - missing Account"); return }
+        guard let account = account() else { L.og.debug("Preview.loadBlockedAndMuted - missing Account"); return }
         context.performAndWait {
             let randomContactsR = Contact.fetchRequest()
             randomContactsR.fetchLimit = 10
@@ -454,7 +455,7 @@ struct PreviewContainer<Content: View>: View {
             if didSetup {
                 content()
                     .environment(\.managedObjectContext, pe.context)
-                    .environmentObject(NosturState.shared)
+                    .environmentObject(NRState.shared)
                     .environmentObject(pe.sp)
                     .environmentObject(pe.er)
                     .environmentObject(pe.ss)

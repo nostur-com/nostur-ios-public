@@ -12,14 +12,14 @@ import AVFoundation
 let NOSTUR_SIDEBAR_WIDTH = 310.0
 
 struct NosturRootMenu: View {
-    let account:Account
+    @EnvironmentObject private var loggedInAccount:LoggedInAccount
     @StateObject private var sm = SideBarModel()
     @AppStorage("selected_tab") var selectedTab = "Main"
     
     var body: some View {
 //        let _ = Self._printChanges()
         SideBarStack(sidebarWidth: NOSTUR_SIDEBAR_WIDTH) {
-            SideBar(account: account)
+            SideBar(account: loggedInAccount.account)
         } content: {
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
                 Text("NosturTabsView()")
@@ -159,7 +159,6 @@ struct NosturRootMenu: View {
 
 struct SideBar: View {
     @EnvironmentObject var theme:Theme
-    let ns:NosturState = .shared
     @EnvironmentObject var sm:SideBarModel
     @ObservedObject var account:Account
     @AppStorage("selected_tab") var selectedTab = "Main"
@@ -316,7 +315,6 @@ struct SideBar: View {
             NavigationStack {
                 AccountsSheet()
                     .presentationDetents([.fraction(0.45), .medium, .large])
-                    .environmentObject(ns)
             }
             .presentationBackground(theme.background)
             .environmentObject(theme)
@@ -324,7 +322,6 @@ struct SideBar: View {
         .sheet(isPresented: $showAnySigner) {
             NavigationStack {
                 AnySigner()
-                    .environmentObject(ns)
             }
             .presentationBackground(theme.background)
             .environmentObject(theme)
@@ -343,7 +340,7 @@ struct SideBar: View {
                         ,
                         buttons: !account.isNC && account.privateKey != nil ? [
                             .destructive(Text("Log out", comment: "Log out button"), action: {
-                                ns.logout(account)
+                                NRState.shared.logout(account)
                                 sm.showSidebar = false
                             }),
                             .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
@@ -354,7 +351,7 @@ struct SideBar: View {
                             .cancel(Text("Cancel"))
                         ] : [
                             .destructive(Text("Log out", comment:"Log out button"), action: {
-                                ns.logout(account)
+                                NRState.shared.logout(account)
                                 sm.showSidebar = false
                             }),
                             .cancel(Text("Cancel"))
@@ -368,9 +365,9 @@ struct NosturRootMenu_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
             VStack {
-                if let account = PreviewFetcher.fetchAccount("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
-                    
-                    NosturRootMenu(account: account)
+                if let loggedInAccount = NRState.shared.loggedInAccount {
+                    NosturRootMenu()
+                        .environmentObject(loggedInAccount)
                 }
             }
             .onAppear {

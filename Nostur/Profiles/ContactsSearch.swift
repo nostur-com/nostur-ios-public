@@ -13,24 +13,35 @@ struct ContactsSearch: View, Equatable {
         lhs.followingPubkeys == rhs.followingPubkeys
     }
     
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) private var dismiss
 
-    @State var searchText = ""
+    @State private var searchText = ""
 
-    let followingPubkeys:Set<String>
-    let sp:SocketPool = .shared
-    var prompt:String
-    var onSelectContacts:((Set<Contact>) -> Void)?
-    var onSelectContact:((Contact) -> Void)?
+    public let followingPubkeys:Set<String>
+    public var prompt:String
+    public var onSelectContacts:((Set<Contact>) -> Void)?
+    public var onSelectContact:((Contact) -> Void)?
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
         predicate: NSPredicate(value: false),
         animation: .none)
-    var contacts:FetchedResults<Contact>
+    private var contacts:FetchedResults<Contact>
 
-    var filteredContacts:[Contact] {
-        guard let wot = NosturState.shared.wot else {
+    private var filteredContacts:[Contact] {
+        let wot = WebOfTrust.shared
+        if WOT_FILTER_ENABLED() {
+            return contacts
+                .filter {
+                    // normal following/all filter
+                    contactFilter == "All" || followingPubkeys.contains($0.pubkey)
+                }
+                // WoT enabled, so put in-WoT before non-WoT
+                .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
+                // Put following before non-following
+                .sorted(by: { followingPubkeys.contains($0.pubkey) && !followingPubkeys.contains($1.pubkey) })
+        }
+        else {
             // WoT disabled, just normal following/all filter
             return contacts
                 .filter {
@@ -39,20 +50,11 @@ struct ContactsSearch: View, Equatable {
                 // Put following before non-following
                 .sorted(by: { followingPubkeys.contains($0.pubkey) && !followingPubkeys.contains($1.pubkey) })
         }
-        return contacts
-            .filter {
-                // normal following/all filter
-                contactFilter == "All" || followingPubkeys.contains($0.pubkey)
-            }
-            // WoT enabled, so put in-WoT before non-WoT
-            .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
-            // Put following before non-following
-            .sorted(by: { followingPubkeys.contains($0.pubkey) && !followingPubkeys.contains($1.pubkey) })
     }
     
-    @State var searching = false
-    @State var selectedContacts:Set<Contact> = []
-    @State var contactFilter = "All"
+    @State private var searching = false
+    @State private var selectedContacts:Set<Contact> = []
+    @State private var contactFilter = "All"
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -128,7 +130,7 @@ struct ContactsSearch: View, Equatable {
                     searching = true
                     let key = try NIP19(displayString: searchTrimmed)
                     contacts.nsPredicate = NSPredicate(format: "pubkey = %@", key.hexString)
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
+                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
                 }
                 catch {
                     L.og.debug("npub1 search fail \(error)")
@@ -173,7 +175,7 @@ struct ContactsSearch_Previews: PreviewProvider {
             pe.loadContacts()
         }) {
             NavigationStack {
-                ContactsSearch(followingPubkeys: NosturState.shared.followingPublicKeys,
+                ContactsSearch(followingPubkeys: follows(),
                                prompt: "Search")
             }
         }

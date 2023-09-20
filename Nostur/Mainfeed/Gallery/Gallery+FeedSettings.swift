@@ -58,7 +58,6 @@ struct GalleryFeedSettings: View {
 }
 
 struct GalleryFeedSettingsTester: View {
-    @EnvironmentObject var ns:NosturState
     
     var body: some View {
         NavigationStack {

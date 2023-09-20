@@ -8,17 +8,16 @@
 import SwiftUI
 
 struct NosturTabsView: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var dm:DirectMessageViewModel
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var dm:DirectMessageViewModel
     @StateObject private var dim = DIMENSIONS()
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
-    @State var unread = 0
-    @State var showTabBar = true
-    @ObservedObject var ss:SettingsStore = .shared
+    @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Posts"
+    @State private var unread = 0
+    @State private var showTabBar = true
+    @ObservedObject private var ss:SettingsStore = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-//    @Environment(\.verticalSizeClass) private var verticalSizeClass
     
     var body: some View {
 //        let _ = Self._printChanges()

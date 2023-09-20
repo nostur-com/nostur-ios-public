@@ -9,8 +9,6 @@ import SwiftUI
 
 struct TryGuestAccountSheet: View {
     @EnvironmentObject var theme:Theme
-    @EnvironmentObject var ns:NosturState
-    let sp:SocketPool = .shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @State var letsGo = false
@@ -39,16 +37,16 @@ struct TryGuestAccountSheet: View {
         .frame(maxWidth: 300)
         .onAppear {
             // Start onboarding already.. speed up..
-            let countBefore = ns.accounts.count
-            if !ns.accounts.contains(where: { $0.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY }) {
+            let countBefore = NRState.shared.accounts.count
+            if !NRState.shared.accounts.contains(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY }) {
                 let guestAccount = GuestAccountManager.shared.createGuestAccount()
-                ns.setAccount(account: guestAccount)
-                if ns.accounts.count > countBefore {
+                NRState.shared.changeAccount(guestAccount)
+                if NRState.shared.accounts.count > countBefore {
                     didCreate = true
                 }
             }
             do {
-                try NewOnboardingTracker.shared.start(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY)
+                try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
                 L.onboarding.info("✈️✈️✈️ ONBORADING SPEED UP, FETCHING 0 + 3")
     //                    req(RM.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
             }
@@ -58,14 +56,14 @@ struct TryGuestAccountSheet: View {
         }
         .onDisappear {
             // back without trying out guest, so should cancel onboarding and creating guest
-            let guestAccount = try? Account.fetchAccount(publicKey: NosturState.GUEST_ACCOUNT_PUBKEY, context: viewContext)
+            let guestAccount = try? Account.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: viewContext)
             
             if let guestAccount, !letsGo && didCreate {
                 viewContext.delete(guestAccount)
                 NewOnboardingTracker.shared.abort()
             }
             else {
-                ns.setAccount(account: guestAccount)
+                NRState.shared.changeAccount(guestAccount)
             }
         }
         .navigationTitle("")
@@ -74,7 +72,7 @@ struct TryGuestAccountSheet: View {
     
     func tryGuestAccount() {
         letsGo = true
-        ns.onBoardingIsShown = false
+        NRState.shared.onBoardingIsShown = false
         dismiss()
     }
 }

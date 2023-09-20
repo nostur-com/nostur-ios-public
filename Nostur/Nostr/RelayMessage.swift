@@ -98,7 +98,7 @@ class RelayMessage {
             // These subscriptions: "Following", "CATCHUP-", "RESUME-", "PAGE-"
             // also can include hashtags, if WoT spam filter is enabled we filter these messages out
             if WOT_FILTER_ENABLED() && subCanHaveHashtags(mMessage.subscriptionId) {
-                if !(NosturState.shared.wot?.isAllowed(mMessage.pubkey) ?? true) {
+                if !(WebOfTrust.shared.isAllowed(mMessage.pubkey)) {
                     throw error.NOT_IN_WOT
                 }
             }
@@ -131,7 +131,7 @@ class RelayMessage {
                 }
                 
                 // We should always notify if we received a contact list this session, to enable Follow button
-                if mMessage.pubkey == NosturState.shared.activeAccountPublicKey && mMessage.kind == 3 { // To enable Follow button we need to have received a contact list
+                if mMessage.pubkey == NRState.shared.activeAccountPublicKey && mMessage.kind == 3 { // To enable Follow button we need to have received a contact list
                     DispatchQueue.main.async {
                         FollowingGuardian.shared.didReceiveContactListThisSession = true
                     }

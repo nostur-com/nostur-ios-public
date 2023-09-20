@@ -102,6 +102,8 @@
 		1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */; };
 		1F33EC3729B613F800615FB9 /* FullImageViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33EC3629B613F800615FB9 /* FullImageViewer.swift */; };
 		1F33EC3929B6849800615FB9 /* Centered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33EC3829B6849800615FB9 /* Centered.swift */; };
+		1F3897512AB9822B001A874E /* NRState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3897502AB9822B001A874E /* NRState.swift */; };
+		1F3897532ABA92DD001A874E /* LoggedInAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3897522ABA92DD001A874E /* LoggedInAccount.swift */; };
 		1F38AFF12A27166C0035641E /* VideoHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF02A27166C0035641E /* VideoHelpers.swift */; };
 		1F38AFF42A2789C80035641E /* MacListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF32A2789C70035641E /* MacListsView.swift */; };
 		1F39756D2AB5A229004F9D77 /* NIP42.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F39756C2AB5A229004F9D77 /* NIP42.swift */; };
@@ -524,6 +526,8 @@
 		1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+withNavigationDestinations.swift"; sourceTree = "<group>"; };
 		1F33EC3629B613F800615FB9 /* FullImageViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullImageViewer.swift; sourceTree = "<group>"; };
 		1F33EC3829B6849800615FB9 /* Centered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Centered.swift; sourceTree = "<group>"; };
+		1F3897502AB9822B001A874E /* NRState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRState.swift; sourceTree = "<group>"; };
+		1F3897522ABA92DD001A874E /* LoggedInAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInAccount.swift; sourceTree = "<group>"; };
 		1F38AFF02A27166C0035641E /* VideoHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoHelpers.swift; sourceTree = "<group>"; };
 		1F38AFF32A2789C70035641E /* MacListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacListsView.swift; sourceTree = "<group>"; };
 		1F39756C2AB5A229004F9D77 /* NIP42.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP42.swift; sourceTree = "<group>"; };
@@ -1474,6 +1478,8 @@
 				1F45C7EE29EF998D00F58772 /* Utils */,
 				1F91D8F92A188DE800C419A3 /* ViewFragments */,
 				1FCA273A299A4F2100298881 /* Zaps */,
+				1F3897502AB9822B001A874E /* NRState.swift */,
+				1F3897522ABA92DD001A874E /* LoggedInAccount.swift */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -1837,6 +1843,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F3897512AB9822B001A874E /* NRState.swift in Sources */,
 				1F20F4BF2AAE2F7D002D8886 /* ArticlesFeed+FeedSettings.swift in Sources */,
 				1FE31EE12A587F60008A4A6F /* ProfileOverlayCard.swift in Sources */,
 				1FE6947C2A8B5550004BB949 /* Search+FollowHashtagTile.swift in Sources */,
@@ -1953,6 +1960,7 @@
 				1FB130B129C0DB07004AC98D /* NoteRow.swift in Sources */,
 				1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */,
 				1FEC81A32A8FCB8B006FA50C /* DiscoverNostr.swift in Sources */,
+				1F3897532ABA92DD001A874E /* LoggedInAccount.swift in Sources */,
 				1F15F0A52AAF9CB00004E706 /* GalleryViewModel.swift in Sources */,
 				1F1580D32AAD11A100E5CCAA /* View+onBecomingVisible.swift in Sources */,
 				1FCB52732A533027006D08DF /* Migration+CoreDataProperties.swift in Sources */,

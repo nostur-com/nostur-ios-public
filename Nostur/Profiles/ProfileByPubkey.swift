@@ -25,7 +25,7 @@ struct ProfileByPubkey: View {
                         req: {
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                    let nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(pubkey))
+                                    let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))
                                     vm.ready(nrContact) // 2A. DONE
                                 }
                                 else { req(RM.getUserMetadata(pubkey: pubkey)) } // 2B. FETCH IF WE DONT HAVE
@@ -34,7 +34,7 @@ struct ProfileByPubkey: View {
                         onComplete: { relayMessage in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                    let nrContact = NRContact(contact: contact, following: NosturState.shared.bgFollowingPublicKeys.contains(pubkey))
+                                    let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))
                                     vm.ready(nrContact)
                                 }
                                 else { // 4. OR ELSE WE TIMEOUT
@@ -57,7 +57,7 @@ struct ProfileByPubkey: View {
                 Spacer()
             }
             .onAppear {
-                guard let account = NosturState.shared.account else { return }
+                guard let account = account() else { return }
                 if account.publicKey == pubkey {
                     editingAccount = account
                 }

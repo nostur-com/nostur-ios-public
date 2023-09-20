@@ -11,7 +11,8 @@ import NostrEssentials
 
 @MainActor
 struct Search: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var la:LoggedInAccount
+    @EnvironmentObject private var theme:Theme
     @State var nrPosts:[NRPost] = []
 
     @FetchRequest(
@@ -20,32 +21,34 @@ struct Search: View {
         animation: .none)
     var contacts:FetchedResults<Contact>
     
-    var filteredContactSearchResults:[Contact] {
-        guard let wot = NosturState.shared.wot else {
+    private var filteredContactSearchResults:[Contact] {
+        let wot = WebOfTrust.shared
+        if WOT_FILTER_ENABLED() {
+            return contacts
+                // WoT enabled, so put in-WoT before non-WoT
+                .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
+                // Put following before non-following
+                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
+        }
+        else {
             // WoT disabled, just following before non-following
             return contacts
-                .sorted(by: { NosturState.shared.followingPublicKeys.contains($0.pubkey) && !NosturState.shared.followingPublicKeys.contains($1.pubkey) })
+                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
         }
-        return contacts
-            // WoT enabled, so put in-WoT before non-WoT
-            .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
-            // Put following before non-following
-            .sorted(by: { NosturState.shared.followingPublicKeys.contains($0.pubkey) && !NosturState.shared.followingPublicKeys.contains($1.pubkey) })
     }
 
     @State var searching = false
-    @AppStorage("selected_tab") var selectedTab = "Search"
-    @State var navPath = NavigationPath()
+    @AppStorage("selected_tab") private var selectedTab = "Search"
+    @State private var navPath = NavigationPath()
 
-    @State var searchText = ""
+    @State private var searchText = ""
     @State var searchTask:Task<Void, Never>? = nil
     @State var backlog = Backlog()
-    @ObservedObject var settings:SettingsStore = .shared
+    @ObservedObject private var settings:SettingsStore = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-//    @Environment(\.verticalSizeClass) private var verticalSizeClass
     
-    var isSearchingHashtag:Bool {
+    private var isSearchingHashtag:Bool {
         let term = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         return isHashtag(term)
     }
@@ -54,8 +57,8 @@ struct Search: View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             ScrollView {
-                if isSearchingHashtag, let account = NosturState.shared.account {
-                    FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:account)
+                if isSearchingHashtag {
+                    FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:la.account)
                         .padding([.top, .horizontal], 10)
                 }
                 if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
@@ -75,16 +78,14 @@ struct Search: View {
                 }
                 .padding(.top, 10)
                 .toolbar {
-                    if let account = NosturState.shared.account {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button {
-                                sendNotification(.showSideBar)
-                            } label: {
-                                PFP(pubkey: account.publicKey, account: account, size:30)
-                            }
-                            .accessibilityLabel("Account menu")
-
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button {
+                            sendNotification(.showSideBar)
+                        } label: {
+                            PFP(pubkey: la.account.publicKey, account: la.account, size:30)
                         }
+                        .accessibilityLabel("Account menu")
+
                     }
                     ToolbarItem(placement: .principal) {
                         SearchBox(prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"), text: $searchText)

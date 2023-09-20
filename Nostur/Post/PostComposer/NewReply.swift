@@ -9,21 +9,20 @@ import SwiftUI
 import Combine
 
 struct NewReply: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var theme:Theme
     let PLACEHOLDER = String(localized:"Enter your reply", comment: "Placeholder when typing a reply")
     
     var replyTo:Event
-    @Namespace var textfield
-    @Namespace var images
+    @Namespace private var textfield
+    @Namespace private var images
     
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var ns:NosturState
     
-    @StateObject var vm = NewPostModel()
-    @StateObject var ipm = ImagePickerModel()
+    @StateObject private var vm = NewPostModel()
+    @StateObject private var ipm = ImagePickerModel()
     
-    @State var replyToNRPost:NRPost?
-    @State var textHeight:CGFloat = 0
+    @State private var replyToNRPost:NRPost?
+    @State private var textHeight:CGFloat = 0
     
     var body: some View {
         VStack(spacing:0) {
@@ -244,10 +243,10 @@ struct NewReply: View {
             }
         }
         .onAppear {
-            vm.activeAccount = NosturState.shared.account
+            vm.activeAccount = account()
         }
         .task {
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 let replyToNRPost = NRPost(event: replyTo)
                 DispatchQueue.main.async {
                     self.replyToNRPost = replyToNRPost

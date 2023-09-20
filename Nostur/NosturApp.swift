@@ -26,6 +26,7 @@ struct NosturApp: App {
     private var nip05verifier:NIP05Verifier = .shared
     private var ip:ImageProcessing = .shared
     @StateObject private var theme:Theme = .default
+    @StateObject private var nm:NotificationsManager = .shared
     
     var body: some Scene {
         WindowGroup {
@@ -67,15 +68,6 @@ struct NosturApp: App {
     
     /// Saves state to disk
     func saveState() {
-        let ns = NosturState.shared
-        if let account = ns.account {
-            if ns.lastNotificationReceivedAt != account.lastNotificationReceivedAt {
-                account.lastNotificationReceivedAt = ns.lastNotificationReceivedAt
-            }
-            if ns.lastProfileReceivedAt != account.lastProfileReceivedAt {
-                account.lastProfileReceivedAt = ns.lastProfileReceivedAt
-            }
-        }
         DataProvider.shared().save()
         L.og.notice("State saved")
     }

@@ -8,7 +8,9 @@
 import Foundation
 
 func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {
-    let since = NosturState.shared.lastProfileReceivedAt ?? nil
+    // Normally we use "Profiles" sub, and track the timestamp since last fetch
+    // if we fetch someone elses feed, the sub is not "Profiles" but "SomeoneElsesProfiles", and we skip the date check
+    let since = subscriptionId == "Profiles" ? (Nostur.account()?.lastProfileReceivedAt ?? nil) : nil
     let sinceNTimestamp = since != nil ? NTimestamp(date: since!) : nil
     L.fetching.info("checking profiles since: \(since?.description ?? "")")
     

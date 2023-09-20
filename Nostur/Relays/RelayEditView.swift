@@ -20,7 +20,7 @@ struct RelayEditView: View {
     
     @State private var excludedPubkeys:Set<String> = []
     private var accounts:[Account] {
-        NosturState.shared.accounts
+        NRState.shared.accounts
             .sorted(by: { $0.publicKey < $1.publicKey })
             .filter { $0.privateKey != nil }
     }

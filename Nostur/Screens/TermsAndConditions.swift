@@ -62,8 +62,8 @@ For any questions, please contact feedback@nostur.com.
             
             Button(String(localized:"Accept", comment: "Button to accept terms and conditions")) {
                 didAcceptTerms = true
-                if !NosturState.shared.activeAccountPublicKey.isEmpty {
-                    NosturState.shared.onBoardingIsShown = false
+                if !NRState.shared.activeAccountPublicKey.isEmpty {
+                    NRState.shared.onBoardingIsShown = false
                 }
             }
         }

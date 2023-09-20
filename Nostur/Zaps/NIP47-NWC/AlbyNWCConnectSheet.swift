@@ -112,7 +112,7 @@ struct AlbyNWCConnectSheet: View {
             }
         }
         .onReceive(receiveNotification(.nwcCallbackReceived)) { notification in
-            guard let account = NosturState.shared.account else { return }
+            guard let account = account() else { return }
             
             // When we redirect back from Alby to app:
             let albyCallback = notification.object as! AlbyCallback

@@ -17,42 +17,41 @@ public extension View {
 }
 
 private struct WithSheets: ViewModifier {
-    @EnvironmentObject var theme:Theme
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var dim:DIMENSIONS
+    @EnvironmentObject private var theme:Theme
+    @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var dim:DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
     
     
     // Sheet contents (item based)
-    @State var privateNote:PrivateNote? = nil
-    @State var post:Event? = nil
-    @State var contact:Contact? = nil
-    @State var fullImage:FullScreenItem? = nil
-    @State var reportPost:ReportPost? = nil
-    @State var reportContact:ReportContact? = nil
-    @State var addRemoveContactFromList:Contact? = nil
+    @State private var privateNote:PrivateNote? = nil
+    @State private var post:Event? = nil
+    @State private var contact:Contact? = nil
+    @State private var fullImage:FullScreenItem? = nil
+    @State private var reportPost:ReportPost? = nil
+    @State private var reportContact:ReportContact? = nil
+    @State private var addRemoveContactFromList:Contact? = nil
     
     // Confirmation dialogs
-    @State var restoreContactSheet = false
-    @State var removed:RemovedPubkeys? = nil
+    @State private var restoreContactSheet = false
+    @State private var removed:RemovedPubkeys? = nil
     
-    @State var deletePostSheet = false
-    @State var deletePost:DeletePost? = nil
+    @State private var deletePostSheet = false
+    @State private var deletePost:DeletePost? = nil
     
     // new post/quote post / new reply
-    @State var replyToEvent:EventNotification? = nil
-    @State var quoteOrRepostEvent:Event? = nil
-    @State var quotePostEvent:Event? = nil
+    @State private var replyToEvent:EventNotification? = nil
+    @State private var quoteOrRepostEvent:Event? = nil
+    @State private var quotePostEvent:Event? = nil
     
     // Zap sheet
-    @State var paymentInfo:PaymentInfo? = nil
+    @State private var paymentInfo:PaymentInfo? = nil
     
     // New highlight sheet
-    @State var newHighlight:NewHighlight? = nil
+    @State private var newHighlight:NewHighlight? = nil
     
-    @State var contextMenuNrPost:NRPost? = nil
-    @State var zapCustomizerSheetInfo:ZapCustomizerSheetInfo? = nil
+    @State private var contextMenuNrPost:NRPost? = nil
+    @State private var zapCustomizerSheetInfo:ZapCustomizerSheetInfo? = nil
     
     // Share post screenshot
     @State private var sharablePostImage:ShareablePostImage? = nil
@@ -60,8 +59,8 @@ private struct WithSheets: ViewModifier {
     //    @State private var renderer:ImageRenderer<AnyView>? = nil
     @State private var shareableWeblink:ShareableWeblink? = nil
     
-    @State var miniProfileSheetInfo:MiniProfileSheetInfo? = nil
-    @State var miniProfileAnimateIn = false
+    @State private var miniProfileSheetInfo:MiniProfileSheetInfo? = nil
+    @State private var miniProfileAnimateIn = false
     
     func body(content: Content) -> some View {
         content
@@ -111,7 +110,7 @@ private struct WithSheets: ViewModifier {
                 NavigationStack {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(dim)
-                        .environmentObject(ns)
+                        .environmentObject(NRState.shared)
                         .environmentObject(theme)
                 }
                 .presentationBackground(theme.background)
@@ -155,7 +154,7 @@ private struct WithSheets: ViewModifier {
             }
             .confirmationDialog("It's up to relays and other apps to honor your request", isPresented: $deletePostSheet, titleVisibility: .visible,  actions: {
                 Button("Request delete", role: .destructive) {
-                    guard let account = NosturState.shared.account else { return }
+                    guard let account = account() else { return }
                     guard let deletePost = self.deletePost else { return }
                     
                     if account.isNC {
@@ -163,12 +162,12 @@ private struct WithSheets: ViewModifier {
                         deletion.publicKey = account.publicKey
                         deletion = deletion.withId()
                         
-                        NosturState.shared.nsecBunker?.requestSignature(forEvent: deletion, whenSigned: { signedEvent in
+                        NSecBunkerManager.shared.requestSignature(forEvent: deletion, usingAccount: account, whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })
                     }
                     else {
-                        guard let signedDeletion = NosturState.shared.deletePost(deletePost.eventId) else {
+                        guard let signedDeletion = NRState.shared.loggedInAccount?.deletePost(deletePost.eventId) else {
                             return
                         }
                         Unpublisher.shared.publishNow(signedDeletion)
@@ -177,34 +176,28 @@ private struct WithSheets: ViewModifier {
             })
         
             .onReceive(receiveNotification(.createNewReply)) { notification in
-                guard ns.account?.privateKey != nil else {
-                    ns.readOnlyAccountSheetShown = true
-                    return
-                }
+                guard isFullAccount() else { showReadOnlyMessage(); return }
                 replyToEvent = notification.object as? EventNotification
             }
         
             .onReceive(receiveNotification(.createNewQuoteOrRepost)) { notification in
-                guard ns.account?.privateKey != nil else {
-                    ns.readOnlyAccountSheetShown = true
-                    return
-                }
+                guard isFullAccount() else { showReadOnlyMessage(); return }
                 quoteOrRepostEvent = notification.object as? Event
             }
         
             .sheet(item: $replyToEvent) { eventNotification in
                 NavigationStack {
-                    if let account = ns.account, account.isNC, let nsecBunker = ns.nsecBunker {
-                        WithNSecBunkerConnection(nsecBunker: nsecBunker) {
+                    if let account = account(), account.isNC {
+                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             NewReply(replyTo: eventNotification.event)
-                                .environmentObject(ns)
+                                .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                         }
                         .environmentObject(theme)
                     }
                     else {
                         NewReply(replyTo: eventNotification.event)
-                            .environmentObject(ns)
+                            .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(theme)
                     }
@@ -212,10 +205,10 @@ private struct WithSheets: ViewModifier {
             }
         
             .sheet(item: $quoteOrRepostEvent) { event in
-                if let account = ns.account, account.isNC, let nsecBunker = ns.nsecBunker {
-                    WithNSecBunkerConnection(nsecBunker: nsecBunker) {
+                if let account = account(), account.isNC {
+                    WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                         QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
-                            .environmentObject(ns)
+                            .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .presentationDetents([.height(200)])
                             .presentationDragIndicator(.visible)
@@ -224,7 +217,7 @@ private struct WithSheets: ViewModifier {
                 }
                 else {
                     QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
-                        .environmentObject(ns)
+                        .environmentObject(NRState.shared)
                         .environmentObject(dim)
                         .presentationDetents([.height(200)])
                         .presentationDragIndicator(.visible)
@@ -234,17 +227,17 @@ private struct WithSheets: ViewModifier {
         
             .sheet(item: $quotePostEvent) { quotePostEvent in
                 NavigationStack {
-                    if let account = ns.account, account.isNC, let nsecBunker = ns.nsecBunker {
-                        WithNSecBunkerConnection(nsecBunker: nsecBunker) {
+                    if let account = account(), account.isNC {
+                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             NewQuoteRepost(quotingEvent: quotePostEvent)
-                                .environmentObject(ns)
+                                .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                         }
                         .environmentObject(theme)
                     }
                     else {
                         NewQuoteRepost(quotingEvent: quotePostEvent)
-                            .environmentObject(ns)
+                            .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(theme)
                     }
@@ -279,7 +272,7 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $newHighlight) { newHighlight in
                 NavigationStack {
                     HighlightComposer(highlight: newHighlight)
-                        .environmentObject(ns)
+                        .environmentObject(NRState.shared)
                         .environmentObject(theme)
                 }
             }
@@ -291,7 +284,7 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $contextMenuNrPost) { nrPost in
                 LazyNoteMenuSheet(nrPost: nrPost)
-                    .environmentObject(ns)
+                    .environmentObject((NRState.shared))
                     .presentationDetents([.medium])
                     .environmentObject(theme)
                     .presentationBackground(theme.background)
@@ -304,7 +297,7 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $zapCustomizerSheetInfo) { zapCustomizerSheetInfo in
                 ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId)
-                    .environmentObject(ns)
+                    .environmentObject(NRState.shared)
                     .presentationDetents([.large])
                     .environmentObject(theme)
                     .presentationBackground(theme.background)
@@ -349,7 +342,7 @@ private struct WithSheets: ViewModifier {
                         .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                         .padding(.vertical, 10)
                         .environmentObject(dim)
-                        .environmentObject(ns)
+                        .environmentObject(NRState.shared)
                         .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                         .environment(\.colorScheme, colorScheme)
                         .environmentObject(theme)

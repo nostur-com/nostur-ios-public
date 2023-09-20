@@ -11,7 +11,6 @@ import CoreData
 struct NotificationsPosts: View {
     @EnvironmentObject private var theme:Theme
     @ObservedObject private var settings:SettingsStore = .shared
-    @EnvironmentObject private var ns:NosturState
     @StateObject private var fl = FastLoader()
     @State private var backlog = Backlog()
     @State private var didLoad = false
@@ -81,7 +80,7 @@ struct NotificationsPosts: View {
             load()
         }
         .onReceive(receiveNotification(.newMentions)) { _ in
-            guard let account = NosturState.shared.account else { return }
+            guard let account = account() else { return }
             let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
             fl.onComplete = {
                 saveLastSeenPostCreatedAt() // onComplete from local database
@@ -140,7 +139,7 @@ struct NotificationsPosts: View {
     }
     
     private func load() {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         didLoad = true
         fl.predicate = NSPredicate(
             format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
@@ -163,7 +162,7 @@ struct NotificationsPosts: View {
     }
     
     private func fetchNewer() {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         let fetchNewerTask = ReqTask(
             reqCommand: { (taskId) in
                 req(RM.getMentions(
@@ -201,7 +200,7 @@ struct NotificationsPosts: View {
         if let first = fl.nrPosts.first {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
-                if let account = NosturState.shared.bgAccount {
+                if let account = account() {
                     if account.lastSeenPostCreatedAt != firstCreatedAt {
                         account.lastSeenPostCreatedAt = firstCreatedAt
                     }
@@ -212,7 +211,7 @@ struct NotificationsPosts: View {
     }
     
     private func loadMore() {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         fl.predicate = NSPredicate(
             format: "NOT pubkey IN %@ AND kind == 1 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
             (account.blockedPubkeys_ + [account.publicKey]),

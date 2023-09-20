@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct ProfileCardByPubkey: View {
-    let pubkey:String
+    public let pubkey:String
     
     @FetchRequest
-    var contacts:FetchedResults<Contact>
+    private var contacts:FetchedResults<Contact>
     
     init(pubkey:String) {
         self.pubkey = pubkey
@@ -39,21 +39,20 @@ struct ProfileCardByPubkey: View {
 }
 
 struct ProfileRow: View {
-    @EnvironmentObject var ns:NosturState
-    @ObservedObject var fg:FollowingGuardian = .shared
-    let sp:SocketPool = .shared
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var la:LoggedInAccount
+    @ObservedObject private var fg:FollowingGuardian = .shared
      
     // Following/Unfollowing tap is slow so update UI and do in background:
-    @State var isFollowing = false
-    var withoutFollowButton = false
-    @ObservedObject var contact:Contact
+    @State private var isFollowing = false
+    public var withoutFollowButton = false
+    @ObservedObject public var contact:Contact
     
-    @State var similarPFP = false
+    @State private var similarPFP = false
     
-    var couldBeImposter:Bool {
-        guard let account = NosturState.shared.account else { return false }
-        guard account.publicKey != contact.pubkey else { return false }
-        guard !NosturState.shared.isFollowing(contact.pubkey) else { return false }
+    private var couldBeImposter:Bool {
+        guard la.pubkey != contact.pubkey else { return false }
+        guard !la.isFollowing(pubkey: contact.pubkey) else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
         return similarPFP
     }
@@ -96,18 +95,19 @@ struct ProfileRow: View {
                     Spacer()
                     if (!withoutFollowButton) {
                         Button {
+                            guard isFullAccount() else { showReadOnlyMessage(); return }
                             if (isFollowing && !contact.privateFollow) {
                                 contact.privateFollow = true
-                                ns.follow(contact)
+                                la.follow(contact, pubkey: contact.pubkey)
                             }
                             else if (isFollowing && contact.privateFollow) {
                                 isFollowing = false
                                 contact.privateFollow = false
-                                ns.unfollow(contact)
+                                la.unfollow(contact, pubkey: contact.pubkey)
                             }
                             else {
                                 isFollowing = true
-                                ns.follow(contact)
+                                la.follow(contact, pubkey: contact.pubkey)
                             }
                         } label: {
                             FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.privateFollow)
@@ -124,8 +124,11 @@ struct ProfileRow: View {
         .onTapGesture {
             navigateTo(ContactPath(key: contact.pubkey))
         }
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            isFollowing = la.isFollowing(pubkey: contact.pubkey)
+        }
         .task {
-            if (NosturState.shared.isFollowing(contact.pubkey)) {
+            if la.isFollowing(pubkey: contact.pubkey) {
                 isFollowing = true
             }
             else {
@@ -137,10 +140,10 @@ struct ProfileRow: View {
                 
                 let contactAnyName = contact.anyName.lowercased()
                 let cPubkey = contact.pubkey
-                let currentAccountPubkey = NosturState.shared.activeAccountPublicKey
+                let currentAccountPubkey = la.pubkey
                 
                 DataProvider.shared().bg.perform {
-                    guard let account = NosturState.shared.bgAccount else { return }
+                    guard let account = la.bgAccount else { return }
                     guard account.publicKey == currentAccountPubkey else { return }
                     guard let similarContact = account.follows_.first(where: {
                         isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
@@ -156,7 +159,7 @@ struct ProfileRow: View {
                         }
                         
                         DispatchQueue.main.async {
-                            guard currentAccountPubkey == NosturState.shared.activeAccountPublicKey else { return }
+                            guard currentAccountPubkey == la.pubkey else { return }
                             self.similarPFP = similarPFP
                             contact.couldBeImposter = similarPFP ? 1 : 0
                         }

@@ -9,14 +9,13 @@ import SwiftUI
 import Combine
 
 struct NewQuoteRepost: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var theme:Theme
     let PLACEHOLDER = String(localized: "Add comment", comment: "Placeholder when typing a new reply")
-    var quotingEvent:Event
+    private var quotingEvent:Event
     
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var ns:NosturState
-    @StateObject var vm = NewPostModel()
-    @StateObject var ipm = ImagePickerModel()
+    @StateObject private var vm = NewPostModel()
+    @StateObject private var ipm = ImagePickerModel()
     
     @State var quotingNRPost:NRPost?
     
@@ -175,7 +174,7 @@ struct NewQuoteRepost: View {
             }
         }
         .onAppear {
-            vm.activeAccount = NosturState.shared.account
+            vm.activeAccount = account()
         }
         .task {
             DataProvider.shared().bg.perform {

@@ -8,16 +8,16 @@
 import SwiftUI
 
 struct EditNosturList: View {
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var list:NosturList
-    @Environment(\.managedObjectContext) var viewContext
-    @Environment(\.dismiss) var dismiss
+    @ObservedObject public var list:NosturList
     
-    @State var confirmDeleteShown = false
-    @State var contactToRemove:Contact? = nil
-    @State var addContactsSheetShown = false
-    @State var editList:NosturList? = nil
-    @State var selectedContacts:Set<Contact> = []
+    @EnvironmentObject private var theme:Theme
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var confirmDeleteShown = false
+    @State private var contactToRemove:Contact? = nil
+    @State private var addContactsSheetShown = false
+    @State private var editList:NosturList? = nil
+    @State private var selectedContacts:Set<Contact> = []
     
     var body: some View {
         List(list.contacts_) { contact in
@@ -66,7 +66,7 @@ struct EditNosturList: View {
         })
         .sheet(isPresented: $addContactsSheetShown) {
             NavigationStack {
-                ContactsSearch(followingPubkeys:NosturState.shared.followingPublicKeys,
+                ContactsSearch(followingPubkeys: follows(),
                                prompt: "Search", onSelectContacts: { selectedContacts in
                     list.contacts_.append(contentsOf: selectedContacts)
                     addContactsSheetShown = false

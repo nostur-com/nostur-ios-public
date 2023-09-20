@@ -58,8 +58,7 @@ struct HotFeedSettings: View {
 }
 
 struct HotFeedSettingsTester: View {
-    @EnvironmentObject var ns:NosturState
-    
+
     var body: some View {
         NavigationStack {
             VStack {

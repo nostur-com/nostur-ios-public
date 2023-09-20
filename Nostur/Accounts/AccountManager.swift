@@ -26,7 +26,9 @@ class AccountManager {
             account.publicKey = newKeys.publicKeyHex()
             
             try! context.save()
-            NosturState.shared.loadAccounts()
+            DispatchQueue.main.async {
+                NRState.shared.loadAccounts()
+            }
             return account
         }
         return account
@@ -96,7 +98,7 @@ class AccountManager {
     }
     
     // Wipes kind 0 and 3, publishes wiped events. Deletes key fron keychain, account from db
-    func wipeAccount(_ account:Account) {
+    @MainActor func wipeAccount(_ account:Account) {
         guard let pk = account.privateKey else { return }
     
         let metaData = NSetMetadata(name: "ACCOUNT_DELETED", display_name: "ACCOUNT_DELETED", about: "", picture: "", banner: "", nip05: "", lud16: "", lud06: "")
@@ -118,13 +120,13 @@ class AccountManager {
             if account.isNC {
                 newKind0Event.publicKey = account.publicKey
                 newKind0Event = newKind0Event.withId()
-                NosturState.shared.nsecBunker?.requestSignature(forEvent: newKind0Event, whenSigned: { signedEvent in
+                NSecBunkerManager.shared.requestSignature(forEvent: newKind0Event, usingAccount: account, whenSigned: { signedEvent in
                     Unpublisher.shared.publishNow(signedEvent)
                 })
                 
                 newKind3Event.publicKey = account.publicKey
                 newKind3Event = newKind3Event.withId()
-                NosturState.shared.nsecBunker?.requestSignature(forEvent: newKind3Event, whenSigned: { signedEvent in
+                NSecBunkerManager.shared.requestSignature(forEvent: newKind3Event, usingAccount: account, whenSigned: { signedEvent in
                     Unpublisher.shared.publishNow(signedEvent)
                 })
             }
@@ -140,22 +142,25 @@ class AccountManager {
             deletePrivateKey(forPublicKeyHex: account.publicKey)
             
             // delete account
-            let accounts = NosturState.shared.accounts
-            if (accounts.isEmpty) {
-                NosturState.shared.onBoardingIsShown = true
-                sendNotification(.clearNavigation)
-                LVMManager.shared.listVMs.removeAll()
-                NosturState.shared.setAccount(account: nil)
-                DataProvider.shared().viewContext.delete(account)
-                NosturState.shared.loadAccounts()
-            }
-            else {
-                DataProvider.shared().viewContext.delete(account)
-                NosturState.shared.loadAccounts()
-                let accountsAfterDelete = NosturState.shared.accounts
-                NosturState.shared.setAccount(account:accountsAfterDelete.first)
-            }
+            
+            DataProvider.shared().viewContext.delete(account)
             try DataProvider.shared().viewContext.save()
+            
+            NRState.shared.loadAccounts() { accounts in
+                if (accounts.isEmpty) {
+                    NRState.shared.onBoardingIsShown = true
+                    sendNotification(.clearNavigation)
+                    LVMManager.shared.listVMs.removeAll()
+                    NRState.shared.changeAccount(nil)
+                }
+                else {
+                    NRState.shared.changeAccount(accounts.first)
+                }
+            }
+            
+            let accounts = NRState.shared.accounts
+            
+            
         }
         catch {
             L.og.error("🔴🔴🔴🔴🔴 Could not wipe or delete account 🔴🔴🔴🔴🔴")
@@ -266,7 +271,7 @@ func publishMetadataEvent(_ account:Account) throws {
             newKind0Event.publicKey = account.publicKey
             newKind0Event = newKind0Event.withId()
             
-            NosturState.shared.nsecBunker?.requestSignature(forEvent: newKind0Event, whenSigned: { signedEvent in
+            NSecBunkerManager.shared.requestSignature(forEvent: newKind0Event, usingAccount: account, whenSigned: { signedEvent in
                 L.og.debug("Going to publish \(signedEvent.wrappedEventJson())")
                 bg().perform {
                     _ = Event.saveEvent(event: signedEvent)

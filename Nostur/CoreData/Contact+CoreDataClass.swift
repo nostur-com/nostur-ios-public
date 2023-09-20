@@ -25,6 +25,18 @@ public class Contact: NSManagedObject {
     }
     
     var zapState:ZapState?
+    
+    func followsYou() -> Bool {
+        guard let clEvent = clEvent else { return false }
+        let account = if Thread.isMainThread {
+            NRState.shared.loggedInAccount?.account
+        }
+        else {
+            NRState.shared.loggedInAccount?.bgAccount
+        }
+        guard let account = account else { return false }
+        return !clEvent.fastTags.filter { $0.0 == "p" && $0.1 == account.publicKey }.isEmpty
+    }
 }
 
 public typealias ZapEtag = String

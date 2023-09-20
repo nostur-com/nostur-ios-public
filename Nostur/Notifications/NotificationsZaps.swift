@@ -17,23 +17,20 @@ struct ZapInfo: Identifiable {
 }
 
 struct NotificationsZaps: View {
-    @EnvironmentObject var theme:Theme
-    let er:ExchangeRateModel = .shared // Not Observed for performance
-
-    @ObservedObject var settings:SettingsStore = .shared
-    @StateObject var fl = FastLoader()
-    @State var didLoad = false
-    @State var backlog = Backlog()
-    @EnvironmentObject var ns:NosturState
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Zaps"
+    @EnvironmentObject private var theme:Theme
+    @ObservedObject private var settings:SettingsStore = .shared
+    @StateObject private var fl = FastLoader()
+    @State private var didLoad = false
+    @State private var backlog = Backlog()
+    @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Zaps"
     
-    @State var zapsForMeDeduplicated = [ZapInfo]()
+    @State private var zapsForMeDeduplicated = [ZapInfo]()
     
     @FetchRequest
-    var pNotifications:FetchedResults<PersistentNotification>
+    private var pNotifications:FetchedResults<PersistentNotification>
     
-    func zapsForNote(_ zap:Event, zapsForMe:[Event]) -> [Event] {
+    private func zapsForNote(_ zap:Event, zapsForMe:[Event]) -> [Event] {
         return zapsForMe.filter { zap in
             if let zappedEventId = zap.zappedEventId {
                 return zap.id == zappedEventId
@@ -49,7 +46,7 @@ struct NotificationsZaps: View {
         _pNotifications = FetchRequest(fetchRequest: fr)
     }
     
-    var notifications:[ZapOrNotification] {
+    private var notifications:[ZapOrNotification] {
         // combine nrPosts and PersistentNotifications in the list
         return (pNotifications.map { pNot in
             ZapOrNotification(id: "NOTIF-" + pNot.id.uuidString, type: .NOTIFICATION, notification: pNot)
@@ -91,7 +88,7 @@ struct NotificationsZaps: View {
                 VStack {
                     if !zapsForMeDeduplicated.isEmpty {
                         Button("Show more") {
-                            guard let account = NosturState.shared.account else { return }
+                            guard let account = account() else { return }
                             fl.predicate = NSPredicate(
                                 format: "otherPubkey == %@" + // ONLY TO ME
                                 "AND kind == 9735 " +
@@ -129,7 +126,7 @@ struct NotificationsZaps: View {
             load()
         }
         .onReceive(receiveNotification(.newZaps)) { _ in
-            guard let account = NosturState.shared.account else { return }
+            guard let account = account() else { return }
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
             fl.onComplete = {
                 saveLastSeenZapCreatedAt() // onComplete from local database
@@ -180,8 +177,8 @@ struct NotificationsZaps: View {
     
     @State var subscriptions = Set<AnyCancellable>()
     
-    func load() {
-        guard let account = NosturState.shared.account else { return }
+    private func load() {
+        guard let account = account() else { return }
         didLoad = true
         fl.$events
             .sink(receiveValue: { events in
@@ -231,8 +228,8 @@ struct NotificationsZaps: View {
         fl.loadMore(500)
     }
     
-    func fetchNewer() {
-        guard let account = ns.account else { return }
+    private func fetchNewer() {
+        guard let account = account() else { return }
         let fetchNewerTask = ReqTask(
             reqCommand: { (taskId) in
                 req(RM.getMentions(
@@ -267,23 +264,23 @@ struct NotificationsZaps: View {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Zaps" else { return }
         if let first = fl.events.first {
             let firstCreatedAt = first.created_at
-            DataProvider.shared().bg.perform {
-                if let account = NosturState.shared.bgAccount {
+            bg().perform {
+                if let account = account() {
                     if account.lastSeenZapCreatedAt != firstCreatedAt {
                         account.lastSeenZapCreatedAt = firstCreatedAt
                     }
                 }
-                DataProvider.shared().bgSave()
+                bgSave()
             }
         }
     }
 }
 
 struct PostZap: View {
-    let er:ExchangeRateModel = .shared // Not Observed for performance
-    @ObservedObject var nrPost:NRPost // TODO: ...
-    @ObservedObject var footerAttributes:FooterAttributes
-    var zaps:[Event]
+    @EnvironmentObject private var theme:Theme
+    @ObservedObject private var nrPost:NRPost // TODO: ...
+    @ObservedObject private var footerAttributes:FooterAttributes
+    private var zaps:[Event]
     
     init(nrPost: NRPost, zaps:[Event]) {
         self.nrPost = nrPost
@@ -298,8 +295,8 @@ struct PostZap: View {
                     .foregroundColor(theme.accent)
                 Text(Double(footerAttributes.zapTally).satsFormatted)
                     .font(.title2)
-                if (er.bitcoinPrice != 0.0) {
-                    let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(er.bitcoinPrice)))
+                if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
+                    let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
 
                     Text("\(fiatPrice)")
                         .font(.caption)
@@ -325,21 +322,19 @@ struct PostZap: View {
 }
 
 struct ProfileZap: View {
-    let er:ExchangeRateModel = .shared // Not Observed for performance
-    @EnvironmentObject var ns:NosturState
-    
-    var zap:Event
-    @ObservedObject var zapFrom:Event
+    public var zap:Event
+    @ObservedObject public var zapFrom:Event
+    @EnvironmentObject private var theme:Theme
     
     var body: some View {
         HStack(alignment: .top) {
             VStack {
                 Image(systemName: "bolt.fill")
-                    .foregroundColor(Color("AccentColor"))
+                    .foregroundColor(theme.accent)
                 Text(zap.naiveSats.satsFormatted)
                     .font(.title2)
-                if (er.bitcoinPrice != 0.0) {
-                    let fiatPrice = String(format: "$%.02f",(Double(zap.naiveSats) / 100000000 * Double(er.bitcoinPrice)))
+                if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
+                    let fiatPrice = String(format: "$%.02f",(Double(zap.naiveSats) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
 
                     Text("\(fiatPrice)")
                         .font(.caption)
@@ -376,10 +371,9 @@ struct ProfileZap: View {
 }
 
 struct ZapsForThisNote: View {
-    var zaps:[Event]
-    @EnvironmentObject var ns:NosturState
+    public var zaps:[Event]
     
-    var deduplicated:[String: (String, Contact?, Double, Date, String?)] { // [string: (pubkey, Contact?, amount, created_at)]
+    private var deduplicated:[String: (String, Contact?, Double, Date, String?)] { // [string: (pubkey, Contact?, amount, created_at)]
         var d = [String: (String, Contact?, Double, Date, String?)]()
         // show only 1 zap per pubkey, combine total amount, track most recent created_at
         zaps

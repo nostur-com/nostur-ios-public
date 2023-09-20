@@ -8,13 +8,12 @@
 import SwiftUI
 
 struct EditPrivateNoteSheet: View {
-    @Environment(\.managedObjectContext) var viewContext
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var ns:NosturState
+    @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.dismiss) private var dismiss
     
-    @ObservedObject var privateNote:PrivateNote
+    @ObservedObject private var privateNote:PrivateNote
     
-    @State var privateNoteToRemove:PrivateNote?
+    @State private var privateNoteToRemove:PrivateNote?
     
     init(privateNote: PrivateNote) {
         self.privateNote = privateNote

@@ -229,7 +229,10 @@ final class SettingsStore: ObservableObject {
     }
     
     var webOfTrustLevel: String {
-        set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.webOfTrustLevel)  }
+        set { 
+            objectWillChange.send(); defaults.set(newValue, forKey: Keys.webOfTrustLevel)
+            WebOfTrust.shared.webOfTrustLevel = newValue
+        }
         get { defaults.string(forKey: Keys.webOfTrustLevel) ?? WebOfTrustLevel.normal.rawValue }
     }
     

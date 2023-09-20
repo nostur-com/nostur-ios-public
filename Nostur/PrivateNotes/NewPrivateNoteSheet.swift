@@ -8,14 +8,13 @@
 import SwiftUI
 
 struct NewPrivateNoteSheet: View {
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.dismiss) private var dismiss
     
-    var post:Event?
-    var contact:Contact?
+    private var post:Event?
+    private var contact:Contact?
     
-    @State var content = ""
+    @State private var content = ""
     
     init(contact:Contact? = nil, post: Event? = nil) {
         self.post = post
@@ -54,9 +53,8 @@ struct NewPrivateNoteSheet: View {
                     Button("Save") {
                         dismiss()
                         do {
-                            guard let account = ns.account else { return }
+                            guard let account = account() else { return }
                             guard post != nil || contact != nil else { return }
-//                            ns.objectWillChange.send()
                             post?.objectWillChange.send()
                             contact?.objectWillChange.send()
                             if let post {

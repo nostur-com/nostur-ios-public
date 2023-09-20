@@ -8,26 +8,21 @@
 import SwiftUI
 
 struct PaymentAmountSelector: View {
-    @EnvironmentObject var ns:NosturState
-    @Environment(\.openURL) var openURL
-    
-    let ss:SettingsStore = .shared
-    let sp:SocketPool = .shared
-    let paymentInfo:PaymentInfo
-    
+    @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
-    @State var errorMessage:String? = nil
+    @State private var errorMessage:String? = nil
+    private let paymentInfo:PaymentInfo
     
     init(paymentInfo:PaymentInfo) {
         self.paymentInfo = paymentInfo
     }
     
-    func amountSelected(amount:Double, zapMessage:String) {
-        guard let account = NosturState.shared.account else { return }
+    private func amountSelected(amount:Double, zapMessage:String) {
+        guard let account = account() else { return }
         guard let anyLud = paymentInfo.contact?.anyLud, anyLud == true else { return }
         let pubkey = paymentInfo.contact!.pubkey
         let eventId = paymentInfo.nrPost?.id ?? nil
-        let relays = sp.sockets.values
+        let relays = SocketPool.shared.sockets.values
             .filter { $0.write }
             .map { $0.url }
         let isNC = account.isNC
@@ -38,12 +33,12 @@ struct PaymentAmountSelector: View {
                     let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
                     
                     if isNC {
-                        NosturState.shared.nsecBunker?.requestSignature(forEvent: zapRequestNote, whenSigned: { signedZapRequestNote in
+                        NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedZapRequestNote in
                             Task {
                                 let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                                 
                                 if response.pr != nil {
-                                    if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
+                                    if SettingsStore.shared.defaultLightningWallet.scheme.contains(":nwc:") && !SettingsStore.shared.activeNWCconnectionId.isEmpty {
                                         // NWC WALLET INSTANT ZAPS
                                         if nwcSendPayInvoiceRequest(response.pr!) {
                                             dismiss()
@@ -55,7 +50,7 @@ struct PaymentAmountSelector: View {
                                     else {
                                         // OLD STYLE WALLET
                                         await MainActor.run {
-                                            openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                                            openURL(URL(string: "\(SettingsStore.shared.defaultLightningWallet.scheme)\(response.pr!)")!)
                                         }
                                     }
                                 }
@@ -69,7 +64,7 @@ struct PaymentAmountSelector: View {
                         let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                         
                         if response.pr != nil {
-                            if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
+                            if SettingsStore.shared.defaultLightningWallet.scheme.contains(":nwc:") && !SettingsStore.shared.activeNWCconnectionId.isEmpty {
                                 // NWC WALLET INSTANT ZAPS
                                 if nwcSendPayInvoiceRequest(response.pr!) {
                                     dismiss()
@@ -81,7 +76,7 @@ struct PaymentAmountSelector: View {
                             else {
                              // OLD STYLE WALLET
                                 await MainActor.run {
-                                    openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                                    openURL(URL(string: "\(SettingsStore.shared.defaultLightningWallet.scheme)\(response.pr!)")!)
                                 }
                             }
                         }
@@ -99,7 +94,7 @@ struct PaymentAmountSelector: View {
                     
                     if response.pr != nil {
                         
-                        if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
+                        if SettingsStore.shared.defaultLightningWallet.scheme.contains(":nwc:") && !SettingsStore.shared.activeNWCconnectionId.isEmpty {
                             // NWC WALLET INSTANT ZAPS
                             if nwcSendPayInvoiceRequest(response.pr!) {
                                 dismiss()
@@ -111,7 +106,7 @@ struct PaymentAmountSelector: View {
                         else {
                          // OLD STYLE WALLET
                             await MainActor.run {
-                                openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                                openURL(URL(string: "\(SettingsStore.shared.defaultLightningWallet.scheme)\(response.pr!)")!)
                             }
                         }
                     }

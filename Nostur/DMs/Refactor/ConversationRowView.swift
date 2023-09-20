@@ -77,10 +77,10 @@ struct ConversationRowView: View {
                         guard !NewOnboardingTracker.shared.isOnboarding else { return }
                         
                         let contactAnyName = contact.anyName.lowercased()
-                        let currentAccountPubkey = NosturState.shared.activeAccountPublicKey
+                        let currentAccountPubkey = NRState.shared.activeAccountPublicKey
                         
                         DataProvider.shared().bg.perform {
-                            guard let account = NosturState.shared.bgAccount else { return }
+                            guard let account = account() else { return }
                             guard account.publicKey == currentAccountPubkey else { return }
                             guard let similarContact = account.follows_.first(where: {
                                 isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
@@ -89,13 +89,13 @@ struct ConversationRowView: View {
                             Task.detached(priority: .background) {
                                 let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
                                 DispatchQueue.main.async {
-                                    guard currentAccountPubkey == NosturState.shared.activeAccountPublicKey else { return }
+                                    guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                                     if similarPFP && contact.couldBeImposter != 1 {
                                         conv.objectWillChange.send() // need to rerender
                                     }
                                     contact.couldBeImposter = similarPFP ? 1 : 0
                                     DataProvider.shared().bg.perform {
-                                        guard currentAccountPubkey == NosturState.shared.bgAccount?.publicKey else { return }
+                                        guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
                                         contact.contact.couldBeImposter = similarPFP ? 1 : 0
             //                            DataProvider.shared().bgSave()
                                     }

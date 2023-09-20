@@ -216,9 +216,13 @@ class LVM: NSObject, ObservableObject {
     var hashtags: Set<String> = []
     
     public func loadHashtags() {
-        self.hashtags = self.id == "Following"
-        ? (NosturState.shared.account?.followingHashtags ?? [])
-        : (self.feed?.followingHashtags ?? [])
+        self.hashtags =
+        if self.id == "Following" {
+            (account()?.followingHashtags ?? [])
+        }
+        else {
+            (self.feed?.followingHashtags ?? [])
+        }
     }
     
     private func getAllObjectIds(_ nrPosts:[NRPost]) -> Set<NRPostID> { // called from main thread?
@@ -1425,10 +1429,10 @@ extension LVM {
     }
     
     func filterMutedWords(_ events:[Event]) -> [Event] {
-        guard !NosturState.shared.mutedWords.isEmpty else { return events }
+        guard !NRState.shared.mutedWords.isEmpty else { return events }
         return events
             .filter {
-                notMutedWords(in: $0.noteText, mutedWords: NosturState.shared.mutedWords)
+                notMutedWords(in: $0.noteText, mutedWords: NRState.shared.mutedWords)
             }
     }
     
@@ -1520,7 +1524,7 @@ func notMutedWords(in text: String, mutedWords: [String]) -> Bool {
 }
 
 func notMuted(_ nrPost:NRPost) -> Bool {
-    let mutedRootIds = NosturState.shared.account?.mutedRootIds_ ?? []
+    let mutedRootIds = account()?.mutedRootIds_ ?? []
     return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "NIL") && !mutedRootIds.contains(nrPost.replyToId ?? "NIL")
 }
 
