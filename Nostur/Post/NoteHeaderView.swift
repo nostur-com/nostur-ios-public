@@ -230,6 +230,7 @@ struct PreviewHeaderView: View {
 }
 
 struct NameAndNip: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var contact:NRContact // for rendering nip check (after just verified) etc
     
     var body: some View {

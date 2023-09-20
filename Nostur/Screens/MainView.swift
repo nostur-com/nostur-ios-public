@@ -57,6 +57,7 @@ struct MainView: View {
                                 NewPost()
                             }
                         }
+                        .presentationBackground(theme.background)
                     }
                     .toolbar {
                         if let account = self.account, !sm.showSidebar {

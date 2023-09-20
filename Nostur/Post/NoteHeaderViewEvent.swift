@@ -66,6 +66,7 @@ struct PlaceholderPostHeaderEvent: View {
 }
 
 struct PostHeaderEvent: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var contact:Contact
     let event:Event
     let singleLine:Bool
@@ -115,6 +116,7 @@ struct PostHeaderEvent: View {
 }
 
 struct NameAndNipContact: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
     
     var body: some View {

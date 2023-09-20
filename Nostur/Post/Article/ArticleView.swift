@@ -9,6 +9,7 @@ import SwiftUI
 import MarkdownUI
 
 struct ArticleView: View {
+    @EnvironmentObject var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var article:NRPost
     var isParent = false
@@ -238,7 +239,7 @@ struct ArticleView: View {
                             FontSize(18)
                         }
                         .markdownTextStyle(\.link) {
-                            ForegroundColor(Color("AccentColor"))
+                            ForegroundColor(theme.accent)
                         }
                         .markdownImageProvider(.noImage)
                         .markdownInlineImageProvider(.noImage)
@@ -253,7 +254,7 @@ struct ArticleView: View {
                             FontSize(18)
                         }
                         .markdownTextStyle(\.link) {
-                            ForegroundColor(Color("AccentColor"))
+                            ForegroundColor(theme.accent)
                         }
                         .markdownImageProvider(.noImage)
                         .markdownInlineImageProvider(.noImage)

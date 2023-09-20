@@ -52,7 +52,12 @@ struct BadgesReceivedView: View {
             List(Array(Set(badgeAwardsToMe.compactMap { $0.badgeDefinition }).sorted(by: { $0.created_at > $1.created_at })), id:\.self) { badge in
                 BadgeReceivedRow(badge: badge, selectedBadges: $selection)
                     .id(badge.id)
+                    .listRowBackground(theme.background)
+//                    .background(theme.background)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(theme.listBackground)
             
             Button {
                 guard isFullAccount() else { showReadOnlyMessage(); return }
@@ -63,6 +68,7 @@ struct BadgesReceivedView: View {
             
             Spacer()
         }
+        .background(theme.listBackground)
         .navigationTitle("")
         .onAppear {
             // fetch missing badge definitions:

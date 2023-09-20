@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct BadgesView: View {
+    @EnvironmentObject var theme:Theme
     @State var tab = "Issued"
     
     var body: some View {
@@ -24,13 +25,17 @@ struct BadgesView: View {
             switch tab {
             case "Issued":
                 BadgesIssuedContainer()
+                    .background(theme.listBackground)
             case "Received":
                 BadgesReceivedContainer()
+                    .background(theme.listBackground)
             default:
                 BadgesReceivedContainer()
+                    .background(theme.listBackground)
             }
             Spacer()
         }
+        .background(theme.listBackground)
     }
 }
 

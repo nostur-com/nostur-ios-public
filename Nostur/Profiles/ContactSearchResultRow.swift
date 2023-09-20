@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContactSearchResultRow: View {
+    @EnvironmentObject var theme:Theme
     @ObservedObject var contact:Contact
     var onSelect:(() -> Void)?
     

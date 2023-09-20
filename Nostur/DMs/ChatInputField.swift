@@ -9,6 +9,7 @@
 import SwiftUI
 
 struct ChatInputField: View {
+    @EnvironmentObject var theme: Theme
     @Binding var message:String
     var onSubmit:(() -> Void)?
     
@@ -35,7 +36,7 @@ struct ChatInputField: View {
                     .font(.system(size: 20))
                     .padding(.trailing, 10)
             }
-            .accentColor(Color("AccentColor"))
+            .accentColor(theme.accent)
         }
         .background(Color(UIColor.systemGray6))
         .cornerRadius(25)
