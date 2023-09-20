@@ -174,7 +174,13 @@ struct LazyNoteMenuSheet: View {
                     }
                     HStack {
                         Button {
-                            guard isFullAccount() else { showReadOnlyMessage(); return }
+                            guard isFullAccount() else {
+                                dismiss()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05)  {
+                                    showReadOnlyMessage()
+                                }
+                                return
+                            }
                             dismiss()
                             if (nrPost.mainEvent.contact != nil) {
                                 la.follow(nrPost.mainEvent.contact!, pubkey: nrPost.pubkey)
