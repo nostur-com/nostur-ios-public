@@ -74,7 +74,7 @@ struct OwnPostFooter: View {
                 .foregroundColor(Color.primary)
                 .fontWeight(.bold)
             }
-            else if !nrPost.isPreview && own.flags != "awaiting_send" && own.flags != "nsecbunker_unsigned" {
+            else if !nrPost.isPreview && !["awaiting_send","nsecbunker_unsigned","draft"].contains(own.flags) {
                 HStack {
                     if own.flags == "nsecbunker_unsigned" && own.relaysCount != 0 {
                         Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)

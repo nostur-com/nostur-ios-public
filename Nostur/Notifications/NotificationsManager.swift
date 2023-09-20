@@ -263,7 +263,7 @@ class NotificationsManager: ObservableObject {
                                     "AND pubkey = %@ " +
                                     "AND kind IN {0,1,3,4,5,6,7,9802} " +
                                     "AND relays = \"\"" +
-                                    "AND NOT flags IN {\"nsecbunker_unsigned\",\"awaiting_send\"}" +
+                                    "AND NOT flags IN {\"nsecbunker_unsigned\",\"awaiting_send\",\"draft\"}" +
                                     "AND sig != nil"
                                     ,
                                     Int64(xDaysAgo.timeIntervalSince1970),
