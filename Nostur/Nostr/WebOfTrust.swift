@@ -28,20 +28,22 @@ import Foundation
 import Combine
 
 class WebOfTrust: ObservableObject {
+    
+    static let shared = WebOfTrust()
  
-    let ENABLE_THRESHOLD = 2000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
+    private let ENABLE_THRESHOLD = 2000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
     // For views
-    @Published var lastUpdated:Date? = nil {
-        didSet {
-            SettingsStore.shared.objectWillChange.send() // update Settings screen
-        }
-    }
-    @Published var allowedKeysCount:Int = 0 {
-        didSet {
-            SettingsStore.shared.objectWillChange.send() // update Settings screen
-        }
-    }
+    @Published var lastUpdated:Date? = nil //{ // TODO: REWIRE SETTINGS SCREEN
+//        didSet {
+//            SettingsStore.shared.objectWillChange.send() // update Settings screen
+//        }
+//    }
+    @Published var allowedKeysCount:Int = 0 //{ // TODO: REWIRE SETTINGS SCREEN
+//        didSet {
+//            SettingsStore.shared.objectWillChange.send() // update Settings screen
+//        }
+//    }
     
     // Only accessed from bg thread
     // Keep seperate lists for faster filtering
@@ -61,6 +63,7 @@ class WebOfTrust: ObservableObject {
     }
 
     private func updateViewData() {
+        guard let pubkey = self.pubkey else { return }
         DispatchQueue.main.async {
             if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.strict.rawValue {
                 self.allowedKeysCount = self.followingPubkeys.count
@@ -68,27 +71,49 @@ class WebOfTrust: ObservableObject {
             else {
                 self.allowedKeysCount = self.followingPubkeys.count + self.followingFollowingPubkeys.count
             }
-            sendNotification(.WoTReady, self.pubkey)
+            sendNotification(.WoTReady, pubkey)
         }
     }
     
     var didWoT = false
     
-    var backlog:Backlog {
-        get { NosturState.shared.backlog }
-        set { NosturState.shared.backlog = newValue }
-    }
-    var subscriptions = Set<AnyCancellable>()
+    private var backlog = Backlog(timeout: 60, auto: true)
+    private var subscriptions = Set<AnyCancellable>()
     
-    init(pubkey:String, followingPubkeys:Set<String>) {
-        L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: init for \(pubkey)")
-        self.pubkey = pubkey
-        self.followingPubkeys = followingPubkeys
-        updateWoTonNewFollowing()
-    }
+    private init() {}
     
+    public func loadWoT(_ account:Account) {
+        guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
+        
+        let wotFollowingPubkeys = account.getFollowingPublicKeys().subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
+        
+        let publicKey = account.publicKey
+        self.pubkey = publicKey
+        bg().perform {
+            guard wotFollowingPubkeys.count > 10 else {
+                DispatchQueue.main.async { sendNotification(.WoTReady, publicKey) }
+                L.og.info("🕸️🕸️ WebOfTrust: Not enough follows to build WoT. Maybe still onboarding and contact list not received yet")
+                return
+            }
+            
+            switch SettingsStore.shared.webOfTrustLevel {
+                case SettingsStore.WebOfTrustLevel.off.rawValue:
+                    L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+                case SettingsStore.WebOfTrustLevel.normal.rawValue:
+                    L.og.info("🕸️🕸️ WebOfTrust: Normal")
+                    DataProvider.shared().bg.perform { [weak self] in
+                        self?.loadNormal()
+                    }
+                case SettingsStore.WebOfTrustLevel.strict.rawValue:
+                    L.og.info("🕸️🕸️ WebOfTrust: Strict")
+                default:
+                    L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+            }
+        }
+    }
+
     deinit {
-        L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: deinit for \(self.pubkey)")
+        L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: deinit for \(self.pubkey ?? "no pubkey")")
     }
     
     private func updateWoTonNewFollowing() {
@@ -96,7 +121,7 @@ class WebOfTrust: ObservableObject {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
-                guard NosturState.shared.account != nil else { return }
+//                guard NosturState.shared.account != nil else { return } // TODO: NEED THIS?
                 let pubkey = notification.object as! String
                 self.followingPubkeys.insert(pubkey)
                 guard SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.normal.rawValue else { return }
@@ -127,6 +152,7 @@ class WebOfTrust: ObservableObject {
     }
     
     private func regenerateWoTWithFollowsOf(_ otherPubkey:String) {
+        guard let pubkey = self.pubkey else { return }
         var followsOfPubkey = Set<String>()
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
@@ -142,33 +168,33 @@ class WebOfTrust: ObservableObject {
                 self.followingFollowingPubkeys = newSet
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
             }
-            self.storeData(pubkeys: newSet, pubkey: self.pubkey)
+            self.storeData(pubkeys: newSet, pubkey: pubkey)
         }
     }
     
-    // TODO: Listen for follow changes
+    public var webOfTrustLevel:String = UserDefaults.standard.string(forKey: SettingsStore.Keys.webOfTrustLevel) ?? SettingsStore.WebOfTrustLevel.normal.rawValue // Faster then querying UserDefaults so cache here
     
     public func isAllowed(_ pubkey:String) -> Bool {
-        if SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.strict.rawValue && allowedKeysCount < ENABLE_THRESHOLD { return true }
+        if webOfTrustLevel != SettingsStore.WebOfTrustLevel.strict.rawValue && allowedKeysCount < ENABLE_THRESHOLD { return true }
         
         // Maybe check small set first, faster?
         if followingPubkeys.contains(pubkey) { return true }
         
         // if strict, we don't have to check the follows-follows list
-        if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.strict.rawValue {
+        if webOfTrustLevel == SettingsStore.WebOfTrustLevel.strict.rawValue {
             return false
         }
         return followingFollowingPubkeys.contains(pubkey)
     }
     
-    public var pubkey:String
+    private var pubkey:String?
     
     // This is for "normal" mode (follows + follows of follows)
     public func loadNormal(force:Bool = false) { // force = true to force fetching (update)
         self.loadFollowingFollowing(force: force)
-        
+        guard let pubkey = self.pubkey else { return }
         if let lastUpdated = lastUpdatedDate(pubkey) {
-            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.pubkey).txt --> \(lastUpdated.description)")
+            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(pubkey).txt --> \(lastUpdated.description)")
             DispatchQueue.main.async {
                 self.lastUpdated = lastUpdated
             }
@@ -177,6 +203,7 @@ class WebOfTrust: ObservableObject {
     
     // force = true to force fetching (update) - else will only use what is already on disk
     private func loadFollowingFollowing(force:Bool = false) {
+        guard let pubkey = self.pubkey else { return }
         // Load from disk
         self.followingFollowingPubkeys = self.loadData(pubkey)
 
@@ -215,6 +242,7 @@ class WebOfTrust: ObservableObject {
     }
     
     private func generateWoT() {
+        guard let pubkey = self.pubkey else { return }
         var followFollows = Set<String>()
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
@@ -281,6 +309,7 @@ class WebOfTrust: ObservableObject {
     }
     
     public func loadLastUpdatedDate() {
+        guard let pubkey = self.pubkey else { return }
         if let date = self.lastUpdatedDate(pubkey) {
             DispatchQueue.main.async {
                 self.lastUpdated = date
@@ -305,5 +334,5 @@ class WebOfTrust: ObservableObject {
 }
 
 func WOT_FILTER_ENABLED() -> Bool {
-    SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue && NosturState.shared.wot != nil
+    WebOfTrust.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue
 }

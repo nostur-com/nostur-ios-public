@@ -10,6 +10,9 @@ import Combine
 
 // TODO: The happy paths works fine, but need to handle errors, timeouts, etc and notify user instead of silent fail.
 class NSecBunkerManager: ObservableObject {
+    
+    static let shared = NSecBunkerManager()
+    
     @Published var state:STATE = .disconnected
     @Published var error = ""
     @Published var isSelfHostedNsecBunker = false
@@ -31,19 +34,7 @@ class NSecBunkerManager: ObservableObject {
     // Queue of commands to execute when we receive a response
     var responseCommmandQueue:[String: (NEvent) -> Void] = [:] // TODO: need to add clean up, timeout...
     
-    init(_ account:Account? = nil) {
-        self.account = account
-        if let account {
-            guard let sessionPrivateKey = account.privateKey else { return }
-            guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
-            // connect to NC relay, the session public key is used as id
-            if account.ncRelay != "" {
-                self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: account.ncRelay)
-            }
-            else {
-                self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
-            }
-        }
+    private init() {
         listenForNCMessages()
     }
     
@@ -146,6 +137,19 @@ class NSecBunkerManager: ObservableObject {
     
     private func connectToHardcodedNsecbunker(sessionPublicKey: String) {
         _ = SocketPool.shared.addNCSocket(sessionPublicKey: sessionPublicKey, url: "wss://relay.nsecbunker.com")
+    }
+    
+    public func setAccount(_ account:Account) {
+        self.account = account
+        guard let sessionPrivateKey = account.privateKey else { return }
+        guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
+        // connect to NC relay, the session public key is used as id
+        if account.ncRelay != "" {
+            self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: account.ncRelay)
+        }
+        else {
+            self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+        }
     }
     
     public func connect(_ account:Account, token:String) {
