@@ -43,14 +43,20 @@ struct Gallery: View {
             case .ready:
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
-                    LazyVGrid(columns: gridColumns) {
-                        ForEach(vm.items) { item in
-                            GeometryReader { geo in
-                                GridItemView(size: geo.size.width, item: item, withPFP: true)
+                    if !vm.items.isEmpty {
+                        LazyVGrid(columns: gridColumns) {
+                            ForEach(vm.items) { item in
+                                GeometryReader { geo in
+                                    GridItemView(size: geo.size.width, item: item, withPFP: true)
+                                }
+                                .clipped()
+                                .aspectRatio(1, contentMode: .fit)
                             }
-                            .clipped()
-                            .aspectRatio(1, contentMode: .fit)
                         }
+                    }
+                    else {
+                        Button("Refresh") { vm.reload() }
+                            .centered()
                     }
                 }
                 .refreshable {
