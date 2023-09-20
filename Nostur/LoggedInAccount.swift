@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreData
 
 // Must be initialized with account
 class LoggedInAccount: ObservableObject {
