@@ -152,7 +152,7 @@ class FollowingGuardian: ObservableObject {
                 account.addToFollows(newContact)
             }
         }
-        
+        NRState.shared.loggedInAccount?.reloadFollows()
         guard republish else { return }
         account.publishNewContactList()
     }
