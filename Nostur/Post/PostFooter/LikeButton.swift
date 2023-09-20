@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct LikeButton: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
-    @ObservedObject var footerAttributes:FooterAttributes
-    @State var unpublishLikeId:UUID? = nil
+    @EnvironmentObject private var theme:Theme
+    private let nrPost:NRPost
+    @ObservedObject private var footerAttributes:FooterAttributes
+    @State private var unpublishLikeId:UUID? = nil
     
     init(nrPost: NRPost) {
         self.nrPost = nrPost
@@ -47,12 +47,8 @@ struct LikeButton: View {
             .padding(5)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard NosturState.shared.account?.privateKey != nil else {
-                    NosturState.shared.readOnlyAccountSheetShown = true
-                    return
-                }
-                
-                guard let account = NosturState.shared.account else { return }
+                guard isFullAccount() else { showReadOnlyMessage(); return }
+                guard let account = account() else { return }
                 let impactMed = UIImpactFeedbackGenerator(style: .medium)
                 impactMed.impactOccurred()
                 
@@ -62,7 +58,7 @@ struct LikeButton: View {
                     likeNEvent.publicKey = account.publicKey
                     likeNEvent = likeNEvent.withId()
                     unpublishLikeId = UUID()
-                    NosturState.shared.nsecBunker?.requestSignature(forEvent: likeNEvent, whenSigned: { signedEvent in
+                    NSecBunkerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
                         if let unpublishLikeId = self.unpublishLikeId {
                             self.unpublishLikeId = Unpublisher.shared.publish(signedEvent, cancellationId: unpublishLikeId)
                         }

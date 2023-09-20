@@ -8,22 +8,19 @@
 import SwiftUI
 
 struct AccountsSheet: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var theme:Theme
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    @State var newAccountSheetShown = false
-    @State var addExistingAccountSheetShown = false
+    @State private var newAccountSheetShown = false
+    @State private var addExistingAccountSheetShown = false
     
-    var withDismissButton:Bool = true
-    var sp: SocketPool = .shared
+    public var withDismissButton:Bool = true
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Account.createdAt, ascending: true)],
         animation: .default)
     private var accounts: FetchedResults<Account>
     
-    @State var logoutAccount:Account? = nil
+    @State private var logoutAccount:Account? = nil
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -34,7 +31,7 @@ struct AccountsSheet: View {
                         AccountRow(account: account)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                ns.setAccount(account: account)
+                                NRState.shared.changeAccount(account)
                                 sendNotification(.hideSideBar)
                                 dismiss()
                             }
@@ -83,26 +80,26 @@ struct AccountsSheet: View {
                     buttons: !account.isNC && account.privateKey != nil
                     ? [
                         .destructive(Text("Log out", comment: "Button to log out"), action: {
-                            ns.logout(account)
+                            NRState.shared.logout(account)
                             
-                            if (ns.accounts.isEmpty) {
-                                sendNotification(.hideSideBar)
-                            }
+//                            if (NRState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
+//                                sendNotification(.hideSideBar)
+//                            }
                             
                         }),
                         .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
-                            if let pk = ns.account?.privateKey {
+                            if let pk = account.privateKey {
                                 UIPasteboard.general.string = nsec(pk)
                             }
                         }),
                         .cancel(Text("Cancel"))
                     ] : [
                         .destructive(Text("Log out", comment: "Button to log out"), action: {
-                            ns.logout(account)
+                            NRState.shared.logout(account)
                             
-                            if (ns.accounts.isEmpty) {
-                                sendNotification(.hideSideBar)
-                            }
+//                            if (NRState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
+//                                sendNotification(.hideSideBar)
+//                            }
                             
                         }),
                         .cancel(Text("Cancel"))
@@ -114,8 +111,8 @@ struct AccountsSheet: View {
 }
 
 struct AccountRow: View {
-    @ObservedObject var account:Account
-    @EnvironmentObject var ns:NosturState
+    @ObservedObject public var account:Account
+    @EnvironmentObject private var ns:NRState
     
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -144,7 +141,7 @@ struct AccountRow: View {
                     Spacer()
                 }
             }
-            if (account == ns.account) {
+            if (account.publicKey == ns.activeAccountPublicKey) {
                 Image(systemName: "checkmark.circle.fill")
                     .resizable()
                     .foregroundColor(.accentColor)

@@ -63,7 +63,7 @@ struct MacListsView: View {
             }
         }
         .onAppear {
-            if let account = NosturState.shared.account {
+            if let account = account() {
                 lvm = LVMManager.shared.followingLVM(forAccount: account)
             }
             
@@ -190,7 +190,7 @@ struct SideTabs:View {
     
     var body: some View {
         VStack {
-            if let account = NosturState.shared.account {
+            if let account = account() {
                 PFP(pubkey: account.publicKey, account: account, size:30)
                     .padding(10)
             }

@@ -28,7 +28,7 @@ struct Ago: View, Equatable {
     
     var body: some View {
         Text(verbatim: agoText)
-            .onReceive(NosturState.shared.agoTimer) { _ in
+            .onReceive(NRState.shared.agoTimer) { _ in
                 if date.agoString != agoText {
                     agoText = date.agoString
                 }

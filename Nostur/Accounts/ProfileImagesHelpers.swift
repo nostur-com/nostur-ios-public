@@ -210,8 +210,8 @@ func uploadBannerImage(image: UIImage) -> AnyPublisher<String, Error> {
 }
 
 func signedImageProof(imageData:Data) -> (signature: String, message: String, publicKey: String)? {
-    guard let privateKeyHexString = NosturState.shared.account?.privateKey else { return nil }
-    guard let nostrPubkeyHex = NosturState.shared.account?.publicKey else { return nil }
+    guard let privateKeyHexString = account()?.privateKey else { return nil }
+    guard let nostrPubkeyHex = account()?.publicKey else { return nil }
     
     // Current profile/pic banner backend runs php, there is no easy way to verify schnorr signatures in
     // php yet, so use Curve25519, works out of the box in both swift and php.

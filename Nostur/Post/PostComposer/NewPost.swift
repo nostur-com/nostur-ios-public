@@ -14,14 +14,12 @@ import Combine
 import PhotosUI
 
 struct NewPost: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var theme:Theme
     let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var ns:NosturState
-    let up:Unpublisher = .shared
     
-    @StateObject var vm = NewPostModel()
-    @StateObject var ipm = ImagePickerModel()
+    @StateObject private var vm = NewPostModel()
+    @StateObject private var ipm = ImagePickerModel()
     
     var body: some View {
         VStack(spacing:0) {
@@ -154,7 +152,7 @@ struct NewPost: View {
             }
         }
         .onAppear {
-            vm.activeAccount = NosturState.shared.account
+            vm.activeAccount = account()
         }
     }
 }

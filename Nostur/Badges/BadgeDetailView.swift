@@ -14,8 +14,7 @@ struct BadgeDetailView: View {
     @EnvironmentObject var theme:Theme
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
-    let up:Unpublisher = .shared
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var la:LoggedInAccount
     
     @State var awardToPeopleIsShown = false
     
@@ -114,20 +113,19 @@ struct BadgeDetailView: View {
         }
         .sheet(isPresented: $awardToPeopleIsShown) {
             NavigationStack {
-                ContactsSearch(followingPubkeys: NosturState.shared.followingPublicKeys, prompt: "Search contacts", onSelectContacts: { selectedContacts in
-                    guard let account = ns.account else { return }
+                ContactsSearch(followingPubkeys: follows(), prompt: "Search contacts", onSelectContacts: { selectedContacts in
                     awardToPeopleIsShown = false
                     guard !selectedContacts.isEmpty else { return }
-                    let newBadgeAwards = createBadgeAward(ns.account!.publicKey,
+                    let newBadgeAwards = createBadgeAward(la.account.publicKey,
                                                           badgeCode: nBadge.badgeCode!.definition,
                                                           pubkeys: selectedContacts.map { $0.pubkey })
                     do {
-                        guard let newBadgeAwardsSigned = try? account.signEvent(newBadgeAwards) else { throw "could not create newBadgeAwardsSigned " }
+                        guard let newBadgeAwardsSigned = try? la.account.signEvent(newBadgeAwards) else { throw "could not create newBadgeAwardsSigned " }
                         bg().perform {
                             _ = Event.saveEvent(event: newBadgeAwardsSigned)
                             DataProvider.shared().bgSave()
                         }
-                        up.publishNow(newBadgeAwardsSigned)
+                        Unpublisher.shared.publishNow(newBadgeAwardsSigned)
                     }
                     catch {
                         L.og.error("🔴🔴 could not create badge \(error)")

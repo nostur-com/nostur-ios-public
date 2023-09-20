@@ -44,14 +44,14 @@ class FooterAttributes: ObservableObject {
     }
     
     static private func isBookmarked(_ event:Event) -> Bool {
-        if let account = NosturState.shared.bgAccount, let bookmarks = account.bookmarks {
+        if let account = account(), let bookmarks = account.bookmarks {
             return bookmarks.contains(event)
         }
         return false
     }
     
     static private func isLiked(_ event:Event) -> Bool {
-        if let account = NosturState.shared.bgAccount {
+        if let account = account() {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7", event.created_at, event.id, account.publicKey)
             fr.fetchLimit = 1
@@ -63,7 +63,7 @@ class FooterAttributes: ObservableObject {
     }
     
     static private func isReplied(_ event:Event) -> Bool {
-        if let account = NosturState.shared.bgAccount {
+        if let account = account() {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at > %i AND replyToId == %@ AND pubkey == %@ AND kind == 1", event.created_at, event.id, account.publicKey)
             fr.fetchLimit = 1
@@ -75,7 +75,7 @@ class FooterAttributes: ObservableObject {
     }
     
     static private func isReposted(_ event:Event) -> Bool {
-        if let account = NosturState.shared.bgAccount {
+        if let account = account() {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at > %i AND repostForId == %@ AND pubkey == %@",
                                        event.created_at, event.id, account.publicKey)

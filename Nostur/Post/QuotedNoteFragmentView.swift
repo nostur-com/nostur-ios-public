@@ -8,10 +8,9 @@
 import SwiftUI
 
 struct QuotedNoteFragmentView: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var accountState:NosturState
-    @ObservedObject var nrPost:NRPost
-    @ObservedObject var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
+    @EnvironmentObject private var theme:Theme
+    @ObservedObject private var nrPost:NRPost
+    @ObservedObject private var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
     
     init(nrPost: NRPost) {
         self.nrPost = nrPost

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct Onboarding: View {
-    @EnvironmentObject var ns:NosturState
     @AppStorage("did_accept_terms") var didAcceptTerms = false
     
     var body: some View {

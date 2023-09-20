@@ -8,20 +8,20 @@
 import SwiftUI
 
 struct MultiFollowSheet: View {
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var theme:Theme
+    public let pubkey:String
+    public let name:String
+    public var onDismiss:(() -> Void)?
     
-    let pubkey:String
-    let name:String
-    var onDismiss:(() -> Void)?
+    @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var theme:Theme
     
-    var accounts:[Account] { // Only accounts with private key
-        NosturState.shared.accounts.filter { $0.privateKey != nil }
+    private var accounts:[Account] { // Only accounts with private key
+        NRState.shared.accounts.filter { $0.privateKey != nil }
     }
     
-    @State var followingOn = Set<String>()
+    @State private var followingOn = Set<String>()
     
-    func toggleAccount(_ account:Account) {
+    private func toggleAccount(_ account:Account) {
         if followingOn.contains(account.publicKey) {
             followingOn.remove(account.publicKey)
             Task {
@@ -36,7 +36,7 @@ struct MultiFollowSheet: View {
         }
     }
     
-    func isFollowingOn(_ account:Account) -> Bool {
+    private func isFollowingOn(_ account:Account) -> Bool {
         followingOn.contains(account.publicKey)
     }
     
@@ -70,7 +70,7 @@ struct MultiFollowSheet: View {
         .onAppear {
             followingOn = Set(
                 accounts
-                    .filter({ $0.followingPublicKeys.contains(pubkey) })
+                    .filter({ $0.getFollowingPublicKeys().contains(pubkey) })
                     .map({ $0.publicKey })
             )
         }
@@ -95,16 +95,11 @@ struct MultiFollowSheet: View {
             contact.couldBeImposter = 0
             account.addToFollows(contact)
         }
-        if account == NosturState.shared.account {
-            NosturState.shared.followingPublicKeys = NosturState.shared._followingPublicKeys
-            NosturState.shared.loadFollowingPFPs()
-            sendNotification(.followersChanged, account.followingPublicKeys)
-            sendNotification(.followingAdded, pubkey)
-            NosturState.shared.publishNewContactList()
+        if account == Nostur.account() {
+            NRState.shared.loggedInAccount?.reloadFollows()            
+            sendNotification(.followingAdded, pubkey) // For WoT
         }
-        else {
-            self.publishNewContactList(account)
-        }
+        account.publishNewContactList()
         DataProvider.shared().save()
     }
     
@@ -114,31 +109,10 @@ struct MultiFollowSheet: View {
             return
         }
         account.removeFromFollows(contact)
-        if account == NosturState.shared.account {
-            NosturState.shared.followingPublicKeys = NosturState.shared._followingPublicKeys
-            NosturState.shared.loadFollowingPFPs()
-            sendNotification(.followersChanged, account.followingPublicKeys)
-            NosturState.shared.publishNewContactList()
+        if account == Nostur.account() {
+            NRState.shared.loggedInAccount?.reloadFollows()
         }
-        else {
-            self.publishNewContactList(account)
-        }
+        account.publishNewContactList()
         DataProvider.shared().save()
-    }
-    
-    func publishNewContactList(_ account:Account) {
-        guard let clEvent = try? AccountManager.createContactListEvent(account: account) else {
-            L.og.error("🔴🔴 Could not create new clEvent")
-            return
-        }
-        if account.isNC {
-            NosturState.shared.nsecBunker = NSecBunkerManager(account)
-            NosturState.shared.nsecBunker?.requestSignature(forEvent: clEvent, usingAccount: account, whenSigned: { signedEvent in
-                _ = Unpublisher.shared.publishLast(signedEvent, ofType: .contactList)
-            })
-        }
-        else {
-            _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
-        }
     }
 }

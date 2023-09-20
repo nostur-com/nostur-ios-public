@@ -127,8 +127,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private var _replies: [NRPost] = []
 
     var replies: [NRPost] {
-        get { NosturState.shared.nrPostQueue.sync { _replies } }
-        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._replies = newValue } }
+        get { NRState.shared.nrPostQueue.sync { _replies } }
+        set { NRState.shared.nrPostQueue.async(flags: .barrier) { self._replies = newValue } }
     }
     
     private var _repliesToRoot: [NRPost] = [] {
@@ -140,8 +140,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
 
     var repliesToRoot: [NRPost] {
-        get { NosturState.shared.nrPostQueue.sync { _repliesToRoot } }
-        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._repliesToRoot = newValue } }
+        get { NRState.shared.nrPostQueue.sync { _repliesToRoot } }
+        set { NRState.shared.nrPostQueue.async(flags: .barrier) { self._repliesToRoot = newValue } }
     }
     var groupedReplies = [NRPost]()
     
@@ -159,13 +159,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var firstQuoteId:String?
     
     var replyTo:NRPost?  {
-        get { NosturState.shared.nrPostQueue.sync { _replyTo } }
-        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._replyTo = newValue } }
+        get { NRState.shared.nrPostQueue.sync { _replyTo } }
+        set { NRState.shared.nrPostQueue.async(flags: .barrier) { self._replyTo = newValue } }
     }
     
     var replyToRoot:NRPost? {
-        get { NosturState.shared.nrPostQueue.sync { _replyToRoot } }
-        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._replyToRoot = newValue } }
+        get { NRState.shared.nrPostQueue.sync { _replyToRoot } }
+        set { NRState.shared.nrPostQueue.async(flags: .barrier) { self._replyToRoot = newValue } }
     }
     
     var firstQuote:NRPost? {
@@ -272,11 +272,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         let replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
         self._replies = replies
-        self.ownPostAttributes = OwnPostAttributes(isOwnPost: NosturState.shared.bgFullAccountKeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
+        self.ownPostAttributes = OwnPostAttributes(isOwnPost: NRState.shared.fullAccountPubkeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
         
         if withReplies {
             self.footerAttributes = FooterAttributes(replyPFPs: Array(_replies.compactMap { reply in
-                return NosturState.shared.bgFollowingPFPs[reply.pubkey]
+                return followingPFP(reply.pubkey)
             }
             .uniqued(on: ({ $0 }))
             .prefix(4)), event: event)
@@ -384,7 +384,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.previewWeights = previewWeights
         }
         
-        self.following = NosturState.shared.bgFollowingPublicKeys.contains(event.pubkey)
+        self.following = isFollowing(event.pubkey)
         
         
         if let contact = event.contact_ {
@@ -477,14 +477,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     
     private func _hasPrivateNote() -> Bool {
-        if let account = NosturState.shared.bgAccount, let notes = account.privateNotes {
+        if let account = account(), let notes = account.privateNotes {
             return notes.first(where: { $0.post == self.event }) != nil
         }
         return false
     }
     
     private func hasZapReceipt() -> Bool {
-        if let account = NosturState.shared.bgAccount {
+        if let account = account() {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at >= %i AND kind == 9734 AND pubkey == %@ AND tagsSerialized CONTAINS %@", created_at, account.publicKey, serializedE(self.id))
             fr.fetchLimit = 1
@@ -496,10 +496,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
 
     private static func isBlocked(pubkey:String) -> Bool {
-        if NosturState.shared.bgAccount != nil {
-            return NosturState.shared.bgAccount?.blockedPubkeys_.contains(pubkey) ?? false
-        }
-        return false
+        return Nostur.blocks().contains(pubkey)
     }
     
     private func getHighlightData(event: Event) -> KindHightlight {
@@ -633,7 +630,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func unpublishListener() {
-        guard let account = NosturState.shared.bgAccount, account.publicKey == pubkey else { return }
+        guard let account = account(), account.publicKey == pubkey else { return }
         
         receiveNotification(.publishingEvent)
             .sink { [weak self] notification in
@@ -911,7 +908,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     
                     let replyPFPs = nrReplies
                         .compactMap { reply in
-                            return NosturState.shared.bgFollowingPFPs[reply.pubkey]
+                            return followingPFP(reply.pubkey)
                         }
                         .uniqued(on: ({ $0 }))
                         .prefix(4)
@@ -1091,7 +1088,7 @@ extension NRPost { // Helpers for grouped replies
         // With WoT enabeled with add filter nr 5.
         return groupedReplies
             // 5. People outside WoT last
-            .filter { $0.inWoT || NosturState.shared.bgAccountKeys.contains($0.pubkey) }
+            .filter { $0.inWoT || NRState.shared.accountPubkeys.contains($0.pubkey) }
         
             // 4. Everything else in WoT last, newest at bottom
             .sorted(by: { $0.created_at < $1.created_at })
@@ -1111,7 +1108,7 @@ extension NRPost { // Helpers for grouped replies
     
     var groupedRepliesNotWoT:[NRPost] { // Read from bottom to top.
         return groupedReplies
-            .filter { !$0.inWoT && !NosturState.shared.bgAccountKeys.contains($0.pubkey)}
+            .filter { !$0.inWoT && !NRState.shared.accountPubkeys.contains($0.pubkey)}
             .sorted(by: { $0.created_at < $1.created_at })
     }
     
@@ -1127,7 +1124,7 @@ extension NRPost { // Helpers for grouped replies
         
         ctx.perform { [weak self] in
             guard let self = self else { return }
-            guard let account = NosturState.shared.account?.toBG() else { return }
+            guard let account = account() else { return }
             let fr = Event.fetchRequest()
             if let replyToRootId = self.replyToRootId { // We are not root, so load replies for actual root instead
                 fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1", replyToRootId)
@@ -1198,7 +1195,7 @@ extension NRPost { // Helpers for grouped replies
     private func _groupRepliesToRoot(_ newReplies:[NRPost]) {
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
-            guard let account = NosturState.shared.bgAccount else {
+            guard let account = account() else {
                 L.og.error("_groupRepliesToRoot: We should have an account here");
                 return
             }

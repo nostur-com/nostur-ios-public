@@ -50,19 +50,7 @@ extension Account {
         set {
             followingHashtags_ = newValue.joined(separator: " ")
         }
-    }
-    
-    var followingPublicKeys:Set<String> {
-        get {
-            let withSelfIncluded = Set([publicKey] + (follows ?? Set<Contact>()).map { $0.pubkey })
-            let withoutBlocked = withSelfIncluded.subtracting(Set(blockedPubkeys_))
-            return withoutBlocked
-        }
-    }
-    
-    var silentFollows:Set<String> {
-        Set(follows_.filter { $0.privateFollow }.map { $0.pubkey })
-    }
+    }    
     
     static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
         let request = NSFetchRequest<Account>(entityName: "Account")

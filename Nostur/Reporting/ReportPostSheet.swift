@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct ReportPostSheet: View {
-    @EnvironmentObject var theme:Theme
-    @Environment(\.dismiss) var dismiss
-    let nrPost:NRPost
-    @State var reason = ReportType.spam
-    @State var comment:String = ""
-    @State var reportWhat = "Post" // to also report the profile, not just the post
+    @EnvironmentObject private var theme:Theme
+    @Environment(\.dismiss) private var dismiss
+    public let nrPost:NRPost
+    @State private var reason = ReportType.spam
+    @State private var comment:String = ""
+    @State private var reportWhat = "Post" // to also report the profile, not just the post
     
     var body: some View {
         VStack {
@@ -67,17 +67,17 @@ struct ReportPostSheet: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button(String(localized: "Report.verb", comment: "Button to publish report")) {
-                    guard let account = NosturState.shared.account else { return }
+                    guard let account = account() else { return }
                     if account.isNC {
                         var report = EventMessageBuilder.makeReportEvent(pubkey: nrPost.pubkey, eventId: nrPost.id, type: reason, note: comment, includeProfile: reportWhat == "Profile+Profile")
                         report.publicKey = account.publicKey
                         report = report.withId()
-                        NosturState.shared.nsecBunker?.requestSignature(forEvent: report, whenSigned: { signedEvent in
+                        NSecBunkerManager.shared.requestSignature(forEvent: report, usingAccount: account, whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })
                     }
                     else {
-                        guard let signedReport = NosturState.shared.report(nrPost.mainEvent, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
+                        guard let signedReport = NRState.shared.loggedInAccount?.report(nrPost.mainEvent, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
                             return
                         }
                         Unpublisher.shared.publishNow(signedReport)

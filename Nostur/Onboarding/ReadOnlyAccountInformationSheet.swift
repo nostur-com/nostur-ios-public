@@ -8,8 +8,7 @@
 import SwiftUI
 
 struct ReadOnlyAccountInformationSheet: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject private var theme:Theme
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -25,7 +24,7 @@ struct ReadOnlyAccountInformationSheet: View {
             .toolbar(content: {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
-                        ns.readOnlyAccountSheetShown = false
+                        NRState.shared.readOnlyAccountSheetShown = false
                         dismiss()
                     }
                 }

@@ -50,19 +50,15 @@ struct NotificationSettings: View {
 }
 
 struct NotificationSettingsTester: View {
-    @EnvironmentObject var ns:NosturState
-    
     var body: some View {
-        if ns.account != nil {
-            NavigationStack {
-                VStack {
-                    NotificationSettings(showFeedSettings: .constant(true))
-                    Spacer()
-                }
+        NavigationStack {
+            VStack {
+                NotificationSettings(showFeedSettings: .constant(true))
+                Spacer()
             }
-            .onAppear {
-                Theme.default.loadPurple()
-            }
+        }
+        .onAppear {
+            Theme.default.loadPurple()
         }
     }
 }

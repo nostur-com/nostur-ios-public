@@ -21,7 +21,7 @@ struct NewDM: View {
                 NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM, tab: $tab)
             }
             else {
-                ContactsSearch(followingPubkeys:NosturState.shared.followingPublicKeys,
+                ContactsSearch(followingPubkeys:follows(),
                                prompt: "Search contact", onSelectContact: { selectedContact in
                     
                     toContact = selectedContact

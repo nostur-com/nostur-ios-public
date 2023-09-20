@@ -10,7 +10,6 @@ import SwiftUI
 struct NewFollowersNotificationView: View {
     var notification:PersistentNotification
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.metadata_created_at, ascending: false)], predicate: NSPredicate(value: false))
     var contacts:FetchedResults<Contact>

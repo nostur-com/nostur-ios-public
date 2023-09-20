@@ -85,7 +85,7 @@ struct FollowersList: View {
             L.og.info("Fetching \(missing.count) missing contacts")
             QueuedFetcher.shared.enqueue(pTags: missing)
             
-            if pubkey == NosturState.shared.activeAccountPublicKey {
+            if pubkey == NRState.shared.activeAccountPublicKey {
                 FollowerNotifier.shared.checkForUpdatedContactList()
             }
             else {

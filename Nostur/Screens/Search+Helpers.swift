@@ -253,14 +253,14 @@ extension Search {
     }
     
     func nametagSearch(_ term:String) {
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         searching = true
         contacts.nsPredicate = NSPredicate(format: "name BEGINSWITH[cd] %@ AND NOT pubkey IN %@", String(term), blockedPubkeys)
         nrPosts = []
     }
     
     func hashtagSearch(_ term:String) {
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         searching = true
         contacts.nsPredicate = NSPredicate(value: false)
         
@@ -394,7 +394,7 @@ extension Search {
     }
     
     func otherSearch(_ term:String) {
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         searching = false
         contacts.nsPredicate = NSPredicate(format: "NOT pubkey IN %@ AND (name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@)", blockedPubkeys, term, term)
         

@@ -13,7 +13,7 @@ class GuestAccountManager {
     private var context = DataProvider.shared().viewContext
     
     public func createGuestAccount() -> Account {
-        if let account = try? Account.fetchAccount(publicKey: NosturState.GUEST_ACCOUNT_PUBKEY, context: context) {
+        if let account = try? Account.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: context) {
             return account
         }
         return context.performAndWait {
@@ -24,9 +24,11 @@ class GuestAccountManager {
 //            account.display_name = "Nostur Rookie"
             account.name = "Nostur Guest Account"
             account.about = "Just trying things out"
-            account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
+            account.publicKey = GUEST_ACCOUNT_PUBKEY
             try! context.save()
-            NosturState.shared.loadAccounts()
+            DispatchQueue.main.async {
+                NRState.shared.loadAccounts()
+            }
             return account
         }
     }

@@ -9,25 +9,24 @@ import SwiftUI
 
 struct CreateNewBadgeSheet: View {
     
-    @EnvironmentObject var ns:NosturState
-    let up:Unpublisher = .shared
+    @EnvironmentObject private var la:LoggedInAccount
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     
-    @State var badgeCode = ""
-    @State var name = ""
-    @State var description = ""
-    @State var image1024 = ""
-    @State var image256 = ""
+    @State private var badgeCode = ""
+    @State private var name = ""
+    @State private var description = ""
+    @State private var image1024 = ""
+    @State private var image256 = ""
     
-    enum FocusedField {
+    private enum FocusedField {
         case badgeCode
     }
     
     @FocusState private var focusedField: FocusedField?
     
-    var accentColor: Color = .orange
-    var grayBackground: Color = Color.gray.opacity(0.2)
+    private var accentColor: Color = .orange
+    private var grayBackground: Color = Color.gray.opacity(0.2)
     
     var body: some View {
         Form {
@@ -64,16 +63,15 @@ struct CreateNewBadgeSheet: View {
         .onAppear { focusedField = .badgeCode }
     }
     func createBadge() {
-        guard let account = ns.account else { return }
         let newBadge = createBadgeDefinition(badgeCode, name: name, description: description, image1024: image1024, thumb256: image256)
         
         do {    
-            guard let newBadgeSigned = try? account.signEvent(newBadge) else { throw "could not create newBadgeSigned " }
+            guard let newBadgeSigned = try? la.account.signEvent(newBadge) else { throw "could not create newBadgeSigned " }
             bg().perform {
                 _ = Event.saveEvent(event: newBadgeSigned)
                 DataProvider.shared().bgSave()
             }
-            up.publishNow(newBadgeSigned)
+            Unpublisher.shared.publishNow(newBadgeSigned)
         }
         catch {
             L.og.error("🔴🔴 could not create badge \(error)")

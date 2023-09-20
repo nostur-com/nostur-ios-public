@@ -113,12 +113,12 @@ extension LVM {
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) { [weak self] in
             guard let self = self else { return }
             self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
-            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "SomeoneElsesProfiles")
         }
     }
     
     public func revertBackToOwnFeed() {
-        guard let account = NosturState.shared.account else { return }
+        guard let account = account() else { return }
         sTab = "Main"
         ssTab = "Following"
         
@@ -126,7 +126,7 @@ extension LVM {
         backlog.clear()
         
         self.pubkey = account.publicKey
-        self.pubkeys = account.followingPublicKeys
+        self.pubkeys = account.getFollowingPublicKeys()
         self.loadHashtags()
         lvmCounter.count = 0
         instantFinished = false

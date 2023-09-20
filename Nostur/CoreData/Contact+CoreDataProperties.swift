@@ -245,7 +245,7 @@ extension Contact : Identifiable {
                 if contact.metadata_created_at < event.createdAt.timestamp {
                     
                     // Needs imposter recheck?
-                    if contact.couldBeImposter == 0 && !NosturState.shared.bgFollowingPublicKeys.contains(contact.pubkey) { // only if wasnt imposter before and is not following
+                    if contact.couldBeImposter == 0 && !isFollowing(contact.pubkey) { // only if wasnt imposter before and is not following
                         if (contact.name != metaData.name) {
                             contact.couldBeImposter = -1
                         }

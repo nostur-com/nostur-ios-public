@@ -126,8 +126,6 @@ struct PostAndParent: View {
     @EnvironmentObject private var theme:Theme
     private var sp:SocketPool = .shared
     @ObservedObject private var nrPost:NRPost
-    @Environment(\.managedObjectContext) private var viewContext
-    @EnvironmentObject private var ns:NosturState
     @EnvironmentObject private var dim:DIMENSIONS
     
     private var navTitleHidden:Bool = false

@@ -14,7 +14,6 @@ struct ProfileView: View {
     var tab:String?
     
     @EnvironmentObject private var theme:Theme
-    @EnvironmentObject private var ns:NosturState
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var settings:SettingsStore = .shared
     @ObservedObject private var nrContact:NRContact
@@ -36,7 +35,7 @@ struct ProfileView: View {
     @State var similarPFP = false
     
     var couldBeImposter:Bool {
-        guard let account = NosturState.shared.account else { return false }
+        guard let account = account() else { return false }
         guard account.publicKey != nrContact.pubkey else { return false }
         guard !nrContact.following else { return false }
         guard nrContact.couldBeImposter == -1 else { return nrContact.couldBeImposter == 1 }
@@ -67,6 +66,7 @@ struct ProfileView: View {
                             ToolbarItem(placement: .navigationBarTrailing) {
                                 VStack {
                                     Button {
+                                        guard isFullAccount() else { showReadOnlyMessage(); return }
                                         if (nrContact.following && !nrContact.privateFollow) {
                                             nrContact.follow(privateFollow: true)
                                         }
@@ -122,15 +122,11 @@ struct ProfileView: View {
                                     ProfileLightningButton(contact: nrContact.mainContact)
                                 }
                                 
-                                if pubkey == NosturState.shared.activeAccountPublicKey {
+                                if pubkey == NRState.shared.activeAccountPublicKey {
                                     Button {
-                                        guard NosturState.shared.account?.privateKey != nil else {
-                                            NosturState.shared.readOnlyAccountSheetShown = true;
-                                            return
-                                        }
-                                        if let account = NosturState.shared.account {
-                                            editingAccount = account
-                                        }
+                                        guard let account = account() else { return }
+                                        guard isFullAccount(account) else { showReadOnlyMessage(); return }
+                                        editingAccount = account
                                     } label: {
                                         Text("Edit profile", comment: "Button to edit own profile")
                                     }
@@ -144,6 +140,7 @@ struct ProfileView: View {
                                 }
                                 else {
                                     Button {
+                                        guard isFullAccount() else { showReadOnlyMessage(); return }
                                         if (nrContact.following && !nrContact.privateFollow) {
                                             nrContact.follow(privateFollow: true)
                                         }
@@ -225,9 +222,10 @@ struct ProfileView: View {
                                     
                                     
                                     Button {
-                                        ns.objectWillChange.send()
-                                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [nrContact.pubkey]
-                                        sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
+                                        guard let account = account() else { return }
+                                        let newBlockedKeys = (account.blockedPubkeys_ + [nrContact.pubkey])
+                                        account.blockedPubkeys_ = newBlockedKeys
+                                        sendNotification(.blockListUpdated, newBlockedKeys)
                                     } label: {
                                         Label(
                                             String(localized:"Block \(nrContact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
@@ -318,10 +316,10 @@ struct ProfileView: View {
             
             let contactAnyName = contact.anyName.lowercased()
             let cPubkey = contact.pubkey
-            let currentAccountPubkey = NosturState.shared.activeAccountPublicKey
+            let currentAccountPubkey = NRState.shared.activeAccountPublicKey
             
             DataProvider.shared().bg.perform {
-                guard let account = NosturState.shared.bgAccount else { return }
+                guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows_.first(where: {
                     isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
@@ -337,7 +335,7 @@ struct ProfileView: View {
                     }
                     
                     DispatchQueue.main.async {
-                        guard currentAccountPubkey == NosturState.shared.activeAccountPublicKey else { return }
+                        guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                         self.similarPFP = similarPFP
                         contact.couldBeImposter = similarPFP ? 1 : 0
                     }
@@ -376,7 +374,7 @@ struct ProfileView: View {
             
             bg().perform {
                 EventRelationsQueue.shared.addAwaitingContact(contact)
-                if (ns.followsYou(contact)) {
+                if (contact.followsYou()) {
                     DispatchQueue.main.async {
                         isFollowingYou = true
                     }
@@ -388,7 +386,7 @@ struct ProfileView: View {
                     },
                     processResponseCommand: { (taskId, _) in
                         bg().perform {
-                            if (ns.followsYou(contact)) {
+                            if (contact.followsYou()) {
                                 DispatchQueue.main.async {
                                     isFollowingYou = true
                                 }
@@ -397,7 +395,7 @@ struct ProfileView: View {
                     },
                     timeoutCommand: { taskId in
                         bg().perform {
-                            if (ns.followsYou(contact)) {
+                            if (contact.followsYou()) {
                                 DispatchQueue.main.async {
                                     isFollowingYou = true
                                 }

@@ -10,43 +10,42 @@ import SwiftUI
 struct ProfileFollowButton: View {
     @EnvironmentObject private var theme:Theme
     @ObservedObject public var contact:Contact
-    @EnvironmentObject private var ns:NosturState
+    @EnvironmentObject private var la:LoggedInAccount
     @ObservedObject private var fg:FollowingGuardian = .shared
     @State private var isFollowing = false
     @State private var editingAccount:Account?
     
     var body: some View {
-        if (contact.pubkey != ns.account?.publicKey) {
+        if (contact.pubkey != la.pubkey) {
             Button {
                 if (isFollowing && !contact.privateFollow) {
                     contact.privateFollow = true
-                    ns.follow(contact)
+                    la.follow(contact, pubkey: contact.pubkey)
                 }
                 else if (isFollowing && contact.privateFollow) {
                     isFollowing = false
                     contact.privateFollow = false
-                    ns.unfollow(contact)
+                    la.unfollow(contact, pubkey: contact.pubkey)
                 }
                 else {
                     isFollowing = true
-                    ns.follow(contact)
+                    la.follow(contact, pubkey: contact.pubkey)
                 }
             } label: {
                 FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.privateFollow)
             }
             .disabled(!fg.didReceiveContactListThisSession)
             .onAppear {
-                if (ns.isFollowing(contact)) {
+                if (la.isFollowing(pubkey: contact.pubkey)) {
                     isFollowing = true
                 }
             }
         }
         else {
             Button {
-                guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                if let account = ns.account {
-                    editingAccount = account
-                }
+                guard let account = account() else { return }
+                guard isFullAccount(account) else { showReadOnlyMessage(); return }
+                editingAccount = account
             } label: {
                 Text("Edit profile", comment: "Button to edit own profile")
             }

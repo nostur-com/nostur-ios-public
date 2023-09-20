@@ -8,14 +8,13 @@
 import SwiftUI
 
 struct NoteReactions: View {
-    @EnvironmentObject var theme:Theme
-    let sp:SocketPool = .shared
+    @EnvironmentObject private var theme:Theme
     
-    let id:String
+    private let id:String
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
-    var reactions:FetchedResults<Event>
-    var reactions_:[Event] { reactions.filter { $0.lastE() == id }  }
+    private var reactions:FetchedResults<Event>
+    private var reactions_:[Event] { reactions.filter { $0.lastE() == id }  }
     
     init(id:String) {
         self.id = id
@@ -50,9 +49,7 @@ struct NoteReactions: View {
 }
 
 struct ReactionRow: View {
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    @ObservedObject var reaction:Event
+    @ObservedObject public var reaction:Event
     
     var body: some View {
         HStack(alignment: .top) {

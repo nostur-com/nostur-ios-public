@@ -9,24 +9,22 @@ import SwiftUI
 
 struct NewListSheet: View {
     
-    @Environment(\.dismiss) var dismiss
-    @State var newList:NosturList?
-    @State var title = ""
-    @State var wotEnabled = true
-    @State var addContactsSheetShown = false
-    @State var selectedContacts:Set<Contact> = []
-    @State var contactSelectionVisible = false
-    @State var feedType:LVM.ListType = .pubkeys
-    @State var selectedRelays:Set<Relay> = []
-
-    var followingPubkeys = NosturState.shared.followingPublicKeys
+    @Environment(\.dismiss) private var dismiss
+    @State private var newList:NosturList?
+    @State private var title = ""
+    @State private var wotEnabled = true
+    @State private var addContactsSheetShown = false
+    @State private var selectedContacts:Set<Contact> = []
+    @State private var contactSelectionVisible = false
+    @State private var feedType:LVM.ListType = .pubkeys
+    @State private var selectedRelays:Set<Relay> = []
     
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Relay.createdAt, order: .forward)],
         animation: .default)
-    var relays: FetchedResults<Relay>
+    private var relays: FetchedResults<Relay>
     
-    var formIsValid:Bool {
+    private var formIsValid:Bool {
         guard !title.isEmpty else { return false }
         if feedType == .relays && selectedRelays.isEmpty { return false }
         return true
@@ -83,7 +81,7 @@ struct NewListSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.navigationStack)
         .navigationDestination(isPresented: $contactSelectionVisible) {
-            ContactsSearch(followingPubkeys:followingPubkeys,
+            ContactsSearch(followingPubkeys: follows(),
                            prompt: String(localized:"Search contacts", comment:"Placeholder in search contacts input field"), onSelectContacts: { selectedContacts in
                 guard let newList = newList else { return }
                 newList.contacts_.append(contentsOf: selectedContacts)

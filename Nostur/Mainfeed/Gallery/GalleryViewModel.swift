@@ -50,20 +50,20 @@ class GalleryViewModel: ObservableObject {
             backlog.timeout = max(Double(ago / 4), 8.0)
             if ago < oldValue {
                 self.state = .loading
-                self.follows = NosturState.shared.followingPublicKeys
+                self.follows = Nostur.follows()
                 self.fetchPostsFromDB()
             }
             else {
                 self.state = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
-                self.follows = NosturState.shared.followingPublicKeys
+                self.follows = Nostur.follows()
                 self.fetchLikesFromRelays()
             }
         }
     }
     
-    var timeoutSeconds:Int { // 10 sec timeout for 1st 8hrs + 1 sec for every 4h after
-        max(10, Int(ceil(Double(10 + ((ago-8)/4)))))
+    var timeoutSeconds:Int { // 12 sec timeout for 1st 8hrs + 1 sec for every 4h after
+        max(12, Int(ceil(Double(12 + ((ago-8)/4)))))
     }
     
     public func timeout() {
@@ -74,7 +74,7 @@ class GalleryViewModel: ObservableObject {
         self.state = .initializing
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog = Backlog(timeout: 5.0, auto: true)
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in
@@ -224,7 +224,7 @@ class GalleryViewModel: ObservableObject {
             L.og.debug("fetchPostsFromDB: empty ids")
             return
         }
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         bg().perform {
             let sortedByLikes = self.posts
                 .sorted(by: { $0.value.count > $1.value.count })
@@ -260,7 +260,7 @@ class GalleryViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         self.state = .loading
         self.items = []
         self.fetchLikesFromRelays()
@@ -272,7 +272,7 @@ class GalleryViewModel: ObservableObject {
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         self.items = []
         self.fetchLikesFromRelays()
     }
@@ -283,7 +283,7 @@ class GalleryViewModel: ObservableObject {
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         
         await withCheckedContinuation { continuation in
             self.fetchLikesFromRelays {
@@ -324,7 +324,7 @@ struct GalleryItem: Identifiable, Equatable {
         self.event = event
         self.id = UUID()
         self.pubkey = event.pubkey
-        self.pfpPictureURL = NosturState.shared.bgFollowingPFPs[event.pubkey]
+        self.pfpPictureURL = NRState.shared.loggedInAccount?.followingPFPs[event.pubkey]
     }
 
     static func == (lhs: GalleryItem, rhs: GalleryItem) -> Bool {

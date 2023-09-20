@@ -58,7 +58,7 @@ class LoggedInAccount: ObservableObject {
             bgSave()
             
             self.followingPublicKeys = self.viewFollowingPublicKeys
-            self.followingPFPs = self.account.getFollowingPFPs()
+            self.followingPFPs = account.getFollowingPFPs()
 //            sendNotification(.followersChanged, account.followingPublicKeys) // TODO: REDO
 //            sendNotification(.followingAdded, contact.pubkey)
 //            self.publishNewContactList()
@@ -177,39 +177,12 @@ class LoggedInAccount: ObservableObject {
     public var followingPFPs:[String: URL] = [:]
     
     public var lastNotificationReceivedAt:Date? // stored here so we dont have to worry about different object contexts / threads
-    public var lastProfileReceivedAt:Date? // stored here so we dont have to worry about different object contexts / threads
     
     // View context
     @Published var account:Account {
-        didSet {
-            self.pubkey = pubkey
-            // Remove currectly active "Following" subscriptions from connected sockets
-            self.bg.perform {
-                guard let bgAccount = self.bg.object(with: self.account.objectID) as? Account else { return }
-                SocketPool.shared.removeActiveAccountSubscriptions()
-                
-                self.followingPublicKeys = bgAccount.getFollowingPublicKeys()
-                self.followingPFPs = bgAccount.getFollowingPFPs()
-                self.lastNotificationReceivedAt = bgAccount.lastNotificationReceivedAt
-                self.lastProfileReceivedAt = bgAccount.lastProfileReceivedAt
-                
-                let pubkey = bgAccount.publicKey
-                FollowingGuardian.shared.didReceiveContactListThisSession = false
-                
-                DispatchQueue.main.async {
-                    self.viewFollowingPublicKeys = self.followingPublicKeys
-    //                sendNotification(.activeAccountChanged, account) // TODO: FIX ALL LISTENERS THAT USED THESE
-                }
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    WebOfTrust.shared.loadWoT(self.account)
-                    if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
-                        DirectMessageViewModel.default.load(pubkey: self.account.publicKey)
-                    }
-                    else {
-                        DirectMessageViewModel.default.loadAfterWoT()
-                    }
-                }
+        didSet { // TODO: REMINDER, didSet does not run on init!
+            Task { @MainActor in
+                self.setupAccount(account)
             }
         }
     }
@@ -219,33 +192,67 @@ class LoggedInAccount: ObservableObject {
     
     public var mutedWords:[String] = []
     
-    public init(_ account:Account) {
+    @MainActor public init(_ account:Account) {
         self.bg = Nostur.bg()
-        self.account = account
         self.pubkey = account.publicKey
+        self.account = account
+        self.setupAccount(account)
+    }
+    
+    @MainActor private func setupAccount(_ account:Account) {
+        self.pubkey = pubkey
+        FollowingGuardian.shared.didReceiveContactListThisSession = false
+        
+        let follows = account.getFollowingPublicKeys() // if we do this in bg.perform it loads too late for other views
+        self.viewFollowingPublicKeys = follows
+        
+        // Remove currectly active "Following" subscriptions from connected sockets
+        self.bg.perform {
+            guard let bgAccount = try? self.bg.existingObject(with: self.account.objectID) as? Account else {
+                L.og.notice("🔴🔴 Problem loading bgAccount")
+                return
+            }
+            self.bgAccount = bgAccount
+            SocketPool.shared.removeActiveAccountSubscriptions()
+            
+            self.followingPublicKeys = follows
+            self.followingPFPs = bgAccount.getFollowingPFPs()
+            self.lastNotificationReceivedAt = bgAccount.lastNotificationReceivedAt
+            
+            DispatchQueue.main.async {
+                sendNotification(.activeAccountChanged, account)
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                WebOfTrust.shared.loadWoT(self.account)
+                if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+                    DirectMessageViewModel.default.load(pubkey: self.account.publicKey)
+                }
+                else {
+                    DirectMessageViewModel.default.loadAfterWoT()
+                }
+            }
+        }
     }
     
     public func changeAccount(account: Account) {
         self.account = account
     }
     
-    private func publishNewContactList() {
-        notMain()
-        guard let account = self.bgAccount else { return }
-        guard let clEvent = try? AccountManager.createContactListEvent(account: account)
-        else {
-            L.og.error("🔴🔴 Could not create new clEvent")
-            return
-        }
-        if account.isNC {
-            NSecBunkerManager.shared.requestSignature(forEvent: clEvent, whenSigned: { signedEvent in
-                _ = Unpublisher.shared.publishLast(signedEvent, ofType: .contactList)
-            })
-        }
-        else {
-            _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
+    public func reloadFollows() {
+        self.bg.perform {
+            guard let bgAccount = self.bgAccount else { return } // TODO: TEST follow, and see if this gets trigger proper and gets new keys or if context did not merge automatically
+            self.followingPublicKeys = bgAccount.getFollowingPublicKeys()
+            self.followingPFPs = bgAccount.getFollowingPFPs()
+        
+            DispatchQueue.main.async {
+                self.viewFollowingPublicKeys = self.followingPublicKeys
+                sendNotification(.followersChanged, self.followingPublicKeys)
+            }
         }
     }
+    
+    
     
     
     // Other

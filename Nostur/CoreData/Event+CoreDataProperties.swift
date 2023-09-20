@@ -312,9 +312,9 @@ extension Event {
     
     var inWoT:Bool {
         if kind == 9735, let zapReq = zapFromRequest {
-            return NosturState.shared.wot?.isAllowed(zapReq.pubkey) ?? false
+            return WebOfTrust.shared.isAllowed(zapReq.pubkey)
         }
-        return NosturState.shared.wot?.isAllowed(pubkey) ?? false
+        return WebOfTrust.shared.isAllowed(pubkey)
     }
     
     var plainText:String {
@@ -335,7 +335,7 @@ extension Event {
     
     var noteText: String {
         if kind == 4 {
-            guard let account = (Thread.isMainThread ? NosturState.shared.account : NosturState.shared.bgAccount), let pk = account.privateKey, let encrypted = content else {
+            guard let account = account(), let pk = account.privateKey, let encrypted = content else {
                 return convertToHieroglyphs(text: "(Encrypted content)")
             }
             if pubkey == account.publicKey, let firstP = self.firstP() {
@@ -1004,7 +1004,7 @@ extension Event {
                     else {
                         savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
                     }
-                    if let zapRequest, zapRequest.pubkey == NosturState.shared.activeAccountPublicKey {
+                    if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
                         savedEvent.zappedEvent?.zapStateChanged.send(.zapReceiptConfirmed)
                     }
@@ -1154,7 +1154,7 @@ extension Event {
                     
                     // if we already track the conversation, consider accepted if we replied to the DM
                     // DM is sent from one of our current logged in pubkey
-                    if !dmState.accepted && NosturState.shared.bgAccountKeys.contains(event.publicKey) {
+                    if !dmState.accepted && NRState.shared.accountPubkeys.contains(event.publicKey) {
                         dmState.accepted = true
                         
                         if let current = dmState.markedReadAt, savedEvent.date > current {
@@ -1171,7 +1171,7 @@ extension Event {
                 else if let dmState = DMState.fetchExisting(contactPubkey, contactPubkey: event.publicKey, context: context) {
                     
                     // if we already track the conversation, consider accepted if we replied to the DM
-                    if !dmState.accepted && NosturState.shared.bgAccountKeys.contains(event.publicKey) {
+                    if !dmState.accepted && NRState.shared.accountPubkeys.contains(event.publicKey) {
                         dmState.accepted = true
                     }
                     // Let DirectMessageViewModel handle view updates
@@ -1180,7 +1180,7 @@ extension Event {
                 else {
                     
                     // if we are sender
-                    if NosturState.shared.bgAccountKeys.contains(event.publicKey) {
+                    if NRState.shared.accountPubkeys.contains(event.publicKey) {
                         let dmState = DMState(context: context)
                         dmState.accountPubkey = event.publicKey
                         dmState.contactPubkey = contactPubkey
@@ -1191,7 +1191,7 @@ extension Event {
                     }
                     
                     // if we are receiver
-                    else if NosturState.shared.bgAccountKeys.contains(contactPubkey) {
+                    else if NRState.shared.accountPubkeys.contains(contactPubkey) {
                         let dmState = DMState(context: context)
                         dmState.accountPubkey = contactPubkey
                         dmState.contactPubkey = event.publicKey

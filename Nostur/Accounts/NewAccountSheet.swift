@@ -10,23 +10,22 @@ import secp256k1
 import Foundation
 
 struct NewAccountSheet: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var ns:NosturState
-    let up:Unpublisher = .shared
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var ns:NRState
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     
-    @State var name = ""
-    @State var about = ""
+    @State private var name = ""
+    @State private var about = ""
     
-    enum FocusedField {
+    private enum FocusedField {
         case name
     }
     
     @FocusState private var focusedField: FocusedField?
     
-    var accentColor: Color = .orange
-    var grayBackground: Color = Color.gray.opacity(0.2)
+    private var accentColor: Color = .orange
+    private var grayBackground: Color = Color.gray.opacity(0.2)
     
     var body: some View {
             VStack {
@@ -55,7 +54,7 @@ struct NewAccountSheet: View {
                 }
                 .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                 
-                if (ns.accounts.first(where: { $0.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY}) == nil) {
+                if (ns.accounts.first(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY}) == nil)  {
                     NavigationLink {
                         TryGuestAccountSheet()
                     } label: {
@@ -89,7 +88,7 @@ struct NewAccountSheet: View {
                 DataProvider.shared().bgSave()
             }
             
-            ns.setAccount(account: newAccount)
+            ns.changeAccount(newAccount)
             ns.onBoardingIsShown = false
             
             // It's a new account so treat as if we received contact list to enable Follow button

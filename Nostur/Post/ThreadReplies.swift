@@ -8,11 +8,10 @@
 import SwiftUI
 
 struct ThreadReplies: View {
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var nrPost:NRPost
-    @EnvironmentObject var ns:NosturState
-    @State var timer:Timer? = nil
-    @State var showNotWoT = false
+    @EnvironmentObject private var theme:Theme
+    @ObservedObject public var nrPost:NRPost
+    @State private var timer:Timer? = nil
+    @State private var showNotWoT = false
     
     var body: some View {
         LazyVStack(spacing: 10) {

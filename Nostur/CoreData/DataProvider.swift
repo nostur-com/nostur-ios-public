@@ -159,3 +159,7 @@ class DataProvider: ObservableObject {
 func bg() -> NSManagedObjectContext {
     return DataProvider.shared().bg
 }
+
+func bgSave() {
+    DataProvider.shared().bgSave()
+}

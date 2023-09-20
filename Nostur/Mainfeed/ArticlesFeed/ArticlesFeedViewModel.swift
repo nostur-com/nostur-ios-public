@@ -46,13 +46,13 @@ class ArticlesFeedViewModel: ObservableObject {
             logAction("Article feed time frame changed to \(self.ago) days")
             if ago < oldValue {
                 self.articles = []
-                self.follows = NosturState.shared.followingPublicKeys
+                self.follows = Nostur.follows()
                 self.fetchFromDB()
             }
             else {
                 self.articles = []
                 lastFetch = nil // need to fetch further back, so remove lastFetch
-                self.follows = NosturState.shared.followingPublicKeys
+                self.follows = Nostur.follows()
                 self.fetchFromRelays()
             }
         }
@@ -77,7 +77,7 @@ class ArticlesFeedViewModel: ObservableObject {
     
     public init() {
         self.backlog = Backlog(timeout: 5.0, auto: true)
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in
@@ -89,7 +89,7 @@ class ArticlesFeedViewModel: ObservableObject {
     }
 
     private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind == 30023 AND pubkey IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", agoTimestamp, follows, blockedPubkeys)
         bg().perform {
@@ -185,7 +185,7 @@ class ArticlesFeedViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         self.nothingFound = false
         self.articles = []
         self.fetchFromRelays()
@@ -196,7 +196,7 @@ class ArticlesFeedViewModel: ObservableObject {
         self.nothingFound = false
         self.lastFetch = nil
         self.backlog.clear()
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         self.articles = []
         self.fetchFromRelays()
     }
@@ -206,7 +206,7 @@ class ArticlesFeedViewModel: ObservableObject {
         self.nothingFound = false
         self.lastFetch = nil
         self.backlog.clear()
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         
         await withCheckedContinuation { continuation in
             self.fetchFromRelays {

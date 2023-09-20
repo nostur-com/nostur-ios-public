@@ -12,18 +12,18 @@ import Combine
 ///
 /// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
 struct AppView: View {
-    @EnvironmentObject var theme:Theme
-    @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
-    @AppStorage("did_accept_terms") var didAcceptTerms = false
+    @EnvironmentObject private var theme:Theme
+    @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
+    @AppStorage("did_accept_terms") private var didAcceptTerms = false
     private var nwcRQ:NWCRequestQueue = .shared
-    let ss:SettingsStore = .shared
-    @StateObject private var ns:NosturState = .shared
+    private let ss:SettingsStore = .shared
+    @StateObject private var ns:NRState = .shared
     @StateObject private var dm:DirectMessageViewModel = .default
     
-    @State var isViewDisplayed = false
-    @State var isOnboarding = false
+    @State private var isViewDisplayed = false
+    @State private var isOnboarding = false
     
-    let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
+    private let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
     
     var body: some View {
@@ -56,8 +56,8 @@ struct AppView: View {
                 
             }
             else {
-                if let account = ns.account {
-                    NosturRootMenu(account: account)
+                if let loggedInAccount = ns.loggedInAccount {
+                    NosturRootMenu()
                         .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
                             ReadOnlyAccountInformationSheet()
                                 .presentationDetents([.large])
@@ -66,7 +66,9 @@ struct AppView: View {
                         }
                         .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                         .environmentObject(ns)
+                        .environmentObject(loggedInAccount)
                         .environmentObject(dm)
+                        .environmentObject(loggedInAccount)
                         .onReceive(priceLoop) { time in
                             if (!isViewDisplayed) { return }
                             Task.detached(priority: .low) {
@@ -94,12 +96,8 @@ struct AppView: View {
         .environmentObject(theme)
     }
     
-    func startNosturing() {
+    private func startNosturing() {
         UserDefaults.standard.register(defaults: ["selected_subtab" : "Following"])
-        
-        if (ns.account == nil && ns.accounts.count >= 1) { // NosturState will set last active account in .init, else we set here:
-            ns.setAccount(account: ns.accounts.last!)
-        }
         
         // Daily cleanup.
         if (firstTimeCompleted) {
@@ -128,7 +126,7 @@ struct AppView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 _ = GuestAccountManager.shared.createGuestAccount()
                 do {
-                    try NewOnboardingTracker.shared.start(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY)
+                    try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
                 }
                 catch {
                     L.og.error("🔴🔴✈️✈️✈️ ONBORADING ERROR")
@@ -139,18 +137,16 @@ struct AppView: View {
             // Fetch updated contactlist for Explore feed
             
             // First get from cache
-            let r = Event.fetchRequest()
-            r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", NosturState.EXPLORER_PUBKEY)
-            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            let exploreContactList = try?  DataProvider.shared().viewContext.fetch(r).first
-            if exploreContactList != nil {
-                ns.objectWillChange.send()
-                ns.rawExplorePubkeys = Set(exploreContactList!.pTags())
-                
+            bg().perform {
+                let r = Event.fetchRequest()
+                r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", EXPLORER_PUBKEY)
+                r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                if let exploreContactList = try? bg().fetch(r).first {
+                    ns.rawExplorePubkeys = Set(exploreContactList.pTags())
+                }
             }
-            
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                req(RM.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
+                req(RM.getAuthorContactsList(pubkey: EXPLORER_PUBKEY))
             }
         }
     }

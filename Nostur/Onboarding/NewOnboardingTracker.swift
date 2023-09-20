@@ -49,7 +49,7 @@ class NewOnboardingTracker {
     }
 
     public func start(pubkey: String) throws {
-        if pubkey == NosturState.GUEST_ACCOUNT_PUBKEY {
+        if pubkey == GUEST_ACCOUNT_PUBKEY {
             if guestAlreadyStarted { return }
             guestAlreadyStarted = true
         }
@@ -89,10 +89,12 @@ class NewOnboardingTracker {
     
     private func stopAfterDelay() {
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
+            if let account = self.account, !NRState.shared.activeAccountPublicKey.isEmpty && account.publicKey == NRState.shared.activeAccountPublicKey {
+                WebOfTrust.shared.loadWoT(account)
+            }
             self.bg.perform { [weak self] in
                 self?.cancel()
             }
-            NosturState.shared.loadWoT()
         }
     }
     
@@ -104,7 +106,7 @@ class NewOnboardingTracker {
     
     private func cancel() {
         guard self.account != nil else { return }
-        L.onboarding.info("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.followingPublicKeys.count) ) followers for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
+        L.onboarding.info("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.getFollowingPublicKeys().count) ) followers for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
 //        self.pubkey = nil
 //        self.account = nil
 //        self.backlog = Backlog()
@@ -180,17 +182,18 @@ class NewOnboardingTracker {
             let pTags = kind3.fastPs.map { $0.1 }
             let existingAndCreatedContacts = self.createContactsFromPs(pTags, isOwnAccount: account.privateKey != nil)
             account.addToFollows(NSSet(array: existingAndCreatedContacts))
-            let followingPublicKeys = account.followingPublicKeys
+            let followingPublicKeys = account.getFollowingPublicKeys()
             
             let tTags = kind3.fastTs.map { $0.1 }
             for tag in tTags {
                 account.followingHashtags.insert(tag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
             }
             
-            NosturState.shared.bgFollowingPublicKeys = followingPublicKeys
             DataProvider.shared().bgSave()
+            NRState.shared.loggedInAccount?.reloadFollows()
+            
             DispatchQueue.main.async {
-                if NosturState.shared.activeAccountPublicKey == pubkey {
+                if NRState.shared.activeAccountPublicKey == pubkey {
                     sendNotification(.followersChanged, followingPublicKeys)
                 }
             }

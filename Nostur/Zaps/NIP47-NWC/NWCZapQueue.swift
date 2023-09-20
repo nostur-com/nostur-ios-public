@@ -45,7 +45,7 @@ class NWCZapQueue {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
-                        _ = PersistentNotification.createFailedNWCZaps(pubkey: NosturState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        _ = PersistentNotification.createFailedNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
                     }
                 }
             }
@@ -151,7 +151,7 @@ class Zap {
                 guard let self = self else { return }
                 if let eventId = self.eventId {
                     let message = String(localized: "[Zap](nostur:e:\(eventId)) failed.\n\(self.error ?? "")", comment: "Error message. don't translate the (nostur:e:...) part")
-                    _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
+                    _ = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
                     
                     // Revert zap state
@@ -166,7 +166,7 @@ class Zap {
                 }
                 else {
                     let message = String(localized:"Zap failed for [contact](nostur:p:\(self.contactPubkey)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
-                    _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
+                    _ = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(self.contactPubkey)). \(self.error ?? "")")
                 }
                 DataProvider.shared().bgSave()
@@ -211,9 +211,10 @@ class Zap {
         if (self.supportsZap) {
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
+                guard let account = account() else { return }
                 if isNC {
                     let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
-                    NosturState.shared.nsecBunker?.requestSignature(forEvent: zapRequestNote, whenSigned: { signedEvent in
+                    NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedEvent in
                         Task {
                             if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedEvent) {
                                 
@@ -231,7 +232,7 @@ class Zap {
                     })
                 }
                 else {
-                    guard let account = NosturState.shared.bgAccount else { return }
+                    
                     let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {
                         Task {

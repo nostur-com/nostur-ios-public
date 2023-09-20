@@ -11,47 +11,47 @@ import CoreData
 import Nuke
 
 struct Settings: View {
-    @EnvironmentObject var theme: Theme
-    @EnvironmentObject var ns: NosturState
-    @ObservedObject var settings: SettingsStore = .shared
-    let er: ExchangeRateModel = .shared
-    @AppStorage("devToggle") var devToggle: Bool = false
-    @AppStorage("selected_tab") var selectedTab = "Main"
+    @EnvironmentObject private var theme: Theme
+    @ObservedObject private var settings: SettingsStore = .shared
+    @AppStorage("devToggle") private var devToggle: Bool = false
+    @AppStorage("selected_tab") private var selectedTab = "Main"
     @Environment(\.managedObjectContext) var viewContext
-    let sp:SocketPool = .shared
 
-    @State var contactsCount:Int? = nil
-    @State var eventsCount:Int? = nil
+    @State private var contactsCount:Int? = nil
+    @State private var eventsCount:Int? = nil
     
     @FetchRequest(fetchRequest: Relay.fetchRequest())
-    var allRelays:FetchedResults<Relay>
+    private var allRelays:FetchedResults<Relay>
     
-    @State var deleteAll = false
-    @State var showDeleteAllEventsConfirmation = false
-    @State var albyNWCsheetShown = false
-    @State var customNWCsheetShown = false
-    @State var showDefaultZapAmountSheet = false
+    @State private var deleteAll = false
+    @State private var showDeleteAllEventsConfirmation = false
+    @State private var albyNWCsheetShown = false
+    @State private var customNWCsheetShown = false
+    @State private var showDefaultZapAmountSheet = false
     
 //    @State var showDocPicker = false
-    @State var showExporter = false
+    @State private var showExporter = false
+    @State private var exportAccount:Account? = nil
     @ObservedObject var vm = ViewPrint()
-    @State var createRelayPresented = false
+    @State private var createRelayPresented = false
     
-    @State var updatingWoT = false // to prevent double tapping
+    @State private var updatingWoT = false // to prevent double tapping
     
-    var fiatPrice:String {
-        String(format: "$%.02f", (ceil(Double(settings.defaultZapAmount)) / 100000000 * er.bitcoinPrice))
+    private var fiatPrice:String {
+        String(format: "$%.02f", (ceil(Double(settings.defaultZapAmount)) / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
     }
     
     @State var deleteAccountIsShown = false
     
-    @State var pfpSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
-    @State var contentSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
-    @State var bannerSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
-    @State var badgesSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
+    @State private var pfpSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
+    @State private var contentSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
+    @State private var bannerSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
+    @State private var badgesSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
     
-    @AppStorage("app_theme") var selectedTheme = "default"
-    @State var appTheme = "default"
+    @AppStorage("app_theme") private var selectedTheme = "default"
+    @State private var appTheme = "default"
+    
+    @ObservedObject private var wot = WebOfTrust.shared
 
     var body: some View {
 
@@ -121,11 +121,11 @@ struct Settings: View {
                         .onChange(of: settings.webOfTrustLevel) { newValue in
                             if newValue == SettingsStore.WebOfTrustLevel.normal.rawValue {
                                 DataProvider.shared().bg.perform {
-                                    NosturState.shared.wot?.loadNormal()
+                                    wot.loadNormal()
                                 }
                             }
                             else if newValue == SettingsStore.WebOfTrustLevel.off.rawValue {
-                                DirectMessageViewModel.default.load(pubkey: NosturState.shared.activeAccountPublicKey)
+                                DirectMessageViewModel.default.load(pubkey: NRState.shared.activeAccountPublicKey)
                             }
                         }
                     }
@@ -133,31 +133,25 @@ struct Settings: View {
                     
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("Updated: \(NosturState.shared.wot?.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
+                            Text("Updated: \(wot.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
                                 .onAppear {
                                     DataProvider.shared().bg.perform {
-                                        NosturState.shared.wot?.loadLastUpdatedDate()
+                                        wot.loadLastUpdatedDate()
                                     }
                                 }
                             if settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
                                 Text("Allowed: Everyone")
                             }
-                            else if let count = NosturState.shared.wot?.allowedKeysCount {
-                                Text("Allowed: \(count) contacts")
+                            else {
+                                Text("Allowed: \(wot.allowedKeysCount) contacts")
                             }
                         }
                         Spacer()
                         Button(String(localized:"Update", comment:"Button to update WoT")) {
                             guard updatingWoT == false else { return }
+                            guard let account = account() else { return }
                             updatingWoT = true
-                            if NosturState.shared.wot == nil, let account = NosturState.shared.account {
-                                NosturState.shared.loadWoT(account)
-                            }
-                            else {
-                                DataProvider.shared().bg.perform {
-                                    NosturState.shared.wot?.loadNormal(force: true)
-                                }
-                            }
+                            wot.loadWoT(account)
                         }
                     }
                 }
@@ -220,12 +214,13 @@ struct Settings: View {
                 
                 Section(header: Text("Data export")) {
                     Button("Save to file...") {
-                        guard ns.account != nil else { L.og.error("Cannot export, no account"); return }
+                        guard let account = account() else { L.og.error("Cannot export, no account"); return }
+                        exportAccount = account
                         showExporter.toggle()
                     }
-                    if (showExporter) {
+                    if let exportAccount = exportAccount, showExporter == true {
                         Color.clear
-                            .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: ns.account!.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(ns.account!.npub.prefix(11)))") { result in
+                            .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: exportAccount.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(exportAccount.npub.prefix(11)))") { result in
                                 switch result {
                                 case .success(let url):
                                     L.og.info("Saved to \(url)")
@@ -254,7 +249,7 @@ struct Settings: View {
                             do {
                                 try viewContext.save()
                                 if (relay.read || relay.write) {
-                                    _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read: relay.read, write: relay.write)
+                                    _ = SocketPool.shared.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read: relay.read, write: relay.write)
                                 }
                             } catch {
                                 L.og.error("Unresolved error \(error)")
@@ -437,7 +432,7 @@ struct Settings: View {
 //                    }
 //                }
 //                .listRowBackground(theme.background)
-            if ns.account?.privateKey != nil && !(ns.account?.isNC ?? false) {
+            if account()?.privateKey != nil && !(account()?.isNC ?? false) {
                 Section(header: Text("Account", comment: "Heading for section to delete account")) {
                     Button(role: .destructive) {
                         deleteAccountIsShown = true
@@ -478,7 +473,7 @@ struct Settings: View {
         .sheet(isPresented: $deleteAccountIsShown) {
             NavigationStack {
                 DeleteAccountSheet()
-                    .environmentObject(ns)
+                    .environmentObject(NRState.shared)
             }
             .environmentObject(theme)
             .presentationBackground(theme.background)
@@ -486,7 +481,7 @@ struct Settings: View {
         .sheet(isPresented: $albyNWCsheetShown) {
             NavigationStack {
                 AlbyNWCConnectSheet()
-                    .environmentObject(ns)
+                    .environmentObject(NRState.shared)
             }
             .environmentObject(theme)
             .presentationBackground(theme.background)
@@ -494,7 +489,7 @@ struct Settings: View {
         .sheet(isPresented: $customNWCsheetShown) {
             NavigationStack {
                 CustomNWCConnectSheet()
-                    .environmentObject(ns)
+                    .environmentObject(NRState.shared)
             }
             .environmentObject(theme)
             .presentationBackground(theme.background)

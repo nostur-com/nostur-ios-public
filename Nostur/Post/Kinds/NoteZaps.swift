@@ -91,19 +91,16 @@ struct NoteZaps: View {
 }
 
 struct NoteZapRow: View {
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    let er:ExchangeRateModel = .shared
-     
+
     @AppStorage("devToggle") var devToggle:Bool = false
     
     // THE ZAP EVENT (FROM CUSTODIAL ZAP PROVIDER)
-    var zap:Event
-    @ObservedObject var zapFrom:Event
+    public var zap:Event
+    @ObservedObject public var zapFrom:Event
     
     var fiatPrice:String {
         get {
-            String(format: "($%.02f)",(Double(zap.naiveSats / 100000000 * er.bitcoinPrice)))
+            String(format: "($%.02f)",(Double(zap.naiveSats / 100000000 * ExchangeRateModel.shared.bitcoinPrice)))
         }
     }
     

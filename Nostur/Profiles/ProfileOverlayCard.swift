@@ -31,7 +31,7 @@ struct ProfileOverlayCardContainer: View {
                     .onAppear {
                         DataProvider.shared().bg.perform {
                             if let bgContact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().bg) {
-                                let isFollowing = NosturState.shared.bgFollowingPublicKeys.contains(pubkey)
+                                let isFollowing = isFollowing(pubkey)
                                 let nrContact = NRContact(contact: bgContact, following: isFollowing)
                                 DispatchQueue.main.async {
                                     self.contact = nrContact
@@ -46,8 +46,7 @@ struct ProfileOverlayCardContainer: View {
                                     processResponseCommand: { taskId, _ in
                                         DataProvider.shared().bg.perform {
                                             if let bgContact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().bg) {
-                                                let isFollowing = NosturState.shared.bgFollowingPublicKeys.contains(pubkey)
-                                                let nrContact = NRContact(contact: bgContact, following: isFollowing)
+                                                let nrContact = NRContact(contact: bgContact, following: isFollowing(pubkey))
                                                 DispatchQueue.main.async {
                                                     self.contact = nrContact
                                                 }
@@ -72,25 +71,24 @@ struct ProfileOverlayCardContainer: View {
 }
 
 struct ProfileOverlayCard: View {
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var contact:NRContact
-    var zapEtag:String? // so other clients can still tally zaps
-    @EnvironmentObject private var ns:NosturState
+    @ObservedObject public var contact:NRContact
+    public var zapEtag:String? // so other clients can still tally zaps
+    public var withoutFollowButton = false
+    
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var theme:Theme
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var fg:FollowingGuardian = .shared
-    private let sp:SocketPool = .shared
     
-    var withoutFollowButton = false
-    @State var similarPFP = false
-    @State var backlog = Backlog(timeout: 5.0, auto: true)
-    @State var lastSeen:String? = nil
-    @State var isFollowingYou = false
+    @State private var similarPFP = false
+    @State private var backlog = Backlog(timeout: 5.0, auto: true)
+    @State private var lastSeen:String? = nil
+    @State private var isFollowingYou = false
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
     var couldBeImposter:Bool {
-        guard let account = NosturState.shared.account else { return false }
+        guard let account = account() else { return false }
         guard account.publicKey != contact.pubkey else { return false }
         guard !contact.following else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
@@ -117,6 +115,7 @@ struct ProfileOverlayCard: View {
                     VStack {
                         if (!withoutFollowButton) {
                             Button {
+                                guard isFullAccount() else { showReadOnlyMessage(); return }
                                 if (contact.following && !contact.privateFollow) {
                                     contact.follow(privateFollow: true)
                                 }
@@ -132,7 +131,7 @@ struct ProfileOverlayCard: View {
                             .disabled(!fg.didReceiveContactListThisSession)
                         }
                         Button("Show feed") {
-                            guard let account = ns.account else { return }
+                            guard let account = account() else { return }
                             dismiss()
                             LVMManager.shared.followingLVM(forAccount: account)
                                 .loadSomeonesFeed(contact.pubkey)
@@ -256,10 +255,10 @@ struct ProfileOverlayCard: View {
             
             let contactAnyName = contact.anyName.lowercased()
             let cPubkey = contact.pubkey
-            let currentAccountPubkey = NosturState.shared.activeAccountPublicKey
+            let currentAccountPubkey = NRState.shared.activeAccountPublicKey
             
             DataProvider.shared().bg.perform {
-                guard let account = NosturState.shared.bgAccount else { return }
+                guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows_.first(where: {
                     isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
@@ -275,7 +274,7 @@ struct ProfileOverlayCard: View {
                     }
                     
                     DispatchQueue.main.async {
-                        guard currentAccountPubkey == NosturState.shared.activeAccountPublicKey else { return }
+                        guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                         self.similarPFP = similarPFP
                         contact.couldBeImposter = similarPFP ? 1 : 0
                     }
@@ -287,7 +286,7 @@ struct ProfileOverlayCard: View {
             
             bg().perform {
                 EventRelationsQueue.shared.addAwaitingContact(contact)
-                if (ns.followsYou(contact)) {
+                if (contact.followsYou()) {
                     DispatchQueue.main.async {
                         isFollowingYou = true
                     }
@@ -299,7 +298,7 @@ struct ProfileOverlayCard: View {
                     },
                     processResponseCommand: { (taskId, _) in
                         bg().perform {
-                            if (ns.followsYou(contact)) {
+                            if (contact.followsYou()) {
                                 DispatchQueue.main.async {
                                     isFollowingYou = true
                                 }
@@ -308,7 +307,7 @@ struct ProfileOverlayCard: View {
                     },
                     timeoutCommand: { taskId in
                         bg().perform {
-                            if (ns.followsYou(contact)) {
+                            if (contact.followsYou()) {
                                 DispatchQueue.main.async {
                                     isFollowingYou = true
                                 }

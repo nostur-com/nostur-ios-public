@@ -27,7 +27,7 @@ struct MutedWordsView: View {
             .onDelete { offsets in
                 offsets.forEach { viewContext.delete(mutedWords[$0]) }
                 DataProvider.shared().save()
-                NosturState.shared.initMutedWords()
+                NRState.shared.loadMutedWords()
             }
         }
         .sheet(item: $selected) { words in
@@ -79,7 +79,7 @@ struct MutedWordsView: View {
                         Button("Save") {
                             mutedWords.words = text
                             DataProvider.shared().save()
-                            NosturState.shared.initMutedWords()
+                            NRState.shared.loadMutedWords()
                             dismiss()
                         }
                     }

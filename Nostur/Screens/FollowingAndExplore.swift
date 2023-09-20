@@ -128,7 +128,7 @@ struct FollowingAndExplore: View {
             
             ZStack {
                 // FOLLOWING
-                if (account.followingPublicKeys.count <= 1 && !didSend) {
+                if (account.getFollowingPublicKeys().count <= 1 && !didSend) {
                     VStack {
                         Spacer()
                         Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -238,7 +238,7 @@ struct FollowingAndExplore_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
             NavigationStack {
-                if let account = NosturState.shared.account {
+                if let account = account() {
                     FollowingAndExplore(account: account)
                 }
             }

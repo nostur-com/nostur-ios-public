@@ -56,8 +56,6 @@ struct ArticleFeedSettings: View {
 }
 
 struct ArticleFeedSettingsTester: View {
-    @EnvironmentObject var ns:NosturState
-    
     var body: some View {
         NavigationStack {
             VStack {

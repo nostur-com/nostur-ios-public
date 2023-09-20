@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct BookmarkButton: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
-    @ObservedObject var footerAttributes:FooterAttributes
+    @EnvironmentObject private var theme:Theme
+    private let nrPost:NRPost
+    @ObservedObject private var footerAttributes:FooterAttributes
     
     init(nrPost: NRPost) {
         self.nrPost = nrPost
@@ -30,7 +30,7 @@ struct BookmarkButton: View {
                         .highPriorityGesture(
                                     TapGesture()
                                         .onEnded { _ in
-                                            NosturState.shared.removeBookmark(nrPost)
+                                            NRState.shared.loggedInAccount?.removeBookmark(nrPost)
                                         }
                                 )
                 }
@@ -48,7 +48,7 @@ struct BookmarkButton: View {
                                         .onEnded { _ in
                                             let impactMed = UIImpactFeedbackGenerator(style: .medium)
                                             impactMed.impactOccurred()
-                                            NosturState.shared.addBookmark(nrPost)
+                                            NRState.shared.loggedInAccount?.addBookmark(nrPost)
                                         }
                                 )
                 }

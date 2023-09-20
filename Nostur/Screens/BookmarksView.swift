@@ -7,35 +7,29 @@
 
 import SwiftUI
 
+// TODO: DONT NEED CONTAINER ANYMORE
 struct BookmarksContainer: View {
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var la:LoggedInAccount
 
     var body: some View {
 //        let _ = Self._printChanges()
-        VStack(spacing:0) {
-            if (ns.account != nil) {
-                BookmarksView(account: ns.account!)
-            }
-            else {
-                Text("Select account first")
-            }
-        }
+        BookmarksView(account: la.account)
     }
 }
 
 struct BookmarksView: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var ns:NRState
 
-    let account: Account
-    @State var vBookmarks:[NRPost] = []
+    private let account: Account
+    @State private var vBookmarks:[NRPost] = []
 
-    var accounts:[Account] {
+    private var accounts:[Account] {
         ns.accounts.filter { $0.privateKey != nil }
     }
 
-    @ObservedObject var settings:SettingsStore = .shared
-    @State var selectedAccount:Account? = nil
+    @ObservedObject private var settings:SettingsStore = .shared
+    @State private var selectedAccount:Account? = nil
 
 
     init(account:Account) {
@@ -111,7 +105,7 @@ struct BookmarksView: View {
                }))
     }
     
-    func loadBookmarks(forAccount account: Account? = nil) {
+    private func loadBookmarks(forAccount account: Account? = nil) {
         let fr = Event.fetchRequest()
         if let account {
             fr.predicate = NSPredicate(format: "%@ IN bookmarkedBy", account)

@@ -8,10 +8,9 @@
 import SwiftUI
 
 struct PrivateNoteRow: View {
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var note: PrivateNote
-    var nrPost: NRPost?
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject private var theme:Theme
+    @ObservedObject public var note: PrivateNote
+    public var nrPost: NRPost?
     
     var body: some View {
         VStack(spacing: 0) {

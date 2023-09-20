@@ -36,31 +36,26 @@ class NRState: ObservableObject {
     var rawExplorePubkeys:Set<String> = []
     
     @MainActor public func logout(_ account:Account) {
-        bg().perform {
-            if (account.privateKey != nil) {
-                if account.isNC {
-                    NIP46SecretManager.shared.deleteSecret(account: account)
-                }
-                else {
-                    AccountManager.shared.deletePrivateKey(forPublicKeyHex: account.publicKey)
-                }
+        if (account.privateKey != nil) {
+            if account.isNC {
+                NIP46SecretManager.shared.deleteSecret(account: account)
             }
-            bg().delete(account)
-            self.loadAccounts() { accounts in
-                guard let nextAccount = accounts.last else {
-                    DispatchQueue.main.async {
-                        sendNotification(.clearNavigation)
-                        self.activeAccountPublicKey = ""
-                        self.onBoardingIsShown = true
-                        self.loggedInAccount = nil
-                    }
-                    DataProvider.shared().bgSave()
-                    return
-                }
-                
-                self.loadAccount(nextAccount)
-                DataProvider.shared().bgSave()
+            else {
+                AccountManager.shared.deletePrivateKey(forPublicKeyHex: account.publicKey)
             }
+        }
+        DataProvider.shared().viewContext.delete(account)
+        DataProvider.shared().save()
+        self.loadAccounts() { accounts in
+            guard let nextAccount = accounts.last else {
+                sendNotification(.clearNavigation)
+                self.activeAccountPublicKey = ""
+                self.onBoardingIsShown = true
+                self.loggedInAccount = nil
+                return
+            }
+            
+            self.loadAccount(nextAccount)
         }
     }
     
@@ -70,29 +65,21 @@ class NRState: ObservableObject {
             self.activeAccountPublicKey = ""
             return
         }
-        bg().perform {
-            guard let account = DataProvider.shared().viewContext.object(with: account.objectID) as? Account
-            else {
-                return
-            }
-            
-            self.nsecBunker.setAccount(account)
-            let pubkey = account.publicKey
-            self.loggedInAccount = LoggedInAccount(account)
-            
-            DispatchQueue.main.async {
-                guard pubkey != self.activeAccountPublicKey else { return }
-                self.activeAccountPublicKey = pubkey
-            }
-        }
+        
+        self.nsecBunker.setAccount(account)
+        let pubkey = account.publicKey
+        self.loggedInAccount = LoggedInAccount(account)
+        
+        guard pubkey != self.activeAccountPublicKey else { return }
+        self.activeAccountPublicKey = pubkey
     }
     
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     
     // BG high speed vars
-    private var accountPubkeys:Set<String> = []
-    private var fullAccountPubkeys:Set<String> = []
-    private var mutedWords:[String] = [] {
+    public var accountPubkeys:Set<String> = []
+    public var fullAccountPubkeys:Set<String> = []
+    public var mutedWords:[String] = [] {
         didSet {
 //            sendNotification(.mutedWordsChanged, mutedWords) // TODO update listeners
         }
@@ -104,7 +91,7 @@ class NRState: ObservableObject {
         let activeAccountPublicKey = activeAccountPublicKey
         loadAccounts() { accounts in
             guard !activeAccountPublicKey.isEmpty,
-                    let account = try? Account.fetchAccount(publicKey: activeAccountPublicKey, context: bg())
+                    let account = try? Account.fetchAccount(publicKey: activeAccountPublicKey, context: DataProvider.shared().viewContext)
             else { return }
             self.loadAccount(account)
         }
@@ -119,19 +106,21 @@ class NRState: ObservableObject {
         onComplete?(accounts)
     }
     
-    private func loadAccount(_ account:Account) { // main context
+    @MainActor public func loadAccount(_ account:Account) { // main context
+        guard loggedInAccount == nil || account.publicKey != self.activeAccountPublicKey else {
+            L.og.notice("🔴🔴 This account is already loaded")
+            return
+        }
         self.nsecBunker.setAccount(account)
-        let pubkey = account.publicKey
         self.loggedInAccount = LoggedInAccount(account)
-        guard pubkey != self.activeAccountPublicKey else { return }
-        self.activeAccountPublicKey = pubkey
+        self.activeAccountPublicKey = account.publicKey
     }
     
     private func managePowerUsage() {
         NotificationCenter.default.addObserver(self, selector: #selector(powerStateChanged), name: Notification.Name.NSProcessInfoPowerStateDidChange, object: nil)
     }
     
-    private func loadMutedWords() {
+    public func loadMutedWords() {
         bg().perform {
             let fr = MutedWords.fetchRequest()
             fr.predicate = NSPredicate(format: "enabled == true")
@@ -162,7 +151,56 @@ func notMain() {
     #endif
 }
 
+func isFollowing(_ pubkey:String) -> Bool {
+    if Thread.isMainThread {
+        return NRState.shared.loggedInAccount?.viewFollowingPublicKeys.contains(pubkey) ?? false
+    }
+    else {
+        return NRState.shared.loggedInAccount?.followingPublicKeys.contains(pubkey) ?? false
+    }
+}
+
+func followingPFP(_ pubkey: String) -> URL? {
+    NRState.shared.loggedInAccount?.followingPFPs[pubkey]
+}
+
+func account() -> Account? {
+    if Thread.isMainThread {
+        NRState.shared.loggedInAccount?.account
+    }
+    else {
+        NRState.shared.loggedInAccount?.bgAccount
+    }
+}
 
 func follows() -> Set<String> {
-    NRState.shared.loggedInAccount?.viewFollowingPublicKeys ?? []
+    if Thread.isMainThread {
+        NRState.shared.loggedInAccount?.viewFollowingPublicKeys ?? []
+    }
+    else {
+        NRState.shared.loggedInAccount?.followingPublicKeys ?? []
+    }
+}
+
+func blocks() -> [String] {
+    if Thread.isMainThread {
+        NRState.shared.loggedInAccount?.account.blockedPubkeys_ ?? []
+    }
+    else {
+        NRState.shared.loggedInAccount?.bgAccount?.blockedPubkeys_ ?? []
+    }
+}
+
+
+func isFullAccount(_ account:Account? = nil ) ->Bool {
+    if Thread.isMainThread {
+        return (account ?? NRState.shared.loggedInAccount?.account)?.privateKey != nil
+    }
+    else {
+        return (account ?? NRState.shared.loggedInAccount?.bgAccount)?.privateKey != nil
+    }
+}
+
+func showReadOnlyMessage() {
+    NRState.shared.readOnlyAccountSheetShown = true;
 }

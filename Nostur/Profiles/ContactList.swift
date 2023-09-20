@@ -9,25 +9,22 @@
 import SwiftUI
 
 struct ContactList: View {
-    
-    let sp:SocketPool = .shared
-    
     @FetchRequest
-    var contacts:FetchedResults<Contact>
-    var pubkeys:[String]
-    var silent:[String]
+    private var contacts:FetchedResults<Contact>
+    private var pubkeys:[String]
+    private var silent:[String]
     
-    var notInContacts:[String] {
+    private var notInContacts:[String] {
         Array(Set(pubkeys).subtracting(Set(contacts.map { $0.pubkey })))
     }
     
-    var noMetadata:[String] {
+    private var noMetadata:[String] {
         contacts
             .filter { $0.metadata_created_at == 0 }
             .map { $0.pubkey }
     }
     
-    var missing:[String] { notInContacts + noMetadata }
+    private var missing:[String] { notInContacts + noMetadata }
 
     init(pubkeys:[String], silent:[String]? = nil) {
         self.pubkeys = pubkeys

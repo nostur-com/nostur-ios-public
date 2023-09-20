@@ -148,17 +148,17 @@ class Importer {
                         continue
                     }
                     
-                    if message.subscriptionId == "Notifications" && event.pTags().contains(NosturState.shared.activeAccountPublicKey) && [1,9802,30023,7,9735,4].contains(event.kind.id) {
-                        NosturState.shared.lastNotificationReceivedAt = Date.now
+                    if message.subscriptionId == "Notifications" && event.pTags().contains(NRState.shared.activeAccountPublicKey) && [1,9802,30023,7,9735,4].contains(event.kind.id) {
+                        NRState.shared.loggedInAccount?.lastNotificationReceivedAt = Date.now
                     }
                     
                     if message.subscriptionId == "Profiles" && event.kind == .setMetadata {
-                        NosturState.shared.lastProfileReceivedAt = Date.now
+                        account()?.lastProfileReceivedAt = Date.now
                     }
                                         
                     guard existingIds[event.id]?.status != .SAVED else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
-                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
@@ -179,7 +179,7 @@ class Importer {
                         let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: context),
                         existingKind3.created_at > Int64(event.createdAt.timestamp)
                     {
-                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
@@ -209,14 +209,14 @@ class Importer {
                     }
                     
                     if event.kind == .contactList {
-                        if event.publicKey == NosturState.EXPLORER_PUBKEY {
+                        if event.publicKey == EXPLORER_PUBKEY {
                             // use guest account p's for "Explorer" feed
                             let pTags = event.pTags()
                             Task { @MainActor in
-                                NosturState.shared.rawExplorePubkeys = Set(pTags)
+                                NRState.shared.rawExplorePubkeys = Set(pTags)
                             }
                         }
-                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }

@@ -9,27 +9,19 @@ import SwiftUI
 import CoreData
 
 struct NotificationsContainer: View {
-    @EnvironmentObject var theme: Theme
-    @StateObject private var nm:NotificationsManager = .shared
-    @EnvironmentObject var ns:NosturState
-    @Environment(\.managedObjectContext) var viewContext
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Posts"
-    @State var navPath = NavigationPath()
+    @EnvironmentObject private var theme: Theme
+    @EnvironmentObject var la:LoggedInAccount
+    @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Posts"
+    @State private var navPath = NavigationPath()
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-//    @Environment(\.verticalSizeClass) private var verticalSizeClass
     
     var body: some View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             VStack {
-                if let account = ns.account {
-                    NotificationsView(account: account, tab: $selectedNotificationsTab)
-                }
-                else {
-                    Text("Select account account first")
-                }
+                NotificationsView(account: la.account, tab: $selectedNotificationsTab)
             }
             .background(theme.listBackground)
             .withNavigationDestinations()
@@ -47,18 +39,18 @@ struct NotificationsContainer: View {
 }
 
 struct NotificationsView: View {
-    @EnvironmentObject var theme:Theme
-    @Environment(\.managedObjectContext) var viewContext
-    @ObservedObject var nm:NotificationsManager = .shared
-    @ObservedObject var account:Account
-    let sp:SocketPool = .shared
+    @ObservedObject public var account:Account
+    @Binding public var tab:String
     
-    @Binding var tab:String
-    @ObservedObject var settings:SettingsStore = .shared
-    @State var markAsReadDelayer:Timer?
-    @State var showNotificationSettings = false
-    @AppStorage("notifications_mute_reactions") var muteReactions:Bool = false
-    @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false
+    @EnvironmentObject private var theme:Theme
+    @ObservedObject private var nm:NotificationsManager = .shared
+    @ObservedObject private var settings:SettingsStore = .shared
+    
+    @State private var markAsReadDelayer:Timer?
+    @State private var showNotificationSettings = false
+    
+    @AppStorage("notifications_mute_reactions") private var muteReactions:Bool = false
+    @AppStorage("notifications_mute_zaps") private var muteZaps:Bool = false
     
     var body: some View {
 //        let _ = Self._printChanges()

@@ -10,12 +10,12 @@ import secp256k1
 
 /// Sign any unsigned nostr event with your key
 struct AnySigner: View {
-    @Environment(\.dismiss) var dismiss
-    @State var input = ""
-    @State var error:String?
-    @State var signedNEvent:AnyNEvent? = nil
+    @Environment(\.dismiss) private var dismiss
+    @State private var input = ""
+    @State private var error:String?
+    @State private var signedNEvent:AnyNEvent? = nil
     
-    func publish() {
+    private func publish() {
         if let signedNEvent = signedNEvent {
             SocketPool.shared.sendMessage(ClientMessage(message: signedNEvent.wrappedEventJson()), accountPubkey: signedNEvent.publicKey)
         }
@@ -25,11 +25,11 @@ struct AnySigner: View {
         Form {
             TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"), axis: .vertical)
                 .lineLimit(16, reservesSpace: true)
-            if let account = NosturState.shared.account, account.privateKey != nil {
-            HStack {
-                Text("Signing as")
-                PFP(pubkey: account.publicKey, account: account, size: 30)
-            }
+            if let account = NRState.shared.loggedInAccount?.account, account.privateKey != nil {
+                HStack {
+                    Text("Signing as")
+                    PFP(pubkey: account.publicKey, account: account, size: 30)
+                }
             }
             if let error {
                 Text(error)
@@ -67,7 +67,7 @@ struct AnySigner: View {
                         error = String(localized:"Could not parse JSON", comment: "Error message"); return
                     }
                     
-                    guard let pk = NosturState.shared.account?.privateKey else {
+                    guard let pk = NRState.shared.loggedInAccount?.account.privateKey else {
                         error = String(localized:"Account has no private key", comment: "Error message"); return
                     }
                     
@@ -79,7 +79,7 @@ struct AnySigner: View {
                     input = signedNEvent.eventJson(.prettyPrinted)
                     self.signedNEvent = signedNEvent
                 }
-                .disabled(NosturState.shared.account?.privateKey == nil)
+                .disabled(NRState.shared.loggedInAccount?.account.privateKey == nil)
             }
         }
     }

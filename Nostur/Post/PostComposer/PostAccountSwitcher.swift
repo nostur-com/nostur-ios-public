@@ -9,12 +9,12 @@ import SwiftUI
 
 struct PostAccountSwitcher: View {
     
-    var activeAccount:Account
-    var onChange:(Account) -> ()
-    @State var expanded = false
+    public var activeAccount:Account
+    public var onChange:(Account) -> ()
+    @State private var expanded = false
     
-    var accounts:[Account] {
-        NosturState.shared.accounts
+    private var accounts:[Account] {
+        NRState.shared.accounts
             .filter { $0.privateKey != nil }
             .sorted(by: {
                 $0 == activeAccount && $1 != activeAccount
@@ -41,7 +41,7 @@ struct PostAccountSwitcher: View {
             }
     }
     
-    func accountTapped(_ account:Account) {
+    private func accountTapped(_ account:Account) {
         if !expanded {
             withAnimation {
                 expanded = true
@@ -57,7 +57,7 @@ struct PostAccountSwitcher: View {
 }
 
 struct PostAccountSwitcherPreviewWrap: View {
-    @State var activeAccount = NosturState.shared.account!
+    @State var activeAccount = NRState.shared.loggedInAccount!.account
     
     var body: some View {
         PostAccountSwitcher(activeAccount: activeAccount, onChange: { account in

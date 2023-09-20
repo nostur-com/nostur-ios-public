@@ -40,8 +40,8 @@ class LVMManager {
         if let lvm = listVMs.first(where: { $0.pubkey == account.publicKey && $0.id == "Following" }) {
             return lvm
         }
-        L.lvm.info("⭐️ New LVM for: \(account.publicKey) - \(account.name) - following: \(account.followingPublicKeys.count)")
-        let lvm = LVM(type: .pubkeys, pubkey: account.publicKey, pubkeys: account.followingPublicKeys, listId: "Following", name: account.name, isDeck: isDeck)
+        L.lvm.info("⭐️ New LVM for: \(account.publicKey) - \(account.name) - following: \(account.getFollowingPublicKeys().count)")
+        let lvm = LVM(type: .pubkeys, pubkey: account.publicKey, pubkeys: account.getFollowingPublicKeys(), listId: "Following", name: account.name, isDeck: isDeck)
         listVMs.append(lvm)
         return lvm
     }
@@ -49,7 +49,16 @@ class LVMManager {
         if let lvm = listVMs.first(where: { $0.id == "Explore" }) {
             return lvm
         }
-        let lvm = LVM(type: .pubkeys, pubkeys: NosturState.shared.explorePubkeys, listId: "Explore", name: "Explore", isDeck: isDeck)
+        
+        let explorePubkeys:Set<String> =
+            if let account = NRState.shared.loggedInAccount?.account {
+                Set([account.publicKey] + NRState.shared.rawExplorePubkeys).subtracting(Set(account.blockedPubkeys_))
+            }
+            else {
+                NRState.shared.rawExplorePubkeys
+            }
+        
+        let lvm = LVM(type: .pubkeys, pubkeys: explorePubkeys, listId: "Explore", name: "Explore", isDeck: isDeck)
         listVMs.append(lvm)
         return lvm
     }

@@ -9,10 +9,10 @@ import SwiftUI
 import UIKit
 
 struct DetailPane: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var theme:Theme
     @StateObject private var dim = DIMENSIONS.shared
-    @StateObject var tm = DetailTabsModel()
-    @State var offsetX = 200.0
+    @StateObject private var tm = DetailTabsModel()
+    @State private var offsetX = 200.0
 
     init() {
         UIScrollView.appearance().bounces = false

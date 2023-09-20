@@ -28,13 +28,11 @@ struct ListViewContainer: View {
 }
 
 struct ListViewContainerTester: View {
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var la:LoggedInAccount
     
     var body: some View {
-        if let account = ns.account {
-            NavigationStack {
-                ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
-            }
+        NavigationStack {
+            ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: la.account))
         }
     }
 }

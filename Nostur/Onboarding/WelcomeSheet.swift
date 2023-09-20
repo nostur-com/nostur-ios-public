@@ -8,9 +8,8 @@
 import SwiftUI
 
 struct WelcomeSheet: View {
-    @EnvironmentObject var theme:Theme
-    var offerTryOut = false
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject private var theme:Theme
+    public var offerTryOut = false
     
     var body: some View {
 //        let _ = Self._printChanges()

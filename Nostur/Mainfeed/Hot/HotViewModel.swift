@@ -56,20 +56,20 @@ class HotViewModel: ObservableObject {
             backlog.timeout = max(Double(ago / 4), 5.0)
             if ago < oldValue {
                 self.state  = .loading
-                self.follows = NosturState.shared.followingPublicKeys
+                self.follows = Nostur.follows()
                 self.fetchPostsFromDB()
             }
             else {
                 self.state  = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
-                self.follows = NosturState.shared.followingPublicKeys
+                self.follows = Nostur.follows()
                 self.fetchLikesFromRelays()
             }
         }
     }
     
-    var timeoutSeconds:Int { // 10 sec timeout for 1st 8hrs + 1 sec for every 4h after
-        max(10, Int(ceil(Double(10 + ((ago-8)/4)))))
+    var timeoutSeconds:Int { // 12 sec timeout for 1st 8hrs + 1 sec for every 4h after
+        max(12, Int(ceil(Double(12 + ((ago-8)/4)))))
     }
     
     public func timeout() {
@@ -80,7 +80,7 @@ class HotViewModel: ObservableObject {
         self.state = .initializing
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog = Backlog(timeout: 5.0, auto: true)
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in
@@ -231,7 +231,7 @@ class HotViewModel: ObservableObject {
             L.og.debug("fetchPostsFromDB: empty ids")
             return
         }
-        let blockedPubkeys = NosturState.shared.account?.blockedPubkeys_ ?? []
+        let blockedPubkeys = blocks()
         bg().perform {
             let sortedByLikes = self.posts
                 .sorted(by: { $0.value.count > $1.value.count })
@@ -286,7 +286,7 @@ class HotViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         self.state = .loading
         self.hotPosts = []
         self.fetchLikesFromRelays()
@@ -298,7 +298,7 @@ class HotViewModel: ObservableObject {
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         self.hotPosts = []
         self.fetchLikesFromRelays()
     }
@@ -309,7 +309,7 @@ class HotViewModel: ObservableObject {
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()
-        self.follows = NosturState.shared.followingPublicKeys
+        self.follows = Nostur.follows()
         
         await withCheckedContinuation { continuation in
             self.fetchLikesFromRelays {

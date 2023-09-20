@@ -8,16 +8,15 @@
 import SwiftUI
 
 struct LightningButton: View {
-    let er:ExchangeRateModel = .shared // Not Observed for performance
-    let ns:NosturState = .shared // Not Observed for performance
-    var tally:Int64 // SATS (1000 SATS ~= 20 cent)
-    var nrPost:NRPost?
-    @State var isLoading = false
-    @State var customZapId:UUID? = nil
+    @EnvironmentObject var la:LoggedInAccount
+    public var tally:Int64 // SATS (1000 SATS ~= 20 cent)
+    public var nrPost:NRPost?
+    @State private var isLoading = false
+    @State private var customZapId:UUID? = nil
     
     var tallyString:String {
-        if (er.bitcoinPrice != 0.0) {
-            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(er.bitcoinPrice)))
+        if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
+            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
             return fiatPrice
         }
         return String(tally.formatNumber)
@@ -37,10 +36,7 @@ struct LightningButton: View {
             .padding(5)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard ns.account?.privateKey != nil else {
-                    ns.readOnlyAccountSheetShown = true
-                    return
-                }
+                guard isFullAccount() else { showReadOnlyMessage(); return }
                 guard nrPost != nil else { return }
                 isLoading = true
                 buttonTapped()
@@ -70,7 +66,7 @@ class PaymentInfo: Identifiable {
 
 extension LightningButton {
     func buttonTapped() {
-        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+        guard isFullAccount() else { showReadOnlyMessage(); return }
         guard (nrPost?.contact?.anyLud ?? false) else { return }
         isLoading = true
         

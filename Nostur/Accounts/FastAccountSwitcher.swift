@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FastAccountSwitcher: View {
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var ns:NRState
     @EnvironmentObject var sm:SideBarModel
     
     var activePubkey:String = ""
@@ -30,7 +30,7 @@ struct FastAccountSwitcher: View {
                     .contentShape(Rectangle())
                     .onTapGesture {
                         if let account = fewAccounts[safe: index] { // Swift runtime failure: Index out of bounds + 0 (<compiler-generated>:0) . Added check because maybe tap gesture fires too late??
-                            ns.setAccount(account: account)
+                            ns.changeAccount(account)
                             sm.showSidebar = false
                         }
                     }

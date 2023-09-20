@@ -16,12 +16,9 @@ struct Badge: Hashable {
 }
 
 struct BadgesIssuedContainer:View {
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var la:LoggedInAccount
     var body: some View {
-        if (ns.account != nil) {
-            BadgesIssuedView(pubkey: ns.account!.publicKey)
-        }
-        else { Text("No account selected") }
+        BadgesIssuedView(pubkey: la.account.publicKey)
     }
 }
 
@@ -63,6 +60,7 @@ struct BadgesIssuedView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
+                    guard isFullAccount() else { showReadOnlyMessage(); return }
                     createNewBadgeSheetShown = true
                 }, label: {
                     Text("Create new badge", comment: "Button to create a new badge")

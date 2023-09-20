@@ -91,12 +91,7 @@ struct ProfileZapButton: View {
                                 .simultaneousGesture(
                                        LongPressGesture()
                                            .onEnded { _ in
-                                               guard NosturState.shared.account != nil else { return }
-                                               guard NosturState.shared.account?.privateKey != nil else {
-                                                   dismiss()
-                                                   NosturState.shared.readOnlyAccountSheetShown = true
-                                                   return
-                                               }
+                                               guard isFullAccount() else { showReadOnlyMessage(); return }
                                                // Trigger custom zap
                                                customZapId = UUID()
                                                if let customZapId {
@@ -129,12 +124,8 @@ struct ProfileZapButton: View {
     }
     
     func triggerZap(strikeLocation:CGPoint, contact:NRContact, zapMessage:String = "", amount:Double? = nil) {
-        guard let account = NosturState.shared.account else { return }
-        guard NosturState.shared.account?.privateKey != nil else {
-            dismiss()
-            NosturState.shared.readOnlyAccountSheetShown = true
-            return
-        }
+        guard isFullAccount() else { showReadOnlyMessage(); return }
+        guard let account = account() else { return }
         let isNC = account.isNC
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()

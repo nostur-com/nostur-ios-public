@@ -67,7 +67,7 @@ class NotificationsManager: ObservableObject {
     
 //    let viewContext = DataProvider.shared().viewContext
     let context = DataProvider.shared().bg
-    let ns:NosturState = .shared
+//    let ns:NosturState = .shared
     
     var subscriptions = Set<AnyCancellable>()
     
@@ -100,15 +100,15 @@ class NotificationsManager: ObservableObject {
         let calendar = Calendar.current
         let ago = calendar.date(byAdding: .minute, value: -1, to: Date())!
         let sinceNTimestamp = NTimestamp(date: ago)
-        req(RM.getMentions(pubkeys: [ns.activeAccountPublicKey],
+        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey],
                            subscriptionId: "Notifications", since: sinceNTimestamp),
             activeSubscriptionId: "Notifications")
     }
     
     func relayCheckSinceNotifications() {
         // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-        guard ns.activeAccountPublicKey != "" else { return }
-        guard let since = NosturState.shared.lastNotificationReceivedAt else { return }
+        guard NRState.shared.activeAccountPublicKey != "" else { return }
+        guard let since = account()?.lastNotificationReceivedAt else { return }
     
         let sinceNTimestamp = NTimestamp(date: since)
         let dmSinceNTimestamp = NTimestamp(timestamp: Int(DirectMessageViewModel.default.lastNotificationReceivedAt?.timeIntervalSince1970 ?? 0))
@@ -116,12 +116,12 @@ class NotificationsManager: ObservableObject {
         
         let ago = since.agoString
         
-        req(RM.getMentions(pubkeys: [ns.activeAccountPublicKey], kinds:[1,7,9735,9802,30023], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp))
-        req(RM.getMentions(pubkeys: [ns.activeAccountPublicKey], kinds:[4], subscriptionId: "DMs-CATCHUP-\(ago)", since: dmSinceNTimestamp))
+        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:[1,7,9735,9802,30023], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp))
+        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:[4], subscriptionId: "DMs-CATCHUP-\(ago)", since: dmSinceNTimestamp))
     }
     
     private func checkForNewPosts() {
-        guard let account = ns.bgAccount else { return }
+        guard let account = account() else { return }
         let mutedRootIds = account.mutedRootIds_
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
@@ -172,7 +172,7 @@ class NotificationsManager: ObservableObject {
     }
     
     private func checkForNewReactions() {
-        guard let account = ns.bgAccount else { return }
+        guard let account = account() else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
         
@@ -209,7 +209,7 @@ class NotificationsManager: ObservableObject {
     }
     
     private func checkForNewZaps() {
-        guard let account = ns.bgAccount else { return }
+        guard let account = account() else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
 
@@ -252,7 +252,7 @@ class NotificationsManager: ObservableObject {
     
     private func checkForOfflinePosts(_ maxAgo:TimeInterval = 3600 * 24 * 3) { // 3 days
         guard SocketPool.shared.anyConnected else { return }
-        guard let account = ns.bgAccount else { return }
+        guard let account = account() else { return }
         let pubkey = account.publicKey
         let xDaysAgo = Date.now.addingTimeInterval(-(maxAgo))
         
@@ -284,8 +284,8 @@ class NotificationsManager: ObservableObject {
     }
     
     func checkForEverything() {
-        guard ns.account != nil else { return }
-        guard ns.activeAccountPublicKey != "" else { return }
+        guard account() != nil else { return }
+        guard NRState.shared.activeAccountPublicKey != "" else { return }
         
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
@@ -315,7 +315,7 @@ class NotificationsManager: ObservableObject {
     
     func markMentionsAsRead() {
         self.unreadMentions = 0
-        guard let account = ns.account else { return }
+        guard let account = account() else { return }
         let mutedRootIds = account.mutedRootIds_
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
@@ -347,7 +347,7 @@ class NotificationsManager: ObservableObject {
         
         context.perform { [weak self] in
             guard let self = self else { return }
-            guard let account = ns.bgAccount else { return }
+            guard let account = Nostur.account() else { return }
             if let mostRecent = try? self.context.fetch(r2).first {
                 if account.lastSeenPostCreatedAt != mostRecent.created_at {
                     account.lastSeenPostCreatedAt = mostRecent.created_at
@@ -366,7 +366,7 @@ class NotificationsManager: ObservableObject {
     
     func markReactionsAsRead() {
         self.unreadReactions = 0
-        guard let account = ns.account else { return }
+        guard let account = account() else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
         
@@ -382,7 +382,7 @@ class NotificationsManager: ObservableObject {
         
         context.perform { [weak self] in
             guard let self = self else { return }
-            guard let account = ns.bgAccount else { return }
+            guard let account = Nostur.account() else { return }
             
             if let mostRecent = try? context.fetch(r2).first {
                 if account.lastSeenReactionCreatedAt != mostRecent.created_at {
@@ -401,7 +401,7 @@ class NotificationsManager: ObservableObject {
     
     func markZapsAsRead() {
         self.unreadZaps = 0
-        guard let account = ns.account else { return }
+        guard let account = account() else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
         
@@ -423,7 +423,7 @@ class NotificationsManager: ObservableObject {
         
         context.perform { [weak self] in
             guard let self = self else { return }
-            guard let account = ns.bgAccount else { return }
+            guard let account = Nostur.account() else { return }
             if let mostRecent = try? context.fetch(r2).first {
                 if account.lastSeenZapCreatedAt != mostRecent.created_at {
                     account.lastSeenZapCreatedAt = mostRecent.created_at
