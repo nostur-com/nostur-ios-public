@@ -137,6 +137,7 @@ extension LVM {
 
 extension Event {
     
+    // TODO: Optimize tagsSerialized / hashtags matching
     static func postsByPubkeys(_ pubkeys:Set<String>, mostRecent:Event, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
         let blockedPubkeys = NosturState.shared.bgAccount?.blockedPubkeys_ ?? []
         let cutOffPoint = mostRecent.created_at - (15 * 60)

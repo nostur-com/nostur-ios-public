@@ -155,7 +155,7 @@ struct ContentRenderer: View { // VIEW things
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
 //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-                            .clipped()
+//                            .clipped()
 //                            .debugDimensions("SingleMediaViewer.sd")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
