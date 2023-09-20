@@ -39,22 +39,28 @@ struct Hot: View {
             case .ready:
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
-                    LazyVStack(spacing: 10) {
-                        ForEach(hotVM.hotPosts) { post in
-                            Box(nrPost: post) {
-                                PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages)
-                            }
-                            .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-                            .transaction { t in
-                                t.animation = nil
-                            }
-                            .onBecomingVisible {
-                                // SettingsStore.shared.fetchCounts should be true for below to work
-                                hotVM.prefetch(post)
+                    if !hotVM.hotPosts.isEmpty {
+                        LazyVStack(spacing: 10) {
+                            ForEach(hotVM.hotPosts) { post in
+                                Box(nrPost: post) {
+                                    PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                }
+                                .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
+                                .transaction { t in
+                                    t.animation = nil
+                                }
+                                .onBecomingVisible {
+                                    // SettingsStore.shared.fetchCounts should be true for below to work
+                                    hotVM.prefetch(post)
+                                }
                             }
                         }
+                        .padding(0)
                     }
-                    .padding(0)
+                    else {
+                        Button("Refresh") { hotVM.reload() }
+                            .centered()
+                    }
                 }
                 .refreshable {
                     await hotVM.refresh()
