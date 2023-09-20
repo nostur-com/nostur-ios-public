@@ -288,7 +288,14 @@ class NewOnboardingTracker {
                 }
                 relays.relays.forEach { relay in
                     let fr = Relay.fetchRequest()
-                    fr.predicate = NSPredicate(format: "url == %@", relay.url.lowercased())
+                    if relay.url.suffix(1) == "/" {
+                        let relayWithoutSlash = String(relay.url.dropLast(1))
+                        fr.predicate = NSPredicate(format: "url == %@ OR url == %@", relay.url.lowercased(), relayWithoutSlash.lowercased())
+                    }
+                    else {
+                        let relayWithSlash = relay.url + "/"
+                        fr.predicate = NSPredicate(format: "url == %@ OR url == %@", relay.url.lowercased(), relayWithSlash.lowercased())
+                    }
                     L.onboarding.info("✈️✈️✈️ adding \(relay.url) ")
                     if let existingRelay = try? self.bg.fetch(fr).first {
                         existingRelay.read = relay.readWrite.read ?? false
