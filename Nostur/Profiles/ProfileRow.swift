@@ -8,33 +8,58 @@
 import SwiftUI
 
 struct ProfileCardByPubkey: View {
+    @EnvironmentObject var theme:Theme
     public let pubkey:String
-    
-    @FetchRequest
-    private var contacts:FetchedResults<Contact>
-    
-    init(pubkey:String) {
-        self.pubkey = pubkey
-        _contacts = FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-            predicate: NSPredicate(format: "pubkey == %@", pubkey)
-        )
-    }
+    @StateObject private var vm = FetchVM<Contact>()
     
     var body: some View {
-        if let contact = contacts.first {
-            ProfileRow(contact: contact)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(.regularMaterial, lineWidth: 1)
-                )
-        }
-        else {
-            ProgressView().onAppear {
-                L.og.info("🟢 ProfileByPubkey.onAppear no contact so REQ.0: \(pubkey)")
-                req(RM.getUserMetadata(pubkey: pubkey))
+        Group {
+            switch vm.state {
+            case .initializing, .loading, .altLoading:
+                ProgressView()
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .task {
+                        vm.setFetchParams((
+                            req: {
+                                if let contact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().viewContext) { // 1. CHECK LOCAL DB
+                                    vm.ready(contact)
+                                }
+                                else { // 2. ELSE CHECK RELAY
+                                    req(RM.getUserMetadata(pubkey: pubkey))
+                                }
+                            },
+                            onComplete: { relayMessage in
+                                DispatchQueue.main.async {
+                                    if let contact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().viewContext) { // 3. WE FOUND IT ON RELAY
+                                        vm.ready(contact)
+                                    }
+                                    else { // 4. TIME OUT
+                                        vm.timeout()
+                                    }
+                                }
+                            },
+                            altReq: nil
+                            
+                        ))
+                        vm.fetch()
+                    }
+            case .ready(let contact):
+                ProfileRow(contact: contact)
+            case .timeout:
+                Text("Unable to fetch profile")
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            case .error(let error):
+                Text(error)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
+        .overlay(
+            RoundedRectangle(cornerRadius: 15)
+                .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 
