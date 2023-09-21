@@ -28,7 +28,7 @@ struct NewPost: View {
                     HStack(alignment: .top) {
                         PostAccountSwitcher(activeAccount: account, onChange: { account in
                             vm.activeAccount = account
-                        })
+                        }).equatable()
                         HighlightedTextEditor(
                             text: $vm.text,
                             pastedImages: $vm.pastedImages,

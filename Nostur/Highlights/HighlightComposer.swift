@@ -24,7 +24,7 @@ struct HighlightComposer: View {
                     HStack(alignment: .top, spacing: 10) {
                         PostAccountSwitcher(activeAccount: account, onChange: { account in
                             activeAccount = account
-                        })
+                        }).equatable()
 
                         VStack(alignment:.leading, spacing: 3) {
                             HStack { // name + reply + context menu

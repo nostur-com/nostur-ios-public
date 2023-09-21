@@ -42,6 +42,7 @@ struct NewReply: View {
                                 PostAccountSwitcher(activeAccount: account, onChange: { account in
                                     vm.activeAccount = account
                                 })
+                                .equatable()
                                 .padding(.horizontal, 10)
                                 HighlightedTextEditor(
                                     text: $vm.text,
