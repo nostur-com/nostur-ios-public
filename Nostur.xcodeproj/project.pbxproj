@@ -233,6 +233,7 @@
 		1F91D8FB2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */; };
 		1F922FDE2A9775EB00C84867 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F922FDD2A9775EB00C84867 /* Box.swift */; };
 		1F927C6F297DB34A0024F665 /* ThreadWarning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F927C6E297DB3490024F665 /* ThreadWarning.swift */; };
+		1F92D89C2ABBEED9002F300D /* EmbedById.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F92D89B2ABBEED9002F300D /* EmbedById.swift */; };
 		1F9499C9299F568900F628B4 /* WelcomeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499C8299F568900F628B4 /* WelcomeSheet.swift */; };
 		1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */; };
 		1F96792D29BF611800E78173 /* EditPrivateNoteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F96792C29BF611800E78173 /* EditPrivateNoteSheet.swift */; };
@@ -653,6 +654,7 @@
 		1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapperPubkeyVerificationQueue.swift; sourceTree = "<group>"; };
 		1F922FDD2A9775EB00C84867 /* Box.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		1F927C6E297DB3490024F665 /* ThreadWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadWarning.swift; sourceTree = "<group>"; };
+		1F92D89B2ABBEED9002F300D /* EmbedById.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbedById.swift; sourceTree = "<group>"; };
 		1F9499C8299F568900F628B4 /* WelcomeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeSheet.swift; sourceTree = "<group>"; };
 		1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryGuestAccountSheet.swift; sourceTree = "<group>"; };
 		1F96792C29BF611800E78173 /* EditPrivateNoteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPrivateNoteSheet.swift; sourceTree = "<group>"; };
@@ -870,6 +872,7 @@
 				1F0088EA29D735080016F111 /* ContentRenderer.swift */,
 				1F20939E2A43FDCA0085E7D2 /* DetailFooterFragment.swift */,
 				1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */,
+				1F92D89B2ABBEED9002F300D /* EmbedById.swift */,
 				1F33EC3629B613F800615FB9 /* FullImageViewer.swift */,
 				1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */,
 				1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */,
@@ -1856,6 +1859,7 @@
 				1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */,
 				1F0592DC2A505531003B4B3C /* DiscoverCommunities.swift in Sources */,
 				1FF78BB82A45421500CA3DDA /* PaddingsTesting.swift in Sources */,
+				1F92D89C2ABBEED9002F300D /* EmbedById.swift in Sources */,
 				1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */,
 				1FD78EF92A0CE49D003E7B3E /* NRPost.swift in Sources */,
 				1F756533296AE7910078474E /* NewRelayView.swift in Sources */,

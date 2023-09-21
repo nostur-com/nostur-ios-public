@@ -8,13 +8,60 @@
 import SwiftUI
 
 struct NEventView: View {
-    
+    @EnvironmentObject var theme:Theme
     let identifier:ShareableIdentifier
+    @StateObject private var vm = FetchVM<NRPost>()
         
     var body: some View {
-        if let eventId = identifier.eventId {
-            NEventViewInner(predicate: NSPredicate(format: "id == %@", eventId), identifier: identifier)
+        Group {
+            switch vm.state {
+            case .initializing, .loading:
+                ProgressView()
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .task {
+                        guard let eventId = identifier.eventId else {
+                            vm.error("Problem parsing nostr identifier")
+                            return
+                        }
+                        vm.setFetchParams((
+                            req: {
+                                bg().perform {
+                                    if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
+                                        vm.ready(NRPost(event: event, withFooter: false))
+                                    }
+                                    else {
+                                        req(RM.getEvent(id: eventId))
+                                    }
+                                }
+                            },
+                            onComplete: { relayMessage in
+                                if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
+                                    vm.ready(NRPost(event: event, withFooter: false))
+                                }
+                                else {
+                                    vm.timeout()
+                                }
+                            }
+                        ))
+                        vm.fetch()
+                    }
+            case .ready(let nrPost):
+                EmbeddedPost(nrPost)
+            case .timeout:
+                Text("Unable to fetch content")
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            case .error(let error):
+                Text(error)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
         }
+        .overlay(
+            RoundedRectangle(cornerRadius: 15)
+                .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
+        )
     }
     
     struct NEventViewInner: View {
