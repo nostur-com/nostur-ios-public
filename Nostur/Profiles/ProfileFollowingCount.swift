@@ -14,7 +14,7 @@ struct ProfileFollowingCount: View {
 
     var body: some View {
         switch vm.state {
-        case .initializing:
+        case .initializing, .loading:
             Text("\(Image(systemName: "hourglass.circle.fill")) Following", comment: "Label for Following count")
                 .onAppear {
                     vm.setFetchParams((
@@ -37,8 +37,6 @@ struct ProfileFollowingCount: View {
                     ))
                     vm.fetch()
                 }
-        case .loading:
-            Text("\(Image(systemName: "hourglass.circle.fill")) Following", comment: "Label for Following count")
         case .ready(let count):
             Text("\(count) Following", comment: "Label for Following count")
         case .timeout:
@@ -47,6 +45,8 @@ struct ProfileFollowingCount: View {
                     vm.state = .loading
                     vm.fetch()
                 }
+        case .error(let error):
+            Text(error)
         }
     }
 }

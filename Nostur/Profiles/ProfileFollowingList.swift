@@ -14,8 +14,9 @@ struct ProfileFollowingList: View {
 
     var body: some View {
         switch vm.state {
-        case .initializing:
-            CenteredProgressView()
+        case .initializing, .loading:
+            ProgressView()
+                .frame(alignment: .center)
                 .onAppear {
                     vm.setFetchParams((
                         req: {
@@ -50,8 +51,6 @@ struct ProfileFollowingList: View {
                     ))
                     vm.fetch()
                 }
-        case .loading:
-            CenteredProgressView()
         case .ready(let (pubkeys, silentFollows)):
             ContactList(pubkeys: pubkeys, silent:silentFollows)
         case .timeout:
@@ -61,6 +60,8 @@ struct ProfileFollowingList: View {
                 Button("Try again") { vm.fetch() }
                 Spacer()
             }
+        case .error(let error):
+            Text(error)
         }
     }
 }
