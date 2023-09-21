@@ -15,7 +15,7 @@ struct NEventView: View {
     var body: some View {
         Group {
             switch vm.state {
-            case .initializing, .loading:
+            case .initializing, .loading, .altLoading:
                 ProgressView()
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -26,23 +26,36 @@ struct NEventView: View {
                         }
                         vm.setFetchParams((
                             req: {
-                                bg().perform {
+                                bg().perform { // 1. CHECK LOCAL DB
                                     if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
                                         vm.ready(NRPost(event: event, withFooter: false))
                                     }
-                                    else {
+                                    else { // 2. ELSE CHECK RELAY
                                         req(RM.getEvent(id: eventId))
                                     }
                                 }
                             },
                             onComplete: { relayMessage in
-                                if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
+                                if let event = try? Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
+                                    if vm.state == .altLoading, let relay = identifier.relays.first {
+                                        L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
+                                    }
                                     vm.ready(NRPost(event: event, withFooter: false))
                                 }
-                                else {
+                                // Still don't have the event? try to fetch from relay hint
+                                // TODO: Should try a relay we don't already have in our relay set
+                                else if (vm.state == .loading) && identifier.relays.first != nil { // 4. TIMEOUT BUT WE TRY RELAY HINT
+                                    vm.altFetch()
+                                }
+                                else { // 5. TIMEOUT
                                     vm.timeout()
                                 }
+                            },
+                            altReq: { // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
+                                guard let relay = identifier.relays.first else { vm.timeout(); return }
+                                EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: eventId), relay: relay)
                             }
+                            
                         ))
                         vm.fetch()
                     }
@@ -62,114 +75,6 @@ struct NEventView: View {
             RoundedRectangle(cornerRadius: 15)
                 .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
         )
-    }
-    
-    struct NEventViewInner: View {
-        
-        @State var nrPost:NRPost?
-        @State var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes?
-        @State var fetchTask:Task<Void, Never>?
-        
-        private var fetchRequest: FetchRequest<Event>
-        private var events: FetchedResults<Event> {
-            fetchRequest.wrappedValue
-        }
-        private var identifier:ShareableIdentifier
-        
-        init(predicate: NSPredicate, identifier:ShareableIdentifier) {
-            fetchRequest = FetchRequest(
-                sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-                predicate: predicate
-            )
-            self.identifier = identifier
-         }
-        
-        var body: some View {
-            VStack {
-                if let nrPost = nrPost, let prd = postRowDeletableAttributes, prd.blocked {
-                    HStack {
-                        Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
-                        Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
-                            .buttonStyle(.bordered)
-                    }
-                    .padding(.leading, 8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                    )
-                    .hCentered()
-                }
-                else if let nrPost = nrPost {
-                    if nrPost.kind == 30023 {
-                        ArticleView(nrPost, hideFooter: true)
-//                            .background(
-//                                Color.systemBackground
-//                                    .cornerRadius(15)
-//                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(.regularMaterial, lineWidth: 1)
-                            )
-//                            .debugDimensions("NEventViewInner.ArticleView")
-                    }
-                    else {
-                        QuotedNoteFragmentView(nrPost: nrPost)
-//                            .debugDimensions("NEventViewInner.QuotedNoteFragmentView")
-                    }
-                }
-                else if let event = events.first {
-                    CenteredProgressView()
-                        .frame(height: 150)
-                        .task {
-                            DataProvider.shared().bg.perform {
-                                let bgEvent = DataProvider.shared().bg.object(with: event.objectID) as! Event
-                                let nrPost = NRPost(event: bgEvent)
-                                DispatchQueue.main.async {
-                                    self.nrPost = nrPost
-                                    self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
-                                }
-                            }
-                        }
-                }
-                else {
-                    CenteredProgressView()
-                        .frame(height: 150)
-                        .onAppear {
-                            guard let eventId = identifier.eventId else {
-                                L.og.info("\(identifier.bech32string) has no eventId")
-                                return
-                            }
-                            L.og.info("🟢 Fetching for NEventView \(eventId) / \(identifier.bech32string)")
-                            req(RM.getEvent(id: eventId))
-                            
-                            if !identifier.relays.isEmpty {
-                                fetchTask = Task {
-                                    try? await Task.sleep(for: .seconds(3))
-                                    let ctx = DataProvider.shared().bg
-                                    await ctx.perform {
-                                        // If we don't have the event after X seconds, fetch from relay hint
-                                        if (try? Event.fetchEvent(id: eventId, context: ctx)) == nil {
-                                            if let relay = identifier.relays.first {
-                                                EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: eventId), relay: relay)
-                                            }
-                                            // TODO: hmm we need to get contact also...
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .onDisappear {
-                            if let task = fetchTask {
-                                task.cancel()
-                            }
-                        }
-                }
-            }
-//            .transaction { transaction in
-//                transaction.animation = nil
-//                transaction.disablesAnimations = true
-//            }
-        }
     }
 }
 
