@@ -39,6 +39,12 @@ class FetchVM<T>: ObservableObject {
         }
     }
     
+    public func error(_ text:String) {
+        DispatchQueue.main.async {
+            self.state = .error(text)
+        }
+    }
+    
     public func fetch() {
         guard let fetchParams = self.fetchParams else { L.og.error("🔴🔴 FetchVM: missing fetchParams"); return }
         let reqTask = ReqTask(
@@ -66,5 +72,6 @@ class FetchVM<T>: ObservableObject {
         case loading
         case ready(T)
         case timeout
+        case error(String)
     }
 }

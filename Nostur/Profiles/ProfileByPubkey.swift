@@ -18,8 +18,9 @@ struct ProfileByPubkey: View {
 
     var body: some View {
         switch vm.state {
-        case .initializing:
+        case .initializing, .loading:
             ProgressView()
+                .frame(alignment: .center)
                 .onAppear {
                     vm.setFetchParams((
                         req: {
@@ -45,8 +46,6 @@ struct ProfileByPubkey: View {
                     ))
                     vm.fetch()
                 }
-        case .loading:
-            ProgressView()
         case .ready(let nrContact):
             ProfileView(nrContact: nrContact, tab:tab)
         case .timeout:
@@ -68,6 +67,8 @@ struct ProfileByPubkey: View {
                 }
                 .presentationBackground(theme.background)
             }
+        case .error(let error):
+            Text(error)
         }
     }
 }
