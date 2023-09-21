@@ -116,15 +116,27 @@ class DataProvider: ObservableObject {
             return
         }
         #endif
-        Task.detached {
-            self.container.viewContext.perform {
-                if self.container.viewContext.hasChanges {
-                    do {
-                        try self.container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
-                        L.og.info("🟢🟢 viewContext saved")
-                    }
-                    catch {
-                        L.og.error("🔴🔴 Could not save viewContext")
+
+        bg.perform { [weak self] in
+            guard let self = self else { return }
+            if self.bg.hasChanges {
+                do {
+                    try self.bg.save()
+                }
+                catch {
+                    L.og.error("🔴🔴 Could not save bgContext \(error)")
+                }
+                Task {
+                    self.container.viewContext.perform {
+                        if self.container.viewContext.hasChanges {
+                            do {
+                                try self.container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
+                                L.og.info("🟢🟢 viewContext saved")
+                            }
+                            catch {
+                                L.og.error("🔴🔴 Could not save viewContext")
+                            }
+                        }
                     }
                 }
             }
