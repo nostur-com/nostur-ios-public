@@ -22,7 +22,8 @@ struct ProfileFollowingList: View {
         switch vm.state {
         case .initializing, .loading, .altLoading:
             ProgressView()
-                .frame(alignment: .center)
+                .padding(10)
+                .frame(maxWidth:.infinity, alignment: .center)
                 .onAppear {
                     vm.setFetchParams((
                         req: {
@@ -62,11 +63,11 @@ struct ProfileFollowingList: View {
             ContactList(pubkeys: followsInfo.follows, silent: followsInfo.silentFollows)
         case .timeout:
             VStack(alignment: .center) {
-                Spacer()
-                Text("Time-out")
+                Text("Unable to fetch contacts")
                 Button("Try again") { vm.fetch() }
-                Spacer()
             }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .center)
         case .error(let error):
             Text(error)
         }
