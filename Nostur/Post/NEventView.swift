@@ -10,7 +10,7 @@ import SwiftUI
 struct NEventView: View {
     @EnvironmentObject var theme:Theme
     let identifier:ShareableIdentifier
-    @StateObject private var vm = FetchVM<NRPost>()
+    @StateObject private var vm = FetchVM<NRPost>(timeout: 2.5, debounceTime: 0.05)
         
     var body: some View {
         Group {
