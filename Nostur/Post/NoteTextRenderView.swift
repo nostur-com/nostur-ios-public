@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct NoteTextRenderView: View {
-    @EnvironmentObject var dim:DIMENSIONS
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var nrPost:NRPost
+    @EnvironmentObject private var dim:DIMENSIONS
+    @EnvironmentObject private var theme:Theme
+    let nrPost:NRPost
     
     var body: some View {
         if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
