@@ -14,7 +14,7 @@ struct ProfileFollowingCount: View {
 
     var body: some View {
         switch vm.state {
-        case .initializing, .loading:
+        case .initializing, .loading, .altLoading:
             Text("\(Image(systemName: "hourglass.circle.fill")) Following", comment: "Label for Following count")
                 .onAppear {
                     vm.setFetchParams((
@@ -33,7 +33,8 @@ struct ProfileFollowingCount: View {
                                 }
                                 else { vm.timeout() }
                             }
-                        }
+                        },
+                        altReq: nil
                     ))
                     vm.fetch()
                 }

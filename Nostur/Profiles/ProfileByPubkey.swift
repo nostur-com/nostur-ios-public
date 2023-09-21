@@ -18,7 +18,7 @@ struct ProfileByPubkey: View {
 
     var body: some View {
         switch vm.state {
-        case .initializing, .loading:
+        case .initializing, .loading, .altLoading:
             ProgressView()
                 .frame(alignment: .center)
                 .onAppear {
@@ -42,7 +42,8 @@ struct ProfileByPubkey: View {
                                     vm.timeout()
                                 }
                             }
-                        }
+                        },
+                        altReq: nil
                     ))
                     vm.fetch()
                 }
