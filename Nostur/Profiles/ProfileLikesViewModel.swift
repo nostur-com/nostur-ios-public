@@ -100,12 +100,12 @@ class ProfileLikesViewModel: ObservableObject {
                 guard let reactionToId = like.reactionToId else { continue }
                 self.likedIds.insert(reactionToId)
             }
-            self.fetchPostsFromRelays()
+            self.fetchPostsFromRelays(onComplete)
         }
     }
     
     // STEP 3: FETCH MOST LIKED POSTS FROM RELAYS
-    private func fetchPostsFromRelays(onComplete: (() -> ())? = nil) {
+    private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
         bg().perform {
@@ -124,6 +124,9 @@ class ProfileLikesViewModel: ObservableObject {
                         self.fetchPostsFromDB(onComplete)
                         self.backlog.clear()
                     }
+                }
+                else {
+                    onComplete?()
                 }
                 return
             }
@@ -173,6 +176,7 @@ class ProfileLikesViewModel: ObservableObject {
         bg().perform {
             guard !self.likedIds.isEmpty else {
                 L.og.debug("fetchPostsFromDB: empty ids")
+                onComplete?()
                 return
             }
             

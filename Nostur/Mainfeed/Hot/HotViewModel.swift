@@ -148,12 +148,12 @@ class HotViewModel: ObservableObject {
                 }
             }
             
-            self.fetchPostsFromRelays()
+            self.fetchPostsFromRelays(onComplete)
         }
     }
     
     // STEP 3: FETCH MOST LIKED POSTS FROM RELAYS
-    private func fetchPostsFromRelays(onComplete: (() -> ())? = nil) {
+    private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
         let posts = self.posts
@@ -180,6 +180,9 @@ class HotViewModel: ObservableObject {
                         self.fetchPostsFromDB(onComplete)
                         self.backlog.clear()
                     }
+                }
+                else {
+                    onComplete?()
                 }
                 return
             }
@@ -229,6 +232,7 @@ class HotViewModel: ObservableObject {
         let ids = Set(self.posts.keys)
         guard !ids.isEmpty else {
             L.og.debug("fetchPostsFromDB: empty ids")
+            onComplete?()
             return
         }
         let blockedPubkeys = blocks()
@@ -305,7 +309,6 @@ class HotViewModel: ObservableObject {
     
     // pull to refresh
     public func refresh() async {
-        self.state = .loading
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()

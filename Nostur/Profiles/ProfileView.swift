@@ -26,7 +26,7 @@ struct ProfileView: View {
     @State private var editingAccount:Account?
     
     init(nrContact:NRContact, tab:String? = nil) {
-        UIScrollView.appearance().bounces = false
+//        UIScrollView.appearance().bounces = false
         self.nrContact = nrContact
         self.pubkey = nrContact.pubkey
         self.tab = tab

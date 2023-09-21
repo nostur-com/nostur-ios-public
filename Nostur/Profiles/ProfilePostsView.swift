@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct ProfilePostsView: View {
-    @EnvironmentObject var theme:Theme
-    @ObservedObject var settings:SettingsStore = .shared
+    @EnvironmentObject private var theme:Theme
+    @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var vm:ProfilePostsViewModel
     
     init(pubkey: String) {
@@ -19,10 +19,14 @@ struct ProfilePostsView: View {
     var body: some View {
         switch vm.state {
         case .initializing:
-            CenteredProgressView()
+            ProgressView()
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .onAppear { vm.load() }
         case .loading:
-            CenteredProgressView()
+            ProgressView()
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .task(id: "profileposts") {
                     do {
                         try await Task.sleep(
@@ -61,11 +65,12 @@ struct ProfilePostsView: View {
 //            .background(theme.listBackground)
         case .timeout:
             VStack(alignment: .center) {
-                Spacer()
-                Text("Time-out")
+                Text("Unable to fetch posts")
+                    .frame(maxWidth: .infinity, alignment: .center)
                 Button("Try again") { vm.reload() }
-                Spacer()
             }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 }
