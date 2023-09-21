@@ -24,9 +24,7 @@ struct Gallery: View {
     var body: some View {
         ScrollViewReader { proxy in
             switch vm.state {
-            case .initializing:
-                EmptyView()
-            case .loading:
+            case .initializing, .loading:
                 CenteredProgressView()
                     .task(id: "gallery") {
                         do {

@@ -108,6 +108,7 @@ class GalleryViewModel: ObservableObject {
                 }
                 else {
                     L.og.error("Gallery feed: Problem generating request")
+                    onComplete?()
                 }
             },
             processResponseCommand: { taskId, relayMessage in
@@ -142,12 +143,12 @@ class GalleryViewModel: ObservableObject {
                 }
             }
             
-            self.fetchPostsFromRelays()
+            self.fetchPostsFromRelays(onComplete)
         }
     }
 
     // STEP 3: FETCH MOST LIKED POSTS FROM RELAYS
-    private func fetchPostsFromRelays(onComplete: (() -> ())? = nil) {
+    private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
         let posts = self.posts
@@ -174,6 +175,9 @@ class GalleryViewModel: ObservableObject {
                         self.fetchPostsFromDB(onComplete)
                         self.backlog.clear()
                     }
+                }
+                else {
+                    onComplete?()
                 }
                 return
             }
@@ -222,6 +226,7 @@ class GalleryViewModel: ObservableObject {
         let ids = Set(self.posts.keys)
         guard !ids.isEmpty else {
             L.og.debug("fetchPostsFromDB: empty ids")
+            onComplete?()
             return
         }
         let blockedPubkeys = blocks()
@@ -279,7 +284,7 @@ class GalleryViewModel: ObservableObject {
     
     // pull to refresh
     public func refresh() async {
-        self.state = .loading
+        // don't change .state on refresh, or rerender will cause the pull-to-refresh to be wonky
         self.lastFetch = nil
         self.posts = [PostID: LikedBy<Pubkey>]()
         self.backlog.clear()

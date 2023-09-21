@@ -19,11 +19,11 @@ struct ProfileLikesView: View {
     
     var body: some View {
         switch vm.state {
-        case .initializing:
-            CenteredProgressView()
+        case .initializing, .loading:
+            ProgressView()
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .onAppear { vm.load() }
-        case .loading:
-            CenteredProgressView()
                 .task(id: "profilelikes") {
                     do {
                         try await Task.sleep(
@@ -54,11 +54,11 @@ struct ProfileLikesView: View {
 //            .background(theme.listBackground)
         case .timeout:
             VStack(alignment: .center) {
-                Spacer()
-                Text("Time-out")
+                Text("Unable to fetch content")
                 Button("Try again") { vm.reload() }
-                Spacer()
             }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 }

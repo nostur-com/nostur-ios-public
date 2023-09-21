@@ -15,7 +15,7 @@ struct DetailPane: View {
     @State private var offsetX = 200.0
 
     init() {
-        UIScrollView.appearance().bounces = false
+//        UIScrollView.appearance().bounces = false
     }
     
     var body: some View {

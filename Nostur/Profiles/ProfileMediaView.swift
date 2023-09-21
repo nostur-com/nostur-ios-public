@@ -21,10 +21,10 @@ struct ProfileMediaView: View {
     var body: some View {
         VStack(spacing: 0) {
             switch vm.state {
-            case .initializing:
-                EmptyView()
-            case .loading:
-                CenteredProgressView()
+            case .initializing, .loading:
+                ProgressView()
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .task(id: "profilegallery") {
                         do {
                             try await Task.sleep(
@@ -51,15 +51,16 @@ struct ProfileMediaView: View {
                 }
                 else {
                     Button("Refresh") { vm.reload() }
-                        .centered()
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             case .timeout:
                 VStack(alignment: .center) {
-                    Spacer()
-                    Text("Time-out while loading gallery")
+                    Text("Unable to fetch content")
                     Button("Try again") { vm.reload() }
-                    Spacer()
                 }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .onAppear {
