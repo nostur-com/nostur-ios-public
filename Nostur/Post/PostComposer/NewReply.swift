@@ -93,6 +93,7 @@ struct NewReply: View {
                                     .padding(.leading, DIMENSIONS.ROW_PFP_SPACE)
                             }
                             .id(images)
+                            .padding(.bottom, 100) // Need some extra space for expanding account switcher
                         }
                     }
                     .onAppear {
