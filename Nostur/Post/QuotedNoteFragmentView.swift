@@ -33,7 +33,7 @@ struct QuotedNoteFragmentView: View {
         }
         else {
             VStack(alignment:.leading) {
-                HStack { // name + reply + context menu
+                HStack(alignment: .top) { // name + reply + context menu
                     VStack(alignment: .leading) { // Name + menu "replying to"
                         HStack(spacing:2) {
                             // profile image

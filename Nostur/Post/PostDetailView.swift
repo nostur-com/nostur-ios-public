@@ -476,7 +476,7 @@ struct DetailPost: View {
             }
             .onAppear {
                 guard nrPost.parentPosts.count > 0 else { return } // don't scroll if we already the root
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.25) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
                     sendNotification(.scrollToDetail, nrPost.id)
                 }
             }
