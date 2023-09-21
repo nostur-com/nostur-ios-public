@@ -15,7 +15,7 @@ struct EmbedById: View {
     var body: some View {
         Group {
             switch vm.state {
-            case .initializing, .loading:
+            case .initializing, .loading, .altLoading:
                 ProgressView()
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -38,7 +38,8 @@ struct EmbedById: View {
                                 else {
                                     vm.timeout()
                                 }
-                            }
+                            },
+                            altReq: nil
                         ))
                         vm.fetch()
                     }

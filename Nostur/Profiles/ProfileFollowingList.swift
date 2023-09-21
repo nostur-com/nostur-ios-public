@@ -7,14 +7,20 @@
 
 import SwiftUI
 
+struct FollowsInfo: Identifiable, Equatable {
+    let id = UUID()
+    let follows:[String]
+    let silentFollows:[String]
+}
+
 struct ProfileFollowingList: View {
     let pubkey:String
     
-    @StateObject private var vm = FetchVM<([String],[String])>() // Array of following pubkeys and array of silent follow pubkeys
+    @StateObject private var vm = FetchVM<FollowsInfo>() // Array of following pubkeys and array of silent follow pubkeys
 
     var body: some View {
         switch vm.state {
-        case .initializing, .loading:
+        case .initializing, .loading, .altLoading:
             ProgressView()
                 .frame(alignment: .center)
                 .onAppear {
@@ -29,7 +35,7 @@ struct ProfileFollowingList: View {
                                     
                                     let pubkeys = clEvent.fastPs.map({ $0.1 })
                                     
-                                    vm.ready((pubkeys, silentFollows))
+                                    vm.ready(FollowsInfo(follows: pubkeys, silentFollows: silentFollows))
                                 }
                                 else { req(RM.getAuthorContactsList(pubkey: pubkey)) }
                             }
@@ -43,16 +49,17 @@ struct ProfileFollowingList: View {
                                     
                                     let pubkeys = clEvent.fastPs.map({ $0.1 })
                                     
-                                    vm.ready((pubkeys, silentFollows))
+                                    vm.ready(FollowsInfo(follows: pubkeys, silentFollows: silentFollows))
                                 }
                                 else { vm.timeout() }
                             }
-                        }
+                        },
+                        altReq: nil
                     ))
                     vm.fetch()
                 }
-        case .ready(let (pubkeys, silentFollows)):
-            ContactList(pubkeys: pubkeys, silent:silentFollows)
+        case .ready(let followsInfo):
+            ContactList(pubkeys: followsInfo.follows, silent: followsInfo.silentFollows)
         case .timeout:
             VStack(alignment: .center) {
                 Spacer()
