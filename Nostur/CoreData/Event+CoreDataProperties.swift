@@ -1222,8 +1222,8 @@ extension Event {
         }
         
         // hmm above firstQuote doesn't seem to handle #[0] at .content end and "e" without "mention as first tag, so special case?
-        if !alreadyCounted && event.kind == .textNote && event.content.contains("#[0]"), let firstE = event.firstE() {
-            savedEvent.firstQuoteId = firstE
+        if !alreadyCounted && event.kind == .textNote && event.content.contains("#[0]"), let firstE = event.firstMentionETag() {
+            savedEvent.firstQuoteId = firstE.id
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
             if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
