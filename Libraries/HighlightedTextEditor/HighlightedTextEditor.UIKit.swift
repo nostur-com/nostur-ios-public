@@ -103,7 +103,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     public func makeUIView(context: Context) -> UITextView {
-        _ = textView.layoutManager // force an UITextView to fallback to Text Kit 1 - Maybe fixes crashes on iOS17 beta 
+//        _ = textView.layoutManager // force an UITextView to fallback to Text Kit 1 - Maybe fixes crashes on iOS17 beta 
         textView.smartInsertDeleteType = .no
         textView.isScrollEnabled = true
         textView.backgroundColor = UIColor.clear
