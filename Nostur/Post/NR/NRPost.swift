@@ -198,11 +198,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var relays:String
     
-    var zapState:Event.ZapState?
-    var isZapped:Bool {
-        guard zapState != nil else { return false }
-        return [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
-    }
+//    var zapState:Event.ZapState?
+//    var isZapped:Bool {
+//        guard zapState != nil else { return false }
+//        return [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
+//    }
     var following = false
     var blocked: Bool {
         get { postRowDeletableAttributes.blocked }
@@ -213,7 +213,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
 
-    var hasPrivateNote = false
+    
     var linkPreviewURLs:[URL] = []
     var previewWeights:PreviewWeights?
     var plainTextOnly = false
@@ -235,6 +235,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         return String(pubkey.suffix(11))
     }
     
+    private var withFooter = true // Use false for embedded posts, where footer is not visible so we don't load/listen for likes, replies etc.
     private var withReplyTo = false
     private var withGroupedReplies = false
     private var withReplies = false // Will listen for replies from import save, and process for rendering in bg
@@ -254,7 +255,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var articleImageURL:URL?
     var mostRecentId:String?
     
-    init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isPreview:Bool = false, cancellationId:UUID? = nil) {
+    init(event: Event, withFooter:Bool = true, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isPreview:Bool = false, cancellationId:UUID? = nil) {
         var isAwaiting = false
         
         self.event = event // Only touch this in BG context!!!
@@ -270,19 +271,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: parentPosts)
         self._parentPosts = parentPosts
         
-        let replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
+        let replies = withReplies && withFooter ? event.replies_.map { NRPost(event: $0) } : []
         self._replies = replies
         self.ownPostAttributes = OwnPostAttributes(isOwnPost: NRState.shared.fullAccountPubkeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
         
-        if withReplies {
+        if withReplies && withFooter {
             self.footerAttributes = FooterAttributes(replyPFPs: Array(_replies.compactMap { reply in
                 return followingPFP(reply.pubkey)
             }
             .uniqued(on: ({ $0 }))
-            .prefix(4)), event: event)
+            .prefix(4)), event: event, withFooter: withFooter)
         }
         else {
-            self.footerAttributes = FooterAttributes(event: event)
+            self.footerAttributes = FooterAttributes(event: event, withFooter: withFooter)
         }
         
         self._repliesToRoot = []
@@ -311,7 +312,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005b"); isAwaiting = true
             }
             else {
-                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withReplies: withReplies, withRepliesCount: withRepliesCount))
+                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: false, withReplies: withReplies, withRepliesCount: withRepliesCount))
             }
         }
         else if !isAwaiting && event.firstQuoteId != nil {
@@ -405,12 +406,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         else if let c = self.pfpAttributes.contact, c.metadata_created_at == 0 {
             missingPs.insert(event.pubkey)
         }
-        let eventContactPs = nrContacts.compactMap({ contact in
+        let eventContactPs = (nrContacts.compactMap({ contact in
             if contact.metadata_created_at != 0 {
                 return contact.pubkey
             }
             return nil
-        }) + [event.pubkey]
+        }) + [event.pubkey])
         
         // Some clients put P in kind 6. Ignore that because the contacts are in the reposted post, not in the kind 6.
         // TODO: Should only fetch if the Ps are going to be on screen. Could be just for notifications.
@@ -455,13 +456,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.content = content
         }
         
-        if hasZapReceipt() {
-            self.zapState = .zapReceiptConfirmed
-        } else {
-            self.zapState = event.zapState
-        }
+//        if hasZapReceipt() {
+//            self.zapState = .zapReceiptConfirmed
+//        } else {
+//            self.zapState = event.zapState
+//        }
 
-        self.hasPrivateNote = _hasPrivateNote()
+//        self.hasPrivateNote = _hasPrivateNote()
         
         
         self.subject = fastTags.first(where: { $0.0 == "subject" })?.1
@@ -474,27 +475,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         setupSubscriptions()
     }
     
-    
-    
-    private func _hasPrivateNote() -> Bool {
-        if let account = account(), let notes = account.privateNotes {
-            return notes.first(where: { $0.post == self.event }) != nil
-        }
-        return false
-    }
-    
-    private func hasZapReceipt() -> Bool {
-        if let account = account() {
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind == 9734 AND pubkey == %@ AND tagsSerialized CONTAINS %@", created_at, account.publicKey, serializedE(self.id))
-            fr.fetchLimit = 1
-            fr.resultType = .countResultType
-            let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
-            return count > 0
-        }
-        return false
-    }
-
     private static func isBlocked(pubkey:String) -> Bool {
         return Nostur.blocks().contains(pubkey)
     }
@@ -525,7 +505,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         )
     }
     
-    var subscriptions = Set<AnyCancellable>()
+    private var subscriptions = Set<AnyCancellable>()
     
     private func setupSubscriptions() {
         // Don't listen if there is no need to listen (performance?)
@@ -555,10 +535,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         relaysUpdatedListener()
         updateNRPostListener()
-        actionListener()
-        likesListener()
-        repostsListener()
-        zapsListener()
         isFollowingListener()
         unpublishListener()
         
@@ -652,83 +628,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 let nrPost = notification.object as! NRPost
                 guard replies.contains(where: { $0.id == nrPost.id }) || repliesToRoot.contains(where: { $0.id == nrPost.id })else { return }
                 self.loadGroupedReplies()
-            }
-            .store(in: &subscriptions)
-    }
-    
-    private func repostsListener() {
-        event.repostsDidChange
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] reposts in // Int64
-                guard let self = self else { return }
-                self.footerAttributes.objectWillChange.send()
-                self.footerAttributes.repostsCount = reposts
-            }
-            .store(in: &subscriptions)
-    }
-    
-    private func likesListener() {
-        event.likesDidChange
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] likes in
-                guard let self = self else { return }
-                self.footerAttributes.objectWillChange.send()
-                self.footerAttributes.likesCount = likes
-                
-                // Also update own like (or slow? disbaled)
-//                if !self.liked && isLiked() { // nope. main bg thread mismatch
-//                    self.liked = true
-//                }
-            }
-            .store(in: &subscriptions)
-    }
-    
-    private func zapsListener() {
-        event.zapsDidChange
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] (count, tally) in
-                guard let self = self else { return }
-                self.footerAttributes.objectWillChange.send()
-                self.footerAttributes.zapTally = tally
-                self.footerAttributes.zapsCount = count
-            }
-            .store(in: &subscriptions)
-        
-        event.zapStateChanged
-            .sink { [weak self] zapState in
-                guard let self = self else { return }
-                DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                    self.zapState = zapState
-                }
-            }
-            .store(in: &subscriptions)
-    }
-    
-    private func actionListener() {
-        receiveNotification(.postAction)
-            .subscribe(on: DispatchQueue.global())
-            .sink { [weak self] notification in
-                guard let self = self else { return }
-                let action = notification.object as! PostActionNotification
-                guard action.eventId == self.id else { return }
-                
-                DispatchQueue.main.async {
-                    self.footerAttributes.objectWillChange.send()
-                    switch action.type {
-                    case .bookmark:
-                        self.footerAttributes.bookmarked = action.bookmarked
-                    case .liked:
-                        self.footerAttributes.liked = true
-                    case .replied:
-                        self.footerAttributes.replied = true
-                    case .reposted:
-                        self.footerAttributes.reposted = true
-                    case .privateNote:
-                        self.objectWillChange.send()
-                        self.hasPrivateNote = action.hasPrivateNote
-                    }
-                }
             }
             .store(in: &subscriptions)
     }
@@ -995,9 +894,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
-    public func loadParents() {
+    @MainActor public func loadParents() {
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
+            guard !self.withParents else { return }
+            self.withParents = true
             
             let parents = Event.getParentEvents(self.event, fixRelations: true)//, until:self.id)
             let parentPosts = parents.map { NRPost(event: $0) }

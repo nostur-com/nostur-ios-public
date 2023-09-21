@@ -100,6 +100,12 @@ struct PostDetailView: View {
                 .onAppear {
                     guard !didLoad else { return }
                     didLoad = true
+                    
+                    // If we navigated to this post by opening it from an embedded
+                    nrPost.footerAttributes.loadFooter()
+                    // And maybe we don't have parents so:
+                    nrPost.loadParents()
+                    
                 }
                 .onReceive(receiveNotification(.scrollToDetail)) { notification in
                     guard !didScroll else { return }

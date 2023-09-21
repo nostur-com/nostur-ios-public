@@ -29,13 +29,19 @@ struct ContactPrivateNoteToggle: View {
 }
 
 struct EventPrivateNoteToggle: View {
-    @ObservedObject var nrPost:NRPost
+    private let nrPost:NRPost
+    @ObservedObject private var footerAttributes:FooterAttributes
+    
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+        self.footerAttributes = nrPost.footerAttributes
+    }
     
     var body: some View {
         Image(systemName: "note.text")
             .padding(.horizontal, 5)
             .contentShape(Rectangle())
-            .opacity(nrPost.hasPrivateNote ? 1 : 0.2)
+            .opacity(footerAttributes.hasPrivateNote ? 1 : 0.2)
             .onTapGesture {
                 if let pn = nrPost.mainEvent.privateNote {
                     sendNotification(.editingPrivateNote, pn)

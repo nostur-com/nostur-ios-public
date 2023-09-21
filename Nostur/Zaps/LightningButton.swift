@@ -9,17 +9,22 @@ import SwiftUI
 
 struct LightningButton: View {
     @EnvironmentObject var la:LoggedInAccount
-    public var tally:Int64 // SATS (1000 SATS ~= 20 cent)
-    public var nrPost:NRPost?
+    private let nrPost:NRPost
+    @ObservedObject private var footerAttributes:FooterAttributes
     @State private var isLoading = false
     @State private var customZapId:UUID? = nil
     
     var tallyString:String {
         if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
+            let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
             return fiatPrice
         }
-        return String(tally.formatNumber)
+        return String(footerAttributes.zapTally.formatNumber)
+    }
+    
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+        self.footerAttributes = nrPost.footerAttributes
     }
     
     var body: some View {
@@ -31,13 +36,12 @@ struct LightningButton: View {
         else {
             HStack {
                 Image("BoltIcon")
-                AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)
+                AnimatedNumberString(number: tallyString).opacity(footerAttributes.zapTally == 0 ? 0 : 1)
             }
             .padding(5)
             .contentShape(Rectangle())
             .onTapGesture {
                 guard isFullAccount() else { showReadOnlyMessage(); return }
-                guard nrPost != nil else { return }
                 isLoading = true
                 buttonTapped()
             }
@@ -67,11 +71,11 @@ class PaymentInfo: Identifiable {
 extension LightningButton {
     func buttonTapped() {
         guard isFullAccount() else { showReadOnlyMessage(); return }
-        guard (nrPost?.contact?.anyLud ?? false) else { return }
+        guard (nrPost.contact?.anyLud ?? false) else { return }
         isLoading = true
         
         
-        if let lud16 = nrPost!.contact!.lud16 {
+        if let lud16 = nrPost.contact!.lud16 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
@@ -85,10 +89,10 @@ extension LightningButton {
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrPost!.contact!.zapperPubkey = response.nostrPubkey!
+                                nrPost.contact!.zapperPubkey = response.nostrPubkey!
                             }
                             // Old zap sheet
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost!, contact: nrPost!.contact!.mainContact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost, contact: nrPost.contact!.mainContact)
                             sendNotification(.showZapSheet, paymentInfo)
                             
 //                            // Trigger custom zap
@@ -105,7 +109,7 @@ extension LightningButton {
                 }
             }
         }
-        else if let lud06 = nrPost!.contact!.lud06 {
+        else if let lud06 = nrPost.contact!.lud06 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
@@ -119,9 +123,9 @@ extension LightningButton {
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrPost!.contact!.zapperPubkey = response.nostrPubkey!
+                                nrPost.contact!.zapperPubkey = response.nostrPubkey!
                             }
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost!, contact: nrPost!.contact!.mainContact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost, contact: nrPost.contact!.mainContact)
                             sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }
@@ -142,7 +146,7 @@ struct LightningButton_Previews: PreviewProvider {
         }) {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
-                    LightningButton(tally:nrPost.footerAttributes.zapTally, nrPost: nrPost)
+                    LightningButton(nrPost: nrPost)
                 }
             }
         }
