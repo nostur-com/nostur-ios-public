@@ -72,6 +72,7 @@ struct NewPost: View {
                             ImagePreviews(pastedImages: $vm.pastedImages)
                                 .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
                         }
+                        .padding(.bottom, 100) // Need some extra space for expanding account switcher
                     }
                     if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {
                         ScrollView {
