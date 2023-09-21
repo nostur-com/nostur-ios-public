@@ -56,7 +56,7 @@ struct ContentRenderer: View { // VIEW things
                         .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
-                        QuoteById(id: noteHex)
+                        EmbedById(id: noteHex)
                             .frame(minHeight: 75)
                             .transaction { t in t.animation = nil }
                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
@@ -71,7 +71,7 @@ struct ContentRenderer: View { // VIEW things
                         EmptyView()
                     }
                 case .noteHex(let hex):
-                    QuoteById(id: hex)
+                    EmbedById(id: hex)
                         .frame(minHeight: 75)
                         .transaction { t in t.animation = nil }
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
@@ -202,78 +202,6 @@ struct ContentRenderer: View { // VIEW things
         }
     }
 }
-
-struct QuoteById: View {
-    let id:String
-    
-    @FetchRequest
-    var events:FetchedResults<Event>
-    
-    @State var nrPost:NRPost?
-    
-    init(id:String) {
-        self.id = id
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "id == %@", id)
-        fr.fetchLimit = 1
-        _events = FetchRequest(fetchRequest: fr)
-    }
-    
-    var body: some View {
-        VStack {
-            if let event = events.first {
-                if let nrPost = nrPost {
-                    if nrPost.kind == 30023 {
-                        ArticleView(nrPost, hideFooter: true)
-                            .padding(20)
-                            .background(
-                                Color(.secondarySystemBackground)
-                                    .cornerRadius(15)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(.regularMaterial, lineWidth: 1)
-                            )
-//                            .debugDimensions("QuoteById.ArticleView")
-                    }
-                    else {
-                        QuotedNoteFragmentView(nrPost: nrPost)
-//                            .debugDimensions("QuoteById.QuotedNoteFragmentView")
-                    }
-                }
-                else {
-                    Color.clear
-                        .frame(height: 150)
-                        .task {
-                            DataProvider.shared().bg.perform {
-                                if let eventBG = event.toBG() {
-                                    let nrPost = NRPost(event: eventBG)
-                                    
-                                    DispatchQueue.main.async {
-                                        self.nrPost = nrPost
-                                    }
-                                }
-                            }
-                        }
-                }
-            }
-            else {
-                ProgressView()
-                    .hCentered()
-                    .frame(height: 150)
-                    .onAppear {
-                        L.og.info("🟢 Fetching for QuotedNoteFragmentView \(id)")
-                        req(RM.getEventAndReferences(id: id))
-                    }
-            }
-        }
-//        .transaction { transaction in
-//            transaction.animation = nil
-//            transaction.disablesAnimations = true
-//        }
-    }
-}
-
 
 #Preview("Content Renderer 1") {
     let _ = ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
