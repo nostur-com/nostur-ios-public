@@ -7,7 +7,10 @@
 
 import SwiftUI
 
-struct PostAccountSwitcher: View {
+struct PostAccountSwitcher: View, Equatable {
+    static func == (lhs: PostAccountSwitcher, rhs: PostAccountSwitcher) -> Bool {
+        lhs.activeAccount == rhs.activeAccount
+    }
     
     public var activeAccount:Account
     public var onChange:(Account) -> ()
