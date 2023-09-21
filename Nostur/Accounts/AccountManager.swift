@@ -201,6 +201,10 @@ class AccountManager {
     }
     
     static func createContactListEvent(account:Account) throws -> NEvent? {
+        guard let ctx = account.managedObjectContext else {
+            L.og.error("🔴🔴 createContactListEvent: account does not have managedObjectContext??")
+            return nil
+        }
         guard account.privateKey != nil else {
             throw "Account has no private key"
         }
@@ -214,7 +218,7 @@ class AccountManager {
                 
                 // keep existing content if we have it. Should be ignored as per spec https://github.com/nostr-protocol/nips/blob/master/02.md
                 // but some clients use it to store their stuff
-                if let existingKind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: DataProvider.shared().viewContext)?.first {
+                if let existingKind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: ctx)?.first {
                     newKind3Event.content = existingKind3.content ?? ""
                 }
                 

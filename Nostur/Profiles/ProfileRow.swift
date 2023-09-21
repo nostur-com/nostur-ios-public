@@ -10,7 +10,7 @@ import SwiftUI
 struct ProfileCardByPubkey: View {
     @EnvironmentObject var theme:Theme
     public let pubkey:String
-    @StateObject private var vm = FetchVM<Contact>()
+    @StateObject private var vm = FetchVM<Contact>(timeout: 2.5, debounceTime: 0.05)
     
     var body: some View {
         Group {
@@ -151,6 +151,10 @@ struct ProfileRow: View {
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in
             isFollowing = la.isFollowing(pubkey: contact.pubkey)
+        }
+        .onReceive(receiveNotification(.followersChanged)) { notification in
+            guard let follows = notification.object as? Set<String> else { return }
+            isFollowing = follows.contains(contact.pubkey)
         }
         .task {
             if la.isFollowing(pubkey: contact.pubkey) {
