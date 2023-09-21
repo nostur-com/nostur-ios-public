@@ -10,13 +10,11 @@ import SwiftUI
 struct FooterFragmentView: View {
     @EnvironmentObject var theme:Theme
     let nrPost:NRPost
-    @ObservedObject var footerAttributes:FooterAttributes
     var isDetail = false
     
     init(nrPost: NRPost, isDetail: Bool = false) {
         self.nrPost = nrPost
         self.isDetail = isDetail
-        self.footerAttributes = nrPost.footerAttributes
     }
     
     var body: some View {
@@ -36,7 +34,7 @@ struct FooterFragmentView: View {
                 
                 // ZAP
                 if !IS_APPLE_TYRANNY {
-                    ZapButton(tally: footerAttributes.zapTally, nrPost: nrPost)
+                    ZapButton(nrPost: nrPost)
                         .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
                         .disabled(!(nrPost.contact?.anyLud ?? false))
                     Spacer()

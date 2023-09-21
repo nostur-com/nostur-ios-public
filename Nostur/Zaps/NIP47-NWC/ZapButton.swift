@@ -9,21 +9,25 @@ import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ZapButton: View {
-    @EnvironmentObject var theme: Theme
-    let er:ExchangeRateModel = .shared // Not Observed for performance
-    var tally:Int64 // SATS (1000 SATS ~= 20 cent)
-    @ObservedObject var nrPost:NRPost
-    @ObservedObject var ss:SettingsStore = .shared
-    @State var cancellationId:UUID? = nil
-    @State var customZapId:UUID? = nil
-    @State var activeColor = Theme.default.footerButtons
+    @EnvironmentObject private var theme: Theme
+    private let nrPost:NRPost
+    @ObservedObject private var footerAttributes:FooterAttributes
+    @ObservedObject private var ss:SettingsStore = .shared
+    @State private var cancellationId:UUID? = nil
+    @State private var customZapId:UUID? = nil
+    @State private var activeColor = Theme.default.footerButtons
     
-    var tallyString:String {
-        if (er.bitcoinPrice != 0.0) {
-            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(er.bitcoinPrice)))
+    private var tallyString:String {
+        if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
+            let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
             return fiatPrice
         }
-        return String(tally.formatNumber)
+        return String(footerAttributes.zapTally.formatNumber)
+    }
+    
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+        self.footerAttributes = nrPost.footerAttributes
     }
     
     var body: some View {
@@ -34,24 +38,23 @@ struct ZapButton: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .onTapGesture {
-                            _ = Unpublisher.shared.cancel(cancellationId)
-                            NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
-                            NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
+
                             self.cancellationId = nil
-                            nrPost.zapState = .cancelled
+                            footerAttributes.cancelZap(cancellationId)                            
+                            
                             activeColor = theme.footerButtons
                             L.og.info("⚡️ Zap cancelled")
                         }
-                    AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)
+                    AnimatedNumberString(number: tallyString).opacity(footerAttributes.zapTally == 0 ? 0 : 1)
                 }
             }
             // TODO elsif zap .failed .overlay error !
-            else if [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(nrPost.zapState) {
+            else if footerAttributes.zapped {
                 HStack {
                     Image("BoltIconActive").foregroundColor(.yellow)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                    AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)
+                    AnimatedNumberString(number: tallyString).opacity(footerAttributes.zapTally == 0 ? 0 : 1)
                 }
             }
             else {
@@ -88,12 +91,12 @@ struct ZapButton: View {
                                        }
                             }
                         )
-                    AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)
+                    AnimatedNumberString(number: tallyString).opacity(footerAttributes.zapTally == 0 ? 0 : 1)
                 }
             }
         }
         else {
-            LightningButton(tally:tally, nrPost: nrPost)
+            LightningButton(nrPost: nrPost)
         }
     }
     
@@ -109,14 +112,13 @@ struct ZapButton: View {
             activeColor = .yellow
         }
         cancellationId = UUID()
-        nrPost.zapState = .initiated
+        footerAttributes.zapped = true
         
 
         DataProvider.shared().bg.perform {
             NWCRequestQueue.shared.ensureNWCconnection()
             let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), contact: contact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!, zapMessage: zapMessage)
             NWCZapQueue.shared.sendZap(zap)
-            nrPost.event.zapState = .initiated
         }
     }
 }
@@ -129,10 +131,9 @@ struct ZapButton_Previews: PreviewProvider {
         }) {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
-                    ZapButton(tally:nrPost.footerAttributes.zapTally, nrPost: nrPost)
+                    ZapButton(nrPost: nrPost)
                 }
-                
-                
+
                 Image("BoltIconActive").foregroundColor(.yellow)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
