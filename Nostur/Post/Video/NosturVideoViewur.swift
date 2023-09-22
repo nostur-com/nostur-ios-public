@@ -101,7 +101,7 @@ struct NosturVideoViewur: View {
             }
             else if videoShown {
                 if let asset, let scaledDimensions, let videoLength = videoLength {
-                    VideoViewurRepresentable(asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
+                    VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
                         .padding(.horizontal, fullWidth ? -contentPadding : 0)
                         .overlay(alignment:.bottomLeading) {
                             if !didStart {
@@ -197,7 +197,7 @@ struct NosturVideoViewur: View {
                     isStream = true
                 }
                 else {
-                    Task.detached {
+                    Task.detached(priority: .background) {
                         await loadVideo()
                     }
                 }
@@ -228,7 +228,7 @@ struct NosturVideoViewur: View {
         
         if let response = try? await task?.response {
             if let type = response.container.type, type.isVideo, let asset = response.container.userInfo[.videoAssetKey] as? AVAsset {
-                Task.detached {
+                Task.detached(priority: .background) {
                     if let videoSize = await getVideoDimensions(asset: asset), let videoLength = await getVideoLength(asset: asset) {
                         DispatchQueue.main.async {
                             self.scaledDimensions = Nostur.scaledToFit(videoSize, scale: 1, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
@@ -277,5 +277,27 @@ struct NosturVideoViewur_Previews: PreviewProvider {
         
         NosturVideoViewur(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, isFollowing: true)
             .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+    }
+}
+
+class AVPlayerItemCache {
+    static let shared = AVPlayerItemCache()
+    
+    private var cache:NSCache<NSString, AVPlayerItem>
+
+    private init() {
+        self.cache = NSCache<NSString, AVPlayerItem>()
+        self.cache.countLimit = 10
+    }
+
+    func get(url:String, asset: AVAsset) -> AVPlayerItem {
+        if let playerItem = cache.object(forKey: url as NSString) {
+            return playerItem
+        }
+        else {
+            let playerItem = AVPlayerItem(asset: asset)
+            return playerItem
+        }
+
     }
 }

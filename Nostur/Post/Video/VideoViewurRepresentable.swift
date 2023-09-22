@@ -11,21 +11,21 @@ import AVKit
 struct VideoViewurRepresentable: UIViewRepresentable {
     typealias UIViewType = UIView
     
-    @State var asset:AVAsset
+    private var asset:AVAsset
+    private var url:URL
     @Binding var isPlaying:Bool
     @Binding var isMuted:Bool
     
-    init(asset: AVAsset, isPlaying:Binding<Bool>, isMuted:Binding<Bool>) {
-        do { try AVAudioSession.sharedInstance().setActive(true) }
-        catch { }
+    init(url:URL, asset: AVAsset, isPlaying:Binding<Bool>, isMuted:Binding<Bool>) {
         self.asset = asset
+        self.url = url
         _isPlaying = isPlaying
         _isMuted = isMuted
     }
 
     func makeUIView(context: Context) -> UIView {
         let avpc = AVPlayerViewController()
-        let playerItem = AVPlayerItem(asset: asset)
+        let playerItem = AVPlayerItemCache.shared.get(url: url.absoluteString, asset: asset)
         let player = AVQueuePlayer(playerItem: playerItem)
         player.isMuted = isMuted
         player.preventsDisplaySleepDuringVideoPlayback = false
@@ -45,6 +45,7 @@ struct VideoViewurRepresentable: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIView, context: Context) {
         // Update the view if needed...
+        
         uiView.isUserInteractionEnabled = true
         if isPlaying {
             do { try AVAudioSession.sharedInstance().setActive(true) }
