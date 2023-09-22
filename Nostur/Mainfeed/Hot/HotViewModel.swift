@@ -10,17 +10,17 @@ import NostrEssentials
 import Combine
 
 typealias PostID = String
-typealias LikedBy = Set
+typealias RecommendedBy = Set
 typealias Pubkey = String
 
 
 // Popular/Hot feed
-// Fetch all likes from your follows in the last 24/12/8/4/2 hours
-// Sort posts by unique (pubkey) likes
+// Fetch all likes and reposts from your follows in the last 24/12/8/4/2 hours
+// Sort posts by unique (pubkey) likes/reposts
 class HotViewModel: ObservableObject {
     
     @Published var state:FeedState
-    private var posts:[PostID: LikedBy<Pubkey>]
+    private var posts:[PostID: RecommendedBy<Pubkey>]
     private var backlog:Backlog
     private var follows:Set<Pubkey>
     private var didLoad = false
@@ -63,7 +63,7 @@ class HotViewModel: ObservableObject {
                 self.state  = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
                 self.follows = Nostur.follows()
-                self.fetchLikesFromRelays()
+                self.fetchLikesAndRepostsFromRelays()
             }
         }
     }
@@ -78,7 +78,7 @@ class HotViewModel: ObservableObject {
     
     public init() {
         self.state = .initializing
-        self.posts = [PostID: LikedBy<Pubkey>]()
+        self.posts = [PostID: RecommendedBy<Pubkey>]()
         self.backlog = Backlog(timeout: 5.0, auto: true)
         self.follows = Nostur.follows()
         
@@ -91,8 +91,8 @@ class HotViewModel: ObservableObject {
             .store(in: &self.subscriptions)
     }
     
-    // STEP 1: FETCH LIKES FROM FOLLOWS FROM RELAYS
-    private func fetchLikesFromRelays(_ onComplete: (() -> ())? = nil) {
+    // STEP 1: FETCH LIKES AND REPOSTS FROM FOLLOWS FROM RELAYS
+    private func fetchLikesAndRepostsFromRelays(_ onComplete: (() -> ())? = nil) {
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "HOT",
@@ -103,7 +103,7 @@ class HotViewModel: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: self.follows,
-                                                kinds: Set([7]),
+                                                kinds: Set([6,7]),
                                                 since: self.agoFetchTimestamp,
                                                 limit: 9999
                                             )
@@ -118,13 +118,13 @@ class HotViewModel: ObservableObject {
             },
             processResponseCommand: { taskId, relayMessage in
                 self.backlog.clear()
-                self.fetchLikesFromDB(onComplete)
+                self.fetchLikesAndRepostsFromDB(onComplete)
 
                 L.og.info("Hot feed: ready to process relay response")
             },
             timeoutCommand: { taskId in
                 self.backlog.clear()
-                self.fetchLikesFromDB(onComplete)
+                self.fetchLikesAndRepostsFromDB(onComplete)
                 L.og.info("Hot feed: timeout ")
             })
 
@@ -132,27 +132,41 @@ class HotViewModel: ObservableObject {
         reqTask.fetch()
     }
     
-    // STEP 2: FETCH RECEIVED LIKES FROM DB, SORT MOST LIKED POSTS (WE ONLY HAVE IDs HERE)
-    private func fetchLikesFromDB(_ onComplete: (() -> ())? = nil) {
+    // STEP 2: FETCH RECEIVED LIKES/REPOSTS FROM DB, SORT MOST LIKED/REPOSTED POSTS (WE ONLY HAVE IDs HERE)
+    private func fetchLikesAndRepostsFromDB(_ onComplete: (() -> ())? = nil) {
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "created_at > %i AND kind == 7 AND pubkey IN %@", agoTimestamp, follows)
+        fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@", agoTimestamp, follows)
         bg().perform {
-            guard let likes = try? bg().fetch(fr) else { return }
-            for like in likes {
-                guard let reactionToId = like.reactionToId else { continue }
-                if self.posts[reactionToId] != nil {
-                    self.posts[reactionToId]!.insert(like.pubkey)
+            guard let likesOrReposts = try? bg().fetch(fr) else { return }
+            for item in likesOrReposts {
+                switch item.kind {
+                case 6:
+                    guard let firstQuoteId = item.firstQuoteId else { continue }
+                    if self.posts[firstQuoteId] != nil {
+                        self.posts[firstQuoteId]!.insert(item.pubkey)
+                    }
+                    else {
+                        self.posts[firstQuoteId] = RecommendedBy([item.pubkey])
+                    }
+                case 7:
+                    guard let reactionToId = item.reactionToId else { continue }
+                    if self.posts[reactionToId] != nil {
+                        self.posts[reactionToId]!.insert(item.pubkey)
+                    }
+                    else {
+                        self.posts[reactionToId] = RecommendedBy([item.pubkey])
+                    }
+                default:
+                    continue
                 }
-                else {
-                    self.posts[reactionToId] = LikedBy([like.pubkey])
-                }
+                
             }
             
             self.fetchPostsFromRelays(onComplete)
         }
     }
     
-    // STEP 3: FETCH MOST LIKED POSTS FROM RELAYS
+    // STEP 3: FETCH MOST LIKED/REPOSTED POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
@@ -163,14 +177,14 @@ class HotViewModel: ObservableObject {
                     Importer.shared.existingIds[postId] == nil
                 }
             
-            let sortedByLikes = posts
+            let sortedByLikesAndReposts = posts
                 .filter({ el in
                     onlyNewIds.contains(el.key)
                 })
                 .sorted(by: { $0.value.count > $1.value.count })
                 .prefix(Self.REQ_IDS_LIMIT)
         
-            let ids = Set(sortedByLikes.map { (postId, likedBy) in postId })
+            let ids = Set(sortedByLikesAndReposts.map { (postId, likedOrRepostedBy) in postId })
 
             guard !ids.isEmpty else {
                 L.og.debug("Hot feed: fetchPostsFromRelays: empty ids")
@@ -227,7 +241,7 @@ class HotViewModel: ObservableObject {
         }
     }
     
-    // STEP 4: FETCH RECEIVED POSTS FROM DB, SORT BY MOST LIKED AND PUT ON SCREEN
+    // STEP 4: FETCH RECEIVED POSTS FROM DB, SORT BY MOST LIKED/REPOSTED AND PUT ON SCREEN
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         let ids = Set(self.posts.keys)
         guard !ids.isEmpty else {
@@ -237,14 +251,14 @@ class HotViewModel: ObservableObject {
         }
         let blockedPubkeys = blocks()
         bg().perform {
-            let sortedByLikes = self.posts
+            let sortedByLikesAndReposts = self.posts
                 .sorted(by: { $0.value.count > $1.value.count })
                 .prefix(Self.POSTS_LIMIT)
             
             var nrPosts:[NRPost] = []
-            for (postId, likes) in sortedByLikes {
-                if (likes.count > 3) {
-                    L.og.debug("🔝🔝 id:\(postId): \(likes.count)")
+            for (postId, likesAndReposts) in sortedByLikesAndReposts {
+                if (likesAndReposts.count > 3) {
+                    L.og.debug("🔝🔝 id:\(postId): \(likesAndReposts.count)")
                 }
                 if let event = try? Event.fetchEvent(id: postId, context: bg()) {
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns
@@ -293,29 +307,29 @@ class HotViewModel: ObservableObject {
         self.follows = Nostur.follows()
         self.state = .loading
         self.hotPosts = []
-        self.fetchLikesFromRelays()
+        self.fetchLikesAndRepostsFromRelays()
     }
     
     // for after acocunt change
     public func reload() {
         self.state = .loading
         self.lastFetch = nil
-        self.posts = [PostID: LikedBy<Pubkey>]()
+        self.posts = [PostID: RecommendedBy<Pubkey>]()
         self.backlog.clear()
         self.follows = Nostur.follows()
         self.hotPosts = []
-        self.fetchLikesFromRelays()
+        self.fetchLikesAndRepostsFromRelays()
     }
     
     // pull to refresh
     public func refresh() async {
         self.lastFetch = nil
-        self.posts = [PostID: LikedBy<Pubkey>]()
+        self.posts = [PostID: RecommendedBy<Pubkey>]()
         self.backlog.clear()
         self.follows = Nostur.follows()
         
         await withCheckedContinuation { continuation in
-            self.fetchLikesFromRelays {
+            self.fetchLikesAndRepostsFromRelays {
                 continuation.resume()
             }
         }
