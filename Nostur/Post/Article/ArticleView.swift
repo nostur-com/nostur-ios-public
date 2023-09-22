@@ -9,13 +9,13 @@ import SwiftUI
 import MarkdownUI
 
 struct ArticleView: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var dim:DIMENSIONS
-    @ObservedObject var article:NRPost
-    var isParent = false
-    var isDetail:Bool = false
-    var fullWidth:Bool = false
-    var hideFooter:Bool = false
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var dim:DIMENSIONS
+    @ObservedObject private var article:NRPost
+    private var isParent = false
+    private var isDetail:Bool = false
+    private var fullWidth:Bool = false
+    private var hideFooter:Bool = false
     
     init(_ article:NRPost, isParent:Bool = false, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false) {
         self.article = article
@@ -25,15 +25,15 @@ struct ArticleView: View {
         self.hideFooter = hideFooter
     }
     
-    let WORDS_PER_MINUTE:Double = 200.0
+    private let WORDS_PER_MINUTE:Double = 200.0
     
-    var minutesToRead:Int {
+    private var minutesToRead:Int {
         let wordCount = (article.content ?? "").split(separator: " ").count
         return Int(ceil(Double(wordCount) / WORDS_PER_MINUTE))
     }
     
-    @State var showMiniProfile = false
-    @State var didLoad = false
+    @State private var showMiniProfile = false
+    @State private var didLoad = false
     
     var body: some View {
         if isDetail {
@@ -393,6 +393,7 @@ struct ArticleView: View {
                     .lineLimit(1)
                     .foregroundColor(Color.secondary)
                 }
+                
                 if !hideFooter {
                     FooterFragmentView(nrPost: article)
                 }
