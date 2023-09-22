@@ -16,9 +16,9 @@ class LVMCounter: ObservableObject {
 }
 
 struct ListUnreadCounter: View {
-    @EnvironmentObject var theme:Theme
-    var vm:LVM
-    @ObservedObject var vmCounter:LVMCounter
+    @EnvironmentObject private var theme:Theme
+    private var vm:LVM
+    @ObservedObject private var vmCounter:LVMCounter
     
     init(vm: LVM) {
         self.vm = vm
@@ -27,27 +27,33 @@ struct ListUnreadCounter: View {
     
     var body: some View {
         // TODO: Add mini profile icons
-        HStack {
-            Text(String(vmCounter.count))
-            Image(systemName: "arrow.up")
-        }
-        .frame(minWidth: 30)
-        .padding(10)
-        .fontWeight(.bold)
-        .foregroundColor(.white)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .foregroundColor(theme.accent)
-                .opacity(0.85)
-                .shadow(color: Color.gray.opacity(0.5), radius: 5)
-        )
-        .opacity(vmCounter.count > 0 ? 1.0 : 0)
-        .onTapGesture {
-            sendNotification(.shouldScrollToFirstUnread)
-        }
-        .simultaneousGesture(LongPressGesture().onEnded { _ in
-            sendNotification(.shouldScrollToTop)
-        })
+        RoundedRectangle(cornerRadius: 20)
+            .foregroundColor(theme.accent)
+            .opacity(0.85)
+            .shadow(color: Color.gray.opacity(0.5), radius: 5)
+            .frame(width: 65, height: 40)
+            .overlay(alignment: .leading) {
+                Text(String(vmCounter.count))
+                    .fixedSize()
+                    .frame(width: 35, alignment: .center)
+                    .padding(.leading, 5)
+                    
+            }
+            .overlay(alignment: .trailing) {
+                Image(systemName: "arrow.up")
+                    .padding(.trailing, 10)
+            }
+            .padding(10)
+            .fontWeight(.bold)
+            .foregroundColor(.white)
+
+            .opacity(vmCounter.count > 0 ? 1.0 : 0)
+            .onTapGesture {
+                sendNotification(.shouldScrollToFirstUnread)
+            }
+            .simultaneousGesture(LongPressGesture().onEnded { _ in
+                sendNotification(.shouldScrollToTop)
+            })
     }
 }
 
@@ -59,8 +65,8 @@ struct Previews_ListUnreadCounter_PreviewsWrapper: View {
         VStack {
             ListUnreadCounter(vm: lvm)
             
-            Button("Add +1") {
-                lvm.lvmCounter.count += 1
+            Button("Add +7") {
+                lvm.lvmCounter.count += 7
             }
             .padding(.top, 30)
         }
@@ -70,10 +76,8 @@ struct Previews_ListUnreadCounter_PreviewsWrapper: View {
     }
 }
 
-struct Previews_ListUnreadCounter_Previews: PreviewProvider {
-    static var previews: some View {
-        Previews_ListUnreadCounter_PreviewsWrapper()
-            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-            .environmentObject(Theme.default)
-    }
+#Preview("Unread counter") {
+    Previews_ListUnreadCounter_PreviewsWrapper()
+        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+        .environmentObject(Theme.default)
 }
