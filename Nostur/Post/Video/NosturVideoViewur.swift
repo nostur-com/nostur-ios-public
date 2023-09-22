@@ -13,7 +13,7 @@ import AVFoundation
 
 @MainActor
 struct NosturVideoViewur: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var theme:Theme
     let url:URL
     let pubkey:String
     var height:CGFloat?
@@ -21,18 +21,18 @@ struct NosturVideoViewur: View {
     let isFollowing:Bool
     var fullWidth:Bool = false
     var contentPadding:CGFloat = 10.0
-    @State var videoState:VideoLoadingState = .initial
-    @State var videoShown = true
-    @State var asset:AVAsset? = nil
-    @State var scaledDimensions:CGSize? = nil
-    @State var videoLength:String? = nil
-    @State var task:AsyncImageTask? = nil
-    @State var percent = 0
-    @State var loadNonHttpsAnyway = false
-    @State var isPlaying = false
-    @State var isMuted = false
-    @State var didStart = false
-    @State var isStream = false
+    @State private var videoState:VideoLoadingState = .initial
+    @State private var videoShown = true
+    @State private var asset:AVAsset? = nil
+    @State private var scaledDimensions:CGSize? = nil
+    @State private var videoLength:String? = nil
+    @State private var task:AsyncImageTask? = nil
+    @State private var percent = 0
+    @State private var loadNonHttpsAnyway = false
+    @State private var isPlaying = false
+    @State private var isMuted = false
+    @State private var didStart = false
+    @State private var isStream = false
     
     static let aspect:CGFloat = 16/9
     
@@ -209,7 +209,7 @@ struct NosturVideoViewur: View {
         .transaction { t in t.animation = nil }
     }
     
-    func loadVideo() async {
+    private func loadVideo() async {
         task = ImageProcessing.shared.video.imageTask(with: url)
         
         if let task {
@@ -254,15 +254,17 @@ struct NosturVideoViewur: View {
             }
         }
     }
+    
+    private enum VideoLoadingState {
+        case initial
+        case loading
+        case ready
+        case error
+        case cancelled
+    }
 }
 
-enum VideoLoadingState {
-    case initial
-    case loading
-    case ready
-    case error
-    case cancelled
-}
+
 
 struct NosturVideoViewur_Previews: PreviewProvider {
     static var previews: some View {
@@ -298,6 +300,5 @@ class AVPlayerItemCache {
             let playerItem = AVPlayerItem(asset: asset)
             return playerItem
         }
-
     }
 }
