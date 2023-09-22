@@ -293,9 +293,11 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     }
     
     static func fetch(_ pubkey: String, context:NSManagedObjectContext) -> NRContact? {
-        if Thread.isMainThread {
-            fatalError("Should be bg thread")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         guard let contact = Contact.fetchByPubkey(pubkey, context: context) else {
             return nil
         }

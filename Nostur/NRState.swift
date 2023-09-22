@@ -145,9 +145,9 @@ class NRState: ObservableObject {
 
 func notMain() {
     #if DEBUG
-    if Thread.isMainThread {
-        fatalError("Should not be main")
-    }
+        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            fatalError("Should only be called from bg()")
+        }
     #endif
 }
 

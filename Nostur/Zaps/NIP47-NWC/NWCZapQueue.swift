@@ -54,24 +54,30 @@ class NWCZapQueue {
     }
     
     public func sendZap(_ zap:Zap, debugInfo:String? = "") {
-        if Thread.isMainThread {
-            fatalError("Fix this")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         self.waitingZaps[zap.id] = zap
         L.og.info("⚡️ NWC: sendZap. now in queue: \(self.waitingZaps.count) -- \(debugInfo ?? "")")
     }
     
     public func getAwaitingZap(byId id:UUID) -> Zap? {
-        if Thread.isMainThread {
-            fatalError("Fix this")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         return self.waitingZaps[id]
     }
     
     public func removeZap(byId id:UUID) {
-        if Thread.isMainThread {
-            fatalError("Fix this")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         self.waitingZaps.removeValue(forKey: id)
     }
     

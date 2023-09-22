@@ -115,9 +115,11 @@ class NWCRequestQueue {
     }
     
     public func sendRequest(_ request:NEvent, zap:Zap? = nil, cancellationId:UUID? = nil, debugInfo:String? = "") {
-        if Thread.isMainThread {
-            fatalError("Fix this")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         
         self.ensureNWCconnection()
         
@@ -140,23 +142,29 @@ class NWCRequestQueue {
     }
     
     public func getAwaitingRequests() -> [QueuedNWCRequest] {
-        if Thread.isMainThread {
-            fatalError("Fix this")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         return self.waitingRequests.map { $0.value }
     }
     
     public func getAwaitingRequest(byId id:RequestId) -> QueuedNWCRequest? {
-        if Thread.isMainThread {
-            fatalError("Fix this")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         return self.waitingRequests[id]
     }
     
     public func removeRequest(byId: RequestId) {
-        if Thread.isMainThread {
-            fatalError("Fix this")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         self.waitingRequests.removeValue(forKey: byId)
     }
     
@@ -169,9 +177,11 @@ class NWCRequestQueue {
     }
     
     public func removeAll() {
-        if Thread.isMainThread {
-            fatalError("Fix this")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         self.waitingRequests = [RequestId:QueuedNWCRequest]()
     }
 }

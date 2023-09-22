@@ -368,9 +368,11 @@ class LVM: NSObject, ObservableObject {
     }
     
     func safeInsert(_ nrPosts:[NRPost], older:Bool = false) -> [NRPost] {
-        if !Thread.isMainThread {
-            fatalError("wrong thread")
-        }
+        #if DEBUG
+            if !Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should be main")
+            }
+        #endif
         let leafIdsOnScreen = Set(self.nrPostLeafs.map { $0.id })
         let onlyNew = nrPosts
             .filter { !leafIdsOnScreen.contains($0.id) }
@@ -412,9 +414,11 @@ class LVM: NSObject, ObservableObject {
     var isAtTop = true
     
     func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], leafIdsOnScreen:Set<String>, currentNRPostLeafs:[NRPost], older:Bool = false) {
-        if Thread.isMainThread {
-            fatalError("Should be bg")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         let newLeafThreads = newLeafThreadsWithDuplicates.filter { !leafIdsOnScreen.contains($0.id) }
         let diff = newLeafThreadsWithDuplicates.count - newLeafThreads.count
         if diff > 0 {
@@ -507,9 +511,11 @@ class LVM: NSObject, ObservableObject {
     
     func extractDanglingReplies(_ newLeafThreads:[NRPost]) -> (danglers:[NRPost], threads:[NRPost]) {
         // is called from bg thread only?
-        if Thread.isMainThread {
-            fatalError("should be bg thread?")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         var danglers:[NRPost] = []
         var threads:[NRPost] = []
         newLeafThreads.forEach { nrPost in
@@ -533,9 +539,11 @@ class LVM: NSObject, ObservableObject {
     }
     
     func renderLeafs(_ nrPosts:[NRPost], onScreenSeen:Set<String>) -> [NRPost] {
-        if Thread.isMainThread {
-            fatalError("Should be bg")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         let sortedByLongest = nrPosts.sorted(by: { $0.parentPosts.count > $1.parentPosts.count })
 
         var renderedIds = [String]()
@@ -598,9 +606,11 @@ class LVM: NSObject, ObservableObject {
     }
     
     func renderNewLeafs(_ nrPosts:[NRPost], onScreen:[NRPost], onScreenSeen:Set<String>) -> [NRPost] {
-        if Thread.isMainThread {
-            fatalError("Should be bg")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         
         let onScreenLeafIds = onScreen.map { $0.id }
 //        let onScreenAllIds = onScreen.flatMap { [$0.id] + $0.parentPosts.map { $0.id } }
@@ -1444,9 +1454,11 @@ extension LVM {
     
     // MARK: FROM DB TO SCREEN STEP 2: FIRST FILTER PASS, GETTING PARENTS AND LIMIT, NOT ON SCREEN YET
     func setUnorderedEvents(events:[Event], lastCreatedAt:Int64 = 0, idsOnScreen: Set<String> = []) {
-        if Thread.isMainThread {
-            fatalError("Should be bg")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         var newUnrenderedEvents:[Event]
         
         let filteredEvents = applyWoTifNeeded(events)
@@ -1489,9 +1501,11 @@ extension LVM {
     
     
     func setOlderEvents(events:[Event]) {
-        if Thread.isMainThread {
-            fatalError("Should be bg")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         var newUnrenderedEvents:[Event]
         
         newUnrenderedEvents = events
