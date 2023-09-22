@@ -266,7 +266,7 @@ struct ArticleView: View {
                         .padding(.vertical, 10)
                 }
                 
-                ViewThatFits {
+                ViewThatFits(in: .horizontal) {
                     HStack {
                         Spacer()
                         ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id)

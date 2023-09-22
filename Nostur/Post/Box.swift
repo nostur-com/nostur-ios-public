@@ -66,7 +66,7 @@ struct Box<Content: View>: View {
             content
                 .padding(kind == 30023 ? 20 : 10)
                 .background {
-                    if kind == 30023 {
+                    if kind == 30023 || ((nrPost?.kind ?? 0) == 6) && (nrPost?.firstQuote?.kind ?? 0) == 30023 {
                         theme.secondaryBackground
                             .transaction { t in
                                 t.animation = nil
