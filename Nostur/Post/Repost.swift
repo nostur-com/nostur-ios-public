@@ -122,7 +122,8 @@ struct RepostHeader: View {
             navigateTo(ContactPath(key: pubkey))
         }
         .padding(.leading, 30)
-        .frame(idealHeight: 20.0)
+//        .debugDimensions("RepostedHeader")
+//        .frame(idealHeight: 20.0)
         .transaction { t in t.animation = nil }
 //                .fixedSize(horizontal: false, vertical: true)
     }
