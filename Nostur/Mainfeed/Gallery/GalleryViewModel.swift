@@ -13,7 +13,7 @@ import Combine
 class GalleryViewModel: ObservableObject {
     
     @Published var state:GalleryState
-    private var posts:[PostID: LikedBy<Pubkey>]
+    private var posts:[PostID: RecommendedBy<Pubkey>]
     private var backlog:Backlog
     private var follows:Set<Pubkey>
     private var didLoad = false
@@ -57,7 +57,7 @@ class GalleryViewModel: ObservableObject {
                 self.state = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
                 self.follows = Nostur.follows()
-                self.fetchLikesFromRelays()
+                self.fetchLikesAndRepostsFromRelays()
             }
         }
     }
@@ -72,7 +72,7 @@ class GalleryViewModel: ObservableObject {
     
     public init() {
         self.state = .initializing
-        self.posts = [PostID: LikedBy<Pubkey>]()
+        self.posts = [PostID: RecommendedBy<Pubkey>]()
         self.backlog = Backlog(timeout: 5.0, auto: true)
         self.follows = Nostur.follows()
         
@@ -85,8 +85,8 @@ class GalleryViewModel: ObservableObject {
             .store(in: &self.subscriptions)
     }
     
-    // STEP 1: FETCH LIKES FROM FOLLOWS FROM RELAYS
-    private func fetchLikesFromRelays(_ onComplete: (() -> ())? = nil) {
+    // STEP 1: FETCH LIKES AND REPOSTS FROM FOLLOWS FROM RELAYS
+    private func fetchLikesAndRepostsFromRelays(_ onComplete: (() -> ())? = nil) {
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "GALLERY",
@@ -97,7 +97,7 @@ class GalleryViewModel: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: self.follows,
-                                                kinds: Set([7]),
+                                                kinds: Set([6,7]),
                                                 since: self.agoFetchTimestamp,
                                                 limit: 9999
                                             )
@@ -113,13 +113,13 @@ class GalleryViewModel: ObservableObject {
             },
             processResponseCommand: { taskId, relayMessage in
                 self.backlog.clear()
-                self.fetchLikesFromDB(onComplete)
+                self.fetchLikesAndRepostsFromDB(onComplete)
 
                 L.og.info("Gallery feed: ready to process relay response")
             },
             timeoutCommand: { taskId in
                 self.backlog.clear()
-                self.fetchLikesFromDB(onComplete)
+                self.fetchLikesAndRepostsFromDB(onComplete)
                 L.og.info("Gallery feed: timeout ")
             })
 
@@ -127,27 +127,41 @@ class GalleryViewModel: ObservableObject {
         reqTask.fetch()
     }
     
-    // STEP 2: FETCH RECEIVED LIKES FROM DB, SORT MOST LIKED POSTS (WE ONLY HAVE IDs HERE)
-    private func fetchLikesFromDB(_ onComplete: (() -> ())? = nil) {
+    // STEP 2: FETCH RECEIVED LIKES/REPOSTS FROM DB, SORT MOST LIKED/REPOSTED POSTS (WE ONLY HAVE IDs HERE)
+    private func fetchLikesAndRepostsFromDB(_ onComplete: (() -> ())? = nil) {
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "created_at > %i AND kind == 7 AND pubkey IN %@", agoTimestamp, follows)
+        fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@", agoTimestamp, follows)
         bg().perform {
-            guard let likes = try? bg().fetch(fr) else { return }
-            for like in likes {
-                guard let reactionToId = like.reactionToId else { continue }
-                if self.posts[reactionToId] != nil {
-                    self.posts[reactionToId]!.insert(like.pubkey)
+            guard let likesOrReposts = try? bg().fetch(fr) else { return }
+            for item in likesOrReposts {
+                switch item.kind {
+                case 6:
+                    guard let firstQuoteId = item.firstQuoteId else { continue }
+                    if self.posts[firstQuoteId] != nil {
+                        self.posts[firstQuoteId]!.insert(item.pubkey)
+                    }
+                    else {
+                        self.posts[firstQuoteId] = RecommendedBy([item.pubkey])
+                    }
+                case 7:
+                    guard let reactionToId = item.reactionToId else { continue }
+                    if self.posts[reactionToId] != nil {
+                        self.posts[reactionToId]!.insert(item.pubkey)
+                    }
+                    else {
+                        self.posts[reactionToId] = RecommendedBy([item.pubkey])
+                    }
+                default:
+                    continue
                 }
-                else {
-                    self.posts[reactionToId] = LikedBy([like.pubkey])
-                }
+                
             }
             
             self.fetchPostsFromRelays(onComplete)
         }
     }
 
-    // STEP 3: FETCH MOST LIKED POSTS FROM RELAYS
+    // STEP 3: FETCH MOST LIKED/REPOSTED POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
@@ -158,14 +172,14 @@ class GalleryViewModel: ObservableObject {
                     Importer.shared.existingIds[postId] == nil
                 }
             
-            let sortedByLikes = posts
+            let sortedByLikesAndReposts = posts
                 .filter({ el in
                     onlyNewIds.contains(el.key)
                 })
                 .sorted(by: { $0.value.count > $1.value.count })
                 .prefix(Self.REQ_IDS_LIMIT)
         
-            let ids = Set(sortedByLikes.map { (postId, likedBy) in postId })
+            let ids = Set(sortedByLikesAndReposts.map { (postId, likedOrRepostedBy) in postId })
 
             guard !ids.isEmpty else {
                 L.og.debug("Gallery feed: fetchPostsFromRelays: empty ids")
@@ -221,7 +235,7 @@ class GalleryViewModel: ObservableObject {
         }
     }
     
-    // STEP 4: FETCH RECEIVED POSTS FROM DB, SORT BY MOST LIKED AND PUT ON SCREEN
+    // STEP 4: FETCH RECEIVED POSTS FROM DB, SORT BY MOST LIKED/REPOSTED AND PUT ON SCREEN
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         let ids = Set(self.posts.keys)
         guard !ids.isEmpty else {
@@ -231,14 +245,14 @@ class GalleryViewModel: ObservableObject {
         }
         let blockedPubkeys = blocks()
         bg().perform {
-            let sortedByLikes = self.posts
+            let sortedByLikesAndReposts = self.posts
                 .sorted(by: { $0.value.count > $1.value.count })
             
             
             var items:[GalleryItem] = []
-            for (postId, likes) in sortedByLikes {
-                if (likes.count > 3) {
-                    L.og.debug("🔝🔝 id:\(postId): \(likes.count)")
+            for (postId, likesOrReposts) in sortedByLikesAndReposts {
+                if (likesOrReposts.count > 3) {
+                    L.og.debug("🔝🔝 id:\(postId): \(likesOrReposts.count)")
                 }
                 if let event = try? Event.fetchEvent(id: postId, context: bg()) {
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns
@@ -268,30 +282,30 @@ class GalleryViewModel: ObservableObject {
         self.follows = Nostur.follows()
         self.state = .loading
         self.items = []
-        self.fetchLikesFromRelays()
+        self.fetchLikesAndRepostsFromRelays()
     }
     
     // for after acocunt change
     public func reload() {
         self.state = .loading
         self.lastFetch = nil
-        self.posts = [PostID: LikedBy<Pubkey>]()
+        self.posts = [PostID: RecommendedBy<Pubkey>]()
         self.backlog.clear()
         self.follows = Nostur.follows()
         self.items = []
-        self.fetchLikesFromRelays()
+        self.fetchLikesAndRepostsFromRelays()
     }
     
     // pull to refresh
     public func refresh() async {
         // don't change .state on refresh, or rerender will cause the pull-to-refresh to be wonky
         self.lastFetch = nil
-        self.posts = [PostID: LikedBy<Pubkey>]()
+        self.posts = [PostID: RecommendedBy<Pubkey>]()
         self.backlog.clear()
         self.follows = Nostur.follows()
         
         await withCheckedContinuation { continuation in
-            self.fetchLikesFromRelays {
+            self.fetchLikesAndRepostsFromRelays {
                 continuation.resume()
             }
         }
