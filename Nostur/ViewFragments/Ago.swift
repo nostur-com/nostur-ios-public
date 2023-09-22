@@ -28,6 +28,11 @@ struct Ago: View, Equatable {
     
     var body: some View {
         Text(verbatim: agoText)
+            .onAppear {
+                if date.agoString != agoText {
+                    agoText = date.agoString
+                }
+            }
             .onReceive(NRState.shared.agoTimer) { _ in
                 if date.agoString != agoText {
                     agoText = date.agoString
