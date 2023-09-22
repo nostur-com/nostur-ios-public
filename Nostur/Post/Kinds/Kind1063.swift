@@ -9,11 +9,11 @@ import SwiftUI
 
 struct Kind1063: View {
     
-    @ObservedObject var nrPost:NRPost
-    let url:String
-    let availableWidth:CGFloat
-    let fullWidth:Bool
-    var height:CGFloat? = nil
+    @ObservedObject private var nrPost:NRPost
+    private let url:String
+    private let availableWidth:CGFloat
+    private let fullWidth:Bool
+    private var height:CGFloat? = nil
     
     init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero, fullWidth:Bool = false) {
         self.nrPost = nrPost
@@ -59,10 +59,12 @@ struct Kind1063: View {
             }
             if let height {
                 SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload))
-                    .padding(.horizontal, -10)
+                    .padding(.horizontal, fullWidth ? -10 : 0)
+//                    .padding(.horizontal, -10)
 //                    .fixedSize(horizontal: false, vertical: true)
                     .frame(height: height)
                     .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
     }
