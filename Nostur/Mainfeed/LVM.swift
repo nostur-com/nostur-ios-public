@@ -152,6 +152,10 @@ class LVM: NSObject, ObservableObject {
     var initialIndex:Int = 0 // derived from restoreScrollToId's index
     
     func didDisappear() {
+        self.closeSubAndTimer()
+    }
+    
+    func closeSubAndTimer() {
         if type == .relays {
             L.lvm.info("\(self.id) \(self.name) - Closing subscriptions for .relays tab");
             SocketPool.shared.closeSubscription(self.id)
@@ -1307,6 +1311,8 @@ extension LVM {
         let visibleOrInRefreshInBackground = self.viewIsVisible || refreshInBackground
         guard visibleOrInRefreshInBackground else {
             L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch cancelled - view is not visible")
+            // For some reason the subscription is not closed when switching tab, so close here
+            self.closeSubAndTimer()
             return
         }
         let ctx = DataProvider.shared().bg
