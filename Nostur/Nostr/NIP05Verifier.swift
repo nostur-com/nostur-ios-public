@@ -76,16 +76,16 @@ class NIP05Verifier {
     }
     
     public func verify(_ contact: Contact) {
-        if Thread.isMainThread {
-            fatalError("Should call from bg")
+        #if DEBUG
+        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            fatalError("Should only be called from bg()")
         }
         
-        #if DEBUG
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return
         }
         #endif
-        
+
         L.fetching.info("nip05: going to verify \(contact.nip05 ?? "") for \(contact.pubkey)")
         self.verifySubject.send(contact)
     }
@@ -95,10 +95,10 @@ class NIP05Verifier {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return false
         }
-        #endif
         if Thread.isMainThread {
             fatalError("Should call from bg")
         }
+        #endif
         guard contact.nip05 != nil else { return false }
         return (contact.nip05verifiedAt == nil || (contact.nip05verifiedAt != nil) && (contact.nip05verifiedAt! < Self.fourWeeksAgo))
     }

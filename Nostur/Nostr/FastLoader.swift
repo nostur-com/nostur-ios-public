@@ -344,9 +344,11 @@ class Backlog {
 //    }
     
     public func tasks(with subscriptionIds:Set<String>) -> [ReqTask] {
-        if Thread.isMainThread {
-            fatalError("Must call from bg()")
-        }
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
         return tasks.filter { subscriptionIds.contains($0.subscriptionId) }
     }
 }
