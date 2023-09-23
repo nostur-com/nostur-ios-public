@@ -30,7 +30,7 @@ class FastLoader: ObservableObject {
         viewContext = DataProvider.shared().viewContext
         bgContext = DataProvider.shared().bg
         loadNewerSubject
-            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
             .sink { [weak self] parameters in
                 guard let self = self else { return }
                 let (limit, taskId, includeSpam) = parameters
@@ -39,7 +39,7 @@ class FastLoader: ObservableObject {
             .store(in: &subscriptions)
         
         loadNewerEventsSubject
-            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
             .sink { [weak self] parameters in
                 guard let self = self else { return }
                 let (limit, taskId, includeSpam) = parameters
@@ -48,7 +48,7 @@ class FastLoader: ObservableObject {
             .store(in: &subscriptions)
         
         loadOlderEventsSubject
-            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
             .sink { [weak self] parameters in
                 guard let self = self else { return }
                 let (limit, taskId, includeSpam) = parameters
@@ -386,7 +386,8 @@ class ReqTask: Identifiable, Hashable {
         self.reqCommand = reqCommand
         self.timeoutCommand = timeoutCommand
         processSubject
-            .debounce(for: RunLoop.SchedulerTimeType.Stride(debounceTime), scheduler: RunLoop.main)
+            .debounce(for: .seconds(debounceTime), scheduler: DispatchQueue.main)
+//            .debounce(for: RunLoop.SchedulerTimeType.Stride(debounceTime), scheduler: RunLoop.main)
             .sink { [weak self] message in
                 guard let self = self else { return }
                 guard !didProcess else { return }

@@ -50,7 +50,7 @@ class QueuedFetcher {
         .store(in: &subscriptions)
         
         fetchSubject
-            .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             .sink { [unowned self] _ in
                 bg.perform {
                     guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
