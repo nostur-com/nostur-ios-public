@@ -85,7 +85,7 @@ struct ProfilePicFullScreenSheet: View {
                             if let container = state.imageContainer {
                                 if container.type == .gif, let gifData = container.data {
                                     
-                                    GIFImage(data: gifData)
+                                    GIFImage(data: gifData, isPlaying: .constant(true))
                                         .resizable()
                                         .aspectRatio(contentMode: .fit)
                                         .scaleEffect(scale)
@@ -124,7 +124,7 @@ struct ProfilePicFullScreenSheet: View {
                     else {
                         LazyImage(url: URL(string: pictureUrl)) { state in
                             if state.imageContainer?.type == .gif, let gifData = state.imageContainer?.data {
-                                GIFImage(data: gifData)
+                                GIFImage(data: gifData, isPlaying: .constant(true))
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .scaleEffect(scale)

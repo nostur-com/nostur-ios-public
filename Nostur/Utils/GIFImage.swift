@@ -10,20 +10,12 @@ public struct GIFImage: View {
      private let source: GIFSource
      private var loopCount:Int = 0
      private var isResizable = false
+    @Binding var isPlaying:Bool
 
      /// Initializes the view with the given GIF image data.
-     public init(data: Data) {
+    public init(data: Data, isPlaying:Binding<Bool>) {
          self.source = .data(data)
-     }
-
-     /// Initialzies the view with the given GIF image url.
-     public init(url: URL) {
-         self.source = .url(url)
-     }
-
-     /// Initialzies the view with the given GIF image name.
-     public init(imageName: String) {
-         self.source = .imageName(imageName)
+        _isPlaying = isPlaying
      }
 
      /// Sets the desired number of loops. By default, the number of loops infinite.
@@ -41,7 +33,7 @@ public struct GIFImage: View {
      }
 
      public var body: some View {
-         _GIFImage(source: source, loopCount: loopCount, isResizable: isResizable)
+         _GIFImage(source: source, loopCount: loopCount, isResizable: isResizable, isPlaying: $isPlaying)
      }
  }
 
@@ -50,6 +42,7 @@ public struct GIFImage: View {
      let source: GIFSource
      let loopCount: Int
      let isResizable: Bool
+     @Binding var isPlaying:Bool
      var subscriptions = Set<AnyCancellable>()
 
      func makeUIView(context: Context) -> GIFImageView {
@@ -67,20 +60,29 @@ public struct GIFImage: View {
          receiveNotification(.scenePhaseActive)
              .receive(on: RunLoop.main)
              .sink { _ in
+                 guard isPlaying else { return }
                  imageView.startAnimatingGIF()
              }
              .store(in: &context.coordinator.subscriptions)
+         
+         switch source {
+         case .data(let data):
+             imageView.prepareForAnimation(withGIFData: data, loopCount: loopCount)
+         case .url(let url):
+             imageView.prepareForAnimation(withGIFURL: url, loopCount: loopCount)
+         case .imageName(let imageName):
+             imageView.prepareForAnimation(withGIFNamed: imageName, loopCount: loopCount)
+         }
+         
          return imageView
      }
 
      func updateUIView(_ imageView: GIFImageView, context: Context) {
-         switch source {
-         case .data(let data):
-             imageView.animate(withGIFData: data, loopCount: loopCount)
-         case .url(let url):
-             imageView.animate(withGIFURL: url, loopCount: loopCount)
-         case .imageName(let imageName):
-             imageView.animate(withGIFNamed: imageName, loopCount: loopCount)
+         if isPlaying {
+             imageView.startAnimatingGIF()
+         }
+         else {
+             imageView.stopAnimatingGIF()
          }
      }
 
