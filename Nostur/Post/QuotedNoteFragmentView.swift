@@ -82,6 +82,8 @@ struct QuotedNoteFragmentView: View {
                 .frame(height: 40)
                 VStack(alignment: .leading) {
                     NoteTextRenderView(nrPost: nrPost)
+                        .withoutAnimation()
+//                        .transaction { t in t.animation = nil }
                 }
             }
             .contentShape(Rectangle())
@@ -95,10 +97,14 @@ struct QuotedNoteFragmentView: View {
             .background(
                 theme.background
                     .cornerRadius(15)
+                    .withoutAnimation()
+//                    .transaction { t in t.animation = nil }
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
                     .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
+                    .withoutAnimation()
+//                    .transaction { t in t.animation = nil }
             )
             .onAppear {
                 if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
@@ -112,6 +118,7 @@ struct QuotedNoteFragmentView: View {
                     QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
                 }
             }
+//            .transaction { t in t.animation = nil }
         }
     }
     

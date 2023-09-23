@@ -23,6 +23,7 @@ struct SingleMediaViewer: View {
     
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
+    @State var theHeight = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT
     @State var isPlaying = false
 
     var body: some View {
@@ -36,7 +37,7 @@ struct SingleMediaViewer: View {
                 }
             }
             .padding(10)
-            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
             .background(theme.lineColor.opacity(0.2))
         }
         else if autoload || imagesShown {
@@ -44,7 +45,7 @@ struct SingleMediaViewer: View {
                 if state.error != nil {
                     Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                         .centered()
-                        .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                        .frame(height: theHeight)
                         .background(theme.lineColor.opacity(0.2))
                         .onAppear {
                             L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
@@ -55,12 +56,13 @@ struct SingleMediaViewer: View {
                         GIFImage(data: data, isPlaying: $isPlaying)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
+//                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
                             .padding(.horizontal, -contentPadding)
-                            .transaction { t in t.animation = nil }
+//                            .transaction { t in t.animation = nil }
+                            .withoutAnimation()
                             .task(id: url.absoluteString) {
                                 try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
                                 isPlaying = true
@@ -79,7 +81,10 @@ struct SingleMediaViewer: View {
                             .resizable()
                             .aspectRatio(contentMode: .fit)
 //                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
-                            .frame(maxHeight: min(DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT))
+//                            .frame(height: theHeight)
+//                            .transaction { t in t.animation = nil }
+//                            .background(Color.green)
+                            .withoutAnimation()
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
@@ -107,7 +112,8 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-                            .transaction { t in t.animation = nil }
+//                            .transaction { t in t.animation = nil }
+                            .withoutAnimation()
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
                                     HStack(spacing: 5) {
@@ -126,11 +132,12 @@ struct SingleMediaViewer: View {
 //                            .interpolation(.none)
                             .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
                             .scaledToFit()
-                            .frame(maxHeight: min(DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT))
+//                            .frame(maxHeight: theHeight)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-                            .transaction { t in t.animation = nil }
+//                            .transaction { t in t.animation = nil }
+                            .withoutAnimation()
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
                                     HStack(spacing: 5) {
@@ -156,7 +163,9 @@ struct SingleMediaViewer: View {
                             }
                     }
                     .centered()
-                    .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                    .frame(height: theHeight)
+//                    .background(Color.red)
+                    .withoutAnimation()
 #if DEBUG
 //                    .opacity(0.25)
 //                    .debugDimensions("loading")
@@ -164,11 +173,18 @@ struct SingleMediaViewer: View {
                 }
                 else {
                     Color(.secondarySystemBackground)
-                        .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                        .frame(height: theHeight)
+                        .background(Color.white)
+                        .withoutAnimation()
                 }
             }
             .pipeline(ImageProcessing.shared.content)
-            .transaction { t in t.animation = nil }
+            .onAppear {
+                if let height = height {
+                    theHeight = height
+                }
+            }
+//            .transaction { t in t.animation = nil }
         }
         else {
             Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")

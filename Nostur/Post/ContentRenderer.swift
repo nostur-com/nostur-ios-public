@@ -32,24 +32,27 @@ struct ContentRenderer: View { // VIEW things
                 switch contentElement {
                 case .nrPost(let nrPost):
                     EmbeddedPost(nrPost)
-                        .frame(minHeight: 75)
-                        .transaction { t in t.animation = nil }
+//                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                     //                        .fixedSize(horizontal: false, vertical: true)
-                    //                        .debugDimensions("EmbeddedPost")
+//                                            .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
+                        .withoutAnimation()
+//                        .transaction { t in t.animation = nil }
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier)
-                        .frame(minHeight: 75)
-                        .transaction { t in t.animation = nil }
+//                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
-                    //                        .debugDimensions("NEventView")
+//                                            .debugDimensions("NEventView")
                         .padding(.vertical, 10)
+                        .withoutAnimation()
+//                        .transaction { t in t.animation = nil }
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey)
-                            .transaction { t in t.animation = nil }
                             .padding(.vertical, 10)
+                            .withoutAnimation()
+//                            .transaction { t in t.animation = nil }
                     }
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
@@ -57,11 +60,12 @@ struct ContentRenderer: View { // VIEW things
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex)
-                            .frame(minHeight: 75)
-                            .transaction { t in t.animation = nil }
+//                            .frame(minHeight: 75)
                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
-                        //                            .debugDimensions("QuoteById.note1")
+//                                                    .debugDimensions("QuoteById.note1")
                             .padding(.vertical, 10)
+                            .withoutAnimation()
+//                            .transaction { t in t.animation = nil }
                             .onTapGesture {
                                 guard !isDetail else { return }
                                 navigateTo(nrPost)
@@ -72,11 +76,12 @@ struct ContentRenderer: View { // VIEW things
                     }
                 case .noteHex(let hex):
                     EmbedById(id: hex)
-                        .frame(minHeight: 75)
-                        .transaction { t in t.animation = nil }
+//                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
-                    //                        .debugDimensions("QuoteById.noteHex")
+//                                            .debugDimensions("QuoteById.noteHex")
                         .padding(.vertical, 10)
+                        .withoutAnimation()
+//                        .transaction { t in t.animation = nil }
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
@@ -122,6 +127,8 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
+                            .withoutAnimation()
+//                            .transaction { t in t.animation = nil }
                     }
                     else {
                         
@@ -138,6 +145,8 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
+                            .withoutAnimation()
+//                            .transaction { t in t.animation = nil }
                     }
                     
                 case .image(let mediaContent):
@@ -160,6 +169,8 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
+                            .withoutAnimation()
+//                            .transaction { t in t.animation = nil }
                     }
                     else {
                         
@@ -176,11 +187,16 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
+//                            .background(Color.yellow)
+                            .withoutAnimation()
+//                            .transaction { t in t.animation = nil }
                     }
                 case .linkPreview(let url):
                     // TODO: do no link preview if restrictAutoDownload...
                     LinkPreviewView(url: url)
                         .padding(.vertical, 10)
+                        .withoutAnimation()
+//                        .transaction { t in t.animation = nil }
                 case .postPreviewImage(let uiImage):
                     Image(uiImage: uiImage)
                         .resizable()
@@ -197,9 +213,9 @@ struct ContentRenderer: View { // VIEW things
                 }
             }
         }
-        .transaction { t in
-            t.animation = nil
-        }
+//        .transaction { t in
+//            t.animation = nil
+//        }
     }
 }
 
@@ -283,37 +299,35 @@ struct EmbeddedPost: View {
     }
     
     var body: some View {
-        VStack {
-            if prd.blocked {
-                HStack {
-                    Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
-                    Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
-                        .buttonStyle(.bordered)
-                }
-                .padding(.leading, 8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        if prd.blocked {
+            HStack {
+                Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
+                    .buttonStyle(.bordered)
+            }
+            .padding(.leading, 8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .hCentered()
+        }
+        else if nrPost.kind == 30023 {
+            ArticleView(nrPost, hideFooter: true)
+                .padding(20)
+                .background(
+                    Color(.secondarySystemBackground)
+                        .cornerRadius(15)
                 )
-                .hCentered()
-            }
-            else if nrPost.kind == 30023 {
-                ArticleView(nrPost, hideFooter: true)
-                    .padding(20)
-                    .background(
-                        Color(.secondarySystemBackground)
-                            .cornerRadius(15)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(.regularMaterial, lineWidth: 1)
-                    )
-                //                    .debugDimensions("EmbeddedPost.QuotedNoteFragmentView")
-            }
-            else {
-                QuotedNoteFragmentView(nrPost: nrPost)
-                //                    .debugDimensions("EmbeddedPost.QuotedNoteFragmentView")
-            }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(.regularMaterial, lineWidth: 1)
+                )
+//                .debugDimensions("EmbeddedPost.ArticleView", alignment: .bottomLeading)
+        }
+        else {
+            QuotedNoteFragmentView(nrPost: nrPost)
+//                .debugDimensions("EmbeddedPost.QuotedNoteFragmentView", alignment: .bottomLeading)
         }
     }
 }
