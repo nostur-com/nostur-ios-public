@@ -64,6 +64,7 @@ extension View {
 struct DebugDimensions: ViewModifier {
     
     var label:String? = nil
+    var alignment:Alignment
     @State var actualSize:CGSize? = nil
     
     func body(content: Content) -> some View {
@@ -71,7 +72,7 @@ struct DebugDimensions: ViewModifier {
             .readSize { size in
                 actualSize = size
             }
-            .overlay(alignment: .bottomTrailing) {
+            .overlay(alignment: alignment) {
                 if let actualSize {
                     VStack {
                         if let label {
@@ -117,7 +118,7 @@ extension View {
     func hCentered() -> some View {
         modifier(HorizontallyCenteredView())
     }
-    func debugDimensions(_ label:String? = nil) -> some View {
-        modifier(DebugDimensions(label: label))
+    func debugDimensions(_ label:String? = nil, alignment:Alignment = .bottomTrailing) -> some View {
+        modifier(DebugDimensions(label: label, alignment: alignment))
     }
 }
