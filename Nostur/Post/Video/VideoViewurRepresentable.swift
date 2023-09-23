@@ -25,7 +25,7 @@ struct VideoViewurRepresentable: UIViewRepresentable {
 
     func makeUIView(context: Context) -> UIView {
         let avpc = AVPlayerViewController()
-        let playerItem = AVPlayerItemCache.shared.get(url: url.absoluteString, asset: asset)
+        let playerItem = AVPlayerItem(asset: asset)
         let player = AVQueuePlayer(playerItem: playerItem)
         player.isMuted = isMuted
         player.preventsDisplaySleepDuringVideoPlayback = false

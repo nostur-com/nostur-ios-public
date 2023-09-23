@@ -27,7 +27,7 @@ struct NosturApp: App {
     private var zpvq:ZapperPubkeyVerificationQueue = .shared
     private var nip05verifier:NIP05Verifier = .shared
     private var ip:ImageProcessing = .shared
-    private var avcache:AVPlayerItemCache = .shared
+    private var avcache:AVAssetCache = .shared
     private var idr:ImageDecoderRegistry = .shared
     @StateObject private var theme:Theme = .default
     @StateObject private var nm:NotificationsManager = .shared
