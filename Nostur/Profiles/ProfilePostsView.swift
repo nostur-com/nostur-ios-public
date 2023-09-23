@@ -11,6 +11,8 @@ struct ProfilePostsView: View {
     @EnvironmentObject private var theme:Theme
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var vm:ProfilePostsViewModel
+    @State var showMore = true
+    @State var lastFetchAtId = ""
     
     init(pubkey: String) {
         _vm = StateObject(wrappedValue: ProfilePostsViewModel(pubkey))
@@ -18,15 +20,11 @@ struct ProfilePostsView: View {
     
     var body: some View {
         switch vm.state {
-        case .initializing:
+        case .initializing, .loading:
             ProgressView()
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .onAppear { vm.load() }
-        case .loading:
-            ProgressView()
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .center)
                 .task(id: "profileposts") {
                     do {
                         try await Task.sleep(
@@ -40,27 +38,29 @@ struct ProfilePostsView: View {
                     }
                 }
         case .ready:
-            LazyVStack(spacing: 10) {
-                ForEach(vm.posts, id:\.id) { nrPost in
-                    Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+            VStack {
+                LazyVStack(spacing: 10) {
+                    ForEach(vm.posts) { nrPost in
+                        Box(nrPost: nrPost) {
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                        }
+                        .id(nrPost.id)
+                        .onBecomingVisible {
+                            // SettingsStore.shared.fetchCounts should be true for below to work
+                            vm.prefetch(nrPost)
+                            
+                            guard nrPost == vm.posts.last else { return }
+                            guard lastFetchAtId != nrPost.id else { return }
+                            vm.loadMore(after: nrPost, amount: 10)
+                            vm.fetchMore(after: nrPost, amount: 20)
+//                            vm.loadMore(after: nrPost, amount: max(20, vm.posts.count * 2))
+                            lastFetchAtId = nrPost.id
+                        }
+                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                     }
-//                    .id(nrPost.id)
-                    .onBecomingVisible {
-                        // SettingsStore.shared.fetchCounts should be true for below to work
-                        vm.prefetch(nrPost)
-                    }
-                    .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                }
-                
-                if let last = vm.posts.last {
-                    Button(String(localized:"Show more", comment: "Button to show posts on profile page")) {
-                        vm.loadMore(after: last, amount: max(20, vm.posts.count * 2))
-                    }
-                    .hCentered()
-                    .buttonStyle(.bordered)
                 }
             }
+            
 //            .padding(.top, 10)
 //            .background(theme.listBackground)
         case .timeout:
