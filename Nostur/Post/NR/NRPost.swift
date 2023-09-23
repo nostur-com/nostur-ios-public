@@ -675,10 +675,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self = self else { return false }
                 return self.missingPs.contains(pTag)
             })
-            .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
-                self.objectWillChange.send() // Need to update the views or they still have the old .missingPs
                 self.missingPs.remove(pubkey)
             }
             .store(in: &subscriptions)
