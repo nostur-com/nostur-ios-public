@@ -156,11 +156,7 @@ class AccountManager {
                 else {
                     NRState.shared.changeAccount(accounts.first)
                 }
-            }
-            
-            let accounts = NRState.shared.accounts
-            
-            
+            }            
         }
         catch {
             L.og.error("🔴🔴🔴🔴🔴 Could not wipe or delete account 🔴🔴🔴🔴🔴")

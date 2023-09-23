@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct Box<Content: View>: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var theme:Theme
     
-    let content: Content
-    let kind: Int64
-    let navMode: NavigationMode
-    var nrPost: NRPost? = nil
+    private let content: Content
+    private let kind: Int64
+    private let navMode: NavigationMode
+    private var nrPost: NRPost? = nil
     
     public enum NavigationMode {
         // Normal onTapGesture on entire view, but this makes Video in UIViewRepresentable not tappable
