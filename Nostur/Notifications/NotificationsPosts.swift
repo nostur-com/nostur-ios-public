@@ -87,7 +87,7 @@ struct NotificationsPosts: View {
             }
             fl.predicate = NSPredicate(
                 format:
-                    "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+                    "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,6,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                     currentNewestCreatedAt,
                 account.blockedPubkeys_ + [account.publicKey],
                 serializedP(account.publicKey),
@@ -142,7 +142,7 @@ struct NotificationsPosts: View {
         guard let account = account() else { return }
         didLoad = true
         fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+            format: "NOT pubkey IN %@ AND kind IN {1,6,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
             (account.blockedPubkeys_ + [account.publicKey]),
             serializedP(account.publicKey),
             account.mutedRootIds_,
@@ -177,7 +177,7 @@ struct NotificationsPosts: View {
                 let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
-                        "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+                        "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,6,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                         currentNewestCreatedAt,
                     (account.blockedPubkeys_ + [account.publicKey]),
                     serializedP(account.publicKey),
@@ -213,7 +213,7 @@ struct NotificationsPosts: View {
     private func loadMore() {
         guard let account = account() else { return }
         fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind == 1 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
+            format: "NOT pubkey IN %@ AND kind IN {1,6} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
             (account.blockedPubkeys_ + [account.publicKey]),
             serializedP(account.publicKey),
             account.mutedRootIds_,
@@ -232,7 +232,7 @@ struct NotificationsPosts: View {
             },
             processResponseCommand: { (taskId, _) in
                 fl.predicate = NSPredicate(
-                    format: "NOT pubkey IN %@ AND kind == 1 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
+                    format: "NOT pubkey IN %@ AND kind IN {1,6} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
                     (account.blockedPubkeys_ + [account.publicKey]),
                     serializedP(account.publicKey),
                     account.mutedRootIds_,
