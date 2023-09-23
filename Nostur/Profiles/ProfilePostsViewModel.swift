@@ -235,12 +235,15 @@ class ProfilePostsViewModel: ObservableObject {
     public func loadMore(after: NRPost, amount: Int) {
         let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         
-        let offset = self.posts.count - 1
+        let offset = self.posts.count
         let currentVisibleIds = Set(self.posts.map { $0.id })
+        
+        // Always use offset from this post, else pagination will be messed up if a new post comes in
+        guard let firstPostCreatedAt = self.posts.first?.created_at else { return }
         
         bg().perform {
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@", self.pubkey, Self.PROFILE_KINDS)
+            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND created_at <= %i", self.pubkey, Self.PROFILE_KINDS, Int(firstPostCreatedAt))
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             fr.fetchOffset = offset
             fr.fetchLimit = amount
@@ -267,6 +270,25 @@ class ProfilePostsViewModel: ObservableObject {
             L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
             fetchStuffForLastAddedNotes(ids: eventIds)
             self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
+        }
+    }
+    
+    public func fetchMore(after: NRPost, amount: Int) {
+        if let cm = NostrEssentials
+                    .ClientMessage(type: .REQ,
+                                   filters: [
+                                    Filters(
+                                        authors: Set([self.pubkey]),
+                                        kinds: Self.PROFILE_KINDS,
+                                        until: Int(after.created_at),
+                                        limit: amount
+                                    )
+                                   ]
+                    ).json() {
+            req(cm)
+        }
+        else {
+            L.og.error("Profile posts feed: Problem generating .fetchMore request")
         }
     }
     
