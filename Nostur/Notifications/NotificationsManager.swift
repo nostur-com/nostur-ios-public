@@ -116,11 +116,11 @@ class NotificationsManager: ObservableObject {
         
         let ago = since.agoString
         
-        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:[1,7,9735,9802,30023], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp))
+        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:[1,6,7,9735,9802,30023], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp))
         req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:[4], subscriptionId: "DMs-CATCHUP-\(ago)", since: dmSinceNTimestamp))
     }
     
-    private func checkForNewPosts() {
+    private func checkForNewPosts() { // Also checks if someone reposted TODO: Should check if the kind 6 with our p actually also has our e
         guard let account = account() else { return }
         let mutedRootIds = account.mutedRootIds_
         let pubkey = account.publicKey
@@ -131,7 +131,7 @@ class NotificationsManager: ObservableObject {
         r2.predicate = NSPredicate(format:
                                     "created_at > %i " +
                                     "AND NOT pubkey IN %@ " +
-                                    "AND kind IN {1,9802,30023} " +
+                                    "AND kind IN {1,6,9802,30023} " +
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " +
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
@@ -323,7 +323,7 @@ class NotificationsManager: ObservableObject {
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(format:
                                     "NOT pubkey IN %@ " +
-                                    "AND kind IN {1,9802,30023} " +
+                                    "AND kind IN {1,6,9802,30023} " +
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " +
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
