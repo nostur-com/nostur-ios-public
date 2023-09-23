@@ -23,9 +23,7 @@ struct NosturVideoViewur: View {
     var contentPadding:CGFloat = 10.0
     @State private var videoState:VideoLoadingState = .initial
     @State private var videoShown = true
-    @State private var asset:AVAsset? = nil
-    @State private var scaledDimensions:CGSize? = nil
-    @State private var videoLength:String? = nil
+    @State private var cachedVideo:CachedVideo? = nil
     @State private var task:AsyncImageTask? = nil
     @State private var percent = 0
     @State private var loadNonHttpsAnyway = false
@@ -100,7 +98,7 @@ struct NosturVideoViewur: View {
 //                    }
             }
             else if videoShown {
-                if let asset, let scaledDimensions, let videoLength = videoLength {
+                if let asset = cachedVideo?.asset, let scaledDimensions = cachedVideo?.scaledDimensions, let videoLength = cachedVideo?.videoLength {
                     VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
                         .padding(.horizontal, fullWidth ? -contentPadding : 0)
                         .overlay(alignment:.bottomLeading) {
@@ -113,7 +111,7 @@ struct NosturVideoViewur: View {
                                     .padding(5)
                             }
                         }
-                        .overlay {
+                        .overlay(alignment: .center) {
                             if !didStart {
                                 Button(action: {
                                     isPlaying = true
@@ -124,8 +122,9 @@ struct NosturVideoViewur: View {
                                         .resizable()
                                         .scaledToFit()
                                         .frame(width: 80, height: 80)
-                                        .centered()
+//                                        .centered()
                                         .contentShape(Rectangle())
+                                        .withoutAnimation()
                                 }
                             }
                         }
@@ -139,8 +138,8 @@ struct NosturVideoViewur: View {
                             isPlaying = false
                         }
                     .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-                    .withoutAnimation()
-//                    .transaction { t in t.animation = nil }
+//                    .withoutAnimation()
+                    .transaction { t in t.animation = nil }
 #if DEBUG
 //                    .opacity(0.25)
 //                    .debugDimensions("videoShown")
@@ -198,8 +197,13 @@ struct NosturVideoViewur: View {
                     isStream = true
                 }
                 else {
-                    Task.detached(priority: .background) {
-                        await loadVideo()
+                    if let cachedVideo = AVAssetCache.shared.get(url: url.absoluteString) {
+                        self.cachedVideo = cachedVideo
+                    }
+                    else {
+                        Task.detached(priority: .background) {
+                            await loadVideo()
+                        }
                     }
                 }
             }
@@ -231,20 +235,21 @@ struct NosturVideoViewur: View {
             if let type = response.container.type, type.isVideo, let asset = response.container.userInfo[.videoAssetKey] as? AVAsset {
                 Task.detached(priority: .background) {
                     if let videoSize = await getVideoDimensions(asset: asset), let videoLength = await getVideoLength(asset: asset) {
+                        
+                        let scaledDimensions = Nostur.scaledToFit(videoSize, scale: 1, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                        
+                        let cachedVideo = CachedVideo(asset: asset, scaledDimensions: scaledDimensions, videoLength: videoLength)
+                        AVAssetCache.shared.set(url: url.absoluteString, asset: cachedVideo)
+                        
                         DispatchQueue.main.async {
-                            self.scaledDimensions = Nostur.scaledToFit(videoSize, scale: 1, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            self.videoLength = videoLength
+                            self.cachedVideo = cachedVideo
+                            videoState = .ready
                         }
                     }
                     else {
                         DispatchQueue.main.async {
                             videoState = .error
                         }
-                    }
-                    
-                    DispatchQueue.main.async {
-                        self.asset = asset
-                        videoState = .ready
                     }
                 }
             }
@@ -283,23 +288,33 @@ struct NosturVideoViewur_Previews: PreviewProvider {
     }
 }
 
-class AVPlayerItemCache {
-    static let shared = AVPlayerItemCache()
+class AVAssetCache {
+    static let shared = AVAssetCache()
     
-    private var cache:NSCache<NSString, AVPlayerItem>
+    private var cache:NSCache<NSString, CachedVideo>
 
     private init() {
-        self.cache = NSCache<NSString, AVPlayerItem>()
-        self.cache.countLimit = 10
+        self.cache = NSCache<NSString, CachedVideo>()
+        self.cache.countLimit = 5
     }
 
-    func get(url:String, asset: AVAsset) -> AVPlayerItem {
-        if let playerItem = cache.object(forKey: url as NSString) {
-            return playerItem
-        }
-        else {
-            let playerItem = AVPlayerItem(asset: asset)
-            return playerItem
-        }
+    public func get(url:String) -> CachedVideo? {
+        return cache.object(forKey: url as NSString)
+    }
+    
+    public func set(url:String, asset:CachedVideo) {
+        cache.setObject(asset, forKey: url as NSString)
+    }
+}
+
+class CachedVideo {
+    let asset:AVAsset
+    var scaledDimensions:CGSize? = nil
+    var videoLength:String? = nil
+    
+    init(asset: AVAsset, scaledDimensions: CGSize? = nil, videoLength: String? = nil) {
+        self.asset = asset
+        self.scaledDimensions = scaledDimensions
+        self.videoLength = videoLength
     }
 }
