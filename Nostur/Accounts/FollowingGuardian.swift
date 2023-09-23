@@ -43,7 +43,7 @@ class FollowingGuardian: ObservableObject {
     
     func checkForUpdatedContactList() {
         guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
-        L.og.info("Checking for updated contact list")
+        L.og.info("FollowingGuardian: Checking for updated contact list")
         reqP(RM.getAuthorContactsList(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getAuthorContactsList"))
     }
     
@@ -73,7 +73,7 @@ class FollowingGuardian: ObservableObject {
                 
                 let removed = pubkeysOwn.subtracting(pubkeysRelay)
                 let added = pubkeysRelay.subtracting(pubkeysOwn)
-                L.og.info("receiveNotification(.newFollowingListFromRelay): added: \(added)")
+                L.og.info("FollowingGuardian: receiveNotification(.newFollowingListFromRelay): added: \(added)")
                 
                 self.followNewContacts(added: added, account: account)
                 let tagsRelay = nEvent.tTags()
@@ -93,7 +93,7 @@ class FollowingGuardian: ObservableObject {
                     }
                     else {
                         sendNotification(.requestConfirmationChangedFollows, RemovedPubkeys(pubkeys: removed))
-                        L.og.info("receiveNotification(.newFollowingListFromRelay): removed: \(removed)")
+                        L.og.info("FollowingGuardian: receiveNotification(.newFollowingListFromRelay): removed: \(removed)")
                     }
                 }
             }
