@@ -24,7 +24,7 @@ struct ProfileBanner: View {
                     LazyImage(url: URL(string: banner)) { state in
                         if let container = state.imageContainer {
                             if !ProcessInfo.processInfo.isLowPowerModeEnabled, container.type == .gif, let gifData = container.data {
-                                GIFImage(data: gifData)
+                                GIFImage(data: gifData, isPlaying: .constant(true))
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: width, height: BANNER_HEIGHT)

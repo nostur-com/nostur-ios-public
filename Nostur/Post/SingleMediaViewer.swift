@@ -23,6 +23,7 @@ struct SingleMediaViewer: View {
     
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
+    @State var isPlaying = false
 
     var body: some View {
         if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
@@ -51,7 +52,7 @@ struct SingleMediaViewer: View {
                 }
                 else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
                     if fullWidth {
-                        GIFImage(data: data)
+                        GIFImage(data: data, isPlaying: $isPlaying)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
@@ -60,13 +61,21 @@ struct SingleMediaViewer: View {
                             }
                             .padding(.horizontal, -contentPadding)
                             .transaction { t in t.animation = nil }
+                            .task(id: url.absoluteString) {
+                                try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
+                                isPlaying = true
+                            }
+                            .onDisappear {
+                                isPlaying = false
+                            }
+//                            .withoutAnimation()
 #if DEBUG
 //                            .opacity(0.25)
 //                            .debugDimensions("GIFImage.fullWidth")
 #endif
                     }
                     else {
-                        GIFImage(data: data)
+                        GIFImage(data: data, isPlaying: $isPlaying)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
 //                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
@@ -74,7 +83,14 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-                            .transaction { t in t.animation = nil }
+                            .task(id: url.absoluteString) {
+                                try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
+                                isPlaying = true
+                            }
+                            .onDisappear {
+                                isPlaying = false
+                            }
+                            
 #if DEBUG
 //                            .opacity(0.25)
 //                            .debugDimensions("GIFImage")

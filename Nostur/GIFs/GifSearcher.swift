@@ -62,7 +62,7 @@ struct GifSearcher: View {
                             if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
                                 LazyImage(url: url) { state in
                                     if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                                        GIFImage(data: data)
+                                        GIFImage(data: data, isPlaying: .constant(true))
                                             .resizable()
                                             .aspectRatio(contentMode: .fit)
                                             .hCentered()
@@ -85,7 +85,7 @@ struct GifSearcher: View {
                                 if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
                                     LazyImage(url: url) { state in
                                         if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                                            GIFImage(data: data)
+                                            GIFImage(data: data, isPlaying: .constant(true))
                                                 .resizable()
                                                 .aspectRatio(contentMode: .fit)
                                                 .hCentered()

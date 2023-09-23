@@ -159,7 +159,7 @@ struct BadgeIcon: View {
                 LazyImage(url: URL(string: pictureUrl)) { state in
                     if let container = state.imageContainer {
                         if container.type == .gif, let gifData = container.data {
-                            GIFImage(data: gifData)
+                            GIFImage(data: gifData, isPlaying: .constant(true))
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 32, height: 32)
