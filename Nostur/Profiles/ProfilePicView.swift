@@ -9,14 +9,18 @@ import SwiftUI
 import NukeUI
 import Nuke
 
-struct PFP: View {
+struct PFP: View, Equatable {
     
-    var pubkey:String
+    static func == (lhs: PFP, rhs: PFP) -> Bool {
+        lhs.pubkey == rhs.pubkey
+    }
     
-    var contact:Contact?
-    var nrContact:NRContact?
-    var account:Account?
-    var size:CGFloat? = 50.0
+    public var pubkey:String
+    
+    public var contact:Contact?
+    public var nrContact:NRContact?
+    public var account:Account?
+    public var size:CGFloat? = 50.0
 
     var body: some View {
         if let contact {
