@@ -228,6 +228,7 @@ struct SideBar: View {
                         Label(String(localized:"Profile", comment:"Side bar navigation button"), systemImage: "person")
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundColor(theme.accent)
+                            .contentShape(Rectangle())
                     }
                     Button {
                         if selectedTab != "Main" { selectedTab = "Main" }
@@ -237,6 +238,7 @@ struct SideBar: View {
                         Label(String(localized:"Feeds", comment:"Side bar navigation button"), systemImage: "list.bullet.rectangle")
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundColor(theme.accent)
+                            .contentShape(Rectangle())
                     }
                     Button {
                         selectedTab = "Bookmarks"
@@ -245,6 +247,7 @@ struct SideBar: View {
                         Label(String(localized:"Bookmarks", comment:"Side bar navigation button"), systemImage: "bookmark")
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundColor(theme.accent)
+                            .contentShape(Rectangle())
                     }
                     if !account.isNC {
                         Button {
@@ -255,6 +258,7 @@ struct SideBar: View {
                             Label(String(localized:"Badges", comment:"Side bar navigation button"), systemImage: "medal")
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .foregroundColor(theme.accent)
+                                .contentShape(Rectangle())
                         }
                     }
                     Button {
@@ -265,6 +269,7 @@ struct SideBar: View {
                         Label(String(localized:"Settings", comment:"Side bar navigation button"), systemImage: "gearshape")
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundColor(theme.accent)
+                            .contentShape(Rectangle())
                     }
                     Button {
                         if selectedTab != "Main" { selectedTab = "Main" }
@@ -274,6 +279,7 @@ struct SideBar: View {
                         Label(String(localized:"Block list", comment:"Side bar navigation button"), systemImage: "person.badge.minus")
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundColor(theme.accent)
+                            .contentShape(Rectangle())
                     }
                     if !account.isNC {
                         Button {
@@ -282,6 +288,7 @@ struct SideBar: View {
                             Label(String(localized:"Signer", comment:"Side bar navigation button"), systemImage: "signature")
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .foregroundColor(theme.accent)
+                                .contentShape(Rectangle())
                         }
                     }
     //                Button {} label: {
@@ -293,6 +300,7 @@ struct SideBar: View {
                         Label(String(localized:"Log out", comment:"Side bar navigation button"), systemImage: "rectangle.portrait.and.arrow.right")
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundColor(theme.accent)
+                            .contentShape(Rectangle())
                     }
                 }
                 .listRowBackground(theme.listBackground)
