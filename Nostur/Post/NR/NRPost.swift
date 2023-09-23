@@ -893,6 +893,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     @MainActor public func loadParents() {
+        let beforeThreadPostsCount = self.threadPostsCount
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
             guard !self.withParents else { return }
@@ -901,6 +902,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             let parents = Event.getParentEvents(self.event, fixRelations: true)//, until:self.id)
             let parentPosts = parents.map { NRPost(event: $0) }
             let threadPostsCount = 1 + self.event.parentEvents.count
+            
+            guard beforeThreadPostsCount != threadPostsCount else { return }
             
             DispatchQueue.main.async {
                 self.objectWillChange.send()

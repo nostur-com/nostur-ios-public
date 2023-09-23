@@ -143,6 +143,7 @@ struct PostAndParent: View {
     @ObservedObject private var settings:SettingsStore = .shared
     @State private var timerTask: Task<Void, Never>?
     @State private var didLoad = false
+    @State private var didFetchParent = false
     
     init(nrPost: NRPost, isParent:Bool = false, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
@@ -179,14 +180,18 @@ struct PostAndParent: View {
             else if let replyToId = nrPost.replyToId {
                 CenteredProgressView()
                     .onAppear {
-                        guard !didLoad else { return }
-                        didLoad = true
-                        timerTask = Task {
-                            try? await Task.sleep(for: .seconds(4))
-                            fetchEventFromRelayHint(replyToId, fastTags: nrPost.fastTags)
-                        }
+                        guard !didFetchParent else { return }
+                        didFetchParent = true
+                        
                         EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
                         QueuedFetcher.shared.enqueue(id: replyToId)
+                        
+                        timerTask = Task {
+                            try? await Task.sleep(for: .seconds(4))
+                            if nrPost.replyTo == nil {
+                                fetchEventFromRelayHint(replyToId, fastTags: nrPost.fastTags)
+                            }
+                        }
                     }
                     .background(theme.background)
                     .onDisappear {
