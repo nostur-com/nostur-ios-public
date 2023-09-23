@@ -66,7 +66,6 @@ struct AppView: View {
                         }
                         .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                         .environmentObject(ns)
-                        .environmentObject(loggedInAccount)
                         .environmentObject(dm)
                         .environmentObject(loggedInAccount)
                         .onReceive(priceLoop) { time in

@@ -7,12 +7,17 @@
 
 import SwiftUI
 
-struct FastAccountSwitcher: View {
-    @EnvironmentObject var ns:NRState
-    @EnvironmentObject var sm:SideBarModel
+struct FastAccountSwitcher: View, Equatable {
+
+    static func == (lhs: FastAccountSwitcher, rhs: FastAccountSwitcher) -> Bool {
+        lhs.activePubkey == rhs.activePubkey
+    }
     
-    var activePubkey:String = ""
-    let MAX_ACCOUNTS = 4
+    @EnvironmentObject private var ns:NRState
+    
+    public var activePubkey:String = ""
+    public var  sm:SideBarModel
+    private let MAX_ACCOUNTS = 4
     
     var fewAccounts:ArraySlice<Account> {
         ns.accounts
@@ -42,7 +47,7 @@ struct FastAccountSwitcher: View {
 struct FastAccountSwitcher_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadAccounts() }) {
-            FastAccountSwitcher()
+            FastAccountSwitcher(sm: PreviewEnvironment.shared.sm)
         }
     }
 }

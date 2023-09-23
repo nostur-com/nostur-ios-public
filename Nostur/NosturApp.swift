@@ -7,6 +7,8 @@
 
 import SwiftUI
 import CoreData
+import Nuke
+import AVFoundation
 
 @main
 struct NosturApp: App {
@@ -26,6 +28,7 @@ struct NosturApp: App {
     private var nip05verifier:NIP05Verifier = .shared
     private var ip:ImageProcessing = .shared
     private var avcache:AVPlayerItemCache = .shared
+    private var idr:ImageDecoderRegistry = .shared
     @StateObject private var theme:Theme = .default
     @StateObject private var nm:NotificationsManager = .shared
     
@@ -38,6 +41,10 @@ struct NosturApp: App {
                     .environmentObject(theme)
                     .buttonStyle(NRButtonStyle(theme: theme))
                     .tint(theme.accent)
+                    .onAppear {
+                        ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
+                        configureAudioSession()
+                    }
             }
         }
         .onChange(of: scenePhase) { newScenePhase in
@@ -64,6 +71,14 @@ struct NosturApp: App {
             default:
                 break
             }
+        }
+    }
+    
+    func configureAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        } catch {
+            L.og.error("Failed to configure audio session: \(error.localizedDescription)")
         }
     }
     

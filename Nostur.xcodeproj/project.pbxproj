@@ -383,6 +383,7 @@
 		1FEA8D4B29E967B5004A83D3 /* InlineThings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */; };
 		1FEC81A32A8FCB8B006FA50C /* DiscoverNostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEC81A22A8FCB7C006FA50C /* DiscoverNostr.swift */; };
 		1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FECAC4629A08255006FEE72 /* Collection+subscript.swift */; };
+		1FF128482ABF090600144C0C /* Sidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF128472ABF090600144C0C /* Sidebar.swift */; };
 		1FF209162AB0A92800876DB2 /* ProfileGalleryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF209152AB0A92800876DB2 /* ProfileGalleryViewModel.swift */; };
 		1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */; };
 		1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF283D129DB491F0063B799 /* PostPreview.swift */; };
@@ -808,6 +809,7 @@
 		1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineThings.swift; sourceTree = "<group>"; };
 		1FEC81A22A8FCB7C006FA50C /* DiscoverNostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverNostr.swift; sourceTree = "<group>"; };
 		1FECAC4629A08255006FEE72 /* Collection+subscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+subscript.swift"; sourceTree = "<group>"; };
+		1FF128472ABF090600144C0C /* Sidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar.swift; sourceTree = "<group>"; };
 		1FF209152AB0A92800876DB2 /* ProfileGalleryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileGalleryViewModel.swift; sourceTree = "<group>"; };
 		1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingAndExplore.swift; sourceTree = "<group>"; };
 		1FF283D129DB491F0063B799 /* PostPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostPreview.swift; sourceTree = "<group>"; };
@@ -1421,6 +1423,7 @@
 				1F14CC42299D1D7E00131B8D /* NosturStyles.swift */,
 				1FB448C42965F3D000038671 /* NosturTabsView.swift */,
 				1F33096429895D1600D4D8CF /* SidebarStack.swift */,
+				1FF128472ABF090600144C0C /* Sidebar.swift */,
 			);
 			path = Layout;
 			sourceTree = "<group>";
@@ -2141,6 +2144,7 @@
 				1FDF0ED929EC047C00B56AC4 /* ImagePreviews.swift in Sources */,
 				1FC4D4062997C493004E88CD /* NewReply.swift in Sources */,
 				1F7E38EE2A2DDE7300ABAA85 /* AnySigner.swift in Sources */,
+				1FF128482ABF090600144C0C /* Sidebar.swift in Sources */,
 				1FB6E6FD29E48109008BE8A6 /* LVMManager.swift in Sources */,
 				1F69854F29F2B63E006F813F /* Bolt11.swift in Sources */,
 				1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */,
