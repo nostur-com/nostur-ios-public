@@ -27,39 +27,41 @@ struct LinkPreviewView: View {
                         userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
                             if let image = state.image {
                                 image.interpolation(.none)
-//                                    .resizable()
-//                                    .aspectRatio(contentMode: .fill)
-                                    .frame(maxWidth: (DIMENSIONS.PREVIEW_HEIGHT * Self.aspect))
+                                    .frame(width: (DIMENSIONS.PREVIEW_HEIGHT * Self.aspect))
                                     .clipped()
                             }
                     }
                     .pipeline(ImageProcessing.shared.content)
                 }
-                VStack(alignment:.leading, spacing:0) {
-                    if let title = tags["title"] {
-                        Text(title).lineLimit(2)
-                            .layoutPriority(1)
-                            .fontWeight(.bold)
-                    }
-                    else if let title = tags["fallback_title"] {
-                        Text(title).lineLimit(2)
-                            .layoutPriority(1)
-                            .fontWeight(.bold)
-                    }
-                    if let description = tags["description"] {
-                        Text(description).lineLimit(2)
-                            .font(.caption)
-                    }
-                    Text(url.absoluteString).lineLimit(1)
+                else {
+                    Image(systemName: "link")
+                        .resizable()
+                        .scaledToFit()
+                        .padding()
+                        .foregroundColor(.gray)
+                        .frame(width: DIMENSIONS.PREVIEW_HEIGHT * Self.aspect)
+                }
+                VStack(alignment:.leading, spacing: 0) {
+                    Text((tags["title"] ?? tags["fallback_title"]) ?? "")
+                        .lineLimit(2)
+                        .layoutPriority(1)
+                        .fontWeight(.bold)
+                    
+                    Text(tags["description"] ?? "")
+                        .lineLimit(2)
+                        .font(.caption)
+                    
+                    Text(url.absoluteString)
+                        .lineLimit(1)
                         .font(.caption)
                         .foregroundColor(.gray)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(5)
                 .minimumScaleFactor(0.7)
                 .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             }
             .background(theme.listBackground)
-//            .fixedSize(horizontal: false, vertical: true)
             .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             .clipShape(RoundedRectangle(cornerRadius: 10.0))
         }
@@ -97,5 +99,6 @@ struct LinkPreviewView_Previews: PreviewProvider {
                 .padding(.vertical, 5)
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+        .environmentObject(Theme.default)
     }
 }
