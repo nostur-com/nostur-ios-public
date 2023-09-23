@@ -99,18 +99,56 @@ struct AnimatedNumberString: View {
     }
 }
 
+extension View {
+    
+    // This seems to work to stop views from flying around the screen
+    // Works better than .transaction { t in t.animation = nil }
+    func withoutAnimation() -> some View {
+        self.animation(nil, value: UUID())
+    }
+}
+
 struct AnimatedNumberPreviewContainer: View {
     
-    @State var number = 0
+    @State private var number = 0
+    @State private var visibleRed = false
     
     var body: some View {
-        VStack {
+        VStack(spacing: 10) {
+            if visibleRed {
+                Color.red
+                    .frame(width: 200, height: 300)
+//                    .transaction { t in t.animation = nil }
+            }
+            
             AnimatedNumber(number: number)
-            Button("+1") { number += 25 }
-                .buttonStyle(.borderedProminent)
-            .offset(y:10)
+                
+//                .transaction { t in t.animation = nil } // this breaks animation in child views
+            
+            
+                .withoutAnimation() // <-- this doesn't break animation in child views, and correctly stop this view from moving around the screen
+            
+                
+            
+            Group {
+                Button("+1") { number += 25 }
+//                    .transaction { t in t.animation = nil }
+                
+                Button("toggle red") {
+                    withAnimation {
+                        visibleRed.toggle()
+                    }
+                }
+//                .transaction { t in t.animation = nil }
+            }
+            .buttonStyle(.borderedProminent)
+            .transaction { t in t.animation = nil }
+//            .withoutAnimation()
+                
             Spacer()
         }
+//        .transaction { t in t.animation = nil } // <-- This breaks animation on the AnimatedNumber child view (Makes sense per docs, use only on leaf views, not containers)
+//        .withoutAnimation() // <-- This breaks animation on the AnimatedNumber child view (same as per docs)
     }
 }
 
@@ -118,6 +156,7 @@ struct AnimatedNumber_Previews: PreviewProvider {
     
     static var previews: some View {
         AnimatedNumberPreviewContainer()
+//            .withoutAnimation() <-- doesn't stop child views from flying around
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

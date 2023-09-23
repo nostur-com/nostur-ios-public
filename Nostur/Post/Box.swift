@@ -46,6 +46,7 @@ struct Box<Content: View>: View {
                 .onTapGesture {
                     navigate()
                 }
+                .withoutAnimation()
 //                .transaction { transaction in
 //                    transaction.animation = nil
 //                }
@@ -58,6 +59,7 @@ struct Box<Content: View>: View {
                 .onTapGesture {
                     
                 }
+                .withoutAnimation()
 //                .transaction { transaction in
 //                    transaction.animation = nil
 //                }
@@ -68,18 +70,20 @@ struct Box<Content: View>: View {
                 .background {
                     if kind == 30023 || ((nrPost?.kind ?? 0) == 6) && (nrPost?.firstQuote?.kind ?? 0) == 30023 {
                         theme.secondaryBackground
-                            .transaction { t in
-                                t.animation = nil
-                            }
+                            .withoutAnimation()
+//                            .transaction { t in
+//                                t.animation = nil
+//                            }
                             .onTapGesture {
                                 navigate()
                             }
                     }
                     else {
                         theme.background
-                            .transaction { t in
-                                t.animation = nil
-                            }
+                            .withoutAnimation()
+//                            .transaction { t in
+//                                t.animation = nil
+//                            }
                             .onTapGesture {
                                 navigate()
                             }

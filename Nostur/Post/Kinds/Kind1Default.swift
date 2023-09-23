@@ -66,9 +66,7 @@ struct Kind1Default: View {
                             }
                     }
                 }
-                .transaction { t in
-                    t.animation = nil
-                }
+                .withoutAnimation() // seems to fix flying PFPs
                 .onTapGesture {
                     withAnimation {
                         showMiniProfile = true
@@ -108,17 +106,23 @@ struct Kind1Default: View {
                 }
                 .frame(height: 21.0)
 //                .debugDimensions()
-                .transaction { t in
-                    t.animation = nil
-                }
+                .withoutAnimation()
+//                .transaction { t in
+//                    t.animation = nil
+//                }
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost)
+                        .withoutAnimation()
+//                        .transaction { t in
+//                            t.animation = nil
+//                        }
                 }
                 if let fileMetadata = nrPost.fileMetadata {
                     Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth)
-                        .transaction { transaction in
-                            transaction.animation = nil
-                        }
+                        .withoutAnimation()
+//                        .transaction { transaction in
+//                            transaction.animation = nil
+//                        }
                 }
                 else {
                     if (nrPost.kind != 1) && (nrPost.kind != 6) {
@@ -126,11 +130,19 @@ struct Kind1Default: View {
                             .hCentered()
                             .frame(maxWidth: .infinity)
                             .background(theme.lineColor.opacity(0.2))
+                            .withoutAnimation()
+//                            .transaction { t in
+//                                t.animation = nil
+//                            }
                     }
                     if let subject = nrPost.subject {
                         Text(subject)
                             .fontWeight(.bold)
                             .lineLimit(3)
+                            .withoutAnimation()
+//                            .transaction { t in
+//                                t.animation = nil
+//                            }
                     }
 
                     ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth)
@@ -139,11 +151,19 @@ struct Kind1Default: View {
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
                             .padding(.vertical, 5)
+                            .withoutAnimation()
                             .hCentered()
+//                            .transaction { t in
+//                                t.animation = nil
+//                            }
                     }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
                     FooterFragmentView(nrPost: nrPost)
+                        .withoutAnimation()
+//                        .transaction { t in
+//                            t.animation = nil
+//                        }
                 }
             }
         }
@@ -153,9 +173,10 @@ struct Kind1Default: View {
                     .frame(width: 2)
                     .opacity(0.2)
                     .offset(x: THREAD_LINE_OFFSET, y: 20)
-                    .transaction { t in
-                        t.animation = nil
-                    }
+                    .withoutAnimation()
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
             }
         }
     }

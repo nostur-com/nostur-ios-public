@@ -35,6 +35,7 @@ struct PostOrThread: View {
                 }
                 .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                 //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
+                .withoutAnimation()
 //                .transaction { t in
 //                    t.animation = nil
 //                }
@@ -47,6 +48,7 @@ struct PostOrThread: View {
 //                    }
             }
             .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
+            .withoutAnimation()
 //            .transaction { t in
 //                t.animation = nil
 //            }
@@ -54,21 +56,24 @@ struct PostOrThread: View {
         .background {
             if nrPost.kind == 30023 {
                 theme.secondaryBackground
-                    .transaction { t in
-                        t.animation = nil
-                    }
+                    .withoutAnimation()
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
             }
             else {
                 theme.background
-                    .transaction { t in
-                        t.animation = nil
-                    }
+                    .withoutAnimation()
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
             }
         } // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
         .padding(.top, 10)
         .background { // This is the background between PostOrThread's.
             theme.listBackground
-                .transaction { t in t.animation = nil }
+                .withoutAnimation()
+//                .transaction { t in t.animation = nil }
         }
     }
 }

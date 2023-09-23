@@ -55,11 +55,13 @@ struct EmbedById: View {
                             RoundedRectangle(cornerRadius: 15)
                                 .stroke(.regularMaterial, lineWidth: 1)
                         )
-    //                            .debugDimensions("EmbedById.ArticleView")
+//                        .transaction { t in t.animation = nil }
+//                        .debugDimensions("EmbedById.ArticleView")
                 }
                 else {
                     QuotedNoteFragmentView(nrPost: nrPost)
-    //                            .debugDimensions("EmbedById.QuotedNoteFragmentView")
+//                        .transaction { t in t.animation = nil }
+//                        .debugDimensions("EmbedById.QuotedNoteFragmentView")
                 }
             case .timeout:
                 Text("Unable to fetch content")

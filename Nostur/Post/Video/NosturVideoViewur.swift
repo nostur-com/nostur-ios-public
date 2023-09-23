@@ -139,7 +139,8 @@ struct NosturVideoViewur: View {
                             isPlaying = false
                         }
                     .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-                    .transaction { t in t.animation = nil }
+                    .withoutAnimation()
+//                    .transaction { t in t.animation = nil }
 #if DEBUG
 //                    .opacity(0.25)
 //                    .debugDimensions("videoShown")
@@ -206,7 +207,7 @@ struct NosturVideoViewur: View {
         .onDisappear {
             self.task?.cancel()
         }
-        .transaction { t in t.animation = nil }
+//        .transaction { t in t.animation = nil }
     }
     
     private func loadVideo() async {
