@@ -27,6 +27,9 @@ struct AppView: View {
         .merge(with: Just(Date()))
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         Group {
             if DataProvider.shared().databaseProblem {
                 VStack {

@@ -19,6 +19,9 @@ struct KindResolver: View {
     var grouped:Bool = false
     
     var body: some View {
+//        #if DEBUG
+//        let _ = Self._printChanges()
+//        #endif
         switch nrPost.kind {
         case 9802:
             Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, grouped: grouped)

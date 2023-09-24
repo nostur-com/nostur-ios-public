@@ -17,6 +17,9 @@ struct FeedSettings: View {
     @State private var needsReload = false
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         Rectangle().fill(.thinMaterial)
             .ignoresSafeArea()
             .onTapGesture {

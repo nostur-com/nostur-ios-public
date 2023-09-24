@@ -32,7 +32,9 @@ struct NoteRow: View {
     }
         
     var body: some View {
+//        #if DEBUG
 //        let _ = Self._printChanges()
+//        #endif
         if (nrPost.isRepost) {
             Repost(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped: grouped)
         }

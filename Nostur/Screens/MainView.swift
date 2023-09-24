@@ -23,7 +23,9 @@ struct MainView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     var body: some View {
-//        let _ = Self._printChanges()
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         NavigationStack(path: $navPath) {
             if let account = account {
                 FollowingAndExplore(account: account)

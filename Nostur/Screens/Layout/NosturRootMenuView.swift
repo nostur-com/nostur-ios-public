@@ -17,7 +17,9 @@ struct NosturRootMenu: View {
     @State private var sidebarOffset:CGFloat = -NOSTUR_SIDEBAR_WIDTH
     
     var body: some View {
-//        let _ = Self._printChanges()
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         NosturMainView()
             .environmentObject(sm)
             .onOpenURL { url in
