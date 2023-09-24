@@ -65,21 +65,40 @@ struct ProfileView: View {
                             
                             ToolbarItem(placement: .navigationBarTrailing) {
                                 VStack {
-                                    Button {
-                                        guard isFullAccount() else { showReadOnlyMessage(); return }
-                                        if (nrContact.following && !nrContact.privateFollow) {
-                                            nrContact.follow(privateFollow: true)
+                                    if pubkey == NRState.shared.activeAccountPublicKey {
+                                        Button {
+                                            guard let account = account() else { return }
+                                            guard isFullAccount(account) else { showReadOnlyMessage(); return }
+                                            editingAccount = account
+                                        } label: {
+                                            Text("Edit profile", comment: "Button to edit own profile")
                                         }
-                                        else if (nrContact.following && nrContact.privateFollow) {
-                                            nrContact.unfollow()
+                                        .buttonStyle(NosturButton())
+                                        .sheet(item: $editingAccount) { account in
+                                            NavigationStack {
+                                                AccountEditView(account: account)
+                                            }
+                                            .presentationBackground(theme.background)
                                         }
-                                        else {
-                                            nrContact.follow()
-                                        }
-                                    } label: {
-                                        FollowButton(isFollowing:nrContact.following, isPrivateFollowing:nrContact.privateFollow)
-                                    }
                                         .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
+                                    }
+                                    else {
+                                        Button {
+                                            guard isFullAccount() else { showReadOnlyMessage(); return }
+                                            if (nrContact.following && !nrContact.privateFollow) {
+                                                nrContact.follow(privateFollow: true)
+                                            }
+                                            else if (nrContact.following && nrContact.privateFollow) {
+                                                nrContact.unfollow()
+                                            }
+                                            else {
+                                                nrContact.follow()
+                                            }
+                                        } label: {
+                                            FollowButton(isFollowing:nrContact.following, isPrivateFollowing:nrContact.privateFollow)
+                                        }
+                                        .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
+                                    }
                                 }.frame(height: 40).clipped()
                                     .layoutPriority(2)
                             }
