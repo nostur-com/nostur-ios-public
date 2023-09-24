@@ -100,7 +100,7 @@ struct AppView: View {
         
         // Daily cleanup.
         if (firstTimeCompleted) {
-            Maintenance.maintenance(context: DataProvider.shared().container.newBackgroundContext())
+            Maintenance.maintenance(context: bg())
         }
         else {
             Importer.shared.preloadExistingIdsCache()
