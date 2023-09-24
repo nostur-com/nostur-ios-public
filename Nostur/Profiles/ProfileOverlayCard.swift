@@ -361,6 +361,7 @@ struct ProfileOverlayCard: View {
         }
         .task {
             let contactPubkey = contact.pubkey
+            // Note: can't use prio queue here, because if multiple relays respond and the first one has older data, SEEN will be incorrect.
             let reqTask = ReqTask(prefix: "SEEN-", reqCommand: { taskId in
                 req(RM.getLastSeen(pubkey: contactPubkey, subscriptionId: taskId))
             }, processResponseCommand: { taskId, _, _ in
