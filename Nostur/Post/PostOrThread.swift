@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct PostOrThread: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost: NRPost
-    @ObservedObject var postOrThreadAttributes: NRPost.PostOrThreadAttributes
-    var grouped = false
-    var rootId:String? = nil
-    @ObservedObject var settings:SettingsStore = .shared
+    @EnvironmentObject private var theme:Theme
+    private let nrPost: NRPost
+    @ObservedObject private var postOrThreadAttributes: NRPost.PostOrThreadAttributes
+    private var grouped = false
+    private var rootId:String? = nil
+    @ObservedObject private  var settings:SettingsStore = .shared
     
     init(nrPost: NRPost, grouped: Bool = false, rootId: String? = nil) {
         self.nrPost = nrPost

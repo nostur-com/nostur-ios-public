@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct PostRowDeletable: View {
-    let nrPost:NRPost // Need for .deletedById
-    @ObservedObject var postRowDeletableAttributes: NRPost.PostRowDeletableAttributes
-    var hideFooter = true // For rendering in NewReply
-    var missingReplyTo = false // For rendering in thread, hide "Replying to.."
-    var connect:ThreadConnectDirection? = nil
-    var fullWidth:Bool = false
-    var isReply:Bool = false // is reply on PostDetail (needs 2*10 less box width)
-    var isDetail:Bool = false
-    var grouped:Bool = false
+    private let nrPost:NRPost // Need for .deletedById
+    @ObservedObject private var postRowDeletableAttributes: NRPost.PostRowDeletableAttributes
+    private var hideFooter = true // For rendering in NewReply
+    private var missingReplyTo = false // For rendering in thread, hide "Replying to.."
+    private var connect:ThreadConnectDirection? = nil
+    private var fullWidth:Bool = false
+    private var isReply:Bool = false // is reply on PostDetail (needs 2*10 less box width)
+    private var isDetail:Bool = false
+    private var grouped:Bool = false
     
     init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost

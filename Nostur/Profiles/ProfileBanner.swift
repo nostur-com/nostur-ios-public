@@ -10,10 +10,10 @@ import NukeUI
 import Nuke
 
 struct ProfileBanner: View {
-    @EnvironmentObject var theme:Theme
-    var banner:String?
-    var width:CGFloat
-    let BANNER_HEIGHT = 150.0
+    @EnvironmentObject private var theme:Theme
+    public var banner:String?
+    public var width:CGFloat
+    public let BANNER_HEIGHT = 150.0
     
     var body: some View {
         #if DEBUG

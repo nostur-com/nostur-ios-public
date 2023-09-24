@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct FooterFragmentView: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
-    var isDetail = false
+    @EnvironmentObject private var theme:Theme
+    private let nrPost:NRPost
+    private var isDetail = false
     
     init(nrPost: NRPost, isDetail: Bool = false) {
         self.nrPost = nrPost

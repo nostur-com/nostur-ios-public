@@ -9,14 +9,14 @@ import SwiftUI
 
 struct KindResolver: View {
     
-    let nrPost:NRPost
-    var fullWidth:Bool = false
-    var hideFooter:Bool = false // For rendering in NewReply
-    var missingReplyTo:Bool = false // For rendering in thread
-    var isReply:Bool = false 
-    var isDetail:Bool = false
-    var connect:ThreadConnectDirection? = nil
-    var grouped:Bool = false
+    public let nrPost:NRPost
+    public var fullWidth:Bool = false
+    public var hideFooter:Bool = false // For rendering in NewReply
+    public var missingReplyTo:Bool = false // For rendering in thread
+    public var isReply:Bool = false
+    public var isDetail:Bool = false
+    public var connect:ThreadConnectDirection? = nil
+    public var grouped:Bool = false
     
     var body: some View {
 //        #if DEBUG
