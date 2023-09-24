@@ -393,7 +393,7 @@ class ReqTask: Identifiable, Hashable {
         if let prefix = prefix {
             return (prefix + id)
         }
-        return id
+        return ((prio ? "prio-" : "") + id)
     }
     
     private let reqCommand:(_ taskId:String) -> Void

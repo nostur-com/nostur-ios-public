@@ -40,7 +40,6 @@ class FetchVM<T: Equatable>: ObservableObject {
         let reqTask = ReqTask(
             prio: fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
-            prefix: (fetchParams.prio ?? false) ? "prio-" : "",
             reqCommand: { taskId in
                 self.state = .altLoading
                 altReq(taskId)
@@ -77,7 +76,6 @@ class FetchVM<T: Equatable>: ObservableObject {
         let reqTask = ReqTask(
             prio: fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
-            prefix: (fetchParams.prio ?? false) ? "prio-" : "",
             reqCommand: { taskId in
                 fetchParams.req(taskId)
             },
