@@ -1508,7 +1508,9 @@ extension LVM {
         #endif
         var newUnrenderedEvents:[Event]
         
-        newUnrenderedEvents = events
+        let filteredEvents = applyWoTifNeeded(events)
+        
+        newUnrenderedEvents = filteredEvents
             .filter(onlyRootOrReplyingToFollower)
             .map {
                 $0.parentEvents = Event.getParentEvents($0, fixRelations: true)
