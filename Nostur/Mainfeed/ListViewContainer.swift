@@ -8,11 +8,14 @@
 import SwiftUI
 
 struct ListViewContainer: View {
-    @EnvironmentObject var theme:Theme
-    @EnvironmentObject var dim:DIMENSIONS
-    @ObservedObject var vm:LVM
+    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var dim:DIMENSIONS
+    public let vm:LVM
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         SmoothList(lvm: vm, dim: dim, theme:theme)
             .overlay(alignment: .topTrailing) {
                 ListUnreadCounter(vm: vm)
@@ -20,10 +23,18 @@ struct ListViewContainer: View {
                     .padding(.top, 5)
             }
             .overlay {
-                if vm.state == .INIT || vm.nrPostLeafs.isEmpty {
-                    CenteredProgressView()
-                }
+                IsolatedLVMLoadingView(vm: vm)
             }
+    }
+}
+
+struct IsolatedLVMLoadingView: View {
+    @ObservedObject var vm:LVM
+    
+    var body: some View {
+        if vm.state == .INIT || vm.nrPostLeafs.isEmpty {
+            CenteredProgressView()
+        }
     }
 }
 

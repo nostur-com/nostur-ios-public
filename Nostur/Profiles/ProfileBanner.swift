@@ -13,12 +13,12 @@ struct ProfileBanner: View {
     @EnvironmentObject var theme:Theme
     var banner:String?
     var width:CGFloat
-    var offset:CGFloat
     let BANNER_HEIGHT = 150.0
     
     var body: some View {
         //        let _ = Self._printChanges()
         Group {
+        GeometryReader { geoBanner in
             if let banner {
                 if (banner.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                     LazyImage(url: URL(string: banner)) { state in
@@ -29,7 +29,7 @@ struct ProfileBanner: View {
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: width, height: BANNER_HEIGHT)
                                     .clipped()
-                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                                    .scaleEffect(1 + max(0, geoBanner.frame(in:.global).minY / BANNER_HEIGHT ), anchor: .bottom)
                             }
                             else if let image = state.image {
                                 image
@@ -37,7 +37,7 @@ struct ProfileBanner: View {
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: width, height: BANNER_HEIGHT)
                                     .clipped()
-                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                                    .scaleEffect(1 + max(0, geoBanner.frame(in:.global).minY / BANNER_HEIGHT ), anchor: .bottom)
                             }
                             else {
                                 HStack {
@@ -47,7 +47,7 @@ struct ProfileBanner: View {
                                         endPoint: .top
                                     )
                                     .frame(width: width, height: BANNER_HEIGHT)
-                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                                    .scaleEffect(1 + max(0, geoBanner.frame(in:.global).minY / BANNER_HEIGHT ), anchor: .bottom)
                                 }
                             }
                         }
@@ -59,7 +59,7 @@ struct ProfileBanner: View {
                                     endPoint: .top
                                 )
                                 .frame(width: width, height: BANNER_HEIGHT)
-                                .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                                .scaleEffect(1 + max(0, geoBanner.frame(in:.global).minY / BANNER_HEIGHT ), anchor: .bottom)
                             }
                         }
                     }
@@ -74,7 +74,7 @@ struct ProfileBanner: View {
                                 .scaledToFill()
                                 .frame(width:width, height: BANNER_HEIGHT)
                                 .clipped()
-                                .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                                .scaleEffect(1 + max(0, geoBanner.frame(in:.global).minY / BANNER_HEIGHT ), anchor: .bottom)
                         }
                         else {
                             HStack {
@@ -102,7 +102,8 @@ struct ProfileBanner: View {
                 }
             }
         }
-        .ignoresSafeArea(edges: .top)
+            .frame(height: BANNER_HEIGHT)
+            .ignoresSafeArea(edges: .top)
     }
 }
 
@@ -113,7 +114,7 @@ struct ProfileBanner_Previews: PreviewProvider {
         }) {
             NavigationStack {
                 if let contact = PreviewFetcher.fetchContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
-                    ProfileBanner(banner:contact.banner, width: UIScreen.main.bounds.width, offset: 0)
+                    ProfileBanner(banner:contact.banner, width: UIScreen.main.bounds.width)
                 }
             }
         }
