@@ -309,6 +309,7 @@ class Backlog {
                     bg().perform {
                         if let task = self.task(with: importedPrioNotification.subscriptionId) {
                             task.processResponseCommand(importedPrioNotification.subscriptionId, nil, importedPrioNotification.event)
+                            self.remove(task)
                         }
                     }
                 })
@@ -391,7 +392,7 @@ class ReqTask: Identifiable, Hashable {
     public let id:String
     public var subscriptionId:String {
         if let prefix = prefix {
-            return (prefix + id)
+            return ((prio ? "prio-" : "") + prefix + id)
         }
         return ((prio ? "prio-" : "") + id)
     }
@@ -400,6 +401,9 @@ class ReqTask: Identifiable, Hashable {
     public let processResponseCommand:(_: String, _:RelayMessage?, _:Event?) -> Void
     private let timeoutCommand:((_ taskId:String) -> Void)?
     private var didProcess = false
+    
+    // Only use for fetching specific ids. different relays can return different events
+    // prio will return the first received, this is wrong if we need for example the most recent event .
     private var prio = false
     
     // Use full subscriptionId instead of prefix to have multiple listeners for a task

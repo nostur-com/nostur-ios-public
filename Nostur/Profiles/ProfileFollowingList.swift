@@ -26,7 +26,7 @@ struct ProfileFollowingList: View {
                 .frame(maxWidth:.infinity, alignment: .center)
                 .onAppear {
                     vm.setFetchParams((
-                        prio: false, // TODO: can we use prio here? not sure if properly replaced, should check
+                        prio: false, // Can't use prio, different relays can send different event and we need most recent.
                         req: { _ in
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
