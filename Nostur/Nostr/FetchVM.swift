@@ -10,7 +10,7 @@ import SwiftUI
 // Generic reusable fetcher
 class FetchVM<T: Equatable>: ObservableObject {
     
-    public typealias FetchParams = (req: () -> Void, onComplete: (RelayMessage?) -> Void, altReq: (() -> Void)?)
+    public typealias FetchParams = (prio:Bool?, req: (String?) -> Void, onComplete: (RelayMessage?, Event?) -> Void, altReq: ((String?) -> Void)?)
     
     @Published var state:State
     private let backlog:Backlog
@@ -38,19 +38,21 @@ class FetchVM<T: Equatable>: ObservableObject {
         guard let fetchParams = self.fetchParams else { L.og.error("🔴🔴 FetchVM: missing fetchParams"); return }
         guard let altReq = fetchParams.altReq else { L.og.error("🔴🔴 FetchVM: missing fetchParams.altReq"); return }
         let reqTask = ReqTask(
+            prio: fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
+            prefix: (fetchParams.prio ?? false) ? "prio-" : "",
             reqCommand: { taskId in
                 self.state = .altLoading
-                altReq()
+                altReq(taskId)
             },
-            processResponseCommand: { taskId, relayMessage in
+            processResponseCommand: { taskId, relayMessage, event in
                 L.og.info("FetchVM: ready to process relay response")
-                fetchParams.onComplete(relayMessage)
+                fetchParams.onComplete(relayMessage, event)
                 self.backlog.clear()
             },
             timeoutCommand: { taskId in
-                L.og.info("FetchVM: timeout ")
-                fetchParams.onComplete(nil)
+                L.og.info("FetchVM: timeout")
+                fetchParams.onComplete(nil, nil)
                 self.backlog.clear()
             })
 
@@ -73,18 +75,20 @@ class FetchVM<T: Equatable>: ObservableObject {
     public func fetch() {
         guard let fetchParams = self.fetchParams else { L.og.error("🔴🔴 FetchVM: missing fetchParams"); return }
         let reqTask = ReqTask(
+            prio: fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
+            prefix: (fetchParams.prio ?? false) ? "prio-" : "",
             reqCommand: { taskId in
-                fetchParams.req()
+                fetchParams.req(taskId)
             },
-            processResponseCommand: { taskId, relayMessage in
+            processResponseCommand: { taskId, relayMessage, event in
                 L.og.info("FetchVM: ready to process relay response")
-                fetchParams.onComplete(relayMessage)
+                fetchParams.onComplete(relayMessage, event)
                 self.backlog.clear()
             },
             timeoutCommand: { taskId in
-                L.og.info("FetchVM: timeout ")
-                fetchParams.onComplete(nil)
+                L.og.info("FetchVM: timeout")
+                fetchParams.onComplete(nil, nil)
                 self.backlog.clear()
             })
 

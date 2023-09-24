@@ -32,6 +32,7 @@ class MessageParser {
     private var context = DataProvider.shared().bg
     private var sp = SocketPool.shared
     public var messageBucket = Deque<RelayMessage>()
+    public var priorityBucket = Deque<RelayMessage>()
     public var isSignatureVerificationEnabled = true
     
     init() {
@@ -164,20 +165,37 @@ class MessageParser {
                             return
                         }
                         
-                        
-                        let sameMessageInQueue = self.messageBucket.first(where: { // TODO: Instruments: slow here...
-                             nEvent.id == $0.event?.id && $0.type == .EVENT
-                        })
-                        
-                        if let sameMessageInQueue {
-                            sameMessageInQueue.relays = sameMessageInQueue.relays + " " + message.relays
-                            return
+                        if let subscriptionId = message.subscriptionId, subscriptionId.prefix(5) == "prio-" {
+                            let sameMessageInQueue = self.priorityBucket.first(where: { // TODO: Instruments: slow here...
+                                 nEvent.id == $0.event?.id && $0.type == .EVENT
+                            })
+                            
+                            if let sameMessageInQueue {
+                                sameMessageInQueue.relays = sameMessageInQueue.relays + " " + message.relays
+                                return
+                            }
+                            else {
+                                self.priorityBucket.append(message)
+                                guard let event = message.event else { return }
+                                updateEventCache(event.id, status: .PARSED, relays: relayUrl)
+                                Importer.shared.addedPrioRelayMessage.send()
+                            }
                         }
                         else {
-                            self.messageBucket.append(message)
-                            guard let event = message.event else { return }
-                            updateEventCache(event.id, status: .PARSED, relays: relayUrl)
-                            Importer.shared.addedRelayMessage.send()
+                            let sameMessageInQueue = self.messageBucket.first(where: { // TODO: Instruments: slow here...
+                                 nEvent.id == $0.event?.id && $0.type == .EVENT
+                            })
+                            
+                            if let sameMessageInQueue {
+                                sameMessageInQueue.relays = sameMessageInQueue.relays + " " + message.relays
+                                return
+                            }
+                            else {
+                                self.messageBucket.append(message)
+                                guard let event = message.event else { return }
+                                updateEventCache(event.id, status: .PARSED, relays: relayUrl)
+                                Importer.shared.addedRelayMessage.send()
+                            }
                         }
                     }
                 }
