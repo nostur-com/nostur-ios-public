@@ -23,7 +23,7 @@ struct SideBar: View {
     var body: some View {
 //        let _ = Self._printChanges()
         VStack(alignment: .leading) {
-            ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH, offset: 0)
+            ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH)
                 .overlay(alignment: .bottomLeading, content: {
                     PFP(pubkey: account.publicKey, account: account, size: 75)
                         .equatable()

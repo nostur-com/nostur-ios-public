@@ -108,7 +108,7 @@ struct ProfileView: View {
                 Section {
                     VStack {
                         GeometryReader { geoBanner in
-                            ProfileBanner(banner: nrContact.banner, width: dim.listWidth, offset: geoBanner.frame(in:.global).minY)
+                            ProfileBanner(banner: nrContact.banner, width: dim.listWidth)
                                 .overlay(alignment: .bottomLeading, content: {
                                     PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
                                         .overlay(
