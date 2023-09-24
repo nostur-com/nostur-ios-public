@@ -10,8 +10,8 @@ import Nuke
 import NukeUI
 
 struct ProfileView: View {
-    let pubkey:String
-    var tab:String?
+    private let pubkey:String
+    private var tab:String?
     
     @EnvironmentObject private var theme:Theme
     @EnvironmentObject private var dim:DIMENSIONS
@@ -24,17 +24,15 @@ struct ProfileView: View {
     @State private var lastSeen:String? = nil
     @State private var isFollowingYou = false
     @State private var editingAccount:Account?
+    @State var similarPFP = false
     
     init(nrContact:NRContact, tab:String? = nil) {
-//        UIScrollView.appearance().bounces = false
         self.nrContact = nrContact
         self.pubkey = nrContact.pubkey
         self.tab = tab
     }
     
-    @State var similarPFP = false
-    
-    var couldBeImposter:Bool {
+    private var couldBeImposter:Bool {
         guard let account = account() else { return false }
         guard account.publicKey != nrContact.pubkey else { return false }
         guard !nrContact.following else { return false }
