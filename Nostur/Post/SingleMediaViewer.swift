@@ -135,7 +135,7 @@ struct SingleMediaViewer: View {
 //                            .interpolation(.none)
                             .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
                             .scaledToFit()
-//                            .frame(maxHeight: theHeight)
+                            .frame(minHeight: 100, maxHeight: theHeight)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
@@ -166,7 +166,7 @@ struct SingleMediaViewer: View {
                             }
                     }
                     .centered()
-//                    .frame(height: theHeight)
+                    .frame(minHeight: 100, maxHeight: theHeight)
 //                    .background(Color.red)
                     .withoutAnimation()
 #if DEBUG
@@ -177,7 +177,8 @@ struct SingleMediaViewer: View {
                 else {
                     Color(.secondarySystemBackground)
 //                        .frame(height: theHeight)
-                        .background(Color.white)
+                        .frame(minHeight: 100, maxHeight: theHeight)
+//                        .background(Color.white)
                         .withoutAnimation()
                 }
             }
