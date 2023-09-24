@@ -145,7 +145,7 @@ class NewOnboardingTracker {
 
                 req(RM.getUserMetadataAndContactList(pubkey: pubkey, subscriptionId: taskId))
             },
-            processResponseCommand: { [weak self] (taskId, _) in
+            processResponseCommand: { [weak self] (taskId, _, _) in
                 guard let self = self else { return }
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.processResponseCommand()")
                 self.bg.perform { [weak self] in
@@ -250,7 +250,7 @@ class NewOnboardingTracker {
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.reqCommand()")
                 req(RM.getUserMetadata(pubkeys: pTags, subscriptionId: taskId))
             },
-            processResponseCommand: { [weak self] (taskId, _) in
+            processResponseCommand: { [weak self] (taskId, _, _) in
                 guard let self = self else { return }
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.processResponseCommand()")
                 self.fetchedProfilesOfFollowersTask = true

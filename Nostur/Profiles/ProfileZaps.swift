@@ -107,7 +107,7 @@ struct ProfileZaps: View {
                 reqCommand: { (taskId) in
                     req(RM.getAuthorZaps(pubkey: pubkey, since: NTimestamp(date: ago), subscriptionId: taskId))
                 },
-                processResponseCommand: { (taskId, _) in
+                processResponseCommand: { (taskId, _, _) in
                     self.loadZaps()
                 },
                 timeoutCommand: { (taskId) in
@@ -138,7 +138,7 @@ struct ProfileZaps: View {
             reqCommand: { (taskId) in
                 req(RM.getAuthorZaps(pubkey: pubkey, since: NTimestamp(date: ago), subscriptionId: taskId))
             },
-            processResponseCommand: { (taskId, _) in
+            processResponseCommand: { (taskId, _, _) in
                 self.loadZaps()
             },
             timeoutCommand: { (taskId) in
@@ -157,7 +157,7 @@ struct ProfileZaps: View {
             reqCommand: { (taskId) in
                 req(RM.getAuthorZaps(pubkey: pubkey, since: NTimestamp(date: ago), subscriptionId: taskId))
             },
-            processResponseCommand: { (taskId, _) in
+            processResponseCommand: { (taskId, _, _) in
                 self.loadZaps()
             },
             timeoutCommand: { (taskId) in

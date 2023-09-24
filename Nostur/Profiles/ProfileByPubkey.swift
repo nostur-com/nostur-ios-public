@@ -23,7 +23,8 @@ struct ProfileByPubkey: View {
                 .frame(alignment: .center)
                 .onAppear {
                     vm.setFetchParams((
-                        req: {
+                        prio: false,
+                        req: { _ in
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
                                     let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))
@@ -32,7 +33,7 @@ struct ProfileByPubkey: View {
                                 else { req(RM.getUserMetadata(pubkey: pubkey)) } // 2B. FETCH IF WE DONT HAVE
                             }
                         }, 
-                        onComplete: { relayMessage in
+                        onComplete: { relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
                                     let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))

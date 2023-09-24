@@ -138,7 +138,7 @@ class WebOfTrust: ObservableObject {
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Fetching contact list for \(pubkey)")
                 req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
             },
-            processResponseCommand: { [weak self] taskId, _ in
+            processResponseCommand: { [weak self] taskId, _, _ in
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Received contact list")
                 self?.regenerateWoTWithFollowsOf(pubkey)
             },
@@ -228,7 +228,7 @@ class WebOfTrust: ObservableObject {
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Fetching contact lists for \(pubkeys.count) contacts")
                 req(RM.getAuthorContactsLists(pubkeys: Array(pubkeys), subscriptionId: taskId))
             },
-            processResponseCommand: { [weak self] taskId, _ in
+            processResponseCommand: { [weak self] taskId, _, _ in
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Received contact list(s)")
                 self?.generateWoT()
             },

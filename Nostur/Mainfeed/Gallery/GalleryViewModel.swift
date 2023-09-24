@@ -111,7 +111,7 @@ class GalleryViewModel: ObservableObject {
                     onComplete?()
                 }
             },
-            processResponseCommand: { taskId, relayMessage in
+            processResponseCommand: { taskId, relayMessage, _ in
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
 
@@ -219,7 +219,7 @@ class GalleryViewModel: ObservableObject {
                         L.og.error("Gallery feed: Problem generating posts request")
                     }
                 },
-                processResponseCommand: { taskId, relayMessage in
+                processResponseCommand: { taskId, relayMessage, _ in
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
                     L.og.info("Gallery feed: ready to process relay response")

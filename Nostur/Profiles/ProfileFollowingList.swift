@@ -26,7 +26,8 @@ struct ProfileFollowingList: View {
                 .frame(maxWidth:.infinity, alignment: .center)
                 .onAppear {
                     vm.setFetchParams((
-                        req: {
+                        prio: false, // TODO: can we use prio here? not sure if properly replaced, should check
+                        req: { _ in
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     
@@ -41,7 +42,7 @@ struct ProfileFollowingList: View {
                                 else { req(RM.getAuthorContactsList(pubkey: pubkey)) }
                             }
                         }, 
-                        onComplete: { relayMessage in
+                        onComplete: { relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     let silentFollows = clEvent.pubkey == account()?.publicKey

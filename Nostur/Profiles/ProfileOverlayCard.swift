@@ -43,7 +43,7 @@ struct ProfileOverlayCardContainer: View {
                                     reqCommand: { taskId in
                                         req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId))
                                     },
-                                    processResponseCommand: { taskId, _ in
+                                    processResponseCommand: { taskId, _, _ in
                                         DataProvider.shared().bg.perform {
                                             if let bgContact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().bg) {
                                                 let nrContact = NRContact(contact: bgContact, following: isFollowing(pubkey))
@@ -296,7 +296,7 @@ struct ProfileOverlayCard: View {
                     reqCommand: { (taskId) in
                         req(RM.getUserProfileKinds(pubkey: contact.pubkey, subscriptionId: taskId, kinds: [0,3]))
                     },
-                    processResponseCommand: { (taskId, _) in
+                    processResponseCommand: { (taskId, _, _) in
                         bg().perform {
                             if (contact.followsYou()) {
                                 DispatchQueue.main.async {
@@ -363,7 +363,7 @@ struct ProfileOverlayCard: View {
             let contactPubkey = contact.pubkey
             let reqTask = ReqTask(prefix: "SEEN-", reqCommand: { taskId in
                 req(RM.getLastSeen(pubkey: contactPubkey, subscriptionId: taskId))
-            }, processResponseCommand: { taskId, _ in
+            }, processResponseCommand: { taskId, _, _ in
                 DataProvider.shared().bg.perform {
                     if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: DataProvider.shared().bg) {
                         let agoString = last.date.agoString
