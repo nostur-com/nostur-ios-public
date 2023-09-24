@@ -23,6 +23,9 @@ struct PostOrThread: View {
     }
     
     var body: some View {
+//        #if DEBUG
+//        let _ = Self._printChanges()
+//        #endif
         VStack(spacing: 10) {
             ForEach(postOrThreadAttributes.parentPosts) { nrParent in
                 Box(nrPost: nrParent) {

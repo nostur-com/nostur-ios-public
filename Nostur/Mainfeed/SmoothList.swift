@@ -461,6 +461,7 @@ struct SmoothList: UIViewControllerRepresentable {
         public var PostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, NRPost> = {
             .init { cell, indexPath, nrPost in
                 cell.contentConfiguration = UIHostingConfiguration {
+                    // TODO: Find out how we can actually reuse this view to make the scrolling really smooth
                     PostOrThread(nrPost: nrPost)
                 }
                 .margins(.all, 0)

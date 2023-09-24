@@ -20,7 +20,9 @@ struct NosturTabsView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     var body: some View {
-//        let _ = Self._printChanges()
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         HStack {
             VStack {
                 Color.clear.frame(height: 0)

@@ -21,7 +21,9 @@ struct SideBar: View {
     @State private var showAnySigner = false
     
     var body: some View {
-//        let _ = Self._printChanges()
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         VStack(alignment: .leading) {
             ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH)
                 .overlay(alignment: .bottomLeading, content: {

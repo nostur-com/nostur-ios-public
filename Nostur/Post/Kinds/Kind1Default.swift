@@ -51,7 +51,9 @@ struct Kind1Default: View {
     @State var showMiniProfile = false
     
     var body: some View {
+//        #if DEBUG
 //        let _ = Self._printChanges()
+//        #endif
         HStack(alignment: .top, spacing: 10) {
             ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)

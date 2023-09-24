@@ -53,7 +53,9 @@ struct FollowingAndExplore: View {
     @State var showFeedSettings = false
     
     var body: some View {
-        //        let _ = Self._printChanges()
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         VStack(spacing:0) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing:0) {

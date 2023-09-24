@@ -27,6 +27,9 @@ struct SingleMediaViewer: View {
     @State var isPlaying = false
 
     var body: some View {
+//        #if DEBUG
+//        let _ = Self._printChanges()
+//        #endif
         if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
             VStack {
                 Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")

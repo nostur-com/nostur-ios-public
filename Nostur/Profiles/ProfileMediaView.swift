@@ -19,6 +19,9 @@ struct ProfileMediaView: View {
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: initialColumns)
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         VStack(spacing: 0) {
             switch vm.state {
             case .initializing, .loading:
