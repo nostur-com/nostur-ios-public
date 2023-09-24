@@ -166,7 +166,7 @@ class MessageParser {
                         }
                         
                         if let subscriptionId = message.subscriptionId, subscriptionId.prefix(5) == "prio-" {
-                            let sameMessageInQueue = self.priorityBucket.first(where: { // TODO: Instruments: slow here...
+                            let sameMessageInQueue = self.priorityBucket.first(where: { 
                                  nEvent.id == $0.event?.id && $0.type == .EVENT
                             })
                             
