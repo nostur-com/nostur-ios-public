@@ -21,18 +21,22 @@ struct EmbedById: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .task {
                         vm.setFetchParams((
-                            req: {
+                            prio: true,
+                            req: { taskId in
                                 bg().perform {
                                     if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
                                         vm.ready(NRPost(event: event, withFooter: false))
                                     }
                                     else {
-                                        req(RM.getEvent(id: self.id))
+                                        req(RM.getEvent(id: self.id, subscriptionId: taskId))
                                     }
                                 }
                             },
-                            onComplete: { relayMessage in
-                                if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
+                            onComplete: { relayMessage, event in
+                                if let event = event {
+                                    vm.ready(NRPost(event: event, withFooter: false))
+                                }
+                                else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
                                     vm.ready(NRPost(event: event, withFooter: false))
                                 }
                                 else {

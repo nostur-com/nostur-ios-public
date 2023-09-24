@@ -35,13 +35,21 @@ struct ArticleById: View {
                             }
                             else {
                                 let reqTask = ReqTask(
+                                    prio: true,
                                     prefix: "ARTICLE-",
                                     reqCommand: { taskId in
                                         req(RM.getEvent(id: id, subscriptionId: taskId))
                                     },
-                                    processResponseCommand: { taskId, _ in
+                                    processResponseCommand: { taskId, _, article in
                                         DataProvider.shared().bg.perform {
-                                            if let article = try? Event.fetchEvent(id: id, context: DataProvider.shared().bg) {
+                                            if let article = article {
+                                                let article = NRPost(event: article)
+                                                DispatchQueue.main.async {
+                                                    self.article = article
+                                                }
+                                                backlog.clear()
+                                            }
+                                            else if let article = try? Event.fetchEvent(id: id, context: DataProvider.shared().bg) {
                                                 let article = NRPost(event: article)
                                                 DispatchQueue.main.async {
                                                     self.article = article
