@@ -201,6 +201,9 @@ extension Notification.Name {
     
     static var importedMessagesFromSubscriptionIds: Notification.Name {
         return Notification.Name("importedMessagesFromSubscriptionIds")
+    }    
+    static var importedPrioMessage: Notification.Name {
+        return Notification.Name("importedPrioMessage")
     }
     
     static var receivedMessage: Notification.Name {

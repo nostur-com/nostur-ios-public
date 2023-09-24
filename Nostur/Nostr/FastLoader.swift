@@ -263,6 +263,12 @@ struct ImportedNotification {
     let subscriptionIds:Set<String>
 }
 
+struct ImportedPrioNotification {
+    let id = UUID()
+    let subscriptionId:String
+    let event:Event
+}
+
 class Backlog {
     
     private var tasks = Set<ReqTask>()
@@ -291,6 +297,18 @@ class Backlog {
                         let reqTasks = self.tasks(with: importedNotification.subscriptionIds)
                         for task in reqTasks {
                             task.process()
+                        }
+                    }
+                })
+                .store(in: &subscriptions)
+            
+            receiveNotification(.importedPrioMessage)
+                .sink(receiveValue: { [weak self] notification in
+                    guard let self = self else { return }
+                    let importedPrioNotification = notification.object as! ImportedPrioNotification
+                    bg().perform {
+                        if let task = self.task(with: importedPrioNotification.subscriptionId) {
+                            task.processResponseCommand(importedPrioNotification.subscriptionId, nil, importedPrioNotification.event)
                         }
                     }
                 })
@@ -339,9 +357,14 @@ class Backlog {
         }
     }
     
-//    public func task(with subscriptionId:String) -> ReqTask? {
-//        tasks.first(where: { $0.subscriptionId == subscriptionId })
-//    }
+    public func task(with subscriptionId:String) -> ReqTask? {
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
+        return tasks.first(where: { $0.subscriptionId == subscriptionId })
+    }
     
     public func tasks(with subscriptionIds:Set<String>) -> [ReqTask] {
         #if DEBUG
@@ -374,25 +397,35 @@ class ReqTask: Identifiable, Hashable {
     }
     
     private let reqCommand:(_ taskId:String) -> Void
+    public let processResponseCommand:(_: String, _:RelayMessage?, _:Event?) -> Void
     private let timeoutCommand:((_ taskId:String) -> Void)?
     private var didProcess = false
+    private var prio = false
     
     // Use full subscriptionId instead of prefix to have multiple listeners for a task
     // eg. Onboarding + InstantFeed, both having a task with exact subscriptionId: "pubkey-3"
     // So both can listen for "pubkey-3" notifications. (make sure prefix is nil, and subscriptionId is set on ReqTask
-    init(debounceTime:Double = 0.1, prefix:String? = nil, subscriptionId:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String, _:RelayMessage?) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
+    init(prio:Bool = false, debounceTime:Double = 0.1, prefix:String? = nil,
+         subscriptionId:String? = nil,
+         reqCommand: @escaping (_: String) -> Void,
+         processResponseCommand: @escaping (_: String, _:RelayMessage?, _:Event?) -> Void,
+         timeoutCommand: ( (_: String) -> Void)? = nil) {
+        self.prio = prio
         self.prefix = prefix
         self.id = subscriptionId ?? UUID().uuidString
         self.reqCommand = reqCommand
+        self.processResponseCommand = processResponseCommand
         self.timeoutCommand = timeoutCommand
+        
+        guard !prio else { return }
+        
         processSubject
             .debounce(for: .seconds(debounceTime), scheduler: DispatchQueue.main)
-//            .debounce(for: RunLoop.SchedulerTimeType.Stride(debounceTime), scheduler: RunLoop.main)
             .sink { [weak self] message in
                 guard let self = self else { return }
                 guard !didProcess else { return }
                 didProcess = true
-                processResponseCommand(self.subscriptionId, message)
+                processResponseCommand(self.subscriptionId, message, nil)
             }
             .store(in: &subscriptions)
     }
