@@ -173,7 +173,7 @@ struct NotificationsPosts: View {
                     since: NTimestamp(timestamp: Int(fl.nrPosts.first?.created_at ?? 0))
                 ))
             },
-            processResponseCommand: { (taskId, _) in
+            processResponseCommand: { (taskId, _, _) in
                 let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
@@ -230,7 +230,7 @@ struct NotificationsPosts: View {
                     until: NTimestamp(timestamp: Int(fl.nrPosts.last?.created_at ?? Int64(Date.now.timeIntervalSince1970)))
                 ))
             },
-            processResponseCommand: { (taskId, _) in
+            processResponseCommand: { (taskId, _, _) in
                 fl.predicate = NSPredicate(
                     format: "NOT pubkey IN %@ AND kind IN {1,6} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
                     (account.blockedPubkeys_ + [account.publicKey]),

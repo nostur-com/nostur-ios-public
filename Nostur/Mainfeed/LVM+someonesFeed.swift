@@ -31,7 +31,7 @@ extension LVM {
         let getContactListTask = ReqTask(subscriptionId: "RM.getAuthorContactsList-other") { taskId in
             L.og.notice("🟪 Fetching clEvent from relays")
             reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
-        } processResponseCommand: { taskId, _ in
+        } processResponseCommand: { taskId, _, _ in
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
                 L.og.notice("🟪 Processing clEvent response from relays")
@@ -67,7 +67,7 @@ extension LVM {
         let getFollowingEventsTask = ReqTask(prefix: "GFETOTHER-") { taskId in
             L.og.notice("🟪 Fetching posts from relays using \(self.pubkeys.count) pubkeys")
             reqP(RM.getFollowingEvents(pubkeys: Array(self.pubkeys), limit: 400, subscriptionId: taskId))
-        } processResponseCommand: { taskId, _ in
+        } processResponseCommand: { taskId, _, _  in
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
                 let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)

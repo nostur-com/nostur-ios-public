@@ -18,7 +18,8 @@ struct ProfileFollowingCount: View {
             Text("\(Image(systemName: "hourglass.circle.fill")) Following", comment: "Label for Following count")
                 .onAppear {
                     vm.setFetchParams((
-                        req: {
+                        prio: false,
+                        req: { _ in // TODO: can we use prio here? not sure if properly replaced, should check
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     vm.ready(clEvent.pTags().count)
@@ -26,7 +27,7 @@ struct ProfileFollowingCount: View {
                                 else { req(RM.getAuthorContactsList(pubkey: pubkey)) }
                             }
                         }, 
-                        onComplete: { relayMessage in
+                        onComplete: { relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     vm.ready(clEvent.pTags().count)

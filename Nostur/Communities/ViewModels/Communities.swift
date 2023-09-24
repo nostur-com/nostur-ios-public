@@ -25,7 +25,7 @@ class Communities: ObservableObject {
                 guard let self = self else { return }
                 req(RM.getCommunities(subscriptionId: taskId, since: NTimestamp(timestamp: self.mostRecentCreatedAt)))
             },
-            processResponseCommand: { [weak self] taskId, _ in
+            processResponseCommand: { [weak self] taskId, _, _ in
                 guard let self = self else { return }
                 self.bg.perform { [weak self] in
                     guard let self = self else { return }

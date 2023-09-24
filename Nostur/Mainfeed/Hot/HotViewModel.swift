@@ -116,7 +116,7 @@ class HotViewModel: ObservableObject {
                     L.og.error("Hot feed: Problem generating request")
                 }
             },
-            processResponseCommand: { taskId, relayMessage in
+            processResponseCommand: { taskId, relayMessage, _ in
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
 
@@ -224,7 +224,7 @@ class HotViewModel: ObservableObject {
                         L.og.error("Hot feed: Problem generating posts request")
                     }
                 },
-                processResponseCommand: { taskId, relayMessage in
+                processResponseCommand: { taskId, relayMessage, _ in
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
                     L.og.info("Hot feed: ready to process relay response")

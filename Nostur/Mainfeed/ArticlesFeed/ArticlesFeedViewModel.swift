@@ -168,7 +168,7 @@ class ArticlesFeedViewModel: ObservableObject {
                     L.og.error("Article feed: Problem generating request")
                 }
             },
-            processResponseCommand: { taskId, relayMessage in
+            processResponseCommand: { taskId, relayMessage, _ in
                 self.fetchFromDB(onComplete)
                 self.backlog.clear()
                 L.og.info("Article feed: ready to process relay response")

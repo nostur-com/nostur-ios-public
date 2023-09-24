@@ -21,7 +21,8 @@ struct ProfileCardByPubkey: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .task {
                         vm.setFetchParams((
-                            req: {
+                            prio: false,
+                            req: { _ in
                                 if let contact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().viewContext) { // 1. CHECK LOCAL DB
                                     vm.ready(contact)
                                 }
@@ -29,7 +30,7 @@ struct ProfileCardByPubkey: View {
                                     req(RM.getUserMetadata(pubkey: pubkey))
                                 }
                             },
-                            onComplete: { relayMessage in
+                            onComplete: { relayMessage, _ in // TODO: Should make compatible with Contact also instead of just Event
                                 DispatchQueue.main.async {
                                     if let contact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().viewContext) { // 3. WE FOUND IT ON RELAY
                                         vm.ready(contact)

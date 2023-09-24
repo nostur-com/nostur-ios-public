@@ -64,7 +64,7 @@ class ProfileGalleryViewModel: ObservableObject {
                     L.og.error("Gallery feed: Problem generating request")
                 }
             },
-            processResponseCommand: { taskId, relayMessage in
+            processResponseCommand: { taskId, relayMessage, _ in
                 self.backlog.clear()
                 self.fetchPostsFromDB(onComplete)
 

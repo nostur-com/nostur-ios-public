@@ -132,7 +132,7 @@ extension Search {
                     reqCommand: { taskId in
                         req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId))
                     },
-                    processResponseCommand: { taskId, _ in
+                    processResponseCommand: { taskId, _, _ in
                         bg().perform {
                             if let article = Event.fetchReplacableEvent(
                                     kind,
@@ -208,7 +208,7 @@ extension Search {
             
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
             req(RM.getEvent(id: noteHex, subscriptionId: taskId))
-        }, processResponseCommand: { taskId, _ in
+        }, processResponseCommand: { taskId, _, _ in
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "id = %@", noteHex)
             fr.fetchLimit = 1
@@ -288,7 +288,7 @@ extension Search {
             if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
                 req(message)
             }
-        }, processResponseCommand: { taskId, _ in
+        }, processResponseCommand: { taskId, _, _ in
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "kind == 1 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(term))
             fr.fetchLimit = 150
@@ -328,7 +328,7 @@ extension Search {
             
             let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
                 req(RM.getEvent(id: key.hexString, subscriptionId: taskId))
-            }, processResponseCommand: { taskId, _ in
+            }, processResponseCommand: { taskId, _, _ in
                 let fr = Event.fetchRequest()
                 fr.predicate = NSPredicate(format: "id = %@", key.hexString)
                 fr.fetchLimit = 1
@@ -370,7 +370,7 @@ extension Search {
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
             req(RM.getEvent(id: term, subscriptionId: taskId))
-        }, processResponseCommand: { taskId, _ in
+        }, processResponseCommand: { taskId, _, _ in
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "id = %@", term)
             fr.fetchLimit = 1
