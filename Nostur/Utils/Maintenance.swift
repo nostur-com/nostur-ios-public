@@ -244,7 +244,7 @@ struct Maintenance {
             // otherPubkey NOT IN OWN ACCOUNTS
             //            context.perform {
             let fr9735 = Event.fetchRequest()
-            fr9735.predicate = NSPredicate(format: "created_at < %i AND kind == 9735 AND NOT otherPubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
+            fr9735.predicate = NSPredicate(format: "created_at < %i AND kind == 9735 AND (otherPubkey == nil OR NOT otherPubkey IN %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
             
             var deleted9735 = 0
             var deleted9734 = 0
