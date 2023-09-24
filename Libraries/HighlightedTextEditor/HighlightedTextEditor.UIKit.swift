@@ -103,7 +103,14 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     public func makeUIView(context: Context) -> UITextView {
-//        _ = textView.layoutManager // force an UITextView to fallback to Text Kit 1 - Maybe fixes crashes on iOS17 beta 
+//        _ = textView.layoutManager // force an UITextView to fallback to Text Kit 1 - Maybe fixes crashes on iOS17 beta
+        
+        if #available(iOS 17.0, *) {
+            // iOS 17 inline prediction and HighlightedTextEditor don't mix well, spits out double text
+            // so disable for now
+            textView.inlinePredictionType = .no
+        }
+        
         textView.smartInsertDeleteType = .no
         textView.isScrollEnabled = true
         textView.backgroundColor = UIColor.clear
