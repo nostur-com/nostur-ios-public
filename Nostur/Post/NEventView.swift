@@ -25,18 +25,22 @@ struct NEventView: View {
                             return
                         }
                         vm.setFetchParams((
-                            req: {
+                            prio: true,
+                            req: { taskId in
                                 bg().perform { // 1. CHECK LOCAL DB
                                     if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
                                         vm.ready(NRPost(event: event, withFooter: false))
                                     }
                                     else { // 2. ELSE CHECK RELAY
-                                        req(RM.getEvent(id: eventId))
+                                        req(RM.getEvent(id: eventId, subscriptionId: taskId))
                                     }
                                 }
                             },
-                            onComplete: { relayMessage in
-                                if let event = try? Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
+                            onComplete: { relayMessage, event in
+                                if let event = event {
+                                    vm.ready(NRPost(event: event, withFooter: false))
+                                }
+                                else if let event = try? Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
                                     if vm.state == .altLoading, let relay = identifier.relays.first {
                                         L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
                                     }
@@ -51,9 +55,9 @@ struct NEventView: View {
                                     vm.timeout()
                                 }
                             },
-                            altReq: { // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
+                            altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
                                 guard let relay = identifier.relays.first else { vm.timeout(); return }
-                                EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: eventId), relay: relay)
+                                EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: eventId, subscriptionId: taskId), relay: relay)
                             }
                             
                         ))

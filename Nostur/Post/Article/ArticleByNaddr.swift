@@ -47,13 +47,21 @@ struct ArticleByNaddr: View {
                                 }
                                 else {
                                     let reqTask = ReqTask(
+                                        prio: true,
                                         prefix: "ARTICLE-",
                                         reqCommand: { taskId in
                                             req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId))
                                         },
-                                        processResponseCommand: { taskId, _ in
+                                        processResponseCommand: { taskId, _, article in
                                             DataProvider.shared().bg.perform {
-                                                if let article = Event.fetchReplacableEvent(kind,
+                                                if let article = article {
+                                                    let article = NRPost(event: article)
+                                                    DispatchQueue.main.async {
+                                                        self.article = article
+                                                    }
+                                                    backlog.clear()
+                                                }
+                                                else if let article = Event.fetchReplacableEvent(kind,
                                                                                                  pubkey: pubkey,
                                                                                                  definition: definition,
                                                                                                  context: DataProvider.shared().bg) {
