@@ -10,8 +10,8 @@ import Combine
 
 struct AnimatedNumber: View {
     
-    let numberHeight: CGFloat = 18.0
-    let number: Int
+    static let numberHeight: CGFloat = 18.0
+    private let number: Int
     @State private var currentNumber = 0
     @State private var nextNumber = 0
     @State private var offset: CGFloat = 0.0
@@ -25,10 +25,10 @@ struct AnimatedNumber: View {
         Text(String(currentNumber))
             .overlay(alignment: .bottom) {
                 Text(String(nextNumber))
-                    .offset(y: numberHeight)
+                    .offset(y: Self.numberHeight)
             }
             .offset(y: offset)
-            .frame(height: numberHeight)
+            .frame(height: Self.numberHeight)
             .clipped()
             .onAppear {
                 currentNumber = number
@@ -50,7 +50,7 @@ struct AnimatedNumber: View {
                     .store(in: &cancellables)
                 
                 withAnimation(.linear(duration: 0.3)) {
-                    offset -= numberHeight
+                    offset -= Self.numberHeight
                 }
             }
             .onDisappear {
@@ -62,21 +62,21 @@ struct AnimatedNumber: View {
 
 struct AnimatedNumberString: View {
     
-    let numberHeight = 18.0
-    let number:String
-    @State var currentNumber = ""
-    @State var nextNumber = ""
-    @State var offset = 0.0
-    @State var timer:Timer?
+    static let numberHeight = 18.0
+    public let number:String
+    @State private var currentNumber = ""
+    @State private var nextNumber = ""
+    @State private var offset = 0.0
+    @State private var timer:Timer?
     
     var body: some View {
         Text(verbatim: currentNumber)
             .overlay(alignment:.bottom) {
                 Text(verbatim: nextNumber)
-                    .offset(y:numberHeight)
+                    .offset(y: Self.numberHeight)
             }
             .offset(y:offset)
-            .frame(height: numberHeight)
+            .frame(height: Self.numberHeight)
             .clipped()
             .onAppear {
                 currentNumber = number
@@ -93,7 +93,7 @@ struct AnimatedNumberString: View {
                 timer?.fire()
                 
                 withAnimation(.linear(duration: 0.3)) {
-                    offset -= numberHeight
+                    offset -= Self.numberHeight
                 }
             }
     }
