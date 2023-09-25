@@ -34,35 +34,36 @@ struct NosturTabsView: View {
                 TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
                     tabTapped(newTab, oldTab: oldTab)
                 }) {
-                    MainView()
-                        .tabItem { Image(systemName: "house") }
-                        .tag("Main")
-                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
-                    
-//                    DiscoverCommunities()
-//                        .tabItem { Image(systemName: "person.3.fill")}
-//                        .tag("Communities")
-                    
-                    NotificationsContainer()
-                        .tabItem { Image(systemName: "bell.fill") }
-                        .tag("Notifications")
-                        .badge(unread)
-                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
-                    
-                    Search()
-                        .tabItem { Image(systemName: "magnifyingglass") }
-                        .tag("Search")
-                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
-                    
-                    BookmarksAndPrivateNotes()
-                        .tabItem { Image(systemName: "bookmark") }
-                        .tag("Bookmarks")
-                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
-                    
-                    DMContainer()
-                        .tabItem { Image(systemName: "envelope.fill") }
-                        .tag("Messages")
-                        .badge((dm.unread + dm.newRequests))
+                    Group {
+                        MainView()
+                            .tabItem { Image(systemName: "house") }
+                            .tag("Main")
+                        
+    //                    DiscoverCommunities()
+    //                        .tabItem { Image(systemName: "person.3.fill")}
+    //                        .tag("Communities")
+                        
+                        NotificationsContainer()
+                            .tabItem { Image(systemName: "bell.fill") }
+                            .tag("Notifications")
+                            .badge(unread)
+                        
+                        Search()
+                            .tabItem { Image(systemName: "magnifyingglass") }
+                            .tag("Search")
+                        
+                        BookmarksAndPrivateNotes()
+                            .tabItem { Image(systemName: "bookmark") }
+                            .tag("Bookmarks")
+                            
+                        
+                        DMContainer()
+                            .tabItem { Image(systemName: "envelope.fill") }
+                            .tag("Messages")
+                            .badge((dm.unread + dm.newRequests))
+                    }
+                    .toolbarBackground(theme.listBackground, for: .tabBar)
+                    .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
                 }
                 .withSheets()
             }
