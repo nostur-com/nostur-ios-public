@@ -234,14 +234,14 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
                 
                 if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
-                    imageRequestsPFP.append(pfpImageRequestFor(picture))
+                    imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
                     .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.prefix(7) != "http://" }
-                    .map { pfpImageRequestFor($0) }
+                    .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
                 )
                 
                 for element in item.contentElements {
@@ -302,14 +302,14 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
                 
                 if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
-                    imageRequestsPFP.append(pfpImageRequestFor(picture))
+                    imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
                     .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.prefix(7) != "http://" }
-                    .map { pfpImageRequestFor($0) }
+                    .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
                 )
                 
                 for element in item.contentElements {
@@ -552,7 +552,7 @@ final class CViewHolder {
     }
 }
 
-func pfpImageRequestFor(_ picture:String) -> ImageRequest {
+func pfpImageRequestFor(_ picture:String, size:CGFloat) -> ImageRequest {
     
     //    thumbOptions.createThumbnailFromImageAlways = true
     //    thumbOptions.shouldCacheImmediately = true
@@ -560,7 +560,7 @@ func pfpImageRequestFor(_ picture:String) -> ImageRequest {
         return ImageRequest(url: URL(string:picture),
                             //                            userInfo: [.thumbnailKey: thumbOptions],
                             processors: [
-                                .resize(size: CGSize(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT),
+                                .resize(size: CGSize(width: size, height: size),
                                         unit: .points,
                                         contentMode: .aspectFill,
                                         crop: true,

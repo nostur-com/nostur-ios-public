@@ -22,7 +22,7 @@ class DIMENSIONS: ObservableObject {
     // Screen - Box-left  - (PFP) (Space) -  (text-right) - Box-right
     static public let POST_ROW_HPADDING:CGFloat = 10.0
     static public let POST_ROW_PFP_WIDTH:CGFloat = 50.0
-    static public let POST_ROW_PFP_HEIGHT:CGFloat = 50.0
+    static public let POST_ROW_PFP_DIAMETER:CGFloat = 50.0
     static public let POST_PFP_SPACE:CGFloat = 10.0
     static public let KIND1_TRAILING:CGFloat = 10.0
     static public var ROW_PFP_SPACE:CGFloat { get { Self.POST_ROW_PFP_WIDTH + (Self.POST_PFP_SPACE) }}

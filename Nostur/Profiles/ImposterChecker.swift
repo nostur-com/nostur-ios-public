@@ -50,8 +50,8 @@ func pfpsAreSimilar(imposter:String, real:String, threshold:Double = 0.1) async 
     var impostorImage:UIImage?
     var realImage:UIImage?
     
-    let impostorReq = pfpImageRequestFor(imposter)
-    let realReq = pfpImageRequestFor(real)
+    let impostorReq = pfpImageRequestFor(imposter, size: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+    let realReq = pfpImageRequestFor(real, size: DIMENSIONS.POST_ROW_PFP_DIAMETER)
     
     let task1 = ImageProcessing.shared.pfp.imageTask(with: impostorReq)
     if let response = try? await task1.response {
