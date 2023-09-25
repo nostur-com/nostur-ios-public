@@ -42,6 +42,8 @@ class PreviewWeights {
     var moreText = 0
 }
 
+let PREVIEW_WEIGHT_LIMIT = 2
+
 func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement], PreviewWeights) {
     let w = PreviewWeights()
     
@@ -49,42 +51,42 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
         switch element {
         case .note1:
             w.posts += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.morePosts += 1
                 return false
             }
             return true
         case .noteHex:
             w.posts += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.morePosts += 1
                 return false
             }
             return true
         case .lnbc:
             w.other += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.moreOther += 1
                 return false
             }
             return true
         case .image:
             w.pictures += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.morePictures += 1
                 return false
             }
             return true
         case .video:
             w.videos += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.moreVideos += 1
                 return false
             }
             return true
         case .linkPreview:
             w.linkPreviews += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.moreLinkPreviews += 1
                 return false
             }
@@ -93,28 +95,28 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
             return true
         case .nevent1:
             w.posts += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.morePosts += 1
                 return false
             }
             return true
         case .nprofile1:
             w.other += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.moreOther += 1
                 return false
             }
             return true
         case .text:
             w.text += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.moreText += 1
                 return false
             }
             return true
         default:
             w.other += 1;
-            guard w.weight < 1 else {
+            guard w.weight < 2 else {
                 w.moreOther += 1
                 return false
             }
