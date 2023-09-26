@@ -41,7 +41,9 @@ class FetchVM<T: Equatable>: ObservableObject {
             prio: fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
             reqCommand: { taskId in
-                self.state = .altLoading
+                DispatchQueue.main.async {
+                    self.state = .altLoading
+                }
                 altReq(taskId)
             },
             processResponseCommand: { taskId, relayMessage, event in
