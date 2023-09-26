@@ -62,6 +62,7 @@ struct Maintenance {
             Self.runFixImposterFalsePositivesAgainAgain(context: context)
 //            Self.runTempAlways(context: context)
             Self.runFixZappedContactPubkey(context: context)
+            Self.runPutRepostedPubkeyInOtherPubkey(context: context)
         }
         // Time based migrations
     
@@ -795,6 +796,49 @@ struct Maintenance {
         
     }
     
+    // Run once to put .firstQuote.pubkey in .otherPubkey, for fast reposts notification querying
+    static func runPutRepostedPubkeyInOtherPubkey(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.runPutRepostedPubkeyInOtherPubkey, context: context) else { return }
+        
+        // Find all reposts
+        // if otherPubkey is nil:
+        // get it from firstQuote
+        // if we don't have firstQuote, get it from firstP
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind == 6 AND otherPubkey == nil")
+        
+        var fixed = 0
+        if let reposts = try? context.fetch(fr) {
+            L.maintenance.info("runPutRepostedPubkeyInOtherPubkey: Found \(reposts.count) reposts without otherPubkey")
+            for repost in reposts {
+                
+                // Same code as in saveEvent():
+                // Save reposted pubkey in .otherPubkey for easy querying for repost notifications
+                // if we already have the firstQuote (reposted post), we use that .pubkey
+                if let otherPubkey = repost.firstQuote?.pubkey {
+                    repost.otherPubkey = otherPubkey
+                    fixed += 1
+                } // else we take the pubkey from the tags (should be there)
+                else if let firstP = repost.firstP() {
+                    repost.otherPubkey = firstP
+                    fixed += 1
+                }
+            }
+            L.maintenance.info("runPutRepostedPubkeyInOtherPubkey: Fixed \(fixed) otherPubkey in reposts")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.runPutRepostedPubkeyInOtherPubkey.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runPutRepostedPubkeyInOtherPubkey error on save(): \(error)")
+        }
+        
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -821,6 +865,11 @@ struct Maintenance {
         
         // Move zappedContactPubkey to otherContactPubkey
         case fixZappedContactPubkey = "fixZappedContactPubkey"
+        
+        // Cache .firstQuote.pubkey in .otherPubkey
+        case runPutRepostedPubkeyInOtherPubkey = "runPutRepostedPubkeyInOtherPubkey"
+        
+        
         
     }
 }
