@@ -76,7 +76,7 @@ class FastLoader: ObservableObject {
     }
     
     // load first set of [limit] posts
-    // loads from local, transforms on main, not not fetch from relays
+    // loads from local, transforms in bg, does not fetch from relays
     public func loadMore(_ limit:Int? = nil, includeSpam:Bool = false) {
         let next = Event.fetchRequest()
         next.predicate = predicate

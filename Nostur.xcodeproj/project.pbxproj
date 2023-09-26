@@ -58,7 +58,6 @@
 		1F15F0A52AAF9CB00004E706 /* GalleryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21D67C2AAB69FA00CCF3B1 /* GalleryViewModel.swift */; };
 		1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC482981718700D03FA9 /* BookmarksView.swift */; };
 		1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4A29819CAC00D03FA9 /* Cache.swift */; };
-		1F1D99422A03AACF0024055B /* ProfileNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1D99412A03AACF0024055B /* ProfileNotesView.swift */; };
 		1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1DCB8C2999290E0085223E /* LightningInvoice.swift */; };
 		1F1EF1992AA0FEB400B78A55 /* LVM+someonesFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1EF1982AA0FEB300B78A55 /* LVM+someonesFeed.swift */; };
 		1F1F13032AA9A68100DDED82 /* Hot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1F13022AA9A68100DDED82 /* Hot.swift */; };
@@ -487,7 +486,6 @@
 		1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkButton.swift; sourceTree = "<group>"; };
 		1F1ABC482981718700D03FA9 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		1F1ABC4A29819CAC00D03FA9 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
-		1F1D99412A03AACF0024055B /* ProfileNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNotesView.swift; sourceTree = "<group>"; };
 		1F1DCB8C2999290E0085223E /* LightningInvoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningInvoice.swift; sourceTree = "<group>"; };
 		1F1EF1982AA0FEB300B78A55 /* LVM+someonesFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LVM+someonesFeed.swift"; sourceTree = "<group>"; };
 		1F1F13022AA9A68100DDED82 /* Hot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hot.swift; sourceTree = "<group>"; };
@@ -1659,7 +1657,6 @@
 				1F33096029891C4800D4D8CF /* ProfileLikesView.swift */,
 				1FCCACA12AB764D300B3F00A /* ProfileLikesViewModel.swift */,
 				1F210B0529F853BB00159814 /* ProfileMediaView.swift */,
-				1F1D99412A03AACF0024055B /* ProfileNotesView.swift */,
 				1FCCAC992AB6D6B000B3F00A /* ProfilePostsView.swift */,
 				1FE31EE02A587D78008A4A6F /* ProfileOverlayCard.swift */,
 				1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */,
@@ -1925,7 +1922,6 @@
 				1F558B3C29FE4DA0002938A3 /* EventRelationsQueue.swift in Sources */,
 				1FB130BF29C1A314004AC98D /* QuotedNoteFragmentView.swift in Sources */,
 				1F62F4C62A2C572700783892 /* KrakenApiResponse.swift in Sources */,
-				1F1D99422A03AACF0024055B /* ProfileNotesView.swift in Sources */,
 				1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */,
 				1F1EF1992AA0FEB400B78A55 /* LVM+someonesFeed.swift in Sources */,
 				1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */,
@@ -2057,7 +2053,6 @@
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
 				1F05FA0A2A35FDEF00DAB8E8 /* NosturVideoViewur.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
-				1F2F54F02A02942B00B6D7E4 /* NotificationsPosts.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */,
 				1F20F4C52AAE331F002D8886 /* ArticlesFeed.swift in Sources */,
 				1F685B582A0D7800009EEC9B /* QueuedFetcher.swift in Sources */,
