@@ -926,6 +926,7 @@ extension Event {
         }
     }
     
+    // TODO: .saveEvent() and .importEvents() needs a refactor, to cleanly handle each kind in a reusable/maintainable way, this long list of if statements is becoming a mess.
     static func saveEvent(event:NEvent, relays:String? = nil, flags:String = "", kind6firstQuote:Event? = nil) -> Event {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
@@ -1238,7 +1239,7 @@ extension Event {
         if event.kind == .repost, let firstE = event.firstE() {
             savedEvent.firstQuoteId = firstE
             savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
-
+            
             if savedEvent.firstQuote == nil { // or we fetch it if we dont have it yet
                 // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
                 if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
@@ -1251,6 +1252,15 @@ extension Event {
                     repostedEvent.repostsCount += 1
                     repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                 }
+            }
+            
+            // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+            // if we already have the firstQuote (reposted post), we use that .pubkey
+            if let otherPubkey = savedEvent.firstQuote?.pubkey {
+                savedEvent.otherPubkey = otherPubkey
+            } // else we take the pubkey from the tags (should be there)
+            else if let firstP = event.firstP() {
+                savedEvent.otherPubkey = firstP
             }
         }
         
