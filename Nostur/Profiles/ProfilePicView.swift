@@ -107,7 +107,7 @@ struct InnerPFP: View {
     
     var body: some View {
         Circle()
-            .strokeBorder(.regularMaterial, lineWidth: 5)
+            .strokeBorder(.regularMaterial, lineWidth: 2)
             .background(color)
             .frame(width: size, height: size)
             .cornerRadius(size/2)
@@ -137,10 +137,9 @@ struct InnerPFP: View {
                                     .withoutAnimation()
                             }
                         }
-                        else { color }
+                        else { color.cornerRadius(size/2) }
                     }
                     .pipeline(ImageProcessing.shared.pfp)
-//                    .cornerRadius(size/2)
                     
                 case .animatedGif(let url):
                     LazyImage(request: pfpImageRequestFor(url, size: size)) { state in
