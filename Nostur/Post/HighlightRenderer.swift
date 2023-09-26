@@ -7,9 +7,16 @@
 
 import SwiftUI
 
+// TODO: Not sure why we have Highlight() and HighlightRenderer(). Can maybe remove one.
 struct HighlightRenderer: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
+    @EnvironmentObject private var theme:Theme
+    private let nrPost:NRPost
+    @ObservedObject private var highlightAttributes:NRPost.HighlightAttributes
+    
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+        self.highlightAttributes = nrPost.highlightAttributes
+    }
     
     var body: some View {
         VStack {
@@ -26,21 +33,21 @@ struct HighlightRenderer: View {
                         .foregroundColor(Color.secondary)
                 }
             
-            if let hl = nrPost.highlightData, let hlPubkey = hl.highlightAuthorPubkey {
+            if let hlAuthorPubkey = highlightAttributes.authorPubkey {
                 HStack {
                     Spacer()
-                    PFP(pubkey: hlPubkey, nrContact: hl.highlightNrContact, size: 20)
-                    Text(hl.highlightAuthorName ?? "Unknown")
+                    PFP(pubkey: hlAuthorPubkey, nrContact: highlightAttributes.contact, size: 20)
+                    Text(highlightAttributes.anyName ?? "Unknown")
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    navigateTo(ContactPath(key: hlPubkey))
+                    navigateTo(ContactPath(key: hlAuthorPubkey))
                 }
                 .padding(.trailing, 40)
             }
             HStack {
                 Spacer()
-                if let url = nrPost.highlightData?.highlightUrl, let md = try? AttributedString(markdown:"[\(url)](\(url))") {
+                if let url = highlightAttributes.url, let md = try? AttributedString(markdown:"[\(url)](\(url))") {
                     Text(md)
                         .lineLimit(1)
                         .font(.caption)
