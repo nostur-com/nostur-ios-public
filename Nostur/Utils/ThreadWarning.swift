@@ -39,3 +39,19 @@ struct ThreadWarning {
 }
 
 
+func shouldBeBg() {
+    #if DEBUG
+    if Thread.isMainThread {
+        fatalError("Should be bg")
+    }
+    #endif
+}
+
+func shouldBeMain() {
+    #if DEBUG
+    if !Thread.isMainThread {
+        fatalError("Should be bg")
+    }
+    #endif
+}
+

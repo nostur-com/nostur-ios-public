@@ -19,7 +19,7 @@ struct TabButton: View {
     var body: some View {
         Button { action() } label: {
             VStack(spacing: 0) {
-                HStack(alignment: .bottom, spacing: 1) {
+                HStack(alignment: .bottom, spacing: 3) {
                     Text(title).lineLimit(1)
 //                        .layoutPriority(1)
                         .foregroundColor(theme.accent)
@@ -36,7 +36,7 @@ struct TabButton: View {
                         Text("\(unread)")
                             .font(.footnote)
                             .foregroundColor(.white)
-                            .padding(.horizontal,6)
+                            .padding(.horizontal, 6)
                             .background(Capsule().foregroundColor(theme.badge))
                             .opacity(muted ? 0.25 : 1.0)
                             .offset(y: -2)

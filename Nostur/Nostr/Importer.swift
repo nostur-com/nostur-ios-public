@@ -49,6 +49,7 @@ class Importer {
         sendReceivedNotification
             .debounce(for: .seconds(0.15), scheduler: DispatchQueue.global())
             .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
+            .receive(on: DispatchQueue.global())
             .sink { () in
                 DataProvider.shared().bg.perform {
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
@@ -67,6 +68,7 @@ class Importer {
         addedRelayMessage
             .debounce(for: .seconds(0.15), scheduler: DispatchQueue.global())
             .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
+            .receive(on: DispatchQueue.global())
             .sink { () in
                 L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.5 seconds), but sends first after debounce (0.15)")
                 self.importEvents()
@@ -76,8 +78,9 @@ class Importer {
         addedPrioRelayMessage
             .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
             .throttle(for: 0.25, scheduler: DispatchQueue.global(), latest: true)
+            .receive(on: DispatchQueue.global())
             .sink { () in
-                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.5 seconds), but sends first after debounce (0.15)")
+                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.25 seconds), but sends first after debounce (0.05)")
                 self.importPrioEvents()
             }
             .store(in: &subscriptions)
@@ -89,7 +92,7 @@ class Importer {
     // Might as well just load all??? Its fast anyway
     func preloadExistingIdsCache() {
         let fr = Event.fetchRequest()
-        fr.fetchLimit = 1000000
+        fr.fetchLimit = 1_000_000
 //        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.propertiesToFetch = ["id", "relays"]
         DataProvider.shared().bg.performAndWait { [unowned self] in // AndWait because existingIds MUST be in sync with db
