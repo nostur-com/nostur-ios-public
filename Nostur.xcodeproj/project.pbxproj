@@ -58,7 +58,6 @@
 		1F15F0A52AAF9CB00004E706 /* GalleryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21D67C2AAB69FA00CCF3B1 /* GalleryViewModel.swift */; };
 		1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC482981718700D03FA9 /* BookmarksView.swift */; };
 		1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4A29819CAC00D03FA9 /* Cache.swift */; };
-		1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */; };
 		1F1D99422A03AACF0024055B /* ProfileNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1D99412A03AACF0024055B /* ProfileNotesView.swift */; };
 		1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1DCB8C2999290E0085223E /* LightningInvoice.swift */; };
 		1F1EF1992AA0FEB400B78A55 /* LVM+someonesFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1EF1982AA0FEB300B78A55 /* LVM+someonesFeed.swift */; };
@@ -91,7 +90,6 @@
 		1F2F54E72A02364900B6D7E4 /* GIFImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54E62A02364900B6D7E4 /* GIFImage.swift */; };
 		1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 1F2F54E92A0236E500B6D7E4 /* Gifu */; };
 		1F2F54EE2A02904E00B6D7E4 /* FastLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */; };
-		1F2F54F02A02942B00B6D7E4 /* NotificationsPosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54EF2A02942B00B6D7E4 /* NotificationsPosts.swift */; };
 		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
 		1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */; };
 		1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */; };
@@ -203,6 +201,7 @@
 		1F810B3329E670AB006B1614 /* MutedWords+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B3129E670AB006B1614 /* MutedWords+CoreDataClass.swift */; };
 		1F810B3429E670AB006B1614 /* MutedWords+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B3229E670AB006B1614 /* MutedWords+CoreDataProperties.swift */; };
 		1F810B3529E67145006B1614 /* MutedWordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B2F29E67017006B1614 /* MutedWordsView.swift */; };
+		1F81C4A72AC033DF0006CAA2 /* NotificationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F81C4A62AC033DF0006CAA2 /* NotificationsViewModel.swift */; };
 		1F8227D72A8BD0B10034AA19 /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F8227D62A8BD0B10034AA19 /* NostrEssentials */; };
 		1F83497F29DD6F980032E52B /* LRUCache2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83497E29DD6F980032E52B /* LRUCache2.swift */; };
 		1F83498129DE28290032E52B /* ProfileRelays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498029DE28290032E52B /* ProfileRelays.swift */; };
@@ -228,6 +227,9 @@
 		1F8B6A6F2A20C5DE0060EDB3 /* PreviewWeights.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B6A6E2A20C5DE0060EDB3 /* PreviewWeights.swift */; };
 		1F8B6A712A20C6020060EDB3 /* PostActionNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B6A702A20C6020060EDB3 /* PostActionNotification.swift */; };
 		1F8B6A742A20C6510060EDB3 /* NRKinds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B6A732A20C6510060EDB3 /* NRKinds.swift */; };
+		1F8CBFFB2AC3002D0077EF7D /* NotificationsMentions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8CBFFA2AC3002D0077EF7D /* NotificationsMentions.swift */; };
+		1F8CBFFD2AC3028D0077EF7D /* NotificationsReposts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8CBFFC2AC3028D0077EF7D /* NotificationsReposts.swift */; };
+		1F8CBFFF2AC304FD0077EF7D /* NotificationsNewFollowers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8CBFFE2AC304FD0077EF7D /* NotificationsNewFollowers.swift */; };
 		1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 1F91D8F52A17C55F00C419A3 /* Collections */; };
 		1F91D8F82A186E5200C419A3 /* AnimatedNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */; };
 		1F91D8FB2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */; };
@@ -485,7 +487,6 @@
 		1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkButton.swift; sourceTree = "<group>"; };
 		1F1ABC482981718700D03FA9 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		1F1ABC4A29819CAC00D03FA9 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
-		1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsManager.swift; sourceTree = "<group>"; };
 		1F1D99412A03AACF0024055B /* ProfileNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNotesView.swift; sourceTree = "<group>"; };
 		1F1DCB8C2999290E0085223E /* LightningInvoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningInvoice.swift; sourceTree = "<group>"; };
 		1F1EF1982AA0FEB300B78A55 /* LVM+someonesFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LVM+someonesFeed.swift"; sourceTree = "<group>"; };
@@ -519,7 +520,6 @@
 		1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightRenderer.swift; sourceTree = "<group>"; };
 		1F2F54E62A02364900B6D7E4 /* GIFImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFImage.swift; sourceTree = "<group>"; };
 		1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastLoader.swift; sourceTree = "<group>"; };
-		1F2F54EF2A02942B00B6D7E4 /* NotificationsPosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsPosts.swift; sourceTree = "<group>"; };
 		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
 		1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -627,6 +627,7 @@
 		1F810B2F29E67017006B1614 /* MutedWordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutedWordsView.swift; sourceTree = "<group>"; };
 		1F810B3129E670AB006B1614 /* MutedWords+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MutedWords+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F810B3229E670AB006B1614 /* MutedWords+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MutedWords+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1F81C4A62AC033DF0006CAA2 /* NotificationsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsViewModel.swift; sourceTree = "<group>"; };
 		1F83497E29DD6F980032E52B /* LRUCache2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRUCache2.swift; sourceTree = "<group>"; };
 		1F83498029DE28290032E52B /* ProfileRelays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelays.swift; sourceTree = "<group>"; };
 		1F8418982A2BDCB1001EFE7A /* NIP47SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP47SecretManager.swift; sourceTree = "<group>"; };
@@ -651,6 +652,9 @@
 		1F8B6A6E2A20C5DE0060EDB3 /* PreviewWeights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewWeights.swift; sourceTree = "<group>"; };
 		1F8B6A702A20C6020060EDB3 /* PostActionNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostActionNotification.swift; sourceTree = "<group>"; };
 		1F8B6A732A20C6510060EDB3 /* NRKinds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRKinds.swift; sourceTree = "<group>"; };
+		1F8CBFFA2AC3002D0077EF7D /* NotificationsMentions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsMentions.swift; sourceTree = "<group>"; };
+		1F8CBFFC2AC3028D0077EF7D /* NotificationsReposts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsReposts.swift; sourceTree = "<group>"; };
+		1F8CBFFE2AC304FD0077EF7D /* NotificationsNewFollowers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsNewFollowers.swift; sourceTree = "<group>"; };
 		1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedNumber.swift; sourceTree = "<group>"; };
 		1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapperPubkeyVerificationQueue.swift; sourceTree = "<group>"; };
 		1F922FDD2A9775EB00C84867 /* Box.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
@@ -1558,13 +1562,15 @@
 				1FC2DFF029A9142400C8A9DA /* MinimalQuotedNoteFragment.swift */,
 				1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */,
 				1FC2DFEC29A90F6C00C8A9DA /* NoteMinimalContentView.swift */,
-				1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */,
-				1F2F54EF2A02942B00B6D7E4 /* NotificationsPosts.swift */,
+				1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */,
+				1F8CBFFA2AC3002D0077EF7D /* NotificationsMentions.swift */,
+				1F8CBFFE2AC304FD0077EF7D /* NotificationsNewFollowers.swift */,
 				1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */,
+				1F8CBFFC2AC3028D0077EF7D /* NotificationsReposts.swift */,
 				1F7525832997B21D00477AF2 /* NotificationsView.swift */,
+				1F81C4A62AC033DF0006CAA2 /* NotificationsViewModel.swift */,
 				1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */,
 				1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */,
-				1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */,
 			);
 			path = Notifications;
 			sourceTree = "<group>";
@@ -1921,7 +1927,6 @@
 				1F62F4C62A2C572700783892 /* KrakenApiResponse.swift in Sources */,
 				1F1D99422A03AACF0024055B /* ProfileNotesView.swift in Sources */,
 				1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */,
-				1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */,
 				1F1EF1992AA0FEB400B78A55 /* LVM+someonesFeed.swift in Sources */,
 				1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */,
 				1FB6E6F929E3B16A008BE8A6 /* NewListSheet.swift in Sources */,
@@ -1954,6 +1959,7 @@
 				1F08CA042A5063E3004A3494 /* Community.swift in Sources */,
 				1F00337529BF0A44007CE040 /* BookmarksAndPrivateNotes.swift in Sources */,
 				1FC7A49B29F95AD400645FEF /* ProfileByPubkey.swift in Sources */,
+				1F8CBFFD2AC3028D0077EF7D /* NotificationsReposts.swift in Sources */,
 				1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */,
 				1F810B3329E670AB006B1614 /* MutedWords+CoreDataClass.swift in Sources */,
 				1F1F13032AA9A68100DDED82 /* Hot.swift in Sources */,
@@ -2057,6 +2063,7 @@
 				1F685B582A0D7800009EEC9B /* QueuedFetcher.swift in Sources */,
 				1FA059A12A74F87B0039643C /* LVM+relays.swift in Sources */,
 				1F7A10E22AA1DB7300042CD6 /* Search+Helpers.swift in Sources */,
+				1F81C4A72AC033DF0006CAA2 /* NotificationsViewModel.swift in Sources */,
 				1F006B0729D090370048C6DD /* Event+DMs.swift in Sources */,
 				1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */,
 				1FB130BB29C0F9A6004AC98D /* FooterFragmentView.swift in Sources */,
@@ -2112,6 +2119,7 @@
 				1F39756F2AB622C1004F9D77 /* MultiFollowSheet.swift in Sources */,
 				1FCFDDD229FCEA91005320B8 /* HighlightComposer.swift in Sources */,
 				1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */,
+				1F8CBFFB2AC3002D0077EF7D /* NotificationsMentions.swift in Sources */,
 				1F75257E2996A1AA00477AF2 /* Unpublisher.swift in Sources */,
 				1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */,
 				1F9A55262A3C7FD300F67627 /* DetailTab.swift in Sources */,
@@ -2146,6 +2154,7 @@
 				1F7E38EE2A2DDE7300ABAA85 /* AnySigner.swift in Sources */,
 				1FF128482ABF090600144C0C /* Sidebar.swift in Sources */,
 				1FB6E6FD29E48109008BE8A6 /* LVMManager.swift in Sources */,
+				1F8CBFFF2AC304FD0077EF7D /* NotificationsNewFollowers.swift in Sources */,
 				1F69854F29F2B63E006F813F /* Bolt11.swift in Sources */,
 				1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */,
 				1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */,

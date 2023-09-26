@@ -19,6 +19,7 @@ struct AppView: View {
     private let ss:SettingsStore = .shared
     @StateObject private var ns:NRState = .shared
     @StateObject private var dm:DirectMessageViewModel = .default
+    @StateObject private var nvm:NotificationsViewModel = .shared
     
     @State private var isViewDisplayed = false
     @State private var isOnboarding = false
@@ -70,6 +71,7 @@ struct AppView: View {
                         .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                         .environmentObject(ns)
                         .environmentObject(dm)
+                        .environmentObject(nvm)
                         .environmentObject(loggedInAccount)
                         .onReceive(priceLoop) { time in
                             if (!isViewDisplayed) { return }

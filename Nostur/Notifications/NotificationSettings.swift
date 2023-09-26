@@ -13,6 +13,7 @@ struct NotificationSettings: View {
     @AppStorage("notifications_mute_follows") var muteFollows:Bool = false
     @AppStorage("notifications_mute_reactions") var muteReactions:Bool = false
     @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false
+    @AppStorage("notifications_mute_reposts") var muteReposts:Bool = false
     
     var body: some View {
         Rectangle().fill(.thinMaterial)
@@ -30,7 +31,11 @@ struct NotificationSettings: View {
                             .hCentered()
                         
                         Toggle(isOn: $muteFollows) {
-                            Text("Mute new followers notifications")
+                            Text("Mute new follower notifications")
+                        }
+                        
+                        Toggle(isOn: $muteReposts) {
+                            Text("Mute repost notifications")
                         }
                         
                         Toggle(isOn: $muteReactions) {
