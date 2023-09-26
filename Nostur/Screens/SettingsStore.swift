@@ -118,6 +118,10 @@ final class SettingsStore: ObservableObject {
 //            .print("UserDefaults.didChangeNotificatio")
 //            .map { _ in () }
 //            .subscribe(objectWillChange)
+        
+        // TODO: Refactor settings, better use all properties on SettingsStore directly instead of (slower) defaults.bool()
+        // for now only a few that we need right now:
+        _animatedPFPenabledCache = defaults.bool(forKey: Keys.animatedPFPenabled)
     }
     
     var defaultMediaUploadService: MediaUploadService {
@@ -149,12 +153,7 @@ final class SettingsStore: ObservableObject {
         set { defaults.set(newValue, forKey: Keys.includeSharedFrom); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.includeSharedFrom) }
     }
-    
-    var animatedPFPenabled: Bool {
-        set { defaults.set(newValue, forKey: Keys.animatedPFPenabled); objectWillChange.send() }
-        get { defaults.bool(forKey: Keys.animatedPFPenabled) }
-    }
-    
+
     var rowFooterEnabled: Bool {
         set {
             objectWillChange.send()
@@ -227,15 +226,7 @@ final class SettingsStore: ObservableObject {
         set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.activeNWCconnectionId)  }
         get { defaults.string(forKey: Keys.activeNWCconnectionId) ?? "" }
     }
-    
-    var webOfTrustLevel: String {
-        set { 
-            objectWillChange.send(); defaults.set(newValue, forKey: Keys.webOfTrustLevel)
-            WebOfTrust.shared.webOfTrustLevel = newValue
-        }
-        get { defaults.string(forKey: Keys.webOfTrustLevel) ?? WebOfTrustLevel.normal.rawValue }
-    }
-    
+
     var autoHideBars: Bool {
         set { defaults.set(newValue, forKey: Keys.autoHideBars); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.autoHideBars) }
@@ -256,6 +247,30 @@ final class SettingsStore: ObservableObject {
             defaults.set(newValue.id, forKey: Keys.defaultLightningWallet);
         }
     }
+    
+    
+    // MARK: -- SPECIAL HANDLING FOR PERFORMANCE ON EVERYTHING BELOW:
+    
+    var webOfTrustLevel: String {
+        set {
+            objectWillChange.send(); defaults.set(newValue, forKey: Keys.webOfTrustLevel)
+            WebOfTrust.shared.webOfTrustLevel = newValue
+        }
+        get { defaults.string(forKey: Keys.webOfTrustLevel) ?? WebOfTrustLevel.normal.rawValue }
+    }
+    
+    // Instruments:
+    // 10.00 ms    0.0%    0 s           SettingsStore.animatedPFPenabled.getter
+    public var animatedPFPenabled: Bool {
+        set {
+            objectWillChange.send()
+            _animatedPFPenabledCache = newValue
+            defaults.set(newValue, forKey: Keys.animatedPFPenabled);
+        }
+        get { _animatedPFPenabledCache }
+    }
+    
+    private var _animatedPFPenabledCache:Bool = false
 }
 
 struct LightningWallet: Identifiable, Hashable {
