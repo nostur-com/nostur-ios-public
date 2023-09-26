@@ -63,6 +63,7 @@ struct Maintenance {
 //            Self.runTempAlways(context: context)
             Self.runFixZappedContactPubkey(context: context)
             Self.runPutRepostedPubkeyInOtherPubkey(context: context)
+            Self.runPutReactionToPubkeyInOtherPubkey(context: context)
         }
         // Time based migrations
     
@@ -839,6 +840,47 @@ struct Maintenance {
         
     }
     
+    // Run once to put .reactionTo.pubkey in .otherPubkey, for fast reaction notification querying
+    static func runPutReactionToPubkeyInOtherPubkey(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.runPutReactionToPubkeyInOtherPubkey, context: context) else { return }
+        
+        // Find all reposts
+        // if otherPubkey is nil:
+        // get it from firstQuote
+        // if we don't have firstQuote, get it from firstP
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind == 7 AND otherPubkey == nil")
+        
+        var fixed = 0
+        if let reactions = try? context.fetch(fr) {
+            L.maintenance.info("runPutReactionToPubkeyInOtherPubkey: Found \(reactions.count) reactions without otherPubkey")
+            for reaction in reactions {
+                
+                // Similar as in saveEvent()
+                if let lastP = reaction.lastP() {
+                    reaction.otherPubkey = lastP
+                    fixed += 1
+                }
+                else if let otherPubkey = reaction.reactionTo?.pubkey {
+                    reaction.otherPubkey = otherPubkey
+                    fixed += 1
+                }
+            }
+            L.maintenance.info("runPutReactionToPubkeyInOtherPubkey: Fixed \(fixed) otherPubkey in reactions")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.runPutReactionToPubkeyInOtherPubkey.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runPutReactionToPubkeyInOtherPubkey error on save(): \(error)")
+        }
+        
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -863,11 +905,14 @@ struct Maintenance {
         // And again - found another bug during new account onboarding
         case fixImposterFalsePositivesAgainAgain = "fixImposterFalsePositivesAgainAgain"
         
-        // Move zappedContactPubkey to otherContactPubkey
+        // Move zappedContactPubkey to otherPubkey
         case fixZappedContactPubkey = "fixZappedContactPubkey"
         
         // Cache .firstQuote.pubkey in .otherPubkey
         case runPutRepostedPubkeyInOtherPubkey = "runPutRepostedPubkeyInOtherPubkey"
+        
+        // Cache .reactionTo.pubkey in .otherPubkey
+        case runPutReactionToPubkeyInOtherPubkey = "runPutReactionToPubkeyInOtherPubkey"
         
         
         
