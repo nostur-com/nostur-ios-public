@@ -752,6 +752,10 @@ extension Event {
     }
     
     static func fetchEvent(id:String, context:NSManagedObjectContext) throws -> Event? {
+        if !Thread.isMainThread {
+            guard Importer.shared.existingIds[id]?.status == .SAVED else { return nil }
+        }
+                
         let request = NSFetchRequest<Event>(entityName: "Event")
         //        request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
@@ -1028,9 +1032,14 @@ extension Event {
         
         if event.kind == .reaction {
             if let lastE = event.lastE() {
-//                savedEvent.objectWillChange.send()
                 savedEvent.reactionToId = lastE
                 savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
+                if let otherPubkey =  savedEvent.reactionTo?.pubkey {
+                    savedEvent.otherPubkey = otherPubkey
+                }
+            }
+            if savedEvent.otherPubkey == nil, let lastP = event.lastP() {
+                savedEvent.otherPubkey = lastP
             }
         }
         
