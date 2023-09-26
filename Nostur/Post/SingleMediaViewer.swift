@@ -185,7 +185,7 @@ struct SingleMediaViewer: View {
             .pipeline(ImageProcessing.shared.content)
             .onAppear {
                 if let height = height {
-                    theHeight = height
+                    theHeight = max(100, height)
                 }
             }
 //            .transaction { t in t.animation = nil }
