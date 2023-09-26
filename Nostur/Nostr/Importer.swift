@@ -365,11 +365,11 @@ class Importer {
     public func importPrioEvents() {
         let context = DataProvider.shared().bg
         context.perform { [unowned self] in
-            self.isImportingPrio = true
             let forImportsCount = MessageParser.shared.priorityBucket.count
             guard forImportsCount != 0 else {
-                L.importing.debug("🏎️🏎️ importEvents() nothing to import.")
-                self.isImportingPrio = false; return }
+                L.importing.debug("🏎️🏎️ importPrioEvents() nothing to import.")
+                return
+            }
             
             DispatchQueue.main.async {
                 sendNotification(.listStatus, "Processing \(forImportsCount) items...")
@@ -405,15 +405,7 @@ class Importer {
                         }
                         continue
                     }
-                    
-                    if message.subscriptionId == "Notifications" && event.pTags().contains(NRState.shared.activeAccountPublicKey) && [1,9802,30023,7,9735,4].contains(event.kind.id) {
-                        NRState.shared.loggedInAccount?.lastNotificationReceivedAt = Date.now
-                    }
-                    
-                    if message.subscriptionId == "Profiles" && event.kind == .setMetadata {
-                        account()?.lastProfileReceivedAt = Date.now
-                    }
-                                        
+                                         
                     guard existingIds[event.id]?.status != .SAVED else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
                         if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
@@ -548,15 +540,8 @@ class Importer {
             catch {
                 L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
             }
-            self.isImportingPrio = false
-            if (self.needsImport) {
-                L.importing.debug("🏎️🏎️ Chaining next import ")
-                self.needsImport = false
-                self.importEvents()
-            }
-            else {
-                DataProvider.shared().save()
-            }
+
+            bgSave()
         }
     }
 }
