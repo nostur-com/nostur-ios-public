@@ -9,28 +9,30 @@ import SwiftUI
 
 // Hightlight note
 struct Highlight: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
-    @ObservedObject var pfpAttributes: NRPost.PFPAttributes
-    let hideFooter:Bool // For rendering in NewReply
-    let missingReplyTo:Bool // For rendering in thread
-    var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-    let grouped:Bool
-    @ObservedObject var settings:SettingsStore = .shared
+    @EnvironmentObject private var theme:Theme
+    private let nrPost:NRPost
+    @ObservedObject private var pfpAttributes: NRPost.PFPAttributes
+    @ObservedObject private var highlightAttributes: NRPost.HighlightAttributes
+    private let hideFooter:Bool // For rendering in NewReply
+    private let missingReplyTo:Bool // For rendering in thread
+    private var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+    private let grouped:Bool
+    @ObservedObject private var settings:SettingsStore = .shared
     
     init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, grouped:Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
+        self.highlightAttributes = nrPost.highlightAttributes
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
         self.grouped = grouped
     }
     
-    let THREAD_LINE_OFFSET = 24.0
+    private let THREAD_LINE_OFFSET = 24.0
     
-    @State var showMiniProfile = false
-    @State var lineLimit = 25
+    @State private var showMiniProfile = false
+    @State private var lineLimit = 25
     
     var body: some View {
         
@@ -115,23 +117,23 @@ struct Highlight: View {
                                 .foregroundColor(Color.secondary)
                         }
                     
-                    if let hl = nrPost.highlightData, let hlPubkey = hl.highlightAuthorPubkey {
+                    if let hlAuthorPubkey = highlightAttributes.authorPubkey {
                         HStack {
                             Spacer()
-                            PFP(pubkey: hlPubkey, nrContact: hl.highlightNrContact, size: 20)
+                            PFP(pubkey: hlAuthorPubkey, nrContact: highlightAttributes.contact, size: 20)
                                 .onTapGesture {
-                                    navigateTo(ContactPath(key: hlPubkey))
+                                    navigateTo(ContactPath(key: hlAuthorPubkey))
                                 }
-                            Text(hl.highlightAuthorName ?? "Unknown")
+                            Text(highlightAttributes.anyName ?? "Unknown")
                                 .onTapGesture {
-                                    navigateTo(ContactPath(key: hlPubkey))
+                                    navigateTo(ContactPath(key: hlAuthorPubkey))
                                 }
                         }
                         .padding(.trailing, 20)
                     }
                     HStack {
                         Spacer()
-                        if let url = nrPost.highlightData?.highlightUrl {
+                        if let url = highlightAttributes.url {
                             Text("[\(url)](\(url))")
                                 .lineLimit(1)
                                 .font(.caption)

@@ -50,6 +50,29 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
+    class HighlightAttributes: ObservableObject {
+        @Published var contact:NRContact? = nil
+        
+        public var authorPubkey: String?
+        public var anyName: String? {
+            get {
+                if let anyName = contact?.anyName {
+                    return anyName
+                }
+                guard let authorPubkey = authorPubkey else { return nil }
+                return String(authorPubkey.suffix(11))
+            }
+        }
+        public var url: String?
+        // TODO: Add naddr support
+
+        init(contact:NRContact? = nil, authorPubkey:String? = nil, url:String? = nil) {
+            self.contact = contact
+            self.authorPubkey = authorPubkey
+            self.url = url
+        }
+    }
+    
     class ReplyingToAttributes: ObservableObject {
         @Published var replyingToUsernamesMarkDown:AttributedString? = nil
         
@@ -63,6 +86,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var postRowDeletableAttributes: PostRowDeletableAttributes
     var noteRowAttributes: NoteRowAttributes
     var pfpAttributes: PFPAttributes
+    var highlightAttributes: HighlightAttributes
     var replyingToAttributes: ReplyingToAttributes
     var footerAttributes: FooterAttributes
     var ownPostAttributes: OwnPostAttributes
@@ -192,8 +216,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var missingPs:Set<String> // missing or have no contact info
     var fastTags:[(String, String, String?, String?)] = []
     
-    var isHighlight:Bool { highlightData != nil }
-    var highlightData:KindHightlight?
     var fileMetadata:KindFileMetadata?
     
     var relays:String
@@ -423,6 +445,26 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
         }
         
+        if kind == 9802 {
+            let highlightUrl = event.fastTags.first(where: { $0.0 == "r" } )?.1
+            let highlightAuthorPubkey:String? = event.fastTags.first(where: { $0.0 == "p" } )?.1
+            
+            let highlightContact:NRContact? = if let contact = event.contacts?.first(where: { $0.pubkey == highlightAuthorPubkey } ) {
+                NRContact(contact: contact, following: isFollowing(contact.pubkey))
+            }
+            else {
+                nil
+            }
+            
+            if let highlightAuthorPubkey = highlightAuthorPubkey, highlightContact == nil || (highlightContact?.metadata_created_at ?? 0) == 0 {
+                missingPs.insert(highlightAuthorPubkey)
+            }
+            self.highlightAttributes = HighlightAttributes(contact: highlightContact, authorPubkey: highlightAuthorPubkey, url: highlightUrl)
+        }
+        else {
+            self.highlightAttributes = HighlightAttributes()
+        }
+        
         self.missingPs = missingPs
         if !isAwaiting && !self.missingPs.isEmpty {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.002 - missingPs: \(missingPs.count)"); isAwaiting = true
@@ -442,10 +484,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
         else if !isAwaiting && withReplyTo && event.replyToRootId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.004"); isAwaiting = true
-        }
-        
-        if event.kind == 9802 {
-            self.highlightData = getHighlightData(event: event)
         }
         
         if event.kind == 1063 {
@@ -477,22 +515,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private static func isBlocked(pubkey:String) -> Bool {
         return Nostur.blocks().contains(pubkey)
-    }
-    
-    private func getHighlightData(event: Event) -> KindHightlight {
-        let highlightAuthorPubkey = event.fastTags.first(where: { $0.0 == "p" } )?.1
-        var hlNrContact:NRContact?
-        if let contact = event.contacts?.first(where: { $0.pubkey == highlightAuthorPubkey } ) {
-            hlNrContact = NRContact(contact: contact, following: self.following)
-        }
-        return KindHightlight(
-            highlightAuthorPubkey: highlightAuthorPubkey,
-            highlightAuthorPicture: hlNrContact?.pictureUrl,
-            highlightAuthorIsFollowing: hlNrContact?.following ?? false,
-            highlightAuthorName: hlNrContact?.anyName,
-            highlightUrl: event.fastTags.first(where: { $0.0 == "r" } )?.1,
-            highlightNrContact: hlNrContact
-        )
     }
     
     private func getKindFileMetadata(event: Event) -> KindFileMetadata {
@@ -661,6 +683,17 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         self.rerenderReplyingToFragment()
                     }
                     self.rebuildContentElements()
+                    
+                    if self.kind == 9802 && self.highlightAttributes.authorPubkey == pubkey {
+                        bg().perform {
+                            guard let contact = Contact.fetchByPubkey(pubkey, context: bg()) else { return }
+                            let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))
+                            DispatchQueue.main.async {
+                                self.highlightAttributes.objectWillChange.send()
+                                self.highlightAttributes.contact = nrContact
+                            }
+                        }
+                    }
                 }
             }
             .store(in: &subscriptions)
