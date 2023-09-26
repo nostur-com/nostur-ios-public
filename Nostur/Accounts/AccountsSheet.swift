@@ -116,7 +116,7 @@ struct AccountRow: View {
     
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
-            PFP(pubkey: account.publicKey, account: account, size: 35)
+            PFP(pubkey: account.publicKey, account: account, size: DIMENSIONS.POST_ROW_PFP_DIAMETER)
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
