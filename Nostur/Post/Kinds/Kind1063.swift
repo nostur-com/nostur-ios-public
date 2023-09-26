@@ -57,7 +57,14 @@ struct Kind1063: View {
                     .lineLimit(3)
                     
             }
-            if let height {
+            if is1063Video(nrPost) {
+                NosturVideoViewur(url: URL(string: url)!, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: 0)
+                    .padding(.horizontal, fullWidth ? -10 : 0)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .withoutAnimation()
+            }
+            else if let height {
                 SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload))
                     .padding(.horizontal, fullWidth ? -10 : 0)
 //                    .padding(.horizontal, -10)
@@ -90,6 +97,16 @@ func canRender1063(_ nrPost:NRPost) -> Bool {
     
     guard let mTag = hl.m else { return false }
     guard !hl.url.isEmpty else { return false }
-    guard ["image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp"].contains(mTag) else { return false }
+    guard ["video/mp4", "video/quicktime", "image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp"].contains(mTag) else { return false }
+    return true
+}
+
+func is1063Video(_ nrPost:NRPost) -> Bool {
+    guard nrPost.kind == 1063 else { return false }
+    guard let hl = nrPost.fileMetadata else { return false }
+    
+    guard let mTag = hl.m else { return false }
+    guard !hl.url.isEmpty else { return false }
+    guard ["video/mp4", "video/quicktime"].contains(mTag) else { return false }
     return true
 }
