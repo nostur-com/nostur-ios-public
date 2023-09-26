@@ -30,7 +30,7 @@ struct NosturApp: App {
     private var avcache:AVAssetCache = .shared
     private var idr:ImageDecoderRegistry = .shared
     @StateObject private var theme:Theme = .default
-    @StateObject private var nm:NotificationsManager = .shared
+    @StateObject private var nm:NotificationsViewModel = .shared
     
     var body: some Scene {
         WindowGroup {
@@ -39,6 +39,7 @@ struct NosturApp: App {
                 AppView()
                     .background(theme.listBackground)
                     .environmentObject(theme)
+                    .environmentObject(nm)
                     .buttonStyle(NRButtonStyle(theme: theme))
                     .tint(theme.accent)
                     .onAppear {

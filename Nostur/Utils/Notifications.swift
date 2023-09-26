@@ -212,6 +212,9 @@ extension Notification.Name {
     
     static var newMentions: Notification.Name {
         return Notification.Name("newMentions")
+    }    
+    static var newReposts: Notification.Name {
+        return Notification.Name("newReposts")
     }
     
     static var newReactions: Notification.Name {
@@ -220,6 +223,10 @@ extension Notification.Name {
     
     static var newZaps: Notification.Name {
         return Notification.Name("newZaps")
+    }
+    
+    static var newFollowers: Notification.Name {
+        return Notification.Name("newFollowers")
     }
 
     static var contactSaved: Notification.Name {

@@ -10,10 +10,12 @@ import SwiftUI
 struct NosturTabsView: View {
     @EnvironmentObject private var theme:Theme
     @EnvironmentObject private var dm:DirectMessageViewModel
+    @EnvironmentObject private var nvm:NotificationsViewModel
+
     @StateObject private var dim = DIMENSIONS()
     @AppStorage("selected_tab") private var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Posts"
-    @State private var unread = 0
+    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Mentions"
+
     @State private var showTabBar = true
     @ObservedObject private var ss:SettingsStore = .shared
     
@@ -46,7 +48,7 @@ struct NosturTabsView: View {
                         NotificationsContainer()
                             .tabItem { Image(systemName: "bell.fill") }
                             .tag("Notifications")
-                            .badge(unread)
+                            .badge(nvm.unread)
                         
                         Search()
                             .tabItem { Image(systemName: "magnifyingglass") }
@@ -86,25 +88,21 @@ struct NosturTabsView: View {
             if newValue == "Notifications" {
                 
                 // If there is only one tab with unread notifications, go to that tab
-                if NotificationsManager.shared.unread > 0 {
-                    if NotificationsManager.shared.unreadMentions == NotificationsManager.shared.unread {
-                        selectedNotificationsTab = "Posts"
+                if NotificationsViewModel.shared.unread > 0 {
+                    if NotificationsViewModel.shared.unreadMentions > 0 {
+                        selectedNotificationsTab = "Mentions"
                     }
-                    else if NotificationsManager.shared.unreadReactions == NotificationsManager.shared.unread {
+                    else if NotificationsViewModel.shared.unreadReactions > 0 {
                         selectedNotificationsTab = "Reactions"
                     }
-                    else if NotificationsManager.shared.unreadZaps == NotificationsManager.shared.unread {
+                    else if NotificationsViewModel.shared.unreadZaps > 0 {
                         selectedNotificationsTab = "Zaps"
                     }
-                    // 2 tabs have unread, go to Zaps or Posts
-                    else if NotificationsManager.shared.unreadMentions == 0 {
-                        selectedNotificationsTab = "Zaps"
+                    else if NotificationsViewModel.shared.unreadReposts > 0{
+                        selectedNotificationsTab = "Reposts"
                     }
-                    else if NotificationsManager.shared.unreadReactions == 0 {
-                        selectedNotificationsTab = "Posts"
-                    }
-                    else if NotificationsManager.shared.unreadZaps == 0 {
-                        selectedNotificationsTab = "Posts"
+                    else if NotificationsViewModel.shared.unreadNewFollowers > 0 {
+                        selectedNotificationsTab = "Followers"
                     }
                 }
                 
@@ -112,9 +110,6 @@ struct NosturTabsView: View {
                     sendNotification(.notificationsTabAppeared) // use for resetting unread count
                 }
             }
-        }
-        .onReceive(receiveNotification(.updateNotificationsCount)) { notification in
-            unread = (notification.object as! Int)
         }
         .onReceive(receiveNotification(.scrollingUp)) { _ in
             guard !IS_CATALYST && ss.autoHideBars else { return }

@@ -11,7 +11,6 @@ import Combine
 struct DMs: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject var theme:Theme
-    @EnvironmentObject var nm:NotificationsManager
     @State var navPath = NavigationPath()
     @AppStorage("selected_tab") var selectedTab = "Messages"
     @State var tab = "Accepted"

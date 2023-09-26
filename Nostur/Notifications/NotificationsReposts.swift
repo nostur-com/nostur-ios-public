@@ -1,14 +1,15 @@
 //
-//  NotificationsPostsNew.swift
+//  NotificationsReposts.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 03/05/2023.
+//  Created by Fabian Lachman on 26/09/2023.
 //
 
 import SwiftUI
 import CoreData
 
-struct NotificationsPosts: View {
+// Copy pasta from NotificationsMentions, which was copy pasta from NotificationsPosts
+struct NotificationsReposts: View {
     @EnvironmentObject private var theme:Theme
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
@@ -16,47 +17,16 @@ struct NotificationsPosts: View {
     @State private var didLoad = false
     
     @AppStorage("selected_tab") private var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Posts"
-    
-    @FetchRequest
-    private var pNotifications:FetchedResults<PersistentNotification>
-    
-    init(pubkey: String) {
-        let fr = PersistentNotification.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
-        fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", pubkey, PNType.newFollowers.rawValue)
-        _pNotifications = FetchRequest(fetchRequest: fr)
-    }
-    
-    private var notifications:[PostOrNotification] {
-        // combine nrPosts and PersistentNotifications in the list
-        return (pNotifications.map { pNot in
-            PostOrNotification(id: "NOTIF-" + pNot.id.uuidString , type: .NOTIFICATION, notification: pNot)
-        } + fl.nrPosts.map({ nrPost in
-            PostOrNotification(id: nrPost.id, type: .POST, post: nrPost)
-        }))
-        .sorted(by: { p1, p2 in
-            p1.createdAt > p2.createdAt
-        })
-    }
-    
+    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Reposts"
+        
     var body: some View {
-//        let _ = Self._printChanges()
         ScrollView {
             LazyVStack(spacing: 10) {
-                ForEach(notifications) { pNotification in
-                    switch pNotification.type {
-                    case .NOTIFICATION:
-                        NewFollowersNotificationView(notification: pNotification.notification!)
-                            .padding(10)
-                            .background(theme.background)
-                            .id(pNotification.id)
-                    case .POST:
-                        Box(nrPost: pNotification.post!) {
-                            PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true, fullWidth: settings.fullWidthImages)
-                        }
-                        .id(pNotification.id)
+                ForEach(fl.nrPosts) { nrPost in
+                    Box(nrPost: nrPost) {
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                     }
+                    .id(nrPost.id)
                 }
                 VStack {
                     if !fl.nrPosts.isEmpty {
@@ -65,7 +35,6 @@ struct NotificationsPosts: View {
                         }
                         .padding(.bottom, 40)
                         .buttonStyle(.bordered)
-//                        .tint(.accentColor)
                     }
                     else {
                         ProgressView()
@@ -79,15 +48,15 @@ struct NotificationsPosts: View {
             guard !didLoad else { return }
             load()
         }
-        .onReceive(receiveNotification(.newMentions)) { _ in
+        .onReceive(receiveNotification(.newReposts)) { _ in
             guard let account = account() else { return }
             let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
             fl.onComplete = {
-                saveLastSeenPostCreatedAt() // onComplete from local database
+                saveLastSeenRepostCreatedAt() // onComplete from local database
             }
             fl.predicate = NSPredicate(
                 format:
-                    "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,6,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+                    "created_at >= %i AND NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                     currentNewestCreatedAt,
                 account.blockedPubkeys_ + [account.publicKey],
                 serializedP(account.publicKey),
@@ -95,11 +64,10 @@ struct NotificationsPosts: View {
                 account.mutedRootIds_,
                 account.mutedRootIds_
             )
-            fl.loadNewer(250, taskId:"newMentions")
+            fl.loadNewer(250, taskId: "newReposts")
         }
         .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
             let importedSubIds = notification.object as! ImportedNotification
-
             bg().perform {
                 let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
 
@@ -110,7 +78,6 @@ struct NotificationsPosts: View {
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
             let account = notification.object as! Account
-            pNotifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", account.publicKey, PNType.newFollowers.rawValue)
             fl.nrPosts = []
             backlog.clear()
             load()
@@ -142,7 +109,7 @@ struct NotificationsPosts: View {
         guard let account = account() else { return }
         didLoad = true
         fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind IN {1,6,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+            format: "NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
             (account.blockedPubkeys_ + [account.publicKey]),
             serializedP(account.publicKey),
             account.mutedRootIds_,
@@ -152,10 +119,10 @@ struct NotificationsPosts: View {
         
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fl.onComplete = {
-            saveLastSeenPostCreatedAt() // onComplete from local database
+            saveLastSeenRepostCreatedAt() // onComplete from local database
             self.fetchNewer()
             fl.onComplete = {
-                saveLastSeenPostCreatedAt() // onComplete from local database
+                saveLastSeenRepostCreatedAt() // onComplete from local database
             }
         }
         fl.loadMore(25)
@@ -167,7 +134,7 @@ struct NotificationsPosts: View {
             reqCommand: { (taskId) in
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
-                    kinds: [1],
+                    kinds: [6],
                     limit: 500,
                     subscriptionId: taskId,
                     since: NTimestamp(timestamp: Int(fl.nrPosts.first?.created_at ?? 0))
@@ -177,7 +144,7 @@ struct NotificationsPosts: View {
                 let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
-                        "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,6,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+                        "created_at >= %i AND NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                         currentNewestCreatedAt,
                     (account.blockedPubkeys_ + [account.publicKey]),
                     serializedP(account.publicKey),
@@ -195,14 +162,14 @@ struct NotificationsPosts: View {
         fetchNewerTask.fetch()
     }
     
-    private func saveLastSeenPostCreatedAt() {
-        guard selectedTab == "Notifications" && selectedNotificationsTab == "Posts" else { return }
+    private func saveLastSeenRepostCreatedAt() {
+        guard selectedTab == "Notifications" && selectedNotificationsTab == "Reposts" else { return }
         if let first = fl.nrPosts.first {
             let firstCreatedAt = first.created_at
             DataProvider.shared().bg.perform {
                 if let account = account() {
-                    if account.lastSeenPostCreatedAt != firstCreatedAt {
-                        account.lastSeenPostCreatedAt = firstCreatedAt
+                    if account.lastSeenRepostCreatedAt != firstCreatedAt {
+                        account.lastSeenRepostCreatedAt = firstCreatedAt
                     }
                 }
                 DataProvider.shared().bgSave()
@@ -213,7 +180,7 @@ struct NotificationsPosts: View {
     private func loadMore() {
         guard let account = account() else { return }
         fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind IN {1,6} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
+            format: "NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
             (account.blockedPubkeys_ + [account.publicKey]),
             serializedP(account.publicKey),
             account.mutedRootIds_,
@@ -224,7 +191,7 @@ struct NotificationsPosts: View {
             reqCommand: { (taskId) in
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
-                    kinds: [1],
+                    kinds: [6],
                     limit: 50,
                     subscriptionId: taskId,
                     until: NTimestamp(timestamp: Int(fl.nrPosts.last?.created_at ?? Int64(Date.now.timeIntervalSince1970)))
@@ -232,7 +199,7 @@ struct NotificationsPosts: View {
             },
             processResponseCommand: { (taskId, _, _) in
                 fl.predicate = NSPredicate(
-                    format: "NOT pubkey IN %@ AND kind IN {1,6} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
+                    format: "NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
                     (account.blockedPubkeys_ + [account.publicKey]),
                     serializedP(account.publicKey),
                     account.mutedRootIds_,
@@ -246,32 +213,13 @@ struct NotificationsPosts: View {
     }
 }
 
-#Preview("NotificationsNotes") {
-    let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+#Preview("Notifications Reposts") {
     return PreviewContainer({ pe in
         pe.loadContacts()
-        pe.loadNewFollowersNotification()
+        pe.loadPosts()
     }) {
         VStack {
-            NotificationsPosts(pubkey: pubkey)
+            NotificationsReposts()
         }
-    }
-}
-
-
-
-struct PostOrNotification: Identifiable {
-    let id:String
-    let type:PostOrNotificationType
-    var post:NRPost?
-    var notification:PersistentNotification?
-    
-    var createdAt:Date {
-        (type == .POST ? post!.createdAt : notification!.createdAt)
-    }
-    
-    enum PostOrNotificationType {
-        case POST
-        case NOTIFICATION
     }
 }
