@@ -156,12 +156,13 @@ struct PostHeader: View {
             
             let contactAnyName = contact.anyName.lowercased()
             let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+            let cPubkey = contact.pubkey
             
             DataProvider.shared().bg.perform {
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows_.first(where: {
-                    isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
+                    $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
                 guard let cPic = contact.pictureUrl, let wotPic = similarContact.picture else { return }
                 Task.detached(priority: .background) {
