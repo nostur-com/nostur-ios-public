@@ -95,9 +95,9 @@ struct PlaceholderPostHeader: View {
 }
 
 struct PostHeader: View {
-    @ObservedObject var contact:NRContact
-    let nrPost:NRPost
-    let singleLine:Bool
+    @ObservedObject public var contact:NRContact
+    public let nrPost:NRPost
+    public let singleLine:Bool
     
     var body: some View {
         HStack(alignment: .top, spacing: 5) {

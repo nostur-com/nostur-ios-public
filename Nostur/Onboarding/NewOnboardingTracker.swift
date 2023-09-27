@@ -60,10 +60,10 @@ class NewOnboardingTracker {
         self.pubkey = pubkey
         
         Importer.shared.importedMessagesFromSubscriptionIds
-            .sink { [weak self] importedNotification in
+            .sink { [weak self] subscriptionIds in
             guard let self = self else { return }
 
-            let reqTasks = self.backlog.tasks(with: importedNotification.subscriptionIds)
+            let reqTasks = self.backlog.tasks(with: subscriptionIds)
             reqTasks.forEach { task in
                 task.process()
             }
