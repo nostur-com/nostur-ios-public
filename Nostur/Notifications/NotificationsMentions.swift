@@ -65,15 +65,15 @@ struct NotificationsMentions: View {
             )
             fl.loadNewer(250, taskId:"newMentions")
         }
-        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds) { subscriptionIds in
-            let reqTasks = backlog.tasks(with: subscriptionIds)
-
-            reqTasks.forEach { task in
-                task.process()
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { subscriptionIds in
+            bg().perform {
+                let reqTasks = backlog.tasks(with: subscriptionIds)
+                reqTasks.forEach { task in
+                    task.process()
+                }
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { notification in
-            let account = notification.object as! Account
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
             fl.nrPosts = []
             backlog.clear()
             load()

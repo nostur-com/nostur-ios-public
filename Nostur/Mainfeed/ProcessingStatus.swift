@@ -54,8 +54,7 @@ struct ProcessingStatus: View {
         .onAppear {
 //            setTemporaryMessage("Checking for new items...")
         }
-        .onReceive(receiveNotification(.listStatus)) { notification in
-            let message = notification.object as? String
+        .onReceive(Importer.shared.listStatus.receive(on: RunLoop.main)) { message in
             setTemporaryMessage(message)
         }
         .onReceive(receiveNotification(.socketNotification)) { notification in

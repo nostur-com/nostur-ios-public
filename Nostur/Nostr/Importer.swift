@@ -33,8 +33,10 @@ class Importer {
     var callbackSubscriptionIds = Set<String>()
     var sendReceivedNotification = PassthroughSubject<Void, Never>()
     
-    var importedMessagesFromSubscriptionIds = PassthroughSubject<Set<String>, Never>()
-    var newEventsInDatabase = PassthroughSubject<Void, Never>()
+    public var importedMessagesFromSubscriptionIds = PassthroughSubject<Set<String>, Never>()
+    public var newEventsInDatabase = PassthroughSubject<Void, Never>()
+    public var contactSaved = PassthroughSubject<String, Never>()
+    public var listStatus = PassthroughSubject<String, Never>()
     
     var existingIds:[String: EventState] = [:]
     
@@ -54,7 +56,7 @@ class Importer {
             .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { () in
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
                     let notified = self.callbackSubscriptionIds
                     self.importedMessagesFromSubscriptionIds.send(notified)
@@ -112,21 +114,13 @@ class Importer {
                 let itemsCount = MessageParser.shared.messageBucket.count
                 self.needsImport = true
                 if itemsCount > 0 {
-                    DispatchQueue.main.async {
-                        sendNotification(.listStatus, "Processing \(itemsCount) items...")
-                    }
+                    self.listStatus.send("Processing \(itemsCount) items...")
                 }
                 return
             }
             
             if (self.isImportingPrio) {
-//                let itemsCount = MessageParser.shared.messageBucket.count
                 self.needsImport = true
-//                if itemsCount > 0 {
-//                    DispatchQueue.main.async {
-//                        sendNotification(.listStatus, "Processing \(itemsCount) items...")
-//                    }
-//                }
                 return
             }
             
@@ -136,9 +130,7 @@ class Importer {
                 L.importing.debug("🏎️🏎️ importEvents() nothing to import.")
                 self.isImporting = false; return }
             
-            DispatchQueue.main.async {
-                sendNotification(.listStatus, "Processing \(forImportsCount) items...")
-            }
+            self.listStatus.send("Processing \(forImportsCount) items...")
             
             do {
                 var count = 0
@@ -310,9 +302,7 @@ class Importer {
                                 let mainQueueForImportsCount = forImportsCount
                                 self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
                                 self.newEventsInDatabase.send()
-                                DispatchQueue.main.async {
-                                    sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
-                                }
+                                self.listStatus.send("Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
                                 subscriptionIds.removeAll()
                             }
                             catch {
@@ -329,9 +319,7 @@ class Importer {
                         let mainQueueForImportsCount = forImportsCount
                         self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
                         self.newEventsInDatabase.send()
-                        DispatchQueue.main.async {
-                            sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
-                        }
+                        self.listStatus.send("Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
                         subscriptionIds.removeAll()
                     }
                     else {
@@ -368,11 +356,7 @@ class Importer {
                 L.importing.debug("🏎️🏎️ importPrioEvents() nothing to import.")
                 return
             }
-            
-            DispatchQueue.main.async {
-                sendNotification(.listStatus, "Processing \(forImportsCount) items...")
-            }
-            
+            self.listStatus.send("Processing \(forImportsCount) items...")
             do {
                 var count = 0
                 var alreadyInDBskipped = 0
