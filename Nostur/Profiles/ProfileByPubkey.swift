@@ -10,8 +10,8 @@ import SwiftUI
 struct ProfileByPubkey: View {
     @EnvironmentObject private var theme:Theme
     
-    let pubkey:String
-    var tab:String?
+    public let pubkey:String
+    public var tab:String?
         
     @State private var editingAccount:Account? = nil
     @StateObject private var vm = FetchVM<NRContact>()

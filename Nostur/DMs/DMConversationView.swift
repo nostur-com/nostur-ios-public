@@ -344,6 +344,7 @@ struct DMConversationView: View {
                 }
                 req(RM.getDMConversation(pubkey: pubkey, theirPubkey: theirPubkey))
             }
+            .withNavigationDestinations()
         }
         else {
             Text("Error: could not find contact pubkey", comment: "Error shown on DM conversation screen")
