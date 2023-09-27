@@ -246,6 +246,7 @@ struct ProfileOverlayCard: View {
                 .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
         }
         .task {
+            guard !SettingsStore.shared.lowDataMode else { return }
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard !contact.following else { return }
             guard contact.metadata_created_at != 0 else { return }

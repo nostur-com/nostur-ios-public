@@ -81,6 +81,7 @@ struct ContactSearchResultRow: View {
                 isFollowing = true
             }
             else {
+                guard !SettingsStore.shared.lowDataMode else { return }
                 guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
                 guard contact.metadata_created_at != 0 else { return }
                 guard contact.couldBeImposter == -1 else { return }
