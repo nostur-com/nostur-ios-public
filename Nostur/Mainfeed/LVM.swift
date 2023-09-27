@@ -1003,8 +1003,10 @@ extension LVM {
     }
     
     func performLocalFetchAfterImport() {
-        receiveNotification(.newEventsInDatabase)
-            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
+        Importer.shared.newEventsInDatabase
+            .subscribe(on: DispatchQueue.global())
+            .throttle(for: .seconds(2.5), scheduler: DispatchQueue.global(), latest: true)
+            .receive(on: RunLoop.main) // Main because .performLocalFetch() needs some Main things
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 guard instantFinished else { return }
