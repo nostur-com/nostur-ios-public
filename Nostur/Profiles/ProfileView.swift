@@ -323,6 +323,7 @@ struct ProfileView: View {
                 .environmentObject(theme)
         }
         .task {
+            guard !SettingsStore.shared.lowDataMode else { return }
             let contact = nrContact
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard !contact.following else { return }
