@@ -9,7 +9,7 @@ import Foundation
 import NostrEssentials
 
 func typeOfSearch(_ searchInput:String) -> TypeOfSearch {
-    let searchTrimmed = searchInput.trimmingCharacters(in: .whitespacesAndNewlines)
+    let searchTrimmed = removeUriPrefix(searchInput.trimmingCharacters(in: .whitespacesAndNewlines))
     
     if (searchTrimmed.prefix(9) == "nprofile1") {
         return .nprofile1(searchTrimmed)
@@ -429,4 +429,11 @@ extension Search {
             hexIdSearch(pubkey)
         }
     }
+}
+
+func removeUriPrefix(_ term:String) -> String {
+    if term.hasPrefix("nostr:") {
+        return String(term.dropFirst(6))
+    }
+    return term
 }
