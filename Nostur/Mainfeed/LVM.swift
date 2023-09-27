@@ -951,6 +951,7 @@ extension LVM {
             .sink { [weak self] nrPostIds in
                 guard let self = self else { return }
                 guard SettingsStore.shared.fetchCounts else { return }
+                guard !SettingsStore.shared.lowDataMode else { return } // Also don't fetch if low data mode
                 
                 let events = self.nrPostLeafs
                     .filter { nrPostIds.contains($0.id) }
