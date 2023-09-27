@@ -70,5 +70,6 @@ struct SearchBox_Previews: PreviewProvider {
             }
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+        .environmentObject(Theme.default)
     }
 }
