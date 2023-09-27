@@ -64,6 +64,15 @@ struct Maintenance {
             Self.runFixZappedContactPubkey(context: context)
             Self.runPutRepostedPubkeyInOtherPubkey(context: context)
             Self.runPutReactionToPubkeyInOtherPubkey(context: context)
+            
+            do {
+                if context.hasChanges {
+                    try context.save()
+                }
+            }
+            catch {
+                L.maintenance.error("🧹🧹 🔴🔴 Version based maintenance could not save: \(error)")
+            }
         }
         // Time based migrations
     
@@ -204,14 +213,6 @@ struct Maintenance {
             }
             
             
-            //            do {
-            //                try context.save()
-            //            }
-            //            catch {
-            //                L.maintenance.info("maintenance error on save(): \(error)")
-            //            }
-            //
-            
             // KIND 7,8
             // OLDER THAN X DAYS
             // PUBKEY NOT IN OWN ACCOUNTS
@@ -232,14 +233,6 @@ struct Maintenance {
             } catch {
                 L.maintenance.info("🔴🔴 Failed to delete 8,7 data")
             }
-            //            }
-            
-            //            do {
-            //                try context.save()
-            //            }
-            //            catch {
-            //                L.maintenance.info("maintenance error on save(): \(error)")
-            //            }
             
             // KIND 9735
             // OLDER THAN X DAYS
@@ -262,17 +255,6 @@ struct Maintenance {
                 }
             }
             L.maintenance.info("🧹🧹 Deleted \(deleted9735) zaps and \(deleted9734) zap requests")
-            
-            
-            //            }
-            
-            //            do {
-            //                try context.save()
-            //            }
-            //            catch {
-            //                L.maintenance.info("maintenance error on save(): \(error)")
-            //            }
-            
             
             // KIND 0
             // REMOVE ALL BECAUSE EVERY KIND 0 HAS A CONTACT
@@ -333,17 +315,20 @@ struct Maintenance {
                 }
             }
             
+            if !forDeletion.isEmpty {
+                L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) duplicate kind 3,10002 events")
+            }
+            if olderKind3DeletedCount > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(olderKind3DeletedCount) older kind 3,10002 events")
+            }
+            
             do {
-                if !forDeletion.isEmpty {
-                    L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) duplicate kind 3,10002 events")
+                if context.hasChanges {
+                    try context.save()
                 }
-                if olderKind3DeletedCount > 0 {
-                    L.maintenance.info("🧹🧹 Deleted \(olderKind3DeletedCount) older kind 3,10002 events")
-                }
-                try context.save()
             }
             catch {
-                L.maintenance.info("🧹🧹 🔴🔴 maintenance error on save(), nothing deleted: \(error)")
+                L.maintenance.error("🧹🧹 🔴🔴 Time based maintenance could not save: \(error)")
             }
             
             Importer.shared.preloadExistingIdsCache()
@@ -461,14 +446,6 @@ struct Maintenance {
         
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.useDtagForReplacableEvents.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runUseDtagForReplacableEvents error on save(): \(error)")
-        }
-        
     }
     
     // Run once to delete events without id (old bug)
@@ -491,14 +468,6 @@ struct Maintenance {
         
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.deleteEventsWithoutId.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runDeleteEventsWithoutId error on save(): \(error)")
-        }
-        
     }
     
     // Run once to put .anyName in fixedName
@@ -523,14 +492,6 @@ struct Maintenance {
         
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.insertFixedNames.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runInsertFixedNames error on save(): \(error)")
-        }
-        
     }
     
     // Run once to fix replies to existing replacable events
@@ -582,14 +543,6 @@ struct Maintenance {
                 
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.fixArticleReplies.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runFixArticleReplies error on save(): \(error)")
-        }
-        
     }
     
     // Run once to fix false positives from imposter checking
@@ -627,14 +580,6 @@ struct Maintenance {
                 
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.fixImposterFalsePositivesAgainAgain.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runFixArticleReplies error on save(): \(error)")
-        }
-        
     }
     
     // Run once to migrate DM info in "root" DM event to DMState record
@@ -746,14 +691,6 @@ struct Maintenance {
                 
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.migrateDMState.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runMigrateDMState error on save(): \(error)")
-        }
-        
     }
     
     static func runTempAlways(context: NSManagedObjectContext) {
@@ -787,14 +724,6 @@ struct Maintenance {
                 
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.fixZappedContactPubkey.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runFixZappedContactPubkey error on save(): \(error)")
-        }
-        
     }
     
     // Run once to put .firstQuote.pubkey in .otherPubkey, for fast reposts notification querying
@@ -830,14 +759,6 @@ struct Maintenance {
                 
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.runPutRepostedPubkeyInOtherPubkey.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runPutRepostedPubkeyInOtherPubkey error on save(): \(error)")
-        }
-        
     }
     
     // Run once to put .reactionTo.pubkey in .otherPubkey, for fast reaction notification querying
@@ -871,14 +792,6 @@ struct Maintenance {
                 
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.runPutReactionToPubkeyInOtherPubkey.rawValue
-        
-        do {
-            try context.save()
-        }
-        catch {
-            L.maintenance.error("🧹🧹 🔴🔴 runPutReactionToPubkeyInOtherPubkey error on save(): \(error)")
-        }
-        
     }
     
     // All available migrations
@@ -913,8 +826,6 @@ struct Maintenance {
         
         // Cache .reactionTo.pubkey in .otherPubkey
         case runPutReactionToPubkeyInOtherPubkey = "runPutReactionToPubkeyInOtherPubkey"
-        
-        
-        
+   
     }
 }
