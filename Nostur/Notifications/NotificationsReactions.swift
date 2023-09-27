@@ -10,6 +10,7 @@ import CoreData
 import Combine
 
 struct NotificationsReactions: View {
+    @Binding public var navPath:NavigationPath
     @EnvironmentObject private var theme:Theme
     @StateObject private var fl = FastLoader()
     @State private var didLoad = false
@@ -17,6 +18,7 @@ struct NotificationsReactions: View {
     @ObservedObject private var settings:SettingsStore = .shared
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Reactions"
+    @Namespace private var top
     
     private func myNotesReactedTo(_ events:[Event]) -> [Event] {
         
@@ -43,49 +45,63 @@ struct NotificationsReactions: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
-        ScrollView {
-            LazyVStack(alignment:.leading, spacing: 10) {
-                ForEach(myNotesReactedToAsNRPosts) { nrPost in
-                    Box(nrPost: nrPost, navMode: .view) {
-                        VStack(alignment:.leading, spacing: 3) {
-                            ReactionsForThisNote(reactions:reactionsForNote(nrPost.id))
-                            NoteMinimalContentView(nrPost: nrPost)
-                        }
-                    }
-                    .id(nrPost.id)
-                }
-                VStack {
-                    if !myNotesReactedToAsNRPosts.isEmpty {
-                        Button("Show more") {
-                            guard let account = account() else { return }
-                            fl.predicate = NSPredicate(
-                                format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
-                                account.blockedPubkeys_,
-                                account.publicKey)
-        //                    fl.offset = (fl.events.count - 1)
-                            fl.loadMore(500)
-                            if let until = fl.events.last?.created_at {
-                                req(RM.getMentions(
-                                    pubkeys: [account.publicKey],
-                                    kinds: [7],
-                                    limit: 500,
-                                    until: NTimestamp(timestamp: Int(until))
-                                ))
-                            }
-                            else {
-                                req(RM.getMentions(pubkeys: [account.publicKey], kinds: [7], limit:500))
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
+        ScrollViewReader { proxy in
+            ScrollView {
+                Color.clear.frame(height: 1).id(top)
+                LazyVStack(alignment:.leading, spacing: 10) {
+                    ForEach(myNotesReactedToAsNRPosts) { nrPost in
+                        Box(nrPost: nrPost, navMode: .view) {
+                            VStack(alignment:.leading, spacing: 3) {
+                                ReactionsForThisNote(reactions:reactionsForNote(nrPost.id))
+                                NoteMinimalContentView(nrPost: nrPost)
                             }
                         }
-                        .padding(.bottom, 40)
-                        .buttonStyle(.bordered)
-//                        .tint(.accentColor)
+                        .id(nrPost.id)
                     }
-                    else {
-                        ProgressView()
+                    VStack {
+                        if !myNotesReactedToAsNRPosts.isEmpty {
+                            Button("Show more") {
+                                guard let account = account() else { return }
+                                fl.predicate = NSPredicate(
+                                    format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
+                                    account.blockedPubkeys_,
+                                    account.publicKey)
+            //                    fl.offset = (fl.events.count - 1)
+                                fl.loadMore(500)
+                                if let until = fl.events.last?.created_at {
+                                    req(RM.getMentions(
+                                        pubkeys: [account.publicKey],
+                                        kinds: [7],
+                                        limit: 500,
+                                        until: NTimestamp(timestamp: Int(until))
+                                    ))
+                                }
+                                else {
+                                    req(RM.getMentions(pubkeys: [account.publicKey], kinds: [7], limit:500))
+                                }
+                            }
+                            .padding(.bottom, 40)
+                            .buttonStyle(.bordered)
+    //                        .tint(.accentColor)
+                        }
+                        else {
+                            ProgressView()
+                        }
+                    }
+                    .hCentered()
+                }
+            }
+            .onReceive(receiveNotification(.didTapTab)) { notification in
+                guard selectedNotificationsTab == "Reactions" else { return }
+                guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
+                if navPath.count == 0 {
+                    withAnimation {
+                        proxy.scrollTo(top)
                     }
                 }
-                .hCentered()
             }
         }
         .background(theme.listBackground)
@@ -316,7 +332,7 @@ struct NotificationsV_Previews: PreviewProvider {
             pe.loadRepliesAndReactions()
         }) {
             VStack {
-                NotificationsReactions()
+                NotificationsReactions(navPath: .constant(NavigationPath()))
             }
         }
     }

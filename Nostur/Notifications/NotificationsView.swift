@@ -21,7 +21,7 @@ struct NotificationsContainer: View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             VStack {
-                NotificationsView(account: la.account, tab: $selectedNotificationsTab)
+                NotificationsView(account: la.account, tab: $selectedNotificationsTab, navPath: $navPath)
             }
             .background(theme.listBackground)
             .withNavigationDestinations()
@@ -41,6 +41,7 @@ struct NotificationsContainer: View {
 struct NotificationsView: View {
     @ObservedObject public var account:Account
     @Binding public var tab:String
+    @Binding public var navPath:NavigationPath
     
     @EnvironmentObject private var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
@@ -54,7 +55,9 @@ struct NotificationsView: View {
     @AppStorage("notifications_mute_zaps") private var muteZaps:Bool = false
     
     var body: some View {
-//        let _ = Self._printChanges()
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         VStack(spacing:0) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
@@ -100,15 +103,15 @@ struct NotificationsView: View {
             
             switch (tab) {
                 case "Mentions", "Posts": // (old name was "Posts")
-                    NotificationsMentions()
+                    NotificationsMentions(navPath: $navPath)
                 case "Reactions":
-                    NotificationsReactions()
+                    NotificationsReactions(navPath: $navPath)
                 case "Reposts":
-                    NotificationsReposts()
+                    NotificationsReposts(navPath: $navPath)
                 case "Zaps":
-                    NotificationsZaps(pubkey: account.publicKey)
+                    NotificationsZaps(pubkey: account.publicKey, navPath: $navPath)
                 case "Followers":
-                    NotificationsFollowers(pubkey: account.publicKey)
+                    NotificationsFollowers(pubkey: account.publicKey, navPath: $navPath)
                 default:
                     EmptyView()
             }

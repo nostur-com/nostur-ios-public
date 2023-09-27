@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct BookmarksAndPrivateNotes: View {
-    @EnvironmentObject var theme:Theme
-    @State var navPath = NavigationPath()
-    @AppStorage("selected_tab") var selectedTab = "Bookmarks"
-    @AppStorage("selected_bookmarkssubtab") var selectedSubTab = "Bookmarks"
+    @EnvironmentObject private var fa:LoggedInAccount
+    @EnvironmentObject private var theme:Theme
+    @State private var navPath = NavigationPath()
+    @AppStorage("selected_tab") private var selectedTab = "Bookmarks"
+    @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Bookmarks"
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-//    @Environment(\.verticalSizeClass) private var verticalSizeClass
     
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -30,9 +30,9 @@ struct BookmarksAndPrivateNotes: View {
                 }
                 switch selectedSubTab {
                     case "Bookmarks":
-                        BookmarksContainer()
+                        BookmarksView(account: fa.account, navPath: $navPath)
                     case "Private Notes":
-                        PrivateNotesContainer()
+                        PrivateNotesView(account: fa.account, navPath: $navPath)
                     default:
                         Text("🥪")
                 }

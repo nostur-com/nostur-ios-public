@@ -22,10 +22,13 @@ struct NotificationsZaps: View {
     @StateObject private var fl = FastLoader()
     @State private var didLoad = false
     @State private var backlog = Backlog()
+    @Binding private var navPath:NavigationPath
+    
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Zaps"
     
     @State private var zapsForMeDeduplicated = [ZapInfo]()
+    @Namespace private var top
     
     @FetchRequest
     private var pNotifications:FetchedResults<PersistentNotification>
@@ -39,7 +42,8 @@ struct NotificationsZaps: View {
         }
     }
     
-    init(pubkey:String) {
+    init(pubkey:String, navPath:Binding<NavigationPath>) {
+        _navPath = navPath
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
         fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ IN %@", pubkey, [PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue,PNType.failedLightningInvoice.rawValue])
@@ -59,65 +63,79 @@ struct NotificationsZaps: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
-        ScrollView {
-            LazyVStack(alignment:.leading, spacing: 10) {
-                ForEach(notifications) { pNotification in
-                    switch pNotification.type {
-                    case .NOTIFICATION:
-                        ZapNotificationView(notification: pNotification.notification!)
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
+        ScrollViewReader { proxy in
+            ScrollView {
+                Color.clear.frame(height: 1).id(top)
+                LazyVStack(alignment:.leading, spacing: 10) {
+                    ForEach(notifications) { pNotification in
+                        switch pNotification.type {
+                        case .NOTIFICATION:
+                            ZapNotificationView(notification: pNotification.notification!)
+                                .padding(10)
+                                .background(theme.background)
+                                .id(pNotification.id)
+                        case .ZAP:
+                            VStack {
+                                if let nrPost = pNotification.zapInfo!.zappedEventNRPost {
+                                    PostZap(nrPost: nrPost, zaps:fl.events)
+                                }
+                                else {
+                                    if let zapFrom = pNotification.zapInfo!.zap.zapFromRequest {
+                                        ProfileZap(zap: pNotification.zapInfo!.zap, zapFrom:zapFrom)
+                                    }
+                                }
+                            }
                             .padding(10)
                             .background(theme.background)
                             .id(pNotification.id)
-                    case .ZAP:
-                        VStack {
-                            if let nrPost = pNotification.zapInfo!.zappedEventNRPost {
-                                PostZap(nrPost: nrPost, zaps:fl.events)
-                            }
-                            else {
-                                if let zapFrom = pNotification.zapInfo!.zap.zapFromRequest {
-                                    ProfileZap(zap: pNotification.zapInfo!.zap, zapFrom:zapFrom)
+                        }
+                    }
+                    VStack {
+                        if !zapsForMeDeduplicated.isEmpty {
+                            Button("Show more") {
+                                guard let account = account() else { return }
+                                fl.predicate = NSPredicate(
+                                    format: "otherPubkey == %@" + // ONLY TO ME
+                                    "AND kind == 9735 " +
+                                    "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                                    account.publicKey,
+                                    account.blockedPubkeys_)
+            //                    fl.offset = (fl.events.count - 1)
+                                fl.loadMore(500)
+                                if let until = fl.events.last?.created_at {
+                                    req(RM.getMentions(
+                                        pubkeys: [account.publicKey],
+                                        kinds: [9735],
+                                        limit: 500,
+                                        until: NTimestamp(timestamp: Int(until))
+                                    ))
+                                }
+                                else {
+                                    req(RM.getMentions(pubkeys: [account.publicKey], kinds: [9735], limit:500))
                                 }
                             }
+                            .padding(.bottom, 40)
+                            .buttonStyle(.bordered)
+    //                        .tint(.accentColor)
                         }
-                        .padding(10)
-                        .background(theme.background)
-                        .id(pNotification.id)
+                        else {
+                            ProgressView()
+                        }
+                    }
+                    .hCentered()
+                }
+            }
+            .onReceive(receiveNotification(.didTapTab)) { notification in
+                guard selectedNotificationsTab == "Zaps" else { return }
+                guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
+                if navPath.count == 0 {
+                    withAnimation {
+                        proxy.scrollTo(top)
                     }
                 }
-                VStack {
-                    if !zapsForMeDeduplicated.isEmpty {
-                        Button("Show more") {
-                            guard let account = account() else { return }
-                            fl.predicate = NSPredicate(
-                                format: "otherPubkey == %@" + // ONLY TO ME
-                                "AND kind == 9735 " +
-                                "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
-                                account.publicKey,
-                                account.blockedPubkeys_)
-        //                    fl.offset = (fl.events.count - 1)
-                            fl.loadMore(500)
-                            if let until = fl.events.last?.created_at {
-                                req(RM.getMentions(
-                                    pubkeys: [account.publicKey],
-                                    kinds: [9735],
-                                    limit: 500,
-                                    until: NTimestamp(timestamp: Int(until))
-                                ))
-                            }
-                            else {
-                                req(RM.getMentions(pubkeys: [account.publicKey], kinds: [9735], limit:500))
-                            }
-                        }
-                        .padding(.bottom, 40)
-                        .buttonStyle(.bordered)
-//                        .tint(.accentColor)
-                    }
-                    else {
-                        ProgressView()
-                    }
-                }
-                .hCentered()
             }
         }
         .background(theme.listBackground)
@@ -441,7 +459,7 @@ struct NotificationsZaps_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
         PreviewContainer {
-            NotificationsZaps(pubkey: pubkey)
+            NotificationsZaps(pubkey: pubkey, navPath: .constant(NavigationPath()))
         }
     }
 }

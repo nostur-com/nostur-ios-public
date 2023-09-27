@@ -10,37 +10,54 @@ import CoreData
 
 // Copy pasta from NotificationsMentions, which was copy pasta from NotificationsPosts
 struct NotificationsReposts: View {
+    @Binding public var navPath:NavigationPath
     @EnvironmentObject private var theme:Theme
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
     @State private var backlog = Backlog()
     @State private var didLoad = false
+    @Namespace private var top
     
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Reposts"
         
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(fl.nrPosts) { nrPost in
-                    Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
-                    }
-                    .id(nrPost.id)
-                }
-                VStack {
-                    if !fl.nrPosts.isEmpty {
-                        Button("Show more") {
-                            loadMore()
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
+        ScrollViewReader { proxy in
+            ScrollView {
+                Color.clear.frame(height: 1).id(top)
+                LazyVStack(spacing: 10) {
+                    ForEach(fl.nrPosts) { nrPost in
+                        Box(nrPost: nrPost) {
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                         }
-                        .padding(.bottom, 40)
-                        .buttonStyle(.bordered)
+                        .id(nrPost.id)
                     }
-                    else {
-                        ProgressView()
+                    VStack {
+                        if !fl.nrPosts.isEmpty {
+                            Button("Show more") {
+                                loadMore()
+                            }
+                            .padding(.bottom, 40)
+                            .buttonStyle(.bordered)
+                        }
+                        else {
+                            ProgressView()
+                        }
+                    }
+                    .hCentered()
+                }
+            }
+            .onReceive(receiveNotification(.didTapTab)) { notification in
+                guard selectedNotificationsTab == "Reposts" else { return }
+                guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
+                if navPath.count == 0 {
+                    withAnimation {
+                        proxy.scrollTo(top)
                     }
                 }
-                .hCentered()
             }
         }
         .background(theme.listBackground)
@@ -217,7 +234,7 @@ struct NotificationsReposts: View {
         pe.loadPosts()
     }) {
         VStack {
-            NotificationsReposts()
+            NotificationsReposts(navPath: .constant(NavigationPath()))
         }
     }
 }
