@@ -66,6 +66,8 @@ For any questions, please contact feedback@nostur.com.
                     NRState.shared.onBoardingIsShown = false
                 }
             }
+            .buttonStyle(.borderedProminent)
+            .padding(.bottom, 20)
         }
     }
 }
