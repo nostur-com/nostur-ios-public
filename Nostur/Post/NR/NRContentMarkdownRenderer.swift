@@ -32,16 +32,12 @@ struct NRContentMarkdownRenderer: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, fullWidth ? 10 : 0)
             .onReceive(
-                receiveNotification(.contactSaved)
-                    .subscribe(on: DispatchQueue.global())
-                    .map({ notification in
-                        return notification.object as! String
-                    })
-                    .filter({ pubkey in
+                Importer.shared.contactSaved
+                    .filter { pubkey in
                         guard !markdownContentWithPs.input.isEmpty else { return false }
                         guard !markdownContentWithPs.pTags.isEmpty else { return false }
                         return self.markdownContentWithPs.pTags.contains(pubkey)
-                    })
+                    }
                     .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             ) { pubkey in
                 

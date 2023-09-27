@@ -872,7 +872,7 @@ class NewWebSocket {
                             //                                print($0)
                             L.sockets.info("🟪 WHAT OK")
                         })
-                    sendNotification(.pong)
+//                    sendNotification(.pong)
                 }
             }, receiveValue: { _ in
                 // Handle the received value (optional, based on your requirements)
@@ -904,7 +904,7 @@ class NewWebSocket {
                     let _url = self.url
                     L.sockets.info("\(_url) Ping succeeded")
                     self.delegate?.didReceivePong()
-                    sendNotification(.pong)
+//                    sendNotification(.pong)
                 }
             }, receiveValue: { _ in
                 // Handle the received value (optional, based on your requirements)

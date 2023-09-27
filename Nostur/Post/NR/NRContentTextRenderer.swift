@@ -21,15 +21,12 @@ struct NRContentTextRenderer: View {
             .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
             .frame(maxWidth: .infinity, alignment: .leading)    
             .onReceive(
-                receiveNotification(.contactSaved)
-                    .map({ notification in
-                        return notification.object as! String
-                    })
-                    .filter({ pubkey in
+                Importer.shared.contactSaved
+                    .filter { pubkey in
                         guard !attributedStringWithPs.input.isEmpty else { return false }
                         guard !attributedStringWithPs.pTags.isEmpty else { return false }
                         return self.attributedStringWithPs.pTags.contains(pubkey)
-                    })
+                    }
                     .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             ) { pubkey in
                 

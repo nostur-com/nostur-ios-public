@@ -660,16 +660,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
 
         // Rerender ReplyingToFragment when the new contact is saved (only if we replyToId is set)
         // Rerender content elements also for mentions in text
-        receiveNotification(.contactSaved)
+        Importer.shared.contactSaved
             .subscribe(on: DispatchQueue.global())
-            .map({ notification in
-                return notification.object as! Ptag
-            })
-            .filter({ [weak self] pTag in
+            .filter({ [weak self] pubkey in
                 guard let self = self else { return false }
-                return self.missingPs.contains(pTag)
+                return self.missingPs.contains(pubkey)
             })
-            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
                 if self.kind == 6 {
@@ -699,14 +696,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .store(in: &subscriptions)
        
         // Remove from missingPs so we don't fetch again at any .onAppear
-        receiveNotification(.contactSaved)
+        Importer.shared.contactSaved
             .subscribe(on: DispatchQueue.global())
-            .map({ notification in
-                return notification.object as! Ptag
-            })
-            .filter({ [weak self] pTag in
+            .filter({ [weak self] pubkey in
                 guard let self = self else { return false }
-                return self.missingPs.contains(pTag)
+                return self.missingPs.contains(pubkey)
             })
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
@@ -714,17 +708,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
             .store(in: &subscriptions)
         
-        // Create self.contact = nrContact
-        receiveNotification(.contactSaved)
+        Importer.shared.contactSaved
             .subscribe(on: DispatchQueue.global())
-            .map({ notification in
-                return notification.object as! Ptag
-            })
-            .filter({ [weak self] pTag in
+            .filter({ [weak self] pubkey in
                 guard let self = self else { return false }
-                return self.pubkey == pTag
+                return self.pubkey == pubkey
             })
-            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
                 DataProvider.shared().bg.perform { [weak self] in

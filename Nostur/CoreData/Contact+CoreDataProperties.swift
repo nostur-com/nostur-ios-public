@@ -352,9 +352,7 @@ extension Contact : Identifiable {
         }
         
         let pubkey = contact.pubkey
-        DispatchQueue.main.async {
-            sendNotification(.contactSaved, pubkey)
-        }
+        Importer.shared.contactSaved.send(pubkey)
     }
 
     // Create dummy Contact if not already exists.
