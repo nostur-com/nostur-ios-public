@@ -77,21 +77,21 @@ class DataProvider: ObservableObject {
     }()
     
     lazy var bg: NSManagedObjectContext = {
+        #if DEBUG
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return container.viewContext
         }
-        else {
-            if let bgStored {
-                return bgStored
-            }
-            let newBG = container.newBackgroundContext()
-            newBG.automaticallyMergesChangesFromParent = true
-            newBG.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-            newBG.undoManager = nil
-            newBG.name = "nostur-bg-context"
-            self.bgStored = newBG
-            return newBG
+        #endif
+        if let bgStored {
+            return bgStored
         }
+        let newBG = container.newBackgroundContext()
+        newBG.automaticallyMergesChangesFromParent = true
+        newBG.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        newBG.undoManager = nil
+        newBG.name = "nostur-bg-context"
+        self.bgStored = newBG
+        return newBG
     }()
     
     lazy var viewContext: NSManagedObjectContext = {

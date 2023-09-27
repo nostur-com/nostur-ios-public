@@ -8,9 +8,15 @@
 import Foundation
 
 func sendNotification(_ name: Notification.Name, _ object: Any? = nil) {
+//    #if DEBUG
+//    L.og.info("🗡️🗡️ sendNotification: \(name.rawValue)")
+//    #endif
     NotificationCenter.default.post(Notification(name: name, object: object))
 }
 func receiveNotification(_ name: Notification.Name) -> NotificationCenter.Publisher {
+//    #if DEBUG
+//    L.og.info("🗡️🗡️ receiveNotification: \(name.rawValue)")
+//    #endif
     return NotificationCenter.default.publisher(for: name)
 }
 

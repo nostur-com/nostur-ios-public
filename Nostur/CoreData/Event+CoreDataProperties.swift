@@ -955,7 +955,7 @@ extension Event {
         else {
             savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
         }
-        savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
+        savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags) // TODO: why encode again, need to just store what we received before (performance)
         
         if let relays = relays?.split(separator: " ").map({ String($0) }) {
             let uniqueRelays = Set(relays)
