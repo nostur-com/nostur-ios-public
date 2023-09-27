@@ -117,8 +117,6 @@ extension View {
                         PostDetailView(nrPost: post)
                     case .Blocklist:
                         BlockListView()
-                    case .Bookmarks(let account):
-                        BookmarksView(account: account)
                     case .NoteReactions(let id):
                         NoteReactions(id: id)
                     case .NoteReposts(let id):
@@ -133,6 +131,8 @@ extension View {
                         RelaysView()    
                     case .Badges:
                         BadgesView()
+                    default:
+                        EmptyView()
                 }
             }
     }

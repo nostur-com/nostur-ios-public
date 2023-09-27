@@ -7,73 +7,80 @@
 
 import SwiftUI
 
-// TODO: DONT NEED CONTAINER ANYMORE
-struct BookmarksContainer: View {
-    @EnvironmentObject var la:LoggedInAccount
-
-    var body: some View {
-//        let _ = Self._printChanges()
-        BookmarksView(account: la.account)
-    }
-}
-
 struct BookmarksView: View {
     @EnvironmentObject private var theme:Theme
     @EnvironmentObject private var ns:NRState
+    @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Bookmarks"
 
     private let account: Account
+    @Binding private var navPath:NavigationPath
     @State private var vBookmarks:[NRPost] = []
 
-    private var accounts:[Account] {
-        ns.accounts.filter { $0.privateKey != nil }
-    }
+//    private var accounts:[Account] {
+//        ns.accounts.filter { $0.privateKey != nil }
+//    }
 
     @ObservedObject private var settings:SettingsStore = .shared
-    @State private var selectedAccount:Account? = nil
+//    @State private var selectedAccount:Account? = nil
+    @Namespace private var top
 
-
-    init(account:Account) {
+    init(account:Account, navPath:Binding<NavigationPath>) {
+        _navPath = navPath
         self.account = account
-        self.selectedAccount = account
+//        self.selectedAccount = account
     }
 
     var body: some View {
-//        let _ = Self._printChanges()
-        ScrollView {
-            if !vBookmarks.isEmpty {
-                LazyVStack(spacing: 10) {
-                    ForEach(vBookmarks) { vBookmark in
-                        Box(nrPost: vBookmark) {
-                            PostRowDeletable(nrPost: vBookmark, missingReplyTo: true, fullWidth: settings.fullWidthImages)
-                        }
-//                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-//                        .fixedSize(horizontal: false, vertical: true)
-                        .id(vBookmark.id)
-                        .onDelete {
-                            withAnimation {
-                                vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
+        ScrollViewReader { proxy in
+            ScrollView {
+                Color.clear.frame(height: 1).id(top)
+                if !vBookmarks.isEmpty {
+                    LazyVStack(spacing: 10) {
+                        ForEach(vBookmarks) { vBookmark in
+                            Box(nrPost: vBookmark) {
+                                PostRowDeletable(nrPost: vBookmark, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                             }
-                            
-                            DataProvider.shared().bg.perform {
-                                vBookmark.event.bookmarkedBy = []
-                                DataProvider.shared().bgSave()
+    //                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+    //                        .fixedSize(horizontal: false, vertical: true)
+                            .id(vBookmark.id)
+                            .onDelete {
+                                withAnimation {
+                                    vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
+                                }
+                                
+                                bg().perform {
+                                    vBookmark.event.bookmarkedBy = []
+                                    DataProvider.shared().bgSave()
+                                }
                             }
                         }
+                        Spacer()
                     }
-                    Spacer()
+                    .background(theme.listBackground)
                 }
-                .background(theme.listBackground)
+                else {
+                    Text("When you bookmark a post it will show up here.")
+                        .hCentered()
+                        .padding(.top, 40)
+                }
             }
-            else {
-                Text("When you bookmark a post it will show up here.")
-                    .hCentered()
-                    .padding(.top, 40)
+            .onReceive(receiveNotification(.didTapTab)) { notification in
+                guard selectedSubTab == "Bookmarks" else { return }
+                guard let tabName = notification.object as? String, tabName == "Bookmarks" else { return }
+                if navPath.count == 0 {
+                    withAnimation {
+                        proxy.scrollTo(top)
+                    }
+                }
             }
         }
-        .overlay(alignment:.topTrailing) {
-            AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
-                .padding(.horizontal)
-        }
+//        .overlay(alignment:.topTrailing) {
+//            AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
+//                .padding(.horizontal)
+//        }
         .onReceive(receiveNotification(.postAction)) { notification in
             let action = notification.object as! PostActionNotification
             if (action.type == .bookmark  && !action.bookmarked) {
@@ -88,9 +95,9 @@ struct BookmarksView: View {
         .navigationTitle(String(localized:"Bookmarks", comment:"Navigation title for Bookmarks screen"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
-        .onChange(of: selectedAccount) { account in
-            self.loadBookmarks(forAccount: account)
-        }
+//        .onChange(of: selectedAccount) { account in
+//            self.loadBookmarks(forAccount: account)
+//        }
         .task {
             self.loadBookmarks()
         }
@@ -124,14 +131,14 @@ struct BookmarksView: View {
     }
 }
 
-struct BookmarksView_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadPosts()
-            pe.loadBookmarks()
-        }) {
-            VStack {
-                BookmarksContainer()
+#Preview("Bookmarks") {
+    PreviewContainer({ pe in
+        pe.loadPosts()
+        pe.loadBookmarks()
+    }) {
+        VStack {
+            if let account = NRState.shared.loggedInAccount?.account {
+                BookmarksView(account: account, navPath: .constant(NavigationPath()))
             }
         }
     }

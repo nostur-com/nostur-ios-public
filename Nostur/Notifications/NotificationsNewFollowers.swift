@@ -16,14 +16,17 @@ struct NotificationsFollowers: View {
     @StateObject private var fl = FastLoader()
     @State private var backlog = Backlog()
     @State private var didLoad = false
+    @Binding private var navPath:NavigationPath
     
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Followers"
+    @Namespace private var top
     
     @FetchRequest
     private var notifications:FetchedResults<PersistentNotification>
     
-    init(pubkey: String) {
+    init(pubkey: String, navPath: Binding<NavigationPath>) {
+        _navPath = navPath
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
         fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", pubkey, PNType.newFollowers.rawValue)
@@ -31,14 +34,28 @@ struct NotificationsFollowers: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
-        ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(notifications) { notification in
-                    NewFollowersNotificationView(notification: notification)
-                        .padding(10)
-                        .background(theme.background)
-                        .id(notification.id)
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
+        ScrollViewReader { proxy in
+            ScrollView {
+                Color.clear.frame(height: 1).id(top)
+                LazyVStack(spacing: 10) {
+                    ForEach(notifications) { notification in
+                        NewFollowersNotificationView(notification: notification)
+                            .padding(10)
+                            .background(theme.background)
+                            .id(notification.id)
+                    }
+                }
+            }
+            .onReceive(receiveNotification(.didTapTab)) { notification in
+                guard selectedNotificationsTab == "Followers" else { return }
+                guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
+                if navPath.count == 0 {
+                    withAnimation {
+                        proxy.scrollTo(top)
+                    }
                 }
             }
         }
@@ -82,7 +99,7 @@ struct NotificationsFollowers: View {
         pe.loadNewFollowersNotification()
     }) {
         VStack {
-            NotificationsFollowers(pubkey: pubkey)
+            NotificationsFollowers(pubkey: pubkey, navPath: .constant(NavigationPath()))
         }
     }
 }
