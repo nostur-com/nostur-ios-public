@@ -38,6 +38,7 @@ struct MainView: View {
                     }
                     .overlay(alignment: .bottom) {
                         VStack {
+                            AnyStatus(filter: "APP_NOTICE")
                             #if DEBUG
                             AnyStatus(filter: "RELAY_NOTICE")
                             #endif
