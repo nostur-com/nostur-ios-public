@@ -86,7 +86,6 @@
         <attribute name="repliesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="repliesCount"/>
         <attribute name="replyToId" optional="YES" attributeType="String"/>
         <attribute name="replyToRootId" optional="YES" attributeType="String"/>
-        <attribute name="repostForId" optional="YES" attributeType="String"/>
         <attribute name="repostsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="sig" optional="YES" attributeType="String"/>
         <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
@@ -112,10 +111,6 @@
         </fetchIndex>
         <fetchIndex name="byCreatedAt">
             <fetchIndexElement property="created_at" type="Binary" order="descending"/>
-        </fetchIndex>
-        <fetchIndex name="byRepostForIdAndPubkey">
-            <fetchIndexElement property="repostForId" type="Binary" order="ascending"/>
-            <fetchIndexElement property="pubkey" type="Binary" order="ascending"/>
         </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
