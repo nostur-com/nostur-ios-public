@@ -233,6 +233,9 @@ struct SmoothList: UIViewControllerRepresentable {
                     }
                 }
                 
+                // Everything below here is image or link preview fetching, skip if low data mode
+                guard !SettingsStore.shared.lowDataMode else { continue }
+                
                 if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
                     imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
                 }
@@ -281,6 +284,8 @@ struct SmoothList: UIViewControllerRepresentable {
                     }
                 }
             }
+
+            guard !SettingsStore.shared.lowDataMode else { return }
             if !imageRequests.isEmpty {
                 prefetcher.startPrefetching(with: imageRequests)
             }
@@ -300,6 +305,9 @@ struct SmoothList: UIViewControllerRepresentable {
                 if !item.missingPs.isEmpty {
                     QueuedFetcher.shared.dequeue(pTags: item.missingPs)
                 }
+                
+                // Everything below here is image or link preview fetching, skip if low data mode
+                guard !SettingsStore.shared.lowDataMode else { continue }
                 
                 if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
                     imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
@@ -339,6 +347,8 @@ struct SmoothList: UIViewControllerRepresentable {
 //                    // for element in parentPost.contentElements { }
 //                }
             }
+            
+            guard !SettingsStore.shared.lowDataMode else { return }
             if (!imageRequests.isEmpty) {
                 prefetcher.stopPrefetching(with: imageRequests)
             }
@@ -556,6 +566,8 @@ func pfpImageRequestFor(_ picture:String, size:CGFloat) -> ImageRequest {
     
     //    thumbOptions.createThumbnailFromImageAlways = true
     //    thumbOptions.shouldCacheImmediately = true
+    let options:ImageRequest.Options = SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : []
+    
     if !SettingsStore.shared.animatedPFPenabled || picture.suffix(4) != ".gif" {
         return ImageRequest(url: URL(string:picture),
                             //                            userInfo: [.thumbnailKey: thumbOptions],
@@ -566,6 +578,7 @@ func pfpImageRequestFor(_ picture:String, size:CGFloat) -> ImageRequest {
                                         crop: true,
                                         upscale: true)
                             ],
+                            options: options,
                             userInfo: [.scaleKey: UIScreen.main.scale]
                             //                            userInfo: [.scaleKey: 1, .thumbnailKey: thumbOptions]
                             //                            userInfo: [.scaleKey: UIScreen.main.scale, .thumbnailKey: thumbOptions]
