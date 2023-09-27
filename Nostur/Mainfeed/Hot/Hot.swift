@@ -15,7 +15,7 @@ struct Hot: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_subtab") var selectedSubTab = "Hot"
     
-    @Namespace var top
+    @Namespace private var top
     
     var body: some View {
 //        #if DEBUG
@@ -23,9 +23,7 @@ struct Hot: View {
 //        #endif
         ScrollViewReader { proxy in
             switch hotVM.state {
-            case .initializing:
-                EmptyView()
-            case .loading:
+            case .initializing, .loading:
                 CenteredProgressView()
                     .task(id: "hot") {
                         do {
