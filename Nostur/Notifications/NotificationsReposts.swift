@@ -66,14 +66,11 @@ struct NotificationsReposts: View {
             )
             fl.loadNewer(250, taskId: "newReposts")
         }
-        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
-            let importedSubIds = notification.object as! ImportedNotification
-            bg().perform {
-                let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds) { subscriptionIds in
+            let reqTasks = backlog.tasks(with: subscriptionIds)
 
-                reqTasks.forEach { task in
-                    task.process()
-                }
+            reqTasks.forEach { task in
+                task.process()
             }
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in

@@ -143,15 +143,11 @@ struct NotificationsZaps: View {
             )
             fl.loadNewerEvents(5000, taskId:"newZaps")
         }
-        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
-            let importedSubIds = notification.object as! ImportedNotification
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds) { subscriptionIds in
+            let reqTasks = backlog.tasks(with: subscriptionIds)
             
-            bg().perform {
-                let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
-                
-                reqTasks.forEach { task in
-                    task.process()
-                }
+            reqTasks.forEach { task in
+                task.process()
             }
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in

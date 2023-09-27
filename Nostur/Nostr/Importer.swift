@@ -33,6 +33,8 @@ class Importer {
     var callbackSubscriptionIds = Set<String>()
     var sendReceivedNotification = PassthroughSubject<Void, Never>()
     
+    var importedMessagesFromSubscriptionIds = PassthroughSubject<Set<String>, Never>()
+    
     var existingIds:[String: EventState] = [:]
     
     static let shared = Importer()
@@ -54,11 +56,8 @@ class Importer {
                 DataProvider.shared().bg.perform {
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
                     let notified = self.callbackSubscriptionIds
-                    let importedNotification = ImportedNotification(subscriptionIds: notified)
+                    self.importedMessagesFromSubscriptionIds.send(notified)
                     self.callbackSubscriptionIds = []
-                    DispatchQueue.main.async {
-                        sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
-                    }
                 }
             }
             .store(in: &subscriptions)
@@ -194,10 +193,7 @@ class Importer {
                         if let subscriptionId = message.subscriptionId {
                             alreadySavedSubs.insert(subscriptionId)
                         }
-                        let importedNotification = ImportedNotification(subscriptionIds: alreadySavedSubs)
-                        DispatchQueue.main.async {
-                            sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
-                        }
+                        self.importedMessagesFromSubscriptionIds.send(alreadySavedSubs)
                         continue
                     }
                     // Skip if we already have a newer kind 3
@@ -311,9 +307,8 @@ class Importer {
                                 L.importing.info("💾💾 Saved \(count)/\(forImportsCount)")
                                 let mainQueueCount = count
                                 let mainQueueForImportsCount = forImportsCount
-                                let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
+                                self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
                                 DispatchQueue.main.async {
-                                    sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
                                     sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
                                     sendNotification(.newEventsInDatabase)
                                 }
@@ -331,9 +326,8 @@ class Importer {
                         L.importing.info("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
-                        let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
+                        self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
                         DispatchQueue.main.async {
-                            sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
                             sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
                             sendNotification(.newEventsInDatabase)
                         }
