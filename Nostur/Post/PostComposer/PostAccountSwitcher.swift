@@ -25,6 +25,9 @@ struct PostAccountSwitcher: View, Equatable {
     }
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         Color.clear
             .frame(width: 50, height: 50)
             .overlay(alignment: .topLeading) {
