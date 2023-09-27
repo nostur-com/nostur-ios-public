@@ -229,6 +229,7 @@
 		1F8CBFFB2AC3002D0077EF7D /* NotificationsMentions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8CBFFA2AC3002D0077EF7D /* NotificationsMentions.swift */; };
 		1F8CBFFD2AC3028D0077EF7D /* NotificationsReposts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8CBFFC2AC3028D0077EF7D /* NotificationsReposts.swift */; };
 		1F8CBFFF2AC304FD0077EF7D /* NotificationsNewFollowers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8CBFFE2AC304FD0077EF7D /* NotificationsNewFollowers.swift */; };
+		1F8CC0012AC324710077EF7D /* NotificationsRepostsGrouped.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8CC0002AC324710077EF7D /* NotificationsRepostsGrouped.swift */; };
 		1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 1F91D8F52A17C55F00C419A3 /* Collections */; };
 		1F91D8F82A186E5200C419A3 /* AnimatedNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */; };
 		1F91D8FB2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */; };
@@ -653,6 +654,7 @@
 		1F8CBFFA2AC3002D0077EF7D /* NotificationsMentions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsMentions.swift; sourceTree = "<group>"; };
 		1F8CBFFC2AC3028D0077EF7D /* NotificationsReposts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsReposts.swift; sourceTree = "<group>"; };
 		1F8CBFFE2AC304FD0077EF7D /* NotificationsNewFollowers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsNewFollowers.swift; sourceTree = "<group>"; };
+		1F8CC0002AC324710077EF7D /* NotificationsRepostsGrouped.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsRepostsGrouped.swift; sourceTree = "<group>"; };
 		1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedNumber.swift; sourceTree = "<group>"; };
 		1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapperPubkeyVerificationQueue.swift; sourceTree = "<group>"; };
 		1F922FDD2A9775EB00C84867 /* Box.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
@@ -1569,6 +1571,7 @@
 				1F81C4A62AC033DF0006CAA2 /* NotificationsViewModel.swift */,
 				1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */,
 				1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */,
+				1F8CC0002AC324710077EF7D /* NotificationsRepostsGrouped.swift */,
 			);
 			path = Notifications;
 			sourceTree = "<group>";
@@ -2055,6 +2058,7 @@
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */,
 				1F20F4C52AAE331F002D8886 /* ArticlesFeed.swift in Sources */,
+				1F8CC0012AC324710077EF7D /* NotificationsRepostsGrouped.swift in Sources */,
 				1F685B582A0D7800009EEC9B /* QueuedFetcher.swift in Sources */,
 				1FA059A12A74F87B0039643C /* LVM+relays.swift in Sources */,
 				1F7A10E22AA1DB7300042CD6 /* Search+Helpers.swift in Sources */,
