@@ -51,6 +51,7 @@ class FollowerNotifier {
     }
     
     func checkForUpdatedContactList() {
+        guard !SettingsStore.shared.lowDataMode else { return }
         guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
         L.og.info("Checking for new followers")
         
@@ -80,6 +81,7 @@ class FollowerNotifier {
         receiveNotification(.activeAccountChanged)
             .debounce(for: .seconds(20), scheduler: RunLoop.main)
             .sink { [weak self] notification in
+                guard !SettingsStore.shared.lowDataMode else { return }
                 guard let self = self else { return }
                 let account = notification.object as! Account
                 guard account.privateKey != nil else { return }
