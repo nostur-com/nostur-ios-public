@@ -347,6 +347,15 @@ struct Settings: View {
                 
             }
             
+            Section(header: Text("Data usage", comment: "Setting heading on settings screen")) {
+                Toggle(isOn: $settings.lowDataMode) {
+                    Text("Low Data mode", comment: "Setting on settings screen")
+                    Text("Will not download media and previews", comment:"Setting on settings screen")
+                }
+                // TODO: add limited/primary relay selection
+            }
+            .listRowBackground(theme.background)
+            
             Section(header: Text("Message verification", comment: "Setting heading on settings screen")) {
                 Toggle(isOn: $settings.isSignatureVerificationEnabled) {
                     Text("Verify message signatures", comment: "Setting on settings screen")
