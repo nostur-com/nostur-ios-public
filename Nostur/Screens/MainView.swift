@@ -108,6 +108,15 @@ struct MainView: View {
                         }
                         
                         ToolbarItem(placement: .navigationBarTrailing) {
+                            Image(systemName: "tortoise")
+                                .foregroundColor(theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
+                                .onTapGesture {
+                                    settings.lowDataMode.toggle()
+                                    sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                                }
+                        }
+                        
+                        ToolbarItem(placement: .navigationBarTrailing) {
                             Image(systemName: "gearshape")
                                 .foregroundColor(theme.accent)
                                 .onTapGesture {

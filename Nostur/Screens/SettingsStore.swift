@@ -36,6 +36,7 @@ final class SettingsStore: ObservableObject {
         
         static let webOfTrustLevel:String = "web_of_trust_level"
         static let autoHideBars:String = "auto_hide_bars"
+        static let lowDataMode:String = "low_data_mode"
     }
 
 //    private let cancellable: Cancellable
@@ -108,7 +109,8 @@ final class SettingsStore: ObservableObject {
             Keys.webOfTrustLevel: WebOfTrustLevel.normal.rawValue,
             Keys.includeSharedFrom: true,
             Keys.autoHideBars: false,
-            Keys.isSignatureVerificationEnabled: true
+            Keys.isSignatureVerificationEnabled: true,
+            Keys.lowDataMode: false
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -122,6 +124,7 @@ final class SettingsStore: ObservableObject {
         // TODO: Refactor settings, better use all properties on SettingsStore directly instead of (slower) defaults.bool()
         // for now only a few that we need right now:
         _animatedPFPenabledCache = defaults.bool(forKey: Keys.animatedPFPenabled)
+        _lowDataModeCache = defaults.bool(forKey: Keys.lowDataMode)
     }
     
     var defaultMediaUploadService: MediaUploadService {
@@ -271,6 +274,17 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _animatedPFPenabledCache:Bool = false
+    
+    public var lowDataMode: Bool {
+        set {
+            objectWillChange.send()
+            _lowDataModeCache = newValue
+            defaults.set(newValue, forKey: Keys.lowDataMode);
+        }
+        get { _lowDataModeCache }
+    }
+    
+    private var _lowDataModeCache:Bool = false
 }
 
 struct LightningWallet: Identifiable, Hashable {
