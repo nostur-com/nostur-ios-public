@@ -336,11 +336,13 @@ struct GalleryItem: Identifiable, Equatable {
     let pubkey:String // for blocklist filtering
     let url:URL
     let event:Event // bg
+    let eventId:String // need the id in main context
     var pfpPictureURL:URL?
         
     init(url:URL, event:Event) {
         self.url = url
         self.event = event
+        self.eventId = event.id
         self.id = UUID()
         self.pubkey = event.pubkey
         self.pfpPictureURL = NRState.shared.loggedInAccount?.followingPFPs[event.pubkey]
