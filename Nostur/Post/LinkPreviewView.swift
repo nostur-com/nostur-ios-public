@@ -70,6 +70,7 @@ struct LinkPreviewView: View {
             UIApplication.shared.open(url)
         }
         .task {
+            guard !SettingsStore.shared.lowDataMode else { return }
             guard url.absoluteString.prefix(7) != "http://" else { return }
             if let tags = LinkPreviewCache.shared.retrieveObject(at: url) {
                 self.tags = tags
