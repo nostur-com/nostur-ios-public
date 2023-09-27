@@ -78,6 +78,7 @@ class NukeInlineImageProvider: InlineImageProvider {
         
         let imageRequest = await ImageRequest(url: url,
                                           processors: [.resize(width: imageWidth, upscale: false)],
+                                          options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
                                           userInfo: [.scaleKey: UIScreen.main.scale])
         
         let task = ImageProcessing.shared.content.imageTask(with: imageRequest)

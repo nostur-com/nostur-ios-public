@@ -174,6 +174,7 @@ struct BadgeReceivedRow: View {
                     else {
                         LazyImage(request: ImageRequest(url: URL(string:pictureUrl),
                                     processors: [.resize(width: 50)],
+                                    options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
                                     userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                             if let image = state.image {
                                 image

@@ -10,6 +10,7 @@ import Nuke
 import NukeUI
 
 struct FullImageViewer: View {
+    @Environment(\.openURL) private var openURL
     @EnvironmentObject var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
     @Environment(\.dismiss) var dismiss
@@ -81,14 +82,24 @@ struct FullImageViewer: View {
         GeometryReader { geo in
             ZStack {
                 theme.background
-                LazyImage(request: ImageRequest(url: fullImageURL)) { state in
+                LazyImage(request: ImageRequest(url: fullImageURL, options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [])) { state in
                                 if state.error != nil {
-                                    Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                                        .centered()
-                                        .background(theme.lineColor.opacity(0.2))
-                                        .onAppear {
-                                            L.og.debug("Failed to load image: \(fullImageURL) - \(state.error?.localizedDescription ?? "")")
-                                        }
+                                    if SettingsStore.shared.lowDataMode {
+                                        Text(fullImageURL.absoluteString)
+                                            .foregroundColor(theme.accent)
+                                            .truncationMode(.middle)
+                                            .onTapGesture {
+                                                openURL(fullImageURL)
+                                            }
+                                    }
+                                    else {
+                                        Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                                            .centered()
+                                            .background(theme.lineColor.opacity(0.2))
+                                            .onAppear {
+                                                L.og.debug("Failed to load image: \(fullImageURL) - \(state.error?.localizedDescription ?? "")")
+                                            }
+                                    }
                                 }
                                 else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
                                     GIFImage(data: data, isPlaying: .constant(true))

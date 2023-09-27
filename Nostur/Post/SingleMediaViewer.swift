@@ -10,6 +10,7 @@ import NukeUI
 import Nuke
 
 struct SingleMediaViewer: View {
+    @Environment(\.openURL) private var openURL
     @EnvironmentObject var theme:Theme
     let url:URL
     let pubkey:String
@@ -46,13 +47,23 @@ struct SingleMediaViewer: View {
         else if autoload || imagesShown {
             LazyImage(request: makeImageRequest(url, width: imageWidth, height: height, contentMode: contentMode, upscale: upscale, label: "SingleMediaViewer")) { state in
                 if state.error != nil {
-                    Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                        .centered()
-//                        .frame(height: theHeight)
-                        .background(theme.lineColor.opacity(0.2))
-                        .onAppear {
-                            L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
-                        }
+                    if SettingsStore.shared.lowDataMode {
+                        Text(url.absoluteString)
+                            .foregroundColor(theme.accent)
+                            .truncationMode(.middle)
+                            .onTapGesture {
+                                openURL(url)
+                            }
+                    }
+                    else {
+                        Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                            .centered()
+    //                        .frame(height: theHeight)
+                            .background(theme.lineColor.opacity(0.2))
+                            .onAppear {
+                                L.og.error("Failed to load image: \(state.error?.localizedDescription ?? "")")
+                            }
+                    }
                 }
                 else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
                     if fullWidth {
@@ -309,6 +320,7 @@ func makeImageRequest(_ url:URL, width:CGFloat, height:CGFloat? = nil, contentMo
                     ? .resize(size: CGSize(width: width, height: height!), contentMode: contentMode, upscale: upscale)
                     : .resize(width: width, upscale: upscale)
                  ],
+                options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
                 userInfo: [.scaleKey: UIScreen.main.scale]
     )
 }
