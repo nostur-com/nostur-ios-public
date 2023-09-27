@@ -116,6 +116,7 @@ struct Gallery_Previews: PreviewProvider {
 }
 
 struct GridItemView: View {
+    @EnvironmentObject var theme:Theme
     let size: Double
     let item: GalleryItem
     var withPFP = false
@@ -124,14 +125,24 @@ struct GridItemView: View {
     var body: some View {
         LazyImage(request: makeImageRequest(url, width: size, height: size, contentMode: .aspectFill, upscale: true, label: "GridItemView")) { state in
             if state.error != nil {
-                Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                    .centered()
-                    .onAppear {
-                        L.og.error("Failed to load image: \(url.absoluteString) - \(state.error?.localizedDescription ?? "")")
-                    }
-                    .onTapGesture {
-                        navigateTo(NotePath(id: item.event.id))
-                    }
+                if SettingsStore.shared.lowDataMode {
+                    Text(url.absoluteString)
+                        .foregroundColor(theme.accent)
+                        .truncationMode(.middle)
+                        .onTapGesture {
+                            navigateTo(NotePath(id: item.eventId))
+                        }
+                }
+                else {
+                    Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                        .centered()
+                        .onAppear {
+                            L.og.error("Failed to load image: \(url.absoluteString) - \(state.error?.localizedDescription ?? "")")
+                        }
+                        .onTapGesture {
+                            navigateTo(NotePath(id: item.eventId))
+                        }
+                }
             }
             else if let image = state.image {
                 image
