@@ -222,8 +222,9 @@ class FooterAttributes: ObservableObject {
     static private func isReposted(_ event:Event) -> Bool {
         if let account = account() {
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "created_at > %i AND repostForId == %@ AND pubkey == %@",
-                                       event.created_at, event.id, account.publicKey)
+            // TODO: Should use a generic .otherId, similar to .otherPubkey, to make all relational queries superfast.
+            fr.predicate = NSPredicate(format: "created_at > %i AND kind == 6 AND pubkey == %@ AND tagsSerialized CONTAINS %@",
+                                       event.created_at, account.publicKey, serializedE(event.id))
             fr.fetchLimit = 1
             fr.resultType = .countResultType
             let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
@@ -235,6 +236,7 @@ class FooterAttributes: ObservableObject {
     static private func hasZapReceipt(_ event:Event) -> Bool {
         if let account = account() {
             let fr = Event.fetchRequest()
+            // TODO: Should use a generic .otherId, similar to .otherPubkey, to make all relational queries superfast.
             fr.predicate = NSPredicate(format: "created_at >= %i AND kind == 9734 AND pubkey == %@ AND tagsSerialized CONTAINS %@", event.created_at, account.publicKey, serializedE(event.id))
             fr.fetchLimit = 1
             fr.resultType = .countResultType

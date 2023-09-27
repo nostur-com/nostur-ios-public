@@ -32,7 +32,6 @@ extension Event {
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
     @NSManaged public var firstQuoteId: String?
-    @NSManaged public var repostForId: String? // for tracking if we resposted or not (footer icon)
     
     @NSManaged public var isRepost: Bool // Cache
     
@@ -1045,9 +1044,34 @@ extension Event {
         
         if (event.kind == .textNote) {
             
-            if (event.content == "#[0]" && !event.tags.isEmpty && event.tags[0].type == "e") {
+            if event.content == "#[0]", let firstE = event.firstE() {
                 savedEvent.isRepost = true
-                savedEvent.repostForId = event.tags[0].id // repost
+                
+                savedEvent.firstQuoteId = firstE
+                savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
+                
+                if savedEvent.firstQuote == nil { // or we fetch it if we dont have it yet
+                    // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
+                    if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+                        savedEvent.firstQuote = repostedEvent
+                        repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                    }
+                    else if let repostedEvent = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                        savedEvent.firstQuote = repostedEvent
+                        repostedEvent.repostsCount += 1
+                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                    }
+                }
+                
+                // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+                // if we already have the firstQuote (reposted post), we use that .pubkey
+                if let otherPubkey = savedEvent.firstQuote?.pubkey {
+                    savedEvent.otherPubkey = otherPubkey
+                } // else we take the pubkey from the tags (should be there)
+                else if let firstP = event.firstP() {
+                    savedEvent.otherPubkey = firstP
+                }
             }
             
             // NEw: Save all p's in .contacts

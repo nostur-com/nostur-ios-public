@@ -544,13 +544,13 @@ fileprivate class NotificationFetchRequests {
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
                                     "created_at > %i " +
-                                    "AND NOT pubkey IN %@ " +
+                                    "AND otherPubkey == %@ " +
                                     "AND kind == 6 " +
-                                    "AND tagsSerialized CONTAINS %@ " +
+                                    "AND NOT pubkey IN %@ " +
                                     "AND NOT id IN %@ ",
                                     lastSeenPostCreatedAt,
+                                    pubkey,
                                     (blockedPubkeys + [pubkey]),
-                                    serializedP(pubkey),
                                     mutedRootIds)
         
         r.fetchLimit = Self.FETCH_LIMIT
@@ -582,12 +582,12 @@ fileprivate class NotificationFetchRequests {
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
                                     "created_at > %i " +
+                                    "AND otherPubkey == %@ " +
                                     "AND NOT pubkey IN %@ " +
-                                    "AND kind == 7 " +
-                                    "AND otherPubkey == %@",
+                                    "AND kind == 7",
                                     account.lastSeenReactionCreatedAt,
-                                    (blockedPubkeys + [pubkey]),
-                                    pubkey)
+                                    pubkey,
+                                    (blockedPubkeys + [pubkey]))
         r.fetchLimit = Self.FETCH_LIMIT
         r.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r.resultType = resultType
@@ -654,8 +654,7 @@ class OfflinePosts {
                                     "AND kind IN {0,1,3,4,5,6,7,9802} " +
                                     "AND relays = \"\"" +
                                     "AND NOT flags IN {\"nsecbunker_unsigned\",\"awaiting_send\",\"draft\"}" +
-                                    "AND sig != nil"
-                                    ,
+                                    "AND sig != nil",
                                     Int64(xDaysAgo.timeIntervalSince1970),
                                     pubkey)
         r1.fetchLimit = 100 // sanity
