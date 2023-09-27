@@ -117,6 +117,10 @@ public final class NewPostModel: ObservableObject {
         if let quotingEvent {
             nEvent.content = nEvent.content + "\n#[0]"
             nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
+            
+            if !nEvent.pTags().contains(quotingEvent.pubkey) { // TODO: Add notification toggles to turn off
+                nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
+            }
         }
         
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
