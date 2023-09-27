@@ -119,13 +119,10 @@ struct ProfileZaps: View {
             backlog.add(fetchNewerTask)
             fetchNewerTask.fetch()
         }
-        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
-            let importedNotification = notification.object as! ImportedNotification
-            bg().perform {
-                let reqTasks = backlog.tasks(with: importedNotification.subscriptionIds)
-                reqTasks.forEach { task in
-                    task.process()
-                }
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds) { subscriptionIds in
+            let reqTasks = backlog.tasks(with: subscriptionIds)
+            reqTasks.forEach { task in
+                task.process()
             }
         }
     }

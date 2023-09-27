@@ -289,17 +289,14 @@ class Backlog {
             }
         }
         if (auto) {
-            receiveNotification(.importedMessagesFromSubscriptionIds)
-                .sink(receiveValue: { [weak self] notification in
+            Importer.shared.importedMessagesFromSubscriptionIds
+                .sink { [weak self] subscriptionIds in
                     guard let self = self else { return }
-                    let importedNotification = notification.object as! ImportedNotification
-                    bg().perform {
-                        let reqTasks = self.tasks(with: importedNotification.subscriptionIds)
-                        for task in reqTasks {
-                            task.process()
-                        }
+                    let reqTasks = self.tasks(with: subscriptionIds)
+                    for task in reqTasks {
+                        task.process()
                     }
-                })
+                }
                 .store(in: &subscriptions)
             
             receiveNotification(.importedPrioMessage)
