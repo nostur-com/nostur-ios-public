@@ -34,6 +34,7 @@ class Importer {
     var sendReceivedNotification = PassthroughSubject<Void, Never>()
     
     var importedMessagesFromSubscriptionIds = PassthroughSubject<Set<String>, Never>()
+    var newEventsInDatabase = PassthroughSubject<Void, Never>()
     
     var existingIds:[String: EventState] = [:]
     
@@ -308,9 +309,9 @@ class Importer {
                                 let mainQueueCount = count
                                 let mainQueueForImportsCount = forImportsCount
                                 self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
+                                self.newEventsInDatabase.send()
                                 DispatchQueue.main.async {
                                     sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
-                                    sendNotification(.newEventsInDatabase)
                                 }
                                 subscriptionIds.removeAll()
                             }
@@ -327,9 +328,9 @@ class Importer {
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
                         self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
+                        self.newEventsInDatabase.send()
                         DispatchQueue.main.async {
                             sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
-                            sendNotification(.newEventsInDatabase)
                         }
                         subscriptionIds.removeAll()
                     }
