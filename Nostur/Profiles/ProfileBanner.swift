@@ -10,6 +10,7 @@ import NukeUI
 import Nuke
 
 struct ProfileBanner: View {
+    @ObservedObject private var settings:SettingsStore = .shared
     @EnvironmentObject private var theme:Theme
     public var banner:String?
     public var width:CGFloat
@@ -20,7 +21,7 @@ struct ProfileBanner: View {
         let _ = Self._printChanges()
         #endif
         GeometryReader { geoBanner in
-            if let banner {
+            if !settings.lowDataMode, let banner {
                 if (banner.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                     LazyImage(url: URL(string: banner)) { state in
                         if let container = state.imageContainer {
