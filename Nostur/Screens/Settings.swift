@@ -120,12 +120,17 @@ struct Settings: View {
                         }
                         .onChange(of: settings.webOfTrustLevel) { newValue in
                             if newValue == SettingsStore.WebOfTrustLevel.normal.rawValue {
-                                DataProvider.shared().bg.perform {
-                                    wot.loadNormal()
+                                bg().perform {
+                                    guard let account = account() else { return }
+                                    let wotFollowingPubkeys = account.getFollowingPublicKeys().subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
+                                    wot.loadNormal(wotFollowingPubkeys: wotFollowingPubkeys, force: false)
                                 }
                             }
                             else if newValue == SettingsStore.WebOfTrustLevel.off.rawValue {
                                 DirectMessageViewModel.default.load(pubkey: NRState.shared.activeAccountPublicKey)
+                            }
+                            else {
+                                wot.updateViewData()
                             }
                         }
                     }
@@ -135,11 +140,11 @@ struct Settings: View {
                         VStack(alignment: .leading) {
                             Text("Updated: \(wot.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
                                 .onAppear {
-                                    DataProvider.shared().bg.perform {
+                                    bg().perform {
                                         wot.loadLastUpdatedDate()
                                     }
                                 }
-                            if settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+                            if wot.allowedKeysCount == 0 || settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
                                 Text("Allowed: Everyone")
                             }
                             else {
@@ -151,7 +156,7 @@ struct Settings: View {
                             guard updatingWoT == false else { return }
                             guard let account = account() else { return }
                             updatingWoT = true
-                            wot.loadWoT(account)
+                            wot.loadWoT(account, force: true)
                         }
                     }
                 }

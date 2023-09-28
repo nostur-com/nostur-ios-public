@@ -34,16 +34,9 @@ class WebOfTrust: ObservableObject {
     private let ENABLE_THRESHOLD = 2000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
     // For views
-    @Published var lastUpdated:Date? = nil //{ // TODO: REWIRE SETTINGS SCREEN
-//        didSet {
-//            SettingsStore.shared.objectWillChange.send() // update Settings screen
-//        }
-//    }
-    @Published var allowedKeysCount:Int = 0 //{ // TODO: REWIRE SETTINGS SCREEN
-//        didSet {
-//            SettingsStore.shared.objectWillChange.send() // update Settings screen
-//        }
-//    }
+    @Published public var lastUpdated:Date? = nil
+    
+    @Published public var allowedKeysCount:Int = 0
     
     // Only accessed from bg thread
     // Keep seperate lists for faster filtering
@@ -62,14 +55,18 @@ class WebOfTrust: ObservableObject {
         }
     }
 
-    private func updateViewData() {
+    public func updateViewData() {
         guard let pubkey = self.pubkey else { return }
         DispatchQueue.main.async {
-            if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.strict.rawValue {
+            switch SettingsStore.shared.webOfTrustLevel {
+            case SettingsStore.WebOfTrustLevel.strict.rawValue:
                 self.allowedKeysCount = self.followingPubkeys.count
-            }
-            else {
-                self.allowedKeysCount = self.followingPubkeys.count + self.followingFollowingPubkeys.count
+            case SettingsStore.WebOfTrustLevel.normal.rawValue:
+                self.allowedKeysCount = self.followingFollowingPubkeys.union(self.followingPubkeys).count
+            case SettingsStore.WebOfTrustLevel.off.rawValue:
+                self.allowedKeysCount = 0
+            default:
+                self.allowedKeysCount = 0
             }
             sendNotification(.WoTReady, pubkey)
         }
@@ -82,10 +79,11 @@ class WebOfTrust: ObservableObject {
     
     private init() {}
     
-    public func loadWoT(_ account:Account) {
+    public func loadWoT(_ account:Account, force:Bool = false) {
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
         
         let wotFollowingPubkeys = account.getFollowingPublicKeys().subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
+        self.followingPubkeys = account.getFollowingPublicKeys()
         
         let publicKey = account.publicKey
         self.pubkey = publicKey
@@ -101,8 +99,8 @@ class WebOfTrust: ObservableObject {
                     L.og.info("🕸️🕸️ WebOfTrust: Disabled")
                 case SettingsStore.WebOfTrustLevel.normal.rawValue:
                     L.og.info("🕸️🕸️ WebOfTrust: Normal")
-                    DataProvider.shared().bg.perform { [weak self] in
-                        self?.loadNormal()
+                    bg().perform { [weak self] in
+                        self?.loadNormal(wotFollowingPubkeys: wotFollowingPubkeys, force: force)
                     }
                 case SettingsStore.WebOfTrustLevel.strict.rawValue:
                     L.og.info("🕸️🕸️ WebOfTrust: Strict")
@@ -154,7 +152,7 @@ class WebOfTrust: ObservableObject {
     private func regenerateWoTWithFollowsOf(_ otherPubkey:String) {
         guard let pubkey = self.pubkey else { return }
         var followsOfPubkey = Set<String>()
-        DataProvider.shared().bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", otherPubkey)
@@ -190,8 +188,8 @@ class WebOfTrust: ObservableObject {
     private var pubkey:String?
     
     // This is for "normal" mode (follows + follows of follows)
-    public func loadNormal(force:Bool = false) { // force = true to force fetching (update)
-        self.loadFollowingFollowing(force: force)
+    public func loadNormal(wotFollowingPubkeys:Set<String>, force:Bool = false) { // force = true to force fetching (update)
+        self.loadFollowingFollowing(wotFollowingPubkeys:wotFollowingPubkeys, force: force)
         guard let pubkey = self.pubkey else { return }
         if let lastUpdated = lastUpdatedDate(pubkey) {
             L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(pubkey).txt --> \(lastUpdated.description)")
@@ -202,12 +200,12 @@ class WebOfTrust: ObservableObject {
     }
     
     // force = true to force fetching (update) - else will only use what is already on disk
-    private func loadFollowingFollowing(force:Bool = false) {
+    private func loadFollowingFollowing(wotFollowingPubkeys:Set<String>, force:Bool = false) {
         guard let pubkey = self.pubkey else { return }
         // Load from disk
         self.followingFollowingPubkeys = self.loadData(pubkey)
 
-        var pubkeys = followingPubkeys
+        var pubkeys = wotFollowingPubkeys
         pubkeys.remove(pubkey)
         
         guard self.followingFollowingPubkeys.count < ENABLE_THRESHOLD || force == true else {
@@ -244,7 +242,7 @@ class WebOfTrust: ObservableObject {
     private func generateWoT() {
         guard let pubkey = self.pubkey else { return }
         var followFollows = Set<String>()
-        DataProvider.shared().bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "kind == 3 AND pubkey IN %@", followingPubkeys)
