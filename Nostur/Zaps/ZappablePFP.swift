@@ -60,7 +60,7 @@ struct ZappablePFP: View {
             }
             .onAppear {
                 guard let contact = contact else { return }
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     if let zapState = contact.contact.zapState {
                         if [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState) {
                             DispatchQueue.main.async {

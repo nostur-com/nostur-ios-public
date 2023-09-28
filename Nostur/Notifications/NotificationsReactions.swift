@@ -161,7 +161,7 @@ struct NotificationsReactions: View {
         fl.$events
             .sink { events in
                 let myNotesReactedTo = self.myNotesReactedTo(events)
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     let transformed = myNotesReactedTo
                         .compactMap { $0.toBG() }
                         .map { NRPost(event: $0) }
@@ -228,7 +228,7 @@ struct NotificationsReactions: View {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Reactions" else { return }
         if let first = fl.events.first {
             let firstCreatedAt = first.created_at
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 if let account = account() {
                     if account.lastSeenReactionCreatedAt != firstCreatedAt {
                         account.lastSeenReactionCreatedAt = firstCreatedAt

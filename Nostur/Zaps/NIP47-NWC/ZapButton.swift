@@ -115,7 +115,7 @@ struct ZapButton: View {
         footerAttributes.zapped = true
         
 
-        DataProvider.shared().bg.perform {
+        bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
             let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), contact: contact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!, zapMessage: zapMessage)
             NWCZapQueue.shared.sendZap(zap)

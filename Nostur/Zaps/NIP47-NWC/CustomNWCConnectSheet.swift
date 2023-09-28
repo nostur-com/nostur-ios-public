@@ -117,7 +117,7 @@ struct CustomNWCConnectSheet: View {
             // Here we received the info event from the NWC relay
             let nwcInfoNotification = notification.object as! NWCInfoNotification
             
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 if let _ = NWCConnection.fetchConnection(awaitingConnectionId, context: DataProvider.shared().bg) {
                     if nwcInfoNotification.methods.split(separator: " ").map({ String($0) }).contains("pay_invoice") {
                         DispatchQueue.main.async {
@@ -154,7 +154,7 @@ struct CustomNWCConnectSheet: View {
             return
         }
         
-        DataProvider.shared().bg.perform {
+        bg().perform {
             guard let c = NWCConnection.createCustomConnection(context: DataProvider.shared().bg, secret: secret) else {
                 L.og.error("Problem handling secret in NWCConnection.createCustomConnection")
                 DispatchQueue.main.async {

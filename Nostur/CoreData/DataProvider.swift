@@ -9,7 +9,7 @@ import CoreData
 
 class DataProvider: ObservableObject {
     
-    private var bgStored:NSManagedObjectContext? // IMPORTING, PREPARING, TRANSFORMING FOR VIEW
+    public var bgStored:NSManagedObjectContext? // IMPORTING, PREPARING, TRANSFORMING FOR VIEW
     
     /// A shared data provider for use within the main app bundle.
     static let live = DataProvider()
@@ -116,12 +116,14 @@ class DataProvider: ObservableObject {
             return
         }
         #endif
+        
+        let bg = self.bgStored ?? self.bg
 
         bg.perform { [weak self] in
             guard let self = self else { return }
-            if self.bg.hasChanges {
+            if bg.hasChanges {
                 do {
-                    try self.bg.save()
+                    try bg.save()
                 }
                 catch {
                     L.og.error("🔴🔴 Could not save bgContext \(error)")
@@ -149,11 +151,14 @@ class DataProvider: ObservableObject {
             return
         }
         #endif
+        
+        let bg = self.bgStored ?? self.bg
+        
         bg.perform { [weak self] in
             guard let self = self else { return }
-            if self.bg.hasChanges {
+            if bg.hasChanges {
                 do {
-                    try self.bg.save()
+                    try bg.save()
                 }
                 catch {
                     L.og.error("🔴🔴 Could not save bgContext \(error)")
@@ -174,7 +179,7 @@ class DataProvider: ObservableObject {
 }
 
 func bg() -> NSManagedObjectContext {
-    return DataProvider.shared().bg
+    (DataProvider.shared().bgStored ?? DataProvider.shared().bg) // .bg lazy computed, so may have thread contention issues when used alot, try to directly access .bgStored here.
 }
 
 func bgSave() {

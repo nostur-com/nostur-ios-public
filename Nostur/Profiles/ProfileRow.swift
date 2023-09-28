@@ -173,7 +173,7 @@ struct ProfileRow: View {
                 let cPubkey = contact.pubkey
                 let currentAccountPubkey = la.pubkey
                 
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     guard let account = la.bgAccount else { return }
                     guard account.publicKey == currentAccountPubkey else { return }
                     guard let similarContact = account.follows_.first(where: {

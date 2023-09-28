@@ -31,7 +31,7 @@ class NWCZapQueue {
         cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true, block: { [unowned self] timer in
             let now = Date()
             
-            DataProvider.shared().bg.perform { [weak self] in
+            bg().perform { [weak self] in
                 guard let self = self else { return }
                 var failedZaps = [Zap]()
                 for zap in self.waitingZaps.filter({ now.timeIntervalSince($0.value.queuedAt) >= 55 }) {
@@ -153,7 +153,7 @@ class Zap {
         case .NWC_INVOICE_PAID:
             L.og.debug("NWC_INVOICE_PAID")
         case .ERROR:
-            DataProvider.shared().bg.perform { [weak self] in
+            bg().perform { [weak self] in
                 guard let self = self else { return }
                 if let eventId = self.eventId {
                     let message = String(localized: "[Zap](nostur:e:\(eventId)) failed.\n\(self.error ?? "")", comment: "Error message. don't translate the (nostur:e:...) part")
@@ -188,7 +188,7 @@ class Zap {
                     if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                         self.supportsZap = true
                         // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                        await DataProvider.shared().bg.perform {
+                        await bg().perform {
                             self.contact.zapperPubkey = response.nostrPubkey!
                         }
                     }
@@ -215,7 +215,7 @@ class Zap {
             .map { $0.url }
         
         if (self.supportsZap) {
-            DataProvider.shared().bg.perform { [weak self] in
+            bg().perform { [weak self] in
                 guard let self = self else { return }
                 guard let account = account() else { return }
                 if isNC {
@@ -285,7 +285,7 @@ class Zap {
     }
     
     private func payInvoice() {
-        DataProvider.shared().bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             guard let pr = self.pr else { state = .ERROR; return }
             
@@ -351,7 +351,7 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
                 if let signedReq = try? nwcReq.sign(keys) {
 //                            print(signedReq.wrappedEventJson())
                     if (Thread.isMainThread) {
-                        DataProvider.shared().bg.perform {
+                        bg().perform {
                             NWCRequestQueue.shared.sendRequest(signedReq, zap: zap, cancellationId: cancellationId)
                         }
                     }

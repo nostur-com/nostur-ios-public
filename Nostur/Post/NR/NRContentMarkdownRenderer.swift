@@ -41,7 +41,7 @@ struct NRContentMarkdownRenderer: View {
                     .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             ) { pubkey in
                 
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     let reparsed = NRTextParser.shared.parseMD(markdownContentWithPs.event, text: markdownContentWithPs.input)
                     DispatchQueue.main.async {
                         L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output.renderPlainText())")

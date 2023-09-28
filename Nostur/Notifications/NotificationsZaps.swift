@@ -208,7 +208,7 @@ struct NotificationsZaps: View {
                     ZapInfo(zap: $0, zappedEvent: $0.zappedEvent)
                 }
                                 
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     let transformed = p.map { zapInfo in
                         return ZapInfo(
                             zap: zapInfo.zap,

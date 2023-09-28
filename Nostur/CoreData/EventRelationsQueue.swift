@@ -49,7 +49,7 @@ class EventRelationsQueue {
         cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true, block: { [unowned self] timer in
             let now = Date()
             
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 self.waitingEvents = self.waitingEvents.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
                 self.waitingContacts = self.waitingContacts.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
             }            

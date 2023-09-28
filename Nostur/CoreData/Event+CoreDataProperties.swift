@@ -195,12 +195,12 @@ extension Event {
     func toBG() -> Event? {
         if Thread.isMainThread {
             L.og.info("🔴🔴🔴 toBG() should be in bg already, switching now but should fix code")
-            return DataProvider.shared().bg.performAndWait {
-                return DataProvider.shared().bg.object(with: self.objectID) as? Event
+            return bg().performAndWait {
+                return bg().object(with: self.objectID) as? Event
             }
         }
         else {
-            return DataProvider.shared().bg.object(with: self.objectID) as? Event
+            return bg().object(with: self.objectID) as? Event
         }
     }
 }

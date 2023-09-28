@@ -144,7 +144,7 @@ struct AddExistingAccountSheet: View {
                     if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
                         for contactEvent in contactEvents {
                             let eventId = contactEvent.id
-                            DataProvider.shared().bg.perform {
+                            bg().perform {
                                 Importer.shared.existingIds.removeValue(forKey: eventId)
                             }
                             viewContext.delete(contactEvent)
@@ -154,7 +154,7 @@ struct AddExistingAccountSheet: View {
                     if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
                         for clEvent in clEvents {
                             let eventId = clEvent.id
-                            DataProvider.shared().bg.perform {
+                            bg().perform {
                                 Importer.shared.existingIds.removeValue(forKey: eventId)
                             }
                             viewContext.delete(clEvent)
@@ -208,7 +208,7 @@ struct AddExistingAccountSheet: View {
         if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for contactEvent in contactEvents {
                 let eventId = contactEvent.id
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     Importer.shared.existingIds.removeValue(forKey: eventId)
                 }
                 viewContext.delete(contactEvent)
@@ -219,7 +219,7 @@ struct AddExistingAccountSheet: View {
         if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for clEvent in clEvents {
                 let eventId = clEvent.id
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     Importer.shared.existingIds.removeValue(forKey: eventId)
                 }
                 viewContext.delete(clEvent)
@@ -255,7 +255,7 @@ struct AddExistingAccountSheet: View {
         if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for contactEvent in contactEvents {
                 let eventId = contactEvent.id
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     Importer.shared.existingIds.removeValue(forKey: eventId)
                 }
                 viewContext.delete(contactEvent)
@@ -265,7 +265,7 @@ struct AddExistingAccountSheet: View {
         if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for clEvent in clEvents {
                 let eventId = clEvent.id
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     Importer.shared.existingIds.removeValue(forKey: eventId)
                 }
                 viewContext.delete(clEvent)

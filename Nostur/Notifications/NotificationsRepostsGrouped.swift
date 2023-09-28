@@ -28,7 +28,7 @@ struct NotificationsRepostsGrouped: View {
                         KindResolver(nrPost: nrPost, fullWidth: settings.fullWidthImages, hideFooter: !settings.rowFooterEnabled, missingReplyTo: true, isDetail: false)
                             .onAppear {
                                 if !nrPost.missingPs.isEmpty {
-                                    DataProvider.shared().bg.perform {
+                                    bg().perform {
                                         EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.RepostsGrouped")
                                         QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                                     }
@@ -177,7 +177,7 @@ struct NotificationsRepostsGrouped: View {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Reposts" else { return }
         if let first = fl.nrPosts.first {
             let firstCreatedAt = first.created_at
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 if let account = account() {
                     if account.lastSeenRepostCreatedAt != firstCreatedAt {
                         account.lastSeenRepostCreatedAt = firstCreatedAt

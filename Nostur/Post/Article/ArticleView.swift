@@ -121,7 +121,7 @@ struct ArticleView: View {
                             else {
                                 Text(article.anyName)
                                     .onAppear {
-                                        DataProvider.shared().bg.perform {
+                                        bg().perform {
                                             EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
                                             QueuedFetcher.shared.enqueue(pTag: article.pubkey)
                                         }
@@ -171,7 +171,7 @@ struct ArticleView: View {
                 guard !didLoad else { return }
                 didLoad = true
                 
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView - isDetail")
                     if (!article.missingPs.isEmpty) {
                         QueuedFetcher.shared.enqueue(pTags: article.missingPs)
@@ -197,7 +197,7 @@ struct ArticleView: View {
                 }
             }
             .onDisappear {
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     if (!article.missingPs.isEmpty) {
                         QueuedFetcher.shared.dequeue(pTags: article.missingPs)
                     }
@@ -328,7 +328,7 @@ struct ArticleView: View {
                         else {
                             Text(article.anyName)
                                 .onAppear {
-                                    DataProvider.shared().bg.perform {
+                                    bg().perform {
                                         EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
                                         QueuedFetcher.shared.enqueue(pTag: article.pubkey)
                                     }
@@ -370,7 +370,7 @@ struct ArticleView: View {
                             else {
                                 Text(article.anyName)
                                     .onAppear {
-                                        DataProvider.shared().bg.perform {
+                                        bg().perform {
                                             EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
                                             QueuedFetcher.shared.enqueue(pTag: article.pubkey)
                                         }

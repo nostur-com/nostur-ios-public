@@ -32,7 +32,7 @@ extension LVM {
             L.og.notice("🟪 Fetching clEvent from relays")
             reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
         } processResponseCommand: { taskId, _, _ in
-            DataProvider.shared().bg.perform { [weak self] in
+            bg().perform { [weak self] in
                 guard let self = self else { return }
                 L.og.notice("🟪 Processing clEvent response from relays")
                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: DataProvider.shared().bg) {
@@ -47,7 +47,7 @@ extension LVM {
         } timeoutCommand: { taskId in
             if (self.pubkeys.isEmpty) {
                 L.og.notice("🟪  \(taskId) Timeout in fetching clEvent / pubkeys")
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: DataProvider.shared().bg) {
                         self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
                         
@@ -68,7 +68,7 @@ extension LVM {
             L.og.notice("🟪 Fetching posts from relays using \(self.pubkeys.count) pubkeys")
             reqP(RM.getFollowingEvents(pubkeys: Array(self.pubkeys), limit: 400, subscriptionId: taskId))
         } processResponseCommand: { taskId, _, _  in
-            DataProvider.shared().bg.perform { [weak self] in
+            bg().perform { [weak self] in
                 guard let self = self else { return }
                 let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
                 guard let events = try? DataProvider.shared().bg.fetch(fr) else {

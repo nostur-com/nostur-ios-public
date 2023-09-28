@@ -277,7 +277,7 @@ extension Account : Identifiable {
     }
     
     func toBG() -> Account? {
-        DataProvider.shared().bg.object(with: self.objectID) as? Account
+        bg().object(with: self.objectID) as? Account
     }
     
     

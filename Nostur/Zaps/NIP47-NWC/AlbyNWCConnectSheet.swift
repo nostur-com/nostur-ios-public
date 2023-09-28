@@ -138,7 +138,7 @@ struct AlbyNWCConnectSheet: View {
                 nwcErrorMessage = "Could not connect Alby wallet"
                 return
             }
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 nwcConnection.walletPubkey = nwcPubkey
                 nwcConnection.relay = nwcRelay
                 nwcConnection.methods = "pay_invoice"
@@ -192,7 +192,7 @@ struct AlbyNWCConnectSheet: View {
     }
     
     func startNWC() {
-        DataProvider.shared().bg.perform {
+        bg().perform {
             nwcConnection = NWCConnection.createAlbyConnection(context: DataProvider.shared().bg)
             
             if let nwcConnection = nwcConnection, let nwcUrl = URL(string:"https://nwc.getalby.com/apps/new?c=Nostur&pubkey=\(nwcConnection.pubkey)&return_to=nostur%3A%2F%2Fnwc_callback") {

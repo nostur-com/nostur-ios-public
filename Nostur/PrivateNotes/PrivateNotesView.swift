@@ -133,7 +133,7 @@ struct PrivateNotesView: View {
                 PrivateNoteInfo(note: $0, event: $0.post)
             }
         
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 let privateNotesComplete = privateNotesWithoutNRPost.map { pnInfo in
                     return PrivateNoteInfo(
                         note: pnInfo.note,

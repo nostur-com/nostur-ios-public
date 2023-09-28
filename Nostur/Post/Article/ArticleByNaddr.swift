@@ -30,7 +30,7 @@ struct ArticleByNaddr: View {
             else {
                 ProgressView()
                     .onAppear {
-                        DataProvider.shared().bg.perform {
+                        bg().perform {
                             if let naddr = try? ShareableIdentifier(naddr1),
                                let kind = naddr.kind,
                                let pubkey = naddr.pubkey,
@@ -53,7 +53,7 @@ struct ArticleByNaddr: View {
                                             req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId))
                                         },
                                         processResponseCommand: { taskId, _, article in
-                                            DataProvider.shared().bg.perform {
+                                            bg().perform {
                                                 if let article = article {
                                                     let article = NRPost(event: article)
                                                     DispatchQueue.main.async {

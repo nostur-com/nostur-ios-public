@@ -37,7 +37,7 @@ struct NoteById: View {
                 ProgressView()
                     .task {
                         if let event = events.first, let bgEvent = event.toBG() {
-                            DataProvider.shared().bg.perform {
+                            bg().perform {
                                 let nrPost = NRPost(event: bgEvent, withReplies: true)
                                 
                                 DispatchQueue.main.async {
@@ -231,7 +231,7 @@ struct PostAndParent: View {
                 didLoad = true
                 nrPost.loadReplyTo()
                 
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")
                     if (!nrPost.missingPs.isEmpty) {
                         QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
@@ -259,7 +259,7 @@ struct PostAndParent: View {
                 }
             }
             .onDisappear {
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     if (!nrPost.missingPs.isEmpty) {
                         QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
                     }

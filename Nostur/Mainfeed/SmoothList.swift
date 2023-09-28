@@ -226,7 +226,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 guard let item = data[safe: indexPath.row] else { continue }
                 
                 if !item.missingPs.isEmpty {
-                    DataProvider.shared().bg.perform {
+                    bg().perform {
                         EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "SmoothList.001 - missingPs: \(item.missingPs.count)")
                         QueuedFetcher.shared.enqueue(pTags: item.missingPs)
                         L.fetching.info("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(item.id)")

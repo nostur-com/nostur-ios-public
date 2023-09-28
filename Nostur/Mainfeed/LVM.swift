@@ -476,7 +476,7 @@ class LVM: NSObject, ObservableObject {
                 L.lvm.info("😈😈 processResponseCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) dng: \(danglers.count)")
                 let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                 let idsOnScreen = self.leafsAndParentIdsOnScreen
-                DataProvider.shared().bg.perform { [weak self] in
+                bg().perform { [weak self] in
                     guard let self = self else { return }
                     let danglingEvents = danglers.map { $0.event }
                     if older {
@@ -498,7 +498,7 @@ class LVM: NSObject, ObservableObject {
                 let danglingEvents = danglers.map { $0.event }
                 
                 let idsOnScreen = self.leafsAndParentIdsOnScreen
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
                 }
             })
@@ -816,7 +816,7 @@ class LVM: NSObject, ObservableObject {
         guard self.viewIsVisible else {
             return
         }
-        let isImporting = DataProvider.shared().bg.performAndWait { // TODO: Hang here... need to remove ..AndWait { }
+        let isImporting = bg().performAndWait { // TODO: Hang here... need to remove ..AndWait { }
             return Importer.shared.isImporting
         }
         guard !isImporting else { L.lvm.info("\(self.id) \(self.name) ⏳ Still importing, new fetch skipped."); return }
@@ -964,7 +964,7 @@ extension LVM {
                 
                 guard !events.isEmpty else { return }
                 
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     for event in events {
                         EventRelationsQueue.shared.addAwaitingEvent(event)
                     }
@@ -1224,7 +1224,7 @@ extension LVM {
                 }
                 
 //                // Put onScreenSeen, so when when a new leaf for a long thread is inserted at top, it won't show all the parents you already seen again
-//                DataProvider.shared().bg.perform { [weak self] in
+//                bg().perform { [weak self] in
 //                    guard let self = self else { return }
 //                    self.onScreenSeen.insert(eventId)
 //                }

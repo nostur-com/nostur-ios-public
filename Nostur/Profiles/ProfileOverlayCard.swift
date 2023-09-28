@@ -29,7 +29,7 @@ struct ProfileOverlayCardContainer: View {
             else {
                 ProgressView()
                     .onAppear {
-                        DataProvider.shared().bg.perform {
+                        bg().perform {
                             if let bgContact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().bg) {
                                 let isFollowing = isFollowing(pubkey)
                                 let nrContact = NRContact(contact: bgContact, following: isFollowing)
@@ -44,7 +44,7 @@ struct ProfileOverlayCardContainer: View {
                                         req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId))
                                     },
                                     processResponseCommand: { taskId, _, _ in
-                                        DataProvider.shared().bg.perform {
+                                        bg().perform {
                                             if let bgContact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().bg) {
                                                 let nrContact = NRContact(contact: bgContact, following: isFollowing(pubkey))
                                                 DispatchQueue.main.async {
@@ -258,7 +258,7 @@ struct ProfileOverlayCard: View {
             let cPubkey = contact.pubkey
             let currentAccountPubkey = NRState.shared.activeAccountPublicKey
             
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows_.first(where: {
@@ -366,7 +366,7 @@ struct ProfileOverlayCard: View {
             let reqTask = ReqTask(prefix: "SEEN-", reqCommand: { taskId in
                 req(RM.getLastSeen(pubkey: contactPubkey, subscriptionId: taskId))
             }, processResponseCommand: { taskId, _, _ in
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: DataProvider.shared().bg) {
                         let agoString = last.date.agoString
                         DispatchQueue.main.async {
@@ -375,7 +375,7 @@ struct ProfileOverlayCard: View {
                     }
                 }
             }, timeoutCommand: { taskId in
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: DataProvider.shared().bg) {
                         let agoString = last.date.agoString
                         DispatchQueue.main.async {
@@ -389,7 +389,7 @@ struct ProfileOverlayCard: View {
             reqTask.fetch()
         }
         .onDisappear {
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 contact.contact.zapState = .none
             }
         }

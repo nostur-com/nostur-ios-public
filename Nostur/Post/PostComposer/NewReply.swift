@@ -113,7 +113,7 @@ struct NewReply: View {
                 .onAppear {
                     var newReply = NEvent(content: "")
                     newReply.kind = .textNote
-                    DataProvider.shared().bg.perform {
+                    bg().perform {
                         if let replyTo = replyTo.toMain() {
                             DispatchQueue.main.async {
                                 let root = TagsHelpers(replyTo.tags()).replyToRootEtag()

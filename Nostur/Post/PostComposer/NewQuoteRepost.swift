@@ -178,7 +178,7 @@ struct NewQuoteRepost: View {
             vm.activeAccount = account()
         }
         .task {
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 if let quotingEventNG = quotingEvent.toBG() {
                     let quotingNRPost = NRPost(event: quotingEventNG)
                     DispatchQueue.main.async {

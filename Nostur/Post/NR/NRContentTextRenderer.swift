@@ -30,7 +30,7 @@ struct NRContentTextRenderer: View {
                     .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             ) { pubkey in
                 
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
                     DispatchQueue.main.async {
                         L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
