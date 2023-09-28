@@ -17,6 +17,9 @@ class NotificationsViewModel: ObservableObject {
         startTimer()
         setupSubscriptions()
         checkRelays()
+        if IS_CATALYST {
+            setupBadgeNotifications()
+        }
     }
     
     // Total for the notifications tab on the main tab bar
@@ -116,6 +119,27 @@ class NotificationsViewModel: ObservableObject {
                 self.unreadFailedZaps_ = 0
             }
             .store(in: &subscriptions)
+    }
+    
+    private func setupBadgeNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.badge, .provisional]) { granted, error in
+            if error == nil {
+                // Provisional authorization granted.
+                self.objectWillChange
+                    .sink { _ in
+                        Task {
+                            let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
+                            try? await center.setBadgeCount(self.unread + dmsCount)
+                        }
+                    }
+                    .store(in: &self.subscriptions)
+                Task {
+                    let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
+                    try? await center.setBadgeCount(self.unread + dmsCount)
+                }
+            }
+        }
     }
     
     private func checkRelays() {
