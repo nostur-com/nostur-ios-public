@@ -8,23 +8,21 @@
 import Foundation
 
 extension Date {
-    
-    static let secondsInMinute = 60.0
-    static let secondsInHour = secondsInMinute * 60.0
-    static let secondsInDay = secondsInHour * 24.0
-    static let secondsInYear = secondsInDay * 365.0
+    static let timeUnits: [(Double, String)] = [
+        (365.0 * 24.0 * 60.0 * 60.0, "%dy"),
+        (24.0 * 60.0 * 60.0, "%dd"),
+        (60.0 * 60.0, "%dh"),
+        (60.0, "%dm"),
+        (1.0, "%ds")
+    ]
     
     var agoString: String {
-        if -timeIntervalSinceNow >= Self.secondsInYear {
-            return String.localizedStringWithFormat("%dy", Int(-timeIntervalSinceNow / Self.secondsInYear))
-        } else if -timeIntervalSinceNow >= Self.secondsInDay {
-            return String.localizedStringWithFormat("%dd", Int(-timeIntervalSinceNow / Self.secondsInDay))
-        } else if -timeIntervalSinceNow >= Self.secondsInHour {
-            return String.localizedStringWithFormat("%dh", Int(-timeIntervalSinceNow / Self.secondsInHour))
-        } else if -timeIntervalSinceNow >= Self.secondsInMinute {
-            return String.localizedStringWithFormat("%dm", Int(-timeIntervalSinceNow / Self.secondsInMinute))
-        } else {
-            return String.localizedStringWithFormat("%ds", Int(-timeIntervalSinceNow))
+        let interval = -timeIntervalSinceNow
+        for (unitSeconds, format) in Self.timeUnits {
+            if interval >= unitSeconds {
+                return String.localizedStringWithFormat(format, Int(interval / unitSeconds))
+            }
         }
+        return "now"
     }
 }
