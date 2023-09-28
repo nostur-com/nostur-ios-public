@@ -59,7 +59,7 @@ class NIP05Verifier {
             }
             .filter { (task, data) in data != nil }
             .sink { (task, data) in
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     if let nostrJson = try? self.decoder.decode(NostrJson.self, from: data!) {
                         if let pubkey = nostrJson.names[task.name] {
                             if pubkey != "" && pubkey == task.contact.pubkey {

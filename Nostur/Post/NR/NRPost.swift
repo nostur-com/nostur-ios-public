@@ -717,7 +717,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
-                DataProvider.shared().bg.perform { [weak self] in
+                bg().perform { [weak self] in
                     guard let contact = self?.event.contact else { return }
                     let nrContact = NRContact(contact: contact, following: self?.following ?? false)
                     DispatchQueue.main.async {
@@ -731,7 +731,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
 
     
     private func rebuildContentElements() {
-        DataProvider.shared().bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             
             let (contentElementsDetail, _) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(event)
@@ -748,7 +748,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     private func rerenderReplyingToFragment() {
-        DataProvider.shared().bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             if let replyingToMarkdown = NRReplyingToBuilder.shared.replyingToUsernamesMarkDownString(self.event) {
                 let md = try? AttributedString(markdown: replyingToMarkdown)
@@ -763,7 +763,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private func quotedPostListener() {
         self.event.firstQuoteUpdated
             .sink { firstQuote in
-                DataProvider.shared().bg.perform { [weak self] in
+                bg().perform { [weak self] in
                     guard let self = self else { return }
                     let nrFirstQuote = NRPost(event: firstQuote, withReplyTo: true, withReplies: withReplies)
                     self.firstQuote = nrFirstQuote
@@ -785,7 +785,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private func replyAndReplyRootListener() {
         self.event.replyToUpdated
             .sink { replyTo in
-                DataProvider.shared().bg.perform { [weak self] in
+                bg().perform { [weak self] in
                     guard let self = self else { return }
                     let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
                     DispatchQueue.main.async {
@@ -799,7 +799,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         self.event.replyToRootUpdated
             .sink { replyToRoot in
-                DataProvider.shared().bg.perform { [weak self] in
+                bg().perform { [weak self] in
                     guard let self = self else { return }
                     let nrReplyToRoot = NRPost(event: replyToRoot, withReplyTo: true)
                     DispatchQueue.main.async {
@@ -819,7 +819,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { replies in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
-                DataProvider.shared().bg.perform { [weak self] in
+                bg().perform { [weak self] in
                     guard let self = self else { return }
                     let nrReplies = replies.map { event in
                         let nrPost = NRPost(event: event, cancellationId: cancellationIds[event.id])
@@ -900,7 +900,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.withReplyTo = true
             replyAndReplyRootListener()
         }
-        DataProvider.shared().bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             guard self.replyTo == nil else { return }
             guard let replyToId = self.replyToId else { return }
@@ -917,7 +917,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     @MainActor public func loadParents() {
         let beforeThreadPostsCount = self.threadPostsCount
-        DataProvider.shared().bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             guard !self.withParents else { return }
             self.withParents = true
@@ -943,7 +943,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     @MainActor public func like() -> NEvent {
         self.footerAttributes.objectWillChange.send()
         self.footerAttributes.liked = true
-        DataProvider.shared().bg.perform {
+        bg().perform {
             self.event.likesCount += 1
         }
         
@@ -953,7 +953,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     @MainActor public func unlike() {
         self.footerAttributes.objectWillChange.send()
         self.footerAttributes.liked = false
-        DataProvider.shared().bg.perform {
+        bg().perform {
             self.event.likesCount -= 1
         }
     }
@@ -1078,7 +1078,7 @@ extension NRPost { // Helpers for grouped replies
             .sink { reply in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
                 
-                DataProvider.shared().bg.perform { [weak self] in
+                bg().perform { [weak self] in
                     guard let self = self else { return }
                     
                     let nrReply = NRPost(event: reply, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[reply.id]) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
@@ -1118,7 +1118,7 @@ extension NRPost { // Helpers for grouped replies
     }
     
     private func _groupRepliesToRoot(_ newReplies:[NRPost]) {
-        DataProvider.shared().bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             guard let account = account() else {
                 L.og.error("_groupRepliesToRoot: We should have an account here");

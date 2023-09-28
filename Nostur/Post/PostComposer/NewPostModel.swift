@@ -134,7 +134,7 @@ public final class NewPostModel: ObservableObject {
             nEvent = nEvent.withId()
             
             // Save unsigned event:
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
                 savedEvent.cancellationId = cancellationId
                 DispatchQueue.main.async {
@@ -144,7 +144,7 @@ public final class NewPostModel: ObservableObject {
                 
                 DispatchQueue.main.async {
                     NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
-                        DataProvider.shared().bg.perform {
+                        bg().perform {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"
                             savedEvent.cancellationId = cancellationId
@@ -158,7 +158,7 @@ public final class NewPostModel: ObservableObject {
             }
         }
         else if let signedEvent = try? account.signEvent(nEvent) {
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
                 savedEvent.cancellationId = cancellationId
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
@@ -181,7 +181,7 @@ public final class NewPostModel: ObservableObject {
         }
         
         if let replyTo {
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 let replyToId = replyTo.id
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))

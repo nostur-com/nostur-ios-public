@@ -92,7 +92,7 @@ struct ContactSearchResultRow: View {
                 let cPubkey = contact.pubkey
                 let currentAccountPubkey = NRState.shared.activeAccountPublicKey
                 
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     guard let account = account() else { return }
                     guard account.publicKey == currentAccountPubkey else { return }
                     guard let similarContact = account.follows_.first(where: {

@@ -55,7 +55,7 @@ struct Repost: View {
                     KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
                         .onAppear {
                             if !nrPost.missingPs.isEmpty {
-                                DataProvider.shared().bg.perform {
+                                bg().perform {
                                     EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
                                     QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                                 }

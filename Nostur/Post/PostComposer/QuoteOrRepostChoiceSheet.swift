@@ -29,7 +29,7 @@ struct QuoteOrRepostChoiceSheet: View {
                     repost = repost.withId()
                     
                     // Save unsigned event:
-                    DataProvider.shared().bg.perform {
+                    bg().perform {
                         let savedEvent = Event.saveEvent(event: repost, flags: "nsecbunker_unsigned")
                         savedEvent.cancellationId = cancellationId
                         DispatchQueue.main.async {
@@ -39,7 +39,7 @@ struct QuoteOrRepostChoiceSheet: View {
                         dismiss()
                         DispatchQueue.main.async {
                             NSecBunkerManager.shared.requestSignature(forEvent: repost, usingAccount: account, whenSigned: { signedEvent in
-                                DataProvider.shared().bg.perform {
+                                bg().perform {
                                     savedEvent.sig = signedEvent.signature
                                     savedEvent.flags = "awaiting_send"
                                     savedEvent.cancellationId = cancellationId
@@ -56,7 +56,7 @@ struct QuoteOrRepostChoiceSheet: View {
                     }
                 }
                 else if let signedEvent = try? account.signEvent(repost) {
-                    DataProvider.shared().bg.perform {
+                    bg().perform {
                         let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
                         savedEvent.cancellationId = cancellationId
                         

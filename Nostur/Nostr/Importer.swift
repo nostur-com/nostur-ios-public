@@ -105,7 +105,7 @@ class Importer {
             L.og.debug("\(self.existingIds.count) existing ids added to cache")
         }
         
-//        DataProvider.shared().bg.performAndWait { [unowned self] in // AndWait because existingIds MUST be in sync with db
+//        bg().performAndWait { [unowned self] in // AndWait because existingIds MUST be in sync with db
 //            if let results = try? DataProvider.shared().bg.fetch(fr) {
 //                self.existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
 //                    dict[event.id] = EventState(status: .SAVED, relays: event.relays)

@@ -47,7 +47,7 @@ struct ProfileZapButton: View {
 //                            nrPost.zapState = .cancelled
                             activeColor = Self.grey
                             contact.zappableAttributes.isZapped = false
-                            DataProvider.shared().bg.perform {
+                            bg().perform {
                                 contact.contact.zapState = .cancelled
                                 contact.contact.zapStateChanged.send((.cancelled, zapEtag))
                             }
@@ -137,7 +137,7 @@ struct ProfileZapButton: View {
         cancellationId = UUID()
         contact.zappableAttributes.isZapped = true
 
-        DataProvider.shared().bg.perform {
+        bg().perform {
             let bgContact = contact.contact
             bgContact.zapStateChanged.send((.initiated, zapEtag))
             NWCRequestQueue.shared.ensureNWCconnection()

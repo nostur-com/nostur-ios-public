@@ -79,7 +79,7 @@ struct NotificationsFollowers: View {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Followers" else { return }
         if let first = notifications.first {
             let firstCreatedAt = first.createdAt
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 if let account = account() {
                     if account.lastFollowerCreatedAt != Int64(firstCreatedAt.timeIntervalSince1970) {
                         account.lastFollowerCreatedAt = Int64(firstCreatedAt.timeIntervalSince1970)

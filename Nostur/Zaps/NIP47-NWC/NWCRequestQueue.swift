@@ -64,7 +64,7 @@ class NWCRequestQueue {
 //            L.og.debug("NWCRequestQueue.cleanUpTimer fired")
             let now = Date()
             
-            DataProvider.shared().bg.perform { [weak self] in
+            bg().perform { [weak self] in
                 guard let self = self else { return }
                 var failedZaps = [Zap]()
                 var timeoutZaps = [Zap]()

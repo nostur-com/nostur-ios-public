@@ -122,7 +122,7 @@
 //        let fr = Event.fetchRequest()
 //        fr.predicate = NSPredicate(format: "kind IN {3,10002} AND pubkey in %@", self.followingPubkeys)
 //        
-//        DataProvider.shared().bg.perform { [weak self] in
+//        bg().perform { [weak self] in
 //            guard let self = self else { return }
 //            if let kind3or10002s = try? DataProvider.shared().bg.fetch(fr) {
 //                L.og.info("📡 followingPubkeys: \(self.followingPubkeys.count) kind3or10002s's: \(kind3or10002s.count)")

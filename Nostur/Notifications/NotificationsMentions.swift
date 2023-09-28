@@ -180,7 +180,7 @@ struct NotificationsMentions: View {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Mentions" else { return }
         if let first = fl.nrPosts.first {
             let firstCreatedAt = first.created_at
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 if let account = account() {
                     if account.lastSeenPostCreatedAt != firstCreatedAt {
                         account.lastSeenPostCreatedAt = firstCreatedAt

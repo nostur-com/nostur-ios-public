@@ -81,7 +81,7 @@ struct ConversationRowView: View {
                         let currentAccountPubkey = NRState.shared.activeAccountPublicKey
                         let cPubkey = contact.pubkey
                         
-                        DataProvider.shared().bg.perform {
+                        bg().perform {
                             guard let account = account() else { return }
                             guard account.publicKey == currentAccountPubkey else { return }
                             guard let similarContact = account.follows_.first(where: {
@@ -96,7 +96,7 @@ struct ConversationRowView: View {
                                         conv.objectWillChange.send() // need to rerender
                                     }
                                     contact.couldBeImposter = similarPFP ? 1 : 0
-                                    DataProvider.shared().bg.perform {
+                                    bg().perform {
                                         guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
                                         contact.contact.couldBeImposter = similarPFP ? 1 : 0
             //                            DataProvider.shared().bgSave()
@@ -114,7 +114,7 @@ struct ConversationRowView: View {
                 else {
                     Text(conv.contactPubkey.prefix(11))
                         .onAppear {
-                            DataProvider.shared().bg.perform {
+                            bg().perform {
                                 EventRelationsQueue.shared.addAwaitingEvent(conv.mostRecentEvent, debugInfo: "ConversationRowView.002")
                                 QueuedFetcher.shared.enqueue(pTag: conv.contactPubkey)
                             }

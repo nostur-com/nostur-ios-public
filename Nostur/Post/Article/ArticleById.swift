@@ -26,7 +26,7 @@ struct ArticleById: View {
             else {
                 ProgressView()
                     .onAppear {
-                        DataProvider.shared().bg.perform {
+                        bg().perform {
                             if let article = try? Event.fetchEvent(id: id, context: DataProvider.shared().bg) {
                                 let article = NRPost(event: article)
                                 DispatchQueue.main.async {
@@ -41,7 +41,7 @@ struct ArticleById: View {
                                         req(RM.getEvent(id: id, subscriptionId: taskId))
                                     },
                                     processResponseCommand: { taskId, _, article in
-                                        DataProvider.shared().bg.perform {
+                                        bg().perform {
                                             if let article = article {
                                                 let article = NRPost(event: article)
                                                 DispatchQueue.main.async {

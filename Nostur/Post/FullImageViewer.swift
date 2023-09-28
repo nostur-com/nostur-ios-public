@@ -267,7 +267,7 @@ struct MediaPostPreview: View {
                 else {
                     Text(nrPost.anyName)
                         .onAppear {
-                            DataProvider.shared().bg.perform {
+                            bg().perform {
                                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "FullImageVieweer.001")
                                 QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                             }

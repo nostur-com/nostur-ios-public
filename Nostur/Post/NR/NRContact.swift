@@ -189,7 +189,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
             .sink { [weak self] contact in
                 guard let self = self else { return }
                 
-                DataProvider.shared().bg.perform {
+                bg().perform {
                     let anyName = contact.anyName
                     let fixedName = contact.fixedName
                     let display_name = contact.display_name
@@ -248,7 +248,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         guard name != self.fixedName else { return }
         self.objectWillChange.send()
         self.fixedName = name
-        DataProvider.shared().bg.perform {
+        bg().perform {
             self.contact.fixedName = name
         }
     }

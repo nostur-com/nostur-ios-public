@@ -27,7 +27,7 @@ struct NoteHeaderView: View {
             else {
                 PlaceholderPostHeader(nrPost: nrPost, singleLine: singleLine)
                     .onAppear {
-                        DataProvider.shared().bg.perform {
+                        bg().perform {
                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteHeaderView.001")
                             QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                         }
@@ -159,7 +159,7 @@ struct PostHeader: View {
             let currentAccountPubkey = NRState.shared.activeAccountPublicKey
             let cPubkey = contact.pubkey
             
-            DataProvider.shared().bg.perform {
+            bg().perform {
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows_.first(where: {
@@ -171,7 +171,7 @@ struct PostHeader: View {
                     DispatchQueue.main.async {
                         guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                         contact.couldBeImposter = similarPFP ? 1 : 0
-                        DataProvider.shared().bg.perform {
+                        bg().perform {
                             guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
                             contact.contact.couldBeImposter = similarPFP ? 1 : 0
 //                            DataProvider.shared().bgSave()

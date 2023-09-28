@@ -11,7 +11,6 @@ import Combine
 class InstantFeed {
     typealias CompletionHandler = ([Event]) -> ()
     public var backlog = Backlog(timeout: 15, auto: true)
-    private var bg = DataProvider.shared().bg
     private var pongReceiver:AnyCancellable?
     private var pubkey:Pubkey?
     private var onComplete:CompletionHandler?
@@ -75,13 +74,13 @@ class InstantFeed {
 
     private func fetchContactListPubkeys(pubkey: Pubkey) {
         Task.detached {
-            self.bg.perform { [weak self] in
+            bg().perform { [weak self] in
                 guard let self = self else { return }
-                if let account = try? Account.fetchAccount(publicKey: pubkey, context: bg), !account.follows_.isEmpty {
+                if let account = try? Account.fetchAccount(publicKey: pubkey, context: bg()), !account.follows_.isEmpty {
                     L.og.notice("🟪 Using account.follows")
                     self.pubkeys = Set(((account.follows_.map { $0.pubkey }) + [account.publicKey]))
                 }
-                else if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: self.bg) {
+                else if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                     L.og.notice("🟪 Found clEvent in database")
                     if let pubkey = self.pubkey {
                         self.pubkeys = Set(((clEvent.fastPs.map { $0.1 }) + [pubkey]))
@@ -95,10 +94,10 @@ class InstantFeed {
                         L.og.notice("🟪 Fetching clEvent from relays")
                         reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
                     } processResponseCommand: { taskId, _, _ in
-                        self.bg.perform { [weak self] in
+                        bg().perform { [weak self] in
                             guard let self = self else { return }
                             L.og.notice("🟪 Processing clEvent response from relays")
-                            if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: self.bg) {
+                            if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                 self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
                             }
                         }
@@ -126,7 +125,7 @@ class InstantFeed {
     }
     
     private func fetchPostsFromRelays() {
-        self.bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             guard let pubkeys = self.pubkeys else { return }
             
@@ -134,10 +133,10 @@ class InstantFeed {
                 L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
                 reqP(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
             } processResponseCommand: { taskId, _, _ in
-                self.bg.perform { [weak self] in
+                bg().perform { [weak self] in
                     guard let self = self else { return }
                     let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
-                    guard let events = try? self.bg.fetch(fr) else {
+                    guard let events = try? bg().fetch(fr) else {
                         L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
                         return
                     }
@@ -167,16 +166,16 @@ class InstantFeed {
         let relayCount = relays.count
         
         Task.detached {
-            self.bg.perform { [weak self] in
+            bg().perform { [weak self] in
                 guard let self = self else { return }
                 let getGlobalEventsTask = ReqTask(subscriptionId: "RM.getGlobalFeedEvents-" + UUID().uuidString) { taskId in
                     L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
                     reqP(RM.getGlobalFeedEvents(limit: 200, subscriptionId: taskId), relays: self.relays)
                 } processResponseCommand: { taskId, _, _ in
-                    self.bg.perform { [weak self] in
+                    bg().perform { [weak self] in
                         guard let self = self else { return }
                         let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: 0)
-                        guard let events = try? self.bg.fetch(fr) else {
+                        guard let events = try? bg().fetch(fr) else {
                             L.og.notice("🟪 \(taskId) Could not fetch posts from globalish relays using \(relayCount) relays.")
                             return
                         }
