@@ -10,6 +10,7 @@ import SwiftUI
 struct ArticleByNaddr: View {
     let naddr1:String
     var navigationTitle:String? = nil
+    var navTitleHidden: Bool = false
     @State var article:NRPost? = nil
     @State var backlog = Backlog(timeout: 15, auto: true)
     @State var error:String? = nil
@@ -21,10 +22,10 @@ struct ArticleByNaddr: View {
             }
             else if let article {
                 if article.kind == 30023 {
-                    ArticleView(article, isDetail: true)
+                    ArticleView(article, isDetail: true, navTitleHidden: navTitleHidden)
                 }
                 else {
-                    PostDetailView(nrPost: article)
+                    PostDetailView(nrPost: article, navTitleHidden: navTitleHidden)
                 }
             }
             else {

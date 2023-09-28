@@ -10,6 +10,7 @@ import SwiftUI
 struct ArticleById: View {
     let id:String
     var navigationTitle:String? = nil
+    var navTitleHidden: Bool = false
     @State var article:NRPost? = nil
     @State var backlog = Backlog(timeout: 15, auto: true)
     @State var error:String? = nil

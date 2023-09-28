@@ -16,13 +16,15 @@ struct ArticleView: View {
     private var isDetail:Bool = false
     private var fullWidth:Bool = false
     private var hideFooter:Bool = false
+    private var navTitleHidden:Bool = false
     
-    init(_ article:NRPost, isParent:Bool = false, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false) {
+    init(_ article:NRPost, isParent:Bool = false, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false, navTitleHidden:Bool = false) {
         self.article = article
         self.isParent = isParent
         self.isDetail = isDetail
         self.fullWidth = fullWidth
         self.hideFooter = hideFooter
+        self.navTitleHidden = navTitleHidden
     }
     
     private let WORDS_PER_MINUTE:Double = 200.0
@@ -212,6 +214,7 @@ struct ArticleView: View {
                            sendNotification(.scrollingDown)
                        }
                    }))
+            .navigationBarHidden(navTitleHidden)
         }
         else {
             VStack(alignment: .leading, spacing: 0) {

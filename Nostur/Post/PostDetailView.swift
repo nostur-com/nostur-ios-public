@@ -13,14 +13,16 @@ struct NoteById: View {
     private let sp:SocketPool = .shared
     
     private var id:String
+    private var navTitleHidden:Bool = false
     
     @FetchRequest
     private var events:FetchedResults<Event>
     
     @State private var nrPost:NRPost? = nil
     
-    init(id:String) {
+    init(id:String, navTitleHidden: Bool = false) {
         self.id = id
+        self.navTitleHidden = navTitleHidden
         
         _events = FetchRequest(
             sortDescriptors: [],
@@ -31,7 +33,7 @@ struct NoteById: View {
     var body: some View {
         VStack(spacing: 0) {
             if let nrPost {
-                PostDetailView(nrPost: nrPost)
+                PostDetailView(nrPost: nrPost, navTitleHidden:navTitleHidden)
             }
             else if (events.first != nil) {
                 ProgressView()
