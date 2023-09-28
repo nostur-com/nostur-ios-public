@@ -28,6 +28,8 @@ class TabModel: ObservableObject, Identifiable, Equatable {
         }
     }
     
+    @Published var suspended = false
+    
     init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, nrContactPath:NRContactPath? = nil, event:Event? = nil, nrContact:NRContact? = nil, nrPost:NRPost? = nil, naddr1:Naddr1Path? = nil, articlePath:ArticlePath? = nil, profileTab:String? = nil) {
         self.id = UUID()
         self.notePath = notePath
@@ -43,6 +45,14 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     }
     
     private func configureNavigationTitle() {
+        if let title = self.notePath?.navigationTitle {
+            navigationTitle = title
+            return
+        }
+        if let title = self.contactPath?.navigationTitle {
+            navigationTitle = title
+            return
+        }
         if let title = self.naddr1?.navigationTitle {
             navigationTitle = title
             return
@@ -77,10 +87,109 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     }
 }
 
+import NostrEssentials
+typealias si = NostrEssentials.ShareableIdentifier
+
 final class DetailTabsModel: ObservableObject {
     
     static public let shared = DetailTabsModel()
     
-    @Published var tabs:[TabModel] = []
-    @Published var selected:TabModel? = nil
+    @Published var tabs:[TabModel] = [] {
+        didSet {
+            self.saveTabs()
+        }
+    }
+    @Published var selected:TabModel? = nil {
+        didSet {
+            self.saveTabs()
+        }
+    }
+    
+    @AppStorage("saved_tabs") private var savedTabs = "[]"
+    
+    public func saveTabs() {
+        let saveableTabs:[SavedTab] = tabs.compactMap { tab in
+            if let id = tab.notePath?.id, let identifier = try? si("nevent", id: id).identifier {
+                return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
+            }
+            else if let pubkey = tab.contactPath?.key, let identifier = try? si("nprofile", pubkey: pubkey).identifier {
+                return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
+            }
+            else if let pubkey = tab.nrContact?.pubkey, let identifier = try? si("nprofile", pubkey: pubkey).identifier {
+                return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
+            }
+            else if let pubkey = tab.nrContactPath?.nrContact.pubkey, let identifier = try? si("nprofile", pubkey: pubkey).identifier {
+                return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
+            }
+            else if let id = tab.event?.id, let identifier = try? si("nevent", id: id).identifier {
+                return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
+            }
+            else if let id = tab.nrPost?.id, let identifier = try? si("nevent", id: id).identifier {
+                return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
+            }
+            else if let id = tab.articlePath?.id, let identifier = try? si("nevent", id: id).identifier {
+                return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
+            }
+            else if let naddr1 = tab.naddr1?.naddr1 {
+                return SavedTab(title: tab.navigationTitle, nostrIdentifier: naddr1, selected: tab == self.selected)
+            }
+            return nil
+        }
+        guard let savedTabsData = try? JSONEncoder().encode(saveableTabs) else { return }
+        guard let savedTabsString = String(data: savedTabsData, encoding: .utf8) else { return }
+        savedTabs = savedTabsString
+    }
+    
+    public func restoreTabs() {
+        guard let savedTabsData = savedTabs.data(using: .utf8),
+              let restorableTabs = try? JSONDecoder().decode([SavedTab].self, from: savedTabsData)
+        else { return }
+        
+        for tab in restorableTabs {
+            guard let si = try? si(tab.nostrIdentifier) else { continue }
+            switch si.prefix {
+            case "nevent":
+                guard let id = si.id else { continue }
+                let tabModel = TabModel(notePath: NotePath(id: id, navigationTitle: tab.title))
+                tabModel.suspended = true
+                self.tabs.append(tabModel)
+                if tab.selected {
+                    tabModel.suspended = false
+                    self.selected = tabModel
+                }
+            case "nprofile":
+                guard let pubkey = si.pubkey else { continue }
+                let tabModel = TabModel(contactPath: ContactPath(key: pubkey, navigationTitle: tab.title))
+                tabModel.suspended = true
+                self.tabs.append(tabModel)
+                tabModel.suspended = true
+                if tab.selected {
+                    tabModel.suspended = false
+                    self.selected = tabModel
+                }
+            case "naddr":
+                let tabModel = TabModel(naddr1: Naddr1Path(naddr1: si.identifier, navigationTitle: tab.title))
+                self.tabs.append(tabModel)
+                tabModel.suspended = true
+                if tab.selected {
+                    tabModel.suspended = false
+                    self.selected = tabModel
+                }
+            default:
+                continue
+            }
+        }
+        
+        if self.selected == nil && !self.tabs.isEmpty {
+            self.selected = self.tabs.first
+            self.selected?.suspended = false
+        }
+    }
+}
+
+
+struct SavedTab: Codable {
+    let title:String
+    let nostrIdentifier:String
+    let selected:Bool
 }

@@ -35,7 +35,7 @@ struct DetailTab: View {
                 ZStack {
                     theme.listBackground
                         .ignoresSafeArea()
-                    NoteById(id: notePathId)//.opacity(tm.selected == tab ? 1 : 0)
+                    NoteById(id: notePathId, navTitleHidden: true)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations()
                 }
                 
@@ -44,7 +44,7 @@ struct DetailTab: View {
                 ZStack {
                     theme.listBackground
                         .ignoresSafeArea()
-                    ArticleByNaddr(naddr1: naddr1)
+                    ArticleByNaddr(naddr1: naddr1, navTitleHidden: true)
                         .withNavigationDestinations()
                 }
                 
@@ -53,7 +53,7 @@ struct DetailTab: View {
                 ZStack {
                     theme.listBackground
                         .ignoresSafeArea()
-                    ArticleById(id: articleId)
+                    ArticleById(id: articleId, navTitleHidden: true)
                         .withNavigationDestinations()
                 }
                 

@@ -9,6 +9,7 @@ import SwiftUI
 import UIKit
 
 struct DetailPane: View {
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var theme:Theme
     @StateObject private var dim = DIMENSIONS.shared
     @StateObject private var tm = DetailTabsModel()
@@ -37,6 +38,7 @@ struct DetailPane: View {
                                 onSelect: {
                                     let t = tm.tabs[index]
                                     tm.selected = t
+                                    t.suspended = false
                                     if let nrPost = tm.selected?.nrPost {
                                         bg().perform {
                                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onSelect")
@@ -53,6 +55,7 @@ struct DetailPane: View {
                                     if (index < tm.tabs.count && tm.selected == tm.tabs[index]) {
                                         if (index != 0) {
                                             tm.selected = tm.tabs[(index - 1)]
+                                            tm.selected?.suspended = false
                                             if let id = tm.selected?.id {
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                                     proxy.scrollTo(id)
@@ -61,6 +64,7 @@ struct DetailPane: View {
                                         }
                                         else if (tm.tabs.count > 1) {
                                             tm.selected = tm.tabs[1]
+                                            tm.selected?.suspended = false
                                             if let id = tm.selected?.id {
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                                     proxy.scrollTo(id)
@@ -107,19 +111,24 @@ struct DetailPane: View {
 //            Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
             ZStack {
                 ForEach(tm.tabs) { tab in
-                    DetailTab(tab:tab)
-//                        .padding(.vertical, 10)
-//                        .background(Color.systemBackground)
-//                        .roundedCorner(10, corners: [.topLeft, .topRight])
-//                        .padding(.horizontal, 0)
-                        .opacity(tm.selected == tab ? 1 : 0)
-                        .id(tab.id)
-                        .padding(.horizontal, DIMENSIONS.BOX_PADDING)
-                        .onPreferenceChange(TabTitlePreferenceKey.self) { title in
-                            guard !title.isEmpty else { return }
-                            tm.selected?.navigationTitle = title
-                            L.og.info("💄💄 onPreferenceChange: \(title)")
-                        }
+                    if !tab.suspended {
+                        DetailTab(tab:tab)
+    //                        .padding(.vertical, 10)
+    //                        .background(Color.systemBackground)
+    //                        .roundedCorner(10, corners: [.topLeft, .topRight])
+    //                        .padding(.horizontal, 0)
+                            .opacity(tm.selected == tab ? 1 : 0)
+                            .id(tab.id)
+                            .padding(.horizontal, DIMENSIONS.BOX_PADDING)
+                            .onPreferenceChange(TabTitlePreferenceKey.self) { title in
+                                guard !title.isEmpty else { return }
+                                tm.selected?.navigationTitle = title
+                                L.og.info("💄💄 onPreferenceChange: \(title)")
+                            }
+                    }
+                    else {
+                        ProgressView()
+                    }
                 }
                 if (tm.tabs.count == 0) {
                     DiscoverNostr()
@@ -215,10 +224,14 @@ struct DetailPane: View {
             }
             
         }
-//        .onReceive(receiveNotification(.clearNavigation)) { notification in
-//            tm.selected = nil
-//            tm.tabs.removeAll()
-//        }
+        .onChange(of: scenePhase) { newScenePhase in
+            if newScenePhase == .background || newScenePhase == .inactive {
+                tm.saveTabs()
+            }
+        }
+        .onAppear {
+            tm.restoreTabs()
+        }
     }
 }
 
