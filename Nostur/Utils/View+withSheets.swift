@@ -399,12 +399,12 @@ private struct WithSheets: ViewModifier {
                 
                 if nrPost.kind == 30023 {
                     guard let sharable = try? ShareableIdentifier(prefix: "naddr", kind: nrPost.kind, pubkey: nrPost.pubkey, dTag: nrPost.mainEvent.dTag, relays: relays) else { return }
-                    let url = "https://nostr.com/\(sharable.bech32string)"
+                    let url = "https://njump.me/\(sharable.bech32string)"
                     self.shareableWeblink = ShareableWeblink(url: url)
                 }
                 else {
                     guard let sharable = try? ShareableIdentifier(prefix: "nevent", kind: nrPost.kind, pubkey: nrPost.pubkey, eventId: nrPost.id, relays: relays) else { return }
-                    let url = "https://nostr.com/\(sharable.bech32string)"
+                    let url = "https://njump.me/\(sharable.bech32string)"
                     self.shareableWeblink = ShareableWeblink(url: url)
                 }
             }
