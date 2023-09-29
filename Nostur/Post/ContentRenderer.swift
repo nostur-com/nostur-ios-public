@@ -12,6 +12,7 @@ import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
+    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     private let isDetail:Bool
     private let fullWidth:Bool
@@ -126,7 +127,12 @@ struct ContentRenderer: View { // VIEW things
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .background {
+                                if SettingsStore.shared.lowDataMode {
+                                    theme.lineColor.opacity(0.2)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
                             .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
@@ -144,7 +150,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
                             .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
@@ -164,11 +170,16 @@ struct ContentRenderer: View { // VIEW things
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+                            .background {
+                                if SettingsStore.shared.lowDataMode {
+                                    theme.lineColor.opacity(0.2)
+                                }
+                            }
                         //                            .clipped()
                         //                            .debugDimensions("SingleMediaViewer.sd")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
                             .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
@@ -186,7 +197,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions("SingleMediaViewer")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
 //                            .background(Color.yellow)
                             .withoutAnimation()
 //                            .transaction { t in t.animation = nil }

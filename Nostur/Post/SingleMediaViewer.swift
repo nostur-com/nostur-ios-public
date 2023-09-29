@@ -54,6 +54,7 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 openURL(url)
                             }
+                            .padding(.horizontal, fullWidth ? 10 : 0)
                     }
                     else {
                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
