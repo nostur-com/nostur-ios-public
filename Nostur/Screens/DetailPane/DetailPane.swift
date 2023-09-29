@@ -128,6 +128,7 @@ struct DetailPane: View {
                     }
                     else {
                         ProgressView()
+                            .opacity(tm.selected == tab ? 1 : 0)
                     }
                 }
                 if (tm.tabs.count == 0) {

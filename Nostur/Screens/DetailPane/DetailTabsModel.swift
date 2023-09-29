@@ -135,9 +135,14 @@ final class DetailTabsModel: ObservableObject {
             }
             return nil
         }
-        guard let savedTabsData = try? JSONEncoder().encode(saveableTabs) else { return }
-        guard let savedTabsString = String(data: savedTabsData, encoding: .utf8) else { return }
-        savedTabs = savedTabsString
+        DispatchQueue.global().async { // its doing slow bech32 things, so not on main
+            guard let savedTabsData = try? JSONEncoder().encode(saveableTabs) else { return }
+            guard let savedTabsString = String(data: savedTabsData, encoding: .utf8) else { return }
+            
+            DispatchQueue.main.async {
+                self.savedTabs = savedTabsString
+            }
+        }
     }
     
     public func restoreTabs() {
