@@ -521,6 +521,10 @@ final class CViewHolder {
         
         let layout = UICollectionViewCompositionalLayout { _, layoutEnvironment in
             var config = UICollectionLayoutListConfiguration(appearance: .plain)
+            config.backgroundColor = UIColor(coordinator.parent.theme.listBackground)
+            config.footerMode = .none
+            config.headerMode = .none
+            config.headerTopPadding = 0
             config.showsSeparators = false
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: layoutEnvironment)
             section.contentInsets = .zero
