@@ -37,8 +37,12 @@ extension LVM {
             filters.append(followingHashtagsFilter)
         }
         
-        if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
-            req(message, activeSubscriptionId: subscriptionId)
+        DispatchQueue.global().async { // .global().main dance because Relay used in SocketPool are in viewContext
+            if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
+                DispatchQueue.main.async {
+                    req(message, activeSubscriptionId: subscriptionId)
+                }
+            }
         }
     }
     
@@ -65,8 +69,12 @@ extension LVM {
             filters.append(followingHashtagsFilter)
         }
         
-        if let message = CM(type: .REQ, subscriptionId: "CATCHUP-" + subscriptionId, filters: filters).json() {
-            req(message)
+        DispatchQueue.global().async { // .global().main dance because Relay used in SocketPool are in viewContext
+            if let message = CM(type: .REQ, subscriptionId: "CATCHUP-" + subscriptionId, filters: filters).json() {
+                DispatchQueue.main.async {
+                    req(message)
+                }
+            }
         }
     }
     
@@ -90,8 +98,12 @@ extension LVM {
             filters.append(followingHashtagsFilter)
         }
         
-        if let message = CM(type: .REQ, subscriptionId: "RESUME-" + subscriptionId, filters: filters).json() {
-            req(message)
+        DispatchQueue.global().async { // .global().main dance because Relay used in SocketPool are in viewContext
+            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + subscriptionId, filters: filters).json() {
+                DispatchQueue.main.async {
+                    req(message)
+                }
+            }
         }
     }
     
@@ -117,8 +129,12 @@ extension LVM {
             filters.append(followingHashtagsFilter)
         }
         
-        if let message = CM(type: .REQ, subscriptionId: "PAGE-" + UUID().uuidString, filters: filters).json() {
-            req(message)
+        DispatchQueue.global().async { // .global().main dance because Relay used in SocketPool are in viewContext
+            if let message = CM(type: .REQ, subscriptionId: "PAGE-" + UUID().uuidString, filters: filters).json() {
+                DispatchQueue.main.async {
+                    req(message)
+                }
+            }
         }
     }
     

@@ -158,7 +158,13 @@ class LVM: NSObject, ObservableObject {
     func closeSubAndTimer() {
         if type == .relays {
             L.lvm.info("\(self.id) \(self.name) - Closing subscriptions for .relays tab");
-            SocketPool.shared.closeSubscription(self.id)
+//            15    95.00 ms    0.1%    15.00 ms LVM.performLocalFetchAfterImport()
+//            5    62.00 ms    0.1%    5.00 ms               LVM.performLocalFetch(refreshInBackground:) 
+//            1    32.00 ms    0.0%    1.00 ms                LVM.closeSubAndTimer() 
+//            7    30.00 ms    0.0%    7.00 ms                 SocketPool.closeSubscription(_:)
+            DispatchQueue.global().async { // .closeSubAndTimer eventually hits main, but doesn't need to block.
+                SocketPool.shared.closeSubscription(self.id)
+            }
         }
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = nil

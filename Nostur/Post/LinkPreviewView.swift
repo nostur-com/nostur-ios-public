@@ -72,17 +72,24 @@ struct LinkPreviewView: View {
         .task {
             guard !SettingsStore.shared.lowDataMode else { return }
             guard url.absoluteString.prefix(7) != "http://" else { return }
-            if let tags = LinkPreviewCache.shared.retrieveObject(at: url) {
-                self.tags = tags
-            }
-            else {
-                fetchMetaTags(url: url) { result in
-                    do {
-                        self.tags = try result.get()
-                        LinkPreviewCache.shared.setObject(for: url, value: self.tags)
+            DispatchQueue.global().async {
+                if let tags = LinkPreviewCache.shared.retrieveObject(at: url) {
+                    DispatchQueue.main.async {
+                        self.tags = tags
                     }
-                    catch {
-                        
+                }
+                else {
+                    fetchMetaTags(url: url) { result in
+                        do {
+                            let tags = try result.get()
+                            DispatchQueue.main.async {
+                                self.tags = tags
+                            }
+                            LinkPreviewCache.shared.setObject(for: url, value: tags)
+                        }
+                        catch {
+                            
+                        }
                     }
                 }
             }

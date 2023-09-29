@@ -167,6 +167,7 @@ class DataProvider: ObservableObject {
         }
     }
     
+    // 254    468.00 ms    0.9%    254.00 ms                static DataProvider.shared()
     static func shared() -> DataProvider {
         // Use an in-memory store for previews
         #if DEBUG

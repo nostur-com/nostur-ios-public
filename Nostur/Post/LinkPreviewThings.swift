@@ -25,8 +25,10 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
                 completion(.failure(NSError(domain: "Invalid JSON", code: 0, userInfo: nil)))
                 return
             }
-            let metaTags = parseYoutube(json: json)
-            completion(.success(metaTags))
+            DispatchQueue.global().async {
+                let metaTags = parseYoutube(json: json)
+                completion(.success(metaTags))
+            }
         }
         task.resume()
         
@@ -44,8 +46,12 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
             completion(.failure(NSError(domain: "Invalid HTML", code: 0, userInfo: nil)))
             return
         }
-        let metaTags = parseMetaTags(html: html)
-        completion(.success(metaTags))
+        
+        // dataTask callback seems main??? don't understand
+        DispatchQueue.global().async {
+            let metaTags = parseMetaTags(html: html)
+            completion(.success(metaTags))
+        }
     }
     task.resume()
 }
