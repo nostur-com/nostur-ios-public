@@ -122,16 +122,16 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-                            .padding(.horizontal, fullWidth ? -10 : 0)
-                            .padding(.vertical, 10)
                             .background {
                                 if SettingsStore.shared.lowDataMode {
                                     theme.lineColor.opacity(0.2)
                                 }
                             }
+                            .padding(.horizontal, fullWidth ? -10 : 0)
+                            .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
                             .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
@@ -146,7 +146,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0)
                         //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
