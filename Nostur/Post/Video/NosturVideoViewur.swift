@@ -60,6 +60,7 @@ struct NosturVideoViewur: View {
                         .onTapGesture {
                             openURL(url)
                         }
+                        .padding(.horizontal, fullWidth ? 10 : 0)
                 }
                 else {
                     MusicStreamurRepresentable(url: url, isPlaying: $isPlaying, isMuted: $isMuted)
@@ -159,6 +160,7 @@ struct NosturVideoViewur: View {
                         .onTapGesture {
                             openURL(url)
                         }
+                        .padding(.horizontal, fullWidth ? 10 : 0)
                 }
                 else if videoState == .loading {
                     HStack(spacing: 5) {
