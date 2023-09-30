@@ -18,16 +18,7 @@ struct ProcessingStatus: View {
     
     var body: some View {
         VStack {
-            if let message {
-                Text(message)
-                    .lineLimit(1)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(theme.accent))
-                    .clipShape(Capsule())
-            }
-            if let socketMessage {
+            if let socketMessage = socketMessage {
                 Text(socketMessage)
                     .lineLimit(2)
                     .font(.caption2)
@@ -37,7 +28,8 @@ struct ProcessingStatus: View {
                     .background(Capsule().fill(Color.red))
                     .clipShape(Capsule())
             }
-            if let connectedMessage {
+            
+            if let connectedMessage = connectedMessage {
                 Text(connectedMessage)
                     .lineLimit(1)
                     .font(.caption2)
@@ -47,12 +39,16 @@ struct ProcessingStatus: View {
                     .background(Capsule().fill(Color.green))
                     .clipShape(Capsule())
             }
-            else {
-                EmptyView()
-            }
-        }
-        .onAppear {
-//            setTemporaryMessage("Checking for new items...")
+            
+            Text(message ?? "message")
+                .lineLimit(1)
+                .foregroundColor(.white)
+                .frame(minWidth: 250)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Capsule().fill(theme.accent))
+                .clipShape(Capsule())
+                .opacity(message == nil ? 0 : 1.0)
         }
         .onReceive(Importer.shared.listStatus.receive(on: RunLoop.main)) { message in
             setTemporaryMessage(message)
@@ -110,9 +106,7 @@ struct ProcessingStatus: View {
     }
 }
 
-struct ProcessingStatus_Previews: PreviewProvider {
-    static var previews: some View {
-        ProcessingStatus()
-            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-    }
+#Preview("Processing status") {
+    ProcessingStatus()
+        .environmentObject(Theme.default)
 }
