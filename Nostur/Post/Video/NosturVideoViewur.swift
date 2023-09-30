@@ -108,7 +108,7 @@ struct NosturVideoViewur: View {
             else if videoShown {
                 if let asset = cachedVideo?.asset, let scaledDimensions = cachedVideo?.scaledDimensions, let videoLength = cachedVideo?.videoLength {
                     VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
-                        .padding(.horizontal, fullWidth ? -contentPadding : 0)
+//                        .padding(.horizontal, fullWidth ? -contentPadding : 0)
                         .overlay(alignment:.bottomLeading) {
                             if !didStart {
                                 Text(videoLength)

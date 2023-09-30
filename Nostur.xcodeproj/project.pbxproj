@@ -283,6 +283,8 @@
 		1FB8BD5C2AAB8D9600FBC15F /* NotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */; };
 		1FBB901F2A85128A007A1550 /* StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901D2A85128A007A1550 /* StringMetric.swift */; };
 		1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901E2A85128A007A1550 /* String+StringMetric.swift */; };
+		1FBCA08F2AC84AC800913E16 /* ReplyingToEditable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */; };
+		1FBCA0912AC84AFF00913E16 /* ContactsToggleSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBCA0902AC84AFF00913E16 /* ContactsToggleSheet.swift */; };
 		1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */; };
 		1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */; };
 		1FBE253C2A9DC4F800F60FCF /* NRButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE253B2A9DC4F700F60FCF /* NRButton.swift */; };
@@ -710,6 +712,8 @@
 		1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettings.swift; sourceTree = "<group>"; };
 		1FBB901D2A85128A007A1550 /* StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringMetric.swift; sourceTree = "<group>"; };
 		1FBB901E2A85128A007A1550 /* String+StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+StringMetric.swift"; sourceTree = "<group>"; };
+		1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToEditable.swift; sourceTree = "<group>"; };
+		1FBCA0902AC84AFF00913E16 /* ContactsToggleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsToggleSheet.swift; sourceTree = "<group>"; };
 		1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FBE253B2A9DC4F700F60FCF /* NRButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRButton.swift; sourceTree = "<group>"; };
@@ -1714,6 +1718,7 @@
 		1FFED7FD2A39706B00A0B1E8 /* PostComposer */ = {
 			isa = PBXGroup;
 			children = (
+				1FBCA0902AC84AFF00913E16 /* ContactsToggleSheet.swift */,
 				1F75257F2997854200477AF2 /* NewPost.swift */,
 				1FFED8002A39718F00A0B1E8 /* NewPostModel.swift */,
 				1F49C80529B8D7EA005C960D /* NewQuoteRepost.swift */,
@@ -1722,6 +1727,7 @@
 				1F41527E2A95B12800EC63B2 /* PostAccountSwitcher.swift */,
 				1FF283D129DB491F0063B799 /* PostPreview.swift */,
 				1F49C80729B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift */,
+				1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */,
 				1F4186112A7CCECE00626DF3 /* WithNSecBunkerConnection.swift */,
 			);
 			path = PostComposer;
@@ -1993,6 +1999,7 @@
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
 				1F15F09C2AAF2FCC0004E706 /* ReplyButton.swift in Sources */,
 				1FC2DFF429A9330600C8A9DA /* ProfileLightningButton.swift in Sources */,
+				1FBCA0912AC84AFF00913E16 /* ContactsToggleSheet.swift in Sources */,
 				1F740DA329AF524100EFCCA7 /* BadgeDetailView.swift in Sources */,
 				1F2F54EE2A02904E00B6D7E4 /* FastLoader.swift in Sources */,
 				1FBB901F2A85128A007A1550 /* StringMetric.swift in Sources */,
@@ -2209,6 +2216,7 @@
 				1F15F09E2AAF34F10004E706 /* RepostButton.swift in Sources */,
 				1F740DA729AF61A700EFCCA7 /* ContactSearchResultRow.swift in Sources */,
 				1FC4556529CB75EB00DE3239 /* NewDMComposer.swift in Sources */,
+				1FBCA08F2AC84AC800913E16 /* ReplyingToEditable.swift in Sources */,
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
 				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
 				1F15F0A22AAF35B60004E706 /* BookmarkButton.swift in Sources */,
