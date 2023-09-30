@@ -30,65 +30,77 @@ struct NewReply: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         VStack {
-                            PostRowDeletable(nrPost: replyToNRPost, hideFooter: true)
+                            PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom)
                                 .onTapGesture { }
                                 .disabled(true)
-                            HStack(spacing:0) {
-                                NewReplyingToFragment(contact: replyToNRPost.contact, pubkey: replyToNRPost.pubkey)
-                                    .offset(x:70)
-                                Spacer()
-                            }
-                            HStack(alignment: .top, spacing: 0) {
+                                .padding(.bottom, 20)
+
+                            HStack(alignment: .top, spacing: 10) {
                                 PostAccountSwitcher(activeAccount: account, onChange: { account in
                                     vm.activeAccount = account
                                 })
                                 .equatable()
-                                .padding(.horizontal, 10)
-                                HighlightedTextEditor(
-                                    text: $vm.text,
-                                    pastedImages: $vm.pastedImages,
-                                    shouldBecomeFirstResponder: true,
-                                    highlightRules: NewPostModel.rules,
-                                    photoPickerTapped: {
-                                        ipm.photoPickerShown = true
-                                    },
-                                    gifsTapped: {
-                                        vm.gifSheetShown = true
-                                    })
-                                .introspect { editor in
-                                    if (vm.textView == nil) {
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                                            vm.textView = editor.textView
-                                        }
+                                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                                    .background(alignment: .top) {
+                                        theme.lineColor
+                                            .opacity(0.2)
+                                            .frame(width: 2, height: 20)
+                                            .offset(x:0, y: -8)
                                     }
-                                }
-                                .frame(height: textHeight)
-                                .id(textfield)
-                                .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
-                                .onChange(of: ipm.newImage) { newImage in
-                                    if let newImage {
-                                        vm.pastedImages.append(newImage)
-                                        textHeight = 200
-                                        withAnimation {
-                                            proxy.scrollTo(images, anchor: .bottom)
-                                        }
+                                
+                                VStack(alignment:.leading, spacing: 3) { // Post container
+                                    HStack(alignment: .top) { // name + reply + context menu
+                                        ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $vm.selectedMentions)
+                                            .offset(x: 5.0, y: 4.0)
                                     }
-                                }
-                                .background(alignment:.topLeading) {
-                                    Text(PLACEHOLDER).foregroundColor(.gray)
-                                        .opacity(vm.text == "" ? 1 : 1)
-                                        .offset(x: 5.0, y: 4.0)
-                                }
-                                .sheet(isPresented: $vm.gifSheetShown) {
-                                    NavigationStack {
-                                        GifSearcher { gifUrl in
-                                            vm.text += gifUrl + "\n"
+                                    .frame(height: 21.0)
+                    
+                                    HighlightedTextEditor(
+                                        text: $vm.text,
+                                        pastedImages: $vm.pastedImages,
+                                        shouldBecomeFirstResponder: true,
+                                        highlightRules: NewPostModel.rules,
+                                        photoPickerTapped: {
+                                            ipm.photoPickerShown = true
+                                        },
+                                        gifsTapped: {
+                                            vm.gifSheetShown = true
+                                        })
+                                        .introspect { editor in
+                                            if (vm.textView == nil) {
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                                    vm.textView = editor.textView
+                                                }
+                                            }
                                         }
-                                    }
-                                    .presentationBackground(theme.background)
+                                        .frame(height: textHeight)
+                                        .id(textfield)
+                                        .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
+                                        .onChange(of: ipm.newImage) { newImage in
+                                            if let newImage {
+                                                vm.pastedImages.append(newImage)
+                                                textHeight = 200
+                                                withAnimation {
+                                                    proxy.scrollTo(images, anchor: .bottom)
+                                                }
+                                            }
+                                        }
+                                        .background(alignment:.topLeading) {
+                                            Text(PLACEHOLDER).foregroundColor(.gray)
+                                                .opacity(vm.text == "" ? 1 : 1)
+                                                .offset(x: 5.0, y: 4.0)
+                                        }
+                                        .sheet(isPresented: $vm.gifSheetShown) {
+                                            NavigationStack {
+                                                GifSearcher { gifUrl in
+                                                    vm.text += gifUrl + "\n"
+                                                }
+                                            }
+                                            .presentationBackground(theme.background)
+                                        }
                                 }
-                                AnyStatus(filter: "NewPost")
                             }
+                            
                             HStack {
                                 ImagePreviews(pastedImages: $vm.pastedImages)
                                     .padding(.leading, DIMENSIONS.ROW_PFP_SPACE)
