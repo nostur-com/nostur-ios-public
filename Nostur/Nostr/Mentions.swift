@@ -35,7 +35,7 @@ func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String 
             return false
         }) {
 //            print("selected [exact!] result: \(result.authorName)")
-            newText = newText.replacingOccurrences(of: mention.output.2, with: "@\(result.npub)", options: [.caseInsensitive])
+            newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(result.npub)", options: [.caseInsensitive])
             continue
         }
         
@@ -49,14 +49,14 @@ func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String 
             return false
         }) {
 //            print("selected [contains!] result: \(result.authorName)")
-            newText = newText.replacingOccurrences(of: mention.output.2, with: "@\(result.npub)", options: [.caseInsensitive])
+            newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(result.npub)", options: [.caseInsensitive])
             continue
         }
                 
         
         else if let result = try? DataProvider.shared().viewContext.fetch(fr).first {
 //            print("any! result \(result.handle) \(result.npub)")
-            newText = newText.replacingOccurrences(of: mention.output.2, with: "@\(result.npub)", options: [.caseInsensitive])
+            newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(result.npub)", options: [.caseInsensitive])
         }
     }
     return newText
