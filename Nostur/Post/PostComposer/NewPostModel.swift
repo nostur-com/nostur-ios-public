@@ -22,7 +22,9 @@ public final class NewPostModel: ObservableObject {
     
     @Published var uploading = false
     @Published var uploadError:String?
-    @Published var selectedMentions:[Contact] = []
+    @Published var requiredP:String? = nil
+    @Published var availableContacts:Set<Contact> = [] // are available to toggle on/off for notifications
+    @Published var selectedMentions:Set<Contact> = [] // will become p-tags in the final post
     @Published var previewNRPost:NRPost?
     private var subscriptions = Set<AnyCancellable>()
     @Published var gifSheetShown = false
@@ -110,16 +112,38 @@ public final class NewPostModel: ObservableObject {
                 nEvent.content += "\n\(url)"
             }
         }
+        // @mentions to nostr:npub
         nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
+        
+        // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
         
+        // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
+        if let requiredP = requiredP {
+            nEvent.tags.append(NostrTag(["p", requiredP]))
+        }
+
+        // Include .p tags for @mentions
+        let selectedPtags = selectedMentions
+            .filter { $0.pubkey != requiredP } // don't include requiredP twice
+            .map { NostrTag(["p", $0.pubkey]) }
+        
+        nEvent.tags.append(contentsOf: selectedPtags)
+        
+        // If we are quote reposting, include the quoted post as nostr:note1 at the end
+        // TODO: maybe at .q tag, need to look up if there is a spec
         if let quotingEvent {
+            if let note1id = note1(quotingEvent.id) {
+                nEvent.content = (nEvent.content + "\nnostr:" + note1id)
+            }
             nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
             
             if !nEvent.pTags().contains(quotingEvent.pubkey) { // TODO: Add notification toggles to turn off
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
             }
         }
+        
+        // TODO: We don't use positional index tags anymore, so now we can properly deduplicate .p tags
         
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
@@ -198,17 +222,42 @@ public final class NewPostModel: ObservableObject {
     public func showPreview(quotingEvent:Event? = nil) {
         guard let account = activeAccount else { return }
         var nEvent = nEvent ?? NEvent(content: "")
-        
-        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-        nEvent = putHashtagsInTags(nEvent)
         nEvent.publicKey = account.publicKey
         
+        // @mentions to nostr:npub
+        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
+
+        // #hashtags to .t tags
+        nEvent = putHashtagsInTags(nEvent)
+        
+        // Also include .p tags other @mentions
+        let selectedPtags = selectedMentions.map { NostrTag(["p", $0.pubkey]) }
+        nEvent.tags.append(contentsOf: selectedPtags)
+        
+        // If we are quote reposting, include the quoted post as nostr:note1 at the end
+        // TODO: maybe at .q tag, need to look up if there is a spec
+        if let quotingEvent {
+            if let note1id = note1(quotingEvent.id) {
+                nEvent.content = (nEvent.content + "\nnostr:" + note1id)
+            }
+            nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
+            
+            if !nEvent.pTags().contains(quotingEvent.pubkey) { // TODO: Add notification toggles to turn off
+                nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
+            }
+        }
+        
+        // TODO: We don't use positional index tags anymore, so now we can properly deduplicate .p tags
+        
+
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
         }
+        
         for index in pastedImages.indices {
             nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
         }
+    
         
         bg().perform {
             let previewEvent = createPreviewEvent(nEvent)
@@ -227,7 +276,7 @@ public final class NewPostModel: ObservableObject {
         guard textView != nil else { return }
         let mentionName = contact.handle
         text = "\(text.dropLast(term.count))\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063}"
-        selectedMentions.append(contact)
+        selectedMentions.insert(contact)
         mentioning = false
         lastHit = mentionName
         term = ""
