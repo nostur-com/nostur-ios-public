@@ -249,6 +249,9 @@ struct NewReply: View {
                 ProgressView()
             }
         }
+        .overlay(alignment:. top) {
+            AnyStatus(filter: "NewPost")
+        }
         .onAppear {
             vm.activeAccount = account()
         }
