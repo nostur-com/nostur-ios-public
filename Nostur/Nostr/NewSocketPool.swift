@@ -1008,7 +1008,7 @@ final class EphemeralSocketPool: ObservableObject {
             client.delegate = managedClient
             
             managedClient.connect()
-            sockets[urlLower] = managedClient
+            sockets[urlLower] = managedClient // TODO: Fix datarace: Swift access race in Nostur.EphemeralSocketPool.addSocket(url: Swift.String) -> Nostur.NewEphemeralClient at 0x146c1ae60
             return managedClient
         }
     }

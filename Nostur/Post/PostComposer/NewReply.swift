@@ -25,7 +25,10 @@ struct NewReply: View {
     @State private var textHeight:CGFloat = 0
     
     var body: some View {
-        VStack(spacing:0) {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
+        VStack(spacing: 0) {
             if let account = vm.activeAccount, let replyToNRPost {
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -266,45 +269,26 @@ struct NewReply: View {
     }
 }
 
-struct NewReplyingToFragment: View {
-    @EnvironmentObject var theme: Theme
-    var contact:NRContact?
-    var pubkey:String
-    
-    var body: some View {
-        HStack(spacing:1) {
-            Text("Replying to ")
-                .foregroundColor(theme.secondary)
-                .font(.system(size: 13))
-                .fontWeight(.light)
-            Group {
-                if let contact {
-                    Text("@\(contact.anyName)")
-                }
-                else {
-                    Text("@\(String(pubkey.prefix(5)))")
-                }
-            }
-            .foregroundColor(theme.accent)
-            .font(.system(size: 13))
-            .fontWeight(.light)
-        }
-    }
-}
-
 struct NewReply_Previews: PreviewProvider {
     @State static var noteCancellationId:UUID?
     static var previews: some View {
         
         PreviewContainer({ pe in
+            pe.loadAccounts()
             pe.loadContacts()
             pe.loadPosts()
         }) {
             NavigationStack {
                 if let event = PreviewFetcher.fetchEvent() {
-                    NewReply(replyTo: event)
+                    VStack {
+                        Text("p's: \(event.pTags().count)")
+                        NewReply(replyTo: event)
+                        Spacer()
+                    }
                 }
             }
         }
     }
 }
+
+

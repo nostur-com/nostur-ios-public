@@ -5,7 +5,6 @@
 //  Created by Fabian Lachman on 11/02/2023.
 //
 
-// TODO: Should enable undo, similar to likes or zaps
 // TODO: Should add drafts and auto-save
 // TODO: Need to create better solution for typing @mentions
 

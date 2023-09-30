@@ -7,7 +7,7 @@
 
 import Foundation
 
-func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String {
+func replaceMentionsWithNpubs(_ text:String, selected:Set<Contact> = []) -> String {
     let blocked:[String] = blocks()
     let mentions = text.matches(of: /(?:^|\s)((@(\x{2063}\x{2064}[^\x{2063}\x{2064}]+\x{2064}\x{2063}|\w+)))/)
     var newText = text
