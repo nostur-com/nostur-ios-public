@@ -113,7 +113,43 @@ struct NewReply: View {
                 .onAppear {
                     var newReply = NEvent(content: "")
                     newReply.kind = .textNote
+                    guard let replyTo = replyTo.toMain() else {
+                        L.og.error("🔴🔴 Problem getting event from viewContext")
+                        return
                     }
+                    let existingPtags = TagsHelpers(replyTo.tags()).pTags()
+                    let availableContacts = Set(Contact.fetchByPubkeys(existingPtags.map { $0.pubkey }, context: DataProvider.shared().viewContext))
+                    vm.requiredP = replyTo.contact?.pubkey
+                    vm.availableContacts = Set([replyTo.contact].compactMap { $0 } + availableContacts)
+                    vm.selectedMentions = Set([replyTo.contact].compactMap { $0 } + availableContacts)
+                    
+                    let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
+                    
+                    if (root != nil) { // ADD "ROOT" + "REPLY"
+                        let newRootTag = NostrTag(["e", root!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
+                        newReply.tags.append(newRootTag)
+                        
+                        let newReplyTag = NostrTag(["e", replyTo.id, "", "reply"])
+                        
+                        newReply.tags.append(newReplyTag)
+                    }
+                    else { // ADD ONLY "ROOT"
+                        let newRootTag = NostrTag(["e", replyTo.id, "", "root"])
+                        newReply.tags.append(newRootTag)
+                    }
+                    
+                    let rootA = replyTo.toNEvent().replyToRootAtag()
+                    
+                    if (rootA != nil) { // ADD EXISTING "ROOT" (aTag) FROM REPLYTO
+                        let newRootATag = NostrTag(["a", rootA!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
+                        newReply.tags.append(newRootATag)
+                    }
+                    else if replyTo.kind == 30023 { // ADD ONLY "ROOT" (aTag) (DIRECT REPLY TO ARTICLE)
+                        let newRootTag = NostrTag(["a", replyTo.aTag, "", "root"]) // TODO RECOMMENDED RELAY HERE
+                        newReply.tags.append(newRootTag)
+                    }
+
+                    vm.nEvent = newReply
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
