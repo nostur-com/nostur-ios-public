@@ -9,19 +9,19 @@ import SwiftUI
 
 struct PostAccountSwitcher: View, Equatable {
     static func == (lhs: PostAccountSwitcher, rhs: PostAccountSwitcher) -> Bool {
-        lhs.activeAccount == rhs.activeAccount
+        lhs.activeAccount == rhs.activeAccount //&& lhs.accounts.count == rhs.accounts.count
     }
     
     public var activeAccount:Account
     public var onChange:(Account) -> ()
     @State private var expanded = false
     
-    private var accounts:[Account] {
-        NRState.shared.accounts
-            .filter { $0.privateKey != nil }
-            .sorted(by: {
-                $0 == activeAccount && $1 != activeAccount
-            })
+    @State private var accounts:[Account] = []
+    
+    private var accountsSorted:[Account] {
+        accounts.sorted(by: {
+            $0 == activeAccount && $1 != activeAccount
+        })
     }
     
     var body: some View {
@@ -32,18 +32,26 @@ struct PostAccountSwitcher: View, Equatable {
             .frame(width: 50, height: 50)
             .overlay(alignment: .topLeading) {
                 VStack(spacing: 2) {
-                    ForEach(accounts.indices, id:\.self) { index in
-                        PFP(pubkey: accounts[index].publicKey, account: accounts[index])
+                    ForEach(accountsSorted.indices, id:\.self) { index in
+                        PFP(pubkey: accountsSorted[index].publicKey, account: accountsSorted[index])
                             .onTapGesture {
-                                accountTapped(accounts[index])
+                                accountTapped(accountsSorted[index])
                             }
                             .opacity(index == 0 || expanded ? 1.0 : 0.2)
                             .zIndex(-Double(index))
                             .offset(y: expanded || (index == 0) ? 0 : (Double(index) * -48.0))
                             .animation(.easeOut(duration: 0.2), value: expanded)
+                            .id(accountsSorted[index].publicKey) // sorting index and view identity (publicKey) is different!
                     }
                 }
                 .fixedSize()
+            }
+            .task {
+                accounts = NRState.shared.accounts
+                    .filter { $0.privateKey != nil }
+//                    .sorted(by: {
+//                        $0 == activeAccount && $1 != activeAccount
+//                    })
             }
     }
     
