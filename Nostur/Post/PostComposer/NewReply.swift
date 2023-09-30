@@ -113,49 +113,6 @@ struct NewReply: View {
                 .onAppear {
                     var newReply = NEvent(content: "")
                     newReply.kind = .textNote
-                    bg().perform {
-                        if let replyTo = replyTo.toMain() {
-                            DispatchQueue.main.async {
-                                let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
-                                
-                                if (root != nil) { // ADD "ROOT" + "REPLY"
-                                    let newRootTag = NostrTag(["e", root!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
-                                    newReply.tags.append(newRootTag)
-                                    
-                                    let newReplyTag = NostrTag(["e", replyTo.id, "", "reply"])
-                                    
-                                    newReply.tags.append(newReplyTag)
-                                }
-                                else { // ADD ONLY "ROOT"
-                                    let newRootTag = NostrTag(["e", replyTo.id, "", "root"])
-                                    newReply.tags.append(newRootTag)
-                                }
-                                
-                                let rootA = replyTo.toNEvent().replyToRootAtag()
-                                
-                                if (rootA != nil) { // ADD EXISTING "ROOT" (aTag) FROM REPLYTO
-                                    let newRootATag = NostrTag(["a", rootA!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
-                                    newReply.tags.append(newRootATag)
-                                }
-                                else if replyTo.kind == 30023 { // ADD ONLY "ROOT" (aTag) (DIRECT REPLY TO ARTICLE)
-                                    let newRootTag = NostrTag(["a", replyTo.aTag, "", "root"]) // TODO RECOMMENDED RELAY HERE
-                                    newReply.tags.append(newRootTag)
-                                }
-                                
-                                
-                                // ADD ALL "P" TAGS
-                                let existingPtags = TagsHelpers(replyTo.tags()).pTags()
-                                newReply.tags.append(contentsOf: existingPtags)
-                                
-                                // TODO: DEDUPLICATE P TAGS
-                                
-                                // ADD PUBKEY OF REPLYING TO EVENT
-                                let replyToPtag = NostrTag(["p", replyTo.pubkey])
-                                
-                                newReply.tags.append(replyToPtag)
-                                vm.nEvent = newReply
-                            }
-                        }
                     }
                 }
                 .toolbar {

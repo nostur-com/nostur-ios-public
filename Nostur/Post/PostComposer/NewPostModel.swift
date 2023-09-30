@@ -111,11 +111,9 @@ public final class NewPostModel: ObservableObject {
             }
         }
         nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-        nEvent = applyMentionsNip08(nEvent, bumpIndex: quotingEvent != nil)
         nEvent = putHashtagsInTags(nEvent)
         
         if let quotingEvent {
-            nEvent.content = nEvent.content + "\n#[0]"
             nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
             
             if !nEvent.pTags().contains(quotingEvent.pubkey) { // TODO: Add notification toggles to turn off
@@ -202,7 +200,6 @@ public final class NewPostModel: ObservableObject {
         var nEvent = nEvent ?? NEvent(content: "")
         
         nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-        nEvent = applyMentionsNip08(nEvent, bumpIndex: quotingEvent != nil)
         nEvent = putHashtagsInTags(nEvent)
         nEvent.publicKey = account.publicKey
         
@@ -211,11 +208,6 @@ public final class NewPostModel: ObservableObject {
         }
         for index in pastedImages.indices {
             nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
-        }
-        
-        if let quotingEvent {
-            nEvent.content = nEvent.content + "\n\n#[0]"
-            nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
         }
         
         bg().perform {
