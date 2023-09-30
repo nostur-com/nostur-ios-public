@@ -149,6 +149,14 @@ struct NewPost: View {
                     }
                     .presentationBackground(theme.background)
                 }
+                .onAppear {
+                    signpost(NRState.shared, "New Post", .end, "New Post view ready")
+                    
+                    if let startTime = timeTrackers["NewNote"] {
+                        let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+                        print(String(format: "NewNote: Time elapsed: %.3f seconds", timeElapsed))
+                    }
+                }
             }
             else {
                 ProgressView()

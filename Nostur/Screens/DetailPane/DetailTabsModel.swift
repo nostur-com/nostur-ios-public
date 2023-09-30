@@ -146,9 +146,11 @@ final class DetailTabsModel: ObservableObject {
     }
     
     public func restoreTabs() {
+        signpost(self, "Remember tabs", .begin, "Restoring tabs")
         guard let savedTabsData = savedTabs.data(using: .utf8),
               let restorableTabs = try? JSONDecoder().decode([SavedTab].self, from: savedTabsData)
         else { return }
+        signpost(self, "Remember tabs", .event, "Decoded from storage")
         
         for tab in restorableTabs {
             guard let si = try? si(tab.nostrIdentifier) else { continue }
@@ -184,11 +186,15 @@ final class DetailTabsModel: ObservableObject {
                 continue
             }
         }
+
+        signpost(self, "Remember tabs", .event, "TabModels instantiated and appended to view model")
         
         if self.selected == nil && !self.tabs.isEmpty {
             self.selected = self.tabs.first
             self.selected?.suspended = false
         }
+        
+        signpost(self, "Remember tabs", .end, "Finished")
     }
 }
 
