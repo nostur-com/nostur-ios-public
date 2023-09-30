@@ -19,6 +19,7 @@ struct LazyNoteMenuButton: View {
             .padding(.bottom, 11)
             .contentShape(Rectangle())
             .onTapGesture {
+                signpost(NRState.shared, "Post Context Menu", .begin, "Tapped")
                 sendNotification(.showNoteMenu, nrPost)
             }
 //            .transaction { t in
@@ -321,6 +322,9 @@ struct LazyNoteMenuSheet: View {
             }
             .navigationDestination(isPresented: $followToggles) {
                 MultiFollowSheet(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
+            }
+            .onAppear {
+                signpost(NRState.shared, "Post Context Menu", .begin, "onAppear")
             }
         }
     }
