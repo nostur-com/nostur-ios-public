@@ -12,6 +12,7 @@ import Combine
 ///
 /// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
 struct AppView: View {
+    private let ot:NewOnboardingTracker = .shared
     @EnvironmentObject private var theme:Theme
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
     @AppStorage("did_accept_terms") private var didAcceptTerms = false
