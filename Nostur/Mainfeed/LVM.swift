@@ -417,7 +417,7 @@ class LVM: NSObject, ObservableObject {
         return onlyNew
     }
     
-    var isAtTop = true
+    public var isAtTop = true // main thread
     
     func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], leafIdsOnScreen:Set<String>, currentNRPostLeafs:[NRPost], older:Bool = false) {
         #if DEBUG
@@ -761,15 +761,14 @@ class LVM: NSObject, ObservableObject {
 
             // Continue from first (newest) on screen?
             let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
-            let ago = Date(timeIntervalSince1970: Double(since)).agoString
 
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) { [weak self] in
                 guard let self = self else { return }
                 if type == .relays {
-                    self.fetchRelaysNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                    self.fetchRelaysNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                 }
                 else {
-                    self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                    self.fetchNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                     fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
                 }
             }
@@ -819,9 +818,7 @@ class LVM: NSObject, ObservableObject {
         
     // MARK: STEP 0: FETCH FROM RELAYS
     func fetchFeedTimerNextTick() {
-        guard self.viewIsVisible else {
-            return
-        }
+        guard self.viewIsVisible else { return }
         let isImporting = bg().performAndWait { // TODO: Hang here... need to remove ..AndWait { }
             return Importer.shared.isImporting
         }
@@ -851,23 +848,20 @@ class LVM: NSObject, ObservableObject {
 
             // Continue from first (newest) on screen?
             let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
-            let ago = Date(timeIntervalSince1970: Double(since)).agoString
 
-            DispatchQueue.main.async {
-                if (!self.didCatchup) {
-                    // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
-                        guard let self = self else { return }
-                        if type == .relays {
-                            self.fetchRelaysNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
-                        }
-                        else {
-                            self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
-                            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
-                        }
+            if (!self.didCatchup) {
+                // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
+                    guard let self = self else { return }
+                    if type == .relays {
+                        self.fetchRelaysNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                     }
-                    self.didCatchup = true
+                    else {
+                        self.fetchNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                        fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+                    }
                 }
+                self.didCatchup = true
             }
         }
     }
@@ -905,7 +899,6 @@ extension LVM {
 
         // Continue from first (newest) on screen?
         let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
-        let ago = Date(timeIntervalSince1970: Double(since)).agoString
 
         DispatchQueue.main.async {
             if (!self.didCatchup) {
@@ -913,10 +906,10 @@ extension LVM {
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
                     guard let self = self else { return }
                     if self.type == .relays {
-                        self.fetchRelaysNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                        self.fetchRelaysNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                     }
                     else {
-                        self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                        self.fetchNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                         fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
                     }
                     L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") restoreSubscription + 8 seconds fetchNewerSince()")
