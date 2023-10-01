@@ -109,6 +109,15 @@ class RelayMessage {
             if let eventState = Importer.shared.existingIds[mMessage.id] {
                 
                 if eventState.status == .SAVED {
+                    if mMessage.subscriptionId.prefix(5) == "prio-" {
+                        if let savedEvent = try? Event.fetchEvent(id: mMessage.id, context: bg()) {
+                            Importer.shared
+                                .importedPrioMessagesFromSubscriptionId.send(
+                                    ImportedPrioNotification(subscriptionId: mMessage.subscriptionId, event: savedEvent)
+                                )
+                        }
+                    }
+                    
                     Importer.shared.callbackSubscriptionIds.insert(mMessage.subscriptionId)
                     Importer.shared.sendReceivedNotification.send()
                     
