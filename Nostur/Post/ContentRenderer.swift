@@ -36,7 +36,7 @@ struct ContentRenderer: View { // VIEW things
 //                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                     //                        .fixedSize(horizontal: false, vertical: true)
-//                                            .debugDimensions("EmbeddedPost")
+//                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
@@ -44,7 +44,7 @@ struct ContentRenderer: View { // VIEW things
                     NEventView(identifier: identifier)
 //                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
-//                                            .debugDimensions("NEventView")
+//                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
@@ -63,7 +63,7 @@ struct ContentRenderer: View { // VIEW things
                         EmbedById(id: noteHex)
 //                            .frame(minHeight: 75)
                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
-//                                                    .debugDimensions("QuoteById.note1")
+//                            .debugDimensions("QuoteById.note1")
                             .padding(.vertical, 10)
                             .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
@@ -79,7 +79,7 @@ struct ContentRenderer: View { // VIEW things
                     EmbedById(id: hex)
 //                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
-//                                            .debugDimensions("QuoteById.noteHex")
+//                        .debugDimensions("QuoteById.noteHex")
                         .padding(.vertical, 10)
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
@@ -125,6 +125,7 @@ struct ContentRenderer: View { // VIEW things
                         NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+//                            .debugDimensions("sd.video")
                             .background {
                                 if SettingsStore.shared.lowDataMode {
                                     theme.lineColor.opacity(0.2)
@@ -147,6 +148,7 @@ struct ContentRenderer: View { // VIEW things
 #endif
                         
                         NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+//                            .debugDimensions("video")
                         //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
@@ -170,13 +172,12 @@ struct ContentRenderer: View { // VIEW things
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+//                            .debugDimensions("sd.image")
                             .background {
                                 if SettingsStore.shared.lowDataMode {
                                     theme.lineColor.opacity(0.2)
                                 }
                             }
-                        //                            .clipped()
-                        //                            .debugDimensions("SingleMediaViewer.sd")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
@@ -194,7 +195,7 @@ struct ContentRenderer: View { // VIEW things
 #endif
                         
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
-                        //                            .debugDimensions("SingleMediaViewer")
+//                            .debugDimensions("image")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)

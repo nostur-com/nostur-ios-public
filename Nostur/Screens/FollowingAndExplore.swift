@@ -152,6 +152,7 @@ struct FollowingAndExplore: View {
                 else {
                     ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
                         .opacity(selectedSubTab == "Following" ? 1 : 0)
+//                        .withoutAnimation()
                 }
                 
                 // LISTS
@@ -159,11 +160,13 @@ struct FollowingAndExplore: View {
                     ListViewContainer(vm: LVMManager.shared.listLVM(forList: list))
                         .id(list.subscriptionId)
                         .opacity(selectedSubTab == "List" && list == selectedList ? 1 : 0)
+//                        .withoutAnimation()
                 }
                 
                 // EXPLORE
                 ListViewContainer(vm: exploreVM)
                     .opacity(selectedSubTab == "Explore" ? 1 : 0)
+//                    .withoutAnimation()
                 
                 
                 // HOT/ARTICLES/GALLERY
