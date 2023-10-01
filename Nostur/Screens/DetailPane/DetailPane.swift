@@ -225,10 +225,8 @@ struct DetailPane: View {
             }
             
         }
-        .onChange(of: scenePhase) { newScenePhase in
-            if newScenePhase == .background || newScenePhase == .inactive {
-                tm.saveTabs()
-            }
+        .onChange(of: tm.tabs) { _ in
+            tm.saveTabs()
         }
         .onAppear {
             tm.restoreTabs()
