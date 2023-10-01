@@ -24,7 +24,23 @@ struct ContactsToggleSheet: View {
                 Divider()
                 LazyVStack(alignment: .leading, spacing: 10) {
                     // if we don't have requiredP in contactList, render placeholder here:
-                    
+                    if let requiredP = requiredP, contactList.first(where: { $0.pubkey == requiredP }) == nil {
+                        HStack(spacing: 10) {
+                            Button { } label: {
+                                Image(systemName:  "checkmark.circle.fill")
+                                    .padding(.vertical, 10)
+                            }
+                            Text(requiredP.prefix(11))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Spacer()
+                            Text("required")
+                                .font(.system(size: 12.0))
+                                .italic()
+                        }
+                        .disabled(true)
+                        .opacity(0.5)
+                        Divider()
+                    }
                     
                     // contacts to toggle (but disable toggle for requiredP)
                     ForEach(contactList) { contact in
