@@ -7,6 +7,7 @@
 
 import Foundation
 import AVFoundation
+import UIKit
 
 func getVideoDimensions(asset: AVAsset) async -> CGSize? {
     // Get the video track
@@ -46,4 +47,14 @@ func getVideoLength(asset:AVAsset) async -> String? {
     let secondsText = String(format: "%02d", Int(seconds) % 60)
     let minutesText = String(format: "%02d", Int(seconds) / 60)
     return "\(minutesText):\(secondsText)"
+}
+
+func getVideoFirstFrame(asset:AVAsset) async -> UIImage? {
+    let imageGenerator = AVAssetImageGenerator(asset: asset)
+    imageGenerator.appliesPreferredTrackTransform = true
+    
+    guard let cgImage = try? imageGenerator.copyCGImage(at: CMTime(seconds: 0, preferredTimescale: 1), actualTime: nil)
+    else { return nil }
+                                                     
+    return UIImage(cgImage: cgImage)
 }

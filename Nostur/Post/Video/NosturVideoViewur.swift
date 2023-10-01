@@ -106,17 +106,15 @@ struct NosturVideoViewur: View {
                 }
             }
             else if videoShown {
-                if let asset = cachedVideo?.asset, let scaledDimensions = cachedVideo?.scaledDimensions, let videoLength = cachedVideo?.videoLength {
-                    VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
-//                        .padding(.horizontal, fullWidth ? -contentPadding : 0)
-                        .overlay(alignment:.bottomLeading) {
-                            if !didStart {
-                                Text(videoLength)
-                                    .foregroundColor(.white)
-                                    .fontWeight(.bold)
-                                    .padding(3)
-                                    .background(.black)
-                                    .padding(5)
+                if let scaledDimensions = cachedVideo?.scaledDimensions, let videoLength = cachedVideo?.videoLength {
+                    theme.lineColor.opacity(0.2)
+                        .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+                        .overlay {
+                            if let firstFrame = cachedVideo?.firstFrame {
+                                Image(uiImage: firstFrame)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                             }
                         }
                         .overlay(alignment: .center) {
@@ -136,18 +134,32 @@ struct NosturVideoViewur: View {
                                 }
                             }
                         }
-                        .onReceive(receiveNotification(.startPlayingVideo)) { notification in
-                            let otherUrl = notification.object as! String
-                            if url.absoluteString != otherUrl {
-                                isPlaying = false
+                        .overlay(alignment:.bottomLeading) {
+                            if !didStart {
+                                Text(videoLength)
+                                    .foregroundColor(.white)
+                                    .fontWeight(.bold)
+                                    .padding(3)
+                                    .background(.black)
+                                    .padding(5)
                             }
                         }
-                        .onDisappear {
-                            isPlaying = false
+                        .overlay {
+                            if didStart, let asset = cachedVideo?.asset {
+                                VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
+                                    .onReceive(receiveNotification(.startPlayingVideo)) { notification in
+                                        let otherUrl = notification.object as! String
+                                        if url.absoluteString != otherUrl {
+                                            isPlaying = false
+                                        }
+                                    }
+                                    .onDisappear {
+                                        isPlaying = false
+                                    }
+                            }
                         }
-                    .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                    .withoutAnimation()
-                    .transaction { t in t.animation = nil }
+//                    .transaction { t in t.animation = nil }
 #if DEBUG
 //                    .opacity(0.25)
 //                    .debugDimensions("videoShown")
@@ -255,8 +267,9 @@ struct NosturVideoViewur: View {
                     if let videoSize = await getVideoDimensions(asset: asset), let videoLength = await getVideoLength(asset: asset) {
                         
                         let scaledDimensions = Nostur.scaledToFit(videoSize, scale: 1, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                        let firstFrame = await getVideoFirstFrame(asset: asset)
                         
-                        let cachedVideo = CachedVideo(asset: asset, scaledDimensions: scaledDimensions, videoLength: videoLength)
+                        let cachedVideo = CachedVideo(asset: asset, scaledDimensions: scaledDimensions, videoLength: videoLength, firstFrame: firstFrame)
                         AVAssetCache.shared.set(url: url.absoluteString, asset: cachedVideo)
                         
                         DispatchQueue.main.async {
@@ -329,10 +342,12 @@ class CachedVideo {
     let asset:AVAsset
     var scaledDimensions:CGSize? = nil
     var videoLength:String? = nil
+    var firstFrame:UIImage? = nil
     
-    init(asset: AVAsset, scaledDimensions: CGSize? = nil, videoLength: String? = nil) {
+    init(asset: AVAsset, scaledDimensions: CGSize? = nil, videoLength: String? = nil, firstFrame: UIImage? = nil) {
         self.asset = asset
         self.scaledDimensions = scaledDimensions
         self.videoLength = videoLength
+        self.firstFrame = firstFrame
     }
 }
