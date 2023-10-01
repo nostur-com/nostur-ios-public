@@ -41,7 +41,7 @@ public class Account: NSManagedObject {
             return
         }
         if self.isNC {
-            NSecBunkerManager.shared.requestSignature(forEvent: clEvent, whenSigned: { signedEvent in
+            NSecBunkerManager.shared.requestSignature(forEvent: clEvent, usingAccount: self, whenSigned: { signedEvent in
                 _ = Unpublisher.shared.publishLast(signedEvent, ofType: .contactList)
             })
         }
