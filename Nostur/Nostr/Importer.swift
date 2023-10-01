@@ -34,6 +34,7 @@ class Importer {
     var sendReceivedNotification = PassthroughSubject<Void, Never>()
     
     public var importedMessagesFromSubscriptionIds = PassthroughSubject<Set<String>, Never>()
+    public var importedPrioMessagesFromSubscriptionId = PassthroughSubject<ImportedPrioNotification, Never>()
     public var newEventsInDatabase = PassthroughSubject<Void, Never>()
     public var contactSaved = PassthroughSubject<String, Never>()
     public var listStatus = PassthroughSubject<String, Never>()
@@ -405,10 +406,7 @@ class Importer {
                         }
                         Event.updateRelays(event.id, relays: message.relays)
                         if let subscriptionId = message.subscriptionId, let savedEvent = try? Event.fetchEvent(id: event.id, context: context) {
-                            let importedNotification = ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent)
-                            DispatchQueue.main.async {
-                                sendNotification(.importedPrioMessage, importedNotification)
-                            }
+                            importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
                         }
                         continue
                     }
@@ -475,10 +473,7 @@ class Importer {
                     
                     
                     if let subscriptionId = message.subscriptionId {
-                        let importedNotification = ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent)
-                        DispatchQueue.main.async {
-                            sendNotification(.importedPrioMessage, importedNotification)
-                        }
+                        importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
                     }
                     if (kind6firstQuote != nil) {
                         savedEvent.firstQuote = kind6firstQuote

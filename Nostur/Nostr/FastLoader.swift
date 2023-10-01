@@ -299,17 +299,14 @@ class Backlog {
                 }
                 .store(in: &subscriptions)
             
-            receiveNotification(.importedPrioMessage)
-                .sink(receiveValue: { [weak self] notification in
+            Importer.shared.importedPrioMessagesFromSubscriptionId
+                .sink { [weak self] importedPrioNotification in
                     guard let self = self else { return }
-                    let importedPrioNotification = notification.object as! ImportedPrioNotification
-                    bg().perform {
-                        if let task = self.task(with: importedPrioNotification.subscriptionId) {
-                            task.processResponseCommand(importedPrioNotification.subscriptionId, nil, importedPrioNotification.event)
-                            self.remove(task)
-                        }
+                    if let task = self.task(with: importedPrioNotification.subscriptionId) {
+                        task.processResponseCommand(importedPrioNotification.subscriptionId, nil, importedPrioNotification.event)
+                        self.remove(task)
                     }
-                })
+                }
                 .store(in: &subscriptions)
             
             receiveNotification(.receivedMessage)
