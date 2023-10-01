@@ -130,7 +130,7 @@ struct FollowingAndExplore: View {
             
             ZStack {
                 // FOLLOWING
-                if (account.getFollowingPublicKeys().count <= 1 && !didSend) {
+                if (account.follows_.count <= 1 && !didSend) {
                     VStack {
                         Spacer()
                         Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -158,7 +158,7 @@ struct FollowingAndExplore: View {
                 // LISTS
                 ForEach(lists) { list in
                     ListViewContainer(vm: LVMManager.shared.listLVM(forList: list))
-                        .id(list.subscriptionId)
+//                        .id(list.subscriptionId)
                         .opacity(selectedSubTab == "List" && list == selectedList ? 1 : 0)
 //                        .withoutAnimation()
                 }
