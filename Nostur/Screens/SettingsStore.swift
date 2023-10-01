@@ -125,6 +125,9 @@ final class SettingsStore: ObservableObject {
         // for now only a few that we need right now:
         _animatedPFPenabledCache = defaults.bool(forKey: Keys.animatedPFPenabled)
         _lowDataModeCache = defaults.bool(forKey: Keys.lowDataMode)
+        _rowFooterEnabled = defaults.bool(forKey: Keys.rowFooterEnabled)
+        _restrictAutoDownload = defaults.bool(forKey: Keys.restrictAutoDownload)
+        _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
     }
     
     var defaultMediaUploadService: MediaUploadService {
@@ -157,17 +160,6 @@ final class SettingsStore: ObservableObject {
         get { defaults.bool(forKey: Keys.includeSharedFrom) }
     }
 
-    var rowFooterEnabled: Bool {
-        set {
-            objectWillChange.send()
-            defaults.set(newValue, forKey: Keys.rowFooterEnabled);
-            if !newValue {
-                defaults.set(false, forKey: Keys.fetchCounts);
-            }
-        }
-        get { defaults.bool(forKey: Keys.rowFooterEnabled) }
-    }
-    
     var statusBubble: Bool {
         set { defaults.set(newValue, forKey: Keys.statusBubble); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.statusBubble) }
@@ -189,21 +181,11 @@ final class SettingsStore: ObservableObject {
         }
         get { defaults.bool(forKey: Keys.fetchCounts) }
     }
-    
-    var fullWidthImages: Bool {
-        set { defaults.set(newValue, forKey: Keys.fullWidthImages); objectWillChange.send() }
-        get { defaults.bool(forKey: Keys.fullWidthImages) }
-    }
 
 //    var hideEmojisInNames: Bool {
 //        set { defaults.set(newValue, forKey: Keys.hideEmojisInNames); objectWillChange.send() }
 //        get { defaults.bool(forKey: Keys.hideEmojisInNames) }
 //    }
-    
-    var restrictAutoDownload: Bool {
-        set { defaults.set(newValue, forKey: Keys.restrictAutoDownload); objectWillChange.send() }
-        get { defaults.bool(forKey: Keys.restrictAutoDownload) }
-    }
     
     var isSignatureVerificationEnabled: Bool {
         set { 
@@ -285,6 +267,42 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _lowDataModeCache:Bool = false
+    
+    var rowFooterEnabled: Bool {
+        set {
+            objectWillChange.send()
+            _rowFooterEnabled = newValue
+            defaults.set(newValue, forKey: Keys.rowFooterEnabled);
+            if !newValue {
+                defaults.set(false, forKey: Keys.fetchCounts);
+            }
+        }
+        get { _rowFooterEnabled }
+    }
+    
+    private var _rowFooterEnabled:Bool = true
+    
+    public var restrictAutoDownload: Bool {
+        set {
+            objectWillChange.send()
+            _restrictAutoDownload = newValue
+            defaults.set(newValue, forKey: Keys.restrictAutoDownload);
+        }
+        get { _restrictAutoDownload }
+    }
+    
+    private var _restrictAutoDownload:Bool = false
+    
+    public var fullWidthImages: Bool {
+        set {
+            objectWillChange.send()
+            _fullWidthImages = newValue
+            defaults.set(newValue, forKey: Keys.fullWidthImages);
+        }
+        get { _fullWidthImages }
+    }
+    
+    private var _fullWidthImages:Bool = false
 }
 
 struct LightningWallet: Identifiable, Hashable {
