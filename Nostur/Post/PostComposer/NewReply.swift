@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 
 struct NewReply: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var theme:Theme
     let PLACEHOLDER = String(localized:"Enter your reply", comment: "Placeholder when typing a reply")
     
@@ -181,7 +182,7 @@ struct NewReply: View {
                         }
                     }
                     
-                    if IS_CATALYST {
+                    if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button {
                                 ipm.photoPickerShown = true

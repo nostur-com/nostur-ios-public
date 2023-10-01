@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 
 struct NewQuoteRepost: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var theme:Theme
     let PLACEHOLDER = String(localized: "Add comment", comment: "Placeholder when typing a new reply")
     private var quotingEvent:Event
@@ -104,7 +105,7 @@ struct NewQuoteRepost: View {
                         }
                     }
                     
-                    if IS_CATALYST {
+                    if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button {
                                 ipm.photoPickerShown = true
