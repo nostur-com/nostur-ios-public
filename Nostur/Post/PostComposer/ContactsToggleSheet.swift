@@ -48,8 +48,16 @@ struct ContactsToggleSheet: View {
                                         .padding(.vertical, 10)
                                 }
                             }
+                            if let pfp = NRState.shared.loggedInAccount?.followingPFPs[contact.pubkey] {
+                                MiniPFP(pictureUrl: pfp, size: 20.0)
+                                    .frame(width: 20.0, height: 20.0)
+                            }
+                            else {
+                                Color.clear
+                                    .frame(width: 20.0, height: 20.0)
+                            }
                             Text(contact.anyName)
-//                                .padding(.vertical, 10)
+                            //                                .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             if contact.pubkey == requiredP {
                                 Spacer()
