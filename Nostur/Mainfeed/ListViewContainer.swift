@@ -17,6 +17,7 @@ struct ListViewContainer: View {
         let _ = Self._printChanges()
         #endif
         SmoothList(lvm: vm, dim: dim, theme:theme)
+//            .withoutAnimation()
             .overlay(alignment: .topTrailing) {
                 ListUnreadCounter(vm: vm)
                     .padding(.trailing, 10)
