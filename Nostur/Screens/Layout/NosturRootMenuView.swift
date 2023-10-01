@@ -98,11 +98,17 @@ struct NosturRootMenu: View {
             L.og.info("nostr: nevent1/nprofile1: \(nostrSharable[0][2])\(nostrSharable[0][3])")
             selectedTab = "Search"
             if nostrSharable[0][2] == "nevent1" {
-                navigateTo(Nevent1Path(nevent1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"))
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    // TODO: Make proper loading into Search tab, instead of hoping the tab has loaded in time for .onReceive(receiveNotification(.navigateTo))
+                    navigateTo(Nevent1Path(nevent1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"))
+                }
                 return
             }
             if nostrSharable[0][2] == "nprofile1" {
-                navigateTo(Nprofile1Path(nprofile1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"))
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    // TODO: Make proper loading into Search tab, instead of hoping the tab has loaded in time for .onReceive(receiveNotification(.navigateTo))
+                    navigateTo(Nprofile1Path(nprofile1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"))
+                }
                 return
             }
         }
@@ -140,7 +146,7 @@ struct NosturRootMenu: View {
         if nosturHashtag.count == 1 && nosturHashtag[0].count == 3 {
             L.og.info("nostur: hashtag: \(nosturHashtag[0][2])")
             selectedTab = "Search"
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
             }
             return
