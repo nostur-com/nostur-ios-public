@@ -97,7 +97,6 @@ class NewOnboardingTracker {
     }
     
     public func abort() {
-        self.subscriptions.removeAll()
         self.backlog = Backlog()
         self.account = nil
     }
@@ -105,17 +104,7 @@ class NewOnboardingTracker {
     private func cancel() {
         guard self.account != nil else { return }
         L.onboarding.info("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.getFollowingPublicKeys().count) ) followers for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
-//        self.pubkey = nil
-//        self.account = nil
-//        self.backlog = Backlog()
-        subscriptions.forEach { sub in
-            sub.cancel()
-        }
         self.account = nil
-    }
-    
-    deinit {
-        self.cancel()
     }
     
     private func fetchProfileAndFollowers() {

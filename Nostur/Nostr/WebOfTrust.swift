@@ -109,10 +109,6 @@ class WebOfTrust: ObservableObject {
             }
         }
     }
-
-    deinit {
-        L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: deinit for \(self.pubkey ?? "no pubkey")")
-    }
     
     private func updateWoTonNewFollowing() {
         receiveNotification(.followingAdded)
