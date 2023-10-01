@@ -109,14 +109,16 @@ struct DetailFooterFragment: View {
 }
 
 func reverifyZaps(eventId: String, expectedZpk: String) {
-    let fr = Event.fetchRequest()
-    fr.predicate = NSPredicate(format: "zappedEventId == %@ AND kind == 9735", eventId)
-    if let zaps = try? DataProvider.shared().viewContext.fetch(fr) {
+    bg().perform {
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "zappedEventId == %@ AND kind == 9735", eventId)
+        guard let zaps = try? bg().fetch(fr) else { return }
         for zap in zaps {
             if zap.flags != "zpk_verified" && zap.pubkey == expectedZpk {
                 zap.flags = "zpk_verified"
             }
         }
+        bgSave()
     }
 }
 
