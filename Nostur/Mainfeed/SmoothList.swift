@@ -194,17 +194,25 @@ struct SmoothList: UIViewControllerRepresentable {
     }
  
     final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate, UICollectionViewDataSourcePrefetching, UICollectionViewDelegateFlowLayout {
-        var subscriptions = Set<AnyCancellable>()
-        let parent: SmoothList
-        var lvm: LVM
-        var data:[NRPost] = []
-        var collectionViewHolder: CollectionViewHolderType?
-        var scrollTimer: Timer?
-        var prefetcher:ImagePrefetcher
-        var prefetcherPFP:ImagePrefetcher
+        public var subscriptions = Set<AnyCancellable>()
+        public let parent: SmoothList
+        public var lvm: LVM
+        public var data:[NRPost] = []
+        public var collectionViewHolder: CollectionViewHolderType?
+        private var scrollTimer: Timer?
+        private var didScroll = PassthroughSubject<ScrollInfo, Never>()
+        private var prefetcher:ImagePrefetcher
+        private var prefetcherPFP:ImagePrefetcher
         
         private var lastCalledTimestamp: TimeInterval = 0
         private let debounceInterval: TimeInterval = 0.3 // Adjust this value to control the throttling
+        
+        private struct ScrollInfo {
+            let contentOffsetY: CGFloat
+            let indexPathsForVisibleItems: [IndexPath]
+            let lvm:LVM
+            let data:[NRPost]
+        }
         
         
         init(parent: SmoothList) {
@@ -216,146 +224,175 @@ struct SmoothList: UIViewControllerRepresentable {
             
             self.prefetcherPFP = ImagePrefetcher(pipeline: ImageProcessing.shared.pfp)
             self.prefetcherPFP.priority = .high
+            
+            didScroll
+                .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
+                .sink { scrollInfo in
+                    if scrollInfo.contentOffsetY > 150 {
+                        if scrollInfo.lvm.isAtTop {
+                            scrollInfo.lvm.isAtTop = false
+                        }
+                    }
+                    else {
+                        scrollInfo.lvm.isAtTop = true
+                        
+                        if let firstIndex = scrollInfo.indexPathsForVisibleItems.min(by: { $0.row < $1.row }) {
+                            if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
+                                scrollInfo.lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
+                            }
+                            
+                            if let lastAppearedId = scrollInfo.data[safe: firstIndex.row]?.id {
+                                scrollInfo.lvm.lastAppearedIdSubject.send(lastAppearedId)
+                            }
+                        }
+                    }
+                    
+                    scrollInfo.lvm.postsAppearedSubject.send(scrollInfo.indexPathsForVisibleItems.compactMap { scrollInfo.data[safe: $0.row]?.id })
+                }
+                .store(in: &subscriptions)
         }
         
         func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
-            let imageWidth = parent.dim.availableNoteRowImageWidth()
-            var imageRequests:[ImageRequest] = []
-            var imageRequestsPFP:[ImageRequest] = []
-            //            var imageRequestsPFPnotFollowing:[ImageRequest] = []
+            let items:[NRPost] = indexPaths.compactMap { data[safe: $0.row] }
             
-            for indexPath in indexPaths {
-                guard let item = data[safe: indexPath.row] else { continue }
+            bg().perform { [weak self] in
+                guard let self else { return }
+                let imageWidth = parent.dim.availableNoteRowImageWidth()
+                var imageRequests:[ImageRequest] = []
+                var imageRequestsPFP:[ImageRequest] = []
                 
-                if !item.missingPs.isEmpty {
-                    bg().perform {
-                        EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "SmoothList.001 - missingPs: \(item.missingPs.count)")
+                for item in items {
+                    if !item.missingPs.isEmpty {
                         QueuedFetcher.shared.enqueue(pTags: item.missingPs)
                         L.fetching.info("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(item.id)")
                     }
-                }
-                
-                // Everything below here is image or link preview fetching, skip if low data mode
-                guard !SettingsStore.shared.lowDataMode else { continue }
-                
-                if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
-                    imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
-                }
-                
-                imageRequestsPFP.append(contentsOf: item
-                    .parentPosts
-                    .compactMap { $0.contact?.pictureUrl }
-                    .filter { $0.prefix(7) != "http://" }
-                    .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
-                )
-                
-                for element in item.contentElements {
-                    switch element {
-                    case .image(let mediaContent):
-                        if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                        // SHOULD BE SAME AS IN ContentRenderer:
-                        if let dimensions = mediaContent.dimensions {
-                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                                
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "prefetch"))
+                    
+                    // Everything below here is image or link preview fetching, skip if low data mode
+                    guard !SettingsStore.shared.lowDataMode else { continue }
+                    
+                    if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
+                        imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
+                    }
+                    
+                    imageRequestsPFP.append(contentsOf: item
+                        .parentPosts
+                        .compactMap { $0.contact?.pictureUrl }
+                        .filter { $0.prefix(7) != "http://" }
+                        .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
+                    )
+                    
+                    for element in item.contentElements {
+                        switch element {
+                        case .image(let mediaContent):
+                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            // SHOULD BE SAME AS IN ContentRenderer:
+                            if let dimensions = mediaContent.dimensions {
+                                let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                                    
+                                // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                                imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "prefetch"))
+                            }
+                            else {
+                                // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                                imageRequests.append(makeImageRequest(mediaContent.url, width: imageWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "prefetch (unscaled)"))
+                            }
+                        default:
+                            continue
                         }
-                        else {
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: imageWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "prefetch (unscaled)"))
+                    }
+                    
+                    // TODO: do parent posts if replies is enabled (PostOrThread)
+    //                for parentPost in item.parentPosts {
+    //                    // Same as above
+    //                    // for element in parentPost.contentElements { }
+    //                }
+                    
+                    for url in item.linkPreviewURLs.filter({ $0.absoluteString.prefix(7) != "http://" }) {
+                        fetchMetaTags(url: url) { result in
+                            do {
+                                let tags = try result.get()
+                                LinkPreviewCache.shared.setObject(for: url, value: tags)
+                                L.og.info("✓✓ Loaded link preview meta tags from \(url)")
+                            }
+                            catch { }
                         }
-                    default:
-                        continue
                     }
                 }
-                
-                // TODO: do parent posts if replies is enabled (PostOrThread)
-//                for parentPost in item.parentPosts {
-//                    // Same as above
-//                    // for element in parentPost.contentElements { }
-//                }
-                
-                for url in item.linkPreviewURLs.filter({ $0.absoluteString.prefix(7) != "http://" }) {
-                    fetchMetaTags(url: url) { result in
-                        do {
-                            let tags = try result.get()
-                            LinkPreviewCache.shared.setObject(for: url, value: tags)
-                            L.og.info("✓✓ Loaded link preview meta tags from \(url)")
-                        }
-                        catch { }
-                    }
-                }
-            }
 
-            guard !SettingsStore.shared.lowDataMode else { return }
-            if !imageRequests.isEmpty {
-                prefetcher.startPrefetching(with: imageRequests)
-            }
-            if !imageRequestsPFP.isEmpty {
-                prefetcherPFP.startPrefetching(with: imageRequestsPFP)
+                guard !SettingsStore.shared.lowDataMode else { return }
+                if !imageRequests.isEmpty {
+                    prefetcher.startPrefetching(with: imageRequests)
+                }
+                if !imageRequestsPFP.isEmpty {
+                    prefetcherPFP.startPrefetching(with: imageRequestsPFP)
+                }
             }
         }
         
         func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
-            let imageWidth = parent.dim.availableNoteRowImageWidth()
-            var imageRequests:[ImageRequest] = []
-            var imageRequestsPFP:[ImageRequest] = []
-            
-            for indexPath in indexPaths {
-                guard let item = data[safe: indexPath.row] else { continue }
+            let items:[NRPost] = indexPaths.compactMap { data[safe: $0.row] }
+
+            bg().perform { [weak self] in
+                guard let self else { return }
+                let imageWidth = parent.dim.availableNoteRowImageWidth()
+                var imageRequests:[ImageRequest] = []
+                var imageRequestsPFP:[ImageRequest] = []
                 
-                if !item.missingPs.isEmpty {
-                    QueuedFetcher.shared.dequeue(pTags: item.missingPs)
-                }
-                
-                // Everything below here is image or link preview fetching, skip if low data mode
-                guard !SettingsStore.shared.lowDataMode else { continue }
-                
-                if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
-                    imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
-                }
-                
-                imageRequestsPFP.append(contentsOf: item
-                    .parentPosts
-                    .compactMap { $0.contact?.pictureUrl }
-                    .filter { $0.prefix(7) != "http://" }
-                    .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
-                )
-                
-                for element in item.contentElements {
-                    switch element {
-                    case .image(let mediaContent):
-                        if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                        // SHOULD BE SAME AS IN ContentRenderer:
-                        if let dimensions = mediaContent.dimensions {
-                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                                
-                                
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "cancel prefetch"))
-                        }
-                        else {
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: imageWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "cancel prefetch (unscaled)"))
-                        }
-                    default:
-                        continue
+                for item in items {
+                    
+                    if !item.missingPs.isEmpty {
+                        QueuedFetcher.shared.dequeue(pTags: item.missingPs)
                     }
+                    
+                    // Everything below here is image or link preview fetching, skip if low data mode
+                    guard !SettingsStore.shared.lowDataMode else { continue }
+                    
+                    if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
+                        imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
+                    }
+                    
+                    imageRequestsPFP.append(contentsOf: item
+                        .parentPosts
+                        .compactMap { $0.contact?.pictureUrl }
+                        .filter { $0.prefix(7) != "http://" }
+                        .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
+                    )
+                    
+                    for element in item.contentElements {
+                        switch element {
+                        case .image(let mediaContent):
+                            if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
+                            // SHOULD BE SAME AS IN ContentRenderer:
+                            if let dimensions = mediaContent.dimensions {
+                                let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                                    
+                                    
+                                // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                                imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "cancel prefetch"))
+                            }
+                            else {
+                                // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
+                                imageRequests.append(makeImageRequest(mediaContent.url, width: imageWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "cancel prefetch (unscaled)"))
+                            }
+                        default:
+                            continue
+                        }
+                    }
+                    
+                    // TODO: do parent posts if replies is enabled (PostOrThread)
+    //                for parentPost in item.parentPosts {
+    //                    // Same as above
+    //                    // for element in parentPost.contentElements { }
+    //                }
                 }
                 
-                // TODO: do parent posts if replies is enabled (PostOrThread)
-//                for parentPost in item.parentPosts {
-//                    // Same as above
-//                    // for element in parentPost.contentElements { }
-//                }
-            }
-            
-            guard !SettingsStore.shared.lowDataMode else { return }
-            if (!imageRequests.isEmpty) {
-                prefetcher.stopPrefetching(with: imageRequests)
-            }
-            if !imageRequestsPFP.isEmpty {
-                prefetcherPFP.stopPrefetching(with: imageRequestsPFP)
+                guard !SettingsStore.shared.lowDataMode else { return }
+                if (!imageRequests.isEmpty) {
+                    prefetcher.stopPrefetching(with: imageRequests)
+                }
+                if !imageRequestsPFP.isEmpty {
+                    prefetcherPFP.stopPrefetching(with: imageRequestsPFP)
+                }
             }
         }
         
@@ -406,10 +443,13 @@ struct SmoothList: UIViewControllerRepresentable {
         }
         
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
-            scrollTimer?.invalidate()
-            scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
-                self?.processScrollViewDidScroll(scrollView)
-            }
+            guard let indexPaths = collectionViewHolder?.collectionView.indexPathsForVisibleItems else { return }
+            self.didScroll.send(ScrollInfo(
+                contentOffsetY: scrollView.contentOffset.y,
+                indexPathsForVisibleItems: indexPaths,
+                lvm: lvm,
+                data: data
+            ))
             
             guard !IS_CATALYST else { return }
             if !scrollDirectionDetermined {
@@ -423,32 +463,6 @@ struct SmoothList: UIViewControllerRepresentable {
                     scrollDirectionDetermined = true
                 }
             }
-        }
-
-        func processScrollViewDidScroll(_ scrollView: UIScrollView) {
-            guard let indexPaths = collectionViewHolder?.collectionView.indexPathsForVisibleItems else {
-                return
-            }
-            if scrollView.contentOffset.y > 150 {
-                if lvm.isAtTop {
-                    lvm.isAtTop = false
-                }
-            }
-            else {
-                lvm.isAtTop = true
-                
-                if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
-                    if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
-                        lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
-                    }
-                    
-                    if let lastAppearedId = data[safe: firstIndex.row]?.id {
-                        lvm.lastAppearedIdSubject.send(lastAppearedId)
-                    }
-                }
-            }
-            
-            lvm.postsAppearedSubject.send(indexPaths.compactMap { data[safe: $0.row]?.id })
         }
         
         private var scrollDirectionDetermined = false
