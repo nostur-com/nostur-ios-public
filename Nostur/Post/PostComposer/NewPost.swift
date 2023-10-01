@@ -13,6 +13,7 @@ import Combine
 import PhotosUI
 
 struct NewPost: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var theme:Theme
     let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
     @Environment(\.dismiss) private var dismiss
@@ -98,7 +99,7 @@ struct NewPost: View {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button { dismiss() } label: { Text("Cancel") }
                     }
-                    if IS_CATALYST {
+                    if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button { ipm.photoPickerShown = true } label: {
                                 Image(systemName: "photo")
