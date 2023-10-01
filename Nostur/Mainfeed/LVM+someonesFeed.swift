@@ -28,27 +28,25 @@ extension LVM {
     }
     
     func fetchSomeoneElsesContacts(_ pubkey: String) {   
-        let getContactListTask = ReqTask(subscriptionId: "RM.getAuthorContactsList-other") { taskId in
-            L.og.notice("🟪 Fetching clEvent from relays")
-            reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
-        } processResponseCommand: { taskId, _, _ in
-            bg().perform { [weak self] in
-                guard let self = self else { return }
-                L.og.notice("🟪 Processing clEvent response from relays")
-                if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: DataProvider.shared().bg) {
-                    self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
-                    
-                    let hashtags = clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
-                    self.hashtags = Set(hashtags)
-                    
-                    self.fetchSomeoneElsesFeed()
-                }
-            }
-        } timeoutCommand: { taskId in
-            if (self.pubkeys.isEmpty) {
-                L.og.notice("🟪  \(taskId) Timeout in fetching clEvent / pubkeys")
-                bg().perform {
-                    if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: DataProvider.shared().bg) {
+        let getContactListTask = ReqTask(
+            prio: true,
+            reqCommand: { taskId in
+                L.og.notice("🟪 Fetching clEvent from relays")
+                reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
+            },
+            processResponseCommand: { taskId, _, clEvent in
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
+                    L.og.notice("🟪 Processing clEvent response from relays")
+                    if let clEvent = clEvent {
+                        self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
+                        
+                        let hashtags = clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
+                        self.hashtags = Set(hashtags)
+                        
+                        self.fetchSomeoneElsesFeed()
+                    }
+                    else if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: DataProvider.shared().bg) {
                         self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
                         
                         let hashtags = clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -57,42 +55,61 @@ extension LVM {
                         self.fetchSomeoneElsesFeed()
                     }
                 }
+            },
+            timeoutCommand: { taskId in
+                if (self.pubkeys.isEmpty) {
+                    L.og.notice("🟪  \(taskId) Timeout in fetching clEvent / pubkeys")
+                    bg().perform {
+                        if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: DataProvider.shared().bg) {
+                            self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
+                            
+                            let hashtags = clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
+                            self.hashtags = Set(hashtags)
+                            
+                            self.fetchSomeoneElsesFeed()
+                        }
+                    }
+                }
             }
-        }
+        )
         self.backlog.add(getContactListTask)
         getContactListTask.fetch()
     }
     
     func fetchSomeoneElsesFeed() {
-        let getFollowingEventsTask = ReqTask(prefix: "GFETOTHER-") { taskId in
-            L.og.notice("🟪 Fetching posts from relays using \(self.pubkeys.count) pubkeys")
-            reqP(RM.getFollowingEvents(pubkeys: Array(self.pubkeys), limit: 400, subscriptionId: taskId))
-        } processResponseCommand: { taskId, _, _  in
-            bg().perform { [weak self] in
-                guard let self = self else { return }
-                let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
-                guard let events = try? DataProvider.shared().bg.fetch(fr) else {
-                    L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
-                    return
+        let getFollowingEventsTask = ReqTask(
+            prefix: "GFETOTHER-",
+            reqCommand: { taskId in
+                L.og.notice("🟪 Fetching posts from relays using \(self.pubkeys.count) pubkeys")
+                reqP(RM.getFollowingEvents(pubkeys: Array(self.pubkeys), limit: 400, subscriptionId: taskId))
+            },
+            processResponseCommand: { taskId, _, _  in
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
+                    let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
+                    guard let events = try? DataProvider.shared().bg.fetch(fr) else {
+                        L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
+                        return
+                    }
+                    guard events.count > 20 else {
+                        L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more. Our pubkey: \(self.pubkey?.short ?? "-") ")
+                        return
+                    }
+                    DispatchQueue.main.async {
+                        self.loadSomeoneElsesEvents(events)
+                    }
+                    L.og.notice("🟪 Received \(events.count) posts from relays (found in db)")
                 }
-                guard events.count > 20 else {
-                    L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more. Our pubkey: \(self.pubkey?.short ?? "-") ")
-                    return
-                }
-                DispatchQueue.main.async {
-                    self.loadSomeoneElesesEvents(events)
-                }
-                L.og.notice("🟪 Received \(events.count) posts from relays (found in db)")
-            }
-        } timeoutCommand: { taskId in
+            },
+            timeoutCommand: { taskId in
             
-        }
-        
+            }
+        )
         self.backlog.add(getFollowingEventsTask)
         getFollowingEventsTask.fetch()
     }
     
-    func loadSomeoneElesesEvents(_ events:[Event]) {
+    func loadSomeoneElsesEvents(_ events:[Event]) {
         self.startRenderingSubject.send(events)
         
         if (!self.instantFinished) {
