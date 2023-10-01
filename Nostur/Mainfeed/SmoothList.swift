@@ -200,19 +200,11 @@ struct SmoothList: UIViewControllerRepresentable {
         public var data:[NRPost] = []
         public var collectionViewHolder: CollectionViewHolderType?
         private var scrollTimer: Timer?
-        private var didScroll = PassthroughSubject<ScrollInfo, Never>()
         private var prefetcher:ImagePrefetcher
         private var prefetcherPFP:ImagePrefetcher
         
         private var lastCalledTimestamp: TimeInterval = 0
         private let debounceInterval: TimeInterval = 0.3 // Adjust this value to control the throttling
-        
-        private struct ScrollInfo {
-            let contentOffsetY: CGFloat
-            let indexPathsForVisibleItems: [IndexPath]
-            let lvm:LVM
-            let data:[NRPost]
-        }
         
         
         init(parent: SmoothList) {
@@ -224,32 +216,6 @@ struct SmoothList: UIViewControllerRepresentable {
             
             self.prefetcherPFP = ImagePrefetcher(pipeline: ImageProcessing.shared.pfp)
             self.prefetcherPFP.priority = .high
-            
-            didScroll
-                .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
-                .sink { scrollInfo in
-                    if scrollInfo.contentOffsetY > 150 {
-                        if scrollInfo.lvm.isAtTop {
-                            scrollInfo.lvm.isAtTop = false
-                        }
-                    }
-                    else {
-                        scrollInfo.lvm.isAtTop = true
-                        
-                        if let firstIndex = scrollInfo.indexPathsForVisibleItems.min(by: { $0.row < $1.row }) {
-                            if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
-                                scrollInfo.lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
-                            }
-                            
-                            if let lastAppearedId = scrollInfo.data[safe: firstIndex.row]?.id {
-                                scrollInfo.lvm.lastAppearedIdSubject.send(lastAppearedId)
-                            }
-                        }
-                    }
-                    
-                    scrollInfo.lvm.postsAppearedSubject.send(scrollInfo.indexPathsForVisibleItems.compactMap { scrollInfo.data[safe: $0.row]?.id })
-                }
-                .store(in: &subscriptions)
         }
         
         func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
@@ -443,13 +409,10 @@ struct SmoothList: UIViewControllerRepresentable {
         }
         
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
-            guard let indexPaths = collectionViewHolder?.collectionView.indexPathsForVisibleItems else { return }
-            self.didScroll.send(ScrollInfo(
-                contentOffsetY: scrollView.contentOffset.y,
-                indexPathsForVisibleItems: indexPaths,
-                lvm: lvm,
-                data: data
-            ))
+            scrollTimer?.invalidate()
+            scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
+                self?.processScrollViewDidScroll(scrollView)
+            }
             
             guard !IS_CATALYST else { return }
             if !scrollDirectionDetermined {
@@ -463,6 +426,32 @@ struct SmoothList: UIViewControllerRepresentable {
                     scrollDirectionDetermined = true
                 }
             }
+        }
+
+        func processScrollViewDidScroll(_ scrollView: UIScrollView) {
+            guard let indexPaths = collectionViewHolder?.collectionView.indexPathsForVisibleItems else {
+                return
+            }
+            if scrollView.contentOffset.y > 150 {
+                if lvm.isAtTop {
+                    lvm.isAtTop = false
+                }
+            }
+            else {
+                lvm.isAtTop = true
+                
+                if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
+                    if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
+                        lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
+                    }
+                    
+                    if let lastAppearedId = data[safe: firstIndex.row]?.id {
+                        lvm.lastAppearedIdSubject.send(lastAppearedId)
+                    }
+                }
+            }
+            
+            lvm.postsAppearedSubject.send(indexPaths.compactMap { data[safe: $0.row]?.id })
         }
         
         private var scrollDirectionDetermined = false
