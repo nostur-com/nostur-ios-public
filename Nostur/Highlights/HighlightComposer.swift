@@ -69,7 +69,7 @@ struct HighlightComposer: View {
                                 RoundedRectangle(cornerRadius: 15)
                                     .stroke(.regularMaterial, lineWidth: 1)
                             )
-                            PreviewFooterFragmentView()
+                            CustomizablePreviewFooterFragmentView()
                         }
                     }
                     .padding(10)

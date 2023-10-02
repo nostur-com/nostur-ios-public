@@ -157,7 +157,7 @@ struct ArticleView: View {
                         .padding(.vertical, 10)
                     
                     if !hideFooter {
-                        FooterFragmentView(nrPost: article)
+                        CustomizableFooterFragmentView(nrPost: article)
                             .padding(.vertical, 10)
                     }
                 }
@@ -399,7 +399,7 @@ struct ArticleView: View {
                 }
                 
                 if !hideFooter {
-                    FooterFragmentView(nrPost: article)
+                    CustomizableFooterFragmentView(nrPost: article)
                 }
             }
             .contentShape(Rectangle())
