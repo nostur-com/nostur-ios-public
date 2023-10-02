@@ -5,7 +5,7 @@
 //  Created by Fabian Lachman on 05/09/2023.
 //
 
-import Foundation
+import SwiftUI
 import NostrEssentials
 import Combine
 
@@ -79,6 +79,30 @@ class DirectMessageViewModel: ObservableObject {
                     self.reloadMessageRequestsNotWot()
                 }
                 .store(in: &self.subscriptions)
+        }
+        if IS_CATALYST {
+            setupBadgeNotifications()
+        }
+    }
+    
+    private func setupBadgeNotifications() { // Copy pasta from NotificationsViewModel
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.badge, .provisional]) { granted, error in
+            if error == nil {
+                // Provisional authorization granted.
+                self.objectWillChange
+                    .sink { _ in
+                        Task {
+                            let notificationsCount = NotificationsViewModel.shared.unread
+                            try? await center.setBadgeCount(self.unread + self.newRequests)
+                        }
+                    }
+                    .store(in: &self.subscriptions)
+                Task {
+                    let notificationsCount = NotificationsViewModel.shared.unread
+                    try? await center.setBadgeCount(self.unread + self.newRequests)
+                }
+            }
         }
     }
     
