@@ -37,6 +37,7 @@ struct ReactionButton: View {
                     unpublishLikeId = nil
                 }
                 else {
+                    guard !footerAttributes.reactions.contains(reactionContent) else { return }
                     let impactMed = UIImpactFeedbackGenerator(style: .medium)
                     impactMed.impactOccurred()
                     
