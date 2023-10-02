@@ -387,6 +387,9 @@
 		1FEA8D4B29E967B5004A83D3 /* InlineThings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */; };
 		1FEC81A32A8FCB8B006FA50C /* DiscoverNostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEC81A22A8FCB7C006FA50C /* DiscoverNostr.swift */; };
 		1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FECAC4629A08255006FEE72 /* Collection+subscript.swift */; };
+		1FED0D852ACAF5F1002DAC02 /* CustomizableFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FED0D842ACAF5F1002DAC02 /* CustomizableFooter.swift */; };
+		1FED0D872ACAFC5A002DAC02 /* ReactionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FED0D862ACAFC5A002DAC02 /* ReactionButton.swift */; };
+		1FED0D892ACB1D42002DAC02 /* FooterConfigurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FED0D882ACB1D42002DAC02 /* FooterConfigurator.swift */; };
 		1FF128482ABF090600144C0C /* Sidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF128472ABF090600144C0C /* Sidebar.swift */; };
 		1FF209162AB0A92800876DB2 /* ProfileGalleryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF209152AB0A92800876DB2 /* ProfileGalleryViewModel.swift */; };
 		1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */; };
@@ -817,6 +820,9 @@
 		1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineThings.swift; sourceTree = "<group>"; };
 		1FEC81A22A8FCB7C006FA50C /* DiscoverNostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverNostr.swift; sourceTree = "<group>"; };
 		1FECAC4629A08255006FEE72 /* Collection+subscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+subscript.swift"; sourceTree = "<group>"; };
+		1FED0D842ACAF5F1002DAC02 /* CustomizableFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomizableFooter.swift; sourceTree = "<group>"; };
+		1FED0D862ACAFC5A002DAC02 /* ReactionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionButton.swift; sourceTree = "<group>"; };
+		1FED0D882ACB1D42002DAC02 /* FooterConfigurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FooterConfigurator.swift; sourceTree = "<group>"; };
 		1FF128472ABF090600144C0C /* Sidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar.swift; sourceTree = "<group>"; };
 		1FF209152AB0A92800876DB2 /* ProfileGalleryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileGalleryViewModel.swift; sourceTree = "<group>"; };
 		1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingAndExplore.swift; sourceTree = "<group>"; };
@@ -987,11 +993,13 @@
 		1F15F09A2AAF2FBB0004E706 /* PostFooter */ = {
 			isa = PBXGroup;
 			children = (
+				1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */,
+				1FED0D842ACAF5F1002DAC02 /* CustomizableFooter.swift */,
 				1FB130BA29C0F9A6004AC98D /* FooterFragmentView.swift */,
+				1F15F09F2AAF35560004E706 /* LikeButton.swift */,
+				1FED0D862ACAFC5A002DAC02 /* ReactionButton.swift */,
 				1F15F09B2AAF2FCC0004E706 /* ReplyButton.swift */,
 				1F15F09D2AAF34F10004E706 /* RepostButton.swift */,
-				1F15F09F2AAF35560004E706 /* LikeButton.swift */,
-				1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */,
 			);
 			path = PostFooter;
 			sourceTree = "<group>";
@@ -1035,6 +1043,7 @@
 				1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */,
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
 				1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */,
+				1FED0D882ACB1D42002DAC02 /* FooterConfigurator.swift */,
 				1FB6E6FA29E3B827008BE8A6 /* MainView.swift */,
 				1F810B2F29E67017006B1614 /* MutedWordsView.swift */,
 				1F57C54A299285B300DFE063 /* Search.swift */,
@@ -1874,6 +1883,7 @@
 				1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */,
 				1F0592DC2A505531003B4B3C /* DiscoverCommunities.swift in Sources */,
 				1FF78BB82A45421500CA3DDA /* PaddingsTesting.swift in Sources */,
+				1FED0D872ACAFC5A002DAC02 /* ReactionButton.swift in Sources */,
 				1F92D89C2ABBEED9002F300D /* EmbedById.swift in Sources */,
 				1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */,
 				1FD78EF92A0CE49D003E7B3E /* NRPost.swift in Sources */,
@@ -1939,6 +1949,7 @@
 				1F056FA82A5C2F3B00578B35 /* CustomZapAmountEntry.swift in Sources */,
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FFED7FF2A3970A800A0B1E8 /* PhotosPicker.swift in Sources */,
+				1FED0D892ACB1D42002DAC02 /* FooterConfigurator.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1F41527F2A95B12800EC63B2 /* PostAccountSwitcher.swift in Sources */,
 				1FEA8D4B29E967B5004A83D3 /* InlineThings.swift in Sources */,
@@ -2003,6 +2014,7 @@
 				1F740DA329AF524100EFCCA7 /* BadgeDetailView.swift in Sources */,
 				1F2F54EE2A02904E00B6D7E4 /* FastLoader.swift in Sources */,
 				1FBB901F2A85128A007A1550 /* StringMetric.swift in Sources */,
+				1FED0D852ACAF5F1002DAC02 /* CustomizableFooter.swift in Sources */,
 				1FC6807A29DB0BF7003EE054 /* ReportPostSheet.swift in Sources */,
 				1F740DAB29AF898400EFCCA7 /* BadgesView.swift in Sources */,
 				1FB38B6129E29CEC00B85156 /* ProfilePicPicker.swift in Sources */,
