@@ -400,7 +400,7 @@ struct ParentPost: View {
                 }
             
                 if (settings.rowFooterEnabled) {
-                    FooterFragmentView(nrPost: nrPost)
+                    CustomizableFooterFragmentView(nrPost: nrPost)
                         .padding(.leading, INDENT)
                         .padding(.vertical, 5)
 //                        .padding(.trailingx, 10)
@@ -529,7 +529,7 @@ struct DetailPost: View {
             
             DetailFooterFragment(nrPost: nrPost)
                 .padding(.top, 10)
-            FooterFragmentView(nrPost: nrPost, isDetail: true)
+            CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true)
                 .padding(.vertical, 5)
                 .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
         }

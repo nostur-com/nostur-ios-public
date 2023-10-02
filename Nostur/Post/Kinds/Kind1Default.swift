@@ -161,7 +161,7 @@ struct Kind1Default: View {
                     }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
-                    FooterFragmentView(nrPost: nrPost)
+                    CustomizableFooterFragmentView(nrPost: nrPost)
                         .withoutAnimation()
 //                        .transaction { t in
 //                            t.animation = nil

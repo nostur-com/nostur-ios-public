@@ -152,7 +152,7 @@ struct Highlight: View {
                     navigateTo(nrPost)
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
-                    FooterFragmentView(nrPost: nrPost)
+                    CustomizableFooterFragmentView(nrPost: nrPost)
                         .padding(.top, 10)
                 }
             }

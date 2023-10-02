@@ -121,7 +121,7 @@ struct Kind1: View {
                     }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
-                    FooterFragmentView(nrPost: nrPost)
+                    CustomizableFooterFragmentView(nrPost: nrPost)
                 }
             }
             .fixedSize(horizontal: false, vertical: true)
