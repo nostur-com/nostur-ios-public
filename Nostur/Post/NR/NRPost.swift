@@ -940,19 +940,29 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         DataProvider.shared().viewContext.object(with: event.objectID) as! Event
     }
     
-    @MainActor public func like() -> NEvent {
+    @MainActor public func like(_ reactionContent:String = "+") -> NEvent {
         self.footerAttributes.objectWillChange.send()
-        self.footerAttributes.liked = true
+        if (reactionContent == "+") {
+            self.footerAttributes.liked = true
+        }
+        else {
+            self.footerAttributes.reactions.insert(reactionContent)
+        }
         bg().perform {
             self.event.likesCount += 1
         }
         
-        return EventMessageBuilder.makeReactionEvent(reactingTo: mainEvent)
+        return EventMessageBuilder.makeReactionEvent(reactingTo: mainEvent, reactionContent: reactionContent)
     }
     
-    @MainActor public func unlike() {
+    @MainActor public func unlike(_ reactionContent:String = "+") {
         self.footerAttributes.objectWillChange.send()
-        self.footerAttributes.liked = false
+        if (reactionContent == "+") {
+            self.footerAttributes.liked = false
+        }
+        else {
+            self.footerAttributes.reactions.remove(reactionContent)
+        }
         bg().perform {
             self.event.likesCount -= 1
         }

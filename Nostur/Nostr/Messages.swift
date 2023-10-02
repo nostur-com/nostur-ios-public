@@ -447,12 +447,12 @@ struct EventMessageBuilder {
         return repost
     }
     
-    static func makeReactionEvent(reactingTo: Event) -> NEvent {
+    static func makeReactionEvent(reactingTo: Event, reactionContent:String = "+") -> NEvent {
         var tags = reactingTo.tags().filter { $0.type == "e" || $0.type == "p" }
         tags.append(NostrTag(["e", reactingTo.id]))
         tags.append(NostrTag(["p", reactingTo.pubkey]))
         
-        var reactionEvent = NEvent(content: "+")
+        var reactionEvent = NEvent(content: reactionContent)
         reactionEvent.kind = .reaction
         reactionEvent.tags = tags
         
