@@ -41,7 +41,7 @@ struct HotFeedSettings: View {
                         }
                         .pickerStyle(.segmented)
                         
-                        Text("The Hot feed shows posts most liked by people you follow in the last \(hotVM.ago) hours")
+                        Text("The Hot feed shows posts most liked or reposted by people you follow in the last \(hotVM.ago) hours")
                             .padding(.top, 20)
                     }
                 }
