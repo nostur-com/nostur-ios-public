@@ -129,6 +129,8 @@ struct FollowingAndExplore: View {
             .frame(width: dim.listWidth, height: max(36.0 + tabsOffsetY,0))
             
             ZStack {
+                theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
+                
                 // FOLLOWING
                 if (account.follows_.count <= 1 && !didSend) {
                     VStack {
