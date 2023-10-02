@@ -37,6 +37,7 @@ final class SettingsStore: ObservableObject {
         static let webOfTrustLevel:String = "web_of_trust_level"
         static let autoHideBars:String = "auto_hide_bars"
         static let lowDataMode:String = "low_data_mode"
+        static let footerButtons:String = "footer_buttons"
     }
 
 //    private let cancellable: Cancellable
@@ -110,7 +111,8 @@ final class SettingsStore: ObservableObject {
             Keys.includeSharedFrom: true,
             Keys.autoHideBars: false,
             Keys.isSignatureVerificationEnabled: true,
-            Keys.lowDataMode: false
+            Keys.lowDataMode: false,
+            Keys.footerButtons: "💬🔄+🔖"
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -128,6 +130,7 @@ final class SettingsStore: ObservableObject {
         _rowFooterEnabled = defaults.bool(forKey: Keys.rowFooterEnabled)
         _restrictAutoDownload = defaults.bool(forKey: Keys.restrictAutoDownload)
         _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
+        _footerButtons = defaults.string(forKey: Keys.footerButtons) ?? "💬🔄+🔖"
     }
     
     var defaultMediaUploadService: MediaUploadService {
@@ -303,6 +306,17 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _fullWidthImages:Bool = false
+    
+    public var footerButtons: String {
+        set {
+            objectWillChange.send()
+            _footerButtons = newValue
+            defaults.set(newValue, forKey: Keys.footerButtons);
+        }
+        get { _footerButtons }
+    }
+    
+    private var _footerButtons:String = "💬🔄+🔖"
 }
 
 struct LightningWallet: Identifiable, Hashable {
