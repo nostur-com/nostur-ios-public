@@ -41,7 +41,7 @@ struct GalleryFeedSettings: View {
                         }
                         .pickerStyle(.segmented)
                         
-                        Text("The Gallery feed shows pictures most liked by people you follow in the last \(vm.ago) hours")
+                        Text("The Gallery feed shows pictures most liked or reposted by people you follow in the last \(vm.ago) hours")
                             .padding(.top, 20)
                     }
                 }
