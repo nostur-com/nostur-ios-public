@@ -8,13 +8,17 @@
 import SwiftUI
 
 struct RepostButton: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
-    @ObservedObject var footerAttributes:FooterAttributes
+    @EnvironmentObject private var theme:Theme
+    private let nrPost:NRPost
+    @ObservedObject private var footerAttributes:FooterAttributes
+    private var isFirst:Bool
+    private var isLast:Bool
     
-    init(nrPost: NRPost) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
+        self.isFirst = isFirst
+        self.isLast = isLast
     }
     
     var body: some View {
@@ -27,7 +31,9 @@ struct RepostButton: View {
                     .opacity(footerAttributes.repostsCount == 0 ? 0 : 1)
             }
             .foregroundColor(.green)
-            .padding(5)
+            .padding(.vertical, 5)
+            .padding(.leading, isFirst ? 0 : 5)
+            .padding(.trailing, isLast ? 0 : 5)
         }
         else {
             HStack {
@@ -36,7 +42,9 @@ struct RepostButton: View {
 //                            .equatable()
                     .opacity(footerAttributes.repostsCount == 0 ? 0 : 1)
             }
-            .padding(5)
+            .padding(.vertical, 5)
+            .padding(.leading, isFirst ? 0 : 5)
+            .padding(.trailing, isLast ? 0 : 5)
             .contentShape(Rectangle())
             .onTapGesture {
                 sendNotification(.createNewQuoteOrRepost, nrPost.event.toMain())

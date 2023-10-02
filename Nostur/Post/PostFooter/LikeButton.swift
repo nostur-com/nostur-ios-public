@@ -12,10 +12,14 @@ struct LikeButton: View {
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     @State private var unpublishLikeId:UUID? = nil
+    private var isFirst:Bool
+    private var isLast:Bool
     
-    init(nrPost: NRPost) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
+        self.isFirst = isFirst
+        self.isLast = isLast
     }
     
     var body: some View {
@@ -28,7 +32,9 @@ struct LikeButton: View {
                     .opacity(footerAttributes.likesCount == 0 ? 0 : 1)
             }
             .foregroundColor(.red)
-            .padding(5)
+            .padding(.vertical, 5)
+            .padding(.leading, isFirst ? 0 : 5)
+            .padding(.trailing, isLast ? 0 : 5)
             .contentShape(Rectangle())
             .onTapGesture {
                 if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
@@ -44,7 +50,9 @@ struct LikeButton: View {
 //                            .equatable()
                     .opacity(footerAttributes.likesCount == 0 ? 0 : 1)
             }
-            .padding(5)
+            .padding(.vertical, 5)
+            .padding(.leading, isFirst ? 0 : 5)
+            .padding(.trailing, isLast ? 0 : 5)
             .contentShape(Rectangle())
             .onTapGesture {
                 guard isFullAccount() else { showReadOnlyMessage(); return }

@@ -8,15 +8,19 @@
 import SwiftUI
 
 struct ReplyButton: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
-    @ObservedObject var footerAttributes:FooterAttributes
-    var isDetail = false
+    @EnvironmentObject private var theme:Theme
+    private let nrPost:NRPost
+    @ObservedObject private var footerAttributes:FooterAttributes
+    private var isDetail:Bool
+    private var isFirst:Bool
+    private var isLast:Bool
     
-    init(nrPost: NRPost, isDetail: Bool = false) {
+    init(nrPost: NRPost, isDetail: Bool = false, isFirst: Bool = false, isLast: Bool = false) {
         self.nrPost = nrPost
         self.isDetail = isDetail
         self.footerAttributes = nrPost.footerAttributes
+        self.isFirst = isFirst
+        self.isLast = isLast
     }
     
     var body: some View {
@@ -37,7 +41,9 @@ struct ReplyButton: View {
                 }
             }
         }
-        .padding([.vertical, .trailing], 5)
+        .padding(.vertical, 5)
+        .padding(.leading, isFirst ? 0 : 5)
+        .padding(.trailing, isLast ? 0 : 5)
         .contentShape(Rectangle())
         .onTapGesture {
             sendNotification(.createNewReply, EventNotification(event: nrPost.event))
