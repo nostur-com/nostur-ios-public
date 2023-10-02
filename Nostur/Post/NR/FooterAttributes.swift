@@ -20,6 +20,7 @@ class FooterAttributes: ObservableObject {
     
     @Published var liked:Bool
     @Published var likesCount:Int64
+    @Published var reactions:Set<String> = []
     
     @Published var zapped = false
     @Published var zapsCount:Int64
@@ -48,6 +49,7 @@ class FooterAttributes: ObservableObject {
         
         self.liked = withFooter && Self.isLiked(event)
         self.likesCount = event.likesCount
+        self.reactions = withFooter ? Self.loadReactions(event) : []
         
         self.zapState = withFooter && Self.hasZapReceipt(event) ? .zapReceiptConfirmed : event.zapState
         self.zapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
@@ -72,6 +74,7 @@ class FooterAttributes: ObservableObject {
             let isReplied = Self.isReplied(self.event)
             let isReposted = Self.isReposted(self.event)
             let isLikes = Self.isLiked(self.event)
+            let reactions = Self.loadReactions(self.event)
             let isBookmarked = Self.isBookmarked(self.event)
             let hasPrivateNote = Self.hasPrivateNote(self.event)
             
@@ -83,6 +86,7 @@ class FooterAttributes: ObservableObject {
                 self.replied = isReplied
                 self.reposted = isReposted
                 self.liked = isLikes
+                self.reactions = reactions
                 self.bookmarked = isBookmarked
                 self.hasPrivateNote = hasPrivateNote
                 self.zapped = isZapped
@@ -205,6 +209,22 @@ class FooterAttributes: ObservableObject {
             return count > 0
         }
         return false
+    }
+    
+    static private func loadReactions(_ event:Event) -> Set<String> {
+        if let account = account() {
+            let fr = NSFetchRequest<NSDictionary>(entityName: "Event")
+            fr.sortDescriptors = []
+            fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7", event.created_at, event.id, account.publicKey)
+            fr.fetchLimit = 20
+            fr.resultType = .dictionaryResultType
+            fr.propertiesToFetch = ["content"]
+            guard let reactions = try? DataProvider.shared().bg.fetch(fr) else {
+                return []
+            }
+            return Set(reactions.compactMap { $0["content"] as? String })
+        }
+        return []
     }
     
     static private func isReplied(_ event:Event) -> Bool {
