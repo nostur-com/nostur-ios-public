@@ -57,17 +57,18 @@ class WebOfTrust: ObservableObject {
 
     public func updateViewData() {
         guard let pubkey = self.pubkey else { return }
-        DispatchQueue.main.async {
-            switch SettingsStore.shared.webOfTrustLevel {
+        let allowedKeysCount = switch SettingsStore.shared.webOfTrustLevel {
             case SettingsStore.WebOfTrustLevel.strict.rawValue:
-                self.allowedKeysCount = self.followingPubkeys.count
+                self.followingPubkeys.count
             case SettingsStore.WebOfTrustLevel.normal.rawValue:
-                self.allowedKeysCount = self.followingFollowingPubkeys.union(self.followingPubkeys).count
+                self.followingFollowingPubkeys.union(self.followingPubkeys).count
             case SettingsStore.WebOfTrustLevel.off.rawValue:
-                self.allowedKeysCount = 0
+                0
             default:
-                self.allowedKeysCount = 0
-            }
+                0
+        }
+        DispatchQueue.main.async {
+            self.allowedKeysCount = allowedKeysCount
             sendNotification(.WoTReady, pubkey)
         }
     }
