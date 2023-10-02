@@ -16,87 +16,79 @@ struct ZapButton: View {
     @State private var cancellationId:UUID? = nil
     @State private var customZapId:UUID? = nil
     @State private var activeColor = Theme.default.footerButtons
-    
-    private var tallyString:String {
-        if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-            let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
-            return fiatPrice
-        }
-        return String(footerAttributes.zapTally.formatNumber)
-    }
-    
-    init(nrPost: NRPost) {
+    private var isFirst:Bool
+    private var isLast:Bool
+
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
+        self.isFirst = isFirst
+        self.isLast = isLast
     }
     
     var body: some View {
         if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty, let contact = nrPost.contact?.contact {
             if let cancellationId {
-                HStack {
-                    Image("BoltIconActive").foregroundColor(theme.footerButtons)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .onTapGesture {
+                Image("BoltIconActive").foregroundColor(theme.footerButtons)
+                    .padding(.vertical, 5)
+                    .padding(.leading, isFirst ? 0 : 5)
+                    .padding(.trailing, isLast ? 0 : 5)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
 
-                            self.cancellationId = nil
-                            footerAttributes.cancelZap(cancellationId)                            
-                            
-                            activeColor = theme.footerButtons
-                            L.og.info("⚡️ Zap cancelled")
-                        }
-                    AnimatedNumberString(number: tallyString).opacity(footerAttributes.zapTally == 0 ? 0 : 1)
-                }
+                        self.cancellationId = nil
+                        footerAttributes.cancelZap(cancellationId)
+                        
+                        activeColor = theme.footerButtons
+                        L.og.info("⚡️ Zap cancelled")
+                    }
             }
             // TODO elsif zap .failed .overlay error !
             else if footerAttributes.zapped {
-                HStack {
-                    Image("BoltIconActive").foregroundColor(.yellow)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                    AnimatedNumberString(number: tallyString).opacity(footerAttributes.zapTally == 0 ? 0 : 1)
-                }
+                Image("BoltIconActive").foregroundColor(.yellow)
+                    .padding(.vertical, 5)
+                    .padding(.leading, isFirst ? 0 : 5)
+                    .padding(.trailing, isLast ? 0 : 5)
             }
             else {
-                HStack {
-                    Image("BoltIcon")
-                        .foregroundColor(activeColor)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .overlay(
-                            GeometryReader { geo in
-                                Color.white.opacity(0.001)
-                                    .simultaneousGesture(
-                                           LongPressGesture()
-                                               .onEnded { _ in
-                                                   guard isFullAccount() else { showReadOnlyMessage(); return }
-                                                   // Trigger custom zap
-                                                   customZapId = UUID()
-                                                   if let customZapId {
-                                                       sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
-                                                   }
+                Image("BoltIcon")
+                    .foregroundColor(activeColor)
+                    .padding(.vertical, 5)
+                    .padding(.leading, isFirst ? 0 : 5)
+                    .padding(.trailing, isLast ? 0 : 5)
+                    .contentShape(Rectangle())
+                    .overlay(
+                        GeometryReader { geo in
+                            Color.white.opacity(0.001)
+                                .simultaneousGesture(
+                                       LongPressGesture()
+                                           .onEnded { _ in
+                                               guard isFullAccount() else { showReadOnlyMessage(); return }
+                                               // Trigger custom zap
+                                               customZapId = UUID()
+                                               if let customZapId {
+                                                   sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
                                                }
-                                       )
-                                       .highPriorityGesture(
-                                           TapGesture()
-                                               .onEnded { _ in
-                                                   self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact:contact)
-                                               }
-                                       )
-                                       .onReceive(receiveNotification(.sendCustomZap)) { notification in
-                                           // Complete custom zap
-                                           let customZap = notification.object as! CustomZap
-                                           guard customZap.customZapId == customZapId else { return }
-                                           self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact:contact, zapMessage:customZap.publicNote, amount: customZap.amount)
-                                       }
-                            }
-                        )
-                    AnimatedNumberString(number: tallyString).opacity(footerAttributes.zapTally == 0 ? 0 : 1)
-                }
+                                           }
+                                   )
+                                   .highPriorityGesture(
+                                       TapGesture()
+                                           .onEnded { _ in
+                                               self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact:contact)
+                                           }
+                                   )
+                                   .onReceive(receiveNotification(.sendCustomZap)) { notification in
+                                       // Complete custom zap
+                                       let customZap = notification.object as! CustomZap
+                                       guard customZap.customZapId == customZapId else { return }
+                                       self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact:contact, zapMessage:customZap.publicNote, amount: customZap.amount)
+                                   }
+                        }
+                    )
             }
         }
         else {
-            LightningButton(nrPost: nrPost)
+            LightningButton(nrPost: nrPost, isFirst: isFirst, isLast: isLast)
         }
     }
     

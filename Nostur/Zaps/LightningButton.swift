@@ -13,38 +13,35 @@ struct LightningButton: View {
     @ObservedObject private var footerAttributes:FooterAttributes
     @State private var isLoading = false
     @State private var customZapId:UUID? = nil
+    private var isFirst:Bool
+    private var isLast:Bool
     
-    var tallyString:String {
-        if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-            let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
-            return fiatPrice
-        }
-        return String(footerAttributes.zapTally.formatNumber)
-    }
-    
-    init(nrPost: NRPost) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
+        self.isFirst = isFirst
+        self.isLast = isLast
     }
     
     var body: some View {
         if isLoading {
             ProgressView()
                 .colorInvert()
-                .padding(5)
+                .padding(.vertical, 5)
+                .padding(.leading, isFirst ? 0 : 5)
+                .padding(.trailing, isLast ? 0 : 5)
         }
         else {
-            HStack {
-                Image("BoltIcon")
-                AnimatedNumberString(number: tallyString).opacity(footerAttributes.zapTally == 0 ? 0 : 1)
-            }
-            .padding(5)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                guard isFullAccount() else { showReadOnlyMessage(); return }
-                isLoading = true
-                buttonTapped()
-            }
+            Image("BoltIcon")
+                .padding(.vertical, 5)
+                .padding(.leading, isFirst ? 0 : 5)
+                .padding(.trailing, isLast ? 0 : 5)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard isFullAccount() else { showReadOnlyMessage(); return }
+                    isLoading = true
+                    buttonTapped()
+                }
         }
     }
 }
