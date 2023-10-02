@@ -77,6 +77,8 @@ struct Settings: View {
                         Text("Show post stats on timeline", comment:"Setting on settings screen")
                         Text("Counters for replies, likes, zaps etc.", comment:"Setting on settings screen")
                     }
+                                        
+                    FooterConfiguratorLink() // Put NavigationLink in own view or freeze.
                 }
                 Toggle(isOn: $settings.fetchCounts) {
                     Text("Fetch counts on timeline", comment:"Setting on settings screen")
@@ -514,7 +516,9 @@ struct Settings: View {
 struct Settings_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
-            Settings()
+            NavigationStack {
+                Settings()
+            }
         }
     }
 }
@@ -525,5 +529,21 @@ protocol Localizable: RawRepresentable where RawValue: StringProtocol {}
 extension Localizable {
     var localized: String {
         NSLocalizedString(String(rawValue), comment: "")
+    }
+}
+
+struct FooterConfiguratorLink: View {
+    @ObservedObject private var settings: SettingsStore = .shared
+    
+    var body: some View {
+        NavigationLink(destination: {
+            FooterConfigurator(footerButtons: $settings.footerButtons)
+        }, label: {
+            HStack {
+                Text("Reaction buttons")
+                Spacer()
+                Text(settings.footerButtons)
+            }
+        })
     }
 }
