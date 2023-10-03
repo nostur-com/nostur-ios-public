@@ -356,6 +356,7 @@
 		1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */; };
 		1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49732297FCB5E0084F14E /* PreviewHelper.swift */; };
 		1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49736298029600084F14E /* NoteTextRenderView.swift */; };
+		1FD6C4F82ACC41DB00885125 /* NWCWalletBalance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C4F72ACC41DB00885125 /* NWCWalletBalance.swift */; };
 		1FD78EEF2A0CB78B003E7B3E /* Kind1Default.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */; };
 		1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF02A0CB813003E7B3E /* Kind1.swift */; };
 		1FD78EF32A0CB878003E7B3E /* Highlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF22A0CB878003E7B3E /* Highlight.swift */; };
@@ -790,6 +791,7 @@
 		1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNoteToggle.swift; sourceTree = "<group>"; };
 		1FD49732297FCB5E0084F14E /* PreviewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelper.swift; sourceTree = "<group>"; };
 		1FD49736298029600084F14E /* NoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTextRenderView.swift; sourceTree = "<group>"; };
+		1FD6C4F72ACC41DB00885125 /* NWCWalletBalance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NWCWalletBalance.swift; sourceTree = "<group>"; };
 		1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1Default.swift; sourceTree = "<group>"; };
 		1FD78EF02A0CB813003E7B3E /* Kind1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1.swift; sourceTree = "<group>"; };
 		1FD78EF22A0CB878003E7B3E /* Highlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Highlight.swift; sourceTree = "<group>"; };
@@ -1106,6 +1108,7 @@
 				1F72FB352A2BA30E001370A1 /* NWCURI.swift */,
 				1F6943B42A2A45C000064DBA /* NWCZapQueue.swift */,
 				1F6943B22A2A44A800064DBA /* ZapButton.swift */,
+				1FD6C4F72ACC41DB00885125 /* NWCWalletBalance.swift */,
 			);
 			path = "NIP47-NWC";
 			sourceTree = "<group>";
@@ -2241,6 +2244,7 @@
 				1FE4D91D2A5442450064F649 /* SettingsDefaultZapAmount.swift in Sources */,
 				1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */,
 				1F49C80629B8D7EA005C960D /* NewQuoteRepost.swift in Sources */,
+				1FD6C4F82ACC41DB00885125 /* NWCWalletBalance.swift in Sources */,
 				1F7525842997B21D00477AF2 /* NotificationsView.swift in Sources */,
 				1F45C7F329EF9C8400F58772 /* VoidCatMediaUploadService.swift in Sources */,
 				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,
