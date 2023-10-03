@@ -85,7 +85,7 @@ struct ContactSearchResultRow: View {
                 guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
                 guard contact.metadata_created_at != 0 else { return }
                 guard contact.couldBeImposter == -1 else { return }
-                guard let cPic = contact.picture else { return }
+                guard contact.picture != nil, let cPic = contact.pictureUrl else { return }
                 guard !NewOnboardingTracker.shared.isOnboarding else { return }
                 
                 let contactAnyName = contact.anyName.lowercased()
@@ -98,7 +98,7 @@ struct ContactSearchResultRow: View {
                     guard let similarContact = account.follows_.first(where: {
                         $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                     }) else { return }
-                    guard let wotPic = similarContact.picture else { return }
+                    guard similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
                     
                     L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarContact.anyName)")
                     

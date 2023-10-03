@@ -342,7 +342,7 @@ struct ProfileView: View {
                 guard let similarContact = account.follows_.first(where: {
                     $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
-                guard let wotPic = similarContact.picture else { return }
+                guard similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
                 
                 L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarContact.anyName)")
                 

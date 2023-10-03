@@ -44,7 +44,7 @@ func compareImages(image1: UIImage, image2: UIImage) -> CGFloat {
     return mae
 }
 
-func pfpsAreSimilar(imposter:String, real:String, threshold:Double = 0.1) async -> Bool {
+func pfpsAreSimilar(imposter:URL, real:URL, threshold:Double = 0.1) async -> Bool {
     guard imposter != real else { return true } // if urls are the same we don't need to check the actual images
     
     var impostorImage:UIImage?
@@ -84,7 +84,7 @@ struct ImposterTesterView: View {
                 let imposter = "https://cdn.nostr.build/i/eb8d33b383e103c1143a040dda69729d19e8e3115735c3ef3a283b08723b0a6c.jpg"
                 let real = "https://nostr.build/i/p/nostr.build_6b9909bccf0f4fdaf7aacd9bc01e4ce70dab86f7d90395f2ce925e6ea06ed7cd.jpeg"
                 
-                let similar = await pfpsAreSimilar(imposter: imposter, real: real)
+                let similar = await pfpsAreSimilar(imposter: URL(string: imposter)!, real: URL(string: real)!)
                 print("are they similar: \(similar)")
             }
     }

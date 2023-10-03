@@ -236,14 +236,14 @@ struct SmoothList: UIViewControllerRepresentable {
                     // Everything below here is image or link preview fetching, skip if low data mode
                     guard !SettingsStore.shared.lowDataMode else { continue }
                     
-                    if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
-                        imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
+                    if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
+                        imageRequestsPFP.append(pfpImageRequestFor(pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
                     }
                     
                     imageRequestsPFP.append(contentsOf: item
                         .parentPosts
                         .compactMap { $0.contact?.pictureUrl }
-                        .filter { $0.prefix(7) != "http://" }
+                        .filter { $0.absoluteString.prefix(7) != "http://" }
                         .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
                     )
                     
@@ -313,14 +313,14 @@ struct SmoothList: UIViewControllerRepresentable {
                     // Everything below here is image or link preview fetching, skip if low data mode
                     guard !SettingsStore.shared.lowDataMode else { continue }
                     
-                    if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
-                        imageRequestsPFP.append(pfpImageRequestFor(picture, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
+                    if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
+                        imageRequestsPFP.append(pfpImageRequestFor(pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
                     }
                     
                     imageRequestsPFP.append(contentsOf: item
                         .parentPosts
                         .compactMap { $0.contact?.pictureUrl }
-                        .filter { $0.prefix(7) != "http://" }
+                        .filter { $0.absoluteString.prefix(7) != "http://" }
                         .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
                     )
                     
@@ -571,14 +571,14 @@ final class CViewHolder {
     }
 }
 
-func pfpImageRequestFor(_ picture:String, size:CGFloat) -> ImageRequest {
+func pfpImageRequestFor(_ pictureUrl:URL, size:CGFloat) -> ImageRequest {
     
     //    thumbOptions.createThumbnailFromImageAlways = true
     //    thumbOptions.shouldCacheImmediately = true
     let options:ImageRequest.Options = SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : []
     
-    if !SettingsStore.shared.animatedPFPenabled || picture.suffix(4) != ".gif" {
-        return ImageRequest(url: URL(string:picture),
+    if !SettingsStore.shared.animatedPFPenabled || pictureUrl.absoluteString.suffix(4) != ".gif" {
+        return ImageRequest(url: pictureUrl,
                             //                            userInfo: [.thumbnailKey: thumbOptions],
                             processors: [
                                 .resize(size: CGSize(width: size, height: size),
@@ -593,5 +593,5 @@ func pfpImageRequestFor(_ picture:String, size:CGFloat) -> ImageRequest {
                             //                            userInfo: [.scaleKey: UIScreen.main.scale, .thumbnailKey: thumbOptions]
         )
     }
-    return ImageRequest(url: URL(string:picture))
+    return ImageRequest(url: pictureUrl)
 }

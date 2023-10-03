@@ -165,7 +165,7 @@ struct PostHeader: View {
                 guard let similarContact = account.follows_.first(where: {
                     $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
-                guard let cPic = contact.pictureUrl, let wotPic = similarContact.picture else { return }
+                guard let cPic = contact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
                 Task.detached(priority: .background) {
                     let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
                     DispatchQueue.main.async {

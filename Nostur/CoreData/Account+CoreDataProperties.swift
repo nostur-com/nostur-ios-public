@@ -42,6 +42,8 @@ extension Account {
     
     @NSManaged public var followingHashtags_: String?
     
+    var pictureUrl:URL? { URL(string: picture) }
+    
     var followingHashtags:Set<String> {
         get {
             guard let followingHashtags_ else { return [] }
