@@ -8,7 +8,7 @@
 import SwiftUI
 import AVKit
 
-struct MusicStreamurRepresentable: UIViewRepresentable {
+struct StreamurRepresentable: UIViewRepresentable {
     typealias UIViewType = UIView
     
     var url:URL
