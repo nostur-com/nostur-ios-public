@@ -110,7 +110,7 @@ class LVM: NSObject, ObservableObject {
             onScreenSeen = []
             leafIdsOnScreen = []
             leafsAndParentIdsOnScreen = []
-            self.performLocalFetch()
+            self.performLocalFetch.send(false)
             self.saveListState()
         }
     }
@@ -217,6 +217,7 @@ class LVM: NSObject, ObservableObject {
         self.subscriptions.removeAll()
     }
     
+    private var performLocalFetch = PassthroughSubject<Bool, Never>()
     var postsAppearedSubject = PassthroughSubject<[NRPostID], Never>()
     var startRenderingSubject = PassthroughSubject<[Event], Never>()
     var startRenderingOlderSubject = PassthroughSubject<[Event], Never>()
@@ -794,7 +795,7 @@ class LVM: NSObject, ObservableObject {
                 // if nothing on screen, fetch from local
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                     if self.nrPostLeafs.isEmpty {
-                        self.performLocalFetch()
+                        self.performLocalFetch.send(false)
                     }
                 }
                 self.configureTimer()
@@ -939,6 +940,14 @@ extension LVM {
         loadMoreWhenNearBottom()
         throttledCommands()
         fetchCountsForVisibleIndexPaths()
+        
+        performLocalFetch
+            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
+            .print("⏱ Delays:: performLocalFetch throttle +2.5 + latest")
+            .sink { refreshInBackground in
+                self._performLocalFetch(refreshInBackground: refreshInBackground)
+            }
+            .store(in: &subscriptions)
     }
     
     func fetchCountsForVisibleIndexPaths() {
@@ -1011,7 +1020,7 @@ extension LVM {
                 guard let self = self else { return }
                 guard instantFinished else { return }
                 L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetchAfterImport \(self.uuid)")
-                self.performLocalFetch()
+                self.performLocalFetch.send(false)
             }
             .store(in: &subscriptions)
     }
@@ -1024,7 +1033,7 @@ extension LVM {
                 guard self.viewIsVisible else { return }
                 guard self.nrPostLeafs.isEmpty else { return }
                 L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") renderFromLocalIfWeHaveNothingNew")
-                self.performLocalFetch()
+                self.performLocalFetch.send(false)
             }
             .store(in: &subscriptions)
     }
@@ -1037,7 +1046,7 @@ extension LVM {
                 SocketPool.shared.allowNewFollowingSubscriptions()
                 let pubkeys = notification.object as! Set<String>
                 self.pubkeys = pubkeys
-                self.performLocalFetch(refreshInBackground: true)
+                self.performLocalFetch.send(true)
             }
             .store(in: &subscriptions)
         
@@ -1047,7 +1056,7 @@ extension LVM {
                 guard self.id == "Explore" else { return }
                 let pubkeys = notification.object as! Set<String>
                 self.pubkeys = pubkeys
-                self.performLocalFetch()
+                self.performLocalFetch.send(false)
             }
             .store(in: &subscriptions)
         
@@ -1318,7 +1327,7 @@ extension LVM {
 extension LVM {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
-    func performLocalFetch(refreshInBackground:Bool = false) {
+    func _performLocalFetch(refreshInBackground:Bool = false) {
         let mostRecentEvent:Event? = self.nrPostLeafs.first?.event
         let visibleOrInRefreshInBackground = self.viewIsVisible || refreshInBackground
         guard visibleOrInRefreshInBackground else {
