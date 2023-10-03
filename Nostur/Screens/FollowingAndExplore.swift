@@ -42,10 +42,13 @@ struct FollowingAndExplore: View {
             return String(localized:"Explore", comment:"Tab title for the Explore feed")
         }
         if selectedSubTab == "Hot" {
-            return String(localized:"Explore", comment:"Tab title for the Hot feed")
+            return String(localized:"Hot", comment:"Tab title for the Hot feed")
         }
         if selectedSubTab == "Gallery" {
             return String(localized:"Gallery", comment:"Tab title for the Gallery feed")
+        }
+        if selectedSubTab == "Articles" {
+            return String(localized:"Articles", comment:"Tab title for the Articles feed")
         }
         return String(localized:"Feed", comment:"Tab title for a feed")
     }
