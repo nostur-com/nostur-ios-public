@@ -32,7 +32,7 @@ struct LightningInvoice: View {
                     }
                 
                 
-                if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty && bolt11.amount != nil {
+                if ss.nwcReady && bolt11.amount != nil {
                     if let cancellationId {
                         // INSTANT ZAP TRIGGERED, CAN CANCEL
                         Button {
