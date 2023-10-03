@@ -38,6 +38,11 @@ extension Contact {
     @NSManaged public var lists: NSSet?
     @NSManaged public var privateFollow: Bool
     @NSManaged public var couldBeImposter: Int16 // cache (-1 = unchecked, 1/0 = true/false checked)
+    
+    var pictureUrl:URL? {
+        guard let picture = picture else { return nil }
+        return URL(string: picture)
+    }
 
     var lists_:[NosturList] {
         get { (lists?.allObjects as? [NosturList]) ?? [] }

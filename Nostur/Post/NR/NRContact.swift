@@ -51,7 +51,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var fixedName:String?
     var display_name:String?
     var name:String?
-    var pictureUrl:String?
+    var pictureUrl:URL?
     var banner:String?
     var about:String?
     @Published var couldBeImposter:Int16 = -1 // -1: unchecked, 0:false 1:true
@@ -80,7 +80,12 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.fixedName = contact.fixedName
         self.display_name = contact.display_name
         self.name = contact.name
-        self.pictureUrl = contact.picture
+        self.pictureUrl = if let picture = contact.picture {
+            URL(string: picture)
+        }
+        else {
+            nil
+        }
         self.banner = contact.banner
         self.about = contact.about
         self.couldBeImposter = (following ?? false) ? 0 : contact.couldBeImposter
@@ -194,7 +199,12 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     let fixedName = contact.fixedName
                     let display_name = contact.display_name
                     let name = contact.name
-                    let pictureUrl = contact.picture
+                    let pictureUrl:URL? = if let picture = contact.picture {
+                        URL(string: picture)
+                    }
+                    else {
+                        nil
+                    }
                     let banner = contact.banner
                     let about = contact.about
                     let couldBeImposter = contact.couldBeImposter

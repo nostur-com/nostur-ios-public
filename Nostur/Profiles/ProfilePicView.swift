@@ -42,7 +42,7 @@ struct ContactPFP: View {
     
     @ObservedObject public var contact:Contact
     private var pubkey:String { contact.pubkey }
-    private var pictureUrl:String? { contact.picture }
+    private var pictureUrl:URL? { contact.pictureUrl }
     var size:CGFloat?
     private var color:Color { randomColor(seed: contact.pubkey) }
     
@@ -55,7 +55,7 @@ struct NRContactPFP: View {
     
     @ObservedObject public var nrContact:NRContact
     private var pubkey:String { nrContact.pubkey }
-    private var pictureUrl:String? { nrContact.pictureUrl }
+    private var pictureUrl:URL? { nrContact.pictureUrl }
     public var size:CGFloat?
     private var color:Color { randomColor(seed: nrContact.pubkey) }
     
@@ -68,7 +68,7 @@ struct AccountPFP: View {
     
     @ObservedObject public var account:Account
     private var pubkey:String { account.publicKey }
-    private var pictureUrl:String? { account.picture }
+    private var pictureUrl:URL? { account.pictureUrl }
     public var size:CGFloat? = 50.0
     private var color:Color { randomColor(seed: account.publicKey) }
     
@@ -80,7 +80,7 @@ struct AccountPFP: View {
 struct InnerPFP: View {
     @EnvironmentObject private var theme:Theme
     public var pubkey:String
-    public var pictureUrl:String?
+    public var pictureUrl:URL?
     public var size:CGFloat = 50.0
     public var color:Color
     public var isFollowing = false // will use later to put non following in seperate cache
@@ -94,14 +94,14 @@ struct InnerPFP: View {
     private enum RenderOption {
         case noUrl
         case noHttps
-        case flat(String)
-        case animatedGif(String)
+        case flat(URL)
+        case animatedGif(URL)
     }
     
     private var renderCase: RenderOption {
         guard let pictureUrl else { return .noUrl }
-        guard pictureUrl.prefix(8) == "https://" else { return .noHttps }
-        guard (pictureUrl.suffix(4) == ".gif") && settings.animatedPFPenabled else { return .flat(pictureUrl) }
+        guard pictureUrl.absoluteString.prefix(8) == "https://" else { return .noHttps }
+        guard (pictureUrl.absoluteString.suffix(4) == ".gif") && settings.animatedPFPenabled else { return .flat(pictureUrl) }
         return .animatedGif(pictureUrl)
     }
     
@@ -140,6 +140,7 @@ struct InnerPFP: View {
                         else { color.cornerRadius(size/2) }
                     }
                     .pipeline(ImageProcessing.shared.pfp)
+                    .drawingGroup()
                     
                 case .animatedGif(let url):
                     LazyImage(request: pfpImageRequestFor(url, size: size)) { state in
@@ -249,10 +250,9 @@ struct ProfilePicView_Previews: PreviewProvider {
 struct MiniPFP: View {
     public var pictureUrl:URL
     public var size:CGFloat = 20.0
-    private var pictureUrlString:String { pictureUrl.absoluteString }
     
     var body: some View {
-        LazyImage(request: pfpImageRequestFor(pictureUrlString, size: size)) { state in
+        LazyImage(request: pfpImageRequestFor(pictureUrl, size: size)) { state in
             if let image = state.image {
                 if state.imageContainer?.type == .gif {
                     image

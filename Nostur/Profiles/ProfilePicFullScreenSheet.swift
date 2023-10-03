@@ -11,7 +11,7 @@ import NukeUI
 struct ProfilePicFullScreenSheet: View {
     
     @Binding var profilePicViewerIsShown:Bool
-    var pictureUrl:String
+    public var pictureUrl:URL
     var isFollowing:Bool
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
@@ -80,8 +80,8 @@ struct ProfilePicFullScreenSheet: View {
                 }
                 .zIndex(30)
                 VStack {
-                    if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                        LazyImage(url: URL(string: pictureUrl)) { state in
+                    if (pictureUrl.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                        LazyImage(url: pictureUrl) { state in
                             if let container = state.imageContainer {
                                 if container.type == .gif, let gifData = container.data {
                                     
@@ -122,7 +122,7 @@ struct ProfilePicFullScreenSheet: View {
                         .priority(.high)
                     }
                     else {
-                        LazyImage(url: URL(string: pictureUrl)) { state in
+                        LazyImage(url: pictureUrl) { state in
                             if state.imageContainer?.type == .gif, let gifData = state.imageContainer?.data {
                                 GIFImage(data: gifData, isPlaying: .constant(true))
                                     .resizable()
@@ -180,7 +180,7 @@ struct ProfilePicFullScreenSheet_Previews: PreviewProvider {
         NavigationStack {
             ProfilePicFullScreenSheet(
                 profilePicViewerIsShown: $shown,
-                pictureUrl: "https://nostur.com/fabian/profile.jpg", isFollowing:true)
+                pictureUrl: URL(string: "https://nostur.com/fabian/profile.jpg")!, isFollowing:true)
         }
     }
 }
