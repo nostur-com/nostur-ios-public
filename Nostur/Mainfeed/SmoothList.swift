@@ -72,7 +72,10 @@ struct SmoothList: UIViewControllerRepresentable {
                     return
                 }
                 guard let row = context.coordinator.lvm.lastReadIdIndex else { return }
-                cvh.collectionView.scrollToItem(at: IndexPath(item: max(0,row-1), section: 0), at: .top, animated: true)
+                let index = row-1
+                guard (cvh.dataSource?.snapshot().numberOfItems(inSection: .main) ?? 0) > index+1 else { return }
+                
+                cvh.collectionView.scrollToItem(at: IndexPath(item: max(0,index), section: 0), at: .top, animated: true)
             }
             .store(in: &context.coordinator.subscriptions)
 
