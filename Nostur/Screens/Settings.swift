@@ -212,6 +212,18 @@ struct Settings: View {
                             settings.activeNWCconnectionId = ""
                         }
                     }
+                    
+                    if settings.nwcReady {
+                        Toggle(isOn: $settings.nwcShowBalance) {
+                            Text("Show wallet balance", comment:"Setting on settings screen")
+                            Text("Will show balance in side bar", comment:"Setting on settings screen")
+                        }
+                        .onChange(of: settings.nwcShowBalance) { enabled in
+                            if enabled {
+                                nwcSendBalanceRequest()
+                            }
+                        }
+                    }
                 }
                 .listRowBackground(theme.background)
                 
