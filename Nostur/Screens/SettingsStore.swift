@@ -38,6 +38,8 @@ final class SettingsStore: ObservableObject {
         static let autoHideBars:String = "auto_hide_bars"
         static let lowDataMode:String = "low_data_mode"
         static let footerButtons:String = "footer_buttons"
+        
+        static let nwcShowBalance:String = "nwc_show_balance"
     }
 
 //    private let cancellable: Cancellable
@@ -112,6 +114,7 @@ final class SettingsStore: ObservableObject {
             Keys.autoHideBars: false,
             Keys.isSignatureVerificationEnabled: true,
             Keys.lowDataMode: false,
+            Keys.nwcShowBalance: false,
             Keys.footerButtons: "💬🔄+🔖"
         ])
 
@@ -174,6 +177,12 @@ final class SettingsStore: ObservableObject {
     var autoScroll: Bool {
         set { defaults.set(newValue, forKey: Keys.autoScroll); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.autoScroll) }
+    }
+    
+    
+    var nwcShowBalance: Bool {
+        set { defaults.set(newValue, forKey: Keys.nwcShowBalance); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.nwcShowBalance) }
     }
     
     var fetchCounts: Bool {
