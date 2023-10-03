@@ -8,17 +8,20 @@
 import SwiftUI
 
 final class SideBarModel: ObservableObject {
+    static let shared = SideBarModel()
+    private init() {}
     @Published var showSidebar = false
 }
 
 struct SideBar: View {
     @EnvironmentObject private var theme:Theme
-    public let sm:SideBarModel
+    @ObservedObject private var sm:SideBarModel = .shared
     @ObservedObject public var account:Account
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @State private var accountsSheetIsShown = false
     @State private var logoutAccount:Account? = nil
     @State private var showAnySigner = false
+    @State private var sidebarOffset:CGFloat = -NOSTUR_SIDEBAR_WIDTH
     
     var body: some View {
         #if DEBUG
@@ -224,5 +227,29 @@ struct SideBar: View {
                 ])
         }
         .background(theme.listBackground)
+        .compositingGroup()
+        .opacity(sm.showSidebar ? 1.0 : 0)
+        .offset(x: sidebarOffset)
+        .onChange(of: sm.showSidebar) { newValue in
+            withAnimation(.easeOut(duration: 0.1)) {
+                sidebarOffset = newValue ? 0 : -NOSTUR_SIDEBAR_WIDTH
+            }
+        }
+    }
+}
+
+
+struct SideBarOverlay: View {
+    @ObservedObject private var sm:SideBarModel = .shared
+    @EnvironmentObject private var theme:Theme
+    
+    var body: some View {
+        if sm.showSidebar {
+            theme.listBackground
+                .opacity(0.75)
+                .onTapGesture {
+                    sm.showSidebar = false // TODO: Add swipe left/right to show/hide side menu
+                }
+        }
     }
 }

@@ -16,24 +16,23 @@ import AVFoundation
 /// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
 struct AppView: View {
     @Environment(\.scenePhase) private var scenePhase
-    @StateObject private var tm:DetailTabsModel = .shared
+    @State private var tm:DetailTabsModel = .shared
     
     // These singletons always exists during the apps lifetime
-    private var er:ExchangeRateModel = .shared
-    private var dataProvider = DataProvider.shared()
-    private var eventRelationsQueue:EventRelationsQueue = .shared
-    private var lvmManager:LVMManager = .shared
-    private var importer:Importer = .shared
-    private var queuedFetcher:QueuedFetcher = .shared
-    private var sp:SocketPool = .shared
-    private var mp:MessageParser = .shared
-    private var zpvq:ZapperPubkeyVerificationQueue = .shared
-    private var nip05verifier:NIP05Verifier = .shared
-    private var ip:ImageProcessing = .shared
-    private var avcache:AVAssetCache = .shared
-    private var idr:ImageDecoderRegistry = .shared
-    @StateObject private var theme:Theme = .default
-    @StateObject private var nm:NotificationsViewModel = .shared
+    @State private var er:ExchangeRateModel = .shared
+    @State private var dataProvider = DataProvider.shared()
+    @State private var eventRelationsQueue:EventRelationsQueue = .shared
+    @State private var lvmManager:LVMManager = .shared
+    @State private var importer:Importer = .shared
+    @State private var queuedFetcher:QueuedFetcher = .shared
+    @State private var sp:SocketPool = .shared
+    @State private var mp:MessageParser = .shared
+    @State private var zpvq:ZapperPubkeyVerificationQueue = .shared
+    @State private var nip05verifier:NIP05Verifier = .shared
+    @State private var ip:ImageProcessing = .shared
+    @State private var avcache:AVAssetCache = .shared
+    @State private var idr:ImageDecoderRegistry = .shared
+    @State private var nm:NotificationsViewModel = .shared
     
     
     
@@ -41,17 +40,19 @@ struct AppView: View {
 //    @EnvironmentObject private var theme:Theme
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
     @AppStorage("did_accept_terms") private var didAcceptTerms = false
-    private var nwcRQ:NWCRequestQueue = .shared
-    private let ss:SettingsStore = .shared
-    @StateObject private var ns:NRState = .shared
-    @StateObject private var dm:DirectMessageViewModel = .default
-    @StateObject private var nvm:NotificationsViewModel = .shared
+    @State private var nwcRQ:NWCRequestQueue = .shared
+    @State private var ss:SettingsStore = .shared
+    @State private var dm:DirectMessageViewModel = .default
+    @State private var nvm:NotificationsViewModel = .shared
     
     @State private var isViewDisplayed = false
     @State private var isOnboarding = false
     
-    private let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
+    @State private var priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
+    
+    @StateObject private var ns:NRState = .shared
+    @StateObject private var theme:Theme = .default
     
     var body: some View {
         #if DEBUG

@@ -12,9 +12,8 @@ let NOSTUR_SIDEBAR_WIDTH = 310.0
 struct NosturRootMenu: View {
     @EnvironmentObject private var theme:Theme
     @EnvironmentObject private var loggedInAccount:LoggedInAccount
-    @StateObject private var sm = SideBarModel()
+    @State private var sm:SideBarModel = .shared
     @AppStorage("selected_tab") var selectedTab = "Main"
-    @State private var sidebarOffset:CGFloat = -NOSTUR_SIDEBAR_WIDTH
     
     var body: some View {
         #if DEBUG
@@ -26,26 +25,12 @@ struct NosturRootMenu: View {
                 self.handleUrl(url)
             }
             .overlay {
-                if sm.showSidebar {
-                    theme.listBackground
-                        .opacity(0.75)
-                        .onTapGesture {
-                            sm.showSidebar = false // TODO: Add swipe left/right to show/hide side menu
-                        }
-                }
+                SideBarOverlay()
             }
             .overlay(alignment: .topLeading) {
-                SideBar(sm: sm, account: loggedInAccount.account)
-                    .environmentObject(sm)
+                SideBar(account: loggedInAccount.account)
                     .frame(width: NOSTUR_SIDEBAR_WIDTH)
                     .edgesIgnoringSafeArea(.all)
-                    .opacity(sm.showSidebar ? 1.0 : 0)
-                    .offset(x: sidebarOffset)
-            }
-            .onChange(of: sm.showSidebar) { newValue in
-                withAnimation(.easeOut(duration: 0.1)) {
-                    sidebarOffset = newValue ? 0 : -NOSTUR_SIDEBAR_WIDTH
-                }
             }
         #if DEBUG
             .overlay(alignment: .topTrailing) {
