@@ -69,9 +69,13 @@ struct SideBar: View {
                 .zIndex(30)
             List {
                 Group {
-                    VStack(alignment: .leading) {
-                        Text("\(account.name)").font(.headline)
-                        Text("**\(account.follows?.count ?? 0)**  Following", comment: "Number of people following").font(.caption)
+                    HStack(alignment: .bottom) {
+                        VStack(alignment: .leading) {
+                            Text("\(account.name)").font(.headline)
+                            Text("**\(account.follows?.count ?? 0)**  Following", comment: "Number of people following").font(.caption)
+                        }
+                        Spacer()
+                        NWCWalletBalance()
                     }
                     
                     Button {

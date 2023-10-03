@@ -39,7 +39,7 @@ struct FailedZaps: Codable {
         try container.encode(contentsOf: failedZaps)
     }
 }
-class NWCRequestQueue {
+class NWCRequestQueue: ObservableObject {
     
     typealias RequestId = String
     typealias ContactPubkey = String
@@ -52,6 +52,30 @@ class NWCRequestQueue {
     }
     
     static let shared = NWCRequestQueue()
+    
+    @Published public var balance:Int? {
+        didSet {
+            if let balanceString {
+                balanceState = .ready(balanceString)
+            }
+            else {
+                balanceState = .timeout
+            }
+        }
+    }
+    
+    public var balanceString:String? {
+        guard let balance = balance else { return nil }
+        return String(balance)
+    }
+    @Published public var balanceState:BalanceState = .initial
+    
+    public enum BalanceState:Equatable {
+        case initial
+        case loading
+        case ready(String)
+        case timeout
+    }
     
     private var ctx = DataProvider.shared().bg
     private var waitingRequests = [RequestId:QueuedNWCRequest]()
@@ -86,6 +110,9 @@ class NWCRequestQueue {
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
                         _ = PersistentNotification.createFailedNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        if (SettingsStore.shared.nwcShowBalance) {
+                            nwcSendBalanceRequest()
+                        }
                     }
                     
                     for f in failedZaps  {
@@ -100,6 +127,9 @@ class NWCRequestQueue {
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(timeoutZaps.count) failed zaps by timeout")
                         _ = PersistentNotification.createTimeoutNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        if (SettingsStore.shared.nwcShowBalance) {
+                            nwcSendBalanceRequest()
+                        }
                     }
                     
                     for t in timeoutZaps  {
@@ -138,7 +168,7 @@ class NWCRequestQueue {
             L.og.error("NWC connection missing")
             return
         }
-        reqP(RM.getNWCResponses(pubkey: pubkey, walletPubkey: walletPubkey, subscriptionId: "NWC"), activeSubscriptionId: "NWC")
+        req(RM.getNWCResponses(pubkey: pubkey, walletPubkey: walletPubkey, subscriptionId: "NWC"), activeSubscriptionId: "NWC")
     }
     
     public func getAwaitingRequests() -> [QueuedNWCRequest] {
