@@ -10,10 +10,10 @@ import Foundation
 /// NIP-47 request: 23194
 struct NWCRequest: Codable {
     let method:String // "pay_invoice", // method, string
-    let params:NWCParams
+    var params:NWCParams?
     
     struct NWCParams: Codable {
-        let invoice:String //  "lnbc50n1..." // command-related data
+        var invoice:String? //  "lnbc50n1..." // command-related data
     }
 }
 
@@ -26,6 +26,9 @@ struct NWCResponse: Codable {
 
     struct NWCResponseResult: Codable {
         var preimage:String? // "0123456789abcdef..." // command-related data
+        var balance: Int? // 52410000,
+        var max_amount: Int? // 2333000,
+        var budget_renewal: String? // "weekly"
     }
 
     struct NWCResponseError: Codable {

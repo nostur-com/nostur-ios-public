@@ -105,6 +105,9 @@ class MessageParser {
                                 L.og.error("⚡️ Could not parse/decode nwcResponse, \(nEvent.eventJson()) - \(decrypted)")
                                 return
                             }
+                            if balanceResponseHandled(nwcResponse) {
+                                return
+                            }
                             guard let firstE = nEvent.eTags().first, let awaitingRequest = NWCRequestQueue.shared.getAwaitingRequest(byId: firstE) else {
                                 L.og.error("⚡️ No matching nwc request for response, or e-tag missing, \(nEvent.eventJson()) - \(decrypted)")
                                 return
@@ -117,6 +120,9 @@ class MessageParser {
                                         let message = "[Zap](nostur:e:\(eventId)) may have failed.\n\(error.message)"
                                         _ = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
                                         L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
+                                        if (SettingsStore.shared.nwcShowBalance) {
+                                            nwcSendBalanceRequest()
+                                        }
                                         if let ev = try? Event.fetchEvent(id: eventId, context: DataProvider.shared().bg) {
                                             ev.zapState = .none
                                             ev.zapStateChanged.send(.none)
@@ -139,6 +145,9 @@ class MessageParser {
                                     L.og.info("⚡️ Zap success \(result.preimage ?? "-") - \(decrypted)")
                                     NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
                                     NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                    if (SettingsStore.shared.nwcShowBalance) {
+                                        nwcSendBalanceRequest()
+                                    }
                                     return
                                 }
                             }
@@ -158,6 +167,9 @@ class MessageParser {
                                 if let result = nwcResponse.result {
                                     L.og.info("⚡️ Lighting Invoice Payment (Not Zap) success \(result.preimage ?? "-") - \(decrypted)")
                                     NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                    if (SettingsStore.shared.nwcShowBalance) {
+                                        nwcSendBalanceRequest()
+                                    }
                                     return
                                 }
                             }
