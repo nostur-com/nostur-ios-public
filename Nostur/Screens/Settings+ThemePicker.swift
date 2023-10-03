@@ -8,7 +8,12 @@
 import SwiftUI
 
 struct ThemePicker: View {
-    @Binding var selectedTheme: String
+    @State private var selectedTheme:String // Should just use @AppStorage("app_theme") here, but this freezes on desktop. so workaround via init() and .onChange(of: selectedTheme).
+    
+    init() {
+        let selectedTheme = UserDefaults.standard.string(forKey: "app_theme") ?? "default"
+        _selectedTheme = State(initialValue: selectedTheme)
+    }
     
     var body: some View {
         Picker(selection: $selectedTheme) {
@@ -65,6 +70,8 @@ struct ThemePicker: View {
             default:
                 Theme.`default`.loadDefault()
             }
+            
+            UserDefaults.standard.set(theme, forKey: "app_theme")
         }
     }
 }
@@ -101,7 +108,7 @@ struct Settings_ThemePicker_Previews: PreviewProvider {
         NavigationStack {
             Form {
                 Section(header: Text("Display", comment:"Setting heading on settings screen")) {
-                    ThemePicker(selectedTheme: .constant("default"))
+                    ThemePicker()
                 }
             }
         }

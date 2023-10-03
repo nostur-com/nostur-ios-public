@@ -19,7 +19,7 @@ public class PreviewEnvironment {
     let tm:DetailTabsModel = .shared
     let dim:DIMENSIONS = .shared
     let ss:SettingsStore = .shared
-    let sm = SideBarModel()
+    let sm:SideBarModel = .shared
     let theme:Theme = .default
     
     static let shared = PreviewEnvironment()

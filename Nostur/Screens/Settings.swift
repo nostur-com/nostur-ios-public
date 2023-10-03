@@ -32,7 +32,6 @@ struct Settings: View {
 //    @State var showDocPicker = false
     @State private var showExporter = false
     @State private var exportAccount:Account? = nil
-    @ObservedObject var vm = ViewPrint()
     @State private var createRelayPresented = false
     
     @State private var updatingWoT = false // to prevent double tapping
@@ -48,9 +47,6 @@ struct Settings: View {
     @State private var bannerSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
     @State private var badgesSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
     
-    @AppStorage("app_theme") private var selectedTheme = "default"
-    @State private var appTheme = "default"
-    
     @ObservedObject private var wot = WebOfTrust.shared
 
     var body: some View {
@@ -59,7 +55,7 @@ struct Settings: View {
 
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Group {
-                    ThemePicker(selectedTheme: $appTheme)
+                    ThemePicker()
 
                     Toggle(isOn: $settings.fullWidthImages) {
                         Text("Enable full width pictures", comment:"Setting on settings screen")
@@ -467,7 +463,6 @@ struct Settings: View {
         .scrollContentBackground(.hidden)
         .background(theme.listBackground)
         .onAppear {
-            appTheme = selectedTheme
             let bg = DataProvider.shared().container.newBackgroundContext()
             bg.perform {
                 let r = Event.fetchRequest()

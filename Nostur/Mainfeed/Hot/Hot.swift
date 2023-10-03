@@ -18,9 +18,9 @@ struct Hot: View {
     @Namespace private var top
     
     var body: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         ScrollViewReader { proxy in
             switch hotVM.state {
             case .initializing, .loading:

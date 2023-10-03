@@ -22,9 +22,9 @@ struct Gallery: View {
     
     
     var body: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         ScrollViewReader { proxy in
             switch vm.state {
             case .initializing, .loading:

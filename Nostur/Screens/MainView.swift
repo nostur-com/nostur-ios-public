@@ -16,7 +16,6 @@ struct MainView: View {
     @State private var navPath = NavigationPath()
     @State private var account:Account? = nil
     @State private var showingNewNote = false
-    @EnvironmentObject private var sm:SideBarModel
     @ObservedObject private var settings:SettingsStore = .shared
     @State private var showingOtherContact:NRContact? = nil
     
@@ -64,11 +63,11 @@ struct MainView: View {
                         .presentationBackground(theme.background)
                     }
                     .toolbar {
-                        if let account = self.account, !sm.showSidebar {
+                        if let account = self.account {
                             ToolbarItem(placement: .navigationBarLeading) {
                                 PFP(pubkey: account.publicKey, account: account, size:30)
                                     .onTapGesture {
-                                        sm.showSidebar.toggle()
+                                        SideBarModel.shared.showSidebar = true
                                     }
                                     .accessibilityLabel("Account menu")
                             }

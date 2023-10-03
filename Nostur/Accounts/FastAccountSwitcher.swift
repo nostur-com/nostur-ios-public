@@ -16,7 +16,7 @@ struct FastAccountSwitcher: View, Equatable {
     @EnvironmentObject private var ns:NRState
     
     public var activePubkey:String = ""
-    public var  sm:SideBarModel
+    public var sm:SideBarModel
     private let MAX_ACCOUNTS = 4
     
     var fewAccounts:ArraySlice<Account> {
