@@ -63,46 +63,7 @@ struct NosturVideoViewur: View {
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 }
                 else {
-                    MusicStreamurRepresentable(url: url, isPlaying: $isPlaying, isMuted: $isMuted)
-                        .frame(height: 75.0)
-                        .padding(.horizontal, fullWidth ? -contentPadding : 0)
-                        .overlay {
-                            if !didStart {
-                                Color.black
-                                    .overlay {
-                                        Button(action: {
-                                            isPlaying = true
-                                            didStart = true
-                                            sendNotification(.startPlayingVideo, url.absoluteString)
-                                        }) {
-                                            Image(systemName:"play.circle")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 45, height: 45)
-                                                .centered()
-                                                .contentShape(Rectangle())
-                                        }
-                                    }
-                            }
-                        }
-                        .overlay(alignment:.topTrailing) {
-                            Image(systemName: "music.note")
-                                .foregroundColor(.white)
-                                .fontWeight(.bold)
-                                .padding(3)
-                                .background(.black)
-                                .padding(5)
-                        }
-                        .onAppear {
-                            isMuted = false
-                        }
-                        .onReceive(receiveNotification(.startPlayingVideo)) { notification in
-                            let otherUrl = notification.object as! String
-                            if url.absoluteString != otherUrl {
-                                isPlaying = false
-                                isMuted = true
-                            }
-                        }
+                    MusicOrVideo(url: url, isPlaying: $isPlaying, isMuted: $isMuted, didStart: $didStart, fullWidth: fullWidth, contentPadding: contentPadding, videoWidth: videoWidth)
                 }
             }
             else if videoShown {
