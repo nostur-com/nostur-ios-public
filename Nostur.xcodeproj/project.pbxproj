@@ -120,6 +120,7 @@
 		1F45C7F529EFB13F00F58772 /* NostrBuildMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7F429EFB13E00F58772 /* NostrBuildMediaUploadService.swift */; };
 		1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A6296D4F5B0049454B /* AccountEditView.swift */; };
 		1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */; };
+		1F48441F2ACBDF4D00EA6FC1 /* MusicOrVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F48441E2ACBDF4D00EA6FC1 /* MusicOrVideo.swift */; };
 		1F49C80629B8D7EA005C960D /* NewQuoteRepost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F49C80529B8D7EA005C960D /* NewQuoteRepost.swift */; };
 		1F49C80829B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F49C80729B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift */; };
 		1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */; };
@@ -395,7 +396,7 @@
 		1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */; };
 		1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF283D129DB491F0063B799 /* PostPreview.swift */; };
 		1FF2C6C629EAD7D00096AC4A /* NosturListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2C6C529EAD7D00096AC4A /* NosturListsView.swift */; };
-		1FF2E6C92A72AEB300BF5A4C /* MusicStreamurRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2E6C82A72AEB300BF5A4C /* MusicStreamurRepresentable.swift */; };
+		1FF2E6C92A72AEB300BF5A4C /* StreamurRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2E6C82A72AEB300BF5A4C /* StreamurRepresentable.swift */; };
 		1FF30DEF2A05784F00B0F011 /* SearchBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF30DEE2A05784F00B0F011 /* SearchBox.swift */; };
 		1FF78BB82A45421500CA3DDA /* PaddingsTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF78BB72A45421500CA3DDA /* PaddingsTesting.swift */; };
 		1FF8BD1229D41BBD00C8C96A /* SingleMediaViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */; };
@@ -555,6 +556,7 @@
 		1F45C7F429EFB13E00F58772 /* NostrBuildMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrBuildMediaUploadService.swift; sourceTree = "<group>"; };
 		1F4773A6296D4F5B0049454B /* AccountEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountEditView.swift; sourceTree = "<group>"; };
 		1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsZaps.swift; sourceTree = "<group>"; };
+		1F48441E2ACBDF4D00EA6FC1 /* MusicOrVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MusicOrVideo.swift; path = Nostur/Post/Video/MusicOrVideo.swift; sourceTree = "<group>"; };
 		1F49C80529B8D7EA005C960D /* NewQuoteRepost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewQuoteRepost.swift; sourceTree = "<group>"; };
 		1F49C80729B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteOrRepostChoiceSheet.swift; sourceTree = "<group>"; };
 		1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -830,7 +832,7 @@
 		1FF2C6C529EAD7D00096AC4A /* NosturListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturListsView.swift; sourceTree = "<group>"; };
 		1FF2C6C729EAD9C20096AC4A /* NosturList+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FF2C6C829EAD9C20096AC4A /* NosturList+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		1FF2E6C82A72AEB300BF5A4C /* MusicStreamurRepresentable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MusicStreamurRepresentable.swift; sourceTree = "<group>"; };
+		1FF2E6C82A72AEB300BF5A4C /* StreamurRepresentable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StreamurRepresentable.swift; sourceTree = "<group>"; };
 		1FF30DEE2A05784F00B0F011 /* SearchBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBox.swift; sourceTree = "<group>"; };
 		1FF78BB72A45421500CA3DDA /* PaddingsTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaddingsTesting.swift; sourceTree = "<group>"; };
 		1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleMediaViewer.swift; sourceTree = "<group>"; };
@@ -1121,7 +1123,7 @@
 			children = (
 				1F38AFF02A27166C0035641E /* VideoHelpers.swift */,
 				1F05FA0B2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift */,
-				1FF2E6C82A72AEB300BF5A4C /* MusicStreamurRepresentable.swift */,
+				1FF2E6C82A72AEB300BF5A4C /* StreamurRepresentable.swift */,
 				1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */,
 			);
 			path = Video;
@@ -1448,6 +1450,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F48441E2ACBDF4D00EA6FC1 /* MusicOrVideo.swift */,
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
@@ -2068,7 +2071,7 @@
 				1F49C80829B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift in Sources */,
 				1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */,
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
-				1FF2E6C92A72AEB300BF5A4C /* MusicStreamurRepresentable.swift in Sources */,
+				1FF2E6C92A72AEB300BF5A4C /* StreamurRepresentable.swift in Sources */,
 				1FFED8032A39C86F00A0B1E8 /* MacListState.swift in Sources */,
 				1F210B0629F853BB00159814 /* ProfileMediaView.swift in Sources */,
 				1FCC2F292A19275200202EFA /* NIP05Verifier.swift in Sources */,
@@ -2179,6 +2182,7 @@
 				1FA059A32A7554DC0039643C /* EditRelaysNosturList.swift in Sources */,
 				1F9AE7552A4E8BAC009D093E /* NSecBunkerManager.swift in Sources */,
 				1F716C752A14D4F300B202CA /* ProfileTabs.swift in Sources */,
+				1F48441F2ACBDF4D00EA6FC1 /* MusicOrVideo.swift in Sources */,
 				1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */,
 				1F2F54E72A02364900B6D7E4 /* GIFImage.swift in Sources */,
 				1F740D9F29AF36C800EFCCA7 /* BadgesIssuedView.swift in Sources */,
