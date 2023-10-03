@@ -136,7 +136,7 @@ struct SmoothList: UIViewControllerRepresentable {
 
         coordinator.lvm.$nrPostLeafs
 //            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
-            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
+//            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
             .sink { data in
                 coordinator.data = data
                 guard let dataSource = collectionViewHolder.dataSource else { return }
