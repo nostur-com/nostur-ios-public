@@ -56,5 +56,5 @@ func getVideoFirstFrame(asset:AVAsset) async -> UIImage? {
     guard let cgImage = try? imageGenerator.copyCGImage(at: CMTime(seconds: 0, preferredTimescale: 1), actualTime: nil)
     else { return nil }
                                                      
-    return UIImage(cgImage: cgImage)
+    return await UIImage(cgImage: cgImage).byPreparingForDisplay()
 }
