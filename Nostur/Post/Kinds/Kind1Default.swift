@@ -107,8 +107,9 @@ struct Kind1Default: View {
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
                 .frame(height: 21.0)
+                .drawingGroup()
 //                .debugDimensions()
-                .withoutAnimation()
+//                .withoutAnimation()
 //                .transaction { t in
 //                    t.animation = nil
 //                }
@@ -162,7 +163,8 @@ struct Kind1Default: View {
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
                     CustomizableFooterFragmentView(nrPost: nrPost)
-                        .withoutAnimation()
+                        .drawingGroup()
+//                        .withoutAnimation()
 //                        .transaction { t in
 //                            t.animation = nil
 //                        }

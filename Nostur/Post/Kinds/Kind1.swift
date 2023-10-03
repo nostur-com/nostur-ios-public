@@ -11,7 +11,7 @@ import SwiftUI
 
 // Note Full width
 struct Kind1: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
     let nrPost:NRPost
     @ObservedObject var pfpAttributes: NRPost.PFPAttributes
@@ -122,6 +122,7 @@ struct Kind1: View {
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
                     CustomizableFooterFragmentView(nrPost: nrPost)
+                        .drawingGroup()
                 }
             }
             .fixedSize(horizontal: false, vertical: true)
