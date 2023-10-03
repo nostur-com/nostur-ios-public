@@ -1327,11 +1327,11 @@ extension LVM {
             self.closeSubAndTimer()
             return
         }
-        let ctx = DataProvider.shared().bg
+
         let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
         let hashtagRegex = self.hashtagRegex
         let idsOnScreen = self.leafsAndParentIdsOnScreen
-        ctx.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch LVM.id (\(self.uuid)")
             if let mostRecentEvent = mostRecentEvent {
@@ -1341,7 +1341,7 @@ extension LVM {
                     : Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
                 
                 
-                guard let posts = try? ctx.fetch(fr) else { return }
+                guard let posts = try? bg().fetch(fr) else { return }
                 self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
             }
             else {
@@ -1350,7 +1350,7 @@ extension LVM {
                     ? Event.postsByRelays(self.bgRelays, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies)
                     : Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
 
-                guard let posts = try? ctx.fetch(fr) else { return }
+                guard let posts = try? bg().fetch(fr) else { return }
                 self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
             }
         }
