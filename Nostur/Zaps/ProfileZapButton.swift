@@ -23,7 +23,7 @@ struct ProfileZapButton: View {
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
     var body: some View {
-        if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
+        if ss.nwcReady {
             if let cancellationId {
                 HStack {
                     Text("Zapped \(Image(systemName: "bolt.fill"))", comment: "Text in zap button after zapping")

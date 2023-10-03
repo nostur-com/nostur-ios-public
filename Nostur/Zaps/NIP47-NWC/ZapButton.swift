@@ -27,7 +27,7 @@ struct ZapButton: View {
     }
     
     var body: some View {
-        if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty, let contact = nrPost.contact?.contact {
+        if ss.nwcReady, let contact = nrPost.contact?.contact {
             if let cancellationId {
                 Image("BoltIconActive").foregroundColor(theme.footerButtons)
                     .padding(.vertical, 5)

@@ -131,6 +131,9 @@ final class SettingsStore: ObservableObject {
         _restrictAutoDownload = defaults.bool(forKey: Keys.restrictAutoDownload)
         _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
         _footerButtons = defaults.string(forKey: Keys.footerButtons) ?? "💬🔄+🔖"
+        
+        // optimize
+        self.updateNWCreadyCache()
     }
     
     var defaultMediaUploadService: MediaUploadService {
@@ -211,7 +214,11 @@ final class SettingsStore: ObservableObject {
     }
     
     var activeNWCconnectionId: String {
-        set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.activeNWCconnectionId)  }
+        set {
+            objectWillChange.send();
+            defaults.set(newValue, forKey: Keys.activeNWCconnectionId)
+            updateNWCreadyCache()
+        }
         get { defaults.string(forKey: Keys.activeNWCconnectionId) ?? "" }
     }
 
@@ -233,6 +240,7 @@ final class SettingsStore: ObservableObject {
         set {
             objectWillChange.send()
             defaults.set(newValue.id, forKey: Keys.defaultLightningWallet);
+            updateNWCreadyCache()
         }
     }
     
@@ -317,6 +325,21 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _footerButtons:String = "💬🔄+🔖"
+    
+    
+    // optimize
+    
+    public var nwcReady:Bool = false
+    
+    private func isNWCready() -> Bool {
+        defaultLightningWallet.scheme.contains(":nwc:") && !activeNWCconnectionId.isEmpty
+    }
+    private func updateNWCreadyCache() {
+        DispatchQueue.main.async {
+            self.objectWillChange.send();
+            self.nwcReady = self.isNWCready()
+        }
+    }
 }
 
 struct LightningWallet: Identifiable, Hashable {

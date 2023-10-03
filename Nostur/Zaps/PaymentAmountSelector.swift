@@ -38,7 +38,7 @@ struct PaymentAmountSelector: View {
                                 let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                                 
                                 if response.pr != nil {
-                                    if SettingsStore.shared.defaultLightningWallet.scheme.contains(":nwc:") && !SettingsStore.shared.activeNWCconnectionId.isEmpty {
+                                    if SettingsStore.shared.nwcReady {
                                         // NWC WALLET INSTANT ZAPS
                                         if nwcSendPayInvoiceRequest(response.pr!) {
                                             dismiss()
@@ -64,7 +64,7 @@ struct PaymentAmountSelector: View {
                         let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                         
                         if response.pr != nil {
-                            if SettingsStore.shared.defaultLightningWallet.scheme.contains(":nwc:") && !SettingsStore.shared.activeNWCconnectionId.isEmpty {
+                            if SettingsStore.shared.nwcReady {
                                 // NWC WALLET INSTANT ZAPS
                                 if nwcSendPayInvoiceRequest(response.pr!) {
                                     dismiss()
@@ -94,7 +94,7 @@ struct PaymentAmountSelector: View {
                     
                     if response.pr != nil {
                         
-                        if SettingsStore.shared.defaultLightningWallet.scheme.contains(":nwc:") && !SettingsStore.shared.activeNWCconnectionId.isEmpty {
+                        if SettingsStore.shared.nwcReady {
                             // NWC WALLET INSTANT ZAPS
                             if nwcSendPayInvoiceRequest(response.pr!) {
                                 dismiss()
