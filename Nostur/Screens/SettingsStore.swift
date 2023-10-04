@@ -115,7 +115,7 @@ final class SettingsStore: ObservableObject {
             Keys.isSignatureVerificationEnabled: true,
             Keys.lowDataMode: false,
             Keys.nwcShowBalance: false,
-            Keys.footerButtons: "💬🔄+🔖"
+            Keys.footerButtons: IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -333,7 +333,7 @@ final class SettingsStore: ObservableObject {
         get { _footerButtons }
     }
     
-    private var _footerButtons:String = "💬🔄+🔖"
+    private var _footerButtons:String = IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
     
     
     // optimize

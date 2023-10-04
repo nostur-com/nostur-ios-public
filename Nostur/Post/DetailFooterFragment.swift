@@ -49,13 +49,11 @@ struct DetailFooterFragment: View {
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
                 }
                 
-                if IS_APPLE_TYRANNY {
-                    HStack(spacing: 3) {
-                        AnimatedNumberString(number: tallyString)
-                            .fontWeight(.bold)
-                    }
-                    .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
+                HStack(spacing: 3) {
+                    AnimatedNumberString(number: tallyString)
+                        .fontWeight(.bold)
                 }
+                .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
             }
 
             Spacer()
