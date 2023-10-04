@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ReactionButton: View {
-    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     private let reactionContent:String
     @ObservedObject private var footerAttributes:FooterAttributes
