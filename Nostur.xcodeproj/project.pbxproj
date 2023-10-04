@@ -134,6 +134,8 @@
 		1F558B3C29FE4DA0002938A3 /* EventRelationsQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */; };
 		1F57C54B299285B300DFE063 /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54A299285B300DFE063 /* Search.swift */; };
 		1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BA91329A8C27200002652 /* NewNoteButton.swift */; };
+		1F5C82D92ACD336A00333775 /* ZapReceipt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5C82D82ACD336A00333775 /* ZapReceipt.swift */; };
+		1F5C82DC2ACD42DB00333775 /* Kind0.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5C82DB2ACD42DB00333775 /* Kind0.swift */; };
 		1F5E8A892A5FFD55001F86B9 /* EditableReplyingTo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */; };
 		1F5F5A5C29838F1D00DED8F4 /* DataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */; };
 		1F62F4C62A2C572700783892 /* KrakenApiResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */; };
@@ -571,6 +573,8 @@
 		1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventRelationsQueue.swift; sourceTree = "<group>"; };
 		1F57C54A299285B300DFE063 /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		1F5BA91329A8C27200002652 /* NewNoteButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteButton.swift; sourceTree = "<group>"; };
+		1F5C82D82ACD336A00333775 /* ZapReceipt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapReceipt.swift; sourceTree = "<group>"; };
+		1F5C82DB2ACD42DB00333775 /* Kind0.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind0.swift; sourceTree = "<group>"; };
 		1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableReplyingTo.swift; sourceTree = "<group>"; };
 		1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataProvider.swift; sourceTree = "<group>"; };
 		1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KrakenApiResponse.swift; sourceTree = "<group>"; };
@@ -1226,6 +1230,14 @@
 			path = Highlights;
 			sourceTree = "<group>";
 		};
+		1F5C82DA2ACD42A100333775 /* Processors */ = {
+			isa = PBXGroup;
+			children = (
+				1F5C82DB2ACD42DB00333775 /* Kind0.swift */,
+			);
+			path = Processors;
+			sourceTree = "<group>";
+		};
 		1F685B502A0D1886009EEC9B /* NR */ = {
 			isa = PBXGroup;
 			children = (
@@ -1489,6 +1501,7 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
+				1F5C82DA2ACD42A100333775 /* Processors */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
 				1F0592DA2A5054FD003B4B3C /* Communities */,
@@ -1650,6 +1663,7 @@
 				1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */,
 				1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */,
 				1F7C65BE29A14BA3009FF3EA /* Zaps.swift */,
+				1F5C82D82ACD336A00333775 /* ZapReceipt.swift */,
 			);
 			path = Zaps;
 			sourceTree = "<group>";
@@ -1943,6 +1957,7 @@
 				1F6943B32A2A44A800064DBA /* ZapButton.swift in Sources */,
 				1F75257C2996790D00477AF2 /* Notifications.swift in Sources */,
 				1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */,
+				1F5C82D92ACD336A00333775 /* ZapReceipt.swift in Sources */,
 				1F1F13092AA9D9B000DDED82 /* HotViewModel.swift in Sources */,
 				1F558B3C29FE4DA0002938A3 /* EventRelationsQueue.swift in Sources */,
 				1FB130BF29C1A314004AC98D /* QuotedNoteFragmentView.swift in Sources */,
@@ -2085,6 +2100,7 @@
 				1F20F4C52AAE331F002D8886 /* ArticlesFeed.swift in Sources */,
 				1F8CC0012AC324710077EF7D /* NotificationsRepostsGrouped.swift in Sources */,
 				1F685B582A0D7800009EEC9B /* QueuedFetcher.swift in Sources */,
+				1F5C82DC2ACD42DB00333775 /* Kind0.swift in Sources */,
 				1FA059A12A74F87B0039643C /* LVM+relays.swift in Sources */,
 				1F7A10E22AA1DB7300042CD6 /* Search+Helpers.swift in Sources */,
 				1F81C4A72AC033DF0006CAA2 /* NotificationsViewModel.swift in Sources */,
