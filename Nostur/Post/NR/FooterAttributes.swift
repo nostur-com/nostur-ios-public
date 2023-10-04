@@ -77,6 +77,8 @@ class FooterAttributes: ObservableObject {
             let reactions = Self.loadReactions(self.event)
             let isBookmarked = Self.isBookmarked(self.event)
             let hasPrivateNote = Self.hasPrivateNote(self.event)
+//            let zapsCount = self.event.zapsCount
+//            let zapTally = self.event.zapTally
             
             self.zapState = Self.hasZapReceipt(self.event) ? .zapReceiptConfirmed : self.event.zapState
             let isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
@@ -90,6 +92,8 @@ class FooterAttributes: ObservableObject {
                 self.bookmarked = isBookmarked
                 self.hasPrivateNote = hasPrivateNote
                 self.zapped = isZapped
+//                self.zapsCount = zapsCount
+//                self.zapTally = zapTally
             }
         }
         
@@ -117,8 +121,10 @@ class FooterAttributes: ObservableObject {
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] reposts in // Int64
                 guard let self = self else { return }
-                self.objectWillChange.send()
-                self.repostsCount = reposts
+//                DispatchQueue.main.async {
+                    self.objectWillChange.send()
+                    self.repostsCount = reposts
+//                }
             }
             .store(in: &subscriptions)
     }
@@ -128,8 +134,10 @@ class FooterAttributes: ObservableObject {
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] likes in
                 guard let self = self else { return }
-                self.objectWillChange.send()
-                self.likesCount = likes
+//                DispatchQueue.main.async {
+                    self.objectWillChange.send()
+                    self.likesCount = likes
+//                }
                 
                 // Also update own like (or slow? disbaled)
 //                if !self.liked && isLiked() { // nope. main bg thread mismatch
@@ -144,9 +152,11 @@ class FooterAttributes: ObservableObject {
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] (count, tally) in
                 guard let self = self else { return }
-                self.objectWillChange.send()
-                self.zapTally = tally
-                self.zapsCount = count
+//                DispatchQueue.main.async {
+                    self.objectWillChange.send()
+                    self.zapTally = tally
+                    self.zapsCount = count
+//                }
             }
             .store(in: &subscriptions)
         
