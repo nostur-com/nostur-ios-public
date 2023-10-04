@@ -82,8 +82,11 @@ struct InnerPFP: View {
     public var pubkey:String
     public var pictureUrl:URL?
     public var size:CGFloat = 50.0
-    public var color:Color
-    public var isFollowing = false // will use later to put non following in seperate cache
+    public var color:Color? = nil
+    private var innerColor:Color {
+        color ?? randomColor(seed: pubkey)
+    }
+
     @ObservedObject private var settings:SettingsStore = .shared
     
     // Always render default circle (color is pubkey derived)
@@ -108,7 +111,7 @@ struct InnerPFP: View {
     var body: some View {
         Circle()
             .strokeBorder(.regularMaterial, lineWidth: 2)
-            .background(color)
+            .background(innerColor)
             .frame(width: size, height: size)
             .cornerRadius(size/2)
             
