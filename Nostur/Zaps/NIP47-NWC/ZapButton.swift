@@ -9,7 +9,7 @@ import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ZapButton: View {
-    @EnvironmentObject private var theme: Theme
+    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     @ObservedObject private var ss:SettingsStore = .shared
@@ -30,7 +30,7 @@ struct ZapButton: View {
         HStack {
             if ss.nwcReady, let contact = nrPost.contact?.contact {
                 if let cancellationId {
-                    Image("BoltIconActive").foregroundColor(theme.footerButtons)
+                    Image("BoltIconActive").foregroundColor(.yellow)
                         .padding(.vertical, 5)
                         .padding(.leading, isFirst ? 0 : 5)
                         .padding(.trailing, isLast ? 0 : 5)

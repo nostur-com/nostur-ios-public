@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ReplyButton: View {
-    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     private var isDetail:Bool
@@ -26,7 +25,7 @@ struct ReplyButton: View {
     var body: some View {
         HStack {
             Image(footerAttributes.replied ? "ReplyIconActive" : "ReplyIcon")
-                .foregroundColor(footerAttributes.replied ? theme.accent : theme.footerButtons)
+                .foregroundColor(footerAttributes.replied ? Theme.default.accent : Theme.default.footerButtons)
             AnimatedNumber(number: footerAttributes.repliesCount)
 //                        .equatable()
                 .opacity(footerAttributes.repliesCount == 0 ? 0 : 1)

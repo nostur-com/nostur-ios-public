@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct LikeButton: View {
-    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     @State private var unpublishLikeId:UUID? = nil

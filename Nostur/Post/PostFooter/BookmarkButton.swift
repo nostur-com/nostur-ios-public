@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct BookmarkButton: View {
-    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     private var isFirst:Bool
