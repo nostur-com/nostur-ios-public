@@ -64,14 +64,7 @@ struct ContactsToggleSheet: View {
                                         .padding(.vertical, 10)
                                 }
                             }
-                            if let pfp = NRState.shared.loggedInAccount?.followingPFPs[contact.pubkey] {
-                                MiniPFP(pictureUrl: pfp, size: 20.0)
-                                    .frame(width: 20.0, height: 20.0)
-                            }
-                            else {
-                                Color.clear
-                                    .frame(width: 20.0, height: 20.0)
-                            }
+                            PFP(pubkey: contact.pubkey, contact: contact)
                             Text(contact.anyName)
                             //                                .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -120,7 +113,7 @@ struct ContactsToggleSheet: View {
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button("Back") {
                         dismiss()
                     }
                 }
