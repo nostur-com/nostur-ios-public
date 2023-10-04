@@ -977,7 +977,7 @@ extension LVM {
                         EventRelationsQueue.shared.addAwaitingEvent(event)
                     }
                     let eventIds = events.map { $0.id }
-                    L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+                    L.fetching.debug("🔢 Fetching counts for \(eventIds.count) posts")
                     fetchStuffForLastAddedNotes(ids: eventIds)
                 }
                 
