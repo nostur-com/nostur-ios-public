@@ -17,8 +17,8 @@ struct FooterConfigurator: View {
             Section(content: {
                 TextField("Footer buttons", text: $footerButtons)
                     .onChange(of: footerButtons, perform: { newValue in
-                        if newValue.count > 7 {
-                            footerButtons = filterT(String(newValue.prefix(7)))
+                        if newValue.count > 8 {
+                            footerButtons = filterT(String(newValue.prefix(8)))
                         }
                         else {
                             let filteredButtons = filterT(footerButtons)
