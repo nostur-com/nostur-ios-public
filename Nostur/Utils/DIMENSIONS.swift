@@ -36,7 +36,7 @@ class DIMENSIONS: ObservableObject {
     static public let BOX_PADDING:CGFloat = 10.0 // TODO: Should start using this everywhere instead if .padding(10)
     
     /// Substracts profile pic space from list width
-    func availableNoteRowImageWidth() -> CGFloat {
+    func availableNoteRowImageWidth() -> CGFloat { // TODO: Check if we need to turn this into lazy computed property
         // 10 + ( 50 ) + 10 + (availableWidth) + 10
         return (listWidth - (Self.BOX_PADDING*2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
     }

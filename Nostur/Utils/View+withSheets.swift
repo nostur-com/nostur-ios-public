@@ -445,7 +445,7 @@ struct MiniProfileSheetInfo: Identifiable, Equatable {
     let id = UUID()
     let pubkey: String
     var contact: NRContact?
-    let zapEtag: String
+    var zapEtag: String? = nil
     let location: CGPoint
     
     static func == (lhs: MiniProfileSheetInfo, rhs: MiniProfileSheetInfo) -> Bool {
