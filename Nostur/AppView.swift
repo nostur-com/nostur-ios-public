@@ -45,7 +45,7 @@ struct AppView: View {
     @State private var dm:DirectMessageViewModel = .default
     @State private var nvm:NotificationsViewModel = .shared
     
-    @State private var isViewDisplayed = false
+//    @State private var isViewDisplayed = false
     @State private var isOnboarding = false
     
     @State private var priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
@@ -101,7 +101,7 @@ struct AppView: View {
                         .environmentObject(nvm)
                         .environmentObject(loggedInAccount)
                         .onReceive(priceLoop) { time in
-                            if (!isViewDisplayed) { return }
+//                            if (!isViewDisplayed) { return }
                             Task.detached(priority: .low) {
                                 if let newPrice = await fetchBitcoinPrice() {
                                     if (newPrice != ExchangeRateModel.shared.bitcoinPrice) {
@@ -150,8 +150,9 @@ struct AppView: View {
                 }
             }
         }
-        .onAppear  { startNosturing(); self.isViewDisplayed = true }
-        .onDisappear { self.isViewDisplayed = false }
+//        .onAppear  { startNosturing(); self.isViewDisplayed = true }
+        .onAppear  { startNosturing() }
+//        .onDisappear { self.isViewDisplayed = false }
         .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in
             let onBoardingIsShown = notification.object as! Bool
             if onBoardingIsShown != isOnboarding {
