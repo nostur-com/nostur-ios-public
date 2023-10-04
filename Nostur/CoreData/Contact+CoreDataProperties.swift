@@ -275,7 +275,7 @@ extension Contact : Identifiable {
                     contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                     contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
                     contact.contactUpdated.send(contact)
-                    
+                    Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
                     
                     
                     updateRelatedEvents(contact)
@@ -304,7 +304,7 @@ extension Contact : Identifiable {
                 if contact.anyName != contact.authorKey { // For showing "Previously known as"
                     contact.fixedName = contact.anyName
                 }
-                
+                Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
                 EventRelationsQueue.shared.addAwaitingContact(contact)
                 updateRelatedEvents(contact)
             }
