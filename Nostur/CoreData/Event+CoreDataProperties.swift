@@ -580,11 +580,10 @@ extension Event {
             return false
         }
         
-        guard zappedContact.metadata_created_at != 0 else { // CONTACT INFO MISSING
+        if zappedContact.metadata_created_at == 0 {
             L.fetching.info("⚡️⏳ missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
             QueuedFetcher.shared.enqueue(pTag: zappedContact.pubkey)
-                ZapperPubkeyVerificationQueue.shared.addZap(zap)
-            return false
+            ZapperPubkeyVerificationQueue.shared.addZap(zap)
         }
         
         // Check if contact matches the zapped event contact
@@ -607,7 +606,7 @@ extension Event {
         }
         else {
             zap.flags = "zpk_unverified" // missing contact
-            return false
+//            return false
         }
                 
         if let zappedEvent = zap.zappedEvent {

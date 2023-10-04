@@ -8,23 +8,16 @@
 import SwiftUI
 
 struct DetailFooterFragment: View {
-    let er:ExchangeRateModel = .shared // Not Observed for performance
-    @ObservedObject var nrPost:NRPost // TODO: Remvoe observable, only use footerAttributes
-    @ObservedObject var footerAttributes:FooterAttributes
+    private var nrPost:NRPost // TODO: Remvoe observable, only use footerAttributes
+    @ObservedObject private var footerAttributes:FooterAttributes
     
     init(nrPost: NRPost) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
     }
     
-    var tallyString:String {
-        if (er.bitcoinPrice != 0.0) {
-            let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(er.bitcoinPrice)))
-            return fiatPrice
-        }
-        return String(footerAttributes.zapTally.formatNumber)
-    }
-
+    @State var tallyString:String = ""
+    
     var body: some View {
         Divider()
         HStack {
@@ -47,15 +40,13 @@ struct DetailFooterFragment: View {
                     AnimatedNumber(number: footerAttributes.zapsCount)
                         .fontWeight(.bold)
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
-                }
-                
-                HStack(spacing: 3) {
+                    
                     AnimatedNumberString(number: tallyString)
                         .fontWeight(.bold)
+                        .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
                 }
-                .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
             }
-
+            
             Spacer()
             
             Text(nrPost.createdAt.formatted(date: .omitted, time: .shortened))
@@ -63,6 +54,12 @@ struct DetailFooterFragment: View {
                 .dateTime
                     .day().month(.defaultDigits)
             ))
+        }
+        .onAppear {
+            loadTally(footerAttributes.zapTally)
+        }
+        .onChange(of: footerAttributes.zapTally) { newTally in
+            loadTally(newTally)
         }
         .buttonStyle(.plain)
         .foregroundColor(.gray)
@@ -103,6 +100,16 @@ struct DetailFooterFragment: View {
             }
         }
         Divider()
+    }
+    
+    private func loadTally(_ tally:Int64) {
+        if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
+            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
+            tallyString = fiatPrice
+        }
+        else {
+            tallyString = String(tally.formatNumber)
+        }
     }
 }
 

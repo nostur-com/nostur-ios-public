@@ -219,12 +219,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var fileMetadata:KindFileMetadata?
     
     var relays:String
-    
-//    var zapState:Event.ZapState?
-//    var isZapped:Bool {
-//        guard zapState != nil else { return false }
-//        return [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
-//    }
     var following = false
     var blocked: Bool {
         get { postRowDeletableAttributes.blocked }
@@ -492,16 +486,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         if let content = event.content {
             self.content = content
-        }
-        
-//        if hasZapReceipt() {
-//            self.zapState = .zapReceiptConfirmed
-//        } else {
-//            self.zapState = event.zapState
-//        }
-
-//        self.hasPrivateNote = _hasPrivateNote()
-        
+        }        
         
         self.subject = fastTags.first(where: { $0.0 == "subject" })?.1
         if let subject {
