@@ -8,15 +8,25 @@
 import SwiftUI
 
 struct NoteZaps: View {
-    @EnvironmentObject var theme:Theme
-    let sp:SocketPool = .shared
-    let id:String
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
-    var zaps:FetchedResults<Event>
-    var zapsSorted:[Event] { zaps.sorted(by: { $0.naiveSats > $1.naiveSats }).uniqued(on: { $0.id }) }
+    @EnvironmentObject private var theme:Theme
+    private let id:String
     
-    var unverifiedZaps:[Event] {
-        zapsSorted.filter { $0.flags != "zpk_verified" }
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
+    private var zaps:FetchedResults<Event>
+    private var zapsSorted:[Event] { 
+        zaps.sorted(by: { $0.naiveSats > $1.naiveSats })
+            .uniqued(on: { $0.id })
+    }
+    
+    @State private var verifiedZaps:[ZapAndZapFrom] = []
+    @State private var unverifiedZaps:[ZapAndZapFrom] = []
+    
+    // hack to get both zap and zap from for optimized ForEach
+    // need to clean up some day
+    struct ZapAndZapFrom: Identifiable {
+        var id:String { zap.id }
+        let zap:Event
+        let zapFrom:Event
     }
     
     init(id:String) {
@@ -28,9 +38,9 @@ struct NoteZaps: View {
         ScrollView {
             
             LazyVStack(alignment: .leading) {
-                ForEach(zapsSorted.filter { $0.flags == "zpk_verified" } ) { zap in
-                    if let zapFrom = zap.zapFromRequest {
-                        NoteZapRow(zap: zap, zapFrom:zapFrom)
+                ForEach(verifiedZaps) { both in
+                    Box {
+                        ZapReceipt(sats: both.zap.naiveSats, receiptPubkey: both.zap.pubkey, fromPubkey: both.zapFrom.pubkey, from: both.zapFrom)
                     }
                 }
                 
@@ -39,9 +49,9 @@ struct NoteZaps: View {
                         .fontWeight(.bold)
                         .padding(10)
                     
-                    ForEach(unverifiedZaps) { zap in
-                        if let zapFrom = zap.zapFromRequest {
-                            NoteZapRow(zap: zap, zapFrom:zapFrom)
+                    ForEach(unverifiedZaps) { both in
+                        Box {
+                            ZapReceipt(sats: both.zap.naiveSats, receiptPubkey: both.zap.pubkey, fromPubkey: both.zapFrom.pubkey, from: both.zapFrom)
                         }
                     }
                 }
@@ -51,6 +61,12 @@ struct NoteZaps: View {
             Spacer()
         }
         .background(theme.listBackground)
+        .onAppear {
+            loadZaps(zapsSorted)
+        }
+        .onChange(of: zapsSorted) { newZapsSorted in
+            loadZaps(newZapsSorted)
+        }
         .task {
             // Fix zaps afterwards??
             // (0, 0) = (tally, count)
@@ -87,6 +103,20 @@ struct NoteZaps: View {
             
             QueuedFetcher.shared.enqueue(pTags: missing.map { $0.pubkey })
         }
+    }
+    
+    private func loadZaps(_ zaps:[Event]) {
+        verifiedZaps = zaps.filter { $0.flags == "zpk_verified" }
+            .compactMap({ zap in
+                guard let zapFrom = zap.zapFromRequest else { return nil }
+                return ZapAndZapFrom(zap: zap, zapFrom: zapFrom)
+            })
+        
+        unverifiedZaps = zaps.filter { $0.flags != "zpk_verified" }
+            .compactMap({ zap in
+                guard let zapFrom = zap.zapFromRequest else { return nil }
+                return ZapAndZapFrom(zap: zap, zapFrom: zapFrom)
+            })
     }
 }
 
