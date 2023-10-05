@@ -21,6 +21,7 @@ public class PreviewEnvironment {
     let ss:SettingsStore = .shared
     let sm:SideBarModel = .shared
     let theme:Theme = .default
+    let kind0:Kind0Processor = .shared
     
     static let shared = PreviewEnvironment()
         
@@ -438,11 +439,11 @@ extension PreviewEnvironment {
 public typealias PreviewSetup = (_ pe:PreviewEnvironment) -> ()
 
 struct PreviewContainer<Content: View>: View {
-    let pe = PreviewEnvironment.shared
-    var setup:PreviewSetup? = nil
-    let previewDevice:PreviewDevice
-    var content: () -> Content
-    @State var didSetup = false
+    @State private var pe = PreviewEnvironment.shared
+    private var setup:PreviewSetup? = nil
+    private let previewDevice:PreviewDevice
+    private var content: () -> Content
+    @State private var didSetup = false
     
     init(_ setup:PreviewSetup? = nil, previewDevice:PreviewDevice? = nil, @ViewBuilder content: @escaping () -> Content) {
         self.setup = setup
