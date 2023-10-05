@@ -8,20 +8,19 @@
 import SwiftUI
 
 struct ZapCustomizerSheet: View {
-    @EnvironmentObject var theme:Theme
-    let name:String
-    var customZapId:UUID?
-    var supportsZap = false
-    var sendAction:((CustomZap) -> Void)?
+    public var name:String
+    public var customZapId:UUID?
+    public var supportsZap = false
+    public var sendAction:((CustomZap) -> Void)?
+    private let theme:Theme = .default
+    @Environment(\.dismiss) private var dismiss
     
-    @Environment(\.dismiss) var dismiss
-    
-    @AppStorage("last_custom_zap_amount") var lastCustomZapAmount:Double = 0.0
-    @State var zapMessage = ""
-    @State var selectedAmount:Double = 3
-    @State var customAmount:Double = 0.0
-    @State var showCustomAmountsheet = false
-    @State var setAmountAsDefault = false
+    @AppStorage("last_custom_zap_amount") private var lastCustomZapAmount:Double = 0.0
+    @State private var zapMessage = ""
+    @State private var selectedAmount:Double = 3
+    @State private var customAmount:Double = 0.0
+    @State private var showCustomAmountsheet = false
+    @State private var setAmountAsDefault = false
     
     var body: some View {
         NavigationStack {
@@ -180,14 +179,10 @@ struct CustomZap: Identifiable {
     let amount:Double
 }
 
-struct ZapCustomizerSheet_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in pe.loadPosts() }) {
-            VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost() {
-                    ZapCustomizerSheet(name:nrPost.anyName, customZapId: UUID())
-                }
-            }
+#Preview("ZapCustomizerSheet") {
+    PreviewContainer({ pe in pe.loadPosts() }) {
+        if let nrPost = PreviewFetcher.fetchNRPost() {
+            ZapCustomizerSheet(name:nrPost.anyName, customZapId: UUID(), supportsZap: true)
         }
     }
 }

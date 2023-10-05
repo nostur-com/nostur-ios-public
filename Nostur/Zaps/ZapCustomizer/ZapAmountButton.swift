@@ -8,19 +8,18 @@
 import SwiftUI
 
 struct ZapAmountButton: View {
-    @EnvironmentObject var theme:Theme
-    let er:ExchangeRateModel = .shared
-    let amount:Double
-    let isSelected:Bool
+    private var theme:Theme = .default
+    private let amount:Double
+    private let isSelected:Bool
     
     init(_ amount:Double, isSelected:Bool) {
         self.amount = amount
         self.isSelected = isSelected
     }
     
-    var fiatPrice:String? {
-        guard er.bitcoinPrice > 0 else { return nil }
-        return String(format: "$%.02f",(amount / 100000000 * er.bitcoinPrice))
+    private var fiatPrice:String? {
+        guard ExchangeRateModel.shared.bitcoinPrice > 0 else { return nil }
+        return String(format: "$%.02f",(amount / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
     }
     
     var body: some View {
@@ -53,12 +52,9 @@ struct ZapAmountButton: View {
     }
 }
 
-struct ZapAmountButton_Previews: PreviewProvider {
-    static var previews: some View {
-        HStack {
-            ZapAmountButton(1000, isSelected: false)
-            ZapAmountButton(5000, isSelected: true)
-        }
-        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+#Preview("ZapAmountButton") {
+    HStack {
+        ZapAmountButton(1000, isSelected: false)
+        ZapAmountButton(5000, isSelected: true)
     }
 }
