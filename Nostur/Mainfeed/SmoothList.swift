@@ -411,6 +411,7 @@ struct SmoothList: UIViewControllerRepresentable {
 //            }
         }
         
+        // 18.00 ms    0.1%    18.00 ms         SmoothList.Coordinator.scrollViewDidScroll(_:)
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
             scrollTimer?.invalidate()
             scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
