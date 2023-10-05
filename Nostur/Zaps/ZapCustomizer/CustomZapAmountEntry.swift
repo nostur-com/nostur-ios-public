@@ -9,22 +9,21 @@ import SwiftUI
 
 struct CustomZapAmountEntry: View {
     @Environment(\.dismiss) private var dismiss
-    @Binding var customAmount:Double
+    @Binding public var customAmount:Double
     @State private var enteredAmount = ""
     @FocusState private var focusedField: FocusedField?
+    
     enum FocusedField {
         case amount
     }
-    
-    let er:ExchangeRateModel = .shared
-    
-    var fiatPrice:String? {
-        guard er.bitcoinPrice > 0 else { return nil }
+
+    private var fiatPrice:String? {
+        guard ExchangeRateModel.shared.bitcoinPrice > 0 else { return nil }
         guard let d = Double(enteredAmount), d > 0 else { return nil }
-        return String(format: "$%.02f",(d / 100000000 * er.bitcoinPrice))
+        return String(format: "$%.02f",(d / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
     }
     
-    var isValidAmount:Bool {
+    private var isValidAmount:Bool {
         if let d = Double(enteredAmount), d > 0 {
             return true
         }
@@ -67,12 +66,6 @@ struct CustomZapAmountEntry: View {
     }
 }
 
-struct CustomZapAmountEntry_Previews: PreviewProvider {
-    @State static var customAmount:Double = 400.0
-    static var previews: some View {
-        HStack {
-            CustomZapAmountEntry(customAmount: $customAmount)
-        }
-        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-    }
+#Preview("CustomZapAmountEntry") {
+    CustomZapAmountEntry(customAmount: .constant(400.0))
 }
