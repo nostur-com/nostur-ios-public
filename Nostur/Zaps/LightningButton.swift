@@ -25,8 +25,9 @@ struct LightningButton: View {
     
     var body: some View {
         if isLoading {
-            ProgressView()
-                .colorInvert()
+//            ProgressView() // view is in .drawingGroup() so can't use ProgressView() anymore
+            Image(systemName: "hourglass.tophalf.filled")
+//                .colorInvert()
                 .padding(.vertical, 5)
                 .padding(.leading, isFirst ? 0 : 5)
                 .padding(.trailing, isLast ? 0 : 5)
