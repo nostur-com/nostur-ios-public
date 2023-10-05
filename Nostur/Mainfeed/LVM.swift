@@ -943,7 +943,7 @@ extension LVM {
         
         performLocalFetch
             .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
-            .print("⏱ Delays:: performLocalFetch throttle +2.5 + latest")
+//            .print("⏱ Delays:: performLocalFetch throttle +2.5 + latest")
             .sink { refreshInBackground in
                 self._performLocalFetch(refreshInBackground: refreshInBackground)
             }
