@@ -212,7 +212,7 @@ class FooterAttributes: ObservableObject {
     static private func isLiked(_ event:Event) -> Bool {
         if let account = account() {
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7", event.created_at, event.id, account.publicKey)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7 AND content == \"+\"", event.created_at, event.id, account.publicKey)
             fr.fetchLimit = 1
             fr.resultType = .countResultType
             let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
