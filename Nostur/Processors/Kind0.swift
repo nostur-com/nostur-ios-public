@@ -25,8 +25,12 @@ class Kind0Processor {
     // Don't access directly, use get/setProfile which goes through own queue
     private var _lru = [Pubkey: Profile]() // TODO: Turn into real LRU
     
-    private func getProfile(_ pubkey:String) -> Profile? {
-        queue.sync { return _lru[pubkey] }
+    private func getProfile(_ pubkey:String) async -> Profile? {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                continuation.resume(returning: self._lru[pubkey])
+            }
+        }
     }
     
     private func setProfile(_ profile: Profile) {
@@ -42,20 +46,22 @@ class Kind0Processor {
             .receive(on: DispatchQueue.global())
             .sink { pubkey in
                 // check LRU
-                if let profile = self.getProfile(pubkey) {
-                    self.receive.send(profile)
-                    return
-                }
-                
-                // check DB
-                bg().perform {
-                    if let profile = self.fetchProfile(pubkey: pubkey) {
+                Task {
+                    if let profile = await self.getProfile(pubkey) {
                         self.receive.send(profile)
-                        self.setProfile(profile)
+                        return
                     }
-                    else {
-                        // req relay
-                        req(RM.getUserMetadata(pubkey: pubkey))
+                    
+                    // check DB
+                    await bg().perform {
+                        if let profile = self.fetchProfile(pubkey: pubkey) {
+                            self.receive.send(profile)
+                            self.setProfile(profile)
+                        }
+                        else {
+                            // req relay
+                            req(RM.getUserMetadata(pubkey: pubkey))
+                        }
                     }
                 }
             }
