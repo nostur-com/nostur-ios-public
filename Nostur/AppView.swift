@@ -16,9 +16,9 @@ import AVFoundation
 /// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
 struct AppView: View {
     @Environment(\.scenePhase) private var scenePhase
-    @State private var tm:DetailTabsModel = .shared
     
     // These singletons always exists during the apps lifetime
+    @State private var tm:DetailTabsModel = .shared
     @State private var er:ExchangeRateModel = .shared
     @State private var dataProvider = DataProvider.shared()
     @State private var eventRelationsQueue:EventRelationsQueue = .shared
@@ -33,17 +33,17 @@ struct AppView: View {
     @State private var avcache:AVAssetCache = .shared
     @State private var idr:ImageDecoderRegistry = .shared
     @State private var nm:NotificationsViewModel = .shared
-    
-    
-    
-    private let ot:NewOnboardingTracker = .shared
-//    @EnvironmentObject private var theme:Theme
-    @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
-    @AppStorage("did_accept_terms") private var didAcceptTerms = false
+    @State private var kind0:Kind0Processor = .shared
     @State private var nwcRQ:NWCRequestQueue = .shared
     @State private var ss:SettingsStore = .shared
     @State private var dm:DirectMessageViewModel = .default
     @State private var nvm:NotificationsViewModel = .shared
+    @State private var ot:NewOnboardingTracker = .shared
+    
+//    @EnvironmentObject private var theme:Theme
+    @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
+    @AppStorage("did_accept_terms") private var didAcceptTerms = false
+    
     
 //    @State private var isViewDisplayed = false
     @State private var isOnboarding = false
