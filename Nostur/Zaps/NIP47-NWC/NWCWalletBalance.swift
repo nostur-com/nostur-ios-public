@@ -13,35 +13,40 @@ struct NWCWalletBalance: View {
     @ObservedObject private var nrq:NWCRequestQueue = .shared
 
     var body: some View {
-        switch nrq.balanceState {
-        case .initial, .loading:
-            ProgressView()
-                .task(id: "get_balance") {
-                    do {
-                        nwcSendBalanceRequest()
-                        try await Task.sleep(
-                            until: .now + .seconds(5),
-                            tolerance: .seconds(2),
-                            clock: .continuous
-                        )
-                        if nrq.balanceState == .loading {
-                            nrq.balanceState = .timeout
+        if ss.nwcShowBalance && ss.nwcReady {
+            switch nrq.balanceState {
+            case .initial, .loading:
+                ProgressView()
+                    .task(id: "get_balance") {
+                        do {
+                            nwcSendBalanceRequest()
+                            try await Task.sleep(
+                                until: .now + .seconds(5),
+                                tolerance: .seconds(2),
+                                clock: .continuous
+                            )
+                            if nrq.balanceState == .loading {
+                                nrq.balanceState = .timeout
+                            }
+                        } catch {
+                            
                         }
-                    } catch {
-                        
                     }
-                }
-        case .ready(let balance):
-            Text("\(Image(systemName:"bolt.fill")) \(balance) sats")
-                .onTapGesture {
-                    nwcSendBalanceRequest()
-                }
-        case .timeout:
-            Image(systemName:"bolt.trianglebadge.exclamationmark.fill")
-                .opacity(0.5)
-                .onTapGesture {
-                    nwcSendBalanceRequest()
-                }
+            case .ready(let balance):
+                Text("\(Image(systemName:"bolt.fill")) \(balance) sats")
+                    .onTapGesture {
+                        nwcSendBalanceRequest()
+                    }
+            case .timeout:
+                Image(systemName:"bolt.trianglebadge.exclamationmark.fill")
+                    .opacity(0.5)
+                    .onTapGesture {
+                        nwcSendBalanceRequest()
+                    }
+            }
+        }
+        else {
+            EmptyView()
         }
     }
 }
