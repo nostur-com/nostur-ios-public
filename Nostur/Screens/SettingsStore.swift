@@ -134,6 +134,7 @@ final class SettingsStore: ObservableObject {
         _restrictAutoDownload = defaults.bool(forKey: Keys.restrictAutoDownload)
         _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
         _footerButtons = defaults.string(forKey: Keys.footerButtons) ?? "💬🔄+🔖"
+        _fetchCounts = defaults.bool(forKey: Keys.fetchCounts)
         
         // optimize
         self.updateNWCreadyCache()
@@ -183,18 +184,6 @@ final class SettingsStore: ObservableObject {
     var nwcShowBalance: Bool {
         set { defaults.set(newValue, forKey: Keys.nwcShowBalance); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.nwcShowBalance) }
-    }
-    
-    var fetchCounts: Bool {
-        set {
-            objectWillChange.send();
-            defaults.set(newValue, forKey: Keys.fetchCounts);
-            if newValue {
-                defaults.set(true, forKey: Keys.rowFooterEnabled);
-            }
-            
-        }
-        get { defaults.bool(forKey: Keys.fetchCounts) }
     }
 
 //    var hideEmojisInNames: Bool {
@@ -334,6 +323,17 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _footerButtons:String = IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
+    
+    public var fetchCounts: Bool {
+        set {
+            objectWillChange.send()
+            _fetchCounts = newValue
+            defaults.set(newValue, forKey: Keys.fetchCounts);
+        }
+        get { _fetchCounts }
+    }
+    
+    private var _fetchCounts:Bool = false
     
     
     // optimize
