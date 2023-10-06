@@ -55,7 +55,7 @@ struct SmoothList: UIViewControllerRepresentable {
         
         // configure lvm
         context.coordinator.lvm = lvm
-        context.coordinator.data = lvm.nrPostLeafs
+        context.coordinator.data = lvm.posts
         
         // load posts
         refresh(cvh, coordinator: context.coordinator)
@@ -66,7 +66,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 guard context.coordinator.lvm.viewIsVisible else { return }
                 guard context.coordinator.lvm.lvmCounter.count > 0 else {
                     // if no unread, scroll to top
-                    if !context.coordinator.lvm.nrPostLeafs.isEmpty {
+                    if !context.coordinator.lvm.posts.isEmpty {
                         cvh.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
                     }
                     return
@@ -82,7 +82,7 @@ struct SmoothList: UIViewControllerRepresentable {
         receiveNotification(.shouldScrollToTop)
             .sink { _ in
                 guard context.coordinator.lvm.viewIsVisible else { return }
-                if !context.coordinator.lvm.nrPostLeafs.isEmpty {
+                if !context.coordinator.lvm.posts.isEmpty {
                     cvh.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
                 }
             }
@@ -131,10 +131,10 @@ struct SmoothList: UIViewControllerRepresentable {
         collectionViewHolder.dataSource = collectionViewHolder.createDataSource(coordinator: coordinator)
         var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
         snapshot.appendSections([SingleSection.main])
-        snapshot.appendItems(coordinator.data.map { $0.id }, toSection: .main)
+        snapshot.appendItems(coordinator.data.keys.elements, toSection: .main)
         collectionViewHolder.dataSource?.apply(snapshot, animatingDifferences: false)
 
-        coordinator.lvm.$nrPostLeafs
+        coordinator.lvm.$posts
 //            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
 //            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
             .sink { data in
@@ -144,7 +144,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 let isInitialApply =  currentNumberOfItems == 0
                 var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
                 snapshot.appendSections([SingleSection.main])
-                snapshot.appendItems(data.map { $0.id }, toSection: .main)
+                snapshot.appendItems(data.keys.elements, toSection: .main)
                 
                 let restoreToId:String? = collectionViewHolder.collectionView.contentOffset.y == 0 ? dataSource.snapshot(for: .main).items.first : nil
                                 
@@ -174,14 +174,14 @@ struct SmoothList: UIViewControllerRepresentable {
                             // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
 //                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
 //                            coordinator.lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
-                            coordinator.lvm.lastReadId = coordinator.lvm.nrPostLeafs.first?.id
+                            coordinator.lvm.lastReadId = coordinator.lvm.posts.keys.elements.first
                         }
                     }
                     else {
                         // KEEP POSITION AFTER INSERT, IF AUTOSCROLL IS DISABLED
                         if !SettingsStore.shared.autoScroll {
                             if let restoreToId {
-                                if let restoreIndex = data.firstIndex(where: { $0.id == restoreToId }) {
+                                if let restoreIndex = data.index(forKey: restoreToId) {
                                     L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(data.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
                                     collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
                                 }
@@ -200,7 +200,7 @@ struct SmoothList: UIViewControllerRepresentable {
         public var subscriptions = Set<AnyCancellable>()
         public let parent: SmoothList
         public var lvm: LVM
-        public var data:[NRPost] = []
+        public var data:Posts = [:]
         public var collectionViewHolder: CollectionViewHolderType?
         private var scrollTimer: Timer?
         private var prefetcher:ImagePrefetcher
@@ -222,7 +222,7 @@ struct SmoothList: UIViewControllerRepresentable {
         }
         
         func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
-            let items:[NRPost] = indexPaths.compactMap { data[safe: $0.row] }
+            let items = indexPaths.compactMap { data.elements[$0.row] }
             
             bg().perform { [weak self] in
                 guard let self else { return }
@@ -230,10 +230,10 @@ struct SmoothList: UIViewControllerRepresentable {
                 var imageRequests:[ImageRequest] = []
                 var imageRequestsPFP:[ImageRequest] = []
                 
-                for item in items {
+                for (id, item) in items {
                     if !item.missingPs.isEmpty {
                         QueuedFetcher.shared.enqueue(pTags: item.missingPs)
-                        L.fetching.info("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(item.id)")
+                        L.fetching.info("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(id)")
                     }
                     
                     // Everything below here is image or link preview fetching, skip if low data mode
@@ -299,7 +299,7 @@ struct SmoothList: UIViewControllerRepresentable {
         }
         
         func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
-            let items:[NRPost] = indexPaths.compactMap { data[safe: $0.row] }
+            let items = indexPaths.compactMap { data.elements[$0.row] }
 
             bg().perform { [weak self] in
                 guard let self else { return }
@@ -307,7 +307,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 var imageRequests:[ImageRequest] = []
                 var imageRequestsPFP:[ImageRequest] = []
                 
-                for item in items {
+                for (_, item) in items {
                     
                     if !item.missingPs.isEmpty {
                         QueuedFetcher.shared.dequeue(pTags: item.missingPs)
@@ -389,8 +389,7 @@ struct SmoothList: UIViewControllerRepresentable {
         //        }
         
         func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-            
-            if let lastAppearedId = data[safe: indexPath.row]?.id {
+            if let lastAppearedId = data.elements[safe: indexPath.row]?.value.id {
                 lvm.lastAppearedIdSubject.send(lastAppearedId)
             }
             
@@ -449,13 +448,13 @@ struct SmoothList: UIViewControllerRepresentable {
                         lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
                     }
                     
-                    if let lastAppearedId = data[safe: firstIndex.row]?.id {
+                    if let lastAppearedId = data.elements[safe: firstIndex.row]?.value.id {
                         lvm.lastAppearedIdSubject.send(lastAppearedId)
                     }
                 }
             }
             
-            lvm.postsAppearedSubject.send(indexPaths.compactMap { data[safe: $0.row]?.id })
+            lvm.postsAppearedSubject.send(indexPaths.compactMap { data.elements[safe: $0.row]?.value.id })
         }
         
         private var scrollDirectionDetermined = false
@@ -566,7 +565,7 @@ final class CViewHolder {
         return UICollectionViewDiffableDataSource<SingleSection, String>(
             collectionView: collectionView,
             cellProvider: { collectionView, indexPath, identifier -> UICollectionViewCell? in
-                guard let nrPost = coordinator.data.first(where: { $0.id == identifier }) else {
+                guard let nrPost = coordinator.data[identifier] else {
                     return collectionView.dequeueConfiguredReusableCell(using: coordinator.MissingCellRegistration, for: indexPath, item: "🧨")
                 }
                 return collectionView.dequeueConfiguredReusableCell(using: coordinator.PostOrThreadCellRegistration, for: indexPath, item: nrPost)
