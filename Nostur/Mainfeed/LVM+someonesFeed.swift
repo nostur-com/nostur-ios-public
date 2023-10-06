@@ -20,7 +20,7 @@ extension LVM {
         hashtags = []
         lvmCounter.count = 0
         instantFinished = false
-        nrPostLeafs = []
+        posts = [:]
         onScreenSeen = []
         leafIdsOnScreen = []
         leafsAndParentIdsOnScreen = []

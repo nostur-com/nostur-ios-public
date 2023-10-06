@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import CoreData
 import Combine
+import Collections
 
 let LVM_MAX_VISIBLE:Int = 20
 
@@ -20,16 +21,24 @@ let LVM_MAX_VISIBLE:Int = 20
 
 // 
 
+typealias Posts = OrderedDictionary<PostID, NRPost>
+
 class LVM: NSObject, ObservableObject {
         
     var feed:NosturList?
     
     @Published var state:LVM.LIST_STATE = .INIT
-    @Published var nrPostLeafs:[NRPost] = [] {
+    
+    // BG?
+    var nrPostLeafs:[NRPost] = [] {
         didSet {
-            if state != .READY { state = .READY }
-            leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs) // Data race in Nostur.LVM.leafsAndParentIdsOnScreen.setter : Swift.Set<Swift.String> at 0x10e60b600 - THREAD 1
-            leafIdsOnScreen = Set(nrPostLeafs.map { $0.id })
+            var posts:Posts = [:]
+            for nrPost in nrPostLeafs {
+                posts[nrPost.id] = nrPost
+            }
+            
+            leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs)
+            leafIdsOnScreen = posts.keys
             
             // Pre-fetch next page.
             // Don't prefetch again unless the last post on screen has changed (this happens when a page is added during infinite scroll):
@@ -40,11 +49,23 @@ class LVM: NSObject, ObservableObject {
                     self.fetchNextPage()
                 }
             }
+            
+            DispatchQueue.main.async {
+                self.posts = posts
+            }
         }
     }
+    
+    // Ordered Dictionary so SmoothList can work with O(1)
+    @Published var posts:Posts = [:] {
+        didSet {
+            if state != .READY { state = .READY }
+        }
+    }
+    
     var performingLocalOlderFetch = false
     var leafsAndParentIdsOnScreen:Set<String> = [] // Should always be in sync with nrPostLeafs
-    var leafIdsOnScreen:Set<String> = []
+    var leafIdsOnScreen:OrderedSet<String> = []
     var onScreenSeen:Set<NRPostID> = [] // other .id trackers are in sync with nrPostLeafs. This one keeps track even after nrPostLeafs changed
     var alreadySkipped = false
     var danglingIds:Set<NRPostID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
@@ -96,22 +117,27 @@ class LVM: NSObject, ObservableObject {
         loadHashtags()
         lvmCounter.count = 0
         instantFinished = false
-        nrPostLeafs = []
-        onScreenSeen = []
-        leafIdsOnScreen = []
-        leafsAndParentIdsOnScreen = []
+        bg().perform {
+            self.nrPostLeafs = []
+            self.onScreenSeen = []
+            self.leafIdsOnScreen = []
+            self.leafsAndParentIdsOnScreen = []
+        }
+        
         startInstantFeed()
     }
     
     @Published var hideReplies = false {
         didSet {
             guard oldValue != hideReplies else { return }
-            nrPostLeafs = []
-            onScreenSeen = []
-            leafIdsOnScreen = []
-            leafsAndParentIdsOnScreen = []
-            self.performLocalFetch.send(false)
-            self.saveListState()
+            bg().perform {
+                self.nrPostLeafs = []
+                self.onScreenSeen = []
+                self.leafIdsOnScreen = []
+                self.leafsAndParentIdsOnScreen = []
+                self.saveListState()
+                self.performLocalFetch.send(false)
+            }
         }
     }
     
@@ -237,6 +263,11 @@ class LVM: NSObject, ObservableObject {
     }
     
     private func getAllObjectIds(_ nrPosts:[NRPost]) -> Set<NRPostID> { // called from main thread?
+        #if DEBUG
+            if Thread.isMainThread {
+                fatalError("Should be bg")
+            }
+        #endif
         return nrPosts.reduce(Set<NRPostID>()) { partialResult, nrPost in
             if nrPost.isRepost, let firstPost = nrPost.firstQuote {
                 // for repost add post + reposted post
@@ -351,12 +382,12 @@ class LVM: NSObject, ObservableObject {
                     fetchParents(danglers, older:older)
                 }
                                 
-                DispatchQueue.main.async {
+//                DispatchQueue.main.async {
                     self.initialIndex = self.getRestoreScrollIndex(newLeafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
                     L.sl.info("⭐️ LVM.initialIndex: \(self.name) \(self.initialIndex) - \(taskId)")
                     self.nrPostLeafs = newLeafThreads
                     self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
-                }
+//                }
             }
             else {
                 let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs, onScreenSeen: self.onScreenSeen)
@@ -376,8 +407,8 @@ class LVM: NSObject, ObservableObject {
     
     func safeInsert(_ nrPosts:[NRPost], older:Bool = false) -> [NRPost] {
         #if DEBUG
-            if !Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                fatalError("Should be main")
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should be bg")
             }
         #endif
         let leafIdsOnScreen = Set(self.nrPostLeafs.map { $0.id })
@@ -420,7 +451,7 @@ class LVM: NSObject, ObservableObject {
     
     public var isAtTop = true // main thread
     
-    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], leafIdsOnScreen:Set<String>, currentNRPostLeafs:[NRPost], older:Bool = false) {
+    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], leafIdsOnScreen:OrderedSet<String>, currentNRPostLeafs:[NRPost], older:Bool = false) {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -437,10 +468,10 @@ class LVM: NSObject, ObservableObject {
             return partialResult + nrPost.threadPostsCount
         })
         
-        DispatchQueue.main.async {
+//        DispatchQueue.main.async {
             let inserted = self.safeInsert(newLeafThreads, older: older)
             self.fetchAllMissingPs(inserted)
-        }
+//        }
         
         guard !older else { return }
         DispatchQueue.main.async {
@@ -510,9 +541,9 @@ class LVM: NSObject, ObservableObject {
                 }
             })
 
-        DispatchQueue.main.async {
+//        DispatchQueue.main.async {
             self.backlog.add(danglingFetchTask)
-        }
+//        }
         danglingFetchTask.fetch()
     }
     
@@ -942,10 +973,12 @@ extension LVM {
         fetchCountsForVisibleIndexPaths()
         
         performLocalFetch
-            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
+            .throttle(for: .seconds(2.5), scheduler: DispatchQueue.global(), latest: true)
 //            .print("⏱ Delays:: performLocalFetch throttle +2.5 + latest")
             .sink { refreshInBackground in
-                self._performLocalFetch(refreshInBackground: refreshInBackground)
+                bg().perform {
+                    self._performLocalFetch(refreshInBackground: refreshInBackground)
+                }
             }
             .store(in: &subscriptions)
     }
@@ -1300,14 +1333,14 @@ extension LVM {
     }
     
     func saveListState() {
-        let context = DataProvider.shared().bg
-        let lastAppearedId = self.lastAppearedIdSubject.value
-        let lastReadId = self.lastReadId
-        let leafs = self.nrPostLeafs.map { $0.id }.joined(separator: ",")
-        context.perform { [weak self] in
+        let bg = bg()
+        bg.perform { [weak self] in
             guard let self = self else { return }
             guard let listStateObjectId = self.listStateObjectId else { return }
-            guard let listState = context.object(with: listStateObjectId) as? ListState else { return }
+            guard let listState = bg.object(with: listStateObjectId) as? ListState else { return }
+            let lastAppearedId = self.lastAppearedIdSubject.value
+            let lastReadId = self.lastReadId
+            let leafs = self.nrPostLeafs.map { $0.id }.joined(separator: ",")
             listState.lastAppearedId = lastAppearedId
             listState.mostRecentAppearedId = lastReadId
             listState.updatedAt = Date.now
@@ -1315,7 +1348,7 @@ extension LVM {
             listState.hideReplies = hideReplies
             L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
-                try context.save()
+                try bg.save()
             }
             catch {
                 L.lvm.error("🔴🔴 \(self.id) \(self.name)/\(self.pubkey?.short ?? "") Error saving list state \(self.id) \(listState.pubkey ?? "")")
