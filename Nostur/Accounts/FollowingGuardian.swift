@@ -120,8 +120,8 @@ class FollowingGuardian: ObservableObject {
                 account.addToFollows(newContact)
             }
         }
-        NRState.shared.loggedInAccount?.reloadFollows()
         DataProvider.shared().save()
+        NRState.shared.loggedInAccount?.reloadFollows()
     }
     
     func followTags(_ tags:[String], account:Account) {

@@ -40,9 +40,12 @@ class LoggedInAccount: ObservableObject {
             }
             self.followingPublicKeys = self.viewFollowingPublicKeys
             self.followingPFPs = self.account.getFollowingPFPs()
-//            sendNotification(.followersChanged, account.followingPublicKeys) // TODO: REDO
-//            sendNotification(.followingAdded, pubkey)
-//            self.publishNewContactList()
+            
+            account.publishNewContactList()
+            DispatchQueue.main.async {
+                sendNotification(.followersChanged, self.viewFollowingPublicKeys)
+                sendNotification(.followingAdded, pubkey)
+            }
         }
     }
     
@@ -60,9 +63,12 @@ class LoggedInAccount: ObservableObject {
             
             self.followingPublicKeys = self.viewFollowingPublicKeys
             self.followingPFPs = account.getFollowingPFPs()
-//            sendNotification(.followersChanged, account.followingPublicKeys) // TODO: REDO
-//            sendNotification(.followingAdded, contact.pubkey)
-//            self.publishNewContactList()
+
+            account.publishNewContactList()
+            DispatchQueue.main.async {
+                sendNotification(.followersChanged, self.viewFollowingPublicKeys)
+                sendNotification(.followingAdded, pubkey)
+            }
         }
     }
     
@@ -77,8 +83,11 @@ class LoggedInAccount: ObservableObject {
             bgSave()
             self.followingPublicKeys = self.viewFollowingPublicKeys
             self.followingPFPs = account.getFollowingPFPs()
-//            sendNotification(.followersChanged, account.followingPublicKeys) // TODO: REDO
-//            self.publishNewContactList()
+            
+            account.publishNewContactList()
+            DispatchQueue.main.async {
+                sendNotification(.followersChanged, self.viewFollowingPublicKeys)
+            }
         }
     }
     
@@ -90,8 +99,11 @@ class LoggedInAccount: ObservableObject {
             bgSave()
             self.followingPublicKeys = self.viewFollowingPublicKeys
             self.followingPFPs = account.getFollowingPFPs()
-//            sendNotification(.followersChanged, account.followingPublicKeys) // TODO: REDO
-//            self.publishNewContactList()
+            
+            account.publishNewContactList()
+            DispatchQueue.main.async {
+                sendNotification(.followersChanged, self.viewFollowingPublicKeys)
+            }
         }
     }
     
