@@ -185,7 +185,9 @@ struct PostAndParent: View {
                         guard !didFetchParent else { return }
                         didFetchParent = true
                         
-                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
+                        bg().perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
+                        }
                         QueuedFetcher.shared.enqueue(id: replyToId)
                         
                         timerTask = Task {
