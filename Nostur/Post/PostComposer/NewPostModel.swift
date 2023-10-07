@@ -9,28 +9,44 @@ import Foundation
 import SwiftUI
 import Combine
 
-public final class NewPostModel: ObservableObject {
-    
-    @Published var mentioning = false
+public final class TypingTextModel: ObservableObject {
     @Published var text: String = ""
     @Published var pastedImages:[UIImage] = []
-    @Published var debouncedText: String = ""
-    @Published var term: String = ""
-    @Published var nEvent:NEvent?
-    @Published var lastHit:String = "NOHIT"
-    @Published var textView:SystemTextView?
+    @Published var selectedMentions:Set<Contact> = [] // will become p-tags in the final post
+    private var subscriptions = Set<AnyCancellable>()
+}
+
+public final class NewPostModel: ObservableObject {
+    public var typingTextModel = TypingTextModel()
+    private var mentioning = false
+    @Published var showMentioning = false // To reduce rerendering, use this flag instead of (vm.mentioning && !vm.filteredContactSearchResults.isEmpty)
+    private var term: String = ""
+    var nEvent:NEvent?
+    var lastHit:String = "NOHIT"
+    var textView:SystemTextView?
     
     @Published var uploading = false
     @Published var uploadError:String?
-    @Published var requiredP:String? = nil
+    var requiredP:String? = nil
     @Published var availableContacts:Set<Contact> = [] // are available to toggle on/off for notifications
-    @Published var selectedMentions:Set<Contact> = [] // will become p-tags in the final post
+    
     @Published var previewNRPost:NRPost?
-    private var subscriptions = Set<AnyCancellable>()
     @Published var gifSheetShown = false
     
     @Published var contactSearchResults:[Contact] = []
     @Published var activeAccount:Account? = nil
+    
+    private var subscriptions = Set<AnyCancellable>()
+    
+    public init(dueTime: TimeInterval = 0.2) {
+        self.typingTextModel.$text
+            .removeDuplicates()
+            .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] value in
+                self?.textChanged(value)
+            })
+            .store(in: &subscriptions)
+    }
     
     var filteredContactSearchResults:[Contact] {
         let wot = WebOfTrust.shared
@@ -60,23 +76,12 @@ public final class NewPostModel: ObservableObject {
     ]
     static let typingRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|(?<![/\\?])#)", options: [])
     static let mentionRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\w+|(?<![/\\?])#\\S+)", options: [])
-    private var bag = Set<AnyCancellable>()
-    
-    public init(dueTime: TimeInterval = 0.2) {
-        $text
-            .removeDuplicates()
-            .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
-            .sink(receiveValue: { [weak self] value in
-                self?.debouncedText = value
-            })
-            .store(in: &bag)
-    }
     
     public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
-        if (!pastedImages.isEmpty) {
+        if (!typingTextModel.pastedImages.isEmpty) {
             uploading = true
             
-            uploadImages(images: pastedImages)
+            uploadImages(images: typingTextModel.pastedImages)
                 .receive(on: RunLoop.main)
                 .sink(receiveCompletion: { result in
                     switch result {
@@ -88,14 +93,14 @@ public final class NewPostModel: ObservableObject {
                         L.og.debug("All images uploaded successfully")
                     }
                 }, receiveValue: { urls in
-                    if (self.pastedImages.count == urls.count) {
-                        self._sendNow(urls:urls, pastedImages: self.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss:dismiss)
+                    if (self.typingTextModel.pastedImages.count == urls.count) {
+                        self._sendNow(urls:urls, pastedImages: self.typingTextModel.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss: dismiss)
                     }
                 })
                 .store(in: &subscriptions)
         }
         else {
-            self._sendNow(urls:[], pastedImages: pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss:dismiss)
+            self._sendNow(urls:[], pastedImages: typingTextModel.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss: dismiss)
         }
     }
     
@@ -113,7 +118,7 @@ public final class NewPostModel: ObservableObject {
             }
         }
         // @mentions to nostr:npub
-        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
+        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
         
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
@@ -124,7 +129,7 @@ public final class NewPostModel: ObservableObject {
         }
 
         // Include .p tags for @mentions
-        let selectedPtags = selectedMentions
+        let selectedPtags = typingTextModel.selectedMentions
             .filter { $0.pubkey != requiredP } // don't include requiredP twice
             .map { NostrTag(["p", $0.pubkey]) }
         
@@ -142,8 +147,6 @@ public final class NewPostModel: ObservableObject {
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
             }
         }
-        
-        // TODO: We don't use positional index tags anymore, so now we can properly deduplicate .p tags
         
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
@@ -225,13 +228,13 @@ public final class NewPostModel: ObservableObject {
         nEvent.publicKey = account.publicKey
         
         // @mentions to nostr:npub
-        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
+        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
 
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
         
         // Also include .p tags other @mentions
-        let selectedPtags = selectedMentions.map { NostrTag(["p", $0.pubkey]) }
+        let selectedPtags = typingTextModel.selectedMentions.map { NostrTag(["p", $0.pubkey]) }
         nEvent.tags.append(contentsOf: selectedPtags)
         
         // If we are quote reposting, include the quoted post as nostr:note1 at the end
@@ -246,23 +249,20 @@ public final class NewPostModel: ObservableObject {
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
             }
         }
-        
-        // TODO: We don't use positional index tags anymore, so now we can properly deduplicate .p tags
-        
 
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
         }
         
-        for index in pastedImages.indices {
+        for index in typingTextModel.pastedImages.indices {
             nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
         }
     
         
         bg().perform {
             let previewEvent = createPreviewEvent(nEvent)
-            if (!self.pastedImages.isEmpty) {
-                previewEvent.previewImages = self.pastedImages
+            if (!self.typingTextModel.pastedImages.isEmpty) {
+                previewEvent.previewImages = self.typingTextModel.pastedImages
             }
             let nrPost = NRPost(event: previewEvent, isPreview: true)
             DispatchQueue.main.async {
@@ -275,15 +275,15 @@ public final class NewPostModel: ObservableObject {
     public func selectContactSearchResult(_ contact:Contact) {
         guard textView != nil else { return }
         let mentionName = contact.handle
-        text = "\(text.dropLast(term.count))\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063}"
-        selectedMentions.insert(contact)
+        typingTextModel.text = "\(typingTextModel.text.dropLast(term.count))\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} "
+        availableContacts.insert(contact)
+        typingTextModel.selectedMentions.insert(contact)
         mentioning = false
         lastHit = mentionName
         term = ""
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             // after 0.3 sec to get the new .endOfDocument
-//            vm.mentioning = false
             let newPosition = self.textView!.endOfDocument
             self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
         }
@@ -310,6 +310,11 @@ public final class NewPostModel: ObservableObject {
         else {
             mentioning = false
         }
+        
+        let showMentioning = mentioning && !filteredContactSearchResults.isEmpty
+        if showMentioning != self.showMentioning { // check first to reduce rerendering
+            self.showMentioning = showMentioning
+        }
     }
     
     private func searchContacts(_ mentionTerm:String) {
@@ -318,6 +323,68 @@ public final class NewPostModel: ObservableObject {
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)]
         fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)
         
-        contactSearchResults = Array(((try? DataProvider.shared().viewContext.fetch(fr)) ?? []).prefix(60))
+        let contactSearchResults = Array(((try? DataProvider.shared().viewContext.fetch(fr)) ?? []).prefix(60))
+        
+        // check first to reduce rerendering, if both are already empty, don't re-set it.
+        if self.contactSearchResults.isEmpty && contactSearchResults.isEmpty {
+            return
+        }
+        self.contactSearchResults = contactSearchResults
     }
+    
+    public func loadQuotingEvent(_ quotingEvent:Event) {
+        var newQuoteRepost = NEvent(content: "")
+        newQuoteRepost.kind = .textNote
+        nEvent = newQuoteRepost
+    }
+    
+    public func loadReplyTo(_ replyTo:Event) {
+        var newReply = NEvent(content: "")
+        newReply.kind = .textNote
+        guard let replyTo = replyTo.toMain() else {
+            L.og.error("🔴🔴 Problem getting event from viewContext")
+            return
+        }
+        let existingPtags = TagsHelpers(replyTo.tags()).pTags()
+        let availableContacts = Set(Contact.fetchByPubkeys(existingPtags.map { $0.pubkey }, context: DataProvider.shared().viewContext))
+        requiredP = replyTo.contact?.pubkey
+        self.availableContacts = Set([replyTo.contact].compactMap { $0 } + availableContacts)
+        typingTextModel.selectedMentions = Set([replyTo.contact].compactMap { $0 } + availableContacts)
+        
+        let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
+        
+        if (root != nil) { // ADD "ROOT" + "REPLY"
+            let newRootTag = NostrTag(["e", root!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
+            newReply.tags.append(newRootTag)
+            
+            let newReplyTag = NostrTag(["e", replyTo.id, "", "reply"])
+            
+            newReply.tags.append(newReplyTag)
+        }
+        else { // ADD ONLY "ROOT"
+            let newRootTag = NostrTag(["e", replyTo.id, "", "root"])
+            newReply.tags.append(newRootTag)
+        }
+        
+        let rootA = replyTo.toNEvent().replyToRootAtag()
+        
+        if (rootA != nil) { // ADD EXISTING "ROOT" (aTag) FROM REPLYTO
+            let newRootATag = NostrTag(["a", rootA!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
+            newReply.tags.append(newRootATag)
+        }
+        else if replyTo.kind == 30023 { // ADD ONLY "ROOT" (aTag) (DIRECT REPLY TO ARTICLE)
+            let newRootTag = NostrTag(["a", replyTo.aTag, "", "root"]) // TODO RECOMMENDED RELAY HERE
+            newReply.tags.append(newRootTag)
+        }
+
+        nEvent = newReply
+    }
+}
+
+func mentionTerm(_ text:String) -> String? {
+    if let rangeStart = text.lastIndex(of: Character("@")) {
+        let extractedString = String(text[rangeStart..<text.endIndex].dropFirst(1))
+        return extractedString
+    }
+    return nil
 }
