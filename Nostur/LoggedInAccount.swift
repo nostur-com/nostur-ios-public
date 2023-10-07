@@ -193,7 +193,7 @@ class LoggedInAccount: ObservableObject {
     
     // View context
     @Published var account:Account {
-        didSet { // TODO: REMINDER, didSet does not run on init!
+        didSet { // REMINDER, didSet does not run on init!
             Task { @MainActor in
                 self.setupAccount(account)
             }
@@ -254,7 +254,7 @@ class LoggedInAccount: ObservableObject {
     
     public func reloadFollows() {
         self.bg.perform {
-            guard let bgAccount = self.bgAccount else { return } // TODO: TEST follow, and see if this gets trigger proper and gets new keys or if context did not merge automatically
+            guard let bgAccount = self.bgAccount else { return } 
             self.followingPublicKeys = bgAccount.getFollowingPublicKeys()
             self.followingPFPs = bgAccount.getFollowingPFPs()
         

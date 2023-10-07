@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct DetailFooterFragment: View {
-    private var nrPost:NRPost // TODO: Remvoe observable, only use footerAttributes
+    private var nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     
     init(nrPost: NRPost) {

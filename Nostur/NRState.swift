@@ -204,3 +204,21 @@ func isFullAccount(_ account:Account? = nil ) ->Bool {
 func showReadOnlyMessage() {
     NRState.shared.readOnlyAccountSheetShown = true;
 }
+
+final class ExchangeRateModel: ObservableObject {
+    static public var shared = ExchangeRateModel()
+    @Published var bitcoinPrice:Double = 0.0
+}
+
+
+let IS_IPAD = UIDevice.current.userInterfaceIdiom == .pad
+let IS_CATALYST = ProcessInfo.processInfo.isMacCatalystApp
+let IS_APPLE_TYRANNY = ((Bundle.main.infoDictionary?["NOSTUR_IS_DESKTOP"] as? String) ?? "NO") == "NO"
+//let IS_MAC = ProcessInfo.processInfo.isiOSAppOnMac
+
+
+let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
+let EXPLORER_PUBKEY = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320"
+
+
+var timeTrackers: [String: CFAbsoluteTime] = [:]

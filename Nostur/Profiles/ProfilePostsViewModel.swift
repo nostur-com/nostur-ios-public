@@ -42,14 +42,15 @@ class ProfilePostsViewModel: ObservableObject {
         self.state = .initializing
         self.backlog = Backlog(timeout: 8.0, auto: true)
         
-        receiveNotification(.newPostSaved).sink { notification in
-            bg().perform {
-                let event = notification.object as! Event
-                guard event.pubkey == pubkey else { return }
-                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "ProfilePostsViewModel.newPostSaved")
-                let nrPost = NRPost(event: event, cancellationId: event.cancellationId) // TODO: TEST UNDO SEND
-                DispatchQueue.main.async {
-                    self.posts.insert(nrPost, at: 0)
+        receiveNotification(.newPostSaved)
+            .sink { notification in
+                bg().perform {
+                    let event = notification.object as! Event
+                    guard event.pubkey == pubkey else { return }
+                    EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "ProfilePostsViewModel.newPostSaved")
+                    let nrPost = NRPost(event: event, cancellationId: event.cancellationId) // TODO: TEST UNDO SEND
+                    DispatchQueue.main.async {
+                        self.posts.insert(nrPost, at: 0)
                 }
             }
         }
