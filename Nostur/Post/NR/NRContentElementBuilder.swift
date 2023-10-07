@@ -262,8 +262,9 @@ import MarkdownUI
 
 // For text notes
 struct MediaContent: Hashable {
+    let id = UUID()
     func hash(into hasher: inout Hasher) {
-        return hasher.combine(url)
+        return hasher.combine(id)
     }
     var url:URL
     var dimensions:CGSize?
