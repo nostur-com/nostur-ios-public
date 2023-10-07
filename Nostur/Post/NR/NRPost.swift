@@ -613,7 +613,22 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func unpublishListener() {
-        guard let account = account(), account.publicKey == pubkey else { return }
+
+        // the undo can be in the replies, so don't check for own account keys yet
+        receiveNotification(.unpublishedNRPost)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                guard self.withGroupedReplies else { return }
+                let nrPost = notification.object as! NRPost
+                guard replies.contains(where: { $0.id == nrPost.id }) || repliesToRoot.contains(where: { $0.id == nrPost.id })
+                else { return }
+                self.loadGroupedReplies()
+            }
+            .store(in: &subscriptions)
+        
+        
+        // Only for our accounts, handle undo of this post.
+        guard NRState.shared.fullAccountPubkeys.contains(self.pubkey) else { return }
         
         receiveNotification(.publishingEvent)
             .sink { [weak self] notification in
@@ -625,16 +640,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     self.ownPostAttributes.objectWillChange.send()
                     self.ownPostAttributes.cancellationId = nil
                 }
-            }
-            .store(in: &subscriptions)
-
-        receiveNotification(.unpublishedNRPost)
-            .sink { [weak self] notification in
-                guard let self = self else { return }
-                guard self.withGroupedReplies else { return }
-                let nrPost = notification.object as! NRPost
-                guard replies.contains(where: { $0.id == nrPost.id }) || repliesToRoot.contains(where: { $0.id == nrPost.id })else { return }
-                self.loadGroupedReplies()
             }
             .store(in: &subscriptions)
     }
@@ -958,7 +963,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         _ = Unpublisher.shared.cancel(cancellationId)
         self.ownPostAttributes.objectWillChange.send()
         self.ownPostAttributes.cancellationId = nil
-        sendNotification(.unpublishedNRPost, self)
+        bg().perform {
+            bg().delete(self.event)
+            bgSave()
+            DispatchQueue.main.async {
+                sendNotification(.unpublishedNRPost, self)
+            }
+        }
     }
     
     @MainActor public func sendNow() {
