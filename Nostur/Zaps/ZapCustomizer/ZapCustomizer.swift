@@ -92,15 +92,18 @@ struct ZapCustomizerSheet: View {
                 }
                 .padding(.bottom, 10)
                 
-                if supportsZap {
+                if supportsZap, let account = account() {
                     HStack(alignment: .center) {
+                        PFP(pubkey: account.publicKey, account: account)
                         TextField("Add public note (optional)", text: $zapMessage)
                             .multilineTextAlignment(.leading)
                             .lineLimit(5, reservesSpace: true)
                             .textFieldStyle(.roundedBorder)
-                            .padding(20)
+                            .border(theme.lineColor.opacity(0.5))
                             .frame(height: 100)
                     }
+                    .padding(.vertical, 20)
+                    .padding(.horizontal, 10)
                 }
                 
                 Button {
@@ -125,7 +128,7 @@ struct ZapCustomizerSheet: View {
                     dismiss()
                 } label: {
                     Text("Send \(selectedAmount.clean) sats to \(name)")
-                        .lineLimit(1)
+                        .lineLimit(2)
                         .foregroundColor(Color.white)
                         .fontWeight(.bold)
                         .padding(10)
