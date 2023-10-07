@@ -61,12 +61,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         public let scrollView: SystemScrollView?
     }
     
-    @Binding var text: String {
-        didSet {
-            onTextChange?(text)
-        }
-    }
-    
+    @Binding var text: String
     @Binding var pastedImages:[UIImage]
     
     var shouldBecomeFirstResponder: Bool
@@ -78,7 +73,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
     private(set) var onCommit: OnCommitCallback?
-    private(set) var onTextChange: OnTextChangeCallback?
     private(set) var onSelectionChange: OnSelectionChangeCallback?
     private(set) var introspect: IntrospectCallback?
     
@@ -235,8 +229,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         }
         
         public func textViewDidChangeSelection(_ textView: UITextView) {
-            guard let onSelectionChange = parent.onSelectionChange,
-                  !updatingUIView
+            guard let onSelectionChange = parent.onSelectionChange, !updatingUIView
             else { return }
             selectedTextRange = textView.selectedTextRange
             onSelectionChange([textView.selectedRange])
@@ -277,12 +270,6 @@ public extension HighlightedTextEditor {
     func onEditingChanged(_ callback: @escaping OnEditingChangedCallback) -> Self {
         var new = self
         new.onEditingChanged = callback
-        return new
-    }
-    
-    func onTextChange(_ callback: @escaping OnTextChangeCallback) -> Self {
-        var new = self
-        new.onTextChange = callback
         return new
     }
 }
