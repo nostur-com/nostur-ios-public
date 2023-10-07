@@ -232,7 +232,7 @@ class LVM: NSObject, ObservableObject {
     var lastAppearedIdSubject = CurrentValueSubject<String?, Never>(nil) // Need it for debounce etc
     var lastAppearedIndex:Int? {
         lastAppearedIdSubject.value != nil
-        ? nrPostLeafs.firstIndex(where: { $0.id == self.lastAppearedIdSubject.value! })
+        ? posts.index(forKey: self.lastAppearedIdSubject.value!)
         : nil
     }
     var lastReadId:String? // so we dont have to fetch from different context by objectId if we want to save ListState in background
@@ -993,19 +993,19 @@ extension LVM {
                 guard let self = self else { return }
                 guard SettingsStore.shared.fetchCounts else { return }
                 guard !SettingsStore.shared.lowDataMode else { return } // Also don't fetch if low data mode
-                
-                let events = self.nrPostLeafs
-                    .filter { nrPostIds.contains($0.id) }
-                    .compactMap {
-                        if $0.isRepost {
-                            return $0.firstQuote?.event
-                        }
-                        return $0.event
-                    }
-                
-                guard !events.isEmpty else { return }
-                
+
                 bg().perform {
+                    let events = self.nrPostLeafs
+                        .filter { nrPostIds.contains($0.id) }
+                        .compactMap {
+                            if $0.isRepost {
+                                return $0.firstQuote?.event
+                            }
+                            return $0.event
+                        }
+                    
+                    guard !events.isEmpty else { return }
+                    
                     for event in events {
                         EventRelationsQueue.shared.addAwaitingEvent(event)
                     }
@@ -1064,9 +1064,11 @@ extension LVM {
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 guard self.viewIsVisible else { return }
-                guard self.nrPostLeafs.isEmpty else { return }
-                L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") renderFromLocalIfWeHaveNothingNew")
-                self.performLocalFetch.send(false)
+                bg().perform {
+                    guard self.nrPostLeafs.isEmpty else { return }
+                    L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") renderFromLocalIfWeHaveNothingNew")
+                    self.performLocalFetch.send(false)
+                }
             }
             .store(in: &subscriptions)
     }
@@ -1103,11 +1105,13 @@ extension LVM {
                 
                 lvmCounter.count = 0
                 instantFinished = false
-                nrPostLeafs = []
-                onScreenSeen = []
-                leafIdsOnScreen = []
-                leafsAndParentIdsOnScreen = []
-                startInstantFeed()
+                bg().perform {
+                    self.nrPostLeafs = []
+                    self.onScreenSeen = []
+                    self.leafIdsOnScreen = []
+                    self.leafsAndParentIdsOnScreen = []
+                    self.startInstantFeed()
+                }
             }
             .store(in: &subscriptions)
         
@@ -1123,9 +1127,8 @@ extension LVM {
                 
                 SocketPool.shared.closeSubscription(self.id)
                 SocketPool.shared.connectFeedRelays(relays: relays)
-                let bg = DataProvider.shared().bg
-                bg.performAndWait {
-                    let relays = newRelaysInfo.relays.map { bg.object(with: $0.objectID) as! Relay }
+                bg().performAndWait {
+                    let relays = newRelaysInfo.relays.map { bg().object(with: $0.objectID) as! Relay }
                     self.bgRelays = Set(relays) // bgContext relays
                 }
                 
@@ -1133,11 +1136,13 @@ extension LVM {
                     // if WoT did not change, manual clear:
                     lvmCounter.count = 0
                     instantFinished = false
-                    nrPostLeafs = []
-                    onScreenSeen = []
-                    leafIdsOnScreen = []
-                    leafsAndParentIdsOnScreen = []
-                    startInstantFeed()
+                    bg().perform {
+                        self.nrPostLeafs = []
+                        self.onScreenSeen = []
+                        self.leafIdsOnScreen = []
+                        self.leafsAndParentIdsOnScreen = []
+                        self.startInstantFeed()
+                    }
                 }
                 else { // else LVM will clear from didSet on .wotEnabled
                     self.wotEnabled = newRelaysInfo.wotEnabled
@@ -1153,8 +1158,7 @@ extension LVM {
                 guard let self = self else { return }
                 guard self.id == "Following" else { return }
                 let event = notification.object as! Event
-                let context = DataProvider.shared().bg
-                context.perform { [weak self] in
+                bg().perform { [weak self] in
                     guard let self = self else { return }
                     guard let pubkey = self.pubkey, event.pubkey == pubkey else { return }
                     guard !self.leafIdsOnScreen.contains(event.id) else { return }
@@ -1163,8 +1167,8 @@ extension LVM {
                     //     and we don't load replies (withReplies) because any reply we follow should already be its own leaf (PostOrThread)
                     // If we are hiding replies (view), we show mini pfp replies instead, for that we need reply info: withReplies: true
                     let newNRPostLeaf = NRPost(event: event, withParents: !hideReplies, withReplies: hideReplies, withRepliesCount: true, cancellationId: event.cancellationId)
+                    self.nrPostLeafs.insert(newNRPostLeaf, at: 0)
                     DispatchQueue.main.async {
-                        self.nrPostLeafs.insert(newNRPostLeaf, at: 0)
                         self.lvmCounter.count = self.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
                     }
                 }
@@ -1177,19 +1181,10 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let nrPost = notification.object as! NRPost
-                let context = DataProvider.shared().bg
-                
-                // Remove from view
-                DispatchQueue.main.async {
+                bg().perform {
                     self.nrPostLeafs.removeAll(where: { $0.id == nrPost.id })
-                    self.lvmCounter.count = max(0, self.lvmCounter.count - 1)
                 }
-                
-                // Remove from database
-                context.perform {
-                    context.delete(nrPost.event)
-                    DataProvider.shared().bgSave()
-                }
+                self.lvmCounter.count = max(0, self.lvmCounter.count - 1)
             }
             .store(in: &subscriptions)
     }
@@ -1198,8 +1193,10 @@ extension LVM {
         receiveNotification(.muteListUpdated)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                self.nrPostLeafs = self.nrPostLeafs.filter(notMuted)
-                self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
+                bg().perform {
+                    self.nrPostLeafs = self.nrPostLeafs.filter(notMuted)
+                    self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
+                }
             }
             .store(in: &subscriptions)
         
@@ -1207,8 +1204,10 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let blockedPubkeys = notification.object as! [String]
-                self.nrPostLeafs = self.nrPostLeafs.filter({ !blockedPubkeys.contains($0.pubkey) })
-                self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
+                bg().perform {
+                    self.nrPostLeafs = self.nrPostLeafs.filter({ !blockedPubkeys.contains($0.pubkey) })
+                    self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
+                }
             }
             .store(in: &subscriptions)
         
@@ -1216,8 +1215,10 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let words = notification.object as! [String]
-                self.nrPostLeafs = self.nrPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
-                self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
+                bg().perform {
+                    self.nrPostLeafs = self.nrPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
+                    self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
+                }
             }
             .store(in: &subscriptions)
     }
@@ -1246,7 +1247,7 @@ extension LVM {
             .sink { [weak self] eventId in
                 guard let self = self else { return }
                 guard self.lastAppearedIndex != nil else { return }
-                guard !self.nrPostLeafs.isEmpty else { return }
+                guard !self.posts.isEmpty else { return }
                 
 //                print("COUNTER . new lastAppearedId. Index is: \(self.lastAppearedIndex) ")
 
@@ -1280,9 +1281,9 @@ extension LVM {
             .sink { [weak self] eventId in
                 guard let self = self else { return }
                 guard let lastAppeareadIndex = self.lastAppearedIndex else { return }
-                guard !self.nrPostLeafs.isEmpty else { return }
+                guard !self.posts.isEmpty else { return }
                 
-                if lastAppeareadIndex > (self.nrPostLeafs.count-15) {
+                if lastAppeareadIndex > (self.posts.count-15) {
                     L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
                     self.performLocalOlderFetch()
                 }
@@ -1303,7 +1304,7 @@ extension LVM {
         guard let lastAppearedIndex = self.lastAppearedIndex else {
             return 0
         }
-        let postsAfterLastAppeared = self.nrPostLeafs.prefix(lastAppearedIndex)
+        let postsAfterLastAppeared = self.posts.elements.prefix(lastAppearedIndex).values
         let count = threadCount(Array(postsAfterLastAppeared))
         return max(0,count) // cant go negative
     }
@@ -1312,7 +1313,7 @@ extension LVM {
         guard let lastReadIndex = self.lastReadIdIndex else {
             return 0
         }
-        let postsAfterLastRead = self.nrPostLeafs.prefix(lastReadIndex)
+        let postsAfterLastRead = self.posts.elements.prefix(lastReadIndex).values
         let count = threadCount(Array(postsAfterLastRead))
         return max(0,count) // cant go negative
     }
