@@ -81,7 +81,9 @@ struct Repost: View {
             if let firstQuoteId = nrPost.firstQuoteId, noteRowAttributes.firstQuote == nil {
                 CenteredProgressView()
                     .onAppear {
-                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
+                        bg().perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
+                        }
                         QueuedFetcher.shared.enqueue(id: firstQuoteId)
                     }
                     .onDisappear {

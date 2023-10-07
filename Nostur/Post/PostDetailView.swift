@@ -38,8 +38,8 @@ struct NoteById: View {
             else if (events.first != nil) {
                 ProgressView()
                     .task {
-                        if let event = events.first, let bgEvent = event.toBG() {
-                            bg().perform {
+                        bg().perform {
+                            if let event = events.first, let bgEvent = event.toBG() {
                                 let nrPost = NRPost(event: bgEvent, withReplies: true)
                                 
                                 DispatchQueue.main.async {

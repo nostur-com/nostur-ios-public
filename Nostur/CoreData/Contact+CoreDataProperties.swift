@@ -364,9 +364,9 @@ extension Contact : Identifiable {
     
     static func updateRelatedAccounts(_ contact:Contact) {
         #if DEBUG
-        if Thread.isMainThread {
-            fatalError("Should be bg")
-        }
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
         #endif
 
         guard NRState.shared.accountPubkeys.contains(contact.pubkey) else { return }
