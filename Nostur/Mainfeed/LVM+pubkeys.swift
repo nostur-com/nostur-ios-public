@@ -11,7 +11,9 @@ import NostrEssentials
 
 typealias CM = NostrEssentials.ClientMessage
 
-let FOLLOWING_EVENT_KINDS:Set<Int> = [1,5,6,9802,30023]
+let FETCH_FOLLOWING_KINDS:Set<Int> = [1,5,6,9802,30023]
+let QUERY_FOLLOWING_KINDS:Set<Int> = [1,6,9802,30023]
+let QUERY_FETCH_LIMIT = 50 // Was 25 before, but seems we are missing posts, maybe too much non WoT-hashtag coming back. Increase limit or split query? or could be the time cutoff is too short/strict
 
 // LVM things related to feeds of pubkeys
 extension LVM {
@@ -23,17 +25,17 @@ extension LVM {
         var filters:[Filters] = []
         
         let followingContactsFilter = Filters(
-            authors: Set(self.pubkeys.map { String($0.prefix(10)) }),
-            kinds: FOLLOWING_EVENT_KINDS,
+            authors: Set(self.pubkeys), // seems prefixes are no longer in NIP-01
+            kinds: FETCH_FOLLOWING_KINDS,
             since: now.timestamp, limit: 5000)
         
         filters.append(followingContactsFilter)
         
         if !hashtags.isEmpty {
             let followingHashtagsFilter = Filters(
-                kinds: FOLLOWING_EVENT_KINDS,
+                kinds: FETCH_FOLLOWING_KINDS,
                 tagFilter: TagFilter(tag:"t", values: Array(hashtags).map { $0.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }),
-                since: now.timestamp, limit: 5000)
+                since: now.timestamp)
             filters.append(followingHashtagsFilter)
         }
         
@@ -55,15 +57,15 @@ extension LVM {
         var filters:[Filters] = []
         
         let followingContactsFilter = Filters(
-            authors: Set(self.pubkeys.map { String($0.prefix(10)) }),
-            kinds: FOLLOWING_EVENT_KINDS,
+            authors: Set(self.pubkeys), // seems prefixes are no longer in NIP-01
+            kinds: FETCH_FOLLOWING_KINDS,
             until: now.timestamp, limit: 5000)
         
         filters.append(followingContactsFilter)
         
         if !hashtags.isEmpty {
             let followingHashtagsFilter = Filters(
-                kinds: FOLLOWING_EVENT_KINDS,
+                kinds: FETCH_FOLLOWING_KINDS,
                 tagFilter: TagFilter(tag:"t", values: Array(hashtags)),
                 until: now.timestamp, limit: 5000)
             filters.append(followingHashtagsFilter)
@@ -84,15 +86,15 @@ extension LVM {
         var filters:[Filters] = []
         
         let followingContactsFilter = Filters(
-            authors: Set(self.pubkeys.map { String($0.prefix(10)) }),
-            kinds: FOLLOWING_EVENT_KINDS,
+            authors: Set(self.pubkeys), // seems prefixes are no longer in NIP-01
+            kinds: FETCH_FOLLOWING_KINDS,
             since: since.timestamp, limit: 5000)
         
         filters.append(followingContactsFilter)        
         
         if !hashtags.isEmpty {
             let followingHashtagsFilter = Filters(
-                kinds: FOLLOWING_EVENT_KINDS,
+                kinds: FETCH_FOLLOWING_KINDS,
                 tagFilter: TagFilter(tag:"t", values: Array(hashtags)),
                 since: since.timestamp, limit: 5000)
             filters.append(followingHashtagsFilter)
@@ -115,15 +117,15 @@ extension LVM {
         var filters:[Filters] = []
         
         let followingContactsFilter = Filters(
-            authors: Set(self.pubkeys.map { String($0.prefix(10)) }),
-            kinds: FOLLOWING_EVENT_KINDS,
+            authors: Set(self.pubkeys), // seems prefixes are no longer in NIP-01
+            kinds: FETCH_FOLLOWING_KINDS,
             until: until.timestamp, limit: 100)
         
         filters.append(followingContactsFilter)
         
         if !hashtags.isEmpty {
             let followingHashtagsFilter = Filters(
-                kinds: FOLLOWING_EVENT_KINDS,
+                kinds: FETCH_FOLLOWING_KINDS,
                 tagFilter: TagFilter(tag:"t", values: Array(hashtags)),
                 until: until.timestamp, limit: 100)
             filters.append(followingHashtagsFilter)
@@ -160,13 +162,13 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 25
+        fr.fetchLimit = QUERY_FETCH_LIMIT
         if let hashtagRegex = hashtagRegex {
             if hideReplies {
                 fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, pubkeys, hashtagRegex)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
             }
         }
         else {
@@ -187,7 +189,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 25
+        fr.fetchLimit = QUERY_FETCH_LIMIT
         if let hashtagRegex = hashtagRegex {
             
             let after = until.created_at - (8 * 3600) // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
@@ -221,21 +223,21 @@ extension Event {
         // get 15 events before lastAppearedCreatedAt (or 8 hours ago, if we dont have it)
         let frBefore = Event.fetchRequest()
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        frBefore.fetchLimit = 25
+        frBefore.fetchLimit = QUERY_FETCH_LIMIT
         if let hashtagRegex = hashtagRegex {
             if hideReplies {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, pubkeys, hashtagRegex)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
             }
             else {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, pubkeys, hashtagRegex)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
             }
         }
         else {
             if hideReplies {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, blockedPubkeys)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
             }
             else {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, blockedPubkeys)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
             }
         }
         
@@ -248,12 +250,12 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 25
+        fr.fetchLimit = QUERY_FETCH_LIMIT
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, pubkeys, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint,  pubkeys, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint,  pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
         }
         return fr
     }

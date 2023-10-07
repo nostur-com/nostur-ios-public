@@ -30,14 +30,14 @@ extension LVM {
         req(RM.getGlobalFeedEvents(subscriptionId: "G-RESUME-" + subscriptionId, since: since), relays: relays)
     }
     
-    func fetchRelaysNextPage() {
-        guard !relays.isEmpty else { return }
-        guard let last = self.nrPostLeafs.last else { return }
-        let until = NTimestamp(date: last.createdAt)
-        req(RM.getGlobalFeedEvents(limit: 100,
-                                  subscriptionId: "G-PAGE-" + UUID().uuidString,
-                                  until: until), relays: relays)
-    }
+//    func fetchRelaysNextPage() {
+//        guard !relays.isEmpty else { return }
+//        guard let last = self.nrPostLeafs.last else { return }
+//        let until = NTimestamp(date: last.createdAt)
+//        req(RM.getGlobalFeedEvents(limit: 100,
+//                                  subscriptionId: "G-PAGE-" + UUID().uuidString,
+//                                  until: until), relays: relays)
+//    }
 }
 
 
