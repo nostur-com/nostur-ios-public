@@ -63,11 +63,11 @@ class ProfilePostsViewModel: ObservableObject {
                 self.posts.removeAll(where: { $0.id == nrPost.id })
             }
             
-            // Remove from database
-            bg().perform {
-                bg().delete(nrPost.event)
-                DataProvider.shared().bgSave()
-            }
+//            // Remove from database
+//            bg().perform {
+//                bg().delete(nrPost.event)
+//                DataProvider.shared().bgSave()
+//            }
         }
         .store(in: &subscriptions)
         
