@@ -79,6 +79,10 @@ class TabModel: ObservableObject, Identifiable, Equatable {
             navigationTitle = contact.anyName
             return
         }
+        if let nrContact = self.nrContactPath?.nrContact {
+            navigationTitle = nrContact.anyName
+            return
+        }
         navigationTitle = "＿"
     }
     

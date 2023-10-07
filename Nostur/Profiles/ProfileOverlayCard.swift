@@ -208,7 +208,7 @@ struct ProfileOverlayCard: View {
                 HStack(spacing:0) {
                     Button(String(localized:"Posts", comment:"Tab title")) {
                         dismiss()
-                        navigateTo(NRContactPath(nrContact: contact, tab:"Posts"))
+                        navigateTo(contact)
                         sendNotification(.dismissMiniProfile)
                     }
                     Spacer()
