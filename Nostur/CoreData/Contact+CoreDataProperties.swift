@@ -279,6 +279,7 @@ extension Contact : Identifiable {
                     
                     
                     updateRelatedEvents(contact)
+                    updateRelatedAccounts(contact)
                 }
                 else {
                     // Received metadata is older than stored Contact
@@ -307,6 +308,7 @@ extension Contact : Identifiable {
                 Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
                 EventRelationsQueue.shared.addAwaitingContact(contact)
                 updateRelatedEvents(contact)
+                updateRelatedAccounts(contact)
             }
         }
     }
@@ -358,6 +360,28 @@ extension Contact : Identifiable {
         
         let pubkey = contact.pubkey
         Importer.shared.contactSaved.send(pubkey)
+    }
+    
+    static func updateRelatedAccounts(_ contact:Contact) {
+        #if DEBUG
+        if Thread.isMainThread {
+            fatalError("Should be bg")
+        }
+        #endif
+
+        guard NRState.shared.accountPubkeys.contains(contact.pubkey) else { return }
+        guard let account = try? Account.fetchAccount(publicKey: contact.pubkey, context: bg()) else { return }
+        
+        account.name = contact.name ?? ""
+        account.about = contact.about ?? ""
+        account.picture = contact.picture ?? ""
+        account.banner = contact.banner ?? ""
+        account.nip05 = contact.nip05 ?? ""
+        account.lud16 = contact.lud16 ?? ""
+        account.lud06 = contact.lud06 ?? ""
+        
+        bgSave()
+        L.og.info("Updated account from new kind 0 from relay. pubkey: \(contact.pubkey)")
     }
 
     // Create dummy Contact if not already exists.
