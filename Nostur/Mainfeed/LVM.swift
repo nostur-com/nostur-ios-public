@@ -236,7 +236,7 @@ class LVM: NSObject, ObservableObject {
         : nil
     }
     var lastReadId:String? // so we dont have to fetch from different context by objectId if we want to save ListState in background
-    var lastReadIdIndex:Int? { lastReadId != nil ? nrPostLeafs.firstIndex(where: { $0.id == self.lastReadId! }) : nil }
+    var lastReadIdIndex:Int? { lastReadId != nil ? posts.index(forKey: self.lastReadId!) : nil }
     
     private var subscriptions = Set<AnyCancellable>()
     public func cleanUp() {
