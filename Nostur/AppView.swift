@@ -26,6 +26,7 @@ struct AppView: View {
     @State private var importer:Importer = .shared
     @State private var queuedFetcher:QueuedFetcher = .shared
     @State private var sp:SocketPool = .shared
+    @State private var esp:EphemeralSocketPool = .shared
     @State private var mp:MessageParser = .shared
     @State private var zpvq:ZapperPubkeyVerificationQueue = .shared
     @State private var nip05verifier:NIP05Verifier = .shared
