@@ -12,7 +12,7 @@ class Kind0Processor {
     
     static let shared = Kind0Processor()
 
-    public var queue = DispatchQueue(label: "kind0processor", qos: .utility, attributes: .concurrent)
+    public var queue = DispatchQueue(label: "kind0-processor", qos: .utility, attributes: .concurrent)
     public var request = PassthroughSubject<Pubkey, Never>()
     public var receive = PassthroughSubject<Profile, Never>()
     
