@@ -13,6 +13,7 @@ import SwiftUI
 struct ComposePost: View {
     public var replyTo:Event? = nil
     public var quotingEvent:Event? = nil
+    public var directMention:Contact? = nil // For initiating a post from profile view
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var theme:Theme
@@ -60,7 +61,7 @@ struct ComposePost: View {
                                         vm.activeAccount = account
                                     }).equatable()
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, replyTo: replyTo, quotingEvent: quotingEvent)
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
                                         .frame(height: replyTo == nil && quotingEvent == nil ? (geo.size.height - 20) : ((geo.size.height - 20) * 0.5 ) )
                                         .id(textfield)
                                 }

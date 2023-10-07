@@ -24,7 +24,9 @@ struct ProfileView: View {
     @State private var lastSeen:String? = nil
     @State private var isFollowingYou = false
     @State private var editingAccount:Account?
-    @State var similarPFP = false
+    @State private var similarPFP = false
+    @State private var showingNewNote = false
+    
     
     init(nrContact:NRContact, tab:String? = nil) {
         self.nrContact = nrContact
@@ -41,7 +43,9 @@ struct ProfileView: View {
     }
     
     var body: some View {
+        #if DEBUG
         let _ = Self._printChanges()
+        #endif
         ScrollView {
             Color.clear.background( // GeometryReader in .background so it does not mess up layout
                 GeometryReader { toolbarGEO in
@@ -299,6 +303,26 @@ struct ProfileView: View {
 //                contact.objectWillChange.send()
 //            }
 //        }
+        .overlay(alignment: .bottomTrailing) {
+            NewNoteButton(showingNewNote: $showingNewNote)
+                .padding([.top, .leading, .bottom], 10)
+                .padding([.trailing], 25)
+        }
+        .sheet(isPresented: $showingNewNote) {
+            NavigationStack {
+                if let account = Nostur.account() {
+                    if account.isNC {
+                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                            ComposePost(directMention: nrContact.mainContact)
+                        }
+                    }
+                    else {
+                        ComposePost(directMention: nrContact.mainContact)
+                    }
+                }
+            }
+            .presentationBackground(theme.background)
+        }
         .onAppear {
             if let tab = tab {
                 selectedSubTab = tab
