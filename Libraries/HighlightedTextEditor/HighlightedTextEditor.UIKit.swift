@@ -146,6 +146,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
 
         textView.inputAccessoryView = doneToolbar
         textView.keyboardType = .twitter
+        textView.font = UIFont.systemFont(ofSize: UIFont.systemFontSize + 4.0)
         
         updateTextViewModifiers(textView)
         if (shouldBecomeFirstResponder) {
