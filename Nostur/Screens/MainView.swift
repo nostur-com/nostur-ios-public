@@ -53,11 +53,11 @@ struct MainView: View {
                         NavigationStack {
                             if account.isNC {
                                 WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                                    NewPost()
+                                    ComposePost()
                                 }
-                            }
+                            }   
                             else {
-                                NewPost()
+                                ComposePost()
                             }
                         }
                         .presentationBackground(theme.background)
