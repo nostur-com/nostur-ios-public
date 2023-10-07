@@ -245,7 +245,7 @@ public final class NewPostModel: ObservableObject {
             }
             nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
             
-            if !nEvent.pTags().contains(quotingEvent.pubkey) { // TODO: Add notification toggles to turn off
+            if !nEvent.pTags().contains(quotingEvent.pubkey) { 
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
             }
         }
@@ -378,6 +378,20 @@ public final class NewPostModel: ObservableObject {
         }
 
         nEvent = newReply
+    }
+    
+    public func directMention(_ contact:Contact) {
+        guard textView != nil else { return }
+        let mentionName = contact.handle
+        typingTextModel.text = "@\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} "
+        availableContacts.insert(contact)
+        typingTextModel.selectedMentions.insert(contact)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            // after 0.3 sec to get the new .endOfDocument
+            let newPosition = self.textView!.endOfDocument
+            self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
+        }
     }
 }
 

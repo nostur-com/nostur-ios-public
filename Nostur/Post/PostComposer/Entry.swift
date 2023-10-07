@@ -16,12 +16,14 @@ struct Entry: View {
     @Binding var gifSheetShown:Bool
     private var replyTo:Event?
     private var quotingEvent:Event?
+    private var directMention:Contact?
     static let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
 //    @Namespace private var images
     
-    init(vm:NewPostModel, photoPickerShown:Binding<Bool>, gifSheetShown:Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil) {
+    init(vm:NewPostModel, photoPickerShown:Binding<Bool>, gifSheetShown:Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention:Contact? = nil) {
         self.replyTo = replyTo
         self.quotingEvent = quotingEvent
+        self.directMention = directMention
         self.vm = vm
         self.typingTextModel = vm.typingTextModel
         _photoPickerShown = photoPickerShown
@@ -58,6 +60,9 @@ struct Entry: View {
                 if (vm.textView == nil) {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                         vm.textView = editor.textView
+                        if let directMention = directMention {
+                            vm.directMention(directMention)
+                        }
                     }
                 }
             }
@@ -77,7 +82,6 @@ struct Entry: View {
             if !typingTextModel.pastedImages.isEmpty {
                 HStack(spacing: 5) {
                     ImagePreviews(pastedImages: $typingTextModel.pastedImages)
-//                        .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
                 }
 //                .id(images)
             }
