@@ -37,6 +37,7 @@ struct OwnPostFooter: View {
     @EnvironmentObject var theme:Theme
     let nrPost:NRPost
     @ObservedObject var own:OwnPostAttributes
+    @State private var unpublishing = false
     
     init(nrPost: NRPost) {
         self.nrPost = nrPost
@@ -63,12 +64,18 @@ struct OwnPostFooter: View {
                         .opacity(own.flags == "nsecbunker_unsigned" ? 0 : 1.0)
                         .padding(.trailing, 5)
                     }
-                    Button("Undo") {
-                        nrPost.unpublish()
+                    if unpublishing {
+                        Image(systemName:"hourglass.tophalf.filled")
                     }
-                    .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
-                    .foregroundColor(Color.white)
-                    .opacity(own.flags == "nsecbunker_unsigned" ? 0 : 1.0)
+                    else {
+                        Button("Undo") {
+                            unpublishing = true
+                            nrPost.unpublish()
+                        }
+                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                        .foregroundColor(Color.white)
+                        .opacity(own.flags == "nsecbunker_unsigned" ? 0 : 1.0)
+                    }
                 }
                 .padding(.bottom, 5)
                 .foregroundColor(Color.primary)
