@@ -40,7 +40,7 @@ struct SideBar: View {
                             if IS_IPAD {
                                 sm.showSidebar = false
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                    navigateTo(ContactPath(key: account.publicKey))
+                                    navigateTo(ContactPath(key: account.publicKey, navigationTitle: account.anyName))
                                 }
                             }
                             else {
