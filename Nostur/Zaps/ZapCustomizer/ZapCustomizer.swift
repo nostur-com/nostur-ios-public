@@ -24,8 +24,7 @@ struct ZapCustomizerSheet: View {
     
     var body: some View {
         NavigationStack {
-            VStack {
-                
+            VStack(spacing: 10) {
                 Grid {
                     GridRow {
                         ZapAmountButton(3, isSelected: selectedAmount == 3).onTapGesture {
@@ -90,7 +89,6 @@ struct ZapCustomizerSheet: View {
                         }
                     }
                 }
-                .padding(.bottom, 10)
                 
                 if supportsZap, let account = account() {
                     HStack(alignment: .center) {
@@ -100,10 +98,8 @@ struct ZapCustomizerSheet: View {
                             .lineLimit(5, reservesSpace: true)
                             .textFieldStyle(.roundedBorder)
                             .border(theme.lineColor.opacity(0.5))
-                            .frame(height: 100)
                     }
-                    .padding(.vertical, 20)
-                    .padding(.horizontal, 10)
+                    .padding(10)
                 }
                 
                 Button {
@@ -141,8 +137,8 @@ struct ZapCustomizerSheet: View {
                 Toggle(isOn: $setAmountAsDefault) {
                     Text("Remember this amount for all zaps", comment:"Toggle on zap screen to set selected amount as default for all zaps")
                 }
-                .padding(10)
                 .padding(.horizontal, 20)
+                Spacer()
             }
             .navigationTitle(String(localized:"Send sats", comment:"Title of sheet showing zap options when sending sats (satoshis)"))
             .navigationBarTitleDisplayMode(.inline)
