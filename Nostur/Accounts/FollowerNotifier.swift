@@ -137,11 +137,12 @@ class FollowerNotifier {
             // Don't continue if newFollowerPubkeys is empty after WoT check
             guard !self.newFollowerPubkeys.isEmpty else { return }
             
-            _ = PersistentNotification.create(
+            let notification = PersistentNotification.create(
                 pubkey: pubkey,
                 followers: Array(self.newFollowerPubkeys),
                 context: self.ctx
             )
+            NotificationsViewModel.shared.checkNeedsUpdate(notification)
             
             if let account = account() {
                 account.lastFollowerCreatedAt = Int64(Date.now.timeIntervalSince1970) // HM not needed since we use mostRecent (PNotification)
