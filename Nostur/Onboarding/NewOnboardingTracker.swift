@@ -103,7 +103,7 @@ class NewOnboardingTracker {
     
     private func cancel() {
         guard self.account != nil else { return }
-        L.onboarding.info("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.getFollowingPublicKeys().count) ) followers for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
+        L.onboarding.info("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.getFollowingPublicKeys(includeBlocked: true).count) ) followers for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
         self.account = nil
     }
     
@@ -169,7 +169,7 @@ class NewOnboardingTracker {
             let pTags = kind3.fastPs.map { $0.1 }
             let existingAndCreatedContacts = self.createContactsFromPs(pTags, isOwnAccount: account.privateKey != nil)
             account.addToFollows(NSSet(array: existingAndCreatedContacts))
-            let followingPublicKeys = account.getFollowingPublicKeys()
+            let followingPublicKeys = account.getFollowingPublicKeys(includeBlocked: true)
             
             let tTags = kind3.fastTs.map { $0.1 }
             for tag in tTags {

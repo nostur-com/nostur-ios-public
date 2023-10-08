@@ -208,24 +208,22 @@ struct LazyNoteMenuSheet: View {
                             bg().perform {
                                 _ = DataProvider.shared().newContact(pubkey: nrPost.event.pubkey, context: bg())
                                 guard let account = account() else { return }
-                                let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
-                                account.blockedPubkeys_ = newBlockedKeys
+                                account.blockedPubkeys_.insert(nrPost.pubkey)
                                 
                                 DataProvider.shared().bgSave()
                                 DispatchQueue.main.async {
-                                    sendNotification(.blockListUpdated, newBlockedKeys)
+                                    sendNotification(.blockListUpdated, account.blockedPubkeys_)
                                 }
                             }
                         }
                         else {
                             bg().perform {
                                 guard let account = account() else { return }
-                                let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
-                                account.blockedPubkeys_ = newBlockedKeys
+                                account.blockedPubkeys_.insert(nrPost.pubkey)
                                 
                                 bgSave()
                                 DispatchQueue.main.async {
-                                    sendNotification(.blockListUpdated, newBlockedKeys)
+                                    sendNotification(.blockListUpdated, account.blockedPubkeys_)
                                 }
                             }
                         }

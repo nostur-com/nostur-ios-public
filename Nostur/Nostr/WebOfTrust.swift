@@ -83,8 +83,8 @@ class WebOfTrust: ObservableObject {
     public func loadWoT(_ account:Account, force:Bool = false) {
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
         
-        let wotFollowingPubkeys = account.getFollowingPublicKeys().subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
-        self.followingPubkeys = account.getFollowingPublicKeys()
+        let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
+        self.followingPubkeys = account.getFollowingPublicKeys(includeBlocked: true)
         
         let publicKey = account.publicKey
         self.pubkey = publicKey

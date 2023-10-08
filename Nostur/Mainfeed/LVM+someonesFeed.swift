@@ -143,7 +143,7 @@ extension LVM {
         backlog.clear()
         
         self.pubkey = account.publicKey
-        self.pubkeys = account.getFollowingPublicKeys()
+        self.pubkeys = account.getFollowingPublicKeys(includeBlocked: false)
         self.loadHashtags()
         lvmCounter.count = 0
         instantFinished = false

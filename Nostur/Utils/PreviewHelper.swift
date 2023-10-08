@@ -366,8 +366,7 @@ extension PreviewEnvironment {
             randomContactsR.fetchOffset = Int.random(in: 0..<100)
             let randomContacts = try? context.fetch(randomContactsR)
             if let randomContacts {
-                account.blockedPubkeys_.append(contentsOf:randomContacts.randomSample(count: 3).map { $0.pubkey })
-                
+                account.blockedPubkeys_ = account.blockedPubkeys_.union(Set(randomContacts.randomSample(count: 3).map { $0.pubkey }))
             }
             
             let randomTextEventsR = Event.fetchRequest()

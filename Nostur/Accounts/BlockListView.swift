@@ -59,7 +59,7 @@ struct BlockedAccounts:View {
                     ProfileRow(withoutFollowButton: true, contact: contact)
                         .background(theme.background)
                         .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
-                            la.account.blockedPubkeys_.removeAll(where: { $0 == contact.pubkey })
+                            la.account.blockedPubkeys_.remove(contact.pubkey)
                             sendNotification(.blockListUpdated, la.account.blockedPubkeys_)
                         }
                 }
