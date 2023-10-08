@@ -118,7 +118,8 @@ class MessageParser {
                                     L.og.info("⚡️ NWC response with error: \(error.code) - \(error.message)")
                                     if let eventId = awaitingZap.eventId {
                                         let message = "[Zap](nostur:e:\(eventId)) may have failed.\n\(error.message)"
-                                        _ = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
+                                        let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
+                                        NotificationsViewModel.shared.checkNeedsUpdate(notification)
                                         L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
                                         if (SettingsStore.shared.nwcShowBalance) {
                                             nwcSendBalanceRequest()
@@ -130,7 +131,8 @@ class MessageParser {
                                     }
                                     else {
                                         let message = "Zap may have failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)).\n\(error.message)"
-                                        _ = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
+                                        let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
+                                        NotificationsViewModel.shared.checkNeedsUpdate(notification)
                                         L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)). \(error.message)")
                                     }
                                     NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
@@ -155,7 +157,8 @@ class MessageParser {
                                 // HANDLE OLD BOLT11 INVOICE PAYMENT
                                 if let error = nwcResponse.error {
                                     let message = "Failed to pay lightning invoice.\n\(error.message)"
-                                    _ = PersistentNotification.createFailedLightningInvoice(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
+                                    let notification = PersistentNotification.createFailedLightningInvoice(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
+                                    NotificationsViewModel.shared.checkNeedsUpdate(notification)
                                     L.og.error("⚡️ Failed to pay lightning invoice. \(error.message)")
                                     NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
                                     return

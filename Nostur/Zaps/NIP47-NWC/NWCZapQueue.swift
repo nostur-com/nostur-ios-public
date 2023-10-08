@@ -45,7 +45,8 @@ class NWCZapQueue {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
-                        _ = PersistentNotification.createFailedNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        let notification = PersistentNotification.createFailedNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     }
                 }
             }
@@ -157,7 +158,8 @@ class Zap {
                 guard let self = self else { return }
                 if let eventId = self.eventId {
                     let message = String(localized: "[Zap](nostur:e:\(eventId)) failed.\n\(self.error ?? "")", comment: "Error message. don't translate the (nostur:e:...) part")
-                    _ = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
+                    let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
+                    NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
                     
                     // Revert zap state
@@ -172,7 +174,8 @@ class Zap {
                 }
                 else {
                     let message = String(localized:"Zap failed for [contact](nostur:p:\(self.contactPubkey)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
-                    _ = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
+                    let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
+                    NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(self.contactPubkey)). \(self.error ?? "")")
                 }
                 DataProvider.shared().bgSave()

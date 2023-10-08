@@ -109,7 +109,8 @@ class NWCRequestQueue: ObservableObject {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
-                        _ = PersistentNotification.createFailedNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        let notification = PersistentNotification.createFailedNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        NotificationsViewModel.shared.checkNeedsUpdate(notification)
                         if (SettingsStore.shared.nwcShowBalance) {
                             nwcSendBalanceRequest()
                         }
@@ -126,7 +127,8 @@ class NWCRequestQueue: ObservableObject {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(timeoutZaps.count) failed zaps by timeout")
-                        _ = PersistentNotification.createTimeoutNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        let notification = PersistentNotification.createTimeoutNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        NotificationsViewModel.shared.checkNeedsUpdate(notification)
                         if (SettingsStore.shared.nwcShowBalance) {
                             nwcSendBalanceRequest()
                         }
