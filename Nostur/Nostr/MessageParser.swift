@@ -228,7 +228,7 @@ class MessageParser {
                 L.sockets.notice("🟠 \(relayUrl) Could not parse EVENT: \(text)")
             }
             catch RelayMessage.error.DUPLICATE_ALREADY_SAVED, RelayMessage.error.DUPLICATE_ALREADY_PARSED {
-                L.sockets.debug("🟡🟡 \(relayUrl) already SAVED/PARSED ")
+//                L.sockets.debug("🟡🟡 \(relayUrl) already SAVED/PARSED ")
             }
             catch RelayMessage.error.INVALID_SIGNATURE {
                 L.sockets.notice("🔴🔴 \(relayUrl) invalid signature \(text)")
