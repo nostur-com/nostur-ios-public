@@ -1080,7 +1080,7 @@ extension LVM {
                 guard self.id == "Following" else { return }
                 SocketPool.shared.allowNewFollowingSubscriptions()
                 let pubkeys = notification.object as! Set<String>
-                self.pubkeys = pubkeys
+                self.pubkeys = pubkeys.subtracting(blocks())
                 self.performLocalFetch.send(true)
             }
             .store(in: &subscriptions)

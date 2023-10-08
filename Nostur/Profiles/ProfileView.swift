@@ -244,9 +244,8 @@ struct ProfileView: View {
                                     
                                     Button {
                                         guard let account = account() else { return }
-                                        let newBlockedKeys = (account.blockedPubkeys_ + [nrContact.pubkey])
-                                        account.blockedPubkeys_ = newBlockedKeys
-                                        sendNotification(.blockListUpdated, newBlockedKeys)
+                                        account.blockedPubkeys_.insert(nrContact.pubkey)
+                                        sendNotification(.blockListUpdated, account.blockedPubkeys_)
                                     } label: {
                                         Label(
                                             String(localized:"Block \(nrContact.anyName)", comment:"Menu action"), systemImage: "slash.circle")

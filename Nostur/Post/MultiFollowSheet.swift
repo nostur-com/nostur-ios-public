@@ -70,7 +70,7 @@ struct MultiFollowSheet: View {
         .onAppear {
             followingOn = Set(
                 accounts
-                    .filter({ $0.getFollowingPublicKeys().contains(pubkey) })
+                    .filter({ $0.getFollowingPublicKeys(includeBlocked: true).contains(pubkey) })
                     .map({ $0.publicKey })
             )
         }

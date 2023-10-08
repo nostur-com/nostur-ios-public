@@ -40,8 +40,8 @@ class LVMManager {
         if let lvm = listVMs.first(where: { $0.pubkey == account.publicKey && $0.id == "Following" }) {
             return lvm
         }
-        L.lvm.info("⭐️ New LVM for: \(account.publicKey) - \(account.name) - following: \(account.getFollowingPublicKeys().count)")
-        let lvm = LVM(type: .pubkeys, pubkey: account.publicKey, pubkeys: account.getFollowingPublicKeys(), listId: "Following", name: account.name, isDeck: isDeck)
+        L.lvm.info("⭐️ New LVM for: \(account.publicKey) - \(account.name) - following: \(account.getFollowingPublicKeys(includeBlocked: false).count)")
+        let lvm = LVM(type: .pubkeys, pubkey: account.publicKey, pubkeys: account.getFollowingPublicKeys(includeBlocked: false), listId: "Following", name: account.name, isDeck: isDeck)
         listVMs.append(lvm)
         return lvm
     }

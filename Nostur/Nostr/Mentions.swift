@@ -8,7 +8,7 @@
 import Foundation
 
 func replaceMentionsWithNpubs(_ text:String, selected:Set<Contact> = []) -> String {
-    let blocked:[String] = blocks()
+    let blocked:Set<String> = blocks()
     let mentions = text.matches(of: /(?:^|\s)((@(\x{2063}\x{2064}[^\x{2063}\x{2064}]+\x{2064}\x{2063}|\w+)))/)
     var newText = text
     let mentionsByLongest = mentions.sorted(by: { $0.output.3.count > $1.output.3.count })

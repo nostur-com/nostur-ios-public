@@ -182,7 +182,7 @@ func follows() -> Set<String> {
     }
 }
 
-func blocks() -> [String] {
+func blocks() -> Set<String> {
     if Thread.isMainThread {
         NRState.shared.loggedInAccount?.account.blockedPubkeys_ ?? []
     }

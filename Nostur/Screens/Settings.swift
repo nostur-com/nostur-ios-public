@@ -120,7 +120,7 @@ struct Settings: View {
                             if newValue == SettingsStore.WebOfTrustLevel.normal.rawValue {
                                 bg().perform {
                                     guard let account = account() else { return }
-                                    let wotFollowingPubkeys = account.getFollowingPublicKeys().subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
+                                    let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
                                     wot.loadNormal(wotFollowingPubkeys: wotFollowingPubkeys, force: false)
                                 }
                             }

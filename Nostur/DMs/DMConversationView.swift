@@ -234,7 +234,7 @@ struct DMConversationView: View {
                                                         Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
                                                     }
                                                     Button {
-                                                        la.account.blockedPubkeys_ = la.account.blockedPubkeys_ + [contactPubkey]
+                                                        la.account.blockedPubkeys_.insert(contactPubkey)
                                                         sendNotification(.blockListUpdated, la.account.blockedPubkeys_)
                                                         dismiss()
                                                     } label: {
@@ -266,7 +266,7 @@ struct DMConversationView: View {
                                                         Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
                                                     }
                                                     Button {
-                                                        la.account.blockedPubkeys_ = la.account.blockedPubkeys_ + [contactPubkey]
+                                                        la.account.blockedPubkeys_.insert(contactPubkey)
                                                         sendNotification(.blockListUpdated, la.account.blockedPubkeys_)
                                                         dismiss()
                                                     } label: {

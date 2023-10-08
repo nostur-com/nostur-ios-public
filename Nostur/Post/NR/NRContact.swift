@@ -121,7 +121,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     }
     
     private func isFollowingListener() {
-        receiveNotification(.followersChanged)
+        receiveNotification(.followersChanged) // includes followed but blocked keys
             .subscribe(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }

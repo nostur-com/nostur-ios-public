@@ -261,17 +261,17 @@ extension Account : Identifiable {
         }
     }
     
-    var blockedPubkeys_:[String] {
+    var blockedPubkeys_:Set<String> {
         get {
             guard blockedPubkeys != nil else { return [] }
             let decoder = JSONDecoder()
             guard let ids = try? decoder.decode([String].self, from: Data(blockedPubkeys!.utf8)) else { return [] }
-            return ids
+            return Set(ids)
         }
         set {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .withoutEscapingSlashes
-            if let idsSerialized = try? encoder.encode(newValue) {
+            if let idsSerialized = try? encoder.encode(Array(newValue)) {
                 objectWillChange.send()
                 blockedPubkeys = String(data: idsSerialized, encoding: .utf8)
             }

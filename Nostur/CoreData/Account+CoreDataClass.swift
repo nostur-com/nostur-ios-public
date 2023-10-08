@@ -24,10 +24,13 @@ public class Account: NSManagedObject {
         })
     }
     
-    public func getFollowingPublicKeys() -> Set<String> {
+    public func getFollowingPublicKeys(includeBlocked:Bool = false) -> Set<String> {
         let withSelfIncluded = Set([publicKey] + (follows ?? Set<Contact>()).map { $0.pubkey })
+        if includeBlocked {
+            return withSelfIncluded
+        }
         let withoutBlocked = withSelfIncluded.subtracting(Set(blockedPubkeys_))
-        return withoutBlocked
+        return withSelfIncluded
     }
     
     public func getSilentFollows() -> Set<String> {
