@@ -22,6 +22,32 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
+    public var needsUpdate:Bool = true // Importer or other parts will set this flag to true if anything incoming is part of a notification. Only then the notification querys will run. (instead of before, every 15 sec, even for no reason)
+    // is true at start, then false after each notification check
+    
+    public func checkNeedsUpdate(_ failedZapNotification:PersistentNotification) {
+        guard let account = account() else { return }
+        if failedZapNotification.pubkey == account.publicKey {
+            needsUpdate = true
+        }
+    }
+    
+    public func checkNeedsUpdate(_ event:Event) {
+        guard let account = account() else { return }
+        switch event.kind {
+        case 1,9802,30023: // TODO: Should check if not muted or blocked
+            needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == account.publicKey })
+        case 6:
+            needsUpdate = (event.otherPubkey == account.publicKey) // TODO: Should ignore blocked or muted
+        case 7:
+            needsUpdate = (event.otherPubkey == account.publicKey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+        case 9735:
+            needsUpdate = (event.otherPubkey == account.publicKey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+        default:
+            return
+        }
+    }
+    
     // Total for the notifications tab on the main tab bar
     public var unread: Int {
         unreadMentions + (muteReactions ? 0 : unreadReactions) + (muteZaps ? 0 : (unreadZaps + unreadFailedZaps)) + (muteFollows ? 0 : unreadNewFollowers) + (muteReposts ? 0 : unreadReposts)
@@ -198,9 +224,11 @@ class NotificationsViewModel: ObservableObject {
     
     
     private func checkForEverything() {
+        guard needsUpdate else { L.og.debug("Notification check skipped, needsUpdate: false"); return }
         guard account() != nil else { return }
         guard NRState.shared.activeAccountPublicKey != "" else { return }
         
+        needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
         bg().perform {
             guard !Importer.shared.isImporting else {
                 L.og.info("⏳ Still importing, new notifications check skipped.");
