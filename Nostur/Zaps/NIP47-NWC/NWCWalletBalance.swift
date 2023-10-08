@@ -108,7 +108,6 @@ func nwcSendBalanceRequest() {
                 }
             }
         }
-        L.og.error("⚡️ Problem with NWC private key")
     }
 }
 

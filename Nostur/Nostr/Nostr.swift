@@ -298,7 +298,7 @@ struct NEvent: Codable {
     }
 
     func verified() throws -> Bool {
-        L.og.debug("✍️ VERIFYING SIG ✍️")
+//        L.og.debug("✍️ VERIFYING SIG ✍️")
         let serializableEvent = NSerializableEvent(publicKey: self.publicKey, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
 
         let encoder = JSONEncoder()
