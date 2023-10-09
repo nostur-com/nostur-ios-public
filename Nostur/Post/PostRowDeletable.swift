@@ -17,8 +17,9 @@ struct PostRowDeletable: View {
     private var isReply:Bool = false // is reply on PostDetail (needs 2*10 less box width)
     private var isDetail:Bool = false
     private var grouped:Bool = false
+    private var ignoreBlock:Bool = false // Force show, when we open profile of blocked account
     
-    init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
+    init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, ignoreBlock:Bool = false) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.hideFooter = hideFooter
@@ -28,13 +29,14 @@ struct PostRowDeletable: View {
         self.isReply = isReply
         self.isDetail = isDetail
         self.grouped = grouped
+        self.ignoreBlock = ignoreBlock
     }
     
     var body: some View {
 //        #if DEBUG
 //        let _ = Self._printChanges()
 //        #endif
-        if postRowDeletableAttributes.blocked {
+        if !ignoreBlock && postRowDeletableAttributes.blocked {
             HStack {
                 Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
                 Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }

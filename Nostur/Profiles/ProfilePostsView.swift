@@ -45,7 +45,7 @@ struct ProfilePostsView: View {
                 LazyVStack(spacing: 10) {
                     ForEach(vm.posts) { nrPost in
                         Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true)
                         }
                         .id(nrPost.id)
                         .onBecomingVisible {
