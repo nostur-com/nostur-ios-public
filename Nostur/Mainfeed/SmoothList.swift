@@ -183,11 +183,9 @@ struct SmoothList: UIViewControllerRepresentable {
                     else {
                         // KEEP POSITION AFTER INSERT, IF AUTOSCROLL IS DISABLED
                         if !SettingsStore.shared.autoScroll {
-                            if let restoreToId {
-                                if let restoreIndex = data.index(forKey: restoreToId) {
-                                    L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(data.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
-                                    collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
-                                }
+                            if let restoreToId, let restoreIndex = snapshot.itemIdentifiers(inSection: .main).firstIndex(of: restoreToId) { // data.index(forKey: restoreToId) is wrong?
+                                L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(data.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
+                                collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
                             }
                         }
                         if !SettingsStore.shared.autoScroll && restoreToId != nil {
