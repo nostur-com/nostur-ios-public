@@ -17,8 +17,7 @@ struct Gallery: View {
     
     @Namespace var top
     
-    private static let initialColumns = 3
-    @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: initialColumns)
+    static let gridColumns = Array(repeating: GridItem(.flexible()), count: 3)
     
     
     var body: some View {
@@ -45,7 +44,7 @@ struct Gallery: View {
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     if !vm.items.isEmpty {
-                        LazyVGrid(columns: gridColumns) {
+                        LazyVGrid(columns: Self.gridColumns) {
                             ForEach(vm.items) { item in
                                 GeometryReader { geo in
                                     GridItemView(size: geo.size.width, item: item, withPFP: true)
