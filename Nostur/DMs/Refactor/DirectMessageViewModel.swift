@@ -94,13 +94,13 @@ class DirectMessageViewModel: ObservableObject {
                     .sink { _ in
                         Task {
                             let notificationsCount = NotificationsViewModel.shared.unread
-                            try? await center.setBadgeCount(self.unread + self.newRequests)
+                            try? await center.setBadgeCount((self.unread + self.newRequests) + notificationsCount)
                         }
                     }
                     .store(in: &self.subscriptions)
                 Task {
                     let notificationsCount = NotificationsViewModel.shared.unread
-                    try? await center.setBadgeCount(self.unread + self.newRequests)
+                    try? await center.setBadgeCount((self.unread + self.newRequests) + notificationsCount)
                 }
             }
         }
