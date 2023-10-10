@@ -213,7 +213,10 @@ class NotificationsViewModel: ObservableObject {
     
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
-            self?.checkForEverything()
+            guard NRState.shared.activeAccountPublicKey != "" else { return }
+            bg().perform {
+                self?.checkForEverything()
+            }
         }
         timer?.tolerance = 5.0
     }
@@ -222,42 +225,40 @@ class NotificationsViewModel: ObservableObject {
         timer?.invalidate()
     }
     
-    
     private func checkForEverything() {
+        shouldBeBg()
         guard needsUpdate else { L.og.debug("Notification check skipped, needsUpdate: false"); return }
         guard account() != nil else { return }
-        guard NRState.shared.activeAccountPublicKey != "" else { return }
         
         needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
-        bg().perform {
-            guard !Importer.shared.isImporting else {
-                L.og.info("⏳ Still importing, new notifications check skipped.");
-                return
-            }
-
-            self.relayCheckNewestNotifications() // or wait 3 seconds?
-            
-            bg().perform { self.checkForUnreadMentions() }
-            bg().perform {
-                guard !self.muteReposts else { return }
-                self.checkForUnreadReposts()
-            }
-            bg().perform {
-                guard !self.muteFollows else { return }
-                self.checkForUnreadNewFollowers()
-            }
-            bg().perform {
-                guard !self.muteReactions else { return }
-                self.checkForUnreadReactions()
-            }
-            bg().perform {
-                guard !self.muteZaps else { return }
-                self.checkForUnreadZaps()
-            }
-            bg().perform { self.checkForUnreadFailedZaps() }
-            
-            OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
+        
+        guard !Importer.shared.isImporting else {
+            L.og.info("⏳ Still importing, new notifications check skipped.");
+            return
         }
+
+        self.relayCheckNewestNotifications() // or wait 3 seconds?
+        
+        bg().perform { self.checkForUnreadMentions() }
+        bg().perform {
+            guard !self.muteReposts else { return }
+            self.checkForUnreadReposts()
+        }
+        bg().perform {
+            guard !self.muteFollows else { return }
+            self.checkForUnreadNewFollowers()
+        }
+        bg().perform {
+            guard !self.muteReactions else { return }
+            self.checkForUnreadReactions()
+        }
+        bg().perform {
+            guard !self.muteZaps else { return }
+            self.checkForUnreadZaps()
+        }
+        bg().perform { self.checkForUnreadFailedZaps() }
+        
+        OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
     }
     
     
