@@ -40,11 +40,11 @@ struct ThreadWarning {
 
 
 func shouldBeBg() {
-    #if DEBUG
-    if Thread.isMainThread {
-        fatalError("Should be bg")
+#if DEBUG
+    if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+        fatalError("Should only be called from bg()")
     }
-    #endif
+#endif
 }
 
 func shouldBeMain() {
