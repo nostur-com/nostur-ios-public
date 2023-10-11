@@ -29,7 +29,7 @@ struct KindResolver: View {
             ArticleView(nrPost, isDetail: isDetail, fullWidth: fullWidth)
         default:
             if fullWidth {
-                Kind1(nrPost: nrPost, hideFooter:false, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped)
+                Kind1(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped)
             }
             else {
                 Kind1Default(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped)

@@ -48,6 +48,9 @@ struct NoteZaps: View {
                     Text("Unverified zaps", comment: "List of unverified zaps")
                         .fontWeight(.bold)
                         .padding(10)
+                    Text("This can be caused by the receiver switching to a different lightning address")
+                        .font(.caption)
+                        .italic()
                     
                     ForEach(unverifiedZaps) { both in
                         Box {
