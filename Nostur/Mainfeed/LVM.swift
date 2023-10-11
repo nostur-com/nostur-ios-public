@@ -12,6 +12,11 @@ import Combine
 import Collections
 
 let LVM_MAX_VISIBLE:Int = 20
+class Deduplicator {
+    public var onScreenSeen:Set<String> = []
+    static let shared = Deduplicator()
+    private init() { }
+}
 
 // LVM handles the main feed and other lists
 // Posts are loaded from local database andprocessed in background,
@@ -66,7 +71,18 @@ class LVM: NSObject, ObservableObject {
     var performingLocalOlderFetch = false
     var leafsAndParentIdsOnScreen:Set<String> = [] // Should always be in sync with nrPostLeafs
     var leafIdsOnScreen:OrderedSet<String> = []
-    var onScreenSeen:Set<NRPostID> = [] // other .id trackers are in sync with nrPostLeafs. This one keeps track even after nrPostLeafs changed
+    var onScreenSeen:Set<NRPostID> {
+        get { SettingsStore.shared.appWideSeenTracker ? Deduplicator.shared.onScreenSeen : _onScreenSeen }
+        set {
+            if SettingsStore.shared.appWideSeenTracker {
+                Deduplicator.shared.onScreenSeen = newValue
+            }
+            else {
+                _onScreenSeen = newValue
+            }
+        }
+    }
+    var _onScreenSeen:Set<NRPostID> = [] // other .id trackers are in sync with nrPostLeafs. This one keeps track even after nrPostLeafs changed
     var alreadySkipped = false
     var danglingIds:Set<NRPostID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
     
@@ -103,10 +119,13 @@ class LVM: NSObject, ObservableObject {
     @Published var wotEnabled = true {
         didSet {
             guard oldValue != wotEnabled else { return }
+            lastAppearedIdSubject.send(nil)
             lvmCounter.count = 0
             instantFinished = false
             nrPostLeafs = []
-            onScreenSeen = []
+            if !SettingsStore.shared.appWideSeenTracker {
+                onScreenSeen = []
+            }
             leafIdsOnScreen = []
             leafsAndParentIdsOnScreen = []
             startInstantFeed()
@@ -115,11 +134,14 @@ class LVM: NSObject, ObservableObject {
     
     @MainActor func reload() {
         loadHashtags()
+        lastAppearedIdSubject.send(nil)
         lvmCounter.count = 0
         instantFinished = false
         bg().perform {
             self.nrPostLeafs = []
-            self.onScreenSeen = []
+            if !SettingsStore.shared.appWideSeenTracker {
+                self.onScreenSeen = []
+            }
             self.leafIdsOnScreen = []
             self.leafsAndParentIdsOnScreen = []
         }
@@ -132,7 +154,9 @@ class LVM: NSObject, ObservableObject {
             guard oldValue != hideReplies else { return }
             bg().perform {
                 self.nrPostLeafs = []
-                self.onScreenSeen = []
+                if !SettingsStore.shared.appWideSeenTracker {
+                    self.onScreenSeen = []
+                }
                 self.leafIdsOnScreen = []
                 self.leafsAndParentIdsOnScreen = []
                 self.saveListState()
@@ -1102,12 +1126,14 @@ extension LVM {
                 guard newPubkeyInfo.subscriptionId == self.id else { return }
                 L.lvm.info("LVM .listPubkeysChanged \(self.pubkeys.count) -> \(newPubkeyInfo.pubkeys.count)")
                 self.pubkeys = newPubkeyInfo.pubkeys
-                
+                lastAppearedIdSubject.send(nil)
                 lvmCounter.count = 0
                 instantFinished = false
                 bg().perform {
                     self.nrPostLeafs = []
-                    self.onScreenSeen = []
+                    if !SettingsStore.shared.appWideSeenTracker {
+                        self.onScreenSeen = []
+                    }
                     self.leafIdsOnScreen = []
                     self.leafsAndParentIdsOnScreen = []
                     self.startInstantFeed()
@@ -1138,7 +1164,9 @@ extension LVM {
                     instantFinished = false
                     bg().perform {
                         self.nrPostLeafs = []
-                        self.onScreenSeen = []
+                        if !SettingsStore.shared.appWideSeenTracker {
+                            self.onScreenSeen = []
+                        }
                         self.leafIdsOnScreen = []
                         self.leafsAndParentIdsOnScreen = []
                         self.startInstantFeed()
@@ -1266,10 +1294,10 @@ extension LVM {
                 }
                 
 //                // Put onScreenSeen, so when when a new leaf for a long thread is inserted at top, it won't show all the parents you already seen again
-//                bg().perform { [weak self] in
-//                    guard let self = self else { return }
-//                    self.onScreenSeen.insert(eventId)
-//                }
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
+                    self.onScreenSeen.insert(eventId)
+                }
             }
             .store(in: &subscriptions)
     }
@@ -1507,6 +1535,12 @@ extension LVM {
         var newUnrenderedEvents:[Event]
         
         let filteredEvents = applyWoTifNeeded(events)
+            .filter {
+                if $0.isRepost, let firstQuoteId = $0.firstQuoteId {
+                    return !onScreenSeen.contains(firstQuoteId)
+                }
+                return !onScreenSeen.contains($0.id)
+            }
         
         switch (self.state) {
             case .INIT: // Show last X (FORCED CUTOFF)
