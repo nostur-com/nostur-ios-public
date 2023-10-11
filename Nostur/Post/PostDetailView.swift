@@ -9,53 +9,60 @@ import SwiftUI
 import CoreData
 
 struct NoteById: View {
-    
-    private let sp:SocketPool = .shared
-    
-    private var id:String
-    private var navTitleHidden:Bool = false
-    
-    @FetchRequest
-    private var events:FetchedResults<Event>
-    
-    @State private var nrPost:NRPost? = nil
-    
-    init(id:String, navTitleHidden: Bool = false) {
-        self.id = id
-        self.navTitleHidden = navTitleHidden
-        
-        _events = FetchRequest(
-            sortDescriptors: [],
-            predicate: NSPredicate(format: "id == %@", id)
-        )
-    }
+    @EnvironmentObject var theme:Theme
+    public let id:String
+    public var navTitleHidden:Bool = false
+    @StateObject private var vm = FetchVM<NRPost>(timeout: 2.5, debounceTime: 0.05)
     
     var body: some View {
-        VStack(spacing: 0) {
-            if let nrPost {
-                PostDetailView(nrPost: nrPost, navTitleHidden:navTitleHidden)
-            }
-            else if (events.first != nil) {
-                ProgressView()
-                    .task {
-                        bg().perform {
-                            if let event = events.first, let bgEvent = event.toBG() {
-                                let nrPost = NRPost(event: bgEvent, withReplies: true)
-                                
-                                DispatchQueue.main.async {
-                                    self.nrPost = nrPost
+        switch vm.state {
+        case .initializing, .loading, .altLoading:
+            ProgressView()
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .task {
+                    vm.setFetchParams((
+                        prio: true,
+                        req: { taskId in
+                            bg().perform {
+                                if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
+                                    vm.ready(NRPost(event: event, withFooter: false))
+                                }
+                                else {
+                                    req(RM.getEvent(id: self.id, subscriptionId: taskId))
                                 }
                             }
-                        }
-                    }
+                        },
+                        onComplete: { relayMessage, event in
+                            if let event = event {
+                                vm.ready(NRPost(event: event, withFooter: false))
+                            }
+                            else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
+                                vm.ready(NRPost(event: event, withFooter: false))
+                            }
+                            else {
+                                vm.timeout()
+                            }
+                        },
+                        altReq: nil
+                    ))
+                    vm.fetch()
+                }
+        case .ready(let nrPost):
+            if nrPost.kind == 30023 {
+                ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
             }
             else {
-                Text("Trying to fetch...", comment: "Message shown when trying to fetch a post")
-                    .onAppear {
-                        L.og.info("🟢 NoteById.onAppear no event so REQ.1: \(id)")
-                        req(RM.getEventAndReferences(id: id))
-                    }
+                PostDetailView(nrPost: nrPost, navTitleHidden: navTitleHidden)
             }
+        case .timeout:
+            Text("Unable to fetch")
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
+        case .error(let error):
+            Text(error)
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 }
