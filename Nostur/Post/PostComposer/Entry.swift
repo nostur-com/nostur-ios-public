@@ -98,8 +98,11 @@ struct Entry: View {
 //        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button { vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss) } label: {
-                    if (vm.uploading) {
+                Button {
+                    vm.sending = true
+                    vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+                } label: {
+                    if (vm.uploading || vm.sending) {
                         ProgressView()
                     }
                     else {
@@ -108,7 +111,7 @@ struct Entry: View {
                 }
                 .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
                 .cornerRadius(20)
-                .disabled(vm.uploading || typingTextModel.text.isEmpty)
+                .disabled(vm.sending || vm.uploading || typingTextModel.text.isEmpty)
                 
             }
         }
