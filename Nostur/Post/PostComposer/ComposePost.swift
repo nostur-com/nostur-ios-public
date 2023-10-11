@@ -53,7 +53,6 @@ struct ComposePost: View {
                                     PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom)
                                         .onTapGesture { }
                                         .disabled(true)
-                                        .padding(.bottom, 20)
                                 }
                                 
                                 HStack(alignment: .top) {
