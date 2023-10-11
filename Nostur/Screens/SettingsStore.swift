@@ -116,7 +116,7 @@ final class SettingsStore: ObservableObject {
             Keys.isSignatureVerificationEnabled: true,
             Keys.lowDataMode: false,
             Keys.nwcShowBalance: false,
-            Keys.footerButtons: IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
+            Keys.footerButtons: IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖",
             Keys.appWideSeenTracker: true
         ])
 
@@ -136,6 +136,9 @@ final class SettingsStore: ObservableObject {
         _restrictAutoDownload = defaults.bool(forKey: Keys.restrictAutoDownload)
         _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
         _footerButtons = defaults.string(forKey: Keys.footerButtons) ?? "💬🔄+🔖"
+        DispatchQueue.main.async {
+            ViewModelCache.shared.footerButtons = self._footerButtons
+        }
         _fetchCounts = defaults.bool(forKey: Keys.fetchCounts)
         _appWideSeenTracker = defaults.bool(forKey: Keys.appWideSeenTracker)
         
@@ -321,6 +324,7 @@ final class SettingsStore: ObservableObject {
             objectWillChange.send()
             _footerButtons = newValue
             defaults.set(newValue, forKey: Keys.footerButtons);
+            ViewModelCache.shared.footerButtons = newValue
         }
         get { _footerButtons }
     }

@@ -41,6 +41,7 @@ struct AppView: View {
     @State private var nvm:NotificationsViewModel = .shared
     @State private var ot:NewOnboardingTracker = .shared
     @State private var dd:Deduplicator = .shared
+    @State private var vmc:ViewModelCache = .shared
     
 //    @EnvironmentObject private var theme:Theme
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false

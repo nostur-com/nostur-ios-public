@@ -18,7 +18,6 @@ public class PreviewEnvironment {
     let er:ExchangeRateModel = .shared
     let tm:DetailTabsModel = .shared
     let dim:DIMENSIONS = .shared
-    let ss:SettingsStore = .shared
     let sm:SideBarModel = .shared
     let theme:Theme = .default
     let kind0:Kind0Processor = .shared
@@ -32,8 +31,12 @@ public class PreviewEnvironment {
         d.set("Following", forKey: "selected_subtab")
         d.set("Main", forKey: "selected_tab")
         d.set(false, forKey: "full_width_images")
+        d.set(FOOTER_BUTTONS_PREVIEW, forKey: "footer_buttons")
         return d
     }()
+    
+    let ss:SettingsStore = .shared
+    
     let context:NSManagedObjectContext = DataProvider.shared().container.viewContext
     let decoder = JSONDecoder()
     
@@ -458,6 +461,7 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(NRState.shared)
                     .environmentObject(la)
                     .environmentObject(pe.sp)
+                    .environmentObject(pe.ss)
                     .environmentObject(pe.er)
                     .environmentObject(pe.ss)
                     .environmentObject(pe.sm)

@@ -296,7 +296,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 return followingPFP(reply.pubkey)
             }
             .uniqued(on: ({ $0 }))
-            .prefix(4)), event: event, withFooter: withFooter)
+            .prefix(8)), event: event, withFooter: withFooter)
         }
         else {
             self.footerAttributes = FooterAttributes(event: event, withFooter: withFooter)
@@ -821,7 +821,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                             return followingPFP(reply.pubkey)
                         }
                         .uniqued(on: ({ $0 }))
-                        .prefix(4)
+                        .prefix(8)
                     
                     if (withGroupedReplies) {
                         self.groupRepliesToRoot.send(nrReplies)

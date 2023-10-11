@@ -25,41 +25,46 @@ struct ReactionButton: View {
     
     var body: some View {
         Text(reactionContent)
-            .opacity(footerAttributes.reactions.contains(reactionContent) ? 1.0 : 0.5)
-            .padding(5)
+            .frame(width: 20)
+            .opacity(footerAttributes.reactions.contains(reactionContent) ? 1.0 : 0.7)
+            .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard isFullAccount() else { showReadOnlyMessage(); return }
-                guard let account = account() else { return }
-                if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
-                    nrPost.unlike(self.reactionContent)
-                    unpublishLikeId = nil
-                }
-                else {
-                    guard !footerAttributes.reactions.contains(reactionContent) else { return }
-                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                    impactMed.impactOccurred()
-                    
-                    var likeNEvent = nrPost.like(self.reactionContent)
-                    
-                    if account.isNC {
-                        likeNEvent.publicKey = account.publicKey
-                        likeNEvent = likeNEvent.withId()
-                        unpublishLikeId = UUID()
-                        NSecBunkerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
-                            if let unpublishLikeId = self.unpublishLikeId {
-                                self.unpublishLikeId = Unpublisher.shared.publish(signedEvent, cancellationId: unpublishLikeId)
-                            }
-                        })
-                    }
-                    else {
-                        guard let signedEvent = try? account.signEvent(likeNEvent) else {
-                            L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
-                            return
-                        }
-                        unpublishLikeId = Unpublisher.shared.publish(signedEvent)
-                    }
-                }
+                tap()
             }
+    }
+    
+    private func tap() {
+        guard isFullAccount() else { showReadOnlyMessage(); return }
+        guard let account = account() else { return }
+        if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+            nrPost.unlike(self.reactionContent)
+            unpublishLikeId = nil
+        }
+        else {
+            guard !footerAttributes.reactions.contains(reactionContent) else { return }
+            let impactMed = UIImpactFeedbackGenerator(style: .medium)
+            impactMed.impactOccurred()
+            
+            var likeNEvent = nrPost.like(self.reactionContent)
+            
+            if account.isNC {
+                likeNEvent.publicKey = account.publicKey
+                likeNEvent = likeNEvent.withId()
+                unpublishLikeId = UUID()
+                NSecBunkerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
+                    if let unpublishLikeId = self.unpublishLikeId {
+                        self.unpublishLikeId = Unpublisher.shared.publish(signedEvent, cancellationId: unpublishLikeId)
+                    }
+                })
+            }
+            else {
+                guard let signedEvent = try? account.signEvent(likeNEvent) else {
+                    L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                    return
+                }
+                unpublishLikeId = Unpublisher.shared.publish(signedEvent)
+            }
+        }
     }
 }

@@ -57,6 +57,7 @@ struct AnimatedNumber: View {
                 // Cancel all subscriptions (timers in this case)
                 cancellables.removeAll()
             }
+//            .border(Color.green)
     }
 }
 
@@ -96,6 +97,7 @@ struct AnimatedNumberString: View {
                     offset -= Self.numberHeight
                 }
             }
+//            .border(Color.green)
     }
 }
 

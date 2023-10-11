@@ -7,28 +7,15 @@
 
 
 import SwiftUI
-
-struct FooterButton: Identifiable {
-    let id:String
-    var isFirst = false
-    var isLast = false
-}
+import Algorithms
 
 struct CustomizableFooterFragmentView: View {
     @ObservedObject private var settings:SettingsStore = .shared
-    
-    private var buttons:[FooterButton] {
-        Array(self.settings.footerButtons)
-            .map({
-                FooterButton(
-                    id: String($0),
-                    isFirst: Array(self.settings.footerButtons).first == $0,
-                    isLast: Array(self.settings.footerButtons).last == $0
-                )
-            })
-    }
-    
+    @ObservedObject private var vmc:ViewModelCache = .shared
     @EnvironmentObject private var theme:Theme
+    
+    static let gridColumns = Array(repeating: GridItem(.flexible()), count: ViewModelCache.BUTTONS_PER_ROW)
+
     private let nrPost:NRPost
     private var isDetail = false
     
@@ -42,142 +29,112 @@ struct CustomizableFooterFragmentView: View {
         //        let _ = Self._printChanges()
         //        #endif
         VStack(alignment: .leading, spacing: 5) {
-            HStack {
-                ForEach(buttons) { button in
-                    switch button.id {
-                    case "💬":
-                        ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast)
-                    case "🔄":
-                        RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
-                    case "+":
-                        LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
-                    case "⚡️":
-                        if IS_NOT_APPSTORE { // Only available in non app store version
-                            ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
-                                .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
-                                .disabled(!(nrPost.contact?.anyLud ?? false))
+            ForEach(vmc.buttonRows) { row in
+                HStack(spacing: 0) {
+                    ForEach(row.buttons) { button in
+                        switch button.id {
+                        case "💬":
+                            ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast)
+                        case "🔄":
+                            RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                        case "+":
+                            LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                        case "⚡️":
+                            if IS_NOT_APPSTORE { // Only available in non app store version
+                                ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                                    .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
+                                    .disabled(!(nrPost.contact?.anyLud ?? false))
+                            }
+                            else {
+                                EmptyView()
+                            }
+                        case "🔖":
+                            BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                        default:
+                            ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
                         }
-                        else {
-                            EmptyView()
+                        if !button.isLast {
+                            Spacer()
                         }
-                    case "🔖":
-                        BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
-                    default:
-                        ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
-                    }
-                    if !button.isLast {
-                        Spacer()
                     }
                 }
             }
-            .frame(height: 28)
             
             // UNDO SEND AND SENT TO RELAYS
             OwnPostFooter(nrPost: nrPost)
         }
+        .padding(.bottom, 20)
         .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))
     }
 }
 
-
 struct CustomizablePreviewFooterFragmentView: View {
     
-    public var footerButtons:String = "💬🔄+💯💜⚡️🔖"
-    
-    private var buttons:[FooterButton] {
-        Array(self.footerButtons)
-            .map({
-                FooterButton(
-                    id: String($0),
-                    isFirst: Array(self.footerButtons).first == $0,
-                    isLast: Array(self.footerButtons).last == $0
-                )
-            })
-    }
-    
+    @State private var nrPost:NRPost? = nil
     @EnvironmentObject var theme:Theme
+    @ObservedObject private var vmc:ViewModelCache = .shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            HStack {
-                ForEach(buttons) { button in
-                    switch button.id {
-                    case "💬":
-                        HStack {
-                            Image("ReplyIcon")
-                            Text("0").opacity(0)
-                        }
-                        .padding(.vertical, 5)
-                        .padding(.leading, button.isFirst ? 0 : 5)
-                        .padding(.trailing, button.isLast ? 0 : 5)
-                    case "🔄":
-                        // REPOST
-                        HStack {
-                            Image("RepostedIcon")
-                            Text("0").opacity(0)
-                        }
-                        .padding(.vertical, 5)
-                        .padding(.leading, button.isFirst ? 0 : 5)
-                        .padding(.trailing, button.isLast ? 0 : 5)
-                    case "+":
-                        // LIKE
-                        HStack {
-                            Image("LikeIcon")
-                            Text("0").opacity(0)
-                        }
-                        .padding(.vertical, 5)
-                        .padding(.leading, button.isFirst ? 0 : 5)
-                        .padding(.trailing, button.isLast ? 0 : 5)
-                    case "⚡️":
-                        if IS_NOT_APPSTORE { // Only available in non app store version
-                            Image("BoltIcon")
-                                .padding(.vertical, 5)
-                                .padding(.leading, button.isFirst ? 0 : 5)
-                                .padding(.trailing, button.isLast ? 0 : 5)
-                        }
-                        else {
-                            EmptyView()
-                        }
-                    case "🔖":
-                        Image("BookmarkIcon")
-                            .padding(.vertical, 5)
-                            .padding(.leading, button.isFirst ? 0 : 5)
-                            .padding(.trailing, button.isLast ? 0 : 5)
-                    default:
-                        Text(button.id)
-                        .padding(.vertical, 5)
-                        .padding(.leading, button.isFirst ? 0 : 5)
-                        .padding(.trailing, button.isLast ? 0 : 5)
-                    }
-                    if !button.isLast {
-                        Spacer()
-                    }
-                }
+            if let nrPost {
+                CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false)
             }
-            .frame(height: 28)
         }
         .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))
-        
-        
+        .onAppear {
+            bg().perform {
+                let tmpEvent = Event(context: bg())
+                tmpEvent.flags = "tmp" // event should not be in database anymore after view is finished. add a flag just in case, so we can still clean up later.
+                tmpEvent.id = "tmp"
+                let tmpNRPost = NRPost(event: tmpEvent)
+                DispatchQueue.main.async {
+                    self.nrPost = tmpNRPost
+                    bg().perform {
+                        bg().delete(tmpEvent)
+                    }
+                }
+            }
+        }
     }
 }
 
 #Preview("Customizable Footer") {
     PreviewContainer({ pe in
-        pe.loadPosts()
+        NRState.shared.loggedInAccount?.followingPFPs["7ecd3fe6353ec4c53672793e81445c2a319ccf0a298a91d77adcfa386b52f30d"] = URL(string: "https://files.peakd.com/file/peakd-hive/chekohler/AK297i3PX3mZpwVagu4FhZjVLcSW7UpEDv7b4mXRKSQav5vwsWgw46iGUcqSoDi.jpg")!
+        NRState.shared.loggedInAccount?.followingPFPs["738f69184aeda675002b687fe47c8e9e2f7b1a267d6f9145b1193312f97c18ef"] = URL(string: "https://pbs.twimg.com/profile_images/1431273817477992452/arsE5HEn_400x400.jpg")!
+        NRState.shared.loggedInAccount?.followingPFPs["79b647ba67c6f434b348e4af011e0984af14a459b6d86fd05e8f2ee8d32ec8c9"] = URL(string: "https://hitony.com/tony.gif")!
+        pe.loadContacts()
+        pe.loadRepliesAndReactions()
     }) {
-        VStack(spacing: 0) {
-            
-            CustomizablePreviewFooterFragmentView()
-            
-            if let p = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0") {
-                CustomizableFooterFragmentView(nrPost: p)
+        HStack(spacing: 0) {
+            Circle()
+                .foregroundColor(Color.random)
+                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                .padding(.trailing, 10)
+            VStack(spacing: 10) {
+                
+                let _ = SettingsStore.shared.footerButtons = FOOTER_BUTTONS_PREVIEW // "💬🔄+⚡️🤣👀💯🔖"
+                
+                CustomizablePreviewFooterFragmentView()
+                
+                Divider()
+                
+                if let p = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81", withReplies: true) {
+                    
+                    CustomizableFooterFragmentView(nrPost: p)
+                    
+                    ForEach(p.replies) {
+                        Text($0.pubkey)
+                    }
+                }
             }
         }
+        .padding(5)
     }
 }
 
 let IS_NOT_APPSTORE = ((Bundle.main.infoDictionary?["NOSTUR_IS_DESKTOP"] as? String) ?? "NO") != "NNO"
 
+let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️🔖🤣👀💯"

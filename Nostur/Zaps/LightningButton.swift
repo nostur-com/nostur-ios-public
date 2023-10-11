@@ -25,18 +25,12 @@ struct LightningButton: View {
     
     var body: some View {
         if isLoading {
-//            ProgressView() // view is in .drawingGroup() so can't use ProgressView() anymore
             Image(systemName: "hourglass.tophalf.filled")
-//                .colorInvert()
                 .padding(.vertical, 5)
-                .padding(.leading, isFirst ? 0 : 5)
-                .padding(.trailing, isLast ? 0 : 5)
         }
         else {
             Image("BoltIcon")
                 .padding(.vertical, 5)
-                .padding(.leading, isFirst ? 0 : 5)
-                .padding(.trailing, isLast ? 0 : 5)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     guard isFullAccount() else { showReadOnlyMessage(); return }
