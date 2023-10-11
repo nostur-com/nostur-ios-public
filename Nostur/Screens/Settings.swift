@@ -84,6 +84,10 @@ struct Settings: View {
                     Text("Auto scroll to new posts", comment:"Setting on settings screen")
                     Text("When at top, auto scroll if there are new posts", comment:"Setting on settings screen")
                 }
+                Toggle(isOn: $settings.appWideSeenTracker) {
+                    Text("Hide posts you have already seen (beta)", comment:"Setting on settings screen")
+                    Text("Keeps track across all feeds posts you have already seen, don't show them again", comment:"Setting on settings screen")
+                }
                 Toggle(isOn: $settings.autoHideBars) {
                     Text("Hide tab bars when scrolling", comment:"Setting on settings screen")
                     Text("This gives more screen space when scrolling")

@@ -40,6 +40,7 @@ struct AppView: View {
     @State private var dm:DirectMessageViewModel = .default
     @State private var nvm:NotificationsViewModel = .shared
     @State private var ot:NewOnboardingTracker = .shared
+    @State private var dd:Deduplicator = .shared
     
 //    @EnvironmentObject private var theme:Theme
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false

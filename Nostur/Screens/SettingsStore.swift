@@ -40,6 +40,7 @@ final class SettingsStore: ObservableObject {
         static let footerButtons:String = "footer_buttons"
         
         static let nwcShowBalance:String = "nwc_show_balance"
+        static let appWideSeenTracker:String = "app_wide_seen_tracker"
     }
 
 //    private let cancellable: Cancellable
@@ -116,6 +117,7 @@ final class SettingsStore: ObservableObject {
             Keys.lowDataMode: false,
             Keys.nwcShowBalance: false,
             Keys.footerButtons: IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
+            Keys.appWideSeenTracker: true
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -135,6 +137,7 @@ final class SettingsStore: ObservableObject {
         _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
         _footerButtons = defaults.string(forKey: Keys.footerButtons) ?? "💬🔄+🔖"
         _fetchCounts = defaults.bool(forKey: Keys.fetchCounts)
+        _appWideSeenTracker = defaults.bool(forKey: Keys.appWideSeenTracker)
         
         // optimize
         self.updateNWCreadyCache()
@@ -334,6 +337,17 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _fetchCounts:Bool = false
+    
+    public var appWideSeenTracker: Bool {
+        set {
+            objectWillChange.send()
+            _appWideSeenTracker = newValue
+            defaults.set(newValue, forKey: Keys.appWideSeenTracker);
+        }
+        get { _appWideSeenTracker }
+    }
+    
+    private var _appWideSeenTracker:Bool = false
     
     
     // optimize
