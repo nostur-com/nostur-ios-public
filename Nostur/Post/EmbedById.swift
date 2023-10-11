@@ -68,9 +68,12 @@ struct EmbedById: View {
 //                        .debugDimensions("EmbedById.QuotedNoteFragmentView")
                 }
             case .timeout:
-                Text("Unable to fetch content")
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                VStack {
+                    Text("Unable to fetch content")
+                    Button("Retry") { vm.fetch() }
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
             case .error(let error):
                 Text(error)
                     .padding(10)

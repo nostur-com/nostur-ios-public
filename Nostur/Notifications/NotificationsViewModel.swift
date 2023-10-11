@@ -592,7 +592,7 @@ fileprivate class NotificationFetchRequests {
         let mutedRootIds = account.mutedRootIds_
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
-        let lastSeenPostCreatedAt = account.lastSeenRepostCreatedAt
+        let lastSeenRepostCreatedAt = account.lastSeenRepostCreatedAt
 
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
@@ -601,7 +601,7 @@ fileprivate class NotificationFetchRequests {
                                     "AND kind == 6 " +
                                     "AND NOT pubkey IN %@ " +
                                     "AND NOT id IN %@ ",
-                                    lastSeenPostCreatedAt,
+                                    lastSeenRepostCreatedAt,
                                     pubkey,
                                     (blockedPubkeys + [pubkey]),
                                     mutedRootIds)

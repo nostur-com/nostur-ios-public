@@ -28,18 +28,19 @@ struct LinkPreviewView: View {
                         userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
                             if let image = state.image {
                                 image.interpolation(.none)
-                                    .frame(width: (DIMENSIONS.PREVIEW_HEIGHT * Self.aspect))
-                                    .clipped()
                             }
                     }
                     .pipeline(ImageProcessing.shared.content)
+                    .frame(width: (DIMENSIONS.PREVIEW_HEIGHT * Self.aspect))
+                    .background(Color.gray)
+                    .clipped()
                 }
                 else {
                     Image(systemName: "link")
                         .resizable()
                         .scaledToFit()
                         .padding()
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color.gray)
                         .frame(width: DIMENSIONS.PREVIEW_HEIGHT * Self.aspect)
                 }
                 VStack(alignment:.leading, spacing: 0) {
@@ -60,7 +61,7 @@ struct LinkPreviewView: View {
                 }
                 .padding(5)
                 .minimumScaleFactor(0.7)
-                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
+//                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             }
             .background(theme.listBackground)
             .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
