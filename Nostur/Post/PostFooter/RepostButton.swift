@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct RepostButton: View {
+    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     private var isFirst:Bool
@@ -21,33 +22,24 @@ struct RepostButton: View {
     }
     
     var body: some View {
-        if (footerAttributes.reposted) {
-            HStack {
-                Image("RepostedIcon")
-                    .foregroundColor(.green)
+        Image(systemName: "arrow.2.squarepath")
+            .foregroundColor(footerAttributes.reposted ? .green : theme.footerButtons)
+            .overlay(alignment: .leading) {
                 AnimatedNumber(number: footerAttributes.repostsCount)
-//                            .equatable()
-                    .opacity(footerAttributes.repostsCount == 0 ? 0 : 1)
+                    .opacity(footerAttributes.repostsCount == 0 ? 0 : 1.0)
+                    .frame(width: 28)
+                    .offset(x: 20)
+                //                    AnimatedNumber(number: 234)
+                //                        .frame(width: 28)
+                //                        .offset(x: 20)
             }
-            .foregroundColor(.green)
+            .padding(.trailing, 30)
+        //                .background(.red)
             .padding(.vertical, 5)
-            .padding(.leading, isFirst ? 0 : 5)
-            .padding(.trailing, isLast ? 0 : 5)
-        }
-        else {
-            HStack {
-                Image("RepostedIcon")
-                AnimatedNumber(number: footerAttributes.repostsCount)
-//                            .equatable()
-                    .opacity(footerAttributes.repostsCount == 0 ? 0 : 1)
-            }
-            .padding(.vertical, 5)
-            .padding(.leading, isFirst ? 0 : 5)
-            .padding(.trailing, isLast ? 0 : 5)
             .contentShape(Rectangle())
             .onTapGesture {
+                guard !footerAttributes.reposted else { return }
                 sendNotification(.createNewQuoteOrRepost, nrPost.event.toMain())
             }
-        }
     }
 }

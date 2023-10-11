@@ -10,6 +10,7 @@ import SwiftUI
 struct FooterConfigurator: View {
     
     @Binding public var footerButtons:String
+    @ObservedObject private var ss:SettingsStore = .shared
     
     var body: some View {
         Form(content: {
@@ -17,8 +18,8 @@ struct FooterConfigurator: View {
             Section(content: {
                 TextField("Footer buttons", text: $footerButtons)
                     .onChange(of: footerButtons, perform: { newValue in
-                        if newValue.count > 8 {
-                            footerButtons = filterT(String(newValue.prefix(8)))
+                        if newValue.count > ViewModelCache.BUTTONS_PER_ROW {
+                            footerButtons = filterT(String(newValue.prefix(ViewModelCache.BUTTONS_PER_ROW)))
                         }
                         else {
                             let filteredButtons = filterT(footerButtons)
@@ -34,8 +35,19 @@ struct FooterConfigurator: View {
             })
             
             Section(content: {
-                CustomizablePreviewFooterFragmentView(footerButtons: footerButtons)
-                    .disabled(true)
+                if !ss.fullWidthImages {
+                    HStack(spacing: 0) {
+                        CustomizablePreviewFooterFragmentView()
+                            .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_DIAMETER/2)
+                            .disabled(true)
+                    }
+                    .padding([.horizontal], -10)
+                }
+                else {
+                    CustomizablePreviewFooterFragmentView()
+                        .disabled(true)
+                        .padding([.horizontal], -10)
+                }
             }, header: {
                 Text("Preview", comment: "Heading when entering Report details")
             })

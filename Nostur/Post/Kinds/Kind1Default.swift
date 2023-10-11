@@ -107,7 +107,8 @@ struct Kind1Default: View {
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
                 .frame(height: 21.0)
-                .drawingGroup()
+//                .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
+//                .drawingGroup(opaque: true)
 //                .debugDimensions()
 //                .withoutAnimation()
 //                .transaction { t in
@@ -163,7 +164,8 @@ struct Kind1Default: View {
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
                     CustomizableFooterFragmentView(nrPost: nrPost)
-                        .drawingGroup()
+                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
+                        .drawingGroup(opaque: true)
 //                        .withoutAnimation()
 //                        .transaction { t in
 //                            t.animation = nil
@@ -195,13 +197,13 @@ struct Kind1Default_Previews: PreviewProvider {
             SmoothListMock {
                 if let nrPost = PreviewFetcher.fetchNRPost("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
                     Box {
-                        Kind1Default(nrPost: nrPost)
+                        Kind1Default(nrPost: nrPost, hideFooter: false)
                     }
                 }
                 
                 if let nrPost = PreviewFetcher.fetchNRPost() {
                     Box {
-                        Kind1Default(nrPost: nrPost)
+                        Kind1Default(nrPost: nrPost, hideFooter: false)
                     }
                 }
             }

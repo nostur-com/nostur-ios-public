@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct BookmarkButton: View {
+    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     private var isFirst:Bool
@@ -21,44 +22,29 @@ struct BookmarkButton: View {
     }
     
     var body: some View {
-        if (footerAttributes.bookmarked) {
-            Image("BookmarkIconActive")
-                .foregroundColor(.orange)
-                .padding(.vertical, 5)
-                .padding(.leading, isFirst ? 0 : 5)
-                .padding(.trailing, isLast ? 0 : 5)
-                .overlay {
-                    Color.clear
-                        .frame(width: 30)
-                        .offset(x: -10)
-                        .contentShape(Rectangle())
-                        .highPriorityGesture(
-                                    TapGesture()
-                                        .onEnded { _ in
-                                            NRState.shared.loggedInAccount?.removeBookmark(nrPost)
-                                        }
-                                )
-                }
+        Image(systemName: footerAttributes.bookmarked ? "bookmark.fill" : "bookmark")
+            .padding(.trailing, isLast ? 0 : 10)
+            .padding(.leading, isFirst ? 0 : 10)
+            .padding(.vertical, 5)
+            .foregroundColor(footerAttributes.bookmarked ? .orange : theme.footerButtons)
+            .contentShape(Rectangle())
+            .highPriorityGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        tap()
+                    }
+            )
+    }
+    
+    private func tap() {
+        if footerAttributes.bookmarked {
+            NRState.shared.loggedInAccount?.removeBookmark(nrPost)
         }
         else {
-            Image("BookmarkIcon")
-                .padding(.vertical, 5)
-                .padding(.leading, isFirst ? 0 : 5)
-                .padding(.trailing, isLast ? 0 : 5)
-                .overlay {
-                    Color.clear
-                        .frame(width: 30)
-                        .offset(x: -10)
-                        .contentShape(Rectangle())
-                        .highPriorityGesture(
-                                    TapGesture()
-                                        .onEnded { _ in
-                                            let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                                            impactMed.impactOccurred()
-                                            NRState.shared.loggedInAccount?.addBookmark(nrPost)
-                                        }
-                                )
-                }
+            let impactMed = UIImpactFeedbackGenerator(style: .medium)
+            impactMed.impactOccurred()
+            NRState.shared.loggedInAccount?.addBookmark(nrPost)
         }
     }
 }
+

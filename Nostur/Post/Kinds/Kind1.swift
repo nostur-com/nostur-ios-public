@@ -122,7 +122,8 @@ struct Kind1: View {
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
                     CustomizableFooterFragmentView(nrPost: nrPost)
-                        .drawingGroup()
+                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
+                        .drawingGroup(opaque: true)
                 }
             }
             .fixedSize(horizontal: false, vertical: true)
