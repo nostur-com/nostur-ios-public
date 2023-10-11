@@ -312,107 +312,114 @@ struct ParentPost: View {
                 .padding(.vertical, 20)
             }
             else {
-                HStack(alignment:.top, spacing: 10) {
-                    ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
-                        .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
-                        .onTapGesture {
-                            if !IS_APPLE_TYRANNY {
-                                if let nrContact = nrPost.contact {
-                                    navigateTo(nrContact)
+                ZStack(alignment: .topLeading) {
+                    VStack(spacing: 0) {
+                        HStack(alignment:.top, spacing: 10) {
+                            ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+                                .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
+                                .onTapGesture {
+                                    if !IS_APPLE_TYRANNY {
+                                        if let nrContact = nrPost.contact {
+                                            navigateTo(nrContact)
+                                        }
+                                        else {
+                                            navigateTo(ContactPath(key: nrPost.pubkey))
+                                        }
+                                    }
+                                    else {
+                                        withAnimation {
+                                            showMiniProfile = true
+                                        }
+                                    }
                                 }
-                                else {
-                                    navigateTo(ContactPath(key: nrPost.pubkey))
-                                }
-                            }
-                            else {
-                                withAnimation {
-                                    showMiniProfile = true
-                                }
-                            }
-                        }
-                        .overlay(alignment: .topLeading) {
-                            if (showMiniProfile) {
-                                GeometryReader { geo in
-                                    Color.clear
-                                        .onAppear {
-                                            sendNotification(.showMiniProfile,
-                                                             MiniProfileSheetInfo(
-                                                                pubkey: nrPost.pubkey,
-                                                                contact: nrPost.contact,
-                                                                zapEtag: nrPost.id,
-                                                                location: geo.frame(in: .global).origin
-                                                             )
-                                            )
+                                .overlay(alignment: .topLeading) {
+                                    if (showMiniProfile) {
+                                        GeometryReader { geo in
+                                            Color.clear
+                                                .onAppear {
+                                                    sendNotification(.showMiniProfile,
+                                                                     MiniProfileSheetInfo(
+                                                                        pubkey: nrPost.pubkey,
+                                                                        contact: nrPost.contact,
+                                                                        zapEtag: nrPost.id,
+                                                                        location: geo.frame(in: .global).origin
+                                                                     )
+                                                    )
+                                                    showMiniProfile = false
+                                                }
+                                        }
+                                        .frame(width: 10)
+                                        .zIndex(100)
+                                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
                                             showMiniProfile = false
                                         }
+                                    }
                                 }
-                                  .frame(width: 10)
-                                  .zIndex(100)
-                                  .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                                  .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                      showMiniProfile = false
-                                  }
+                            
+                            VStack(alignment:.leading, spacing: 3) {
+                                HStack(alignment: .top) {
+                                    NoteHeaderView(nrPost: nrPost, singleLine: true)
+                                    Spacer()
+                                    EventPrivateNoteToggle(nrPost: nrPost)
+                                    LazyNoteMenuButton(nrPost: nrPost)
+                                        .offset(y: -5)
+                                }
+                                
+                                // We don't show "Replying to.." unless we can't fetch the parent
+                                if nrPost.replyTo == nil && nrPost.replyToId != nil {
+                                    ReplyingToFragmentView(nrPost: nrPost)
+                                    //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                }
+                                
+                                switch nrPost.kind {
+                                case 30023:
+                                    ArticleView(nrPost, isDetail: false, fullWidth: settings.fullWidthImages, hideFooter: false)
+                                        .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
+                                        .padding(.bottom, 10)
+                                        .background(Color(.secondarySystemBackground))
+                                case 9802: // highlight
+                                    HighlightRenderer(nrPost: nrPost)
+                                        .padding(.vertical, 10)
+                                    //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                case 1,6,9734: // text, repost, zap request
+                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20)
+                                    //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                case 1063: // File Metadata
+                                    NoteTextRenderView(nrPost: nrPost)
+                                default:
+                                    Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
+                                        .centered()
+                                        .frame(maxWidth: .infinity)
+                                        .background(theme.lineColor.opacity(0.2))
+                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 )
+                                    //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                }
                             }
                         }
-                    
-                    VStack(alignment:.leading, spacing: 3) {
-                        HStack(alignment: .top) {
-                            NoteHeaderView(nrPost: nrPost, singleLine: true)
-                            Spacer()
-                            EventPrivateNoteToggle(nrPost: nrPost)
-                            LazyNoteMenuButton(nrPost: nrPost)
-                                .offset(y: -5)
-                        }
                         
-                        // We don't show "Replying to.." unless we can't fetch the parent
-                        if nrPost.replyTo == nil && nrPost.replyToId != nil {
-                            ReplyingToFragmentView(nrPost: nrPost)
-//                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                        }
-                        
-                        switch nrPost.kind {
-                        case 30023:
-                            ArticleView(nrPost, isDetail: false, fullWidth: settings.fullWidthImages, hideFooter: false)
-                                .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
-                                .padding(.bottom, 10)
-                                .background(Color(.secondarySystemBackground))
-                        case 9802: // highlight
-                            HighlightRenderer(nrPost: nrPost)
-                                .padding(.vertical, 10)
-//                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                        case 1,6,9734: // text, repost, zap request
-                            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20)
-//                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                        case 1063: // File Metadata
-                            NoteTextRenderView(nrPost: nrPost)
-                        default:
-                            Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                                .centered()
-                                .frame(maxWidth: .infinity)
-                                .background(theme.lineColor.opacity(0.2))
-                            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 )
-//                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        if (settings.rowFooterEnabled) {
+                            CustomizableFooterFragmentView(nrPost: nrPost)
+                                .padding(.leading, INDENT)
+                                .padding(.vertical, 5)
+                            //                        .padding(.trailingx, 10)
                         }
                     }
                 }
-                .background(alignment:.leading) {
-                    ZStack(alignment: .leading) {
-                        theme.background
+                .background(alignment:.topLeading) {
+                    ZStack(alignment: .topLeading) {
+                        theme.lineColor.opacity(0.2)
+                            .frame(width: 2, height: 20)
+                            .offset(x: THREAD_LINE_OFFSET, y: -10)
+                            .opacity(connect == .top || connect == .both ? 1 : 0)
                         theme.lineColor.opacity(0.2)
                             .frame(width: 2)
-                            .offset(x: THREAD_LINE_OFFSET, y: 50)
+                            .offset(x: THREAD_LINE_OFFSET)
                             .opacity(connect == .bottom || connect == .both ? 1 : 0)
                     }
                     .onTapGesture {
                         navigateTo(nrPost)
                     }
-                }
-            
-                if (settings.rowFooterEnabled) {
-                    CustomizableFooterFragmentView(nrPost: nrPost)
-                        .padding(.leading, INDENT)
-                        .padding(.vertical, 5)
-//                        .padding(.trailingx, 10)
                 }
             }
         }
@@ -472,12 +479,12 @@ struct DetailPost: View {
                               }
                         }
                     }
-                    .overlay(alignment: .top) {
+                    .background(alignment: .top) {
                         if nrPost.replyToId != nil {
                             theme.lineColor
                                 .opacity(0.2)
-                                .frame(width: 2, height: 10)
-                                .offset(y: -10)
+                                .frame(width: 2, height: 30)
+                                .offset(y: -20)
                         }
                     }
                 
