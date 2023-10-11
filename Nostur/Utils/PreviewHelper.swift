@@ -377,7 +377,7 @@ extension PreviewEnvironment {
             if let randomTextEvents {
                 for _ in 0..<10 {
                     if let random = randomTextEvents.randomElement() {
-                        account.mutedRootIds_.append(random.id)
+                        account.mutedRootIds_.insert(random.id)
                     }
                 }
             }

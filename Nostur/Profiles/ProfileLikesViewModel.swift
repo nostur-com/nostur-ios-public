@@ -40,7 +40,7 @@ class ProfileLikesViewModel: ObservableObject {
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in
                 guard let self else { return }
-                let blockedPubkeys = notification.object as! [String]
+                let blockedPubkeys = notification.object as! Set<String>
                 self.posts = self.posts.filter { !blockedPubkeys.contains($0.pubkey)  }
             }
             .store(in: &self.subscriptions)
