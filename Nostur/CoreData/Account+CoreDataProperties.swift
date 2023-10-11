@@ -244,12 +244,12 @@ extension Account : Identifiable {
         }
     }
     
-    var mutedRootIds_:[String] {
+    var mutedRootIds_:Set<String> {
         get {
             guard mutedRootIds != nil else { return [] }
             let decoder = JSONDecoder()
             guard let ids = try? decoder.decode([String].self, from: Data(mutedRootIds!.utf8)) else { return [] }
-            return ids
+            return Set(ids)
         }
         set {
             let encoder = JSONEncoder()

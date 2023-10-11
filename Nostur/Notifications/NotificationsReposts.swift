@@ -103,7 +103,7 @@ struct NotificationsReposts: View {
             load()
         }
         .onReceive(receiveNotification(.blockListUpdated)) { notification in
-            let blockedPubkeys = notification.object as! [String]
+            let blockedPubkeys = notification.object as! Set<String>
             fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
         }
         .onReceive(receiveNotification(.muteListUpdated)) { _ in

@@ -72,7 +72,7 @@ struct BlockedAccounts:View {
             blockedContacts.nsPredicate = NSPredicate(format: "pubkey IN %@", newValue)
         }
         .onReceive(receiveNotification(.blockListUpdated)) { notification in
-            let newBlockList = notification.object as! [String]
+            let newBlockList = notification.object as! Set<String>
             blockedContacts.nsPredicate = NSPredicate(format: "pubkey IN %@", newBlockList)
         }
     }
@@ -108,7 +108,7 @@ struct MutedConversations: View {
                 }
                 .id(nrPost.id)
                 .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
-                    la.account.mutedRootIds_.removeAll(where: { $0 == nrPost.id })
+                    la.account.mutedRootIds_.remove(nrPost.id)
                     fl.nrPosts = fl.nrPosts.filter { $0.id != nrPost.id }
                     DataProvider.shared().save()
                 }

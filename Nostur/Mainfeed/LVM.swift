@@ -1203,7 +1203,7 @@ extension LVM {
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                let blockedPubkeys = notification.object as! [String]
+                let blockedPubkeys = notification.object as! Set<String>
                 bg().perform {
                     self.nrPostLeafs = self.nrPostLeafs.filter({ !blockedPubkeys.contains($0.pubkey) })
                     self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
@@ -1591,7 +1591,7 @@ func notMutedWords(in text: String, mutedWords: [String]) -> Bool {
 }
 
 func notMuted(_ nrPost:NRPost) -> Bool {
-    let mutedRootIds = account()?.mutedRootIds_ ?? []
+    let mutedRootIds:Set<String> = account()?.mutedRootIds_ ?? []
     return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "NIL") && !mutedRootIds.contains(nrPost.replyToId ?? "NIL")
 }
 

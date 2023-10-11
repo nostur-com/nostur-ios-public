@@ -130,15 +130,17 @@ class LoggedInAccount: ObservableObject {
         bg.perform {
             guard let account = self.bgAccount else { return }
             if let replyToRootId = nrPost.replyToRootId {
-                account.mutedRootIds_ = account.mutedRootIds_ + [replyToRootId, nrPost.id]
+                account.mutedRootIds_.insert(replyToRootId)
+                account.mutedRootIds_.insert(nrPost.id)
                 L.og.info("Muting \(replyToRootId)")
             }
             else if let replyToId = nrPost.replyToId {
-                account.mutedRootIds_ = account.mutedRootIds_ + [replyToId, nrPost.id]
+                account.mutedRootIds_.insert(replyToId)
+                account.mutedRootIds_.insert(nrPost.id)
                 L.og.info("Muting \(replyToId)")
             }
             else {
-                account.mutedRootIds_ = account.mutedRootIds_ + [nrPost.id]
+                account.mutedRootIds_.insert(nrPost.id)
                 L.og.info("Muting \(nrPost.id)")
             }
             DataProvider.shared().bgSave()
