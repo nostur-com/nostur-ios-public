@@ -28,39 +28,39 @@ struct PaymentAmountSelector: View {
         let isNC = account.isNC
         
         if (paymentInfo.supportsZap) {
-            Task {
-                do {
-                    let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
-                    
-                    if isNC {
-                        NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedZapRequestNote in
-                            Task {
-                                let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
-                                
-                                if response.pr != nil {
-                                    if SettingsStore.shared.nwcReady {
-                                        // NWC WALLET INSTANT ZAPS
-                                        if nwcSendPayInvoiceRequest(response.pr!) {
-                                            dismiss()
-                                        }
-                                        else {
-                                            errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
-                                        }
+            do {
+                let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
+                
+                if isNC {
+                    NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedZapRequestNote in
+                        Task {
+                            let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
+                            
+                            if response.pr != nil {
+                                if SettingsStore.shared.nwcReady {
+                                    // NWC WALLET INSTANT ZAPS
+                                    if nwcSendPayInvoiceRequest(response.pr!) {
+                                        dismiss()
                                     }
                                     else {
-                                        // OLD STYLE WALLET
-                                        await MainActor.run {
-                                            openURL(URL(string: "\(SettingsStore.shared.defaultLightningWallet.scheme)\(response.pr!)")!)
-                                        }
+                                        errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
+                                    }
+                                }
+                                else {
+                                    // OLD STYLE WALLET
+                                    await MainActor.run {
+                                        openURL(URL(string: "\(SettingsStore.shared.defaultLightningWallet.scheme)\(response.pr!)")!)
                                     }
                                 }
                             }
-                            
-                        })
-                    }
-                    else {
-                        let signedZapRequestNote = try account.signEvent(zapRequestNote)
+                        }
                         
+                    })
+                }
+                else {
+                    let signedZapRequestNote = try account.signEvent(zapRequestNote)
+                    
+                    Task {
                         let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                         
                         if response.pr != nil {
@@ -82,9 +82,9 @@ struct PaymentAmountSelector: View {
                         }
                     }
                 }
-                catch {
-                    L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(paymentInfo.callback) \(error)")
-                }
+            }
+            catch {
+                L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(paymentInfo.callback) \(error)")
             }
         }
         else {
