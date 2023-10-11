@@ -25,6 +25,7 @@ public final class NewPostModel: ObservableObject {
     var lastHit:String = "NOHIT"
     var textView:SystemTextView?
     
+    @Published var sending = false
     @Published var uploading = false
     @Published var uploadError:String?
     var requiredP:String? = nil

@@ -137,7 +137,14 @@ struct ComposePost: View {
                     }
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         NavigationStack {
-                            PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss) }, uploading: $vm.uploading)
+                            PostPreview(
+                                nrPost: nrPost,
+                                sendNow: {
+                                    vm.sending = true
+                                    vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+                                },
+                                uploading: $vm.uploading
+                            )
                         }
                         .presentationBackground(theme.background)
                     }
