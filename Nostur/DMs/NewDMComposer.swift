@@ -15,6 +15,7 @@ struct NewDMComposer: View {
     @Binding var message:String
     @Binding var showingNewDM:Bool
     @Binding var tab:String
+    public var preloaded = false
     
     var body: some View {
         VStack {
@@ -65,8 +66,13 @@ struct NewDMComposer: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(role: .cancel) {
-                    toPubkey = nil
-                    toContact = nil
+                    if preloaded {
+                        showingNewDM = false
+                    }
+                    else {
+                        toPubkey = nil
+                        toContact = nil
+                    }
                 } label: {
                     Text("Cancel")
                 }

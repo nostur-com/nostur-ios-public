@@ -10,15 +10,16 @@ import SwiftUI
 struct NewDM: View {
     
     @Binding var showingNewDM:Bool
-    @State var toPubkey:String?
-    @State var toContact:Contact?
-    @State var message:String = ""
+    @State private  var toPubkey:String?
+    @State private  var toContact:Contact?
+    @State private  var message:String = ""
     @Binding var tab:String
+    @State private var preloaded = false
     
     var body: some View {
         VStack {
             if toPubkey != nil {
-                NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM, tab: $tab)
+                NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM, tab: $tab, preloaded: preloaded)
             }
             else {
                 ContactsSearch(followingPubkeys:follows(),
@@ -37,6 +38,12 @@ struct NewDM: View {
                     }
                 }
             }
+        }
+        .onReceive(receiveNotification(.preloadNewDMInfo)) { notification in
+            let preloadNewDMInfo = notification.object as! (String, Contact)
+            toContact = preloadNewDMInfo.1
+            toPubkey = preloadNewDMInfo.0
+            preloaded = true
         }
     }
 }

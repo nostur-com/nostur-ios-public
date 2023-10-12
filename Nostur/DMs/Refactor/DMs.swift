@@ -11,16 +11,17 @@ import Combine
 struct DMs: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes:Themes
-    @State var navPath = NavigationPath()
-    @AppStorage("selected_tab") var selectedTab = "Messages"
-    @State var tab = "Accepted"
+    @State private var navPath = NavigationPath()
+    @AppStorage("selected_tab") private var selectedTab = "Messages"
+    @State private var tab = "Accepted"
     
-    let pubkey:String
-    @EnvironmentObject var vm:DirectMessageViewModel
+    public let pubkey:String
+    @EnvironmentObject private var vm:DirectMessageViewModel
     
     
-    @State var showingNewDM = false
-    @State var showDMToggles = false
+    @State private var showingNewDM = false
+    @State private var showDMToggles = false
+    @State private var preloadNewDMInfo:(String, Contact)? = nil // pubkey and Contact
     
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -149,8 +150,18 @@ struct DMs: View {
             .sheet(isPresented: $showingNewDM) {
                 NavigationStack {
                     NewDM(showingNewDM: $showingNewDM, tab: $tab)
+                        .onAppear {
+                            if let preloadNewDMInfo {
+                                sendNotification(.preloadNewDMInfo, preloadNewDMInfo)
+                            }
+                        }
                 }
                 .presentationBackground(themes.theme.background)
+            }
+            .onReceive(receiveNotification(.triggerDM)) { notification in
+                let preloadNewDMInfo = notification.object as! (String, Contact)
+                self.preloadNewDMInfo = preloadNewDMInfo
+                showingNewDM = true
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
