@@ -192,6 +192,19 @@ class NotificationsViewModel: ObservableObject {
             activeSubscriptionId: "Notifications")
     }
     
+    public var requestSince:Int64 { // TODO: If event .created_at, is in the future don't save date
+        let twoDaysAgo = (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24))
+        guard let account = account() else { return twoDaysAgo }
+        return [
+            (account.lastNotificationReceivedAt?.timeIntervalSince1970 as? Int64) ?? twoDaysAgo,
+            account.lastSeenRepostCreatedAt,
+            account.lastSeenPostCreatedAt,
+            account.lastSeenZapCreatedAt,
+            account.lastSeenReactionCreatedAt,
+            (DirectMessageViewModel.default.lastNotificationReceivedAt?.timeIntervalSince1970 as? Int64) ?? twoDaysAgo
+        ].sorted(by: >).first!
+    }
+    
     // Check since last notification
     private func relayCheckSinceNotifications() {
         // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
