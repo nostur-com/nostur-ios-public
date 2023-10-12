@@ -35,8 +35,7 @@ final class SocketPool: ObservableObject {
     static let shared = SocketPool()
     
     @Published var sockets:[String : NewManagedClient] = [:]
-    public var connectionQueue = DispatchQueue(label: "com.nostur.connection", qos: .utility, attributes: .concurrent)
-    public var websocketQueue = DispatchQueue(label: "com.nostur.websocket", qos: .utility, attributes: .concurrent)
+    public var poolQueue = DispatchQueue(label: "com.nostur.poolQueue", qos: .utility, attributes: .concurrent)
     
     var stayConnectedTimer:Timer?
     
@@ -64,10 +63,11 @@ final class SocketPool: ObservableObject {
     }
     
     func connectAll() {
+        shouldBeMain()
         for socket in sockets {
             guard socket.value.read else { continue }
-            if !socket.value.isConnecting && !socket.value.isConnected {
-                socket.value.activeSubscriptions = []
+            guard !socket.value.isConnected else { continue }
+            socket.value.mcq.async(flags: .barrier) {
                 socket.value.connect()
             }
         }
@@ -114,8 +114,7 @@ final class SocketPool: ObservableObject {
         let relayUrls = relays.compactMap { $0.url }
         for socket in sockets {
             guard relayUrls.contains(socket.value.client.url) else { continue }
-            if !socket.value.isConnecting && !socket.value.isConnected {
-                socket.value.activeSubscriptions = []
+            if !socket.value.isConnected {
                 socket.value.connect()
             }
         }
@@ -126,8 +125,9 @@ final class SocketPool: ObservableObject {
             guard socket.value.read else { continue }
             guard !socket.value.isNWC else { continue }
             guard !socket.value.isNC else { continue }
-            DispatchQueue.main.async { // Maybe fixes deadlock?
-                if let lastReceivedMessageAt = socket.value.lastMessageReceivedAt {
+            
+            socket.value.mcq.async(flags: .barrier) {
+                if let lastReceivedMessageAt = socket.value._lastMessageReceivedAt {
                     if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
                         L.sockets.info("\(socket.value.url) Last message older that 45 seconds, sending ping")
                         socket.value.client.ping()
@@ -135,7 +135,6 @@ final class SocketPool: ObservableObject {
                 }
                 else {
                     L.sockets.info("\(socket.value.url) Last message = nil. (re)connecting..")
-                    socket.value.activeSubscriptions = []
                     socket.value.connect()
                 }
             }
@@ -173,7 +172,6 @@ final class SocketPool: ObservableObject {
             request.timeoutInterval = 15
             
             let client = NewWebSocket(url: url)
-            
             let managedClient = NewManagedClient(relayId: relayId, url: url, client:client, read: read, write: write, excludedPubkeys: excludedPubkeys)
             
             client.delegate = managedClient
@@ -334,11 +332,11 @@ final class SocketPool: ObservableObject {
                             //                        continue
                         }
                         // skip if we already have an active subcription
-                        if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
+                        if subscriptionId != nil && managedClient.getActiveSubscriptions().contains(subscriptionId!) { continue }
                         if (subscriptionId != nil) {
-                            DispatchQueue.main.async {
-                                managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(managedClient.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(managedClient.isNC)")
+                            managedClient.mcq.async(flags: .barrier) {
+                                managedClient._activeSubscriptions.append(subscriptionId!)
+                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient._activeSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(managedClient.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(managedClient.isNC)")
                             }
                         }
                         L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId): \(message.message)")
@@ -399,11 +397,11 @@ final class SocketPool: ObservableObject {
                             }
                         }
                         // skip if we already have an active subcription
-                        if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
+                        if subscriptionId != nil && managedClient.getActiveSubscriptions().contains(subscriptionId!) { continue }
                         if (subscriptionId != nil) {
-                            DispatchQueue.main.async {
-                                managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(managedClient.isNWC) -- onlyForNC: \(message.onlyForNCRelay) .isNC: \(managedClient.isNC)")
+                            managedClient.mcq.async {
+                                managedClient._activeSubscriptions.append(subscriptionId!)
+                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient._activeSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(managedClient.isNWC) -- onlyForNC: \(message.onlyForNCRelay) .isNC: \(managedClient.isNC)")
                             }
                         }
                         L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId): \(message.message)")
@@ -441,11 +439,11 @@ final class SocketPool: ObservableObject {
                             //                        continue
                         }
                         // skip if we already have an active subcription
-                        if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
+                        if subscriptionId != nil && managedClient.getActiveSubscriptions().contains(subscriptionId!) { continue }
                         if (subscriptionId != nil) {
-                            DispatchQueue.main.async {
-                                managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(managedClient.isNWC) -- onlyForNWC: \(message.onlyForNCRelay) .isNWC: \(managedClient.isNC)")
+                            managedClient.mcq.async(flags: .barrier) {
+                                managedClient._activeSubscriptions.append(subscriptionId!)
+                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient._activeSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(managedClient.isNWC) -- onlyForNWC: \(message.onlyForNCRelay) .isNWC: \(managedClient.isNC)")
                             }
                         }
                         L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId): \(String(message.message))")
@@ -498,8 +496,10 @@ final class SocketPool: ObservableObject {
     
     func removeActiveAccountSubscriptions() {
         for socket in sockets {
-            socket.value.activeSubscriptions.removeAll { subscriptionId in
-                subscriptionId == "Following" || subscriptionId == "Notifications"
+            socket.value.mcq.async(flags: .barrier) {
+                socket.value._activeSubscriptions.removeAll { subscriptionId in
+                    subscriptionId == "Following" || subscriptionId == "Notifications"
+                }
             }
             let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"))
             socket.value.client.sendMessage(closeFollowing.message)
@@ -511,8 +511,10 @@ final class SocketPool: ObservableObject {
     func allowNewFollowingSubscriptions() {
         // removes "Following" from the active subscriptions so when we try a new one when following keys has changed, it would be ignored because didn't pass !contains..
         for socket in sockets {
-            socket.value.activeSubscriptions.removeAll { subscriptionId in
-                subscriptionId == "Following"
+            socket.value.mcq.async(flags: .barrier) {
+                socket.value._activeSubscriptions.removeAll { subscriptionId in
+                    subscriptionId == "Following"
+                }
             }
         }
     }
@@ -521,14 +523,16 @@ final class SocketPool: ObservableObject {
         for socket in sockets {
             guard socket.value.isConnected else { continue }
             
-            if socket.value.activeSubscriptions.contains(subscriptionId) {
+            if socket.value.getActiveSubscriptions().contains(subscriptionId) {
                 let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId))
                 socket.value.client.sendMessage(closeSubscription.message)
             }
             
-            socket.value.activeSubscriptions.removeAll(where: { activeId in
-                activeId == subscriptionId
-            })
+            socket.value.mcq.async(flags: .barrier) {
+                socket.value._activeSubscriptions.removeAll(where: { activeId in
+                    activeId == subscriptionId
+                })
+            }
         }
     }
 }
@@ -541,64 +545,49 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     var isNC:Bool
     var client:NewWebSocket
     
-    var _skipped = 0
-    var _exponentialReconnectBackOff = 0
+    // Managed Client Queue
+    public var mcq = DispatchQueue(label: "com.nostur.managed-client", qos: .utility, attributes: .concurrent)
     
-    
-    private var _isConnecting = false
-    private var _activeSubscriptions:[String] = []
-    
-    private var _lastMessageReceivedAt:Date? = nil
-    var lastMessageReceivedAt: Date? {
-        get {
-            return SocketPool.shared.connectionQueue.sync {
-                _lastMessageReceivedAt
-            }
-        }
-        set {
-            SocketPool.shared.connectionQueue.async(flags: .barrier) {
-                self._lastMessageReceivedAt = newValue
-            }
+    private var _skipped = 0
+    public func getSkipped() async -> Int {
+        await withCheckedContinuation { continuation in
+            mcq.async { continuation.resume(returning: self._skipped) }
         }
     }
-    
-    var skipped: Int {
-        get {
-            return SocketPool.shared.connectionQueue.sync {
-                _skipped
-            }
-        }
-        set {
-            SocketPool.shared.connectionQueue.async(flags: .barrier) {
-                self._skipped = newValue
-            }
-        }
+    public func setSkipped(_ skipped:Int) {
+        mcq.async(flags: .barrier) { self._skipped = skipped }
     }
     
-    var exponentialReconnectBackOff: Int {
-        get {
-            return SocketPool.shared.connectionQueue.sync {
-                _exponentialReconnectBackOff
-            }
-        }
-        set {
-            SocketPool.shared.connectionQueue.async(flags: .barrier) {
-                self._exponentialReconnectBackOff = newValue
-            }
+    
+    private var _exponentialReconnectBackOff = 0
+    public func getExponentialBackoff() async -> Int {
+        await withCheckedContinuation { continuation in
+            mcq.async { continuation.resume(returning: self._skipped) }
         }
     }
+    public func setExponentialBackoff(_ exponentialReconnectBackOff:Int) {
+        mcq.async(flags: .barrier) { self._exponentialReconnectBackOff = exponentialReconnectBackOff }
+    }
     
-    var isConnecting: Bool {
-        get {
-            return SocketPool.shared.connectionQueue.sync {
-                _isConnecting
-            }
+    
+    public var isConnecting = false // mcq
+    
+    public var _activeSubscriptions:[String] = []
+    public func getActiveSubscriptions() -> [String] {
+        mcq.sync { self._activeSubscriptions }
+    }
+    public func setActiveSubscriptions(_ activeSubscriptions:[String] ) {
+        mcq.async(flags: .barrier) { self._activeSubscriptions = activeSubscriptions }
+    }
+    
+    public var _lastMessageReceivedAt:Date? = nil
+    public func getLastMessageReceivedAt() async -> Date? {
+        await withCheckedContinuation { continuation in
+            mcq.async { continuation.resume(returning: self._lastMessageReceivedAt) }
         }
-        set {
-            SocketPool.shared.connectionQueue.async(flags: .barrier) {
-                self._isConnecting = newValue
-            }
-        }
+    }
+    public func setLastMessageReceivedAt(_ date:Date? = nil) {
+        mcq.async(flags: .barrier) { self._lastMessageReceivedAt = date }
     }
     
     @Published var isConnected = false
@@ -606,19 +595,6 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     @Published var write = false
     
     var excludedPubkeys:Set<String>
-    
-    var activeSubscriptions:[String] {
-        get {
-            return SocketPool.shared.connectionQueue.sync {
-                _activeSubscriptions
-            }
-        }
-        set {
-            SocketPool.shared.connectionQueue.async(flags: .barrier) {
-                self._activeSubscriptions = newValue
-            }
-        }
-    }
     
     init(relayId: String, url: String, client:NewWebSocket, read: Bool = true, write: Bool = false, isNWC:Bool = false, isNC:Bool = false, excludedPubkeys:Set<String> = []) {
         self.relayId = relayId
@@ -632,114 +608,117 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func didReceivePong() {
-        self.lastMessageReceivedAt = .now
+        self.setLastMessageReceivedAt(.now)
     }
     
     func connect(_ forceConnectionAttempt:Bool = false) {
-        guard self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
-            self.skipped = skipped + 1
-            L.sockets.info("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
-            return
-        }
-        if !isConnecting {
-            self.skipped = 0
+        mcq.async(flags: .barrier) {
+            self._activeSubscriptions = []
+            guard !self.isConnecting else { return }
+            guard self._exponentialReconnectBackOff > 512 || self._exponentialReconnectBackOff == 1 || forceConnectionAttempt || self._skipped == self._exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
+                self._skipped = self._skipped + 1
+                L.sockets.info("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self._exponentialReconnectBackOff)) skipped: \(self._skipped)")
+                return
+            }
+            self._skipped = 0
             self.isConnecting = true
-            self.client.connect()
-            if self.exponentialReconnectBackOff >= 512 {
-                self.exponentialReconnectBackOff = 512
+            DispatchQueue.main.async {
+                self.client.connect()
+            }
+            
+            if self._exponentialReconnectBackOff >= 512 {
+                self._exponentialReconnectBackOff = 512
             }
             else {
-                self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+                self._exponentialReconnectBackOff = max(1, self._exponentialReconnectBackOff * 2)
             }
         }
     }
     
     func disconnect() {
-        DispatchQueue.main.async {
+        mcq.async(flags: .barrier) {
             self.isConnecting = false
-            self.isConnected = false
+            self._activeSubscriptions = []
+            self._lastMessageReceivedAt = nil
         }
-        self.client.disconnect()
-        self.activeSubscriptions = []
-        self.lastMessageReceivedAt = nil
+        DispatchQueue.main.async {
+            self.isConnected = false
+            self.client.disconnect()
+        }
     }
     
     func didDisconnect() {
-        DispatchQueue.main.async {
-            SocketPool.shared.objectWillChange.send()
+        mcq.async(flags: .barrier) {
             self.isConnecting = false
-            self.isConnected = false
+            self._activeSubscriptions = []
+            self._lastMessageReceivedAt = nil
         }
-        self.activeSubscriptions = []
-        self.lastMessageReceivedAt = nil
-        L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url)")
         DispatchQueue.main.async {
+            self.isConnected = false
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
+        L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url)")
     }
     
     func didDisconnectWithError(_ error: Error) {
-        DispatchQueue.main.async {
-            SocketPool.shared.objectWillChange.send()
+        mcq.async(flags: .barrier) {
             self.isConnecting = false
+            self._activeSubscriptions = []
+            self._lastMessageReceivedAt = nil
+            if self._exponentialReconnectBackOff >= 512 {
+                self._exponentialReconnectBackOff = 512
+            }
+            else {
+                self._exponentialReconnectBackOff = max(1, self._exponentialReconnectBackOff * 2)
+            }
+        }
+        let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
+        DispatchQueue.main.async {
             self.isConnected = false
-            let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
             sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
         }
-        self.activeSubscriptions = []
-        self.lastMessageReceivedAt = nil
-        if self.exponentialReconnectBackOff >= 512 {
-            self.exponentialReconnectBackOff = 512
-        }
-        else {
-            self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
-        }
         L.sockets.info("🏎️🏎️🔌🔴🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
-        DispatchQueue.main.async {
-            sendNotification(.socketNotification, "Disconnected: \(self.url)")
-        }
     }
     
     func didReceiveMessage(_ text:String) {
         L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url): \(text)")
-        self.lastMessageReceivedAt = .now
         MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client:client)
+        self.setLastMessageReceivedAt(.now)
     }
     
     func didReceiveData(_ data:Data) {
-        self.lastMessageReceivedAt = .now
+        self.setLastMessageReceivedAt(.now)
         L.sockets.info("🔌 RECEIVED DATA \(self.url): \(data.count)")
     }
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-        DispatchQueue.main.async {
-            SocketPool.shared.objectWillChange.send()
+        mcq.async(flags: .barrier) {
             self.isConnecting = false
-            self.isConnected = true
+            self._activeSubscriptions = []
+            self._exponentialReconnectBackOff = 0
+            self._skipped = 0
+            self._lastMessageReceivedAt = .now
         }
-        self.activeSubscriptions = []
-        self.exponentialReconnectBackOff = 0
-        self.skipped = 0
-        L.sockets.info("🏎️🏎️🔌 CONNECTED \(self.url)")
-        self.lastMessageReceivedAt = .now
         DispatchQueue.main.async {
+            self.isConnected = true
             sendNotification(.socketConnected, "Connected: \(self.url)")
         }
+        
+        L.sockets.info("🏎️🏎️🔌 CONNECTED \(self.url)")
         LVMManager.shared.restoreSubscriptions()
     }
     
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        DispatchQueue.main.async {
-            SocketPool.shared.objectWillChange.send()
+        mcq.async(flags: .barrier) {
             self.isConnecting = false
-            self.isConnected = false
+            self._activeSubscriptions = []
+            self._exponentialReconnectBackOff = 0
+            self._skipped = 0
+            self._lastMessageReceivedAt = .now
         }
-        self.activeSubscriptions = []
-        self.exponentialReconnectBackOff = 0
-        self.skipped = 0
-        self.lastMessageReceivedAt = nil
         DispatchQueue.main.async {
+            self.isConnected = false
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
         L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
@@ -759,187 +738,55 @@ protocol NewWebSocketDelegate: URLSessionWebSocketDelegate {
     func didReceivePong()
 }
 
+struct SocketMessage {
+    let id = UUID()
+    let text:String
+}
+
 
 class NewWebSocket {
     let url:String
-    var socketQueue = OperationQueue()
+    private var outQueue:[SocketMessage] = []
+    private var wsq:DispatchQueue
     
-    var delegate_:NewWebSocketDelegate?
     var delegate:NewWebSocketDelegate? {
-        get {
-            SocketPool.shared.websocketQueue.sync {
-                self.delegate_
-            }
-        }
-        set {
-            SocketPool.shared.websocketQueue.sync {
-                self.delegate_ = newValue
-                self.session = URLSession(configuration: .default, delegate: self.delegate_, delegateQueue: self.socketQueue)
-            }
+        didSet {
+            self.session = URLSession(configuration: .default, delegate: self.delegate, delegateQueue: nil)
         }
     }
     
-    var subscriptions_ = Set<AnyCancellable>()
-    var subscriptions:Set<AnyCancellable> {
-        get {
-            SocketPool.shared.websocketQueue.sync {
-                self.subscriptions_
-            }
-        }
-        set {
-            SocketPool.shared.websocketQueue.async(flags: .barrier) {
-                self.subscriptions_ = newValue
-            }
-        }
-    }
-    
-    var connection_:AnyCancellable?
-    var connection:AnyCancellable? {
-        get {
-            SocketPool.shared.websocketQueue.sync {
-                self.connection_
-            }
-        }
-        set {
-            SocketPool.shared.websocketQueue.async(flags: .barrier) {
-                self.connection_ = newValue
-            }
-        }
-    }
-    
-    var pinger_:AnyCancellable?
-    var pinger:AnyCancellable? {
-        get {
-            SocketPool.shared.websocketQueue.sync {
-                self.pinger_
-            }
-        }
-        set {
-            SocketPool.shared.websocketQueue.async(flags: .barrier) {
-                self.pinger_ = newValue
-            }
-        }
-    }
-    
-    var webSocket_:WebSocket?
-    var webSocket:WebSocket? {
-        get {
-            SocketPool.shared.websocketQueue.sync {
-                self.webSocket_
-            }
-        }
-        set {
-            SocketPool.shared.websocketQueue.async(flags: .barrier) {
-                self.webSocket_ = newValue
-            }
-        }
-    }
-    
+    var subscriptions = Set<AnyCancellable>()
+    var connection:AnyCancellable?
+    var pinger:AnyCancellable?
+        
+    var webSocket:WebSocket?
     var session:URLSession?
     
     init(url:String) {
         self.url = url
+        self.wsq = DispatchQueue(label: self.url, qos: .utility)
     }
     
-    func sendMessageAfterPing(_ text:String) {
-        L.sockets.info("🟪 sendMessageAfterPing  \(text)")
-        guard let webSocket = webSocket else {
-            L.sockets.info("🟪🔴🔴 Not connected.  \(self.url)")
-            return
-        }
-        webSocket.ping()
-            .sink(receiveCompletion: { completion in
-                switch completion {
-                case .failure(let error):
-                    // Handle the failure case
-#if DEBUG
-                    let _url = self.url
-                    let _error = error
-                    L.sockets.info("🟪 \(_url) Ping Failure: \(_error), trying to reconnect")
-#endif
-                    DispatchQueue.main.async {
-                        self.connect(andSend:text)
-                    }
-                case .finished:
-                    // The ping completed successfully
-                    L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
-                    L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-                    let _ = webSocket.send(text)
-                        .sink(receiveCompletion: { _ in
-                            //                                print($0)
-                            L.sockets.info("🟪 WHAT")
-                        }, receiveValue: {
-                            //                                print($0)
-                            L.sockets.info("🟪 WHAT OK")
-                        })
-//                    sendNotification(.pong)
-                }
-            }, receiveValue: { _ in
-                // Handle the received value (optional, based on your requirements)
-                //                    L.sockets.info("Received value during ping")
-            })
-            .store(in: &subscriptions)
-    }
-    
-    func ping() {
-        L.sockets.info("Trying to ping: \(self.url)")
-        guard let webSocket = webSocket else {
-            L.sockets.info("🔴🔴 Not connected. ????? \(self.url)")
-            return
-        }
-        webSocket.ping()
-            .sink(receiveCompletion: { [weak self] completion in
-                guard let self = self else { return }
-                switch completion {
-                case .failure(let error):
-                    // Handle the failure case
-                    let _url = self.url
-                    let _error = error
-                    L.sockets.info("\(_url) Ping Failure: \(_error), trying to reconnect")
-                    DispatchQueue.main.async {
-                        self.connect()
-                    }
-                case .finished:
-                    // The ping completed successfully
-                    let _url = self.url
-                    L.sockets.info("\(_url) Ping succeeded")
-                    self.delegate?.didReceivePong()
-//                    sendNotification(.pong)
-                }
-            }, receiveValue: { _ in
-                // Handle the received value (optional, based on your requirements)
-                //                    L.sockets.info("Received value during ping")
-            })
-            .store(in: &subscriptions)
-    }
-    
-    func sendMessage(_ text:String) {
-        guard let webSocket = webSocket else {
-            L.sockets.info("🔴🔴 Not connected. Did not sendMessage \(self.url)")
-            return
-        }
-        L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-        let _ = webSocket.send(text)
-            .sink(receiveCompletion: { _ in
-                L.sockets.info("sendMessage receiveCompletion")
-            }, receiveValue: {
-                L.sockets.info("sendMessage receiveValue")
-            } )
-    }
-    
-    func connect(andSend:String? = nil) {
-        guard let session = session else { return }
-        let urlRequest = URLRequest(url: URL(string: url) ?? URL(string: "wss://localhost:123456/invalid_relay_url")!)
-        
-        // Create the WebSocket instance. This is the entry-point for sending and receiving messages
-        webSocket = session.webSocket(with: urlRequest)
-        
-        // Subscribe to the WebSocket. This will connect to the remote server and start listening
-        // for messages (URLSessionWebSocketTask.Message).
-        // URLSessionWebSocketTask.Message is an enum for either Data or String
-        if let webSocket {
-            connection = webSocket
-                .publisher
+    public func connect(andSend:String? = nil) {
+        wsq.async { [weak self] in
+            guard let self = self else { return }
+            guard let session = session else { return }
+            guard let urlURL = URL(string: url) else { return }
+            let urlRequest = URLRequest(url: urlURL)
+            
+            if let andSend = andSend {
+                self.outQueue.append(SocketMessage(text: andSend))
+            }
+            
+            // Create the WebSocket instance. This is the entry-point for sending and receiving messages
+            webSocket = session.webSocket(with: urlRequest)
+            
+            guard let webSocket = webSocket else { return }
+            
+            // Subscribe to the WebSocket. This will connect to the remote server and start listening
+            // for messages (URLSessionWebSocketTask.Message).
+            // URLSessionWebSocketTask.Message is an enum for either Data or String
+            self.connection = webSocket.publisher
                 .sink(receiveCompletion: { completion in
                     switch completion {
                     case .finished:
@@ -948,7 +795,7 @@ class NewWebSocket {
                         self.delegate?.didDisconnectWithError(error)
                     }
                 },
-                      receiveValue: { message in
+                receiveValue: { message in
                     switch message {
                     case .data(let data):
                         // Handle Data message
@@ -961,22 +808,146 @@ class NewWebSocket {
                     }
                 })
             
-            guard let andSend = andSend else { return }
-            let _ = webSocket.send(andSend)
-                .sink(receiveCompletion: { _ in
-                    L.sockets.info("andSend completion")
-                }, receiveValue: {
-                    L.sockets.info("andSend receiveValue")
-                } )
+            guard !outQueue.isEmpty else { return }
+            for out in outQueue {
+                webSocket.send(out.text)
+                    .subscribe(Subscribers.Sink(
+                        receiveCompletion: { completion in
+                            switch completion {
+                            case .finished:
+                                self.wsq.async {
+                                    self.outQueue.removeAll(where: { $0.id == out.id })
+                                }
+                            case .failure(let error):
+                                L.og.error("🟪🔴🔴 Error sending \(error): \(out.text)")
+                            }
+                        },
+                        receiveValue: { _ in }
+                    ))
+            }
         }
     }
     
+    func sendMessageAfterPing(_ text:String) {
+        L.sockets.info("🟪 sendMessageAfterPing  \(text)")
+        wsq.async { [weak self] in
+            guard let self = self else { return }
+            guard let webSocket = self.webSocket else {
+                L.sockets.info("🟪🔴🔴 Not connected.  \(self.url)")
+                return
+            }
+            let socketMessage = SocketMessage(text: text)
+            outQueue.append(socketMessage)
+            
+            webSocket.ping()
+                .subscribe(Subscribers.Sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .failure(let error):
+                            // Handle the failure case
+                            #if DEBUG
+                            let _url = self.url
+                            let _error = error
+                            L.sockets.info("🟪 \(_url) Ping Failure: \(_error), trying to reconnect")
+                            #endif
+                            self.connect(andSend:text)
+                        case .finished:
+                            // The ping completed successfully
+                            L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
+                            L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
+                            webSocket.send(text)
+                                .subscribe(Subscribers.Sink(
+                                    receiveCompletion: { completion in
+                                        switch completion {
+                                        case .finished:
+                                            self.wsq.async {
+                                                self.outQueue.removeAll(where: { $0.id == socketMessage.id })
+                                            }
+                                        case .failure(let error):
+                                            L.og.error("🟪🔴🔴 Error sending \(error): \(text)")
+                                        }
+                                    },
+                                    receiveValue: { _ in }
+                                ))
+        //                    sendNotification(.pong)
+                        }
+                    },
+                    receiveValue: { _ in }
+                ))
+        }
+    }
+    
+    func ping() {
+        L.sockets.info("Trying to ping: \(self.url)")
+        wsq.async { [weak self] in
+            guard let self = self else { return }
+            guard let webSocket = self.webSocket else {
+                L.sockets.info("🔴🔴 Not connected. ????? \(self.url)")
+                return
+            }
+
+            webSocket.ping()
+                .subscribe(Subscribers.Sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .failure(let error):
+                            // Handle the failure case
+                            let _url = self.url
+                            let _error = error
+                            L.sockets.info("\(_url) Ping Failure: \(_error), trying to reconnect")
+                            DispatchQueue.main.async {
+                                self.connect()
+                            }
+                        case .finished:
+                            // The ping completed successfully
+                            let _url = self.url
+                            L.sockets.info("\(_url) Ping succeeded")
+                            self.delegate?.didReceivePong()
+        //                    sendNotification(.pong)
+                        }
+                    },
+                    receiveValue: { _ in }
+                ))
+        }
+    }
+    
+    func sendMessage(_ text:String) {
+        wsq.async { [weak self] in
+            guard let self = self else { return }
+            guard let webSocket = webSocket else {
+                L.sockets.info("🔴🔴 Not connected. Did not sendMessage \(self.url)")
+                return
+            }
+            let socketMessage = SocketMessage(text: text)
+            self.outQueue.append(socketMessage)
+            L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
+            webSocket.send(text)
+                .subscribe(Subscribers.Sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .finished:
+                            self.wsq.async {
+                                self.outQueue.removeAll(where: { $0.id == socketMessage.id })
+                            }
+                        case .failure(let error):
+                            L.og.error("🟪🔴🔴 Error sending \(error): \(text)")
+                        }
+                    },
+                    receiveValue: { _ in }
+                ))
+        }
+    }
+    
+    
+    
     func disconnect() {
-        guard webSocket != nil else { return }
-        // You can stop the WebSocket subscription, disconnecting from remote server.
-        //        pinger?.cancel()
-        //        pingOnceSub?.cancel()
-        connection?.cancel()
+        wsq.async { [weak self] in
+            guard self?.webSocket != nil else { return }
+            // You can stop the WebSocket subscription, disconnecting from remote server.
+            //        pinger?.cancel()
+            //        pingOnceSub?.cancel()
+            self?.connection?.cancel()
+        }
     }
 }
 
@@ -1077,8 +1048,8 @@ class NewEphemeralClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDel
     }
     
     func didDisconnectWithError(_ error: Error) {
+        let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
         DispatchQueue.main.async {
-            let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
             sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
         }
         L.sockets.info("🏎️🏎️🔌🔴🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
