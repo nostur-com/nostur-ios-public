@@ -108,37 +108,51 @@ struct ProfileOverlayCard: View {
                     
                     Spacer()
                     
-                    if contact.anyLud {
-                        ProfileZapButton(contact: contact, zapEtag: zapEtag)
-                    }
-                    
-                    VStack {
-                        if (!withoutFollowButton) {
-                            Button {
-                                guard isFullAccount() else { showReadOnlyMessage(); return }
-                                if (contact.following && !contact.privateFollow) {
-                                    contact.follow(privateFollow: true)
-                                }
-                                else if (contact.following && contact.privateFollow) {
-                                    contact.unfollow()
-                                }
-                                else {
-                                    contact.follow()
-                                }
-                            } label: {
-                                FollowButton(isFollowing:contact.following, isPrivateFollowing:contact.privateFollow)
+                    VStack(alignment: .trailing) {
+                        HStack {
+                            if contact.anyLud {
+                                ProfileZapButton(contact: contact, zapEtag: zapEtag)
                             }
-                            .disabled(!fg.didReceiveContactListThisSession)
+                            if (!withoutFollowButton) {
+                                Button {
+                                    guard isFullAccount() else { showReadOnlyMessage(); return }
+                                    if (contact.following && !contact.privateFollow) {
+                                        contact.follow(privateFollow: true)
+                                    }
+                                    else if (contact.following && contact.privateFollow) {
+                                        contact.unfollow()
+                                    }
+                                    else {
+                                        contact.follow()
+                                    }
+                                } label: {
+                                    FollowButton(isFollowing:contact.following, isPrivateFollowing:contact.privateFollow)
+                                }
+                                .disabled(!fg.didReceiveContactListThisSession)
+                            }
                         }
-                        Button("Show feed") {
-                            guard let account = account() else { return }
-                            dismiss()
-                            LVMManager.shared.followingLVM(forAccount: account)
-                                .loadSomeonesFeed(contact.pubkey)
-                            sendNotification(.showingSomeoneElsesFeed, contact)
-                            sendNotification(.dismissMiniProfile)
+                        HStack {
+                            if account()?.privateKey != nil {
+                                Button {
+                                    UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
+                                    sendNotification(.dismissMiniProfile)
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                        sendNotification(.triggerDM, (contact.pubkey, contact.mainContact))
+                                    }
+                                } label: { Image(systemName: "envelope.fill") }
+                                .buttonStyle(NosturButton())
+                            }
+                            
+                            Button("Show feed") {
+                                guard let account = account() else { return }
+                                dismiss()
+                                LVMManager.shared.followingLVM(forAccount: account)
+                                    .loadSomeonesFeed(contact.pubkey)
+                                sendNotification(.showingSomeoneElsesFeed, contact)
+                                sendNotification(.dismissMiniProfile)
+                            }
+                            .buttonStyle(NosturButton())
                         }
-                        .buttonStyle(NosturButton())
                     }
                 }
                 
