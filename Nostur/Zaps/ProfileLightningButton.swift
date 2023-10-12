@@ -26,17 +26,18 @@ struct ProfileLightningButton: View {
                     .colorInvert()
             }
             else {
-                Text("⚡️")
+                Image(systemName: "bolt.fill")
             }
         }
-        .frame(width: 40, height: 30)
-        .font(.caption.weight(.heavy))
-        .background(themes.theme.background)
-        .cornerRadius(20)
-        .overlay {
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(.gray, lineWidth: 1)
-        }
+        .buttonStyle(NosturButton())
+//        .frame(width: 40, height: 30)
+//        .font(.caption.weight(.heavy))
+//        .background(themes.theme.background)
+//        .cornerRadius(20)
+//        .overlay {
+//            RoundedRectangle(cornerRadius: 20)
+//                .stroke(.gray, lineWidth: 1)
+//        }
         .sheet(isPresented: $payAmountSelectorShown) {
             PaymentAmountSelector(paymentInfo: paymentInfo!)
                 .environmentObject(themes)
