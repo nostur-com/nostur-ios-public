@@ -11,6 +11,8 @@ import CoreData
 
 class NotificationsViewModel: ObservableObject {
     
+    static let UNREAD_KINDS:Set<Int> = Set([1,4,6,7,9735,9802,30023]) // posts, dms, reposts, reactions, zaps, highlights, articles
+    
     static let shared = NotificationsViewModel()
     
     private init() {
@@ -35,7 +37,7 @@ class NotificationsViewModel: ObservableObject {
     public func checkNeedsUpdate(_ event:Event) {
         guard let account = account() else { return }
         switch event.kind {
-        case 1,9802,30023: // TODO: Should check if not muted or blocked
+        case 1,4,9802,30023: // TODO: Should check if not muted or blocked
             needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == account.publicKey })
         case 6:
             needsUpdate = (event.otherPubkey == account.publicKey) // TODO: Should ignore blocked or muted
@@ -194,16 +196,9 @@ class NotificationsViewModel: ObservableObject {
     private func relayCheckSinceNotifications() {
         // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
         guard NRState.shared.activeAccountPublicKey != "" else { return }
-        guard let since = account()?.lastNotificationReceivedAt else { return }
-    
-        let sinceNTimestamp = NTimestamp(date: since)
-        let dmSinceNTimestamp = NTimestamp(timestamp: Int(DirectMessageViewModel.default.lastNotificationReceivedAt?.timeIntervalSince1970 ?? 0))
-        L.og.info("checking notifications since: \(since.description(with: .current))")
-        
-        let ago = since.agoString
-        
-        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:[1,6,7,9735,9802,30023], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp))
-        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:[4], subscriptionId: "DMs-CATCHUP-\(ago)", since: dmSinceNTimestamp))
+                
+        let since = NTimestamp(timestamp: Int(self.requestSince))
+        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS), subscriptionId: "Notifications-CATCHUP", since: since))
     }
     
     
