@@ -208,15 +208,24 @@ public final class NewPostModel: ObservableObject {
         
         if let replyTo {
             bg().perform {
+                let replyToNEvent = replyTo.toNEvent()
                 let replyToId = replyTo.id
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
+                    // Republish post being replied to
+                    Unpublisher.shared.publishNow(replyToNEvent)
                 }
             }
         }
         if let quotingEvent {
-            DispatchQueue.main.async {
-                sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
+            bg().perform {
+                let quotingNEvent = quotingEvent.toNEvent()
+                let quotingEventId = quotingEvent.id
+                DispatchQueue.main.async {
+                    sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEventId))
+                    // Republish post being quoted
+                    Unpublisher.shared.publishNow(quotingNEvent)
+                }
             }
         }
         dismiss()
