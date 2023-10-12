@@ -1000,8 +1000,11 @@ extension LVM {
             .throttle(for: .seconds(2.5), scheduler: DispatchQueue.global(), latest: true)
 //            .print("⏱ Delays:: performLocalFetch throttle +2.5 + latest")
             .sink { refreshInBackground in
-                bg().perform {
-                    self._performLocalFetch(refreshInBackground: refreshInBackground)
+                DispatchQueue.main.async {
+                    let isVisible = self.viewIsVisible
+                    bg().perform {
+                        self._performLocalFetch(refreshInBackground: refreshInBackground, isVisible: isVisible)
+                    }
                 }
             }
             .store(in: &subscriptions)
@@ -1389,9 +1392,9 @@ extension LVM {
 extension LVM {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
-    func _performLocalFetch(refreshInBackground:Bool = false) {
+    func _performLocalFetch(refreshInBackground:Bool = false, isVisible:Bool = false) {
         let mostRecentEvent:Event? = self.nrPostLeafs.first?.event
-        let visibleOrInRefreshInBackground = self.viewIsVisible || refreshInBackground
+        let visibleOrInRefreshInBackground = isVisible || refreshInBackground
         guard visibleOrInRefreshInBackground else {
             L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch cancelled - view is not visible")
             // For some reason the subscription is not closed when switching tab, so close here
