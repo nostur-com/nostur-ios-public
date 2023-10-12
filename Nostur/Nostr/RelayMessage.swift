@@ -118,8 +118,10 @@ class RelayMessage {
                         }
                     }
                     
-                    Importer.shared.callbackSubscriptionIds.insert(mMessage.subscriptionId)
-                    Importer.shared.sendReceivedNotification.send()
+                    let (success, _) = Importer.shared.callbackSubscriptionIds.insert(mMessage.subscriptionId)
+                    if success {
+                        Importer.shared.sendReceivedNotification.send()
+                    }
                     
                     // update from which relays an event id was received, or relay feeds won't work.
                     if let relays = eventState.relays, !relays.contains(relay) {
