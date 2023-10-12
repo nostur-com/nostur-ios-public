@@ -18,8 +18,9 @@ struct PostRowDeletable: View {
     private var isDetail:Bool = false
     private var grouped:Bool = false
     private var ignoreBlock:Bool = false // Force show, when we open profile of blocked account
+    private var theme:Theme
     
-    init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, ignoreBlock:Bool = false) {
+    init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, ignoreBlock:Bool = false, theme:Theme = Themes.default.theme) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.hideFooter = hideFooter
@@ -30,6 +31,7 @@ struct PostRowDeletable: View {
         self.isDetail = isDetail
         self.grouped = grouped
         self.ignoreBlock = ignoreBlock
+        self.theme = theme
     }
     
     var body: some View {
@@ -51,7 +53,7 @@ struct PostRowDeletable: View {
             .transaction { t in t.animation = nil }
         }
         else if postRowDeletableAttributes.deletedById == nil {
-            NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped)
+            NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped, theme: theme)
 //                .transaction { t in
 //                    t.animation = nil
 //                }

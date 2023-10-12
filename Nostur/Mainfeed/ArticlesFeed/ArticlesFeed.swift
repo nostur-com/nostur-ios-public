@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ArticlesFeed: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject var settings:SettingsStore = .shared
     @ObservedObject var vm:ArticlesFeedViewModel
     
@@ -35,7 +35,7 @@ struct ArticlesFeed: View {
                     LazyVStack(spacing: 10) {
                         ForEach(vm.articles) { post in
                             Box(nrPost: post) {
-                                PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                             }
                             .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                             .transaction { t in
@@ -70,7 +70,7 @@ struct ArticlesFeed: View {
                 .padding(0)
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             guard selectedTab == "Main" && selectedSubTab == "Articles" else { return }
             vm.load()
@@ -93,6 +93,6 @@ struct ArticlesFeed: View {
 struct ArticlesFeed_Previews: PreviewProvider {
     static var previews: some View {
         ArticlesFeed(vm: ArticlesFeedViewModel())
-            .environmentObject(Theme.default)
+            .environmentObject(Themes.default)
     }
 }

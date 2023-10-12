@@ -48,7 +48,7 @@ struct PostTest_Previews: PreviewProvider {
 }
 
 struct SmoothListMock<Content: View>: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     let content: Content
     
     init(@ViewBuilder _ content: ()->Content) {
@@ -61,7 +61,7 @@ struct SmoothListMock<Content: View>: View {
                 content
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
     }
 }
 

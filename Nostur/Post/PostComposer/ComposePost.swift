@@ -16,7 +16,7 @@ struct ComposePost: View {
     public var directMention:Contact? = nil // For initiating a post from profile view
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) public var dismiss
     
     @StateObject private var vm = NewPostModel()
@@ -50,7 +50,7 @@ struct ComposePost: View {
                         ScrollView {
                             VStack {
                                 if let replyToNRPost = replyToNRPost {
-                                    PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom)
+                                    PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom, theme: themes.theme)
                                         .onTapGesture { }
                                         .disabled(true)
                                 }
@@ -67,7 +67,7 @@ struct ComposePost: View {
                                 .padding(.top, 10)
                                 
                                 if let quotingNRPost = quotingNRPost {
-                                    QuotedNoteFragmentView(nrPost: quotingNRPost)
+                                    QuotedNoteFragmentView(nrPost: quotingNRPost, theme: themes.theme)
                                         .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
                                 }
                             }
@@ -132,7 +132,7 @@ struct ComposePost: View {
                     .overlay(alignment: .bottom) {
                         MentionChoices(vm: vm)
                             .frame(height: geo.size.height * 0.60)
-                            .background(theme.background)
+                            .background(themes.theme.background)
                     }
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         NavigationStack {
@@ -145,7 +145,7 @@ struct ComposePost: View {
                                 uploading: $vm.uploading
                             )
                         }
-                        .presentationBackground(theme.background)
+                        .presentationBackground(themes.theme.background)
                     }
                 }
                 .overlay {

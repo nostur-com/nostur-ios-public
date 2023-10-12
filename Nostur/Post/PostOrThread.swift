@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PostOrThread: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     private let nrPost: NRPost
     @ObservedObject private var postOrThreadAttributes: NRPost.PostOrThreadAttributes
     private var grouped = false
@@ -28,10 +28,10 @@ struct PostOrThread: View {
 //        #endif
         VStack(spacing: 10) {
             ForEach(postOrThreadAttributes.parentPosts) { nrParent in
-                Box(nrPost: nrParent) {
+                Box(nrPost: nrParent, theme: themes.theme) {
                     PostRowDeletable(nrPost: nrParent,
                                      missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
-                                     connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+                                     connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped, theme: themes.theme)
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
@@ -44,8 +44,8 @@ struct PostOrThread: View {
 //                }
             }
 
-            Box(nrPost: nrPost) {
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+            Box(nrPost: nrPost, theme: themes.theme) {
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped, theme: themes.theme)
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
@@ -58,14 +58,14 @@ struct PostOrThread: View {
         }
         .background {
             if nrPost.kind == 30023 {
-                theme.secondaryBackground
+                themes.theme.secondaryBackground
                     .withoutAnimation()
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
             }
             else {
-                theme.background
+                themes.theme.background
                     .withoutAnimation()
 //                    .transaction { t in
 //                        t.animation = nil
@@ -74,7 +74,7 @@ struct PostOrThread: View {
         } // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
         .padding(.top, 10)
         .background { // This is the background between PostOrThread's.
-            theme.listBackground
+            themes.theme.listBackground
                 .withoutAnimation()
 //                .transaction { t in t.animation = nil }
         }

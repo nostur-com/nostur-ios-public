@@ -9,13 +9,14 @@ import SwiftUI
 
 // TODO: Not sure why we have Highlight() and HighlightRenderer(). Can maybe remove one.
 struct HighlightRenderer: View {
-    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var highlightAttributes:NRPost.HighlightAttributes
+    private var theme:Theme
     
-    init(nrPost: NRPost) {
+    init(nrPost: NRPost, theme: Theme) {
         self.nrPost = nrPost
         self.highlightAttributes = nrPost.highlightAttributes
+        self.theme = theme
     }
     
     var body: some View {
@@ -70,7 +71,7 @@ struct HighlightRenderer_Previews: PreviewProvider {
         }) {
             NavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost() {
-                    HighlightRenderer(nrPost: nrPost)
+                    HighlightRenderer(nrPost: nrPost, theme: Themes.default.theme)
                 }
             }
         }

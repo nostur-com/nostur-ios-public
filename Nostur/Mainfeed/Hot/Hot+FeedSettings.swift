@@ -67,7 +67,7 @@ struct HotFeedSettingsTester: View {
             }
         }
         .onAppear {
-            Theme.default.loadPurple()
+            Themes.default.loadPurple()
         }
     }
 }

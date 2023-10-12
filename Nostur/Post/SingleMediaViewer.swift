@@ -11,16 +11,16 @@ import Nuke
 
 struct SingleMediaViewer: View {
     @Environment(\.openURL) private var openURL
-    @EnvironmentObject var theme:Theme
-    let url:URL
-    let pubkey:String
-    var height:CGFloat?
-    let imageWidth:CGFloat
-    var fullWidth:Bool = false
-    var autoload = false
-    var contentPadding:CGFloat = 0.0
-    var contentMode:ImageProcessingOptions.ContentMode = .aspectFit
-    var upscale = false
+    public let url:URL
+    public let pubkey:String
+    public var height:CGFloat?
+    public let imageWidth:CGFloat
+    public var fullWidth:Bool = false
+    public var autoload = false
+    public var contentPadding:CGFloat = 0.0
+    public var contentMode:ImageProcessingOptions.ContentMode = .aspectFit
+    public var upscale = false
+    public var theme = Themes.default.theme
     
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false

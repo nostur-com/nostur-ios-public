@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BookmarksView: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var ns:NRState
     @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Bookmarks"
 
@@ -41,7 +41,7 @@ struct BookmarksView: View {
                     LazyVStack(spacing: 10) {
                         ForEach(vBookmarks) { vBookmark in
                             Box(nrPost: vBookmark) {
-                                PostRowDeletable(nrPost: vBookmark, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                PostRowDeletable(nrPost: vBookmark, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                             }
     //                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
     //                        .fixedSize(horizontal: false, vertical: true)
@@ -59,7 +59,7 @@ struct BookmarksView: View {
                         }
                         Spacer()
                     }
-                    .background(theme.listBackground)
+                    .background(themes.theme.listBackground)
                 }
                 else {
                     Text("When you bookmark a post it will show up here.")

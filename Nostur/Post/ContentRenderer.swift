@@ -12,19 +12,20 @@ import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
-    @EnvironmentObject private var theme:Theme
+    private var theme:Theme
     private let nrPost:NRPost
     private let isDetail:Bool
     private let fullWidth:Bool
     private let availableWidth:CGFloat
     private let contentElements:[ContentElement]
     
-    init(nrPost: NRPost, isDetail:Bool = false, fullWidth:Bool = false, availableWidth:CGFloat) {
+    init(nrPost: NRPost, isDetail:Bool = false, fullWidth:Bool = false, availableWidth:CGFloat, theme:Theme) {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
         self.availableWidth = availableWidth
         self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
+        self.theme = theme
     }
     
     var body: some View {
@@ -32,7 +33,7 @@ struct ContentRenderer: View { // VIEW things
             ForEach(contentElements) { contentElement in
                 switch contentElement {
                 case .nrPost(let nrPost):
-                    EmbeddedPost(nrPost)
+                    EmbeddedPost(nrPost, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                     //                        .fixedSize(horizontal: false, vertical: true)
@@ -41,7 +42,7 @@ struct ContentRenderer: View { // VIEW things
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .nevent1(let identifier):
-                    NEventView(identifier: identifier)
+                    NEventView(identifier: identifier, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
 //                        .debugDimensions("NEventView")
@@ -50,7 +51,7 @@ struct ContentRenderer: View { // VIEW things
 //                        .transaction { t in t.animation = nil }
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
-                        ProfileCardByPubkey(pubkey: pubkey)
+                        ProfileCardByPubkey(pubkey: pubkey, theme: theme)
                             .padding(.vertical, 10)
                             .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
@@ -60,7 +61,7 @@ struct ContentRenderer: View { // VIEW things
                         .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
-                        EmbedById(id: noteHex)
+                        EmbedById(id: noteHex, theme: theme)
 //                            .frame(minHeight: 75)
                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
 //                            .debugDimensions("QuoteById.note1")
@@ -76,7 +77,7 @@ struct ContentRenderer: View { // VIEW things
                         EmptyView()
                     }
                 case .noteHex(let hex):
-                    EmbedById(id: hex)
+                    EmbedById(id: hex, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
 //                        .debugDimensions("QuoteById.noteHex")
@@ -101,13 +102,13 @@ struct ContentRenderer: View { // VIEW things
                             navigateTo(nrPost)
                         }
                 case .md(let markdownContentWithPs): // For long form articles
-                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs)
+                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme)
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
                 case .lnbc(let text):
-                    LightningInvoice(invoice: text, nrPost:nrPost)
+                    LightningInvoice(invoice: text, theme: theme)
                         .padding(.vertical, 10)
                 case .video(let mediaContent):
                     if let dimensions = mediaContent.dimensions {
@@ -122,7 +123,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .debugDimensions("sd.video")
@@ -147,7 +148,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
 //                            .debugDimensions("video")
                         //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .padding(.horizontal, fullWidth ? -10 : 0)
@@ -169,7 +170,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .debugDimensions("sd.image")
@@ -194,7 +195,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
 //                            .debugDimensions("image")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
@@ -205,7 +206,7 @@ struct ContentRenderer: View { // VIEW things
                     }
                 case .linkPreview(let url):
                     // TODO: do no link preview if restrictAutoDownload...
-                    LinkPreviewView(url: url)
+                    LinkPreviewView(url: url, theme: theme)
                         .padding(.vertical, 10)
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
@@ -243,7 +244,7 @@ struct ContentRenderer: View { // VIEW things
         SmoothListMock {
             if let nrPost = PreviewFetcher.fetchNRPost("473f85cb559d5d8866e7c3ffef536c67323ef44fe2d08d4bef42d82d9f868879") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width)
+                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }
@@ -262,7 +263,7 @@ struct ContentRenderer: View { // VIEW things
         SmoothListMock {
             if let nrPost = PreviewFetcher.fetchNRPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width)
+                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }
@@ -281,7 +282,7 @@ struct ContentRenderer: View { // VIEW things
         SmoothListMock {
             if let nrPost = PreviewFetcher.fetchNRPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width)
+                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }
@@ -302,12 +303,14 @@ func scaledToFit(_ dimensions: CGSize, scale screenScale: Double, maxWidth: Doub
 
 
 struct EmbeddedPost: View {
-    let nrPost:NRPost
+    private let nrPost:NRPost
     @ObservedObject var prd:NRPost.PostRowDeletableAttributes
+    private var theme:Theme
     
-    init(_ nrPost:NRPost) {
+    init(_ nrPost:NRPost, theme: Theme) {
         self.nrPost = nrPost
         self.prd = nrPost.postRowDeletableAttributes
+        self.theme = theme
     }
     
     var body: some View {
@@ -325,7 +328,7 @@ struct EmbeddedPost: View {
             .hCentered()
         }
         else if nrPost.kind == 30023 {
-            ArticleView(nrPost, hideFooter: true)
+            ArticleView(nrPost, hideFooter: true, theme: theme)
                 .padding(20)
                 .background(
                     Color(.secondarySystemBackground)
@@ -338,7 +341,7 @@ struct EmbeddedPost: View {
 //                .debugDimensions("EmbeddedPost.ArticleView", alignment: .bottomLeading)
         }
         else {
-            QuotedNoteFragmentView(nrPost: nrPost)
+            QuotedNoteFragmentView(nrPost: nrPost, theme: theme)
 //                .debugDimensions("EmbeddedPost.QuotedNoteFragmentView", alignment: .bottomLeading)
         }
     }

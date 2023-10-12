@@ -10,7 +10,7 @@ import SwiftUI
 let NOSTUR_SIDEBAR_WIDTH = 310.0
 
 struct NosturRootMenu: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var loggedInAccount:LoggedInAccount
     @State private var sm:SideBarModel = .shared
     @AppStorage("selected_tab") var selectedTab = "Main"
@@ -174,7 +174,7 @@ struct NosturMainView: View {
             }
         }
         .onAppear {
-            Theme.default.loadRed()
+            Themes.default.loadRed()
         }
     }
 }

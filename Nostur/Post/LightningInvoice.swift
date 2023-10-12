@@ -8,11 +8,10 @@
 import SwiftUI
 
 struct LightningInvoice: View {
-    @EnvironmentObject var theme:Theme
-    @Environment(\.openURL) var openURL
-    @ObservedObject var ss:SettingsStore = .shared
-    var invoice:String
-    @ObservedObject var nrPost:NRPost
+    @Environment(\.openURL) private var openURL
+    @ObservedObject private var ss:SettingsStore = .shared
+    public var invoice:String
+    public var theme:Theme
     @State var divider:Double = 1 // 1 = SATS, 100000000 = BTC
     @State var fiatPrice = ""
     @State var cancellationId:UUID? = nil
@@ -41,7 +40,7 @@ struct LightningInvoice: View {
                             }
                             self.cancellationId = nil
                         } label: { Text(isExpired ? "Expired" : "Payment attempted").frame(minWidth: 150) }
-                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                         .cornerRadius(20)
                         .disabled(isExpired)
                     }
@@ -90,7 +89,7 @@ struct LightningInvoice: View {
                             Text("Pay", comment:"Button to pay a lightning invoice").frame(minWidth: 150)
                         }
                     }
-                    .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                     .cornerRadius(20)
                     .disabled(isExpired)
                 }

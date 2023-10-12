@@ -14,8 +14,10 @@ struct Kind1063: View {
     private let availableWidth:CGFloat
     private let fullWidth:Bool
     private var height:CGFloat? = nil
+    private var theme:Theme
     
-    init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero, fullWidth:Bool = false) {
+    init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero, fullWidth:Bool = false, theme: Theme) {
+        self.theme = theme
         self.nrPost = nrPost
         self.url = fileMetadata.url
         self.availableWidth = availableWidth
@@ -58,14 +60,14 @@ struct Kind1063: View {
                     
             }
             if is1063Video(nrPost) {
-                NosturVideoViewur(url: URL(string: url)!, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: 0)
+                NosturVideoViewur(url: URL(string: url)!, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: 0, theme: theme)
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .withoutAnimation()
             }
             else if let height {
-                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload))
+                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), theme: theme)
                     .padding(.horizontal, fullWidth ? -10 : 0)
 //                    .padding(.horizontal, -10)
 //                    .fixedSize(horizontal: false, vertical: true)
@@ -82,7 +84,7 @@ struct Kind1063_Previews: PreviewProvider {
         PreviewContainer({ pe in pe.loadKind1063() }) {
             NavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") , let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: UIScreen.main.bounds.width)
+                    Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }

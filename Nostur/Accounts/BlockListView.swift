@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BlockListView: View {
-    @EnvironmentObject var theme: Theme
+    @EnvironmentObject var themes: Themes
     @State var tab = "Blocked"
     
     var body: some View {
@@ -39,14 +39,14 @@ struct BlockListView: View {
             }
             Spacer()
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .navigationTitle(tab)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 struct BlockedAccounts:View {
-    @EnvironmentObject var theme: Theme
+    @EnvironmentObject var themes: Themes
     @EnvironmentObject var la:LoggedInAccount
     
     @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false))
@@ -57,7 +57,7 @@ struct BlockedAccounts:View {
             LazyVStack(spacing: 10) {
                 ForEach(blockedContacts.sorted(by: { $0.authorName < $1.authorName })) { contact in
                     ProfileRow(withoutFollowButton: true, contact: contact)
-                        .background(theme.background)
+                        .background(themes.theme.background)
                         .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
                             la.account.blockedPubkeys_.remove(contact.pubkey)
                             sendNotification(.blockListUpdated, la.account.blockedPubkeys_)
@@ -79,7 +79,7 @@ struct BlockedAccounts:View {
 }
 
 struct MutedConversations: View {
-    @EnvironmentObject var theme: Theme
+    @EnvironmentObject var themes: Themes
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var la:LoggedInAccount
     @StateObject var fl = FastLoader()

@@ -116,14 +116,14 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
                        
         let photoButton = UIButton(type: .system)
         photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
-        photoButton.tintColor = UIColor(Theme.default.accent)
+        photoButton.tintColor = UIColor(Themes.default.theme.accent)
         photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
         let photos = UIBarButtonItem(customView: photoButton)
     
     
         let gifButton = UIButton(type: .system)
         gifButton.setImage(UIImage(named: "GifButton"), for: .normal)
-        gifButton.tintColor = UIColor(Theme.default.accent)
+        gifButton.tintColor = UIColor(Themes.default.theme.accent)
     
         gifButton.imageView?.contentMode = .scaleAspectFit
         gifButton.sizeToFit()
@@ -152,7 +152,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     public func updateUIView(_ uiView: UITextView, context: Context) {
         context.coordinator.updatingUIView = true
         
-        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Theme.default.background)
+        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.background)
         
         let highlightedText = HighlightedTextEditor.getHighlightedText(
             text: text,
@@ -209,7 +209,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         
         public func textViewDidChange(_ textView: UITextView) {
-            textView.backgroundColor = textView.text.isEmpty && textView.markedTextRange == nil ? UIColor.clear : UIColor(Theme.default.background)
+            textView.backgroundColor = textView.text.isEmpty && textView.markedTextRange == nil ? UIColor.clear : UIColor(Themes.default.theme.background)
             
             // For Multistage Text Input
             guard textView.markedTextRange == nil else { return }

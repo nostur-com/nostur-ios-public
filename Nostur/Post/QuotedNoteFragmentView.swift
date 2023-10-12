@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct QuotedNoteFragmentView: View {
-    @EnvironmentObject private var theme:Theme
     @ObservedObject private var nrPost:NRPost
     @ObservedObject private var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
+    private var theme:Theme
     
-    init(nrPost: NRPost) {
+    init(nrPost: NRPost, theme: Theme) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
+        self.theme = theme
     }
     
     var body: some View {
@@ -74,14 +75,14 @@ struct QuotedNoteFragmentView: View {
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
                         }
-                        ReplyingToFragmentView(nrPost: nrPost)
+                        ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                     }
                     
                     Spacer()
                 }
                 .frame(height: 40)
                 VStack(alignment: .leading) {
-                    NoteTextRenderView(nrPost: nrPost)
+                    NoteTextRenderView(nrPost: nrPost, theme: theme)
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 }
@@ -123,7 +124,7 @@ struct QuotedNoteFragmentView: View {
     }
     
 //    struct NameAndNip: View {
-////        @EnvironmentObject var theme:Theme
+////        @EnvironmentObject private var themes:Themes
 //        @ObservedObject var contact:NRContact
 //        var body: some View {
 //            Text(contact.anyName) // Name
@@ -133,7 +134,7 @@ struct QuotedNoteFragmentView: View {
 //                .lineLimit(1)
 ////            if (contact.nip05verified) {
 ////                Image(systemName: "checkmark.seal.fill")
-////                    .foregroundColor(theme.accent)
+////                    .foregroundColor(themes.theme.accent)
 ////                    .layoutPriority(3)
 ////            }
 //        }
@@ -175,13 +176,13 @@ struct QuotedNoteFragmentView_Previews: PreviewProvider {
                 
                 if let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3") {
                     Box {
-                        QuotedNoteFragmentView(nrPost: event1)
+                        QuotedNoteFragmentView(nrPost: event1, theme: Themes.default.theme)
                     }
                 }
                 
                 if let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e") {
                     Box {
-                        QuotedNoteFragmentView(nrPost: event2)
+                        QuotedNoteFragmentView(nrPost: event2, theme: Themes.default.theme)
                     }
                 }
             }

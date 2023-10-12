@@ -11,7 +11,7 @@ import NukeUI
 
 struct FullImageViewer: View {
     @Environment(\.openURL) private var openURL
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject var dim:DIMENSIONS
     @Environment(\.dismiss) var dismiss
     var fullImageURL:URL
@@ -81,12 +81,12 @@ struct FullImageViewer: View {
         
         GeometryReader { geo in
             ZStack {
-                theme.background
+                themes.theme.background
                 LazyImage(request: ImageRequest(url: fullImageURL, options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [])) { state in
                                 if state.error != nil {
                                     if SettingsStore.shared.lowDataMode {
                                         Text(fullImageURL.absoluteString)
-                                            .foregroundColor(theme.accent)
+                                            .foregroundColor(themes.theme.accent)
                                             .truncationMode(.middle)
                                             .onTapGesture {
                                                 openURL(fullImageURL)
@@ -95,7 +95,7 @@ struct FullImageViewer: View {
                                     else {
                                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                                             .centered()
-                                            .background(theme.lineColor.opacity(0.2))
+                                            .background(themes.theme.lineColor.opacity(0.2))
                                             .onAppear {
                                                 L.og.debug("Failed to load image: \(fullImageURL) - \(state.error?.localizedDescription ?? "")")
                                             }
@@ -145,10 +145,10 @@ struct FullImageViewer: View {
                                             .padding(10)
                                     }
                                     .centered()
-                                    .background(theme.background)
+                                    .background(themes.theme.background)
                                 }
                                 else {
-                                    theme.background
+                                    themes.theme.background
                                 }
                             }
                             .pipeline(ImageProcessing.shared.content)
@@ -220,7 +220,7 @@ struct FullImageViewer: View {
 }
 
 struct MediaPostPreview: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     let nrPost:NRPost
     @ObservedObject var pfpAttributes:NRPost.PFPAttributes
     @Binding var showMiniProfile:Bool

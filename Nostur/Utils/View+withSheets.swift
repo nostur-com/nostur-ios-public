@@ -17,7 +17,7 @@ public extension View {
 }
 
 private struct WithSheets: ViewModifier {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var dim:DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
@@ -70,9 +70,9 @@ private struct WithSheets: ViewModifier {
             }
             .fullScreenCover(item: $fullImage) { f in
                 FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem)
-                    .environmentObject(theme)
+                    .environmentObject(themes)
                     .environmentObject(dim)
-                    .presentationBackground(theme.background)
+                    .presentationBackground(themes.theme.background)
             }
         
             .onReceive(receiveNotification(.editingPrivateNote)) { notification in
@@ -81,8 +81,8 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $privateNote) { note in
                 EditPrivateNoteSheet(privateNote: note)
-                    .environmentObject(theme)
-                    .presentationBackground(theme.background)
+                    .environmentObject(themes)
+                    .presentationBackground(themes.theme.background)
             }
         
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
@@ -91,8 +91,8 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $post) { post in
                 NewPrivateNoteSheet(post: post)
-                    .environmentObject(theme)
-                    .presentationBackground(theme.background)
+                    .environmentObject(themes)
+                    .presentationBackground(themes.theme.background)
             }
         
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
@@ -101,8 +101,8 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $contact) { contact in
                 NewPrivateNoteSheet(contact: contact)
-                    .environmentObject(theme)
-                    .presentationBackground(theme.background)
+                    .environmentObject(themes)
+                    .presentationBackground(themes.theme.background)
             }
         
             .onReceive(receiveNotification(.reportPost), perform: { notification in
@@ -114,9 +114,9 @@ private struct WithSheets: ViewModifier {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(dim)
                         .environmentObject(NRState.shared)
-                        .environmentObject(theme)
+                        .environmentObject(themes)
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             })
         
             .onReceive(receiveNotification(.reportContact), perform: { notification in
@@ -126,9 +126,9 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $reportContact, content: { reportContact in
                 NavigationStack {
                     ReportContactSheet(contact: reportContact.contact)
-                        .environmentObject(theme)
+                        .environmentObject(themes)
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             })
         
             .onReceive(receiveNotification(.requestConfirmationChangedFollows)) { notification in
@@ -196,16 +196,16 @@ private struct WithSheets: ViewModifier {
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                         }
-                        .environmentObject(theme)
+                        .environmentObject(themes)
                     }
                     else {
                         ComposePost(replyTo: eventNotification.event)
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
-                            .environmentObject(theme)
+                            .environmentObject(themes)
                     }
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             }
         
             .sheet(item: $quoteOrRepostEvent) { event in
@@ -217,8 +217,8 @@ private struct WithSheets: ViewModifier {
                             .presentationDetents([.height(200)])
                             .presentationDragIndicator(.visible)
                     }
-                    .environmentObject(theme)
-                    .presentationBackground(theme.background)
+                    .environmentObject(themes)
+                    .presentationBackground(themes.theme.background)
                 }
                 else {
                     QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
@@ -226,8 +226,8 @@ private struct WithSheets: ViewModifier {
                         .environmentObject(dim)
                         .presentationDetents([.height(200)])
                         .presentationDragIndicator(.visible)
-                        .environmentObject(theme)
-                        .presentationBackground(theme.background)
+                        .environmentObject(themes)
+                        .presentationBackground(themes.theme.background)
                 }
             }
         
@@ -239,16 +239,16 @@ private struct WithSheets: ViewModifier {
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                         }
-                        .environmentObject(theme)
+                        .environmentObject(themes)
                     }
                     else {
                         ComposePost(quotingEvent: quotePostEvent)
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
-                            .environmentObject(theme)
+                            .environmentObject(themes)
                     }
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             }
         
             .onReceive(receiveNotification(.showZapSheet)) { notification in
@@ -257,8 +257,8 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $paymentInfo) { paymentInfo in
                 PaymentAmountSelector(paymentInfo:paymentInfo)
-                    .environmentObject(theme)
-                    .presentationBackground(theme.background)
+                    .environmentObject(themes)
+                    .presentationBackground(themes.theme.background)
             }
         
             .onReceive(receiveNotification(.addRemoveToListsheet)) { notification in
@@ -267,8 +267,8 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $addRemoveContactFromList) { contact in
                 AddRemoveToListsheet(contact: contact)
-                    .environmentObject(theme)
-                    .presentationBackground(theme.background)
+                    .environmentObject(themes)
+                    .presentationBackground(themes.theme.background)
             }
         
         // New highlight
@@ -280,9 +280,9 @@ private struct WithSheets: ViewModifier {
                 NavigationStack {
                     HighlightComposer(highlight: newHighlight)
                         .environmentObject(NRState.shared)
-                        .environmentObject(theme)
+                        .environmentObject(themes)
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             }
         
         // Lazy note context menu (because Menu() on every post is slow???)
@@ -294,8 +294,8 @@ private struct WithSheets: ViewModifier {
                 LazyNoteMenuSheet(nrPost: nrPost)
                     .environmentObject((NRState.shared))
                     .presentationDetents([.medium])
-                    .environmentObject(theme)
-                    .presentationBackground(theme.background)
+                    .environmentObject(themes)
+                    .presentationBackground(themes.theme.background)
             }
         
         // Zap customizer sheet
@@ -307,8 +307,8 @@ private struct WithSheets: ViewModifier {
                 ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
                     .environmentObject(NRState.shared)
                     .presentationDetents([.large])
-                    .environmentObject(theme)
-                    .presentationBackground(theme.background)
+                    .environmentObject(themes)
+                    .presentationBackground(themes.theme.background)
             }
         
         // Share post screenshot
@@ -336,7 +336,7 @@ private struct WithSheets: ViewModifier {
                     .padding(10)
                     .background(
                         RoundedRectangle(cornerRadius: 10.0)
-                            .foregroundColor(theme.background)
+                            .foregroundColor(themes.theme.background)
                             .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
                     )
                     .frame(width: 600)
@@ -346,7 +346,7 @@ private struct WithSheets: ViewModifier {
                     .environmentObject(NRState.shared)
                     .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                     .environment(\.colorScheme, colorScheme)
-                    .environmentObject(theme)
+                    .environmentObject(themes)
                 )
                 
                 

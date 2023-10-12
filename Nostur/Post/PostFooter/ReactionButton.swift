@@ -23,10 +23,15 @@ struct ReactionButton: View {
         self.isLast = isLast
     }
     
+    private var isActivated:Bool {
+        footerAttributes.reactions.contains(reactionContent)
+    }
+    
     var body: some View {
         Text(reactionContent)
             .frame(width: 20)
-            .opacity(footerAttributes.reactions.contains(reactionContent) ? 1.0 : 0.7)
+            .grayscale(isActivated ? 0.0 : 1.0)
+            .opacity(isActivated ? 1.0 : 0.7)
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {

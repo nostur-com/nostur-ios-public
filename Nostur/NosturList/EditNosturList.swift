@@ -10,7 +10,7 @@ import SwiftUI
 struct EditNosturList: View {
     @ObservedObject public var list:NosturList
     
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) private var dismiss
     
     @State private var confirmDeleteShown = false
@@ -35,10 +35,10 @@ struct EditNosturList: View {
                     }
                     
                 }
-                .listRowBackground(theme.background)
+                .listRowBackground(themes.theme.background)
         }
         .scrollContentBackground(.hidden)
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .listStyle(.plain)
         .navigationTitle("\(list.name ?? "feed")")
         .navigationBarTitleDisplayMode(.inline)
@@ -62,7 +62,7 @@ struct EditNosturList: View {
             NavigationStack {
                 EditListTitleSheet(list: list)
             }
-            .presentationBackground(theme.background)
+            .presentationBackground(themes.theme.background)
         })
         .sheet(isPresented: $addContactsSheetShown) {
             NavigationStack {
@@ -84,7 +84,7 @@ struct EditNosturList: View {
                     }
                 }
             }
-            .presentationBackground(theme.background)
+            .presentationBackground(themes.theme.background)
         }
     }
 }

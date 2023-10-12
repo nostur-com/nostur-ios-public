@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NoteReactions: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     
     private let id:String
     
@@ -29,7 +29,7 @@ struct NoteReactions: View {
             }
             Spacer()
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             var missing:[Event] = []
             for reaction in reactions_ {

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HighlightComposer: View {
     @EnvironmentObject private var la:LoggedInAccount
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) private var dismiss
     public var highlight:NewHighlight
     @State private var selectedAuthor:Contact?
@@ -91,7 +91,7 @@ struct HighlightComposer: View {
                                 Button(String(localized:"Include author", comment: "Button to include author in Highlight")) { isAuthorSelectionShown = true }
                             }
                             Button(String(localized:"Post.verb", comment: "Button to post a highlight")) { send() }
-                                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                         }
                     }
                 }
@@ -113,7 +113,7 @@ struct HighlightComposer: View {
                             }
                         }
                     }
-                    .presentationBackground(theme.background)
+                    .presentationBackground(themes.theme.background)
                 }
             }
         }

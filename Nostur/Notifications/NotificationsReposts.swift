@@ -11,7 +11,7 @@ import CoreData
 // Copy pasta from NotificationsMentions, which was copy pasta from NotificationsPosts
 struct NotificationsReposts: View {
     @Binding public var navPath:NavigationPath
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
     @State private var backlog = Backlog()
@@ -31,7 +31,7 @@ struct NotificationsReposts: View {
                 LazyVStack(spacing: 10) {
                     ForEach(fl.nrPosts) { nrPost in
                         Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                         }
                         .id(nrPost.id)
                     }
@@ -60,7 +60,7 @@ struct NotificationsReposts: View {
                 }
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             load()

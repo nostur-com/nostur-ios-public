@@ -8,17 +8,18 @@
 import SwiftUI
 
 struct RepostButton: View {
-    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     private var isFirst:Bool
     private var isLast:Bool
+    private var theme:Theme
     
-    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
         self.isFirst = isFirst
         self.isLast = isLast
+        self.theme = theme
     }
     
     var body: some View {

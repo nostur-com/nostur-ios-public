@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NWCWalletBalance: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var ss:SettingsStore = .shared
     @ObservedObject private var nrq:NWCRequestQueue = .shared
 

@@ -77,7 +77,7 @@ struct FooterConfigurator: View {
 
 #Preview {
     FooterConfigurator(footerButtons: .constant("💬🔄+💯🔥🔖"))
-        .environmentObject(Theme.default)
+        .environmentObject(Themes.default)
 }
 
 

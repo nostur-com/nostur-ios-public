@@ -9,7 +9,7 @@ import SwiftUI
 import CoreData
 
 struct NotificationsContainer: View {
-    @EnvironmentObject private var theme: Theme
+    @EnvironmentObject private var themes: Themes
     @EnvironmentObject var la:LoggedInAccount
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Mentions"
@@ -23,7 +23,7 @@ struct NotificationsContainer: View {
             VStack {
                 NotificationsView(account: la.account, tab: $selectedNotificationsTab, navPath: $navPath)
             }
-            .background(theme.listBackground)
+            .background(themes.theme.listBackground)
             .withNavigationDestinations()
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in
@@ -43,7 +43,7 @@ struct NotificationsView: View {
     @Binding public var tab:String
     @Binding public var navPath:NavigationPath
     
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject private var nvm:NotificationsViewModel = .shared
     @ObservedObject private var settings:SettingsStore = .shared
@@ -142,7 +142,7 @@ struct NotificationsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Image(systemName: "gearshape")
-                    .foregroundColor(theme.accent)
+                    .foregroundColor(themes.theme.accent)
                     .onTapGesture {
                         showNotificationSettings.toggle()
                     }

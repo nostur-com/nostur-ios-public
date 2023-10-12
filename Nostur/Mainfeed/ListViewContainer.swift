@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ListViewContainer: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
     public let vm:LVM
     
@@ -16,10 +16,10 @@ struct ListViewContainer: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        SmoothList(lvm: vm, dim: dim, theme:theme)
+        SmoothList(lvm: vm, dim: dim, theme: themes.theme)
 //            .withoutAnimation()
             .overlay(alignment: .topTrailing) {
-                ListUnreadCounter(vm: vm)
+                ListUnreadCounter(vm: vm, theme: themes.theme)
                     .padding(.trailing, 10)
                     .padding(.top, 5)
             }

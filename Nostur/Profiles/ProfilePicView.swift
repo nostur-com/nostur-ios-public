@@ -78,7 +78,7 @@ struct AccountPFP: View {
 }
 
 struct InnerPFP: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     public var pubkey:String
     public var pictureUrl:URL?
     public var size:CGFloat = 50.0

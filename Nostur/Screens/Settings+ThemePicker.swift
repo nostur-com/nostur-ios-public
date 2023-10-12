@@ -54,21 +54,21 @@ struct ThemePicker: View {
             
             switch theme {
             case "default":
-                Theme.`default`.loadDefault()
+                Themes.default.loadDefault()
             case "purple":
-                Theme.`default`.loadPurple()
+                Themes.default.loadPurple()
             case "red":
-                Theme.`default`.loadRed()
+                Themes.default.loadRed()
             case "green":
-                Theme.`default`.loadGreen()
+                Themes.default.loadGreen()
             case "blue":
-                Theme.`default`.loadBlue()
+                Themes.default.loadBlue()
             case "pink":
-                Theme.`default`.loadPink()
+                Themes.default.loadPink()
             case "orange":
-                Theme.`default`.loadOrange()
+                Themes.default.loadOrange()
             default:
-                Theme.`default`.loadDefault()
+                Themes.default.loadDefault()
             }
             
             UserDefaults.standard.set(theme, forKey: "app_theme")
@@ -114,6 +114,6 @@ struct Settings_ThemePicker_Previews: PreviewProvider {
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
         .environmentObject(DIMENSIONS.shared)
-        .environmentObject(Theme.default)
+        .environmentObject(Themes.default)
     }
 }

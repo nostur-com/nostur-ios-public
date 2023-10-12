@@ -9,7 +9,6 @@ import SwiftUI
 import MarkdownUI
 
 struct ArticleView: View {
-    @EnvironmentObject private var theme:Theme
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var article:NRPost
     private var isParent = false
@@ -17,14 +16,16 @@ struct ArticleView: View {
     private var fullWidth:Bool = false
     private var hideFooter:Bool = false
     private var navTitleHidden:Bool = false
+    private var theme:Theme
     
-    init(_ article:NRPost, isParent:Bool = false, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false, navTitleHidden:Bool = false) {
+    init(_ article:NRPost, isParent:Bool = false, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false, navTitleHidden:Bool = false, theme: Theme = Themes.default.theme) {
         self.article = article
         self.isParent = isParent
         self.isDetail = isDetail
         self.fullWidth = fullWidth
         self.hideFooter = hideFooter
         self.navTitleHidden = navTitleHidden
+        self.theme = theme
     }
     
     private let WORDS_PER_MINUTE:Double = 200.0
@@ -153,11 +154,11 @@ struct ArticleView: View {
                         //                            .padding(.horizontal, -20)
                     }
                     
-                    ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth)
+                    ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, theme: theme)
                         .padding(.vertical, 10)
                     
                     if !hideFooter {
-                        CustomizableFooterFragmentView(nrPost: article)
+                        CustomizableFooterFragmentView(nrPost: article, theme: theme)
                             .padding(.vertical, 10)
                     }
                 }
@@ -399,7 +400,7 @@ struct ArticleView: View {
                 }
                 
                 if !hideFooter {
-                    CustomizableFooterFragmentView(nrPost: article)
+                    CustomizableFooterFragmentView(nrPost: article, theme: theme)
                 }
             }
             .contentShape(Rectangle())
@@ -448,7 +449,7 @@ struct ArticleView_Previews: PreviewProvider {
                                                              context: DataProvider.shared().viewContext)
             {
                 NavigationStack {
-                    ArticleView(NRPost(event: article), isDetail: true)
+                    ArticleView(NRPost(event: article), isDetail: true, theme: Themes.default.theme)
                 }
             }
             
@@ -472,11 +473,11 @@ struct Articles_Previews: PreviewProvider {
             SmoothListMock {
                 if let p = PreviewFetcher.fetchNRPost("12c29454fc1f995eb6e08a97f91dff37f891d1de130fbb333b5976f2cca99395") {
                     Box(nrPost: p) {
-                        PostRowDeletable(nrPost: p, fullWidth: true)
+                        PostRowDeletable(nrPost: p, fullWidth: true, theme: Themes.default.theme)
                     }
                     
                     Box(nrPost: p) {
-                        PostRowDeletable(nrPost: p)
+                        PostRowDeletable(nrPost: p, theme: Themes.default.theme)
                     }
                         
                 }

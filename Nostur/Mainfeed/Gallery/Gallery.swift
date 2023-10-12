@@ -9,7 +9,7 @@ import SwiftUI
 import NukeUI
 
 struct Gallery: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject var vm:GalleryViewModel
     
     @AppStorage("selected_tab") var selectedTab = "Main"
@@ -83,7 +83,7 @@ struct Gallery: View {
                 }
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
             vm.load()
@@ -110,12 +110,12 @@ struct Gallery: View {
 struct Gallery_Previews: PreviewProvider {
     static var previews: some View {
         Gallery(vm: GalleryViewModel())
-            .environmentObject(Theme.default)
+            .environmentObject(Themes.default)
     }
 }
 
 struct GridItemView: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     let size: Double
     let item: GalleryItem
     var withPFP = false
@@ -126,7 +126,7 @@ struct GridItemView: View {
             if state.error != nil {
                 if SettingsStore.shared.lowDataMode {
                     Text(url.absoluteString)
-                        .foregroundColor(theme.accent)
+                        .foregroundColor(themes.theme.accent)
                         .truncationMode(.middle)
                         .onTapGesture {
                             navigateTo(NotePath(id: item.eventId))

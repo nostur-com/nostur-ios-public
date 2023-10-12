@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct NEventView: View {
-    @EnvironmentObject var theme:Theme
-    let identifier:ShareableIdentifier
+    public let identifier:ShareableIdentifier
+    public var theme:Theme
     @StateObject private var vm = FetchVM<NRPost>(timeout: 2.5, debounceTime: 0.05)
         
     var body: some View {
@@ -64,7 +64,7 @@ struct NEventView: View {
                         vm.fetch()
                     }
             case .ready(let nrPost):
-                EmbeddedPost(nrPost)
+                EmbeddedPost(nrPost, theme: theme)
             case .timeout:
                 Text("Unable to fetch content")
                     .padding(10)
@@ -90,7 +90,7 @@ struct NEventView_Previews: PreviewProvider {
         }) {
             NavigationStack {
                 if let identifier = try? ShareableIdentifier("nevent1qqspg0h7quunckc8a7lxag0uvmpeewv9hx8cs3r9pmwsp77tqsfz3gcens7um") {
-                    NEventView(identifier: identifier)
+                    NEventView(identifier: identifier, theme: Themes.default.theme)
                 }
             }
         }

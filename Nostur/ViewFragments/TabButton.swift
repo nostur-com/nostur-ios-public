@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TabButton: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     var action:() -> Void
     var title:String = ""
     var secondaryText:String? = nil
@@ -22,13 +22,13 @@ struct TabButton: View {
                 HStack(alignment: .bottom, spacing: 3) {
                     Text(title).lineLimit(1)
 //                        .layoutPriority(1)
-                        .foregroundColor(theme.accent)
+                        .foregroundColor(themes.theme.accent)
 //                        .frame(maxWidth: .infinity)
                         
                     if let secondaryText {
                         Text(secondaryText).lineLimit(1)
                             .font(.caption)
-                            .foregroundColor(theme.accent.opacity(0.5))
+                            .foregroundColor(themes.theme.accent.opacity(0.5))
 //                            .frame(maxWidth: .infinity)
                         
                     }
@@ -37,7 +37,7 @@ struct TabButton: View {
                             .font(.footnote)
                             .foregroundColor(.white)
                             .padding(.horizontal, 6)
-                            .background(Capsule().foregroundColor(theme.badge))
+                            .background(Capsule().foregroundColor(themes.theme.badge))
                             .opacity(muted ? 0.25 : 1.0)
                             .offset(y: -2)
                     }
@@ -45,7 +45,7 @@ struct TabButton: View {
                 .padding(.bottom, 5)
                 .padding(.top, 8)
                 .fixedSize()
-                theme.accent
+                themes.theme.accent
                     .frame(height: 3)
                     .opacity(selected ? 1 : 0.15)
             }
@@ -148,7 +148,7 @@ struct TabButton: View {
         }
         .frame(width: UIScreen.main.bounds.width)
         .onAppear {
-            Theme.default.loadPink()
+            Themes.default.loadPink()
         }
     }
 }

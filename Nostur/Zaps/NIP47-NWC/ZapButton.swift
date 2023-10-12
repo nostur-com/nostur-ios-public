@@ -9,7 +9,6 @@ import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ZapButton: View {
-    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     @ObservedObject private var ss:SettingsStore = .shared
@@ -19,12 +18,14 @@ struct ZapButton: View {
     @State private var isLoading = false
     private var isFirst:Bool
     private var isLast:Bool
+    private var theme:Theme
     
-    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
         self.isFirst = isFirst
         self.isLast = isLast
+        self.theme = theme
     }
     
     private var icon:String {
@@ -46,7 +47,7 @@ struct ZapButton: View {
                 //                            .offset(x: 18)
             }
             .padding(.trailing, 34)
-            .foregroundColor(footerAttributes.zapped ? .yellow : theme.accent)
+            .foregroundColor(footerAttributes.zapped ? .yellow : theme.footerButtons)
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {
@@ -200,7 +201,7 @@ struct ZapButton_Previews: PreviewProvider {
         }) {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
-                    ZapButton(nrPost: nrPost)
+                    ZapButton(nrPost: nrPost, theme: Themes.default.theme)
                 }
                 
                 Image("BoltIconActive").foregroundColor(.yellow)

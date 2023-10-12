@@ -13,7 +13,7 @@ struct MultiFollowSheet: View {
     public var onDismiss:(() -> Void)?
     
     @Environment(\.managedObjectContext) private var viewContext
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     
     private var accounts:[Account] { // Only accounts with private key
         NRState.shared.accounts.filter { $0.privateKey != nil }
@@ -55,7 +55,7 @@ struct MultiFollowSheet: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 7)
                                     .padding(.vertical, 2)
-                                    .background(theme.accent)
+                                    .background(themes.theme.accent)
                                     .cornerRadius(13)
                                     .offset(y: 10)
                             }

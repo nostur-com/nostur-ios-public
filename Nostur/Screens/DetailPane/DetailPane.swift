@@ -10,7 +10,7 @@ import UIKit
 
 struct DetailPane: View {
     @Environment(\.scenePhase) private var scenePhase
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @StateObject private var dim = DIMENSIONS.shared
     @StateObject private var tm = DetailTabsModel()
     @State private var offsetX = 200.0
@@ -156,7 +156,7 @@ struct DetailPane: View {
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .padding(0)
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
             if type(of: destination.destination) == NRPost.self {

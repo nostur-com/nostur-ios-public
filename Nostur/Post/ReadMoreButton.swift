@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ReadMoreButton: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     var nrPost:NRPost
     
     var moreItems:Int { nrPost.previewWeights?.moreItemsCount ?? 0 }
@@ -27,7 +27,7 @@ struct ReadMoreButton: View {
         .padding(.leading, 8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
+                .stroke(themes.theme.lineColor.opacity(0.2), lineWidth: 1)
         )
         .onTapGesture {
             navigateTo(nrPost)

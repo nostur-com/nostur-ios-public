@@ -116,7 +116,7 @@ struct FeedSettingsTester: View {
         }
         .onAppear {
             la.account.followingHashtags = ["bitcoin","nostr"]
-            Theme.default.loadPurple()
+            Themes.default.loadPurple()
         }
     }
 }

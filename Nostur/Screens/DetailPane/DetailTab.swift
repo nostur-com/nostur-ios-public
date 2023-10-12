@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct DetailTab: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @State private var navPath = NavigationPath()
     private let tm:DetailTabsModel = .shared
     @ObservedObject public var tab:TabModel
@@ -17,7 +17,7 @@ struct DetailTab: View {
         NavigationStack(path: $navPath) {
             if let nrPost = tab.nrPost {
                 ZStack {
-                    theme.listBackground
+                    themes.theme.listBackground
                         .ignoresSafeArea()
                     PostDetailView(nrPost: nrPost, navTitleHidden: true)
                         .withNavigationDestinations()
@@ -25,7 +25,7 @@ struct DetailTab: View {
             }
             else if let nrContact = tab.nrContact {
                 ZStack {
-                    theme.listBackground
+                    themes.theme.listBackground
                         .ignoresSafeArea()
                     ProfileView(nrContact:nrContact, tab: tab.profileTab)
                         .withNavigationDestinations()
@@ -33,7 +33,7 @@ struct DetailTab: View {
             }
             else if let notePathId = tab.notePath?.id {
                 ZStack {
-                    theme.listBackground
+                    themes.theme.listBackground
                         .ignoresSafeArea()
                     NoteById(id: notePathId, navTitleHidden: true)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations()
@@ -42,25 +42,25 @@ struct DetailTab: View {
             }
             else if let naddr1 = tab.naddr1?.naddr1 {
                 ZStack {
-                    theme.listBackground
+                    themes.theme.listBackground
                         .ignoresSafeArea()
-                    ArticleByNaddr(naddr1: naddr1, navTitleHidden: true)
+                    ArticleByNaddr(naddr1: naddr1, navTitleHidden: true, theme: themes.theme)
                         .withNavigationDestinations()
                 }
                 
             }
             else if let articleId = tab.articlePath?.id {
                 ZStack {
-                    theme.listBackground
+                    themes.theme.listBackground
                         .ignoresSafeArea()
-                    ArticleById(id: articleId, navTitleHidden: true)
+                    ArticleById(id: articleId, navTitleHidden: true, theme: themes.theme)
                         .withNavigationDestinations()
                 }
                 
             }
             else if let contactPubkey = tab.contactPath?.key {
                 ZStack {
-                    theme.listBackground
+                    themes.theme.listBackground
                         .ignoresSafeArea()
                     ProfileByPubkey(pubkey: contactPubkey, tab: tab.contactPath?.tab)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations()
@@ -69,7 +69,7 @@ struct DetailTab: View {
             }
             else if let nrContact = tab.nrContactPath?.nrContact {
                 ZStack {
-                    theme.listBackground
+                    themes.theme.listBackground
                         .ignoresSafeArea()
                     ProfileView(nrContact:nrContact, tab: tab.profileTab)
                         .withNavigationDestinations()

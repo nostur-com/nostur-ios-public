@@ -9,7 +9,7 @@ import SwiftUI
 import CoreData
 
 struct NoteById: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     public let id:String
     public var navTitleHidden:Bool = false
     @StateObject private var vm = FetchVM<NRPost>(timeout: 2.5, debounceTime: 0.05)
@@ -50,7 +50,7 @@ struct NoteById: View {
                 }
         case .ready(let nrPost):
             if nrPost.kind == 30023 {
-                ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
+                ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false, theme: themes.theme)
             }
             else {
                 PostDetailView(nrPost: nrPost, navTitleHidden: navTitleHidden)
@@ -68,7 +68,7 @@ struct NoteById: View {
 }
 
 struct PostDetailView: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     private let nrPost:NRPost
     private var navTitleHidden:Bool = false
     @State private var didLoad = false
@@ -88,14 +88,14 @@ struct PostDetailView: View {
                         
                             // Around parents + detail (not replies)
                             .padding(10)
-                            .background(theme.background)
+                            .background(themes.theme.background)
                         
                             
                         
                         // MARK: REPLIES TO OUR MAIN NOTE
                         ThreadReplies(nrPost: nrPost)
                     }
-                    .background(theme.listBackground)
+                    .background(themes.theme.listBackground)
                 }
                 .simultaneousGesture(
                        DragGesture().onChanged({
@@ -138,7 +138,7 @@ let THREAD_LINE_OFFSET = 24.0
 // the parent is another PostAndParent
 // so it recursively renders up to the root
 struct PostAndParent: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     private var sp:SocketPool = .shared
     @ObservedObject private var nrPost:NRPost
     @EnvironmentObject private var dim:DIMENSIONS
@@ -170,7 +170,7 @@ struct PostAndParent: View {
                 if replyTo.deletedById == nil {
                     
                     if replyTo.kind == 30023 {
-                        ArticleView(replyTo, isParent:true, isDetail: true, fullWidth: true)
+                        ArticleView(replyTo, isParent:true, isDetail: true, fullWidth: true, theme: themes.theme)
                             .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
                             .background(Color(.secondarySystemBackground))
                     }
@@ -178,7 +178,7 @@ struct PostAndParent: View {
                         let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
                         PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
 //                            .padding(10)
-                            .background(theme.background)
+                            .background(themes.theme.background)
                     }
                 }
                 else {
@@ -204,7 +204,7 @@ struct PostAndParent: View {
                             }
                         }
                     }
-                    .background(theme.background)
+                    .background(themes.theme.background)
                     .onDisappear {
                         timerTask?.cancel()
                         timerTask = nil
@@ -217,7 +217,7 @@ struct PostAndParent: View {
                     if isParent {
                         ParentPost(nrPost: nrPost, connect:connect)
                             .background(
-                                theme.background
+                                themes.theme.background
                                     .onTapGesture {
                                         navigateTo(nrPost)
                                     }
@@ -285,7 +285,7 @@ struct ParentPost: View {
     @ObservedObject private var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
     @ObservedObject private var settings:SettingsStore = .shared
     @EnvironmentObject private var dim:DIMENSIONS
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     private let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     private var connect:ThreadConnectDirection? = nil
     @State private var showMiniProfile = false
@@ -368,38 +368,38 @@ struct ParentPost: View {
                                 
                                 // We don't show "Replying to.." unless we can't fetch the parent
                                 if nrPost.replyTo == nil && nrPost.replyToId != nil {
-                                    ReplyingToFragmentView(nrPost: nrPost)
+                                    ReplyingToFragmentView(nrPost: nrPost, theme: themes.theme)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 }
                                 
                                 switch nrPost.kind {
                                 case 30023:
-                                    ArticleView(nrPost, isDetail: false, fullWidth: settings.fullWidthImages, hideFooter: false)
+                                    ArticleView(nrPost, isDetail: false, fullWidth: settings.fullWidthImages, hideFooter: false, theme: themes.theme)
                                         .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
                                         .padding(.bottom, 10)
                                         .background(Color(.secondarySystemBackground))
                                 case 9802: // highlight
-                                    HighlightRenderer(nrPost: nrPost)
+                                    HighlightRenderer(nrPost: nrPost, theme: themes.theme)
                                         .padding(.vertical, 10)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 case 1,6,9734: // text, repost, zap request
-                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20)
+                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20, theme: themes.theme)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 case 1063: // File Metadata
-                                    NoteTextRenderView(nrPost: nrPost)
+                                    NoteTextRenderView(nrPost: nrPost, theme: themes.theme)
                                 default:
                                     Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
                                         .centered()
                                         .frame(maxWidth: .infinity)
-                                        .background(theme.lineColor.opacity(0.2))
-                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 )
+                                        .background(themes.theme.lineColor.opacity(0.2))
+                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 , theme: themes.theme)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 }
                             }
                         }
                         
                         if (settings.rowFooterEnabled) {
-                            CustomizableFooterFragmentView(nrPost: nrPost)
+                            CustomizableFooterFragmentView(nrPost: nrPost, theme: themes.theme)
                                 .padding(.leading, INDENT)
                                 .padding(.vertical, 5)
                             //                        .padding(.trailingx, 10)
@@ -408,11 +408,11 @@ struct ParentPost: View {
                 }
                 .background(alignment:.topLeading) {
                     ZStack(alignment: .topLeading) {
-                        theme.lineColor.opacity(0.2)
+                        themes.theme.lineColor.opacity(0.2)
                             .frame(width: 2, height: 20)
                             .offset(x: THREAD_LINE_OFFSET, y: -10)
                             .opacity(connect == .top || connect == .both ? 1 : 0)
-                        theme.lineColor.opacity(0.2)
+                        themes.theme.lineColor.opacity(0.2)
                             .frame(width: 2)
                             .offset(x: THREAD_LINE_OFFSET)
                             .opacity(connect == .bottom || connect == .both ? 1 : 0)
@@ -430,7 +430,7 @@ struct ParentPost: View {
 struct DetailPost: View {
     @ObservedObject public var nrPost:NRPost
     
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var settings:SettingsStore = .shared
     @State private var showMiniProfile = false
@@ -481,7 +481,7 @@ struct DetailPost: View {
                     }
                     .background(alignment: .top) {
                         if nrPost.replyToId != nil {
-                            theme.lineColor
+                            themes.theme.lineColor
                                 .opacity(0.2)
                                 .frame(width: 2, height: 30)
                                 .offset(y: -20)
@@ -506,16 +506,16 @@ struct DetailPost: View {
             
             // We don't show "Replying to.." unless we can't fetch the parent
             if nrPost.replyTo == nil && nrPost.replyToId != nil {
-                ReplyingToFragmentView(nrPost: nrPost)
+                ReplyingToFragmentView(nrPost: nrPost, theme: themes.theme)
                     .padding(.top, 10)
             }
         
             switch nrPost.kind {
             case 30023:
-                ArticleView(nrPost, isDetail: true, fullWidth: settings.fullWidthImages, hideFooter: false)
+                ArticleView(nrPost, isDetail: true, fullWidth: settings.fullWidthImages, hideFooter: false, theme: themes.theme)
                     .background(Color(.secondarySystemBackground))
             case 9802:
-                HighlightRenderer(nrPost: nrPost)
+                HighlightRenderer(nrPost: nrPost, theme: themes.theme)
                     .padding(.top, 3)
                     .padding(.bottom, 10)
                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
@@ -524,20 +524,20 @@ struct DetailPost: View {
                     NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
                 }
                 else {
-                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (20)))
+                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (20)), theme: themes.theme)
                         .padding(.vertical, 10)
                 }
             case 1063:
                 if let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                    Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth(), theme: themes.theme)
                         .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                 }
             default:
                 Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
                     .centered()
                     .frame(maxWidth: .infinity)
-                    .background(theme.lineColor.opacity(0.2))
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                    .background(themes.theme.lineColor.opacity(0.2))
+                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth(), theme: themes.theme)
                     .padding(.top, 3)
                     .padding(.bottom, 10)
                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
@@ -545,7 +545,7 @@ struct DetailPost: View {
             
             DetailFooterFragment(nrPost: nrPost)
                 .padding(.top, 10)
-            CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true)
+            CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: themes.theme)
                 .padding(.vertical, 5)
                 .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
         }

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileByPubkey: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     
     public let pubkey:String
     public var tab:String?
@@ -67,7 +67,7 @@ struct ProfileByPubkey: View {
                 NavigationStack {
                     AccountEditView(account: account)
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             }
         case .error(let error):
             Text(error)

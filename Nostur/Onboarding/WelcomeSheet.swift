@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct WelcomeSheet: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     public var offerTryOut = false
     
     var body: some View {
@@ -25,7 +25,7 @@ struct WelcomeSheet: View {
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
 
                 NavigationLink {
                     AddExistingAccountSheet(offerTryOut: true)

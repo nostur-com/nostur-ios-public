@@ -9,15 +9,15 @@ import SwiftUI
 
 struct NoteTextRenderView: View {
     @EnvironmentObject private var dim:DIMENSIONS
-    @EnvironmentObject private var theme:Theme
-    let nrPost:NRPost
+    public let nrPost:NRPost
+    public var theme:Theme
     
     var body: some View {
         if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
-            Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: dim.availableNoteRowImageWidth())
+            Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: dim.availableNoteRowImageWidth(), theme: theme)
         }
         else if nrPost.kind == 9802 {
-            HighlightRenderer(nrPost: nrPost)
+            HighlightRenderer(nrPost: nrPost, theme: theme)
         }
         else if ![1,6,30023].contains(nrPost.kind) {
             Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
@@ -38,7 +38,7 @@ struct NoteTextRenderView: View {
             }
         }
         else {
-            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth())
+            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), theme: theme)
         }
     }
 }
@@ -80,32 +80,32 @@ struct NoteTextRenderView_Previews: PreviewProvider {
                 
                 Group {
                     if (event0 != nil) {
-                        NoteTextRenderView(nrPost:event0!)
+                        NoteTextRenderView(nrPost:event0!, theme: Themes.default.theme)
                         Divider()
                     }
                     
                     if (event1 != nil) {
-                        NoteTextRenderView(nrPost:event1!)
+                        NoteTextRenderView(nrPost:event1!, theme: Themes.default.theme)
                         Divider()
                     }
                     
                     if (event2 != nil) {
-                        NoteTextRenderView(nrPost:event2!)
+                        NoteTextRenderView(nrPost:event2!, theme: Themes.default.theme)
                         Divider()
                     }
                 }
                 
                 if (event3 != nil) {
-                    NoteTextRenderView(nrPost:event3!)
+                    NoteTextRenderView(nrPost:event3!, theme: Themes.default.theme)
                     Divider()
                 }
                 
                 if (event4 != nil) {
-                    NoteTextRenderView(nrPost:event4!)
+                    NoteTextRenderView(nrPost:event4!, theme: Themes.default.theme)
                     Divider()
                 }
                 if (event5 != nil) {
-                    NoteTextRenderView(nrPost:event5!)
+                    NoteTextRenderView(nrPost:event5!, theme: Themes.default.theme)
                     Divider()
                 }
             }

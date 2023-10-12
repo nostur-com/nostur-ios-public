@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileLightningButton: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     
     public var contact:Contact?
     
@@ -31,7 +31,7 @@ struct ProfileLightningButton: View {
         }
         .frame(width: 40, height: 30)
         .font(.caption.weight(.heavy))
-        .background(theme.background)
+        .background(themes.theme.background)
         .cornerRadius(20)
         .overlay {
             RoundedRectangle(cornerRadius: 20)
@@ -39,8 +39,8 @@ struct ProfileLightningButton: View {
         }
         .sheet(isPresented: $payAmountSelectorShown) {
             PaymentAmountSelector(paymentInfo: paymentInfo!)
-                .environmentObject(theme)
-                .presentationBackground(theme.background)
+                .environmentObject(themes)
+                .presentationBackground(themes.theme.background)
         }
         .opacity((contact?.anyLud ?? false) ? 1 : 0)
     }

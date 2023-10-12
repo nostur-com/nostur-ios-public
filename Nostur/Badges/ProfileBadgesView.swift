@@ -105,7 +105,7 @@ struct ProfileBadgesContainer: View {
 }
 
 struct ProfileBadgesView: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     var verifiedBadges:[ProfileBadge]
     @State var selectedBadge:Event? = nil
     @State var badgeInfoIsShown = false
@@ -144,7 +144,7 @@ struct ProfileBadgesView: View {
                     }
                 }
             }
-            .presentationBackground(theme.background)
+            .presentationBackground(themes.theme.background)
         }
     }
 }

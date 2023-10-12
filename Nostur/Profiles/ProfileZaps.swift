@@ -19,7 +19,7 @@ import CoreData
 
 // Posts on user profile screen
 struct ProfileZaps: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     let er:ExchangeRateModel = .shared
     
     let pubkey:String
@@ -80,7 +80,7 @@ struct ProfileZaps: View {
             LazyVStack(spacing: 10) {
                 ForEach(nrPosts) { nrPost in
                     Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                     }
                     .id(nrPost.id)
                     .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
@@ -94,7 +94,7 @@ struct ProfileZaps: View {
         }
         .frame(minHeight: 800)
 //        .padding(.top, 5)
-//        .background(theme.listBackground)
+//        .background(themes.theme.listBackground)
         .task {
             guard !didLoad else { return }
             didLoad = true

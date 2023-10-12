@@ -40,12 +40,12 @@ struct NRButton_Previews: PreviewProvider {
                     .buttonStyle(.borderedProminent)
                 
                 Button("Example") { }
-                    .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(theme: Themes.default.theme, style: .borderedProminent))
             }
                 
                 
         }
-        .buttonStyle(NRButtonStyle(theme: Theme.default))
+        .buttonStyle(NRButtonStyle(theme: Themes.default.theme))
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

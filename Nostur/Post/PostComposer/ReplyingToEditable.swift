@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ReplyingToEditable: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var theme: Theme
+    @EnvironmentObject private var themes: Themes
     public var requiredP:String? = nil
     public var available:Set<Contact>
     @Binding var selected:Set<Contact>
@@ -25,10 +25,10 @@ struct ReplyingToEditable: View {
         HStack(alignment: .top, spacing: 0) {
             Group {
                 Text("Replying to ")
-                    .foregroundColor(theme.secondary)
+                    .foregroundColor(themes.theme.secondary)
                     .lineLimit(1)
                 Text(selectedSorted.map { "@\($0.anyName)" }.formatted(.list(type: .and)))
-                    .foregroundColor(theme.accent)
+                    .foregroundColor(themes.theme.accent)
                     .lineLimit(3)
             }
             .font(.system(size: 13))

@@ -9,13 +9,14 @@ import SwiftUI
 import Combine
 
 struct ReplyingToFragmentView: View {
-    @EnvironmentObject var theme:Theme
-    let nrPost:NRPost
-    @ObservedObject var replyingToAttributes:NRPost.ReplyingToAttributes
+    private let nrPost:NRPost
+    @ObservedObject private var replyingToAttributes:NRPost.ReplyingToAttributes
+    private var theme:Theme
     
-    init(nrPost: NRPost) {
+    init(nrPost: NRPost, theme:Theme) {
         self.nrPost = nrPost
         self.replyingToAttributes = nrPost.replyingToAttributes
+        self.theme = theme
     }
 
     var body: some View {
@@ -42,17 +43,17 @@ struct ReplyingToFragmentView_Previews: PreviewProvider {
             VStack {
                 // No replyTo.contact
                 if let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3") {
-                    ReplyingToFragmentView(nrPost: event1)
+                    ReplyingToFragmentView(nrPost: event1, theme: Themes.default.theme)
                 }
                 
                 // With replyTo.contact
                 if let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e") {
-                    ReplyingToFragmentView(nrPost: event2)
+                    ReplyingToFragmentView(nrPost: event2, theme: Themes.default.theme)
                 }
                 
                 // No reply at all.
                 if let event3 = PreviewFetcher.fetchNRPost("d90c63ca06c0eab08d5c79d3991cd22b6c0e2f4e56167ae918343f2a9bc98ff1") {
-                    ReplyingToFragmentView(nrPost: event3)
+                    ReplyingToFragmentView(nrPost: event3, theme: Themes.default.theme)
                 }
             }
         }

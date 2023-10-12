@@ -9,7 +9,7 @@ import SwiftUI
 import NukeUI
 
 struct GifSearcher: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) var dismiss
     @State var searchTerm = ""
     @State var searchResults:[TenorResult] = []
@@ -49,7 +49,7 @@ struct GifSearcher: View {
 //                                autocompleteResults = []
 //                                suggestionResults = []
                             }
-                            .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                            .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                         }
                     }
                 }
@@ -66,7 +66,7 @@ struct GifSearcher: View {
                                             .resizable()
                                             .aspectRatio(contentMode: .fit)
                                             .hCentered()
-                                            .background(theme.lineColor.opacity(0.2))
+                                            .background(themes.theme.lineColor.opacity(0.2))
                                             .onTapGesture {
                                                 if let url = gifResult.media_formats["gif"]?.url {
                                                     onSelect(url)
@@ -89,7 +89,7 @@ struct GifSearcher: View {
                                                 .resizable()
                                                 .aspectRatio(contentMode: .fit)
                                                 .hCentered()
-                                                .background(theme.lineColor.opacity(0.2))
+                                                .background(themes.theme.lineColor.opacity(0.2))
                                                 .onTapGesture {
                                                     if let url = gifResult.media_formats["gif"]?.url {
                                                         onSelect(url)
@@ -223,5 +223,5 @@ struct GifSearcher: View {
             print("Gif selected: \(gifURL)")
         }
     }
-    .environmentObject(Theme.default)
+    .environmentObject(Themes.default)
 }

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PostPreview: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @StateObject var dim = DIMENSIONS()
     @Environment(\.dismiss) var dismiss
     let nrPost:NRPost
@@ -35,7 +35,7 @@ struct PostPreview: View {
                 }
             if let postPreviewWidth {
                 AnyStatus()
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true)
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: themes.theme)
                     .padding(10)
                     .disabled(true)
                     .environmentObject(DIMENSIONS.embeddedDim(availableWidth: postPreviewWidth - 80.0))
@@ -59,7 +59,7 @@ struct PostPreview: View {
                         Text("Post.verb", comment: "Button to post (publish) a new post")
                     }
                 }
-                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 .cornerRadius(20)
                 .disabled(uploading)
             }

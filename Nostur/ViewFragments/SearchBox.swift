@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SearchBox: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @StateObject var debounceObject = DebounceObject()
     var prompt:String
     @Binding var text:String
@@ -21,7 +21,7 @@ struct SearchBox: View {
         .padding(.leading, 25)
         .padding(.trailing, 25)
         .background {
-            theme.listBackground.opacity(0.5)
+            themes.theme.listBackground.opacity(0.5)
                 .overlay(alignment:.leading) {
                     Image(systemName: "magnifyingglass")
                         .imageScale(.medium)
@@ -70,6 +70,6 @@ struct SearchBox_Previews: PreviewProvider {
             }
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-        .environmentObject(Theme.default)
+        .environmentObject(Themes.default)
     }
 }

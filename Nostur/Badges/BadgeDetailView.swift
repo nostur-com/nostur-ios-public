@@ -11,7 +11,7 @@ import NukeUI
 
 
 struct BadgeDetailView: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var la:LoggedInAccount
@@ -104,7 +104,7 @@ struct BadgeDetailView: View {
             
             
             Button { awardToPeopleIsShown = true } label: { Text("Award to people", comment: "Button to award a badge to people") }
-                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
             // award to people
             
             // lazy vstack foreach award p
@@ -142,7 +142,7 @@ struct BadgeDetailView: View {
                     }
                 }
             }
-            .presentationBackground(theme.background)
+            .presentationBackground(themes.theme.background)
         }
     }
 }

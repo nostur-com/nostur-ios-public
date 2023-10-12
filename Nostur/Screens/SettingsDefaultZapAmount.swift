@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SettingsDefaultZapAmount: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) var dismiss
     
     @AppStorage("last_custom_zap_amount") var lastCustomZapAmount:Double = 0.0
@@ -110,7 +110,7 @@ struct SettingsDefaultZapAmount: View {
                 NavigationStack {
                     CustomZapAmountEntry(customAmount: $customAmount)
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             }
         }
     }

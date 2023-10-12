@@ -9,7 +9,7 @@ import SwiftUI
 
 // Note 1 default (not full-width)
 struct Kind1Default: View {
-    @EnvironmentObject private var theme:Theme
+    private var theme:Theme
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var settings:SettingsStore = .shared
     private let nrPost:NRPost
@@ -22,7 +22,7 @@ struct Kind1Default: View {
     private let isDetail:Bool
     private let grouped:Bool
     
-    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
+    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, theme:Theme) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -31,6 +31,7 @@ struct Kind1Default: View {
         self.isReply = isReply
         self.isDetail = isDetail
         self.grouped = grouped
+        self.theme = theme
     }
     
     private let THREAD_LINE_OFFSET = 24.0
@@ -115,14 +116,14 @@ struct Kind1Default: View {
 //                    t.animation = nil
 //                }
                 if missingReplyTo {
-                    ReplyingToFragmentView(nrPost: nrPost)
+                    ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                         .withoutAnimation()
 //                        .transaction { t in
 //                            t.animation = nil
 //                        }
                 }
                 if let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth)
+                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, theme: theme)
                         .withoutAnimation()
 //                        .transaction { transaction in
 //                            transaction.animation = nil
@@ -149,7 +150,7 @@ struct Kind1Default: View {
 //                            }
                     }
 
-                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth)
+                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, theme: theme)
                         .frame(maxWidth: .infinity, alignment:.leading)
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
@@ -163,7 +164,7 @@ struct Kind1Default: View {
                     }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
-                    CustomizableFooterFragmentView(nrPost: nrPost)
+                    CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
                         .drawingGroup(opaque: true)
 //                        .withoutAnimation()
@@ -197,13 +198,13 @@ struct Kind1Default_Previews: PreviewProvider {
             SmoothListMock {
                 if let nrPost = PreviewFetcher.fetchNRPost("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
                     Box {
-                        Kind1Default(nrPost: nrPost, hideFooter: false)
+                        Kind1Default(nrPost: nrPost, hideFooter: false, theme: Themes.default.theme)
                     }
                 }
                 
                 if let nrPost = PreviewFetcher.fetchNRPost() {
                     Box {
-                        Kind1Default(nrPost: nrPost, hideFooter: false)
+                        Kind1Default(nrPost: nrPost, hideFooter: false, theme: Themes.default.theme)
                     }
                 }
             }
