@@ -64,7 +64,8 @@ struct CustomizableFooterFragmentView: View {
             // UNDO SEND AND SENT TO RELAYS
             OwnPostFooter(nrPost: nrPost, theme: theme)
         }
-        .padding(.bottom, 20)
+        .padding(.top, 5)
+        .padding(.bottom, 16)
         .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))
     }
