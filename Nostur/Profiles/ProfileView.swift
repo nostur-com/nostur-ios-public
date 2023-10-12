@@ -16,6 +16,7 @@ struct ProfileView: View {
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var settings:SettingsStore = .shared
+    @ObservedObject private var fg:FollowingGuardian = .shared
     @ObservedObject private var nrContact:NRContact
 
     @State private var profilePicViewerIsShown = false
@@ -139,6 +140,16 @@ struct ProfileView: View {
                                 
                                 Spacer()
                                 
+                                if account()?.privateKey != nil {
+                                    Button {
+                                        UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                            sendNotification(.triggerDM, (nrContact.pubkey, nrContact.mainContact))
+                                        }
+                                    } label: { Image(systemName: "envelope.fill") }
+                                    .buttonStyle(NosturButton())
+                                }
+                                
                                 if nrContact.anyLud {
                                     ProfileLightningButton(contact: nrContact.mainContact)
                                 }
@@ -174,6 +185,7 @@ struct ProfileView: View {
                                     } label: {
                                         FollowButton(isFollowing:nrContact.following, isPrivateFollowing:nrContact.privateFollow)
                                     }
+                                    .disabled(nrContact.pubkey != account()?.publicKey && !fg.didReceiveContactListThisSession)
                                     .padding(.trailing, 10)
                                 }
                             }

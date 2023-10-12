@@ -327,8 +327,16 @@ extension Notification.Name {
     
     static var WoTReady: Notification.Name {
         return Notification.Name("WoTReady")
-    }    
+    }
+    
     static var didSend: Notification.Name {
         return Notification.Name("didSend")
+    }
+    
+    static var triggerDM: Notification.Name {
+        return Notification.Name("triggerDM")
+    }    
+    static var preloadNewDMInfo: Notification.Name {
+        return Notification.Name("preloadNewDMInfo")
     }
 }

@@ -204,7 +204,7 @@ class DirectMessageViewModel: ObservableObject {
                     lastNotificationReceivedAt = mostRecent.date
                 }
                 
-                // Unread count is based on (in the following fallback order:
+                // Unread count is based on (in the following fallback order):
                 // - 0 if last message is sent by own account
                 // - Manual markedReadAt date
                 // - Most recent DM sent (by own account) date
