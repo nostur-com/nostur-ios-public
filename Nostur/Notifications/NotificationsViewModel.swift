@@ -86,7 +86,6 @@ class NotificationsViewModel: ObservableObject {
             if unreadMentions_ > oldValue {
                 sendNotification(.newMentions)
             }
-//            sendNotification(.updateNotificationsCount, unread)
         }
     }
     @Published var unreadNewFollowers_:Int = 0 {  // custom
@@ -171,7 +170,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     private func checkRelays() {
-        // Check relays for newest messages NOW // NEEDED ("Notifications") realtime
+        // Check relays for newest messages NOW+NEWER ("Notifications") realtime
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             self.relayCheckNewestNotifications()
         }
@@ -235,7 +234,9 @@ class NotificationsViewModel: ObservableObject {
     
     private func checkForEverything() {
         shouldBeBg()
-        guard needsUpdate else { L.og.debug("Notification check skipped, needsUpdate: false"); return }
+        guard needsUpdate else {
+            return
+        }
         guard account() != nil else { return }
         
         needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
