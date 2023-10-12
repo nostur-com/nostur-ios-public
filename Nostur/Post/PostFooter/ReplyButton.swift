@@ -37,7 +37,7 @@ struct ReplyButton: View {
                                     .offset(x:Double(0 + (12*index)))
                             }
                         }
-                        .offset(y: 20)
+                        .offset(y: 17)
                     }
                 }
                 .overlay(alignment: .leading) {
