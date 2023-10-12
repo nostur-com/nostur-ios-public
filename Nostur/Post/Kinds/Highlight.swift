@@ -9,7 +9,6 @@ import SwiftUI
 
 // Hightlight note
 struct Highlight: View {
-    @EnvironmentObject private var theme:Theme
     private let nrPost:NRPost
     @ObservedObject private var pfpAttributes: NRPost.PFPAttributes
     @ObservedObject private var highlightAttributes: NRPost.HighlightAttributes
@@ -18,8 +17,9 @@ struct Highlight: View {
     private var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     private let grouped:Bool
     @ObservedObject private var settings:SettingsStore = .shared
+    private var theme:Theme
     
-    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, grouped:Bool = false) {
+    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, grouped:Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.highlightAttributes = nrPost.highlightAttributes
@@ -27,6 +27,7 @@ struct Highlight: View {
         self.missingReplyTo = missingReplyTo
         self.connect = connect
         self.grouped = grouped
+        self.theme = theme
     }
     
     private let THREAD_LINE_OFFSET = 24.0
@@ -93,7 +94,7 @@ struct Highlight: View {
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
                 if missingReplyTo {
-                    ReplyingToFragmentView(nrPost: nrPost)
+                    ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                         .contentShape(Rectangle())
                         .onTapGesture { navigateTo(nrPost) }
                 }
@@ -152,7 +153,7 @@ struct Highlight: View {
                     navigateTo(nrPost)
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
-                    CustomizableFooterFragmentView(nrPost: nrPost)
+                    CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
                         .padding(.top, 10)
                 }
             }
@@ -183,11 +184,11 @@ struct Highlight: View {
         SmoothListMock {
             if let nrPost = PreviewFetcher.fetchNRPost("6e00b687cdb567eda5093d54e6f73577ecae928f00a85c3b09dddbf2da52adc1") {
                 Box {
-                    Highlight(nrPost: nrPost)
+                    Highlight(nrPost: nrPost, theme: Themes.default.theme)
                 }
                 
                 Box {
-                    Highlight(nrPost: nrPost)
+                    Highlight(nrPost: nrPost, theme: Themes.default.theme)
                 }
             }
         }

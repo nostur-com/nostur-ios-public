@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NostrAddress: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
 
     public var nip05:String
     public var shortened = false
@@ -27,11 +27,11 @@ struct NostrAddress: View {
                 Text(localPart)
             }
             Image(systemName: "at.circle.fill")
-                .foregroundColor(theme.accent)
+                .foregroundColor(themes.theme.accent)
                 .offset(y: 1)
             Text(domainPart)
         }
-        .foregroundColor(theme.accent)
+        .foregroundColor(themes.theme.accent)
         .lineLimit(1)
     }
 }
@@ -71,6 +71,6 @@ struct NostrAddress_Previews: PreviewProvider {
             }
         }
             .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-            .environmentObject(Theme.default)
+            .environmentObject(Themes.default)
     }
 }

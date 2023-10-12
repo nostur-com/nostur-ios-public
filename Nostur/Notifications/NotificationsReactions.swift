@@ -11,7 +11,7 @@ import Combine
 
 struct NotificationsReactions: View {
     @Binding public var navPath:NavigationPath
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @StateObject private var fl = FastLoader()
     @State private var didLoad = false
     @State private var backlog = Backlog()
@@ -104,7 +104,7 @@ struct NotificationsReactions: View {
                 }
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             load()

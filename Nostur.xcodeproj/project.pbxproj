@@ -270,7 +270,6 @@
 		1FB130B129C0DB07004AC98D /* NoteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130B029C0DB07004AC98D /* NoteRow.swift */; };
 		1FB130B329C0E5A4004AC98D /* NoteHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130B229C0E5A4004AC98D /* NoteHeaderView.swift */; };
 		1FB130B529C0E8D8004AC98D /* ReplyingToFragmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */; };
-		1FB130BB29C0F9A6004AC98D /* FooterFragmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130BA29C0F9A6004AC98D /* FooterFragmentView.swift */; };
 		1FB130BD29C1930A004AC98D /* PostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130BC29C1930A004AC98D /* PostDetailView.swift */; };
 		1FB130BF29C1A314004AC98D /* QuotedNoteFragmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130BE29C1A314004AC98D /* QuotedNoteFragmentView.swift */; };
 		1FB38B6129E29CEC00B85156 /* ProfilePicPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB38B6029E29CEC00B85156 /* ProfilePicPicker.swift */; };
@@ -708,7 +707,6 @@
 		1FB130B029C0DB07004AC98D /* NoteRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRow.swift; sourceTree = "<group>"; };
 		1FB130B229C0E5A4004AC98D /* NoteHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeaderView.swift; sourceTree = "<group>"; };
 		1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToFragmentView.swift; sourceTree = "<group>"; };
-		1FB130BA29C0F9A6004AC98D /* FooterFragmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FooterFragmentView.swift; sourceTree = "<group>"; };
 		1FB130BC29C1930A004AC98D /* PostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailView.swift; sourceTree = "<group>"; };
 		1FB130BE29C1A314004AC98D /* QuotedNoteFragmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotedNoteFragmentView.swift; sourceTree = "<group>"; };
 		1FB38B6029E29CEC00B85156 /* ProfilePicPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicPicker.swift; sourceTree = "<group>"; };
@@ -1011,7 +1009,6 @@
 			children = (
 				1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */,
 				1FED0D842ACAF5F1002DAC02 /* CustomizableFooter.swift */,
-				1FB130BA29C0F9A6004AC98D /* FooterFragmentView.swift */,
 				1F15F09F2AAF35560004E706 /* LikeButton.swift */,
 				1FED0D862ACAFC5A002DAC02 /* ReactionButton.swift */,
 				1F15F09B2AAF2FCC0004E706 /* ReplyButton.swift */,
@@ -2128,7 +2125,6 @@
 				1F81C4A72AC033DF0006CAA2 /* NotificationsViewModel.swift in Sources */,
 				1F006B0729D090370048C6DD /* Event+DMs.swift in Sources */,
 				1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */,
-				1FB130BB29C0F9A6004AC98D /* FooterFragmentView.swift in Sources */,
 				1FC4556129CB677F00DE3239 /* NewDMButton.swift in Sources */,
 				1F3309832989819700D4D8CF /* Maintenance.swift in Sources */,
 				1FCCAC9E2AB747CF00B3F00A /* ProfileFollowingCount.swift in Sources */,

@@ -9,7 +9,7 @@ import SwiftUI
 import CoreData
 
 struct ProfileLikesView: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var vm:ProfileLikesViewModel
     
@@ -40,7 +40,7 @@ struct ProfileLikesView: View {
             LazyVStack(spacing: 10) {
                 ForEach(vm.posts, id:\.id) { nrPost in
                     Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                     }
 //                    .id(nrPost.id)
                     .onBecomingVisible {
@@ -51,7 +51,7 @@ struct ProfileLikesView: View {
                 }
             }
 //            .padding(.top, 10)
-//            .background(theme.listBackground)
+//            .background(themes.theme.listBackground)
         case .timeout:
             VStack(alignment: .center) {
                 Text("Unable to fetch content")

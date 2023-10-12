@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ReportPostSheet: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) private var dismiss
     public let nrPost:NRPost
     @State private var reason = ReportType.spam
@@ -19,7 +19,7 @@ struct ReportPostSheet: View {
         VStack {
             ScrollView {
                 Box(nrPost: nrPost, navMode: .noNavigation) {
-                    PostRowDeletable(nrPost: nrPost, hideFooter: true, missingReplyTo: true)
+                    PostRowDeletable(nrPost: nrPost, hideFooter: true, missingReplyTo: true, theme: themes.theme)
                 }
                 .disabled(true)
                 .overlay(
@@ -31,7 +31,7 @@ struct ReportPostSheet: View {
             }
             .frame(maxHeight: 200)
             .padding(10)
-            .background(theme.listBackground)
+            .background(themes.theme.listBackground)
             .clipped()
             
             Form {

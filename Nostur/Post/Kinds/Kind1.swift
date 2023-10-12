@@ -11,7 +11,6 @@ import SwiftUI
 
 // Note Full width
 struct Kind1: View {
-    @EnvironmentObject private var theme:Theme
     @EnvironmentObject var dim:DIMENSIONS
     let nrPost:NRPost
     @ObservedObject var pfpAttributes: NRPost.PFPAttributes
@@ -25,8 +24,9 @@ struct Kind1: View {
     let sp:SocketPool = .shared
     let up:Unpublisher = .shared
     @ObservedObject var settings:SettingsStore = .shared
+    private var theme:Theme
     
-    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
+    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -35,6 +35,7 @@ struct Kind1: View {
         self.isReply = isReply
         self.isDetail = isDetail
         self.grouped = grouped
+        self.theme = theme
     }
     
     let THREAD_LINE_OFFSET = 34.0
@@ -95,10 +96,10 @@ struct Kind1: View {
             }
             VStack(alignment:.leading, spacing: 3) {// Post container
                 if missingReplyTo {
-                    ReplyingToFragmentView(nrPost: nrPost)
+                    ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                 }
                 if let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, fullWidth: true)
+                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, fullWidth: true, theme: theme)
                 }
                 else {
                     if (nrPost.kind != 1) && (nrPost.kind != 6) {
@@ -113,7 +114,7 @@ struct Kind1: View {
                             .lineLimit(3)
                         
                     }
-                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: true, availableWidth: imageWidth)
+                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: true, availableWidth: imageWidth, theme: theme)
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
@@ -121,7 +122,7 @@ struct Kind1: View {
                     }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
-                    CustomizableFooterFragmentView(nrPost: nrPost)
+                    CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
                         .drawingGroup(opaque: true)
                 }
@@ -138,7 +139,7 @@ struct Kind1_Previews: PreviewProvider {
         PreviewContainer {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost() {
-                    Kind1(nrPost: nrPost)
+                    Kind1(nrPost: nrPost, theme: Themes.default.theme)
                 }
             }
         }

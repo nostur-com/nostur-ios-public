@@ -11,7 +11,7 @@ import CoreData
 import Nuke
 
 struct Settings: View {
-    @EnvironmentObject private var theme: Theme
+    @EnvironmentObject private var themes: Themes
     @ObservedObject private var settings: SettingsStore = .shared
     @AppStorage("devToggle") private var devToggle: Bool = false
     @AppStorage("selected_tab") private var selectedTab = "Main"
@@ -108,7 +108,7 @@ struct Settings: View {
                     Text("Shows 'Shared from Nostur' caption when sharing post screenshots", comment: "Setting on settings screen")
                 }
             }
-            .listRowBackground(theme.background)
+            .listRowBackground(themes.theme.background)
             
             Group {
                 Section(header: Text("Spam filtering", comment:"Setting heading on settings screen")) {
@@ -162,7 +162,7 @@ struct Settings: View {
                         }
                     }
                 }
-                .listRowBackground(theme.background)
+                .listRowBackground(themes.theme.background)
                 
                 Section(header: Text("Image uploading", comment:"Setting heading on settings screen")) {
                     VStack {
@@ -175,7 +175,7 @@ struct Settings: View {
                         }
                     }
                 }
-                .listRowBackground(theme.background)
+                .listRowBackground(themes.theme.background)
             }
             
             Group {
@@ -229,7 +229,7 @@ struct Settings: View {
                         }
                     }
                 }
-                .listRowBackground(theme.background)
+                .listRowBackground(themes.theme.background)
                 
                 Section(header: Text("Data export")) {
                     Button("Save to file...") {
@@ -249,7 +249,7 @@ struct Settings: View {
                             }
                     }
                 }
-                .listRowBackground(theme.background)
+                .listRowBackground(themes.theme.background)
                 
                 Section(header: Text("Relays", comment: "Relay settings heading")) {
                     RelaysView()
@@ -274,11 +274,11 @@ struct Settings: View {
                                 L.og.error("Unresolved error \(error)")
                             }
                         }
-                        .presentationBackground(theme.background)
-                        .environmentObject(theme)
+                        .presentationBackground(themes.theme.background)
+                        .environmentObject(themes)
                     }
                 }
-                .listRowBackground(theme.background)
+                .listRowBackground(themes.theme.background)
                 
                 Section(header: Text("Caches", comment: "Settings heading")) {
                     HStack {
@@ -362,7 +362,7 @@ struct Settings: View {
                         }
                     }
                 }
-                .listRowBackground(theme.background)
+                .listRowBackground(themes.theme.background)
                 
             }
             
@@ -373,7 +373,7 @@ struct Settings: View {
                 }
                 // TODO: add limited/primary relay selection
             }
-            .listRowBackground(theme.background)
+            .listRowBackground(themes.theme.background)
             
             Section(header: Text("Message verification", comment: "Setting heading on settings screen")) {
                 Toggle(isOn: $settings.isSignatureVerificationEnabled) {
@@ -381,7 +381,7 @@ struct Settings: View {
                     Text("Turn off to save battery life and trust the relays for the authenticity of messages", comment:"Setting on settings screen")
                 }
             }
-            .listRowBackground(theme.background)
+            .listRowBackground(themes.theme.background)
             
 //            Section(header: Text("Dev")) {
 //                Toggle(isOn: $devToggle) {
@@ -452,14 +452,14 @@ struct Settings: View {
 //                    }
 //                }
 //            }
-//            .listRowBackground(theme.background)
+//            .listRowBackground(themes.theme.background)
 //                Section(header: Text("Private key protector")) {
 //                    Toggle(isOn: $settings.replaceNsecWithHunter2Enabled) {
 //                        Text("Don't allow nsec in posts")
 //                        Text("Replaces any \"nsec1...\" in new posts with \"hunter2\" ")
 //                    }
 //                }
-//                .listRowBackground(theme.background)
+//                .listRowBackground(themes.theme.background)
             if account()?.privateKey != nil && !(account()?.isNC ?? false) {
                 Section(header: Text("Account", comment: "Heading for section to delete account")) {
                     Button(role: .destructive) {
@@ -468,16 +468,16 @@ struct Settings: View {
                         Label(String(localized:"Delete account", comment: "Button to delete account"), systemImage: "trash")
                     }                    
                 }
-                .listRowBackground(theme.background)
+                .listRowBackground(themes.theme.background)
             }
         }
         .sheet(isPresented: $showDefaultZapAmountSheet) {
             SettingsDefaultZapAmount()
-                .environmentObject(theme)
-                .presentationBackground(theme.background)
+                .environmentObject(themes)
+                .presentationBackground(themes.theme.background)
         }
         .scrollContentBackground(.hidden)
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             let bg = DataProvider.shared().container.newBackgroundContext()
             bg.perform {
@@ -502,24 +502,24 @@ struct Settings: View {
                 DeleteAccountSheet()
                     .environmentObject(NRState.shared)
             }
-            .environmentObject(theme)
-            .presentationBackground(theme.background)
+            .environmentObject(themes)
+            .presentationBackground(themes.theme.background)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
             NavigationStack {
                 AlbyNWCConnectSheet()
                     .environmentObject(NRState.shared)
             }
-            .environmentObject(theme)
-            .presentationBackground(theme.background)
+            .environmentObject(themes)
+            .presentationBackground(themes.theme.background)
         }
         .sheet(isPresented: $customNWCsheetShown) {
             NavigationStack {
                 CustomNWCConnectSheet()
                     .environmentObject(NRState.shared)
             }
-            .environmentObject(theme)
-            .presentationBackground(theme.background)
+            .environmentObject(themes)
+            .presentationBackground(themes.theme.background)
         }
     }
 }

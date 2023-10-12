@@ -17,7 +17,7 @@ struct BadgesReceivedContainer:View {
 }
 
 struct BadgesReceivedView: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var la:LoggedInAccount
 
@@ -52,23 +52,23 @@ struct BadgesReceivedView: View {
             List(Array(Set(badgeAwardsToMe.compactMap { $0.badgeDefinition }).sorted(by: { $0.created_at > $1.created_at })), id:\.self) { badge in
                 BadgeReceivedRow(badge: badge, selectedBadges: $selection)
                     .id(badge.id)
-                    .listRowBackground(theme.background)
-//                    .background(theme.background)
+                    .listRowBackground(themes.theme.background)
+//                    .background(themes.theme.background)
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(theme.listBackground)
+            .background(themes.theme.listBackground)
             
             Button {
                 guard isFullAccount() else { showReadOnlyMessage(); return }
                 publishSelection(Array(selection))
             } label: { Text("Publish selected badges on profile") }
-                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 .disabled(selection.isEmpty)
             
             Spacer()
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .navigationTitle("")
         .onAppear {
             // fetch missing badge definitions:

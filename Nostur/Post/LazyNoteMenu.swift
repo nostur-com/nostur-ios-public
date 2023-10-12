@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct LazyNoteMenuButton: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     var nrPost:NRPost
     
     var body: some View {
         Image(systemName: "ellipsis")
             .fontWeight(.bold)
-            .foregroundColor(theme.footerButtons)
+            .foregroundColor(themes.theme.footerButtons)
             .padding(.leading, 15)
             .padding(.bottom, 11)
             .contentShape(Rectangle())
@@ -29,7 +29,7 @@ struct LazyNoteMenuButton: View {
 }
 
 struct LazyNoteMenuSheet: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var la:LoggedInAccount
     public let nrPost:NRPost
     @Environment(\.dismiss) private var dismiss
@@ -197,8 +197,8 @@ struct LazyNoteMenuSheet: View {
                         }
                     }
                 }
-                .foregroundColor(theme.accent)
-                .listRowBackground(theme.background)
+                .foregroundColor(themes.theme.accent)
+                .listRowBackground(themes.theme.background)
                 
                 Group {
                     Button {
@@ -248,8 +248,8 @@ struct LazyNoteMenuSheet: View {
                         Label(String(localized:"Report.verb", comment:"Post context menu action to Report a post or user"), systemImage: "flag")
                     }
                 }
-                .foregroundColor(theme.accent)
-                .listRowBackground(theme.background)
+                .foregroundColor(themes.theme.accent)
+                .listRowBackground(themes.theme.background)
                 
                 if (NRState.shared.activeAccountPublicKey == nrPost.pubkey) {
                     Button {
@@ -260,8 +260,8 @@ struct LazyNoteMenuSheet: View {
                     } label: {
                         Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
                     }
-                    .foregroundColor(theme.accent)
-                    .listRowBackground(theme.background)
+                    .foregroundColor(themes.theme.accent)
+                    .listRowBackground(themes.theme.background)
                 }
                 
                 Button {
@@ -284,8 +284,8 @@ struct LazyNoteMenuSheet: View {
                         Label(String(localized:"Rebroadcast", comment: "Button to rebroadcast a post"), systemImage: "dot.radiowaves.left.and.right")
                     }
                 }
-                .foregroundColor(theme.accent)
-                .listRowBackground(theme.background)
+                .foregroundColor(themes.theme.accent)
+                .listRowBackground(themes.theme.background)
                 
                 if nrPost.relays != "" {
                     VStack(alignment: .leading) {
@@ -300,10 +300,10 @@ struct LazyNoteMenuSheet: View {
                         }
                     }
                     .foregroundColor(.gray)
-                    .listRowBackground(theme.background)
+                    .listRowBackground(themes.theme.background)
                 }
             }
-            .background(theme.background)
+            .background(themes.theme.background)
             .scrollContentBackground(.hidden)
             .listStyle(.plain)
             .navigationTitle(String(localized:"Post actions", comment:"Title of sheet showing actions to perform on post"))

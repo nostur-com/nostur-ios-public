@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct DirectMessageRows: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     let pubkey:String
     @Binding var conversationRows:[Conversation]
     
@@ -20,7 +20,7 @@ struct DirectMessageRows: View {
                         .id(conv.contactPubkey)
                 }
             }
-            .listRowBackground(theme.listBackground)
+            .listRowBackground(themes.theme.listBackground)
         }
         .listStyle(.plain)
     }

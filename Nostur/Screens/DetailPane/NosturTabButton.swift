@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NosturTabButton: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     var isSelected:Bool = false
     var onSelect:() -> Void
     var onClose:() -> Void
@@ -43,13 +43,13 @@ struct NosturTabButton: View {
             }
             Text(tab.navigationTitle)
                 .lineLimit(1)
-                .foregroundColor(theme.accent)
+                .foregroundColor(themes.theme.accent)
                 .frame(maxWidth: 150)
         }
         .padding(.trailing, 23)
         .padding(.vertical, 10)
         .padding(.leading, 5)
-        .background(isSelected ? (isArticle ? theme.secondaryBackground : theme.background) : .clear)
+        .background(isSelected ? (isArticle ? themes.theme.secondaryBackground : themes.theme.background) : .clear)
         .contentShape(Rectangle())
         .onHover { over in
             isHoveringTab = over

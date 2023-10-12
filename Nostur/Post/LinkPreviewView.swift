@@ -11,8 +11,8 @@ import NukeUI
 import HTMLEntities
 
 struct LinkPreviewView: View {
-    @EnvironmentObject var theme:Theme
-    let url:URL
+    public let url:URL
+    public var theme:Theme
     @State var tags:[String: String] = [:]
     
     static let aspect:CGFloat = 16/9
@@ -105,10 +105,10 @@ struct LinkPreviewView_Previews: PreviewProvider {
         let url = URL(string:"https://youtu.be/QU9kRF9tHPU")!
 //        let url = URL(string:"https://nostur.com")!
         NavigationStack {
-            LinkPreviewView(url: url)
+            LinkPreviewView(url: url, theme: Themes.default.theme)
                 .padding(.vertical, 5)
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-        .environmentObject(Theme.default)
+        .environmentObject(Themes.default)
     }
 }

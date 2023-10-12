@@ -19,7 +19,7 @@ public class PreviewEnvironment {
     let tm:DetailTabsModel = .shared
     let dim:DIMENSIONS = .shared
     let sm:SideBarModel = .shared
-    let theme:Theme = .default
+    let themes:Themes = .default
     let kind0:Kind0Processor = .shared
     
     static let shared = PreviewEnvironment()
@@ -467,10 +467,10 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.sm)
                     .environmentObject(pe.tm)
                     .environmentObject(pe.dim)
-                    .environmentObject(pe.theme)
+                    .environmentObject(pe.themes)
                     .environmentObject(pe.dim)
-                    .buttonStyle(NRButtonStyle(theme: pe.theme))
-                    .tint(pe.theme.accent)
+                    .buttonStyle(NRButtonStyle(theme: pe.themes.theme))
+                    .tint(pe.themes.theme.accent)
             }
             else {
                 EmptyView()

@@ -14,7 +14,7 @@ final class SideBarModel: ObservableObject {
 }
 
 struct SideBar: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var sm:SideBarModel = .shared
     @ObservedObject public var account:Account
     @AppStorage("selected_tab") private var selectedTab = "Main"
@@ -34,7 +34,7 @@ struct SideBar: View {
                         .equatable()
                         .overlay(
                             Circle()
-                                .strokeBorder(theme.background, lineWidth: 3)
+                                .strokeBorder(themes.theme.background, lineWidth: 3)
                         )
                         .onTapGesture {
                             if IS_IPAD {
@@ -60,7 +60,7 @@ struct SideBar: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 25, height: 25)
-                                .foregroundColor(theme.accent)
+                                .foregroundColor(themes.theme.accent)
                         }
                     }
                     .zIndex(20)
@@ -92,7 +92,7 @@ struct SideBar: View {
                     } label: {
                         Label(String(localized:"Profile", comment:"Side bar navigation button"), systemImage: "person")
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(theme.accent)
+                            .foregroundColor(themes.theme.accent)
                             .contentShape(Rectangle())
                     }
                     Button {
@@ -102,7 +102,7 @@ struct SideBar: View {
                     } label: {
                         Label(String(localized:"Feeds", comment:"Side bar navigation button"), systemImage: "list.bullet.rectangle")
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(theme.accent)
+                            .foregroundColor(themes.theme.accent)
                             .contentShape(Rectangle())
                     }
                     Button {
@@ -111,7 +111,7 @@ struct SideBar: View {
                     } label: {
                         Label(String(localized:"Bookmarks", comment:"Side bar navigation button"), systemImage: "bookmark")
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(theme.accent)
+                            .foregroundColor(themes.theme.accent)
                             .contentShape(Rectangle())
                     }
                     if !account.isNC {
@@ -122,7 +122,7 @@ struct SideBar: View {
                         } label: {
                             Label(String(localized:"Badges", comment:"Side bar navigation button"), systemImage: "medal")
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .foregroundColor(theme.accent)
+                                .foregroundColor(themes.theme.accent)
                                 .contentShape(Rectangle())
                         }
                     }
@@ -133,7 +133,7 @@ struct SideBar: View {
                     } label: {
                         Label(String(localized:"Settings", comment:"Side bar navigation button"), systemImage: "gearshape")
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(theme.accent)
+                            .foregroundColor(themes.theme.accent)
                             .contentShape(Rectangle())
                     }
                     Button {
@@ -143,7 +143,7 @@ struct SideBar: View {
                     } label: {
                         Label(String(localized:"Block list", comment:"Side bar navigation button"), systemImage: "person.badge.minus")
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(theme.accent)
+                            .foregroundColor(themes.theme.accent)
                             .contentShape(Rectangle())
                     }
                     if !account.isNC {
@@ -152,7 +152,7 @@ struct SideBar: View {
                         } label: {
                             Label(String(localized:"Signer", comment:"Side bar navigation button"), systemImage: "signature")
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .foregroundColor(theme.accent)
+                                .foregroundColor(themes.theme.accent)
                                 .contentShape(Rectangle())
                         }
                     }
@@ -164,14 +164,14 @@ struct SideBar: View {
                     } label: {
                         Label(String(localized:"Log out", comment:"Side bar navigation button"), systemImage: "rectangle.portrait.and.arrow.right")
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(theme.accent)
+                            .foregroundColor(themes.theme.accent)
                             .contentShape(Rectangle())
                     }
                 }
-                .listRowBackground(theme.listBackground)
+                .listRowBackground(themes.theme.listBackground)
             }
             .scrollContentBackground(.hidden)
-            .background(theme.listBackground)
+            .background(themes.theme.listBackground)
             .zIndex(20)
             .listStyle(.plain)
             .padding(.top, 45)
@@ -189,15 +189,15 @@ struct SideBar: View {
                 AccountsSheet()
                     .presentationDetents([.fraction(0.45), .medium, .large])
             }
-            .presentationBackground(theme.background)
-            .environmentObject(theme)
+            .presentationBackground(themes.theme.background)
+            .environmentObject(themes)
         }
         .sheet(isPresented: $showAnySigner) {
             NavigationStack {
                 AnySigner()
             }
-            .presentationBackground(theme.background)
-            .environmentObject(theme)
+            .presentationBackground(themes.theme.background)
+            .environmentObject(themes)
         }
         .actionSheet(item: $logoutAccount) { account in
             ActionSheet(
@@ -230,7 +230,7 @@ struct SideBar: View {
                     .cancel(Text("Cancel"))
                 ])
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .compositingGroup()
         .opacity(sm.showSidebar ? 1.0 : 0)
         .offset(x: sidebarOffset)
@@ -245,11 +245,11 @@ struct SideBar: View {
 
 struct SideBarOverlay: View {
     @ObservedObject private var sm:SideBarModel = .shared
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     
     var body: some View {
         if sm.showSidebar {
-            theme.listBackground
+            themes.theme.listBackground
                 .opacity(0.75)
                 .onTapGesture {
                     sm.showSidebar = false // TODO: Add swipe left/right to show/hide side menu

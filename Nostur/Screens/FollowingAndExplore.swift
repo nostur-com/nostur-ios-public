@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct FollowingAndExplore: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var account:Account
     @ObservedObject var ss:SettingsStore = .shared
@@ -132,7 +132,7 @@ struct FollowingAndExplore: View {
             .frame(width: dim.listWidth, height: max(36.0 + tabsOffsetY,0))
             
             ZStack {
-                theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
+                themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
                 
                 // FOLLOWING
                 if (account.follows_.count <= 1 && !didSend) {
@@ -147,7 +147,7 @@ struct FollowingAndExplore: View {
                         } label: {
                             Text("Explore", comment: "Button to go to the Explore tab")
                         }
-                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                         Spacer()
                     }
                     .onReceive(receiveNotification(.didSend)) { _ in

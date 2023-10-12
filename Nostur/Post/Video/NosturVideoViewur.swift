@@ -14,14 +14,14 @@ import AVFoundation
 @MainActor
 struct NosturVideoViewur: View {
     @Environment(\.openURL) private var openURL
-    @EnvironmentObject private var theme:Theme
-    let url:URL
-    let pubkey:String
-    var height:CGFloat?
-    let videoWidth:CGFloat
-    let isFollowing:Bool
-    var fullWidth:Bool = false
-    var contentPadding:CGFloat = 10.0
+    public let url:URL
+    public let pubkey:String
+    public var height:CGFloat?
+    public let videoWidth:CGFloat
+    public let isFollowing:Bool
+    public var fullWidth:Bool = false
+    public var contentPadding:CGFloat = 10.0
+    public var theme:Theme
     @State private var videoState:VideoLoadingState = .initial
     @State private var videoShown = true
     @State private var cachedVideo:CachedVideo? = nil
@@ -275,7 +275,7 @@ struct NosturVideoViewur_Previews: PreviewProvider {
         
         let urlsFromContent = getImgUrlsFromContent(content1)
         
-        NosturVideoViewur(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, isFollowing: true)
+        NosturVideoViewur(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, isFollowing: true, theme: Themes.default.theme)
             .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

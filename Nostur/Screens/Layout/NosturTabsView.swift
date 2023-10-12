@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NosturTabsView: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dm:DirectMessageViewModel
     @EnvironmentObject private var nvm:NotificationsViewModel
 
@@ -64,7 +64,7 @@ struct NosturTabsView: View {
                             .tag("Messages")
                             .badge((dm.unread + dm.newRequests))
                     }
-                    .toolbarBackground(theme.listBackground, for: .tabBar)
+                    .toolbarBackground(themes.theme.listBackground, for: .tabBar)
                     .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
                 }
                 .withSheets()
@@ -77,7 +77,7 @@ struct NosturTabsView: View {
             }
         }
         .contentShape(Rectangle())
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .withLightningEffect()
         .onChange(of: selectedTab) { newValue in
             if !IS_CATALYST {

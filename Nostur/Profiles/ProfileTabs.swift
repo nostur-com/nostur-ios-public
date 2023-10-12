@@ -11,7 +11,7 @@ struct ProfileTabs: View {
     @ObservedObject public var nrContact:NRContact
     @Binding public var selectedSubTab:String
     
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     private var pubkey:String { nrContact.pubkey }
     @EnvironmentObject private var dim:DIMENSIONS
 
@@ -40,7 +40,7 @@ struct ProfileTabs: View {
                 Spacer()
             }
             .padding(.top, 10)
-            .background(theme.listBackground)
+            .background(themes.theme.listBackground)
             .frame(minHeight: 800)
         } header: {
             ScrollView(.horizontal, showsIndicators: false) {
@@ -78,7 +78,7 @@ struct ProfileTabs: View {
                 .frame(width: dim.listWidth)
             }
             .padding(.top, 10)
-            .background(theme.background)
+            .background(themes.theme.background)
         }
     }
 }

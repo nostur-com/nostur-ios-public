@@ -11,7 +11,7 @@ import Combine
 // Experiment with new "Processor" Combine mechanism
 
 struct ZapReceipt: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
     
     public let sats:Double
@@ -38,7 +38,7 @@ struct ZapReceipt: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 30, height: 30)
-                            .foregroundColor(theme.accent)
+                            .foregroundColor(themes.theme.accent)
                             .offset(x: 6, y: 6)
                     }
                     .withoutAnimation() // seems to fix flying PFPs
@@ -85,7 +85,7 @@ struct ZapReceipt: View {
 //                .frame(height: 40.0, alignment: .leading)
                 
                 if let nrZapFrom = nrZapFrom {
-                    ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth())
+                    ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth(), theme: themes.theme)
                         .frame(maxWidth: .infinity, minHeight: 40, alignment:.leading)
                 }
                 else {
@@ -156,7 +156,7 @@ struct ZappedFrom: View {
 }
 
 struct ReceiptFrom: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     let pubkey:String
     
     @State private var name:String?
@@ -171,7 +171,7 @@ struct ReceiptFrom: View {
             Text(name ?? String(pubkey.prefix(11)))
         }
         .font(.footnote)
-        .foregroundColor(theme.secondary)
+        .foregroundColor(themes.theme.secondary)
         .frame(maxWidth: .infinity, alignment: .trailing)
         .task {
             Kind0Processor.shared.receive

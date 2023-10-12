@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct ZapCustomizerSheet: View {
+    @EnvironmentObject private var themes:Themes
     public var name:String
     public var customZapId:UUID?
     public var supportsZap = false
     public var sendAction:((CustomZap) -> Void)?
-    private let theme:Theme = .default
     @Environment(\.dismiss) private var dismiss
     
     @AppStorage("last_custom_zap_amount") private var lastCustomZapAmount:Double = 0.0
@@ -97,7 +97,7 @@ struct ZapCustomizerSheet: View {
                             .multilineTextAlignment(.leading)
                             .lineLimit(5, reservesSpace: true)
                             .textFieldStyle(.roundedBorder)
-                            .border(theme.lineColor.opacity(0.5))
+                            .border(themes.theme.lineColor.opacity(0.5))
                     }
                     .padding(10)
                 }
@@ -128,7 +128,7 @@ struct ZapCustomizerSheet: View {
                         .foregroundColor(Color.white)
                         .fontWeight(.bold)
                         .padding(10)
-                        .background(theme.accent)
+                        .background(themes.theme.accent)
                         .clipShape(RoundedRectangle(cornerRadius: 8.0))
                         .frame(maxWidth: 300)
                         .controlSize(.large)
@@ -156,7 +156,7 @@ struct ZapCustomizerSheet: View {
                 NavigationStack {
                     CustomZapAmountEntry(customAmount: $customAmount)
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             }
             .onAppear {
                 selectedAmount = SettingsStore.shared.defaultZapAmount
@@ -182,6 +182,7 @@ struct CustomZap: Identifiable {
     PreviewContainer({ pe in pe.loadPosts() }) {
         if let nrPost = PreviewFetcher.fetchNRPost() {
             ZapCustomizerSheet(name:nrPost.anyName, customZapId: UUID(), supportsZap: true)
+                .environmentObject(Themes.default)
         }
     }
 }

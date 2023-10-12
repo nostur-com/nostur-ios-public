@@ -10,7 +10,7 @@
 //
 //struct NewQuoteRepost: View {
 //    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-//    @EnvironmentObject private var theme:Theme
+//    @EnvironmentObject private var themes:Themes
 //    let PLACEHOLDER = String(localized: "Add comment", comment: "Placeholder when typing a new reply")
 //    private var quotingEvent:Event
 //    
@@ -73,7 +73,7 @@
 //                                        vm.text += gifUrl + "\n"
 //                                    }
 //                                }
-//                                .presentationBackground(theme.background)
+//                                .presentationBackground(themes.theme.background)
 //                            }
 //                            AnyStatus(filter: "NewPost")
 //                        }
@@ -146,7 +146,7 @@
 ////                                Text("Post.verb", comment: "Button to post (publish) a new reply")
 ////                            }
 ////                        }
-////                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+////                        .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
 ////                        .cornerRadius(20)
 ////                        .disabled(vm.uploading)
 ////                    }
@@ -155,7 +155,7 @@
 ////                    NavigationStack {
 ////                        PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(quotingEvent: quotingEvent, dismiss:dismiss) }, uploading: $vm.uploading)
 ////                    }
-////                    .presentationBackground(theme.background)
+////                    .presentationBackground(themes.theme.background)
 ////                }
 //                
 ////                if vm.mentioning && !vm.filteredContactSearchResults.isEmpty {

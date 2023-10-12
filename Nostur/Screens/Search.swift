@@ -12,7 +12,7 @@ import NostrEssentials
 @MainActor
 struct Search: View {
     @EnvironmentObject private var la:LoggedInAccount
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @State var nrPosts:[NRPost] = []
 
     @FetchRequest(
@@ -67,11 +67,11 @@ struct Search: View {
                 LazyVStack(spacing: 10) {
                     ForEach(filteredContactSearchResults.prefix(75)) { contact in
                         ProfileRow(contact: contact)
-                            .background(theme.background)
+                            .background(themes.theme.background)
                     }
                     ForEach(nrPosts.prefix(75)) { nrPost in
                         Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                         }
                         .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                     }
@@ -102,7 +102,7 @@ struct Search: View {
                         .padding(.bottom, 10)
                 }
             }
-            .background(theme.listBackground)
+            .background(themes.theme.listBackground)
             .withNavigationDestinations()
             .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)

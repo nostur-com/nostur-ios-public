@@ -15,7 +15,7 @@ struct AddExistingAccountSheet: View {
     
     public var offerTryOut = false
     
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
@@ -86,7 +86,7 @@ struct AddExistingAccountSheet: View {
                         }
                     }
                     .frame(maxWidth: 300)
-                    .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                     .disabled(bunkerManager.state == .connecting || (bunkerManager.isSelfHostedNsecBunker && bunkerManager.invalidSelfHostedAddress))
                     
                     if isNsecbunkerKey {

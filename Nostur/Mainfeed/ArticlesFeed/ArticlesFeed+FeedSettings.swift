@@ -64,7 +64,7 @@ struct ArticleFeedSettingsTester: View {
             }
         }
         .onAppear {
-            Theme.default.loadPurple()
+            Themes.default.loadPurple()
         }
     }
 }

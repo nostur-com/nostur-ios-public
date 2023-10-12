@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CustomNWCConnectSheet: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @State var awaitingConnectionId = ""
     @Environment(\.openURL) var openURL
     @Environment(\.dismiss) var dismiss
@@ -78,7 +78,7 @@ struct CustomNWCConnectSheet: View {
                 else {
                     if !tryingConnection {
                         Button(String(localized:"Connect wallet", comment: "Button to connect a wallet to Nostur")) { startNWC() }
-                            .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                            .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                             .disabled(!validUri)
                     }
                     else {

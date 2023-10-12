@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct EmbedById: View {
-    @EnvironmentObject var theme:Theme
     public let id:String
+    public var theme:Theme
     @StateObject private var vm = FetchVM<NRPost>(timeout: 2.5, debounceTime: 0.05)
     
     var body: some View {
@@ -49,7 +49,7 @@ struct EmbedById: View {
                     }
             case .ready(let nrPost):
                 if nrPost.kind == 30023 {
-                    ArticleView(nrPost, hideFooter: true)
+                    ArticleView(nrPost, hideFooter: true, theme: theme)
                         .padding(20)
                         .background(
                             Color(.secondarySystemBackground)
@@ -63,14 +63,14 @@ struct EmbedById: View {
 //                        .debugDimensions("EmbedById.ArticleView")
                 }
                 else {
-                    QuotedNoteFragmentView(nrPost: nrPost)
+                    QuotedNoteFragmentView(nrPost: nrPost, theme: theme)
 //                        .transaction { t in t.animation = nil }
 //                        .debugDimensions("EmbedById.QuotedNoteFragmentView")
                 }
             case .timeout:
                 VStack {
                     Text("Unable to fetch content")
-                    Button("Retry") { vm.fetch() }
+                    Button("Retry") { vm.state = .loading; vm.fetch() }
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -90,7 +90,7 @@ struct EmbedById: View {
 #Preview {
     PreviewContainer({ pe in pe.loadPosts() }) {
         if let post = PreviewFetcher.fetchNRPost() {
-            EmbedById(id: post.id)
+            EmbedById(id: post.id, theme: Themes.default.theme)
         }
     }
 }

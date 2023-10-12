@@ -10,7 +10,7 @@ import SwiftUI
 typealias AnyStatusMessage = (String, String?)
 
 struct AnyStatus: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     var filter:String?
     @State var message:AnyStatusMessage? = nil
     @State var dismissTask:Task<Void, Never>? = nil
@@ -22,7 +22,7 @@ struct AnyStatus: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Capsule().fill(theme.accent))
+                    .background(Capsule().fill(themes.theme.accent))
                     .clipShape(Capsule())
             }
             else {

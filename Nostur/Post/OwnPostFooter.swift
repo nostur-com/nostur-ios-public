@@ -34,14 +34,16 @@ class OwnPostAttributes: ObservableObject {
 }
 
 struct OwnPostFooter: View {
-    @EnvironmentObject var theme:Theme
+
     let nrPost:NRPost
     @ObservedObject var own:OwnPostAttributes
     @State private var unpublishing = false
+    private var theme:Theme
     
-    init(nrPost: NRPost) {
+    init(nrPost: NRPost, theme: Theme) {
         self.nrPost = nrPost
         self.own = nrPost.ownPostAttributes
+        self.theme = theme
     }
     
     var body: some View {
@@ -72,7 +74,7 @@ struct OwnPostFooter: View {
                             unpublishing = true
                             nrPost.unpublish()
                         }
-                        .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                         .foregroundColor(Color.white)
                         .opacity(own.flags == "nsecbunker_unsigned" ? 0 : 1.0)
                     }
@@ -105,7 +107,7 @@ struct OwnPostFooter_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadPosts() }){
             if let p = PreviewFetcher.fetchNRPost() {
-                OwnPostFooter(nrPost: p)
+                OwnPostFooter(nrPost: p, theme: Themes.default.theme)
             }
         }
     }

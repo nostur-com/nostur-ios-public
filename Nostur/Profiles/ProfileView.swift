@@ -13,7 +13,7 @@ struct ProfileView: View {
     private let pubkey:String
     private var tab:String?
     
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var settings:SettingsStore = .shared
     @ObservedObject private var nrContact:NRContact
@@ -57,7 +57,7 @@ struct ProfileView: View {
                                         PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: 25)
                                             .overlay(
                                                 Circle()
-                                                    .strokeBorder(theme.background, lineWidth: 1)
+                                                    .strokeBorder(themes.theme.background, lineWidth: 1)
                                             )
                                         Text("\(nrContact.anyName) ").font(.headline)
                                     }
@@ -80,7 +80,7 @@ struct ProfileView: View {
                                             NavigationStack {
                                                 AccountEditView(account: account)
                                             }
-                                            .presentationBackground(theme.background)
+                                            .presentationBackground(themes.theme.background)
                                         }
                                         .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
                                     }
@@ -117,7 +117,7 @@ struct ProfileView: View {
                                     PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
                                         .overlay(
                                             Circle()
-                                                .strokeBorder(theme.background, lineWidth: 3)
+                                                .strokeBorder(themes.theme.background, lineWidth: 3)
                                         )
                                         .onTapGesture {
                                             if (nrContact.pictureUrl != nil) {
@@ -156,7 +156,7 @@ struct ProfileView: View {
                                         NavigationStack {
                                             AccountEditView(account: account)
                                         }
-                                        .presentationBackground(theme.background)
+                                        .presentationBackground(themes.theme.background)
                                     }
                                 }
                                 else {
@@ -294,7 +294,7 @@ struct ProfileView: View {
                 ProfileTabs(nrContact: nrContact, selectedSubTab: $selectedSubTab)
             }
         }
-        .background(theme.background)
+        .background(themes.theme.background)
         .preference(key: TabTitlePreferenceKey.self, value: nrContact.anyName)
 //        .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in // TODO: MOVE TO FOLLOWING LIST TAB
 //            let nEvent = notification.object as! NEvent
@@ -320,7 +320,7 @@ struct ProfileView: View {
                     }
                 }
             }
-            .presentationBackground(theme.background)
+            .presentationBackground(themes.theme.background)
         }
         .onAppear {
             if let tab = tab {
@@ -343,7 +343,7 @@ struct ProfileView: View {
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:nrContact.pictureUrl!, isFollowing: nrContact.following)
-                .environmentObject(theme)
+                .environmentObject(themes)
         }
         .task {
             guard !SettingsStore.shared.lowDataMode else { return }

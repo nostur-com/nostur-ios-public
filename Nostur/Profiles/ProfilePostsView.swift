@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfilePostsView: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var vm:ProfilePostsViewModel
     @State var showMore = true
@@ -45,7 +45,7 @@ struct ProfilePostsView: View {
                 LazyVStack(spacing: 10) {
                     ForEach(vm.posts) { nrPost in
                         Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: themes.theme)
                         }
                         .id(nrPost.id)
                         .onBecomingVisible {
@@ -65,7 +65,7 @@ struct ProfilePostsView: View {
             }
             
 //            .padding(.top, 10)
-//            .background(theme.listBackground)
+//            .background(themes.theme.listBackground)
         case .timeout:
             VStack(alignment: .center) {
                 Text("Unable to fetch posts")

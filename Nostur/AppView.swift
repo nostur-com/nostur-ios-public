@@ -43,7 +43,7 @@ struct AppView: View {
     @State private var dd:Deduplicator = .shared
     @State private var vmc:ViewModelCache = .shared
     
-//    @EnvironmentObject private var theme:Theme
+//    @EnvironmentObject private var themes:Themes
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
     @AppStorage("did_accept_terms") private var didAcceptTerms = false
     
@@ -55,7 +55,7 @@ struct AppView: View {
         .merge(with: Just(Date()))
     
     @StateObject private var ns:NRState = .shared
-    @StateObject private var theme:Theme = .default
+    @StateObject private var themes:Themes = .default
     
     var body: some View {
         #if DEBUG
@@ -96,7 +96,7 @@ struct AppView: View {
                             ReadOnlyAccountInformationSheet()
                                 .presentationDetents([.large])
                                 .environmentObject(ns)
-                                .environmentObject(theme)
+                                .environmentObject(themes)
                         }
                         .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                         .environmentObject(ns)
@@ -113,11 +113,11 @@ struct AppView: View {
                                 }
                             }
                         }
-                        .background(theme.listBackground)
-                        .environmentObject(theme)
+                        .background(themes.theme.listBackground)
+                        .environmentObject(themes)
                         .environmentObject(nm)
-                        .buttonStyle(NRButtonStyle(theme: theme))
-                        .tint(theme.accent)
+                        .buttonStyle(NRButtonStyle(theme: themes.theme))
+                        .tint(themes.theme.accent)
                         .onAppear {
                             ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
                             configureAudioSession()
@@ -162,7 +162,7 @@ struct AppView: View {
                 isOnboarding = onBoardingIsShown
             }
         }
-        .environmentObject(theme)
+        .environmentObject(themes)
     }
     
     private func startNosturing() {

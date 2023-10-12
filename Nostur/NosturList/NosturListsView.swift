@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NosturListsView: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)])
@@ -32,10 +32,10 @@ struct NosturListsView: View {
                         
                     }
             }
-            .listRowBackground(theme.background)
+            .listRowBackground(themes.theme.background)
         }
         .scrollContentBackground(.hidden)
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -58,7 +58,7 @@ struct NosturListsView: View {
             NavigationStack {
                 NewListSheet()
             }
-            .presentationBackground(theme.background)
+            .presentationBackground(themes.theme.background)
         }
     }
 }

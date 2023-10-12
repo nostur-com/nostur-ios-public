@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ReportContactSheet: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) var dismiss
     let contact:Contact
     @State var reason = ReportType.impersonation
@@ -20,7 +20,7 @@ struct ReportContactSheet: View {
                 ContactSearchResultRow(contact: contact)
             }
             .padding(10)
-            .background(theme.listBackground)
+            .background(themes.theme.listBackground)
             .disabled(true)
             .opacity(0.9)
                 

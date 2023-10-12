@@ -12,16 +12,17 @@ import Algorithms
 struct CustomizableFooterFragmentView: View {
     @ObservedObject private var settings:SettingsStore = .shared
     @ObservedObject private var vmc:ViewModelCache = .shared
-    @EnvironmentObject private var theme:Theme
+    private var theme:Theme
     
     static let gridColumns = Array(repeating: GridItem(.flexible()), count: ViewModelCache.BUTTONS_PER_ROW)
 
     private let nrPost:NRPost
     private var isDetail = false
     
-    init(nrPost: NRPost, isDetail: Bool = false) {
+    init(nrPost: NRPost, isDetail: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.isDetail = isDetail
+        self.theme = theme
     }
     
     var body: some View {
@@ -34,14 +35,14 @@ struct CustomizableFooterFragmentView: View {
                     ForEach(row.buttons) { button in
                         switch button.id {
                         case "💬":
-                            ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast)
+                            ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                         case "🔄":
-                            RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                            RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                         case "+":
-                            LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                            LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                         case "⚡️":
                             if IS_NOT_APPSTORE { // Only available in non app store version
-                                ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                                ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                                     .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
                                     .disabled(!(nrPost.contact?.anyLud ?? false))
                             }
@@ -49,7 +50,7 @@ struct CustomizableFooterFragmentView: View {
                                 EmptyView()
                             }
                         case "🔖":
-                            BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                            BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                         default:
                             ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
                         }
@@ -61,7 +62,7 @@ struct CustomizableFooterFragmentView: View {
             }
             
             // UNDO SEND AND SENT TO RELAYS
-            OwnPostFooter(nrPost: nrPost)
+            OwnPostFooter(nrPost: nrPost, theme: theme)
         }
         .padding(.bottom, 20)
         .foregroundColor(theme.footerButtons)
@@ -72,16 +73,16 @@ struct CustomizableFooterFragmentView: View {
 struct CustomizablePreviewFooterFragmentView: View {
     
     @State private var nrPost:NRPost? = nil
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var vmc:ViewModelCache = .shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             if let nrPost {
-                CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false)
+                CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false, theme: themes.theme)
             }
         }
-        .foregroundColor(theme.footerButtons)
+        .foregroundColor(themes.theme.footerButtons)
         .font(.system(size: 14))
         .onAppear {
             bg().perform {
@@ -123,7 +124,7 @@ struct CustomizablePreviewFooterFragmentView: View {
                 
                 if let p = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81", withReplies: true) {
                     
-                    CustomizableFooterFragmentView(nrPost: p)
+                    CustomizableFooterFragmentView(nrPost: p, theme: Themes.default.theme)
                     
                     ForEach(p.replies) {
                         Text($0.pubkey)

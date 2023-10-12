@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MutedWordsView: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: true))
@@ -32,7 +32,7 @@ struct MutedWordsView: View {
         }
         .sheet(item: $selected) { words in
             EditWordSheet(mutedWords: words)
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {

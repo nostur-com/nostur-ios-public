@@ -17,6 +17,7 @@ struct KindResolver: View {
     public var isDetail:Bool = false
     public var connect:ThreadConnectDirection? = nil
     public var grouped:Bool = false
+    public var theme:Theme
     
     var body: some View {
 //        #if DEBUG
@@ -24,15 +25,15 @@ struct KindResolver: View {
 //        #endif
         switch nrPost.kind {
         case 9802:
-            Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, grouped: grouped)
+            Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, grouped: grouped, theme: theme)
         case 30023:
             ArticleView(nrPost, isDetail: isDetail, fullWidth: fullWidth)
         default:
             if fullWidth {
-                Kind1(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped)
+                Kind1(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped, theme: theme)
             }
             else {
-                Kind1Default(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped)
+                Kind1Default(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped, theme: theme)
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
@@ -72,7 +73,7 @@ struct KindResolver_Previews: PreviewProvider {
                 }
                 Spacer()
             }
-            .background(Theme.default.listBackground)
+            .background(Themes.default.theme.listBackground)
         }
     }
 }

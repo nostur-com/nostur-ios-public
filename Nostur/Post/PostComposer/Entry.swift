@@ -9,7 +9,7 @@ import SwiftUI
 
 struct Entry: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     private var vm:NewPostModel
     @ObservedObject var typingTextModel:TypingTextModel
     @Binding var photoPickerShown:Bool
@@ -77,7 +77,7 @@ struct Entry: View {
                         typingTextModel.text += gifUrl + "\n"
                     }
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             }
             if !typingTextModel.pastedImages.isEmpty {
                 HStack(spacing: 5) {
@@ -109,7 +109,7 @@ struct Entry: View {
                         Text("Post.verb", comment: "Button to post (publish) a post")
                     }
                 }
-                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 .cornerRadius(20)
                 .disabled(vm.sending || vm.uploading || typingTextModel.text.isEmpty)
                 

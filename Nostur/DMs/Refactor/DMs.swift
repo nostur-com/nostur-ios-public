@@ -10,7 +10,7 @@ import Combine
 
 struct DMs: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @State var navPath = NavigationPath()
     @AppStorage("selected_tab") var selectedTab = "Messages"
     @State var tab = "Accepted"
@@ -56,7 +56,7 @@ struct DMs: View {
                             }
                             Rectangle()
                                 .frame(height: 3)
-                                .background(theme.accent)
+                                .background(themes.theme.accent)
                                 .opacity(tab == "Accepted" ? 1 : 0.15)
                         }
                     }
@@ -91,7 +91,7 @@ struct DMs: View {
                             }
                             Rectangle()
                                 .frame(height: 3)
-                                .background(theme.accent)
+                                .background(themes.theme.accent)
                                 .opacity(tab == "Requests" ? 1 : 0.15)
                         }
                     }
@@ -150,7 +150,7 @@ struct DMs: View {
                 NavigationStack {
                     NewDM(showingNewDM: $showingNewDM, tab: $tab)
                 }
-                .presentationBackground(theme.background)
+                .presentationBackground(themes.theme.background)
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
@@ -165,12 +165,12 @@ struct DMs: View {
             .navigationTitle(String(localized: "Messages", comment: "Navigation title for DMs (Direct Messages)"))
             .navigationBarTitleDisplayMode(.inline)
             
-            .background(theme.listBackground)
+            .background(themes.theme.listBackground)
             
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(theme.accent)
+                        .foregroundColor(themes.theme.accent)
                         .onTapGesture {
                             sendNotification(.showDMToggles)
                         }
@@ -199,8 +199,12 @@ struct DMs: View {
 
 struct DirectMessagesX_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer({ pe in pe.loadDMs2() }) {
+        PreviewContainer({ pe in
+            pe.loadDMs()
+            pe.loadDMs2()
+        }) {
             DMContainer()
+                .environmentObject(DirectMessageViewModel.default)
         }
     }
 }

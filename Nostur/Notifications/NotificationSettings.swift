@@ -63,7 +63,7 @@ struct NotificationSettingsTester: View {
             }
         }
         .onAppear {
-            Theme.default.loadPurple()
+            Themes.default.loadPurple()
         }
     }
 }

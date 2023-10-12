@@ -17,7 +17,7 @@ struct ZapInfo: Identifiable {
 }
 
 struct NotificationsZaps: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
     @State private var didLoad = false
@@ -75,7 +75,7 @@ struct NotificationsZaps: View {
                         case .NOTIFICATION:
                             ZapNotificationView(notification: pNotification.notification!)
                                 .padding(10)
-                                .background(theme.background)
+                                .background(themes.theme.background)
                                 .id(pNotification.id)
                         case .ZAP:
                             VStack {
@@ -89,7 +89,7 @@ struct NotificationsZaps: View {
                                 }
                             }
                             .padding(10)
-                            .background(theme.background)
+                            .background(themes.theme.background)
                             .id(pNotification.id)
                         }
                     }
@@ -138,7 +138,7 @@ struct NotificationsZaps: View {
                 }
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             load()
@@ -292,7 +292,7 @@ struct NotificationsZaps: View {
 }
 
 struct PostZap: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var nrPost:NRPost // TODO: ...
     @ObservedObject private var footerAttributes:FooterAttributes
     private var zaps:[Event]
@@ -307,7 +307,7 @@ struct PostZap: View {
         HStack(alignment: .top) {
             VStack {
                 Image(systemName: "bolt.fill")
-                    .foregroundColor(theme.accent)
+                    .foregroundColor(themes.theme.accent)
                 Text(Double(footerAttributes.zapTally).satsFormatted)
                     .font(.title2)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
@@ -339,13 +339,13 @@ struct PostZap: View {
 struct ProfileZap: View {
     public var zap:Event
     @ObservedObject public var zapFrom:Event
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     
     var body: some View {
         HStack(alignment: .top) {
             VStack {
                 Image(systemName: "bolt.fill")
-                    .foregroundColor(theme.accent)
+                    .foregroundColor(themes.theme.accent)
                 Text(zap.naiveSats.satsFormatted)
                     .font(.title2)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {

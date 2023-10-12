@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Hot: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject var settings:SettingsStore = .shared
     @ObservedObject var hotVM:HotViewModel
     
@@ -44,7 +44,7 @@ struct Hot: View {
                         LazyVStack(spacing: 10) {
                             ForEach(hotVM.hotPosts) { post in
                                 Box(nrPost: post) {
-                                    PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                    PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                                 }
                                 .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                                 .transaction { t in
@@ -91,7 +91,7 @@ struct Hot: View {
                 }
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
             hotVM.load()
@@ -115,6 +115,6 @@ struct Hot: View {
 struct Hot_Previews: PreviewProvider {
     static var previews: some View {
         Hot(hotVM: HotViewModel())
-            .environmentObject(Theme.default)
+            .environmentObject(Themes.default)
     }
 }

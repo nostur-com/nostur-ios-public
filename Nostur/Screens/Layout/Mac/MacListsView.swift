@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MacListsView: View {
+    @EnvironmentObject private var themes:Themes
     let SIDEBAR_WIDTH:CGFloat = 50.0
     @StateObject private var dim = DIMENSIONS()
     @StateObject private var vm:MacListState = .shared
@@ -30,7 +31,7 @@ struct MacListsView: View {
                             if let lvm = lvm {
                                 ListViewContainer(vm: lvm)
                                     .overlay(alignment: .topTrailing) {
-                                        ListUnreadCounter(vm: lvm)
+                                        ListUnreadCounter(vm: lvm, theme: themes.theme)
                                             .padding(.trailing, 10)
                                             .padding(.top, 5)
                                     }
@@ -90,21 +91,21 @@ struct ColumnViewWrapper: View {
 }
 
 struct ColumnView: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     let availableFeeds:[NosturList]
     @Binding var selectedFeed:NosturList?
     @Binding var lvm:LVM?
     
     var body: some View {
         ZStack {
-            theme.listBackground
+            themes.theme.listBackground
             VStack {
                 FeedSelector(feeds: availableFeeds, selected: $selectedFeed)
                     .padding(.top, 10)
                 if let lvm = lvm {
                     ListViewContainer(vm: lvm)
                         .overlay(alignment: .topTrailing) {
-                            ListUnreadCounter(vm: lvm)
+                            ListUnreadCounter(vm: lvm, theme: themes.theme)
                                 .padding(.trailing, 10)
                                 .padding(.top, 5)
                         }

@@ -10,7 +10,7 @@ import secp256k1
 import Foundation
 
 struct NewAccountSheet: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var ns:NRState
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
@@ -52,7 +52,7 @@ struct NewAccountSheet: View {
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 
                 if (ns.accounts.first(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY}) == nil)  {
                     NavigationLink {

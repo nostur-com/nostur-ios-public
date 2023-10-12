@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MainView: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @State private var fg:FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @State private var fn:FollowerNotifier = .shared
     @AppStorage("selected_tab") private var selectedTab = "Main"
@@ -29,7 +29,7 @@ struct MainView: View {
             if let account = account {
                 FollowingAndExplore(account: account)
                     .transaction { t in t.animation = nil }
-                    .background(theme.listBackground)
+                    .background(themes.theme.listBackground)
                     .withNavigationDestinations()
                     .overlay(alignment: .bottomTrailing) {
                         NewNoteButton(showingNewNote: $showingNewNote)
@@ -60,7 +60,7 @@ struct MainView: View {
                                 ComposePost()
                             }
                         }
-                        .presentationBackground(theme.background)
+                        .presentationBackground(themes.theme.background)
                     }
                     .toolbar {
                         if let account = self.account {
@@ -110,7 +110,7 @@ struct MainView: View {
                         
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Image(systemName: "tortoise")
-                                .foregroundColor(theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
+                                .foregroundColor(themes.theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
                                 .onTapGesture {
                                     settings.lowDataMode.toggle()
                                     sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
@@ -119,7 +119,7 @@ struct MainView: View {
                         
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Image(systemName: "gearshape")
-                                .foregroundColor(theme.accent)
+                                .foregroundColor(themes.theme.accent)
                                 .onTapGesture {
                                     sendNotification(.showFeedToggles)
                                 }

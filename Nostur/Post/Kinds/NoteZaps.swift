@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NoteZaps: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     private let id:String
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
@@ -63,7 +63,7 @@ struct NoteZaps: View {
             
             Spacer()
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             loadZaps(zapsSorted)
         }

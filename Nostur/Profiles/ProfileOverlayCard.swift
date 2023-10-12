@@ -76,7 +76,7 @@ struct ProfileOverlayCard: View {
     public var withoutFollowButton = false
     
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var fg:FollowingGuardian = .shared
     
@@ -237,12 +237,12 @@ struct ProfileOverlayCard: View {
                     }
                 }
                 .padding(.top, 10)
-                .background(theme.background)
+                .background(themes.theme.background)
             }
         }
         .padding(10)
         .background {
-            theme.background
+            themes.theme.background
                 .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
         }
         .task {

@@ -23,7 +23,7 @@ struct BadgesIssuedContainer:View {
 }
 
 struct BadgesIssuedView: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @State var createNewBadgeSheetShown = false
     @FetchRequest
     var badges:FetchedResults<Event>
@@ -44,12 +44,12 @@ struct BadgesIssuedView: View {
                 NavigationLink(value: Badge(badge)) {
                     BadgeIssuedRow(badge: badge)
                 }
-                .listRowBackground(theme.background)
+                .listRowBackground(themes.theme.background)
             }
             .scrollContentBackground(.hidden)
-            .background(theme.listBackground)
+            .background(themes.theme.listBackground)
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             // fetch missing badge definitions:
             // or just all...
@@ -72,13 +72,13 @@ struct BadgesIssuedView: View {
             NavigationStack {
                 CreateNewBadgeSheet()
             }
-            .presentationBackground(theme.background)
+            .presentationBackground(themes.theme.background)
         }
     }
 }
 
 struct BadgeIssuedRow: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     var badge:Event
     var nBadge:NEvent { badge.toNEvent() }
     
@@ -145,7 +145,7 @@ struct BadgeIssuedRow: View {
                 Text("Awarded to \(badge.awardedTo.count) people", comment: "Text showing how many badges have been awarded").font(.caption)
             }.padding(10)
         }
-        .background(theme.background)
+        .background(themes.theme.background)
         .navigationTitle("")
     }
     

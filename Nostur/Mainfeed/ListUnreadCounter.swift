@@ -16,13 +16,14 @@ class LVMCounter: ObservableObject {
 }
 
 struct ListUnreadCounter: View {
-    @EnvironmentObject private var theme:Theme
     private var vm:LVM
     @ObservedObject private var vmCounter:LVMCounter
+    private var theme:Theme
     
-    init(vm: LVM) {
+    init(vm: LVM, theme:Theme) {
         self.vm = vm
         self.vmCounter = vm.lvmCounter
+        self.theme = theme
     }
     
     var body: some View {
@@ -66,7 +67,7 @@ struct Previews_ListUnreadCounter_PreviewsWrapper: View {
     
     var body: some View {
         VStack {
-            ListUnreadCounter(vm: lvm)
+            ListUnreadCounter(vm: lvm, theme: Themes.default.theme)
             
             Button("Add +7") {
                 lvm.lvmCounter.count += 7
@@ -82,5 +83,4 @@ struct Previews_ListUnreadCounter_PreviewsWrapper: View {
 #Preview("Unread counter") {
     Previews_ListUnreadCounter_PreviewsWrapper()
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-        .environmentObject(Theme.default)
 }

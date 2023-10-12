@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PrivateNoteRow: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject public var note: PrivateNote
     public var nrPost: NRPost?
     

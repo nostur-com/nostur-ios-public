@@ -11,7 +11,7 @@ import Combine
 
 // Copy pasta from old NotificationsPosts, only using the new follower parts.
 struct NotificationsFollowers: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
     @State private var backlog = Backlog()
@@ -44,7 +44,7 @@ struct NotificationsFollowers: View {
                     ForEach(notifications) { notification in
                         NewFollowersNotificationView(notification: notification)
                             .padding(10)
-                            .background(theme.background)
+                            .background(themes.theme.background)
                             .id(notification.id)
                     }
                 }
@@ -59,7 +59,7 @@ struct NotificationsFollowers: View {
                 }
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
             let account = notification.object as! Account
             notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", account.publicKey, PNType.newFollowers.rawValue)

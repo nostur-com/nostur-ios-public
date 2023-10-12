@@ -17,7 +17,7 @@ struct PrivateNoteInfo: Identifiable {
 
 struct PrivateNotesView: View {
     @EnvironmentObject private var ns:NRState
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Private Notes"
     @Environment(\.managedObjectContext) private var viewContext
     
@@ -49,7 +49,7 @@ struct PrivateNotesView: View {
                     LazyVStack(spacing: 10) {
                         ForEach(privateNotes) { pnInfo in
                             PrivateNoteRow(note: pnInfo.note, nrPost: pnInfo.nrPost)
-                                .background(theme.background)
+                                .background(themes.theme.background)
                                 .onDelete {
                                     withAnimation {
                                         privateNotes = privateNotes.filter { $0.note.id != pnInfo.note.id }
@@ -77,7 +77,7 @@ struct PrivateNotesView: View {
                 }
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
 //        .overlay(alignment:.topTrailing) {
 //            AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
 //                .padding(.horizontal)

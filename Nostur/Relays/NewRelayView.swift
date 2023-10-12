@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NewRelayView: View {
-//    @EnvironmentObject var theme:Theme
+//    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) private var dismiss
     @State private var url = "wss://"
     
@@ -50,6 +50,6 @@ struct NewRelayView_Previews: PreviewProvider {
     static var previews: some View {
         NewRelayView()
             .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-            .environmentObject(Theme.default)
+            .environmentObject(Themes.default)
     }
 }

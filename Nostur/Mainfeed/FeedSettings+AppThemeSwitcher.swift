@@ -23,7 +23,7 @@ struct AppThemeSwitcher: View {
                     .padding(3)
                     .background(selectedTheme == "default" ? Color.secondary : .clear)
                     .onTapGesture {
-                        Theme.default.loadDefault()
+                        Themes.default.loadDefault()
                         showFeedSettings = false
                     }
                 Color("purpleAccentColor")
@@ -31,7 +31,7 @@ struct AppThemeSwitcher: View {
                     .padding(3)
                     .background(selectedTheme == "purple" ? Color.secondary : .clear)
                     .onTapGesture {
-                        Theme.default.loadPurple()
+                        Themes.default.loadPurple()
                         showFeedSettings = false
                     }
                 Color("redAccentColor")
@@ -39,7 +39,7 @@ struct AppThemeSwitcher: View {
                     .padding(3)
                     .background(selectedTheme == "red" ? Color.secondary : .clear)
                     .onTapGesture {
-                        Theme.default.loadRed()
+                        Themes.default.loadRed()
                         showFeedSettings = false
                     }
                 Color("greenAccentColor")
@@ -47,7 +47,7 @@ struct AppThemeSwitcher: View {
                     .padding(3)
                     .background(selectedTheme == "green" ? Color.secondary : .clear)
                     .onTapGesture {
-                        Theme.default.loadGreen()
+                        Themes.default.loadGreen()
                         showFeedSettings = false
                     }
                 Color("blueAccentColor")
@@ -55,7 +55,7 @@ struct AppThemeSwitcher: View {
                     .padding(3)
                     .background(selectedTheme == "blue" ? Color.secondary : .clear)
                     .onTapGesture {
-                        Theme.default.loadBlue()
+                        Themes.default.loadBlue()
                         showFeedSettings = false
                     }
                 Color("pinkAccentColor")
@@ -63,7 +63,7 @@ struct AppThemeSwitcher: View {
                     .padding(3)
                     .background(selectedTheme == "pink" ? Color.secondary : .clear)
                     .onTapGesture {
-                        Theme.default.loadPink()
+                        Themes.default.loadPink()
                         showFeedSettings = false
                     }
                 Color("orangeAccentColor")
@@ -71,7 +71,7 @@ struct AppThemeSwitcher: View {
                     .padding(3)
                     .background(selectedTheme == "orange" ? Color.secondary : .clear)
                     .onTapGesture {
-                        Theme.default.loadOrange()
+                        Themes.default.loadOrange()
                         showFeedSettings = false
                     }
                 Spacer()
@@ -83,6 +83,6 @@ struct AppThemeSwitcher: View {
 struct FeedSettings_AppThemeSwitcher_Previews: PreviewProvider {
     static var previews: some View {
         AppThemeSwitcher(showFeedSettings: .constant(true))
-            .environmentObject(Theme.default)
+            .environmentObject(Themes.default)
     }
 }

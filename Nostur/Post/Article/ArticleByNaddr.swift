@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct ArticleByNaddr: View {
-    let naddr1:String
-    var navigationTitle:String? = nil
-    var navTitleHidden: Bool = false
+    public let naddr1:String
+    public var navigationTitle:String? = nil
+    public var navTitleHidden: Bool = false
+    public var theme:Theme = Themes.default.theme
     @State var article:NRPost? = nil
     @State var backlog = Backlog(timeout: 15, auto: true)
     @State var error:String? = nil
@@ -22,7 +23,7 @@ struct ArticleByNaddr: View {
             }
             else if let article {
                 if article.kind == 30023 {
-                    ArticleView(article, isDetail: true, navTitleHidden: navTitleHidden)
+                    ArticleView(article, isDetail: true, navTitleHidden: navTitleHidden, theme: theme)
                 }
                 else {
                     PostDetailView(nrPost: article, navTitleHidden: navTitleHidden)

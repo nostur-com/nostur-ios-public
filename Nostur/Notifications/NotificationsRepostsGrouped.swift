@@ -10,7 +10,7 @@ import CoreData
 
 // Copy pasta from NotificationsMentions, which was copy pasta from NotificationsPosts
 struct NotificationsRepostsGrouped: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
     @State private var backlog = Backlog()
@@ -25,7 +25,7 @@ struct NotificationsRepostsGrouped: View {
                 ForEach(fl.nrPosts) { nrPost in
                     Box(nrPost: nrPost) {
                         // TODO: Put grouped repost header here
-                        KindResolver(nrPost: nrPost, fullWidth: settings.fullWidthImages, hideFooter: !settings.rowFooterEnabled, missingReplyTo: true, isDetail: false)
+                        KindResolver(nrPost: nrPost, fullWidth: settings.fullWidthImages, hideFooter: !settings.rowFooterEnabled, missingReplyTo: true, isDetail: false, theme: themes.theme)
                             .onAppear {
                                 if !nrPost.missingPs.isEmpty {
                                     bg().perform {
@@ -57,7 +57,7 @@ struct NotificationsRepostsGrouped: View {
                 .hCentered()
             }
         }
-        .background(theme.listBackground)
+        .background(themes.theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             load()

@@ -14,7 +14,7 @@
 //
 //struct NewPost: View {
 //    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-//    @EnvironmentObject private var theme:Theme
+//    @EnvironmentObject private var themes:Themes
 //    let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
 //    @Environment(\.dismiss) private var dismiss
 //    

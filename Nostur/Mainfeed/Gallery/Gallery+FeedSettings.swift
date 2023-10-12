@@ -67,7 +67,7 @@ struct GalleryFeedSettingsTester: View {
             }
         }
         .onAppear {
-            Theme.default.loadPurple()
+            Themes.default.loadPurple()
         }
     }
 }

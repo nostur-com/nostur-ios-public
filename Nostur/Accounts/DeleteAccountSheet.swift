@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct DeleteAccountSheet: View {
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var la:LoggedInAccount
     @Environment(\.dismiss) private var dismiss
     @State private var remaining = 10
@@ -61,7 +61,7 @@ struct DeleteAccountSheet: View {
                     } label: {
                         Label(String(localized: "Copy private key", comment: "Button to copy your private key to clipboard"), systemImage: "doc.on.doc")
                     }
-                    .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                     
                     Button(role: .destructive) {
                         self.cancel = timer.connect()
@@ -70,7 +70,7 @@ struct DeleteAccountSheet: View {
                         Label("Delete", systemImage: "trash")
                         //                        Image(systemName: "trash")
                     }
-                    .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 }
             }
             else {
@@ -80,7 +80,7 @@ struct DeleteAccountSheet: View {
                 } label: {
                     Text("Cancel")
                 }
-                .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
             }
         }
         .onReceive(timer, perform: { _ in

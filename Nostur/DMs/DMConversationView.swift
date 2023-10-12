@@ -10,7 +10,7 @@ import Algorithms
 
 struct DMConversationView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Namespace private var bottom
     
     @EnvironmentObject var la:LoggedInAccount
@@ -177,7 +177,7 @@ struct DMConversationView: View {
                                                     }
                                                 }
                                             }
-                                            .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+                                            .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                                         }
                                     }
                                     .padding(.vertical, 10)

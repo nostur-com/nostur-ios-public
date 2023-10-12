@@ -7,13 +7,12 @@
 
 import SwiftUI
 
-struct Box<Content: View>: View {
-    @EnvironmentObject private var theme:Theme
-    
+struct Box<Content: View>: View {    
     private let content: Content
     private let kind: Int64
     private let navMode: NavigationMode
     private var nrPost: NRPost? = nil
+    private var theme: Theme
     
     public enum NavigationMode {
         // Normal onTapGesture on entire view, but this makes Video in UIViewRepresentable not tappable
@@ -27,11 +26,12 @@ struct Box<Content: View>: View {
         case noNavigation // no navigation
     }
     
-    init(nrPost:NRPost? = nil, navMode:NavigationMode? = .background, @ViewBuilder _ content:()->Content) {
+    init(nrPost:NRPost? = nil, navMode:NavigationMode? = .background, theme:Theme = Themes.default.theme, @ViewBuilder _ content:()->Content) {
         self.kind = nrPost?.kind ?? 1
         self.navMode = navMode ?? .background
         self.nrPost = nrPost
         self.content = content()
+        self.theme = theme
     }
     
     var body: some View {

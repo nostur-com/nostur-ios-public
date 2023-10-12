@@ -16,8 +16,9 @@ struct NoteRow: View {
     private let isReply:Bool // is reply on PostDetail (needs 2*10 less box width)
     private let isDetail:Bool
     private let grouped:Bool
+    private var theme:Theme
     
-    init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
+    init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, theme:Theme) {
         self.nrPost = nrPost
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
@@ -26,6 +27,7 @@ struct NoteRow: View {
         self.isReply = isReply
         self.isDetail = isDetail
         self.grouped = grouped
+        self.theme = theme
     }
         
     var body: some View {
@@ -33,10 +35,10 @@ struct NoteRow: View {
 //        let _ = Self._printChanges()
 //        #endif
         if (nrPost.isRepost) {
-            Repost(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped: grouped)
+            Repost(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped: grouped, theme: theme)
         }
         else { // IS NOT A REPOST
-            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped)
+            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped, theme: theme)
                 .onAppear {
                     if !nrPost.missingPs.isEmpty {
                         bg().perform {

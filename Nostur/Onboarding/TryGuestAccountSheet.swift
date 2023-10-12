@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TryGuestAccountSheet: View {
-    @EnvironmentObject var theme:Theme
+    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @State var letsGo = false
@@ -32,7 +32,7 @@ struct TryGuestAccountSheet: View {
                     .frame(maxWidth: .infinity)
             }
             .controlSize(.large)
-            .buttonStyle(NRButtonStyle(theme: Theme.default, style: .borderedProminent))
+            .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
         }
         .frame(maxWidth: 300)
         .onAppear {
