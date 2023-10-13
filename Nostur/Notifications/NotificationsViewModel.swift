@@ -234,17 +234,20 @@ class NotificationsViewModel: ObservableObject {
     
     private func checkForEverything() {
         shouldBeBg()
+        
+        OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
+        
         guard needsUpdate else {
             return
         }
         guard account() != nil else { return }
-        
-        needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
-        
+                
         guard !Importer.shared.isImporting else {
             L.og.info("⏳ Still importing, new notifications check skipped.");
             return
         }
+        
+        needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
 
         self.relayCheckNewestNotifications() // or wait 3 seconds?
         
@@ -266,8 +269,6 @@ class NotificationsViewModel: ObservableObject {
             self.checkForUnreadZaps()
         }
         bg().perform { self.checkForUnreadFailedZaps() }
-        
-        OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
     }
     
     
