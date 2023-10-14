@@ -80,9 +80,41 @@ class WebOfTrust: ObservableObject {
     private var backlog = Backlog(timeout: 60, auto: true)
     private var subscriptions = Set<AnyCancellable>()
     
-    private init() {}
+    private init() {
+        if mainAccountWoTpubkey == "" {
+            DispatchQueue.main.async {
+                self.guessMainAccount()
+            }
+        }
+    }
     
-    public func loadWoT(_ account:Account, force:Bool = false) {
+    // For first time guessing the main account, user can change actual main account in Settings
+    private func guessMainAccount() {
+        // in prefered order:
+        // 1. full account with most follows, and >50 follows
+        // 2. read-only account currently logged and >50 follows
+
+        // this ignores full accounts that are test accounts
+        // and it ignores "login as someone else" accounts
+        
+        // so the main account is likely the currently logged in read-only account at start OR
+        // any full-account with more than 50 follows, so we know its probably not a test throwaway account
+        
+        if let fullAccount = NRState.shared.accounts
+            .filter({ $0.privateKey != nil && $0.follows_.count > 50 }) // only full accounts with 50+ follows
+            .sorted(by: { $0.follows_.count > $1.follows_.count }).first // sorted to get the one with the most follows
+        {
+            L.og.info("🕸️🕸️ WebOfTrust: Main WoT full account guessed: \(fullAccount.publicKey)")
+            mainAccountWoTpubkey = fullAccount.publicKey
+        }
+        // the currently logged in read only account, if it has 50+ follows
+        else if let readOnlyAccount = NRState.shared.accounts
+            .first(where: { $0.publicKey == NRState.shared.activeAccountPublicKey && $0.follows_.count > 50 }) 
+        {
+            L.og.info("🕸️🕸️ WebOfTrust: Main WoT read account guessed: \(readOnlyAccount.publicKey)")
+            mainAccountWoTpubkey = readOnlyAccount.publicKey
+        }
+    }
     
     public func loadWoT(force:Bool = false) {
         guard mainAccountWoTpubkey != "" else { return }
