@@ -224,7 +224,7 @@ struct SmoothList: UIViewControllerRepresentable {
         }
         
         func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
-            let items = indexPaths.compactMap { data.elements[$0.row] }
+            let items = indexPaths.compactMap { data.elements[safe: $0.row] }
             
             bg().perform { [weak self] in
                 guard let self else { return }
@@ -301,7 +301,7 @@ struct SmoothList: UIViewControllerRepresentable {
         }
         
         func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
-            let items = indexPaths.compactMap { data.elements[$0.row] }
+            let items = indexPaths.compactMap { data.elements[safe: $0.row] }
 
             bg().perform { [weak self] in
                 guard let self else { return }
