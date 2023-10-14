@@ -181,27 +181,17 @@ struct Settings: View {
             Group {
                 Section(header: Text("Zapping", comment:"Setting heading on settings screen")) {
                     
-                    VStack(alignment: .leading) {
-                        Picker(selection: $settings.defaultLightningWallet) {
-                            ForEach(SettingsStore.walletOptions) {
-                                Text($0.name).tag($0)
-                            }
-                        } label: {
-                            Text("Lightning wallet", comment:"Setting on settings screen")
-                            Text("Choose which wallet to use for zapping", comment:"Setting on settings screen")
-                        }
-                        
-                        Divider()
-                        
-                        HStack {
-                            Text("Default zap amount:")
-                            Spacer()
-                            Text("\(SettingsStore.shared.defaultZapAmount.clean) sats \(Image(systemName: "chevron.right"))")
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            showDefaultZapAmountSheet = true
-                        }
+                    LightningWalletPicker()
+                    
+                    HStack {
+                        Text("Default zap amount:")
+                        Spacer()
+                        Text("\(SettingsStore.shared.defaultZapAmount.clean) sats \(Image(systemName: "chevron.right"))")
+                            .foregroundColor(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        showDefaultZapAmountSheet = true
                     }
                     .onChange(of: settings.defaultLightningWallet) { newWallet in
                         if newWallet.scheme == "nostur:nwc:alby:" {
