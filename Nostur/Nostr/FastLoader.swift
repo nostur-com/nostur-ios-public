@@ -327,7 +327,13 @@ class Backlog {
     
     private func removeOldTasks() {
         for task in self.tasks {
-            if task.createdAt.timeIntervalSinceNow < -self.timeout {
+            // Check timeoout if configured per task
+            if let timeout = task.timeout, task.createdAt.timeIntervalSinceNow < -timeout {
+                task.onTimeout()
+                self.tasks.remove(task)
+            }
+            // else check against the Backlog timeout
+            else if task.createdAt.timeIntervalSinceNow < -self.timeout {
                 task.onTimeout()
                 self.tasks.remove(task)
             }
@@ -399,11 +405,12 @@ class ReqTask: Identifiable, Hashable {
     // Only use for fetching specific ids. different relays can return different events
     // prio will return the first received, this is wrong if we need for example the most recent event .
     private var prio = false
+    public var timeout: Double? // default is 60.0 set in Backlog, this overrides it on a request basis
     
     // Use full subscriptionId instead of prefix to have multiple listeners for a task
     // eg. Onboarding + InstantFeed, both having a task with exact subscriptionId: "pubkey-3"
     // So both can listen for "pubkey-3" notifications. (make sure prefix is nil, and subscriptionId is set on ReqTask
-    init(prio:Bool = false, debounceTime:Double = 0.1, prefix:String? = nil,
+    init(prio:Bool = false, debounceTime:Double = 0.1, timeout:Double? = nil, prefix:String? = nil,
          subscriptionId:String? = nil,
          reqCommand: @escaping (_: String) -> Void,
          processResponseCommand: @escaping (_: String, _:RelayMessage?, _:Event?) -> Void,
@@ -414,6 +421,7 @@ class ReqTask: Identifiable, Hashable {
         self.reqCommand = reqCommand
         self.processResponseCommand = processResponseCommand
         self.timeoutCommand = timeoutCommand
+        self.timeout = timeout
         
         guard !prio else { return }
         
