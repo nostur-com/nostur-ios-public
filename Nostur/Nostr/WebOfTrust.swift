@@ -33,6 +33,8 @@ class WebOfTrust: ObservableObject {
  
     private let ENABLE_THRESHOLD = 2000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
+    @AppStorage("_mainWoTaccountPubkey") private var mainAccountWoTpubkey = ""
+    
     // For views
     @Published public var lastUpdated:Date? = nil
     
@@ -81,7 +83,12 @@ class WebOfTrust: ObservableObject {
     private init() {}
     
     public func loadWoT(_ account:Account, force:Bool = false) {
+    
+    public func loadWoT(force:Bool = false) {
+        guard mainAccountWoTpubkey != "" else { return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
+        guard let account = NRState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) else { return }
+        L.og.info("🕸️🕸️ WebOfTrust: Main account: \(account.anyName)")
         
         let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
         self.followingPubkeys = account.getFollowingPublicKeys(includeBlocked: true)

@@ -88,7 +88,7 @@ class NewOnboardingTracker {
     private func stopAfterDelay() {
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
             if let account = Nostur.account(), !NRState.shared.activeAccountPublicKey.isEmpty && account.publicKey == NRState.shared.activeAccountPublicKey {
-                WebOfTrust.shared.loadWoT(account)
+                WebOfTrust.shared.loadWoT()
             }
             self.bg.perform { [weak self] in
                 self?.cancel()
