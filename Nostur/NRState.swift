@@ -111,9 +111,9 @@ class NRState: ObservableObject {
             L.og.notice("🔴🔴 This account is already loaded")
             return
         }
+        self.activeAccountPublicKey = account.publicKey
         self.nsecBunker.setAccount(account)
         self.loggedInAccount = LoggedInAccount(account)
-        self.activeAccountPublicKey = account.publicKey
     }
     
     private func managePowerUsage() {

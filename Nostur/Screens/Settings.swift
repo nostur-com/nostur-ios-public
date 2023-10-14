@@ -134,11 +134,6 @@ struct Settings: View {
                                     wot.loadNormal(wotFollowingPubkeys: wotFollowingPubkeys, force: false)
                                 }
                             }
-                            else if newValue == SettingsStore.WebOfTrustLevel.off.rawValue {
-                                DirectMessageViewModel.default.load(pubkey: NRState.shared.activeAccountPublicKey)
-                            }
-                            else {
-                                wot.updateViewData()
                             }
                         }
                     }
