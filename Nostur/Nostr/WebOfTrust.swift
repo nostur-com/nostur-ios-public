@@ -126,11 +126,12 @@ class WebOfTrust: ObservableObject {
         L.og.info("🕸️🕸️ WebOfTrust: Main account: \(account.anyName)")
         
         let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
-        self.followingPubkeys = account.getFollowingPublicKeys(includeBlocked: true)
+        let followingPubkeys = account.getFollowingPublicKeys(includeBlocked: true)
         
         let publicKey = account.publicKey
         self.pubkey = publicKey
         bg().perform {
+            self.followingPubkeys = followingPubkeys
             guard wotFollowingPubkeys.count > 10 else {
                 DispatchQueue.main.async { 
                     sendNotification(.WoTReady)
@@ -202,13 +203,9 @@ class WebOfTrust: ObservableObject {
             if let list = try? DataProvider.shared().bg.fetch(fr).first {
                 followsOfPubkey = followsOfPubkey.union( Set(list.fastPs.map { $0.1 }) )
             }
-            let newSet = self.followingFollowingPubkeys.union(followsOfPubkey)
-            
-            DispatchQueue.main.async {
-                self.followingFollowingPubkeys = newSet
-                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
-            }
-            self.storeData(pubkeys: newSet, pubkey: pubkey)
+            self.followingFollowingPubkeys = self.followingFollowingPubkeys.union(followsOfPubkey)
+            L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
+            self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: pubkey)
         }
     }
     
@@ -294,12 +291,8 @@ class WebOfTrust: ObservableObject {
                     followFollows = followFollows.union(pubkeys)
                 }
             }
-            
-            DispatchQueue.main.async {
-                self.followingFollowingPubkeys = followFollows
-                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
-            }
-            self.storeData(pubkeys: followFollows, pubkey: pubkey)
+            L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
+            self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: pubkey)
         }
     }
     
