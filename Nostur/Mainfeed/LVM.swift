@@ -518,11 +518,20 @@ class LVM: NSObject, ObservableObject {
     }
     
     func fetchParents(_ danglers:[NRPost], older:Bool = false) {
-        danglers.forEach { nrPost in
+        for nrPost in danglers {
             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "LVM.001")
         }
-        
+
+        // TODO: PROBLEM/BUG: During first load of feed with 1 contact, we have some recent events + some old events from a single person,
+        // First render: some events are put on screen, most recent is 12h ago, at top of feed.
+        // Some events are replies but the parent is missing, after fetching replies, they are rendered in second pass
+        // they are put on top (as if new events), but they are old replies (30 days ago), so should be bottom!
+        // Solutions?
+        // - Only put events on top, within last 1-3 days, ignore others
+        // - Maybe just always only fetch dangling events only from newer than 1-2 days ago, never older, because they will always come in at top on second pass because they are fetched later, so expectation is NEW events, not old.
         let danglingFetchTask = ReqTask(
+            debounceTime: 1.0, // getting all missing replyTo's in 1 req, so can debounce a bit longer
+            timeout: 6.0,
             reqCommand: { [weak self] (taskId) in
                 guard let self = self else { return }
                 L.lvm.info("😈😈 reqCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) - dng: \(danglers.count)")
@@ -573,7 +582,8 @@ class LVM: NSObject, ObservableObject {
         danglingFetchTask.fetch()
     }
     
-    func extractDanglingReplies(_ newLeafThreads:[NRPost]) -> (danglers:[NRPost], threads:[NRPost]) {
+    // onlyNew flag so very old replies don't appear as new events on top
+    func extractDanglingReplies(_ newLeafThreads:[NRPost], onlyNew:Bool = true) -> (danglers:[NRPost], threads:[NRPost]) {
         // is called from bg thread only?
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
@@ -582,8 +592,9 @@ class LVM: NSObject, ObservableObject {
         #endif
         var danglers:[NRPost] = []
         var threads:[NRPost] = []
+        let xDaysAgo = Date.now.addingTimeInterval(-1 * 86400) // 1 day
         newLeafThreads.forEach { nrPost in
-            if (nrPost.replyToRootId != nil || nrPost.replyToId != nil) && nrPost.parentPosts.isEmpty {
+            if (nrPost.replyToRootId != nil || nrPost.replyToId != nil) && nrPost.parentPosts.isEmpty && nrPost.createdAt > xDaysAgo {
                 danglers.append(nrPost)
             }
             else {
