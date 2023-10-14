@@ -503,7 +503,9 @@ struct Settings: View {
 
 struct Settings_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer {
+        PreviewContainer({ pe in
+            pe.loadAccounts()
+        }) {
             NavigationStack {
                 Settings()
             }
