@@ -417,6 +417,7 @@ class NotificationsViewModel: ObservableObject {
                 }
             }
             else {
+                L.og.info("🔴🔴 Falling back to 2 days before (should not happen)")
                 let twoDaysAgoOrNewer = max(account.lastSeenPostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24)))
                 if account.lastSeenPostCreatedAt != twoDaysAgoOrNewer {
                     account.lastSeenPostCreatedAt = twoDaysAgoOrNewer
