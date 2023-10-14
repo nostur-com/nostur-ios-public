@@ -34,8 +34,6 @@ struct Settings: View {
     @State private var exportAccount:Account? = nil
     @State private var createRelayPresented = false
     
-    @State private var updatingWoT = false // to prevent double tapping
-    
     private var fiatPrice:String {
         String(format: "$%.02f", (ceil(Double(settings.defaultZapAmount)) / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
     }
@@ -128,39 +126,35 @@ struct Settings: View {
                             .font(.caption).foregroundColor(.secondary)
 //                            .padding(.bottom, 5)
                     }
+                    
+                    HStack {
+                        Text("Last updated: \(wot.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
+                            .onAppear {
                                 bg().perform {
-                                    guard let account = account() else { return }
-                                    let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
-                                    wot.loadNormal(wotFollowingPubkeys: wotFollowingPubkeys, force: false)
+                                    wot.loadLastUpdatedDate()
                                 }
                             }
+                        Spacer()
+                        if wot.updatingWoT {
+                            ProgressView()
+                        }
+                        else {
+                            Button(String(localized:"Update", comment:"Button to update WoT")) {
+                                guard !wot.updatingWoT else { return }
+                                wot.updatingWoT = true
+                                wot.loadWoT(force: true)
                             }
                         }
                     }
                     
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("Updated: \(wot.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
-                                .onAppear {
-                                    bg().perform {
-                                        wot.loadLastUpdatedDate()
-                                    }
-                                }
-                            if wot.allowedKeysCount == 0 || settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
-                                Text("Allowed: Everyone")
-                            }
-                            else {
-                                Text("Allowed: \(wot.allowedKeysCount) contacts")
-                            }
+                    Group {
+                        if wot.allowedKeysCount == 0 || settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+                            Text("Currently allowed by the filter: Everyone")
                         }
-                        Spacer()
-                        Button(String(localized:"Update", comment:"Button to update WoT")) {
-                            guard updatingWoT == false else { return }
-                            guard let account = account() else { return }
-                            updatingWoT = true
-                            wot.loadWoT(account, force: true)
+                        else {
+                            Text("Currently allowed by the filter: \(wot.allowedKeysCount) contacts")
                         }
-                    }
+                    }.font(.caption).foregroundColor(.secondary)
                 }
                 .listRowBackground(themes.theme.background)
                 
@@ -198,6 +192,7 @@ struct Settings: View {
                             settings.activeNWCconnectionId = ""
                         }
                     }
+                    
                     
                     if settings.nwcReady {
                         Toggle(isOn: $settings.nwcShowBalance) {
