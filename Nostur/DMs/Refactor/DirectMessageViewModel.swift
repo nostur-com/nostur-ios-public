@@ -109,11 +109,12 @@ class DirectMessageViewModel: ObservableObject {
     // .load is called from:
     // NosturState on startup if WoT is disabled
     // receiveNotification(.WoTReady) if WoT is enabled, after WoT has loaded
-    public func load(pubkey: String) {
+    public func load() {
+        guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
         conversationRows = []
         requestRows = []
         requestRowsNotWoT = []
-        self.pubkey = pubkey
+        self.pubkey = NRState.shared.activeAccountPublicKey
         self.loadAcceptedConversations()
         self.loadMessageRequests()
         self.loadOutSideWoT() // even if we don't show it, we need to load to show how many there are in toggle.
@@ -121,10 +122,9 @@ class DirectMessageViewModel: ObservableObject {
     
     public func loadAfterWoT() {
         receiveNotification(.WoTReady)
-            .sink { [weak self] notifciation in
+            .sink { [weak self] _ in
                 guard let self else { return }
-                let pubkey = notifciation.object as! String
-                self.load(pubkey: pubkey)
+                self.load()
             }
             .store(in: &self.subscriptions)
     }

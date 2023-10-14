@@ -241,7 +241,7 @@ class LoggedInAccount: ObservableObject {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 WebOfTrust.shared.loadWoT()
                 if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
-                    DirectMessageViewModel.default.load(pubkey: self.account.publicKey)
+                    DirectMessageViewModel.default.load()
                 }
                 else {
                     DirectMessageViewModel.default.loadAfterWoT()
