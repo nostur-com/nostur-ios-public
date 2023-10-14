@@ -40,6 +40,8 @@ class WebOfTrust: ObservableObject {
     
     @Published public var allowedKeysCount:Int = 0
     
+    @Published public var updatingWoT = false
+    
     // Only accessed from bg thread
     // Keep seperate lists for faster filtering
     
@@ -71,7 +73,8 @@ class WebOfTrust: ObservableObject {
         }
         DispatchQueue.main.async {
             self.allowedKeysCount = allowedKeysCount
-            sendNotification(.WoTReady, pubkey)
+            sendNotification(.WoTReady)
+            self.updatingWoT = false
         }
     }
     
@@ -129,7 +132,10 @@ class WebOfTrust: ObservableObject {
         self.pubkey = publicKey
         bg().perform {
             guard wotFollowingPubkeys.count > 10 else {
-                DispatchQueue.main.async { sendNotification(.WoTReady, publicKey) }
+                DispatchQueue.main.async { 
+                    sendNotification(.WoTReady)
+                    self.updatingWoT = false
+                }
                 L.og.info("🕸️🕸️ WebOfTrust: Not enough follows to build WoT. Maybe still onboarding and contact list not received yet")
                 return
             }
