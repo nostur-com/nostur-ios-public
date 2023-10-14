@@ -87,6 +87,7 @@ struct NewListSheet: View {
                 newList.contacts_.append(contentsOf: selectedContacts)
                 contactSelectionVisible = false
                 DataProvider.shared().save()
+                sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: newList.subscriptionId, pubkeys: Set(newList.contacts_.map { $0.pubkey })))
                 dismiss()
             })
             .equatable()
@@ -103,11 +104,12 @@ struct NewListSheet: View {
                     newList?.name = title
                     newList?.showAsTab = true
                     
-                    if feedType == .relays {
-                        newList?.relays = selectedRelays
-                        newList?.type = feedType.rawValue
-                        newList?.wotEnabled = wotEnabled
+                    if feedType == .relays, let newList = newList {
+                        newList.relays = selectedRelays
+                        newList.type = feedType.rawValue
+                        newList.wotEnabled = wotEnabled
                         DataProvider.shared().save()
+                        sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: newList.subscriptionId, relays: selectedRelays, wotEnabled: wotEnabled))
                         dismiss()
                     }
                     else {
