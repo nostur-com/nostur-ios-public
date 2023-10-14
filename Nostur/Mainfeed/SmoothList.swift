@@ -138,13 +138,14 @@ struct SmoothList: UIViewControllerRepresentable {
         collectionViewHolder.dataSource?.apply(snapshot, animatingDifferences: false)
 
         coordinator.lvm.$posts
+            .filter({ !$0.isEmpty })
 //            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
 //            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
             .sink { data in
                 coordinator.data = data
                 guard let dataSource = collectionViewHolder.dataSource else { return }
                 let currentNumberOfItems = dataSource.snapshot().numberOfItems(inSection: .main)
-                let isInitialApply =  currentNumberOfItems == 0
+                let isInitialApply = currentNumberOfItems == 0
                 var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
                 snapshot.appendSections([SingleSection.main])
                 snapshot.appendItems(data.keys.elements, toSection: .main)
