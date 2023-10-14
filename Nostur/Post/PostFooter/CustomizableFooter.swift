@@ -63,6 +63,7 @@ struct CustomizableFooterFragmentView: View {
             
             // UNDO SEND AND SENT TO RELAYS
             OwnPostFooter(nrPost: nrPost, theme: theme)
+                .offset(y: 14)
         }
         .padding(.top, 5)
         .padding(.bottom, 16)
