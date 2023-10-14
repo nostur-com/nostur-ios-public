@@ -254,6 +254,12 @@ class LVM: NSObject, ObservableObject {
     
     private var fetchFeedTimer: Timer?
     
+    // REMINDER:
+    // lastAppeared is for scroll position
+    // lastReadId is for unread count (is named mostRecentAppeared in db, TODO: cleanup)
+    // example: 3 unread, scroll up, 2 unread changed (lastReadId) and scroll position changed (lastAppeared)
+    // example: 3 unread, scroll down, still 3 unread is same (lastReadId is same) and scroll position changed (lastAppeared)
+    
     var throttledCommand = PassthroughSubject<() -> (), Never>()
     var lastAppearedIdSubject = CurrentValueSubject<String?, Never>(nil) // Need it for debounce etc
     var lastAppearedIndex:Int? {
@@ -392,28 +398,29 @@ class LVM: NSObject, ObservableObject {
 //                .filter(notMuted) // TODO: ADD BACK NOT MUTED IN RIGHT CONTEXT / THREAD
 
             guard !transformedIds.isEmpty else {
+                L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Nothing transformed (all were duplicates or seen) - \(taskId)")
                 DispatchQueue.main.async {
                     self.performingLocalOlderFetch = false
                 }
                 return
             }
-            L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedIds.count) posts - \(taskId)")
+            L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedIds.count) posts - \(taskId)")
 
             if currentNRPostLeafs.isEmpty {
                 let leafThreads = self.renderLeafs(added, onScreenSeen:self.onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(leafThreads)
                 if !danglers.isEmpty && !self.hideReplies {
-                    L.lvm.info("🟪🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
+                    L.lvm.debug("🟪🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
                     fetchParents(danglers, older:older)
                 }
                                 
-//                DispatchQueue.main.async {
-                    self.initialIndex = self.getRestoreScrollIndex(newLeafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
-                    L.sl.info("⭐️ LVM.initialIndex: \(self.name) \(self.initialIndex) - \(taskId)")
-                    self.nrPostLeafs = newLeafThreads
-                    self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
-//                }
+
+                self.initialIndex = self.getRestoreScrollIndex(newLeafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
+                L.sl.debug("⭐️ LVM.initialIndex: \(self.name) initialIndex: \(self.initialIndex) - restoreToScrollId: \(self.restoreScrollToId) - \(taskId)")
+                L.lvm.debug("⭐️ LVM.initialIndex: \(self.name) initialIndex: \(self.initialIndex) - restoreToScrollId: \(self.restoreScrollToId) - \(taskId)")
+                self.nrPostLeafs = newLeafThreads
+                self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
             }
             else {
                 let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs, onScreenSeen: self.onScreenSeen)
@@ -422,7 +429,7 @@ class LVM: NSObject, ObservableObject {
 //                self.needsReplyTo.append(contentsOf: danglers)
                 let newDanglers = danglers.filter { !self.danglingIds.contains($0.id) }
                 if !newDanglers.isEmpty && !self.hideReplies {
-                    L.lvm.info("🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
+                    L.lvm.debug("🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
                     danglingIds = danglingIds.union(newDanglers.map { $0.id })
                     fetchParents(newDanglers, older:older)
                 }
@@ -851,7 +858,7 @@ class LVM: NSObject, ObservableObject {
             instantFeed.start(bgRelays, onComplete: completeInstantFeed)
         }
         else {
-            L.lvm.notice("🟪 instantFeed.start \(self.name) \(self.id)")
+            L.lvm.notice("🟪 instantFeed.start \(self.name) \(self.id) - pubkeys: \(self.pubkeys.count)")
             instantFeed.start(pubkeys, onComplete: completeInstantFeed)
         }
     }
@@ -887,11 +894,19 @@ class LVM: NSObject, ObservableObject {
         
     // MARK: STEP 0: FETCH FROM RELAYS
     func fetchFeedTimerNextTick() {
-        guard self.viewIsVisible else { return }
+        guard self.viewIsVisible else {
+            if self.id == "Following" {
+                L.lvm.debug("fetchFeedTimerNextTick: view not visible, skipped.")
+            }
+            return
+        }
         let isImporting = bg().performAndWait { // TODO: Hang here... need to remove ..AndWait { }
             return Importer.shared.isImporting
         }
-        guard !isImporting else { L.lvm.info("\(self.id) \(self.name) ⏳ Still importing, new fetch skipped."); return }
+        guard !isImporting else {
+            L.lvm.info("\(self.id) \(self.name) ⏳ fetchFeedTimerNextTick: Still importing, new fetch skipped.")
+            return
+        }
         
         if !UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
             DispatchQueue.main.async {
@@ -917,8 +932,11 @@ class LVM: NSObject, ObservableObject {
 
             // Continue from first (newest) on screen?
             let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
-
+            
             if (!self.didCatchup) {
+                if self.id == "Following" {
+                    L.lvm.debug("fetchFeedTimerNextTick: catching up after 8 sec, since: \( Date(timeIntervalSince1970: Double(since)).agoString ) ")
+                }
                 // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
                     guard let self = self else { return }
@@ -1391,7 +1409,7 @@ extension LVM {
             listState.updatedAt = Date.now
             listState.leafs = leafs
             listState.hideReplies = hideReplies
-            L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
+            L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedId ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
                 try bg.save()
             }
