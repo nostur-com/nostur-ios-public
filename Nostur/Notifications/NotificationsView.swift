@@ -87,7 +87,7 @@ struct NotificationsView: View {
                             tab = "Zaps"
                             nvm.markZapsAsRead()
                         }
-                    }, title: String(localized: "Zaps", comment:"Title of tab"), selected: tab == "Zaps", unread: nvm.unreadZaps_, muted: nvm.muteZaps)
+                    }, title: String(localized: "Zaps", comment:"Title of tab"), selected: tab == "Zaps", unread: nvm.muteZaps ? nvm.unreadFailedZaps_ : (nvm.unreadZaps_ + nvm.unreadFailedZaps_), muted: nvm.muteZaps)
                     
                     TabButton(action: {
                         withAnimation {
