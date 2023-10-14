@@ -227,7 +227,9 @@ class LVM: NSObject, ObservableObject {
         }
         L.lvm.info("🟢🟢 \(self.id) \(self.name) \(self.pubkey?.short ?? "") didAppear")
         self.restoreSubscription()
-        
+        bg().perform {
+            self._performLocalFetch(refreshInBackground: true, isVisible: true)
+        }
         
         // TODO: Provide a setting to enable this again, instead of InstantFeed()... maybe for Lists only
 //        if nrPostLeafs.count == 0 {
