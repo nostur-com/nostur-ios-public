@@ -84,11 +84,15 @@
 		1F2DD42E2A29EACA0028A062 /* NWCConnection+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD42C2A29EACA0028A062 /* NWCConnection+CoreDataProperties.swift */; };
 		1F2DD4302A29F5B70028A062 /* AlbyNWCConnectSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD42F2A29F5B70028A062 /* AlbyNWCConnectSheet.swift */; };
 		1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DE02F298E5C5C00891D2E /* BlockListView.swift */; };
+		1F2DEDDB2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DEDDA2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift */; };
+		1F2DEDDD2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DEDDC2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift */; };
+		1F2DEDDF2ADAB52E009E360C /* Settings+LightningWalletPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DEDDE2ADAB52E009E360C /* Settings+LightningWalletPicker.swift */; };
 		1F2E760529F6DF6C00E67CE7 /* EditListTitleSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */; };
 		1F2F54E52A02242900B6D7E4 /* HighlightRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */; };
 		1F2F54E72A02364900B6D7E4 /* GIFImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54E62A02364900B6D7E4 /* GIFImage.swift */; };
 		1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 1F2F54E92A0236E500B6D7E4 /* Gifu */; };
 		1F2F54EE2A02904E00B6D7E4 /* FastLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */; };
+		1F2FE6892AD8E5810088BF56 /* Settings+MainWoTaccountPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2FE6882AD8E5810088BF56 /* Settings+MainWoTaccountPicker.swift */; };
 		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
 		1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */; };
 		1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */; };
@@ -527,10 +531,14 @@
 		1F2DD42C2A29EACA0028A062 /* NWCConnection+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NWCConnection+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F2DD42F2A29F5B70028A062 /* AlbyNWCConnectSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbyNWCConnectSheet.swift; sourceTree = "<group>"; };
 		1F2DE02F298E5C5C00891D2E /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
+		1F2DEDDA2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Settings+WebOfTrustLevelPicker.swift"; path = "Nostur/Screens/Settings+WebOfTrustLevelPicker.swift"; sourceTree = "<group>"; };
+		1F2DEDDC2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Settings+MediaUploadServicePicker.swift"; path = "Nostur/Screens/Settings+MediaUploadServicePicker.swift"; sourceTree = "<group>"; };
+		1F2DEDDE2ADAB52E009E360C /* Settings+LightningWalletPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Settings+LightningWalletPicker.swift"; path = "Nostur/Screens/Settings+LightningWalletPicker.swift"; sourceTree = "<group>"; };
 		1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListTitleSheet.swift; sourceTree = "<group>"; };
 		1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightRenderer.swift; sourceTree = "<group>"; };
 		1F2F54E62A02364900B6D7E4 /* GIFImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFImage.swift; sourceTree = "<group>"; };
 		1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastLoader.swift; sourceTree = "<group>"; };
+		1F2FE6882AD8E5810088BF56 /* Settings+MainWoTaccountPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Settings+MainWoTaccountPicker.swift"; path = "Nostur/Screens/Settings+MainWoTaccountPicker.swift"; sourceTree = "<group>"; };
 		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
 		1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -1483,6 +1491,10 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F2DEDDC2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift */,
+				1F2DEDDE2ADAB52E009E360C /* Settings+LightningWalletPicker.swift */,
+				1F2DEDDA2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift */,
+				1F2FE6882AD8E5810088BF56 /* Settings+MainWoTaccountPicker.swift */,
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
@@ -1942,6 +1954,7 @@
 				1F9A55242A3C7EE400F67627 /* View+roundedCorner.swift in Sources */,
 				1F3E135929C8B11F00D076EA /* Event+PrivateNotes.swift in Sources */,
 				1FB4FCD629B87D3D0034D03A /* ImageProcessing.swift in Sources */,
+				1F2DEDDB2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift in Sources */,
 				1FCCAC9C2AB7477E00B3F00A /* FetchVM.swift in Sources */,
 				1F995EF52A4DE349002227B3 /* NIP46TesterView.swift in Sources */,
 				1FE31EE72A588AC8008A4A6F /* ZappablePFP.swift in Sources */,
@@ -2077,6 +2090,7 @@
 				1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */,
 				1FFE7F602A7927E2001E8D80 /* PostTest.swift in Sources */,
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
+				1F2DEDDF2ADAB52E009E360C /* Settings+LightningWalletPicker.swift in Sources */,
 				1F2DD4292A29C1170028A062 /* NIP47.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1FCFDDBE2A2881250096CD84 /* PNotification+CoreDataProperties.swift in Sources */,
@@ -2098,6 +2112,7 @@
 				1F0A6BDC2A7DF97100258255 /* FeedSelector.swift in Sources */,
 				1FF2C6C629EAD7D00096AC4A /* NosturListsView.swift in Sources */,
 				1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */,
+				1F2FE6892AD8E5810088BF56 /* Settings+MainWoTaccountPicker.swift in Sources */,
 				1FE31EE42A58889A008A4A6F /* ProfileZapButton.swift in Sources */,
 				1F2F54E52A02242900B6D7E4 /* HighlightRenderer.swift in Sources */,
 				1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */,
@@ -2158,6 +2173,7 @@
 				1FAE9B442A2F0ADB00439A63 /* ProfileImagesHelpers.swift in Sources */,
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
 				1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */,
+				1F2DEDDD2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift in Sources */,
 				1F0CA5DE2AA6914900DC10CD /* DirectMessageViewModel.swift in Sources */,
 				1F7E38EC2A2D9AED00ABAA85 /* DIMENSIONS.swift in Sources */,
 				1F922FDE2A9775EB00C84867 /* Box.swift in Sources */,
