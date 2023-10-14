@@ -165,15 +165,7 @@ struct Settings: View {
                 .listRowBackground(themes.theme.background)
                 
                 Section(header: Text("Image uploading", comment:"Setting heading on settings screen")) {
-                    VStack {
-                        Picker(selection: $settings.defaultMediaUploadService) {
-                            ForEach(SettingsStore.mediaUploadServiceOptions) {
-                                Text($0.name).tag($0)
-                            }
-                        } label: {
-                            Text("Media upload service", comment:"Setting on settings screen")
-                        }
-                    }
+                    MediaUploadServicePicker()
                 }
                 .listRowBackground(themes.theme.background)
             }
