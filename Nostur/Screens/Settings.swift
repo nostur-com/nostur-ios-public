@@ -122,6 +122,16 @@ struct Settings: View {
                         }
                         .onChange(of: settings.webOfTrustLevel) { newValue in
                             if newValue == SettingsStore.WebOfTrustLevel.normal.rawValue {
+                    VStack(alignment: .leading) {
+                        MainWoTaccountPicker()
+                            .frame(maxHeight: 20)
+                            .padding(.top, 5)
+                        
+                        Text("To log in with other accounts, but keep filtering using the main Web of Trust account")
+                            .lineLimit(2, reservesSpace: true)
+                            .font(.caption).foregroundColor(.secondary)
+//                            .padding(.bottom, 5)
+                    }
                                 bg().perform {
                                     guard let account = account() else { return }
                                     let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
