@@ -23,8 +23,7 @@ struct NewNoteButton: View {
             Image(systemName: "plus.circle.fill")
                 .resizable()
                 .scaledToFit()
-                .foregroundColor(themes.theme.accent)
-                .background(Circle().foregroundColor(Color.white))
+                .foregroundStyle(Color.white, themes.theme.accent)
                 .frame(width: 45, height: 45)
         }
         .accessibilityLabel(String(localized:"New post", comment: "Button to create a new post"))
