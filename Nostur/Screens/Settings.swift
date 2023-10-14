@@ -112,16 +112,12 @@ struct Settings: View {
             
             Group {
                 Section(header: Text("Spam filtering", comment:"Setting heading on settings screen")) {
-                    VStack {
-                        Picker(selection: $settings.webOfTrustLevel) {
-                            ForEach(SettingsStore.WebOfTrustLevel.allCases, id:\.self) {
-                                Text($0.localized).tag($0.rawValue)
-                            }
-                        } label: {
-                            Text("Web of Trust filter", comment:"Setting on settings screen")
-                        }
-                        .onChange(of: settings.webOfTrustLevel) { newValue in
-                            if newValue == SettingsStore.WebOfTrustLevel.normal.rawValue {
+                    VStack(alignment: .leading) {
+                        WebOfTrustLevelPicker()
+                        
+                        Text("Filter by your follows only (strict), or also your follows follows (normal)").font(.caption).foregroundColor(.secondary)
+                    }
+                    
                     VStack(alignment: .leading) {
                         MainWoTaccountPicker()
                             .frame(maxHeight: 20)
@@ -146,7 +142,6 @@ struct Settings: View {
                             }
                         }
                     }
-                    Text("Filter by your follows only (strict), or also your follows follows (normal)").font(.caption).foregroundColor(.gray)
                     
                     HStack {
                         VStack(alignment: .leading) {
