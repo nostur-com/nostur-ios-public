@@ -41,6 +41,7 @@ final class SettingsStore: ObservableObject {
         
         static let nwcShowBalance:String = "nwc_show_balance"
         static let appWideSeenTracker:String = "app_wide_seen_tracker"
+        static let mainWoTaccountPubkey:String = "main_wot_account_pubkey"
     }
 
 //    private let cancellable: Cancellable
@@ -117,7 +118,8 @@ final class SettingsStore: ObservableObject {
             Keys.lowDataMode: false,
             Keys.nwcShowBalance: false,
             Keys.footerButtons: IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖",
-            Keys.appWideSeenTracker: true
+            Keys.appWideSeenTracker: true,
+            Keys.mainWoTaccountPubkey: ""
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -141,6 +143,7 @@ final class SettingsStore: ObservableObject {
         }
         _fetchCounts = defaults.bool(forKey: Keys.fetchCounts)
         _appWideSeenTracker = defaults.bool(forKey: Keys.appWideSeenTracker)
+        _mainWoTaccountPubkey = defaults.string(forKey: Keys.mainWoTaccountPubkey) ?? ""
         
         // optimize
         self.updateNWCreadyCache()
@@ -367,6 +370,17 @@ final class SettingsStore: ObservableObject {
             self.nwcReady = self.isNWCready()
         }
     }
+    
+    public var mainWoTaccountPubkey: String {
+        set {
+            objectWillChange.send()
+            _mainWoTaccountPubkey = newValue
+            defaults.set(newValue, forKey: Keys.mainWoTaccountPubkey);
+        }
+        get { _mainWoTaccountPubkey }
+    }
+    
+    private var _mainWoTaccountPubkey:String = ""
 }
 
 struct LightningWallet: Identifiable, Hashable {
