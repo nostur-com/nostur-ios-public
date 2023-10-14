@@ -1338,7 +1338,14 @@ extension LVM {
     
     func loadMoreWhenNearBottom() {
         lastAppearedIdSubject
-//            .throttle(for: 0.05, scheduler: RunLoop.main, latest: false)
+//        Throttle needed else we get within miliseconds:
+//        2023-10-14 09:22:34.682261+0700
+//        LVM    📖 Appeared: 8/21 - loading more from local
+//        LVM    📖 Appeared: 9/21 - loading more from local
+//        LVM    📖 Appeared: 10/21 - loading more from local
+//        LVM    📖 Appeared: 11/21 - loading more from local
+//        2023-10-14 09:22:34.748451+0700
+            .debounce(for: 0.2, scheduler: RunLoop.main)
             .compactMap { $0 }
             .sink { [weak self] eventId in
                 guard let self = self else { return }
