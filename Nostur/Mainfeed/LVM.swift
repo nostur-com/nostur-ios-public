@@ -125,12 +125,15 @@ class LVM: NSObject, ObservableObject {
             lastAppearedIdSubject.send(nil)
             lvmCounter.count = 0
             instantFinished = false
-            nrPostLeafs = []
-            if !SettingsStore.shared.appWideSeenTracker {
-                onScreenSeen = []
+            posts = [:]
+            bg().perform {
+                self.nrPostLeafs = []
+                if !SettingsStore.shared.appWideSeenTracker {
+                    self.onScreenSeen = []
+                }
+                self.leafIdsOnScreen = []
+                self.leafsAndParentIdsOnScreen = []
             }
-            leafIdsOnScreen = []
-            leafsAndParentIdsOnScreen = []
             startInstantFeed()
         }
     }
@@ -140,6 +143,7 @@ class LVM: NSObject, ObservableObject {
         lastAppearedIdSubject.send(nil)
         lvmCounter.count = 0
         instantFinished = false
+        posts = [:]
         bg().perform {
             self.nrPostLeafs = []
             if !SettingsStore.shared.appWideSeenTracker {
@@ -147,14 +151,14 @@ class LVM: NSObject, ObservableObject {
             }
             self.leafIdsOnScreen = []
             self.leafsAndParentIdsOnScreen = []
-        }
-        
+        }  
         startInstantFeed()
     }
     
     @Published var hideReplies = false {
         didSet {
             guard oldValue != hideReplies else { return }
+            posts = [:]
             bg().perform {
                 self.nrPostLeafs = []
                 if !SettingsStore.shared.appWideSeenTracker {
@@ -1178,6 +1182,7 @@ extension LVM {
                 lastAppearedIdSubject.send(nil)
                 lvmCounter.count = 0
                 instantFinished = false
+                posts = [:]
                 bg().perform {
                     self.nrPostLeafs = []
                     if !SettingsStore.shared.appWideSeenTracker {
@@ -1211,6 +1216,7 @@ extension LVM {
                     // if WoT did not change, manual clear:
                     lvmCounter.count = 0
                     instantFinished = false
+                    posts = [:]
                     bg().perform {
                         self.nrPostLeafs = []
                         if !SettingsStore.shared.appWideSeenTracker {

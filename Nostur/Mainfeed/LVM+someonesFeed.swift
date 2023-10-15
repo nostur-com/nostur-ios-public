@@ -9,7 +9,7 @@ import Foundation
 
 extension LVM {
     
-    public func loadSomeonesFeed(_ someonesPubkey: String) {
+    @MainActor public func loadSomeonesFeed(_ someonesPubkey: String) {
         sTab = "Main"
         ssTab = "Following"
         
@@ -19,11 +19,16 @@ extension LVM {
         pubkeys = []
         hashtags = []
         lvmCounter.count = 0
-        instantFinished = false
         posts = [:]
-        onScreenSeen = []
-        leafIdsOnScreen = []
-        leafsAndParentIdsOnScreen = []
+        instantFinished = false
+        bg().perform {
+            self.nrPostLeafs = []
+            if !SettingsStore.shared.appWideSeenTracker {
+                self.onScreenSeen = []
+            }
+            self.leafIdsOnScreen = []
+            self.leafsAndParentIdsOnScreen = []
+        }
         fetchSomeoneElsesContacts(someonesPubkey)
     }
     
@@ -134,7 +139,7 @@ extension LVM {
         }
     }
     
-    public func revertBackToOwnFeed() {
+    @MainActor public func revertBackToOwnFeed() {
         guard let account = account() else { return }
         sTab = "Main"
         ssTab = "Following"
@@ -147,10 +152,15 @@ extension LVM {
         self.loadHashtags()
         lvmCounter.count = 0
         instantFinished = false
-        nrPostLeafs = []
-        onScreenSeen = []
-        leafIdsOnScreen = []
-        leafsAndParentIdsOnScreen = []
+        posts = [:]
+        bg().perform {
+            self.nrPostLeafs = []
+            if !SettingsStore.shared.appWideSeenTracker {
+                self.onScreenSeen = []
+            }
+            self.leafIdsOnScreen = []
+            self.leafsAndParentIdsOnScreen = []
+        }
         startInstantFeed()
     }
 }
