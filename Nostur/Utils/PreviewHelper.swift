@@ -37,6 +37,8 @@ public class PreviewEnvironment {
     
     let ss:SettingsStore = .shared
     
+    let vmc:ViewModelCache = .shared
+    
     let context:NSManagedObjectContext = DataProvider.shared().container.viewContext
     let decoder = JSONDecoder()
     

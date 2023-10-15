@@ -117,9 +117,7 @@ struct CustomizablePreviewFooterFragmentView: View {
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .padding(.trailing, 10)
             VStack(spacing: 10) {
-                
-                let _ = SettingsStore.shared.footerButtons = FOOTER_BUTTONS_PREVIEW // "💬🔄+⚡️🤣👀💯🔖"
-                
+    
                 CustomizablePreviewFooterFragmentView()
                 
                 Divider()
@@ -140,4 +138,4 @@ struct CustomizablePreviewFooterFragmentView: View {
 
 let IS_NOT_APPSTORE = ((Bundle.main.infoDictionary?["NOSTUR_IS_DESKTOP"] as? String) ?? "NO") != "NNO"
 
-let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️🔖🤣👀💯"
+let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️😆👍🤔🔖"
