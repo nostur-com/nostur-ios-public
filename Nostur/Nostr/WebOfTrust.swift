@@ -72,7 +72,7 @@ class WebOfTrust: ObservableObject {
                 0
         }
         DispatchQueue.main.async {
-            self.allowedKeysCount = allowedKeysCount
+            self.allowedKeysCount = self.mainAccountWoTpubkey == "" ? 0 : allowedKeysCount
             sendNotification(.WoTReady)
             self.updatingWoT = false
         }
@@ -103,16 +103,18 @@ class WebOfTrust: ObservableObject {
         // so the main account is likely the currently logged in read-only account at start OR
         // any full-account with more than 50 follows, so we know its probably not a test throwaway account
         
+        // never use the built-in guest account
+        
         if let fullAccount = NRState.shared.accounts
-            .filter({ $0.privateKey != nil && $0.follows_.count > 50 }) // only full accounts with 50+ follows
+            .filter({ $0.privateKey != nil && $0.follows_.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY }) // only full accounts with 50+ follows (exclude guest account)
             .sorted(by: { $0.follows_.count > $1.follows_.count }).first // sorted to get the one with the most follows
         {
             L.og.info("🕸️🕸️ WebOfTrust: Main WoT full account guessed: \(fullAccount.publicKey)")
             mainAccountWoTpubkey = fullAccount.publicKey
         }
-        // the currently logged in read only account, if it has 50+ follows
+        // the currently logged in read only account, if it has 50+ follows but not if its the guest account
         else if let readOnlyAccount = NRState.shared.accounts
-            .first(where: { $0.publicKey == NRState.shared.activeAccountPublicKey && $0.follows_.count > 50 }) 
+            .first(where: { $0.publicKey == NRState.shared.activeAccountPublicKey && $0.follows_.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY })
         {
             L.og.info("🕸️🕸️ WebOfTrust: Main WoT read account guessed: \(readOnlyAccount.publicKey)")
             mainAccountWoTpubkey = readOnlyAccount.publicKey
@@ -212,6 +214,7 @@ class WebOfTrust: ObservableObject {
     public var webOfTrustLevel:String = UserDefaults.standard.string(forKey: SettingsStore.Keys.webOfTrustLevel) ?? SettingsStore.WebOfTrustLevel.normal.rawValue // Faster then querying UserDefaults so cache here
     
     public func isAllowed(_ pubkey:String) -> Bool {
+        guard mainAccountWoTpubkey != "" else { return true }
         if webOfTrustLevel != SettingsStore.WebOfTrustLevel.strict.rawValue && allowedKeysCount < ENABLE_THRESHOLD { return true }
         
         // Maybe check small set first, faster?
