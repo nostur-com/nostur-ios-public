@@ -75,9 +75,18 @@ struct FooterConfigurator: View {
     }
 }
 
-#Preview {
-    FooterConfigurator(footerButtons: .constant("💬🔄+💯🔥🔖"))
-        .environmentObject(Themes.default)
+struct FooterConfiguratorTester: View {
+    @State private var footerButtons = "💬🔄+💯🔥🔖"
+
+    var body: some View {
+        FooterConfigurator(footerButtons: $footerButtons)
+    }
+}
+
+#Preview("FooterConfigurator") {
+    PreviewContainer {
+        FooterConfiguratorTester()
+    }
 }
 
 

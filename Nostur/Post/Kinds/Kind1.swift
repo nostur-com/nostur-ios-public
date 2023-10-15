@@ -136,10 +136,17 @@ struct Kind1: View {
 
 struct Kind1_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer {
-            VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost() {
-                    Kind1(nrPost: nrPost, theme: Themes.default.theme)
+        PreviewContainer({ pe in
+            pe.loadPosts()
+        }) {
+            SmoothListMock {
+                Box {
+                    if let nrPost = PreviewFetcher.fetchNRPost() {
+                        VStack(spacing: 0) {
+                            Kind1(nrPost: nrPost, theme: Themes.default.theme)
+                            CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false, theme: Themes.default.theme)
+                        }
+                    }
                 }
             }
         }

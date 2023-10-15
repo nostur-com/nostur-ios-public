@@ -355,11 +355,11 @@ struct LazyNoteMenuSheet_Previews: PreviewProvider {
     PreviewContainer({ pe in
         pe.loadPosts()
     }) {
-        VStack {
+        NavigationStack {
             if let nrPost = PreviewFetcher.fetchNRPost() {
                 LazyNoteMenuButton(nrPost:nrPost)
             }
-            Color.clear.withSheets()
         }
+        .withSheets()
     }
 }
