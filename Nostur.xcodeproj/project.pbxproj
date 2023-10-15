@@ -29,6 +29,7 @@
 		1F08CA042A5063E3004A3494 /* Community.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F08CA032A5063E3004A3494 /* Community.swift */; };
 		1F08CA072A506414004A3494 /* Event+communities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F08CA062A506414004A3494 /* Event+communities.swift */; };
 		1F08CA0A2A5067C2004A3494 /* CommunityFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F08CA092A5067C2004A3494 /* CommunityFilters.swift */; };
+		1F099DA62ADC29710069F2DF /* Settings+AutodownloadLevelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F099DA52ADC29710069F2DF /* Settings+AutodownloadLevelPicker.swift */; };
 		1F0A25542A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A25532A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift */; };
 		1F0A25562A3E139E00178A5C /* WebOfTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A25552A3E139E00178A5C /* WebOfTrust.swift */; };
 		1F0A3C252A0C113700B30D7E /* Kind1063.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A3C242A0C113700B30D7E /* Kind1063.swift */; };
@@ -475,6 +476,7 @@
 		1F08CA032A5063E3004A3494 /* Community.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Community.swift; sourceTree = "<group>"; };
 		1F08CA062A506414004A3494 /* Event+communities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+communities.swift"; sourceTree = "<group>"; };
 		1F08CA092A5067C2004A3494 /* CommunityFilters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityFilters.swift; sourceTree = "<group>"; };
+		1F099DA52ADC29710069F2DF /* Settings+AutodownloadLevelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Settings+AutodownloadLevelPicker.swift"; sourceTree = "<group>"; };
 		1F0A25532A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrFilesDevMediaUploadService.swift; sourceTree = "<group>"; };
 		1F0A25552A3E139E00178A5C /* WebOfTrust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebOfTrust.swift; sourceTree = "<group>"; };
 		1F0A3C242A0C113700B30D7E /* Kind1063.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1063.swift; sourceTree = "<group>"; };
@@ -1072,6 +1074,7 @@
 				1F7A10E12AA1DB7300042CD6 /* Search+Helpers.swift */,
 				1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */,
 				1F21442B29A797930090E78E /* Settings.swift */,
+				1F099DA52ADC29710069F2DF /* Settings+AutodownloadLevelPicker.swift */,
 				1FBE253D2A9E5A7400F60FCF /* Settings+ThemePicker.swift */,
 				1F2DEDDC2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift */,
 				1F2DEDDE2ADAB52E009E360C /* Settings+LightningWalletPicker.swift */,
@@ -2077,6 +2080,7 @@
 				1F8418992A2BDCB1001EFE7A /* NIP47SecretManager.swift in Sources */,
 				1FF209162AB0A92800876DB2 /* ProfileGalleryViewModel.swift in Sources */,
 				1FB6E70329E52EF3008BE8A6 /* SmoothList.swift in Sources */,
+				1F099DA62ADC29710069F2DF /* Settings+AutodownloadLevelPicker.swift in Sources */,
 				1F00E8C329C2FE7800797B78 /* LVM.swift in Sources */,
 				1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */,
 				1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */,

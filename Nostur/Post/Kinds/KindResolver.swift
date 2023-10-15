@@ -17,6 +17,7 @@ struct KindResolver: View {
     public var isDetail:Bool = false
     public var connect:ThreadConnectDirection? = nil
     public var grouped:Bool = false
+    public var forceAutoload:Bool = false // To override auto downloaded of reposted post using pubkey of reposter
     public var theme:Theme
     
     var body: some View {
@@ -27,13 +28,13 @@ struct KindResolver: View {
         case 9802:
             Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, grouped: grouped, theme: theme)
         case 30023:
-            ArticleView(nrPost, isDetail: isDetail, fullWidth: fullWidth)
+            ArticleView(nrPost, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
         default:
             if fullWidth {
-                Kind1(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped, theme: theme)
+                Kind1(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
             }
             else {
-                Kind1Default(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped, theme: theme)
+                Kind1Default(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }

@@ -58,9 +58,10 @@ struct Settings: View {
                     Toggle(isOn: $settings.fullWidthImages) {
                         Text("Enable full width pictures", comment:"Setting on settings screen")
                     }
-                    Toggle(isOn: $settings.restrictAutoDownload) {
-                        Text("Restrict images to following", comment:"Setting on settings screen")
-                        Text("Only auto-download images in new posts from people you follow\nToggle off to download from all", comment:"Setting on settings screen")
+                    VStack(alignment: .leading) {
+                        AutodownloadLevelPicker()
+                        
+                        Text("Restrict auto-downloading of media posted by others").font(.caption).foregroundColor(.secondary)
                     }
                     
                     Toggle(isOn: $settings.animatedPFPenabled) {

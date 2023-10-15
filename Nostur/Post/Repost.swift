@@ -32,6 +32,10 @@ struct Repost: View {
         self.theme = theme
     }
     
+    private var shouldForceAutoLoad:Bool { // To override auto download of the reposted post
+        SettingsStore.shouldAutodownload(nrPost)
+    }
+    
     var body: some View {
         VStack(alignment: .leading) {
             RepostHeader(repostedHeader: nrPost.repostedHeader, pubkey: nrPost.pubkey)
@@ -53,7 +57,7 @@ struct Repost: View {
                     .hCentered()
                 }
                 else {
-                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped, theme: theme)
+                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped, forceAutoload: shouldForceAutoLoad, theme: theme)
                         .onAppear {
                             if !nrPost.missingPs.isEmpty {
                                 bg().perform {

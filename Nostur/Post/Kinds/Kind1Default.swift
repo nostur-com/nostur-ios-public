@@ -21,8 +21,10 @@ struct Kind1Default: View {
     private let isReply:Bool // is reply on PostDetail
     private let isDetail:Bool
     private let grouped:Bool
+    private let forceAutoload:Bool
     
-    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, theme:Theme) {
+    
+    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, forceAutoload:Bool = false, theme:Theme) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -32,6 +34,7 @@ struct Kind1Default: View {
         self.isDetail = isDetail
         self.grouped = grouped
         self.theme = theme
+        self.forceAutoload = forceAutoload
     }
     
     private let THREAD_LINE_OFFSET = 24.0
@@ -150,7 +153,7 @@ struct Kind1Default: View {
 //                            }
                     }
 
-                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, theme: theme)
+                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
                         .frame(maxWidth: .infinity, alignment:.leading)
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {

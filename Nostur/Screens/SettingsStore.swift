@@ -23,6 +23,7 @@ final class SettingsStore: ObservableObject {
         static let defaultLightningWallet:String = "default_lightning_wallet"
 //        static let hideEmojisInNames:String = "hide_emojis_in_names"
         static let hideBadges:String = "hide_badges"
+        static let autoDownloadFrom:String = "autodownload_from"
         static let restrictAutoDownload:String = "restrict_autodownload"
         static let animatedPFPenabled:String = "animated_pfp_enabled"
         static let rowFooterEnabled:String = "row_footer_enabled"
@@ -58,7 +59,7 @@ final class SettingsStore: ObservableObject {
             String(self.rawValue)
         }
     }
-
+    
     public static let walletOptions:[LightningWallet] = [
         LightningWallet(name: "none", scheme: "lightning:"),
         LightningWallet(name: "Zebedee", scheme: "zebedee:lightning:"), // https://documentation.zebedee.io/docs/zbd-app-uri-schemes/
@@ -101,6 +102,7 @@ final class SettingsStore: ObservableObject {
             Keys.defaultZapAmount: 21,
 //            Keys.hideEmojisInNames: false,
             Keys.hideBadges: false,
+            Keys.autoDownloadFrom: AutodownloadLevel.onlyWoT.rawValue,
             Keys.restrictAutoDownload: false,
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id,
             Keys.animatedPFPenabled: false,
@@ -136,6 +138,7 @@ final class SettingsStore: ObservableObject {
         _lowDataModeCache = defaults.bool(forKey: Keys.lowDataMode)
         _rowFooterEnabled = defaults.bool(forKey: Keys.rowFooterEnabled)
         _restrictAutoDownload = defaults.bool(forKey: Keys.restrictAutoDownload)
+        _autoDownloadFrom = defaults.string(forKey: Keys.autoDownloadFrom) ?? AutodownloadLevel.onlyWoT.rawValue
         _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
         _footerButtons = defaults.string(forKey: Keys.footerButtons) ?? "💬🔄+🔖"
         DispatchQueue.main.async {
@@ -311,6 +314,16 @@ final class SettingsStore: ObservableObject {
     
     private var _restrictAutoDownload:Bool = false
     
+    public var autoDownloadFrom: String {
+        set {
+            objectWillChange.send(); defaults.set(newValue, forKey: Keys.autoDownloadFrom)
+            _autoDownloadFrom = newValue
+        }
+        get { defaults.string(forKey: Keys.autoDownloadFrom) ?? AutodownloadLevel.onlyWoT.rawValue }
+    }
+    
+    private var _autoDownloadFrom:String = AutodownloadLevel.onlyWoT.rawValue
+    
     public var fullWidthImages: Bool {
         set {
             objectWillChange.send()
@@ -381,10 +394,37 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _mainWoTaccountPubkey:String = ""
+    
+    static func shouldAutodownload(_ nrPost:NRPost) -> Bool {
+        if nrPost.following { return true }
+        switch SettingsStore.shared.autoDownloadFrom {
+        case AutodownloadLevel.all.rawValue:
+            return true
+        case AutodownloadLevel.onlyWoT.rawValue:
+            guard WebOfTrust.shared.tresholdReached else { return true }
+            return WebOfTrust.shared.isAllowed(nrPost.pubkey)
+        case AutodownloadLevel.onlyWoTstrict.rawValue:
+            return isFollowing(nrPost.pubkey)
+        default:
+            return true
+        }
+    }
 }
 
 struct LightningWallet: Identifiable, Hashable {
     var id:String { name }
     let name: String
     let scheme: String
+}
+
+
+
+enum AutodownloadLevel:String, CaseIterable, Localizable, Identifiable {
+    case all = "AUTODOWNLOAD_ALL"
+    case onlyWoT = "AUTODOWNLOAD_WOT_NORMAL"
+    case onlyWoTstrict = "AUTODOWNLOAD_WOT_STRICT"
+    
+    var id:String {
+        String(self.rawValue)
+    }
 }
