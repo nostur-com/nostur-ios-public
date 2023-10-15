@@ -16,6 +16,7 @@ struct FollowingAndExplore: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @AppStorage("selected_listId") var selectedListId = ""
+    @Binding var showingOtherContact:NRContact?
     
     @State var showingNewNote = false
     @State var noteCancellationId:UUID?
@@ -135,7 +136,7 @@ struct FollowingAndExplore: View {
                 themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
                 
                 // FOLLOWING
-                if (account.follows_.count <= 1 && !didSend) {
+                if (showingOtherContact == nil && account.follows_.count <= 1 && !didSend) {
                     VStack {
                         Spacer()
                         Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -249,7 +250,7 @@ struct FollowingAndExplore_Previews: PreviewProvider {
         PreviewContainer {
             NavigationStack {
                 if let account = account() {
-                    FollowingAndExplore(account: account)
+                    FollowingAndExplore(account: account, showingOtherContact: .constant(nil))
                 }
             }
         }
