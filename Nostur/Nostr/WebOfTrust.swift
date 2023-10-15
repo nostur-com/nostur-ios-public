@@ -33,7 +33,7 @@ class WebOfTrust: ObservableObject {
  
     private let ENABLE_THRESHOLD = 2000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
-    @AppStorage("_mainWoTaccountPubkey") private var mainAccountWoTpubkey = ""
+    @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
     
     // For views
     @Published public var lastUpdated:Date? = nil
