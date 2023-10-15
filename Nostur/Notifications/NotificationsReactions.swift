@@ -66,9 +66,9 @@ struct NotificationsReactions: View {
                             Button("Show more") {
                                 guard let account = account() else { return }
                                 fl.predicate = NSPredicate(
-                                    format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
-                                    account.blockedPubkeys_,
-                                    account.publicKey)
+                                    format: "otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
+                                    account.publicKey,
+                                    account.blockedPubkeys_)
             //                    fl.offset = (fl.events.count - 1)
                                 fl.loadMore(500)
                                 if let until = fl.events.last?.created_at {
@@ -117,10 +117,10 @@ struct NotificationsReactions: View {
             }
             fl.predicate = NSPredicate(
                 format:
-                    "created_at >= %i AND NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
+                    "created_at >= %i AND otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
                     currentNewestCreatedAt,
-                account.blockedPubkeys_,
-                account.publicKey
+                account.publicKey,
+                account.blockedPubkeys_
             )
             fl.loadNewerEvents(5000, taskId:"newReactions")
         }
@@ -176,10 +176,10 @@ struct NotificationsReactions: View {
         fl.reset()
         fl.nrPostTransform = false
         fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
-            account.blockedPubkeys_,
-            account.publicKey
-            )
+            format: "otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
+            account.publicKey,
+            account.blockedPubkeys_
+        )
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fl.onComplete = {
             saveLastSeenReactionCreatedAt() // onComplete from local database
@@ -209,11 +209,11 @@ struct NotificationsReactions: View {
 //                    print("🟠🟠🟠 processResponseCommand \(taskId)")
                 let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
-                    format: "created_at >= %i AND NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
-                        currentNewestCreatedAt,
-                    account.blockedPubkeys_,
-                    account.publicKey
-                  )
+                    format: "created_at >= %i AND otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
+                    currentNewestCreatedAt,
+                    account.publicKey,
+                    account.blockedPubkeys_
+                )
                 fl.loadNewerEvents(5000, taskId: taskId)
             },
             timeoutCommand: { taskId in
@@ -243,7 +243,7 @@ struct NotificationsReactions: View {
         guard let account = account() else { return }
         let mr = Event.fetchRequest()
         mr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        mr.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@ AND reactionTo == nil", serializedP(account.publicKey))
+        mr.predicate = NSPredicate(format: "otherPubkey == %@ AND kind == 7 AND reactionTo == nil", account.publicKey)
 
         Task.detached(priority: .medium) {
             bg().perform {
@@ -274,11 +274,11 @@ struct ReactionsForThisNote: View {
             ZStack(alignment:.leading) {
                 ForEach(withoutDuplicates.prefix(10).indices, id:\.self) { index in
                     ZStack(alignment:.leading) {
-                        PFP(pubkey: reactions[index].pubkey, contact: reactions[index].contact)
+                        PFP(pubkey: reactions[index].pubkey, contact: reactions[index].contact, forceFlat: true)
                             .id(reactions[index].id)
                             .zIndex(-Double(index))
                         Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")
-                            .offset(x:5, y:+15)
+                            .offset(x: 5, y: 15)
                             .zIndex(20)
                         
                     }
@@ -301,6 +301,7 @@ struct ReactionsForThisNote: View {
                     .foregroundColor(.gray)
             }
         }
+        .drawingGroup()
         .onAppear {
             self.fetchMissingEventContacts(events:Array(withoutDuplicates.prefix(10)))
         }
