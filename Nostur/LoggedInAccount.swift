@@ -216,7 +216,14 @@ class LoggedInAccount: ObservableObject {
     
     @MainActor private func setupAccount(_ account:Account) {
         self.pubkey = pubkey
-        FollowingGuardian.shared.didReceiveContactListThisSession = false
+        
+        // Set to true only if it is a brand new account, otherwise set to false and wait for kind 3 from relay
+        if let flags = account.flags, flags == "nostur_created" {
+            FollowingGuardian.shared.didReceiveContactListThisSession = true
+        }
+        else {
+            FollowingGuardian.shared.didReceiveContactListThisSession = false
+        }
         
         let follows = account.getFollowingPublicKeys(includeBlocked: true) // if we do this in bg.perform it loads too late for other views
         self.viewFollowingPublicKeys = follows

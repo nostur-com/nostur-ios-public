@@ -42,6 +42,8 @@ extension Account {
     
     @NSManaged public var followingHashtags_: String?
     
+    @NSManaged public var flags: String?
+    
     var pictureUrl:URL? { URL(string: picture) }
     
     var followingHashtags:Set<String> {
