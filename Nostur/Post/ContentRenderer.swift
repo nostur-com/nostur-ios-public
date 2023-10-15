@@ -18,14 +18,20 @@ struct ContentRenderer: View { // VIEW things
     private let fullWidth:Bool
     private let availableWidth:CGFloat
     private let contentElements:[ContentElement]
+    private let forceAutoload:Bool
     
-    init(nrPost: NRPost, isDetail:Bool = false, fullWidth:Bool = false, availableWidth:CGFloat, theme:Theme) {
+    init(nrPost: NRPost, isDetail:Bool = false, fullWidth:Bool = false, availableWidth:CGFloat, forceAutoload: Bool = false, theme:Theme) {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
         self.availableWidth = availableWidth
         self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
+        self.forceAutoload = forceAutoload
         self.theme = theme
+    }
+    
+    private var shouldAutoLoad:Bool {
+        forceAutoload || SettingsStore.shouldAutodownload(nrPost)
     }
     
     var body: some View {
@@ -123,7 +129,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: shouldAutoLoad, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .debugDimensions("sd.video")
@@ -148,7 +154,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoLoad, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
 //                            .debugDimensions("video")
                         //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .padding(.horizontal, fullWidth ? -10 : 0)
@@ -170,7 +176,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoLoad, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .debugDimensions("sd.image")
@@ -195,7 +201,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoLoad, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
 //                            .debugDimensions("image")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
@@ -206,7 +212,7 @@ struct ContentRenderer: View { // VIEW things
                     }
                 case .linkPreview(let url):
                     // TODO: do no link preview if restrictAutoDownload...
-                    LinkPreviewView(url: url, theme: theme)
+                    LinkPreviewView(url: url, autoload: shouldAutoLoad, theme: theme)
                         .padding(.vertical, 10)
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }

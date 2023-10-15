@@ -18,7 +18,7 @@ struct NosturVideoViewur: View {
     public let pubkey:String
     public var height:CGFloat?
     public let videoWidth:CGFloat
-    public let isFollowing:Bool
+    public let autoload:Bool
     public var fullWidth:Bool = false
     public var contentPadding:CGFloat = 10.0
     public var theme:Theme
@@ -181,7 +181,7 @@ struct NosturVideoViewur: View {
             }
         }
         .onAppear {
-            videoShown = !SettingsStore.shared.restrictAutoDownload || isFollowing
+            videoShown = !SettingsStore.shared.restrictAutoDownload || autoload
             if videoShown {
                 if url.absoluteString.suffix(4) == "m3u8" || url.absoluteString.suffix(3) == "m4a" {
                     isStream = true
@@ -275,7 +275,7 @@ struct NosturVideoViewur_Previews: PreviewProvider {
         
         let urlsFromContent = getImgUrlsFromContent(content1)
         
-        NosturVideoViewur(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, isFollowing: true, theme: Themes.default.theme)
+        NosturVideoViewur(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, autoload: true, theme: Themes.default.theme)
             .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

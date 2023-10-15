@@ -14,14 +14,16 @@ struct Kind1063: View {
     private let availableWidth:CGFloat
     private let fullWidth:Bool
     private var height:CGFloat? = nil
+    private let forceAutoload:Bool
     private var theme:Theme
     
-    init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero, fullWidth:Bool = false, theme: Theme) {
+    init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero, fullWidth:Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.theme = theme
         self.nrPost = nrPost
         self.url = fileMetadata.url
         self.availableWidth = availableWidth
         self.fullWidth = fullWidth
+        self.forceAutoload = forceAutoload
         if let dim = fileMetadata.dim {
             let dims = dim.split(separator: "x", maxSplits: 2)
             if dims.count == 2 {
@@ -51,6 +53,10 @@ struct Kind1063: View {
         }
     }
     
+    private var shouldAutoload:Bool {
+        forceAutoload || SettingsStore.shouldAutodownload(nrPost)
+    }
+    
     var body: some View {
         VStack(alignment: .leading) {
             if let subject = nrPost.subject {
@@ -60,14 +66,14 @@ struct Kind1063: View {
                     
             }
             if is1063Video(nrPost) {
-                NosturVideoViewur(url: URL(string: url)!, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: 0, theme: theme)
+                NosturVideoViewur(url: URL(string: url)!, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, contentPadding: 0, theme: theme)
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .withoutAnimation()
             }
             else if let height {
-                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: (nrPost.following || !SettingsStore.shared.restrictAutoDownload), theme: theme)
+                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, theme: theme)
                     .padding(.horizontal, fullWidth ? -10 : 0)
 //                    .padding(.horizontal, -10)
 //                    .fixedSize(horizontal: false, vertical: true)

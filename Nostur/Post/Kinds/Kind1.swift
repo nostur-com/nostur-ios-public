@@ -11,22 +11,21 @@ import SwiftUI
 
 // Note Full width
 struct Kind1: View {
-    @EnvironmentObject var dim:DIMENSIONS
-    let nrPost:NRPost
-    @ObservedObject var pfpAttributes: NRPost.PFPAttributes
-    let hideFooter:Bool // For rendering in NewReply
-    let missingReplyTo:Bool // For rendering in thread
-    var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-    let isReply:Bool // is reply of PostDetail
-    let isDetail:Bool
-    let grouped:Bool
-    
-    let sp:SocketPool = .shared
-    let up:Unpublisher = .shared
+    @EnvironmentObject private var dim:DIMENSIONS
+    @ObservedObject private var pfpAttributes: NRPost.PFPAttributes
     @ObservedObject var settings:SettingsStore = .shared
+    
+    private let nrPost:NRPost
+    private let hideFooter:Bool // For rendering in NewReply
+    private let missingReplyTo:Bool // For rendering in thread
+    private var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+    private let isReply:Bool // is reply of PostDetail
+    private let isDetail:Bool
+    private let grouped:Bool
+    private let forceAutoload:Bool
     private var theme:Theme
     
-    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -35,6 +34,7 @@ struct Kind1: View {
         self.isReply = isReply
         self.isDetail = isDetail
         self.grouped = grouped
+        self.forceAutoload = forceAutoload
         self.theme = theme
     }
     
@@ -99,7 +99,7 @@ struct Kind1: View {
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                 }
                 if let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, fullWidth: true, theme: theme)
+                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, fullWidth: true, forceAutoload: forceAutoload, theme: theme)
                 }
                 else {
                     if (nrPost.kind != 1) && (nrPost.kind != 6) {
@@ -114,7 +114,7 @@ struct Kind1: View {
                             .lineLimit(3)
                         
                     }
-                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: true, availableWidth: imageWidth, theme: theme)
+                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
 
                     if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)

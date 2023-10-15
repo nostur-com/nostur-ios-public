@@ -16,15 +16,17 @@ struct ArticleView: View {
     private var fullWidth:Bool = false
     private var hideFooter:Bool = false
     private var navTitleHidden:Bool = false
+    private var forceAutoload:Bool
     private var theme:Theme
     
-    init(_ article:NRPost, isParent:Bool = false, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false, navTitleHidden:Bool = false, theme: Theme = Themes.default.theme) {
+    init(_ article:NRPost, isParent:Bool = false, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false, navTitleHidden:Bool = false, forceAutoload: Bool = false, theme: Theme = Themes.default.theme) {
         self.article = article
         self.isParent = isParent
         self.isDetail = isDetail
         self.fullWidth = fullWidth
         self.hideFooter = hideFooter
         self.navTitleHidden = navTitleHidden
+        self.forceAutoload = forceAutoload
         self.theme = theme
     }
     
@@ -37,6 +39,10 @@ struct ArticleView: View {
     
     @State private var showMiniProfile = false
     @State private var didLoad = false
+    
+    private var shouldAutoload:Bool { // Only for non-detail view. On detail we force show images.
+        forceAutoload || SettingsStore.shouldAutodownload(article)
+    }
     
     var body: some View {
         if isDetail {
@@ -154,7 +160,7 @@ struct ArticleView: View {
                         //                            .padding(.horizontal, -20)
                     }
                     
-                    ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, theme: theme)
+                    ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme)
                         .padding(.vertical, 10)
                     
                     if !hideFooter {
@@ -229,7 +235,7 @@ struct ArticleView: View {
                 .padding(.bottom, 10)
                 
                 if let image = article.articleImageURL {
-                    SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: (article.following || !SettingsStore.shared.restrictAutoDownload), contentMode: .aspectFill, upscale: true)
+                    SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: shouldAutoload, contentMode: .aspectFill, upscale: true)
                         .frame(minHeight: 100)
                         .padding(.horizontal, -20) // on article preview always use full width style
                         .padding(.vertical, 10)
