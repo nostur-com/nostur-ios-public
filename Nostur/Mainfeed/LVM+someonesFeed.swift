@@ -19,6 +19,7 @@ extension LVM {
         pubkeys = []
         hashtags = []
         lvmCounter.count = 0
+        L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.loadSomeonesFeed()")
         posts = [:]
         instantFinished = false
         bg().perform {
@@ -151,6 +152,7 @@ extension LVM {
         self.pubkeys = account.getFollowingPublicKeys(includeBlocked: false)
         self.loadHashtags()
         lvmCounter.count = 0
+        L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.revertBackToOwnFeed()")
         instantFinished = false
         posts = [:]
         bg().perform {
