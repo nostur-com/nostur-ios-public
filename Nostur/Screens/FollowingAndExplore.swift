@@ -10,16 +10,16 @@ import Combine
 
 struct FollowingAndExplore: View {
     @EnvironmentObject private var themes:Themes
-    @EnvironmentObject var dim:DIMENSIONS
+    @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject var account:Account
-    @ObservedObject var ss:SettingsStore = .shared
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_subtab") var selectedSubTab = "Following"
-    @AppStorage("selected_listId") var selectedListId = ""
     @Binding var showingOtherContact:NRContact?
+    @ObservedObject private var ss:SettingsStore = .shared
+    @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_subtab") private var selectedSubTab = "Following"
+    @AppStorage("selected_listId") private var selectedListId = ""
     
-    @State var showingNewNote = false
-    @State var noteCancellationId:UUID?
+    @State private var showingNewNote = false
+    @State private var noteCancellationId:UUID?
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)], predicate: NSPredicate(format: "showAsTab == true"))
     var lists:FetchedResults<NosturList>
