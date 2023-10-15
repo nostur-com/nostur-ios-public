@@ -836,7 +836,18 @@ class LVM: NSObject, ObservableObject {
         guard !instantFinished && !instantFeed.isRunning else { return }
         let completeInstantFeed = { [weak self] events in
             guard let self = self else { return }
-            self.startRenderingSubject.send(events)
+            
+            let firstRenderedEvents:[Event] = if hideReplies {
+                events
+            }
+            else {
+                events.map({
+                    $0.parentEvents = self.hideReplies ? [] : Event.getParentEvents($0, fixRelations: true)
+                    _ = $0.replyTo__
+                    return $0
+                })
+            }
+            self.startRenderingSubject.send(firstRenderedEvents)
             
             if (!self.instantFinished) {
                 self.performLocalFetchAfterImport()
