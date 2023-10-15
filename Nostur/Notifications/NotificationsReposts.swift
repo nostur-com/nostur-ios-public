@@ -31,7 +31,16 @@ struct NotificationsReposts: View {
                 LazyVStack(spacing: 10) {
                     ForEach(fl.nrPosts) { nrPost in
                         Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                            VStack(alignment: .leading, spacing: 0) {
+                                RepostHeader(repostedHeader: nrPost.repostedHeader, pubkey: nrPost.pubkey)
+                                    .offset(x: -35)
+                                if let firstQuote = nrPost.firstQuote {
+                                    MinimalNoteTextRenderView(nrPost: firstQuote, lineLimit: 5)
+                                        .onTapGesture {
+                                            navigateTo(firstQuote)
+                                        }
+                                }
+                            }
                         }
                         .id(nrPost.id)
                     }
@@ -91,8 +100,7 @@ struct NotificationsReposts: View {
                 }
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { notification in
-            let account = notification.object as! Account
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
             fl.nrPosts = []
             backlog.clear()
             load()
