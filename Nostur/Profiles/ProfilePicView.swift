@@ -21,19 +21,20 @@ struct PFP: View, Equatable {
     public var nrContact:NRContact?
     public var account:Account?
     public var size:CGFloat? = 50.0
+    public var forceFlat = false
 
     var body: some View {
         if let contact {
-            ContactPFP(contact: contact, size: size)
+            ContactPFP(contact: contact, size: size, forceFlat: forceFlat)
         }
         else if let nrContact {
-            NRContactPFP(nrContact: nrContact, size: size)
+            NRContactPFP(nrContact: nrContact, size: size, forceFlat: forceFlat)
         }
         else if let account {
-            AccountPFP(account: account, size: size)
+            AccountPFP(account: account, size: size, forceFlat: forceFlat)
         }
         else {
-            InnerPFP(pubkey: pubkey, size: size!, color: randomColor(seed: pubkey))
+            InnerPFP(pubkey: pubkey, size: size!, color: randomColor(seed: pubkey), forceFlat: forceFlat)
         }
     }
 }
@@ -44,10 +45,11 @@ struct ContactPFP: View {
     private var pubkey:String { contact.pubkey }
     private var pictureUrl:URL? { contact.pictureUrl }
     var size:CGFloat?
+    public var forceFlat = false
     private var color:Color { randomColor(seed: contact.pubkey) }
     
     var body: some View {
-         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color)
+         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color, forceFlat: forceFlat)
     }
 }
 
@@ -57,10 +59,11 @@ struct NRContactPFP: View {
     private var pubkey:String { nrContact.pubkey }
     private var pictureUrl:URL? { nrContact.pictureUrl }
     public var size:CGFloat?
+    public var forceFlat = false
     private var color:Color { randomColor(seed: nrContact.pubkey) }
     
     var body: some View {
-        InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color)
+        InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color, forceFlat: forceFlat)
     }
 }
 
@@ -70,10 +73,11 @@ struct AccountPFP: View {
     private var pubkey:String { account.publicKey }
     private var pictureUrl:URL? { account.pictureUrl }
     public var size:CGFloat? = 50.0
+    public var forceFlat = false
     private var color:Color { randomColor(seed: account.publicKey) }
     
     var body: some View {
-         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color)
+         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color, forceFlat: forceFlat)
     }
 }
 
@@ -83,6 +87,7 @@ struct InnerPFP: View {
     public var pictureUrl:URL?
     public var size:CGFloat = 50.0
     public var color:Color? = nil
+    public var forceFlat = false
     private var innerColor:Color {
         color ?? randomColor(seed: pubkey)
     }
@@ -104,6 +109,7 @@ struct InnerPFP: View {
     private var renderCase: RenderOption {
         guard let pictureUrl else { return .noUrl }
         guard pictureUrl.absoluteString.prefix(8) == "https://" else { return .noHttps }
+        if forceFlat { return .flat(pictureUrl) }
         guard (pictureUrl.absoluteString.suffix(4) == ".gif") && settings.animatedPFPenabled else { return .flat(pictureUrl) }
         return .animatedGif(pictureUrl)
     }
