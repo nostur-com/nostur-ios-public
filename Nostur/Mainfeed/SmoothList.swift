@@ -138,7 +138,6 @@ struct SmoothList: UIViewControllerRepresentable {
         collectionViewHolder.dataSource?.apply(snapshot, animatingDifferences: false)
 
         coordinator.lvm.$posts
-            .filter({ !$0.isEmpty })
 //            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
 //            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
             .sink { data in
