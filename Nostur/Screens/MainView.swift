@@ -27,7 +27,7 @@ struct MainView: View {
         #endif
         NavigationStack(path: $navPath) {
             if let account = account {
-                FollowingAndExplore(account: account)
+                FollowingAndExplore(account: account, showingOtherContact: $showingOtherContact)
                     .transaction { t in t.animation = nil }
                     .background(themes.theme.listBackground)
                     .withNavigationDestinations()
