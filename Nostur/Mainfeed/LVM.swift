@@ -56,6 +56,9 @@ class LVM: NSObject, ObservableObject {
             }
             
             DispatchQueue.main.async {
+                if self.id == "Following" {
+                    signpost(NRState.shared, "LAUNCH", .event, "setting .posts")
+                }
                 self.posts = posts
             }
         }
@@ -362,6 +365,9 @@ class LVM: NSObject, ObservableObject {
     
     // MARK: FROM DB TO SCREEN STEP 3:
     private func processPostsInBackground(_ events:[Event], older:Bool = false) { // events are from viewContext
+        if self.id == "Following" {
+            signpost(NRState.shared, "LAUNCH", .event, "Processing posts for rendering")
+        }
         let taskId = UUID().uuidString
         L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Start transforming \(events.count) events - \(taskId)")
         let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg
@@ -419,6 +425,9 @@ class LVM: NSObject, ObservableObject {
                 self.initialIndex = self.getRestoreScrollIndex(newLeafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
                 L.sl.debug("⭐️ LVM.initialIndex: \(self.name) initialIndex: \(self.initialIndex) - restoreToScrollId: \(self.restoreScrollToId) - \(taskId)")
                 L.lvm.debug("⭐️ LVM.initialIndex: \(self.name) initialIndex: \(self.initialIndex) - restoreToScrollId: \(self.restoreScrollToId) - \(taskId)")
+                if self.id == "Following" {
+                    signpost(NRState.shared, "LAUNCH", .event, "setting .nrPostsLeafs")
+                }
                 self.nrPostLeafs = newLeafThreads
                 self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
             }
@@ -802,9 +811,14 @@ class LVM: NSObject, ObservableObject {
         }
         addSubscriptions()
         
-        
+        if self.id == "Following" {
+            signpost(NRState.shared, "LAUNCH", .event, "Initializing Follwing LVM")
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
             if self.viewIsVisible {
+                if self.id == "Following" {
+                    signpost(NRState.shared, "LAUNCH", .event, "Starting InstantFeed")
+                }
                 self.startInstantFeed()
             }
         }
@@ -821,6 +835,7 @@ class LVM: NSObject, ObservableObject {
             }
 //            fetchFeedTimerNextTick()
             self.instantFinished = true
+            signpost(instantFeed, "InstantFeed", .end, "Completed")
             
             if type == .relays {
                 DispatchQueue.main.async {

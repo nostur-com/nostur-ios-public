@@ -166,9 +166,15 @@ struct SmoothList: UIViewControllerRepresentable {
                 
                 L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): \(currentNumberOfItems) → \(data.count)")
                 
+                if isInitialApply && data.count > 0 {
+                    signpost(NRState.shared, "LAUNCH", .event, "SmoothList: Applying snapshot")
+                }
                 dataSource.apply(snapshot, animatingDifferences: shouldAnimate) {
                     if (isInitialApply) { // Scroll to initial position
                         // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
+                        if data.count > 0 {
+                            signpost(NRState.shared, "LAUNCH", .end, "SmoothList: snapshot applied")
+                        }
                         if (coordinator.lvm.initialIndex > 4) {
                             L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
                             coordinator.lvm.isAtTop = false

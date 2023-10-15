@@ -88,6 +88,7 @@ class NRState: ObservableObject {
     @MainActor private init() {
         self.wot = WebOfTrust.shared
         self.nsecBunker = NSecBunkerManager.shared
+        signpost(self, "LAUNCH", .begin, "Initializing Nostur App State")
         let activeAccountPublicKey = activeAccountPublicKey
         loadAccounts() { accounts in
             guard !activeAccountPublicKey.isEmpty,
