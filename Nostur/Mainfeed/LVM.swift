@@ -124,6 +124,7 @@ class LVM: NSObject, ObservableObject {
             guard oldValue != wotEnabled else { return }
             lastAppearedIdSubject.send(nil)
             lvmCounter.count = 0
+            L.og.debug("COUNTER: \(self.lvmCounter.count) - wotEnabled change")
             instantFinished = false
             posts = [:]
             bg().perform {
@@ -142,6 +143,7 @@ class LVM: NSObject, ObservableObject {
         loadHashtags()
         lastAppearedIdSubject.send(nil)
         lvmCounter.count = 0
+        L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.reload()")
         instantFinished = false
         posts = [:]
         bg().perform {
@@ -522,7 +524,9 @@ class LVM: NSObject, ObservableObject {
         guard !older else { return }
         DispatchQueue.main.async {
             if !self.isAtTop || !SettingsStore.shared.autoScroll {
+                let before = self.lvmCounter.count
                 self.lvmCounter.count += addedCount
+                L.og.debug("COUNTER: \(before) -> \(self.lvmCounter.count) - putNewThreadsOnScreen")
             }
         }
         
@@ -1181,6 +1185,7 @@ extension LVM {
                 self.pubkeys = newPubkeyInfo.pubkeys
                 lastAppearedIdSubject.send(nil)
                 lvmCounter.count = 0
+                L.og.debug("COUNTER: 0 - listPubkeysChanged")
                 instantFinished = false
                 posts = [:]
                 bg().perform {
@@ -1215,6 +1220,7 @@ extension LVM {
                 if newRelaysInfo.wotEnabled == self.wotEnabled {
                     // if WoT did not change, manual clear:
                     lvmCounter.count = 0
+                    L.og.debug("COUNTER: 0 - listRelaysChanged")
                     instantFinished = false
                     posts = [:]
                     bg().perform {
@@ -1339,9 +1345,9 @@ extension LVM {
                 // only way to go up is when new posts are added.
                 if self.itemsAfterLastAppeared < self.lvmCounter.count {
 //                if self.itemsAfterLastAppeared != 0 && self.itemsAfterLastAppeared < self.lvmCounter.count {
-//                    print("COUNTER A: \(self.lvmCounter.count)")
+                    let before = self.lvmCounter.count
                     self.lvmCounter.count = self.itemsAfterLastAppeared
-//                    print("COUNTER AA: \(self.lvmCounter.count)")
+                    L.og.debug("COUNTER: \(before) -> \(self.lvmCounter.count) - lastAppearedIdSubject.sink")
                     self.lastReadId = eventId
                 }
                 else if self.lastReadId == nil {
