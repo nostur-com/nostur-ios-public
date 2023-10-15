@@ -73,6 +73,7 @@ class InstantFeed {
     private var kind3listener:AnyCancellable?
 
     private func fetchContactListPubkeys(pubkey: Pubkey) {
+        signpost(self, "InstantFeed", .event, "Fetching contact list pubkeys")
         Task.detached {
             bg().perform { [weak self] in
                 guard let self = self else { return }
@@ -125,6 +126,7 @@ class InstantFeed {
     }
     
     private func fetchPostsFromRelays() {
+        signpost(self, "InstantFeed", .event, "Fetching posts from relays")
         bg().perform { [weak self] in
             guard let self = self else { return }
             guard let pubkeys = self.pubkeys else { return }
