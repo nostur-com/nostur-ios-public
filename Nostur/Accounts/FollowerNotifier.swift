@@ -16,20 +16,18 @@ import Combine
 class FollowerNotifier {
     
     static let shared = FollowerNotifier()
-    
-    private var ctx = DataProvider.shared().bg
     private var currentFollowerPubkeys = Set<String>()
     private var newFollowerPubkeys = Set<String>()
     private var subscriptions = Set<AnyCancellable>()
     private let generateNewFollowersNotification = PassthroughSubject<String, Never>()
     private var checkForNewTimer:Timer?
     
-    init() {
-#if DEBUG
-        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-            return
-        }
-#endif
+    private init() {
+        #if DEBUG
+                if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+                    return
+                }
+        #endif
         listenForNewContactListEvents()
         listenForAccountChanged()
         generateNewFollowersNotification
@@ -43,62 +41,74 @@ class FollowerNotifier {
             .store(in: &subscriptions)
         
         checkForNewTimer = Timer.scheduledTimer(withTimeInterval: 3600*4, repeats: true, block: { _ in
-            self.checkForUpdatedContactList()
+            
+            guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
+            let pubkey = NRState.shared.activeAccountPublicKey
+            self.checkForUpdatedContactList(pubkey: pubkey)
         })
         DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
-            self.checkForUpdatedContactList()
+            guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
+            let pubkey = NRState.shared.activeAccountPublicKey
+            self.checkForUpdatedContactList(pubkey: pubkey)
         }
     }
     
-    func checkForUpdatedContactList() {
+    public func checkForUpdatedContactList(pubkey: String) {
         guard !SettingsStore.shared.lowDataMode else { return }
-        guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
         L.og.info("Checking for new followers")
         
+        bg().perform { [weak self] in
+            guard let self = self else { return }
+            self.loadCurrentFollowers(pubkey: pubkey)
+            self.newFollowerPubkeys.removeAll()
+            
+            let since = if let mostRecent = PersistentNotification.fetchPersistentNotification(byPubkey: pubkey, type: .newFollowers, context: bg()) {
+                NTimestamp(date: mostRecent.createdAt)
+            }
+            else {
+                NTimestamp(timestamp: Int(Date.now.timeIntervalSince1970 - (3600 * 3*24)))
+            }
+            
+            req(RM.getFollowers(pubkey: NRState.shared.activeAccountPublicKey, since: since))
+        }
+    }
+    
+    private func loadCurrentFollowers(pubkey:String) {
+        shouldBeBg()
         let fr = Event.fetchRequest()
         fr.sortDescriptors = []
         // Not parsing and filtering tags, but searching for string. Ugly hack but works fast
-        fr.predicate = NSPredicate(format: "kind == 3 AND tagsSerialized CONTAINS %@", serializedP(NRState.shared.activeAccountPublicKey))
-        
-        ctx.perform { [weak self] in
-            guard let self = self else { return }
-            if let currentFollowerPubkeys = try? self.ctx.fetch(fr) {
-                self.currentFollowerPubkeys = Set(currentFollowerPubkeys.map { $0.pubkey })
-                self.newFollowerPubkeys.removeAll()
-                if let mostRecent = PersistentNotification.fetchPersistentNotification(context: self.ctx) {
-                    let since = NTimestamp(date: mostRecent.createdAt)
-                    req(RM.getFollowers(pubkey: NRState.shared.activeAccountPublicKey, since: since))
-                }
-                else {
-                    let since = Int(Date.now.timeIntervalSince1970 - (3600 * 3*24)) // how long ago  ago
-                    req(RM.getFollowers(pubkey: NRState.shared.activeAccountPublicKey, since: NTimestamp(timestamp: since)))
-                }
-            }
+        fr.predicate = NSPredicate(format: "kind == 3 AND tagsSerialized CONTAINS %@", serializedP(pubkey))
+        if let currentFollowerPubkeys = try? bg().fetch(fr) {
+            self.currentFollowerPubkeys = Set(currentFollowerPubkeys.map { $0.pubkey })
         }
     }
     
     func listenForAccountChanged() {
+        
+        receiveNotification(.activeAccountChanged)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let account = notification.object as! Account
+                let pubkey = account.publicKey
+                
+                bg().perform {
+                    self.loadCurrentFollowers(pubkey: pubkey)
+                }
+            }
+            .store(in: &subscriptions)
+        
+        
         receiveNotification(.activeAccountChanged)
             .debounce(for: .seconds(20), scheduler: RunLoop.main)
             .sink { [weak self] notification in
                 guard !SettingsStore.shared.lowDataMode else { return }
                 guard let self = self else { return }
                 let account = notification.object as! Account
-                guard account.privateKey != nil else { return }
                 L.og.info("Checking for new followers after account switch")
                 let pubkey = account.publicKey
                 
-                self.ctx.perform { [weak self] in
-                    guard let self = self else { return }
-                    if let mostRecent = PersistentNotification.fetchPersistentNotification(type: .newFollowers, context: self.ctx) {
-                        let since = NTimestamp(date: mostRecent.createdAt)
-                        req(RM.getFollowers(pubkey: pubkey, since: since))
-                    }
-                    else {
-                        let since = Int(Date.now.timeIntervalSince1970 - (3600 * 3*24)) // how long ago  ago
-                        req(RM.getFollowers(pubkey: pubkey, since: NTimestamp(timestamp: since)))
-                    }
-                }
+                self.checkForUpdatedContactList(pubkey: pubkey)
             }
             .store(in: &subscriptions)
     }
@@ -110,10 +120,8 @@ class FollowerNotifier {
                 let nEvent = notification.object as! NEvent
                 guard nEvent.kind == .contactList else { return }
                 guard nEvent.pTags().contains(NRState.shared.activeAccountPublicKey) else { return }
-//                guard let account = NosturState.shared.account else { return }
                 guard !self.currentFollowerPubkeys.isEmpty else { return }
-//                guard account.privateKey != nil else { return }
-                
+
                 if !self.currentFollowerPubkeys.contains(nEvent.publicKey) {
                     self.newFollowerPubkeys.insert(nEvent.publicKey)
                     self.generateNewFollowersNotification.send(NRState.shared.activeAccountPublicKey)
@@ -123,7 +131,7 @@ class FollowerNotifier {
     }
     
     private func _generateNewFollowersNotification(_ pubkey:String) {
-        ctx.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             guard !self.newFollowerPubkeys.isEmpty else { return }
                         
@@ -140,13 +148,13 @@ class FollowerNotifier {
             let notification = PersistentNotification.create(
                 pubkey: pubkey,
                 followers: Array(self.newFollowerPubkeys),
-                context: self.ctx
+                context: bg()
             )
             NotificationsViewModel.shared.checkNeedsUpdate(notification)
             
-            if let account = account() {
-                account.lastFollowerCreatedAt = Int64(Date.now.timeIntervalSince1970) // HM not needed since we use mostRecent (PNotification)
-            }
+//            if let account = account() {
+//                account.lastFollowerCreatedAt = Int64(Date.now.timeIntervalSince1970) // HM not needed since we use mostRecent (PNotification)
+//            }
             
             L.og.info("New followers (\(self.newFollowerPubkeys.count)) notification, for \(pubkey)")
             L.og.debug("Prefetching kind 0 for first 10 new followers")

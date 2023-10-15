@@ -86,7 +86,7 @@ struct FollowersList: View {
             QueuedFetcher.shared.enqueue(pTags: missing)
             
             if pubkey == NRState.shared.activeAccountPublicKey {
-                FollowerNotifier.shared.checkForUpdatedContactList()
+                FollowerNotifier.shared.checkForUpdatedContactList(pubkey: pubkey)
             }
             else {
                 req(RM.getFollowers(pubkey: pubkey))

@@ -30,10 +30,15 @@ extension PersistentNotification {
 }
 
 extension PersistentNotification : Identifiable {
-    static func fetchPersistentNotification(id:String? = nil, type:PersistentNotificationType? = nil, context:NSManagedObjectContext) -> PersistentNotification? {
+    static func fetchPersistentNotification(byPubkey pubkey:String? = nil, id:String? = nil, type:PersistentNotificationType? = nil, context:NSManagedObjectContext) -> PersistentNotification? {
         let request = NSFetchRequest<PersistentNotification>(entityName: "PersistentNotification")
+        
         if let id {
             request.predicate = NSPredicate(format: "id == %@", id)
+        }
+        else if let pubkey, let type {
+            request.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", pubkey, type.rawValue)
+            request.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
         }
         else {
             request.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
