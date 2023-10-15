@@ -16,12 +16,20 @@ struct LazyNoteMenuButton: View {
             .fontWeight(.bold)
             .foregroundColor(themes.theme.footerButtons)
             .padding(.leading, 15)
-            .padding(.bottom, 11)
+            .padding(.bottom, 14)
+            .padding(.top, 10)
+            .padding(.trailing, 10)
             .contentShape(Rectangle())
-            .onTapGesture {
-                signpost(NRState.shared, "Post Context Menu", .begin, "Tapped")
-                sendNotification(.showNoteMenu, nrPost)
-            }
+//            .background(themes.theme.background)
+            .padding(.top, -10)
+            .padding(.trailing, -10)
+            .highPriorityGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        signpost(NRState.shared, "Post Context Menu", .begin, "Tapped")
+                        sendNotification(.showNoteMenu, nrPost)
+                    }
+            )
 //            .transaction { t in
 //                t.animation = nil
 //            }
