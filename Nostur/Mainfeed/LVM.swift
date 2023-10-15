@@ -438,9 +438,9 @@ class LVM: NSObject, ObservableObject {
                 self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
             }
             else {
-                let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs, onScreenSeen: self.onScreenSeen)
+                let newLeafThreadsIncludingMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs, onScreenSeen: self.onScreenSeen)
                 
-                let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
+                let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsIncludingMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
                 let newDanglers = danglers.filter { !self.danglingIds.contains($0.id) }
                 if !newDanglers.isEmpty && !self.hideReplies {
