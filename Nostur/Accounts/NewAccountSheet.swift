@@ -90,9 +90,6 @@ struct NewAccountSheet: View {
             
             ns.changeAccount(newAccount)
             ns.onBoardingIsShown = false
-            
-            // It's a new account so treat as if we received contact list to enable Follow button
-            FollowingGuardian.shared.didReceiveContactListThisSession = true
         }
         catch {
             L.og.error("🔴🔴 could not ns.setAccount \(error)")
