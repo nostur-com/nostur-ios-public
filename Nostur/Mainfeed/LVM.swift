@@ -1342,7 +1342,7 @@ extension LVM {
         
     func trackLastAppeared() {
         lastAppearedIdSubject
-//            .throttle(for: 0.05, scheduler: RunLoop.main, latest: false)
+            .throttle(for: 0.25, scheduler: RunLoop.main, latest: false)
             .compactMap { $0 }
             .sink { [weak self] eventId in
                 guard let self = self else { return }
