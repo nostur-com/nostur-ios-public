@@ -27,8 +27,10 @@ struct BookmarkButton: View {
             .padding(.trailing, isLast ? 0 : 10)
             .padding(.leading, isFirst ? 0 : 10)
             .padding(.vertical, 5)
+            .padding(.trailing, isLast ? 10: 0)
             .foregroundColor(footerAttributes.bookmarked ? .orange : theme.footerButtons)
             .contentShape(Rectangle())
+            .padding(.trailing, isLast ? -10 : 0)
             .highPriorityGesture(
                 TapGesture()
                     .onEnded { _ in
