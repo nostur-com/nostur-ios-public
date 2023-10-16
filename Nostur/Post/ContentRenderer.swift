@@ -211,7 +211,6 @@ struct ContentRenderer: View { // VIEW things
 //                            .transaction { t in t.animation = nil }
                     }
                 case .linkPreview(let url):
-                    // TODO: do no link preview if restrictAutoDownload...
                     LinkPreviewView(url: url, autoload: shouldAutoLoad, theme: theme)
                         .padding(.vertical, 10)
                         .withoutAnimation()
