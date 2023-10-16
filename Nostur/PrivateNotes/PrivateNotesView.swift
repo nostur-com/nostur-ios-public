@@ -60,6 +60,7 @@ struct PrivateNotesView: View {
                         }
                         Spacer()
                     }
+                    .preference(key: PrivateNotesCountPreferenceKey.self, value: privateNotes.count.description)
                 }
                 else {
                     Text("When you add a private note to a post or profile it will show up here.", comment: "Message shown when private note screen is empty")
