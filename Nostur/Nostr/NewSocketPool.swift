@@ -524,6 +524,7 @@ final class SocketPool: ObservableObject {
             guard socket.value.isConnected else { continue }
             
             if socket.value.getActiveSubscriptions().contains(subscriptionId) {
+                L.lvm.info("Closing subscriptions for .relays - subscriptionId: \(subscriptionId)");
                 let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId))
                 socket.value.client.sendMessage(closeSubscription.message)
             }
