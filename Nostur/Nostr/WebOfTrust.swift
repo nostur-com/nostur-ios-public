@@ -64,7 +64,6 @@ class WebOfTrust: ObservableObject {
     }
 
     public func updateViewData() {
-        guard let pubkey = self.pubkey else { return }
         let allowedKeysCount = switch SettingsStore.shared.webOfTrustLevel {
             case SettingsStore.WebOfTrustLevel.strict.rawValue:
                 self.followingPubkeys.count
@@ -134,8 +133,6 @@ class WebOfTrust: ObservableObject {
         let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
         let followingPubkeys = account.getFollowingPublicKeys(includeBlocked: true)
         
-        let publicKey = account.publicKey
-        self.pubkey = publicKey
         bg().perform {
             self.followingPubkeys = followingPubkeys
             guard wotFollowingPubkeys.count > 10 else {
@@ -199,7 +196,7 @@ class WebOfTrust: ObservableObject {
     }
     
     private func regenerateWoTWithFollowsOf(_ otherPubkey:String) {
-        guard let pubkey = self.pubkey else { return }
+        guard mainAccountWoTpubkey != "" else { return }
         var followsOfPubkey = Set<String>()
         bg().perform { [weak self] in
             guard let self = self else { return }
@@ -211,13 +208,14 @@ class WebOfTrust: ObservableObject {
             }
             self.followingFollowingPubkeys = self.followingFollowingPubkeys.union(followsOfPubkey)
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
-            self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: pubkey)
+            self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
         }
     }
     
     public var webOfTrustLevel:String = UserDefaults.standard.string(forKey: SettingsStore.Keys.webOfTrustLevel) ?? SettingsStore.WebOfTrustLevel.normal.rawValue // Faster then querying UserDefaults so cache here
     
     public func isAllowed(_ pubkey:String) -> Bool {
+        // TODO: Accessing UserDefaults seems slow (mainAccountWoTpubkey)
         guard mainAccountWoTpubkey != "" else { return true }
         if webOfTrustLevel != SettingsStore.WebOfTrustLevel.strict.rawValue && allowedKeysCount < ENABLE_THRESHOLD { return true }
         
@@ -231,14 +229,12 @@ class WebOfTrust: ObservableObject {
         return followingFollowingPubkeys.contains(pubkey)
     }
     
-    private var pubkey:String?
-    
     // This is for "normal" mode (follows + follows of follows)
     public func loadNormal(wotFollowingPubkeys:Set<String>, force:Bool = false) { // force = true to force fetching (update)
         self.loadFollowingFollowing(wotFollowingPubkeys:wotFollowingPubkeys, force: force)
-        guard let pubkey = self.pubkey else { return }
-        if let lastUpdated = lastUpdatedDate(pubkey) {
-            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(pubkey).txt --> \(lastUpdated.description)")
+        guard mainAccountWoTpubkey != "" else { return }
+        if let lastUpdated = lastUpdatedDate(mainAccountWoTpubkey) {
+            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.mainAccountWoTpubkey).txt --> \(lastUpdated.description)")
             DispatchQueue.main.async {
                 self.lastUpdated = lastUpdated
             }
@@ -247,12 +243,12 @@ class WebOfTrust: ObservableObject {
     
     // force = true to force fetching (update) - else will only use what is already on disk
     private func loadFollowingFollowing(wotFollowingPubkeys:Set<String>, force:Bool = false) {
-        guard let pubkey = self.pubkey else { return }
+        guard mainAccountWoTpubkey != "" else { return }
         // Load from disk
-        self.followingFollowingPubkeys = self.loadData(pubkey)
+        self.followingFollowingPubkeys = self.loadData(mainAccountWoTpubkey)
 
         var pubkeys = wotFollowingPubkeys
-        pubkeys.remove(pubkey)
+        pubkeys.remove(mainAccountWoTpubkey)
         
         guard self.followingFollowingPubkeys.count < ENABLE_THRESHOLD || force == true else {
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already have loaded enough from file")
@@ -286,7 +282,7 @@ class WebOfTrust: ObservableObject {
     }
     
     private func generateWoT() {
-        guard let pubkey = self.pubkey else { return }
+        guard mainAccountWoTpubkey != "" else { return }
         var followFollows = Set<String>()
         bg().perform { [weak self] in
             guard let self = self else { return }
@@ -299,7 +295,7 @@ class WebOfTrust: ObservableObject {
                 }
             }
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
-            self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: pubkey)
+            self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
         }
     }
     
@@ -349,8 +345,8 @@ class WebOfTrust: ObservableObject {
     }
     
     public func loadLastUpdatedDate() {
-        guard let pubkey = self.pubkey else { return }
-        if let date = self.lastUpdatedDate(pubkey) {
+        guard mainAccountWoTpubkey != "" else { return }
+        if let date = self.lastUpdatedDate(mainAccountWoTpubkey) {
             DispatchQueue.main.async {
                 self.lastUpdated = date
             }
