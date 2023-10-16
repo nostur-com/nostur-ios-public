@@ -15,6 +15,8 @@ struct BookmarksAndPrivateNotes: View {
     @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Bookmarks"
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var bookmarksCount:String?
+    @State private var privateNotesCount:String?
     
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -22,11 +24,11 @@ struct BookmarksAndPrivateNotes: View {
                 HStack {
                     TabButton(action: {
                         selectedSubTab = "Bookmarks"
-                    }, title: String(localized: "Bookmarks", comment: "Tab to switch to bookmarks"), selected: selectedSubTab == "Bookmarks")
+                    }, title: String(localized: "Bookmarks", comment: "Tab to switch to bookmarks"), secondaryText: bookmarksCount, selected: selectedSubTab == "Bookmarks")
                     
                     TabButton(action: {
                         selectedSubTab = "Private Notes"
-                    }, title: String(localized: "Private Notes", comment: "Tab to switch to private notes"), selected: selectedSubTab == "Private Notes")
+                    }, title: String(localized: "Private Notes", comment: "Tab to switch to private notes"), secondaryText: privateNotesCount, selected: selectedSubTab == "Private Notes")
                 }
                 switch selectedSubTab {
                     case "Bookmarks":
@@ -51,6 +53,12 @@ struct BookmarksAndPrivateNotes: View {
             .onReceive(receiveNotification(.clearNavigation)) { notification in
                 navPath.removeLast(navPath.count)
             }
+            .onPreferenceChange(BookmarksCountPreferenceKey.self, perform: { value in
+                bookmarksCount = value == "0" ? nil : value
+            })
+            .onPreferenceChange(PrivateNotesCountPreferenceKey.self, perform: { value in
+                privateNotesCount = value == "0" ? nil : value
+            })
         }
     }
 }

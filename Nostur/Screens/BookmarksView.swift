@@ -60,6 +60,7 @@ struct BookmarksView: View {
                         Spacer()
                     }
                     .background(themes.theme.listBackground)
+                    .preference(key: BookmarksCountPreferenceKey.self, value: vBookmarks.count.description)
                 }
                 else {
                     Text("When you bookmark a post it will show up here.")
@@ -143,3 +144,20 @@ struct BookmarksView: View {
         }
     }
 }
+
+
+struct BookmarksCountPreferenceKey: PreferenceKey {
+    static var defaultValue: String = ""
+
+    static func reduce(value: inout String, nextValue: () -> String) {
+        value = nextValue()
+    }
+}
+struct PrivateNotesCountPreferenceKey: PreferenceKey {
+    static var defaultValue: String = ""
+
+    static func reduce(value: inout String, nextValue: () -> String) {
+        value = nextValue()
+    }
+}
+
