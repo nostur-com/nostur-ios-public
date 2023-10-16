@@ -186,7 +186,7 @@ class NotificationsViewModel: ObservableObject {
         let calendar = Calendar.current
         let ago = calendar.date(byAdding: .minute, value: -1, to: Date())!
         let sinceNTimestamp = NTimestamp(date: ago)
-        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey],
+        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS),
                            subscriptionId: "Notifications", since: sinceNTimestamp),
             activeSubscriptionId: "Notifications")
     }
@@ -221,7 +221,7 @@ class NotificationsViewModel: ObservableObject {
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             guard NRState.shared.activeAccountPublicKey != "" else { return }
-            bg().perform {
+            bg().perform { [weak self] in
                 self?.checkForEverything()
             }
         }
@@ -237,9 +237,7 @@ class NotificationsViewModel: ObservableObject {
         
         OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
         
-        guard needsUpdate else {
-            return
-        }
+        guard needsUpdate else { return }
         guard account() != nil else { return }
                 
         guard !Importer.shared.isImporting else {
@@ -251,24 +249,38 @@ class NotificationsViewModel: ObservableObject {
 
         self.relayCheckNewestNotifications() // or wait 3 seconds?
         
-        bg().perform { self.checkForUnreadMentions() }
-        bg().perform {
-            guard !self.muteReposts else { return }
-            self.checkForUnreadReposts()
-        }
-        bg().perform {
-            guard !self.muteFollows else { return }
-            self.checkForUnreadNewFollowers()
-        }
-        bg().perform {
-            guard !self.muteReactions else { return }
-            self.checkForUnreadReactions()
-        }
-        bg().perform {
-            guard !self.muteZaps else { return }
-            self.checkForUnreadZaps()
-        }
-        bg().perform { self.checkForUnreadFailedZaps() }
+//        if bg().hasChanges { // No idea why after needsUpdate = true, unread badge doesn't update, maybe because .checkNeedsUpdate() is run before bg save, it runs in bg, but different block, so save is needed? so lets try saving here to be sure.
+//            do {
+//                try bg().save()
+//            }
+//            catch {
+//                L.og.error("🔴🔴 Could not save bgContext \(error)")
+//            }
+//        }
+        
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            bg().perform { self.checkForUnreadMentions() }
+            bg().perform {
+                guard !self.muteReposts else { return }
+                self.checkForUnreadReposts()
+            }
+            bg().perform {
+                guard !self.muteFollows else { return }
+                self.checkForUnreadNewFollowers()
+            }
+            bg().perform {
+                guard !self.muteReactions else { return }
+                self.checkForUnreadReactions()
+            }
+            bg().perform {
+                guard !self.muteZaps else { return }
+                self.checkForUnreadZaps()
+            }
+            bg().perform { self.checkForUnreadFailedZaps() }
+//        }
+        
+        NRState.shared.loggedInAccount?.lastNotificationReceivedAt = Date.now
+        L.og.info("🟢🟢 .checkForEverything(): account.lastNotificationReceivedAt set to .now")
     }
     
     

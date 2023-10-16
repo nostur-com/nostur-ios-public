@@ -196,10 +196,10 @@ class Importer {
                     }
                     
                     
-                    if message.subscriptionId == "Notifications" && event.pTags().contains(NRState.shared.activeAccountPublicKey) && NotificationsViewModel.UNREAD_KINDS.contains(event.kind.id) {
-                        NRState.shared.loggedInAccount?.lastNotificationReceivedAt = Date.now
-                        L.og.info("🟢🟢 New \"Notification\", account.lastNotificationReceivedAt set to .now")
-                    }
+//                    if message.subscriptionId == "Notifications" && event.pTags().contains(NRState.shared.activeAccountPublicKey) && NotificationsViewModel.UNREAD_KINDS.contains(event.kind.id) {
+//                        NRState.shared.loggedInAccount?.lastNotificationReceivedAt = Date.now
+//                        L.og.info("🟢🟢 New \"Notification\", account.lastNotificationReceivedAt set to .now")
+//                    }
                     
                     
                     // Skip if we already have a newer kind 3
@@ -226,7 +226,11 @@ class Importer {
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                             if !Event.eventExists(id: noteInNote.id, context: context) { // TODO: check existingIds instead of .eventExists
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays)
-                                kind6firstQuote?.repostsCount = 1
+                                
+                                if let kind6firstQuote = kind6firstQuote {
+                                    kind6firstQuote.repostsCount = 1
+                                    NotificationsViewModel.shared.checkNeedsUpdate(kind6firstQuote)
+                                }
                             }
                             else {
                                 Event.updateRelays(noteInNote.id, relays: message.relays)
@@ -439,7 +443,11 @@ class Importer {
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                             if !Event.eventExists(id: noteInNote.id, context: context) { // TODO: check existingIds instead of .eventExists
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays)
-                                kind6firstQuote?.repostsCount = 1
+                                
+                                if let kind6firstQuote = kind6firstQuote {
+                                    kind6firstQuote.repostsCount = 1
+                                    NotificationsViewModel.shared.checkNeedsUpdate(kind6firstQuote)
+                                }
                             }
                             else {
                                 Event.updateRelays(noteInNote.id, relays: message.relays)
@@ -475,7 +483,7 @@ class Importer {
                     
                     let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote)
                     saved = saved + 1
-                    
+                    NotificationsViewModel.shared.checkNeedsUpdate(savedEvent)
                     
                     if let subscriptionId = message.subscriptionId {
                         importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
