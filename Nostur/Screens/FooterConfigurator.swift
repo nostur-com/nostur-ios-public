@@ -53,7 +53,7 @@ struct FooterConfigurator: View {
             })
             
             Button("Load default", action: {
-                footerButtons = "💬🔄+🔖"
+                footerButtons = IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
             })
             
             Button("Load preset 1", action: {
