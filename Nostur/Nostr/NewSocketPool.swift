@@ -571,7 +571,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     
-    public var isConnecting = false // mcq
+    public var isConnecting = false // main
     
     public var _activeSubscriptions:[String] = []
     public func getActiveSubscriptions() -> [String] {
@@ -613,17 +613,18 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func connect(_ forceConnectionAttempt:Bool = false) {
+        guard !isConnecting else { return }
         mcq.async(flags: .barrier) {
             self._activeSubscriptions = []
-            guard !self.isConnecting else { return }
             guard self._exponentialReconnectBackOff > 512 || self._exponentialReconnectBackOff == 1 || forceConnectionAttempt || self._skipped == self._exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
                 self._skipped = self._skipped + 1
                 L.sockets.info("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self._exponentialReconnectBackOff)) skipped: \(self._skipped)")
                 return
             }
             self._skipped = 0
-            self.isConnecting = true
+            
             DispatchQueue.main.async {
+                self.isConnecting = true
                 self.client.connect()
             }
             
@@ -638,11 +639,11 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     func disconnect() {
         mcq.async(flags: .barrier) {
-            self.isConnecting = false
             self._activeSubscriptions = []
             self._lastMessageReceivedAt = nil
         }
         DispatchQueue.main.async {
+            self.isConnecting = false
             self.isConnected = false
             self.client.disconnect()
         }
@@ -650,11 +651,11 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     func didDisconnect() {
         mcq.async(flags: .barrier) {
-            self.isConnecting = false
             self._activeSubscriptions = []
             self._lastMessageReceivedAt = nil
         }
         DispatchQueue.main.async {
+            self.isConnecting = false
             self.isConnected = false
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
@@ -663,7 +664,6 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     func didDisconnectWithError(_ error: Error) {
         mcq.async(flags: .barrier) {
-            self.isConnecting = false
             self._activeSubscriptions = []
             self._lastMessageReceivedAt = nil
             if self._exponentialReconnectBackOff >= 512 {
@@ -675,6 +675,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         }
         let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
         DispatchQueue.main.async {
+            self.isConnecting = false
             self.isConnected = false
             sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
         }
@@ -694,13 +695,13 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         mcq.async(flags: .barrier) {
-            self.isConnecting = false
             self._activeSubscriptions = []
             self._exponentialReconnectBackOff = 0
             self._skipped = 0
             self._lastMessageReceivedAt = .now
         }
         DispatchQueue.main.async {
+            self.isConnecting = false
             self.isConnected = true
             sendNotification(.socketConnected, "Connected: \(self.url)")
         }
@@ -712,13 +713,13 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         mcq.async(flags: .barrier) {
-            self.isConnecting = false
             self._activeSubscriptions = []
             self._exponentialReconnectBackOff = 0
             self._skipped = 0
             self._lastMessageReceivedAt = .now
         }
         DispatchQueue.main.async {
+            self.isConnecting = false
             self.isConnected = false
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
