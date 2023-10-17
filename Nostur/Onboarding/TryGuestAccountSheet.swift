@@ -17,22 +17,27 @@ struct TryGuestAccountSheet: View {
     var body: some View {
 //        let _ = Self._printChanges()
         VStack(alignment: .center) {
-            Text("Try Nostur as guest", comment:"Heading for message")
-                .multilineTextAlignment(.center)
-                .font(.largeTitle)
-            
-            Text("The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself", comment: "Message during onboarding about the Guest Account").multilineTextAlignment(.center)
-                .padding()
-            
-            Button {
-                tryGuestAccount()
-            } label: {
-                Text("Let's go!", comment: "Button to start using Nostur, during onboarding")
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity)
+            if letsGo {
+                ProgressView()
             }
-            .controlSize(.large)
-            .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+            else {
+                Text("Try Nostur as guest", comment:"Heading for message")
+                    .multilineTextAlignment(.center)
+                    .font(.largeTitle)
+                
+                Text("The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself", comment: "Message during onboarding about the Guest Account").multilineTextAlignment(.center)
+                    .padding()
+                
+                Button {
+                    tryGuestAccount()
+                } label: {
+                    Text("Let's go!", comment: "Button to start using Nostur, during onboarding")
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                }
+                .controlSize(.large)
+                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+            }
         }
         .frame(maxWidth: 300)
         .onAppear {
@@ -62,18 +67,20 @@ struct TryGuestAccountSheet: View {
                 viewContext.delete(guestAccount)
                 NewOnboardingTracker.shared.abort()
             }
-            else {
-                NRState.shared.changeAccount(guestAccount)
-            }
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(letsGo)
     }
     
     func tryGuestAccount() {
         letsGo = true
         NRState.shared.onBoardingIsShown = false
-        dismiss()
+        let guestAccount = try? Account.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: viewContext)
+        
+        if let guestAccount {
+            NRState.shared.changeAccount(guestAccount)
+        }
     }
 }
 
