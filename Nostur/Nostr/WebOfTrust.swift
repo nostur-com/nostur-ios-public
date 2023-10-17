@@ -76,8 +76,6 @@ class WebOfTrust: ObservableObject {
         }
         DispatchQueue.main.async {
             self.allowedKeysCount = self.mainAccountWoTpubkey == "" ? 0 : allowedKeysCount
-            sendNotification(.WoTReady)
-            self.updatingWoT = false
         }
     }
     
@@ -95,7 +93,8 @@ class WebOfTrust: ObservableObject {
     }
     
     // For first time guessing the main account, user can change actual main account in Settings
-    private func guessMainAccount() {
+    public func guessMainAccount() {
+        guard mainAccountWoTpubkey == "" else { return }
         // in prefered order:
         // 1. full account with most follows, and >50 follows
         // 2. read-only account currently logged and >50 follows
@@ -147,6 +146,8 @@ class WebOfTrust: ObservableObject {
             switch SettingsStore.shared.webOfTrustLevel {
                 case SettingsStore.WebOfTrustLevel.off.rawValue:
                     L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+                    sendNotification(.WoTReady)
+                    self.updatingWoT = false
                 case SettingsStore.WebOfTrustLevel.normal.rawValue:
                     L.og.info("🕸️🕸️ WebOfTrust: Normal")
                     bg().perform { [weak self] in
@@ -154,10 +155,27 @@ class WebOfTrust: ObservableObject {
                     }
                 case SettingsStore.WebOfTrustLevel.strict.rawValue:
                     L.og.info("🕸️🕸️ WebOfTrust: Strict")
+                    self.addOwnFollowsIfNeeded()
+                    sendNotification(.WoTReady)
+                    self.updatingWoT = false
                 default:
                     L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+                    sendNotification(.WoTReady)
+                    self.updatingWoT = false
             }
         }
+    }
+    
+    // If currently logged in account is not main WoT account
+    // Also add our of follows to the main WoT.
+    // BUT only after main WoT is loaded! so follows + follows-of-follows, and then add own follows
+    // SO NOT: follows + add own follows, and then follows-of-follows
+    // Order matters.
+    private func addOwnFollowsIfNeeded() {
+        guard let account = Nostur.account() else { return }
+        guard mainAccountWoTpubkey != account.publicKey else { return }
+        let ownFollows = Set(account.follows_.map { $0.pubkey })
+        self.followingPubkeys = self.followingPubkeys.union(ownFollows)
     }
     
     private func updateWoTonNewFollowing() {
@@ -231,8 +249,11 @@ class WebOfTrust: ObservableObject {
     
     // This is for "normal" mode (follows + follows of follows)
     public func loadNormal(wotFollowingPubkeys:Set<String>, force:Bool = false) { // force = true to force fetching (update)
+        guard mainAccountWoTpubkey != "" else {
+            sendNotification(.WoTReady)
+            return
+        }
         self.loadFollowingFollowing(wotFollowingPubkeys:wotFollowingPubkeys, force: force)
-        guard mainAccountWoTpubkey != "" else { return }
         if let lastUpdated = lastUpdatedDate(mainAccountWoTpubkey) {
             L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.mainAccountWoTpubkey).txt --> \(lastUpdated.description)")
             DispatchQueue.main.async {
@@ -243,7 +264,10 @@ class WebOfTrust: ObservableObject {
     
     // force = true to force fetching (update) - else will only use what is already on disk
     private func loadFollowingFollowing(wotFollowingPubkeys:Set<String>, force:Bool = false) {
-        guard mainAccountWoTpubkey != "" else { return }
+        guard mainAccountWoTpubkey != "" else {
+            sendNotification(.WoTReady)
+            return
+        }
         // Load from disk
         self.followingFollowingPubkeys = self.loadData(mainAccountWoTpubkey)
 
@@ -251,11 +275,15 @@ class WebOfTrust: ObservableObject {
         pubkeys.remove(mainAccountWoTpubkey)
         
         guard self.followingFollowingPubkeys.count < ENABLE_THRESHOLD || force == true else {
+            self.addOwnFollowsIfNeeded()
+            sendNotification(.WoTReady)
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already have loaded enough from file")
             return
         }
         
         guard !didWoT || force == true else {
+            self.addOwnFollowsIfNeeded()
+            sendNotification(.WoTReady)
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already didWot")
             return
         }
@@ -263,12 +291,14 @@ class WebOfTrust: ObservableObject {
         
         // Fetch kind 3s
         let task = ReqTask(
+            debounceTime: 5.0, // in test, default 0.1 stops at 2000 contacts, with 5.0 its 10000+ contacts
             prefix: "WoTFol-",
             reqCommand: { taskId in
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Fetching contact lists for \(pubkeys.count) contacts")
                 req(RM.getAuthorContactsLists(pubkeys: Array(pubkeys), subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] taskId, _, _ in
+                self?.updatingWoT = true
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Received contact list(s)")
                 self?.generateWoT()
             },
@@ -282,20 +312,30 @@ class WebOfTrust: ObservableObject {
     }
     
     private func generateWoT() {
-        guard mainAccountWoTpubkey != "" else { return }
-        var followFollows = Set<String>()
+        guard mainAccountWoTpubkey != "" else {
+            sendNotification(.WoTReady)
+            updatingWoT = false
+            return
+        }
         bg().perform { [weak self] in
             guard let self = self else { return }
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "kind == 3 AND pubkey IN %@", followingPubkeys)
+            var followFollows = Set<String>()
             if let contactLists = try? DataProvider.shared().bg.fetch(fr) {
                 for list in contactLists {
                     let pubkeys = Set(list.fastPs.map { $0.1 })
                     followFollows = followFollows.union(pubkeys)
                 }
             }
+            self.followingFollowingPubkeys = followFollows
+            self.addOwnFollowsIfNeeded()
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
             self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
+            DispatchQueue.main.async {
+                sendNotification(.WoTReady)
+                self.updatingWoT = false
+            }
         }
     }
     

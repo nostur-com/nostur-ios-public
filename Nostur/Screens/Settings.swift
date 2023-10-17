@@ -15,6 +15,7 @@ struct Settings: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @AppStorage("devToggle") private var devToggle: Bool = false
     @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
     @Environment(\.managedObjectContext) var viewContext
 
     @State private var contactsCount:Int? = nil
@@ -134,12 +135,15 @@ struct Settings: View {
                                 bg().perform {
                                     wot.loadLastUpdatedDate()
                                 }
+                                if mainAccountWoTpubkey == "" {
+                                    wot.guessMainAccount()
+                                }
                             }
                         Spacer()
                         if wot.updatingWoT {
                             ProgressView()
                         }
-                        else {
+                        else if mainAccountWoTpubkey != "" {
                             Button(String(localized:"Update", comment:"Button to update WoT")) {
                                 guard !wot.updatingWoT else { return }
                                 wot.updatingWoT = true
