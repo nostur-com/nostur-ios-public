@@ -164,7 +164,9 @@ struct DMs: View {
                     NewDM(showingNewDM: $showingNewDM, tab: $tab)
                         .onAppear {
                             if let preloadNewDMInfo {
-                                sendNotification(.preloadNewDMInfo, preloadNewDMInfo)
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                    sendNotification(.preloadNewDMInfo, preloadNewDMInfo)
+                                }
                             }
                         }
                 }
