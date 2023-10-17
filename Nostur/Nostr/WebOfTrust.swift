@@ -37,7 +37,15 @@ class WebOfTrust: ObservableObject {
         allowedKeysCount >= ENABLE_THRESHOLD
     }
     
-    @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
+    // UserDefaults can be slow and its called every .isAllowed() so cache the value in .mainAccountWoTpubkey
+    @AppStorage("main_wot_account_pubkey") private var _mainAccountWoTpubkey = "" {
+        didSet {
+            mainAccountWoTpubkey = _mainAccountWoTpubkey
+        }
+    }
+    
+    // cached
+    private var mainAccountWoTpubkey:String = ""
     
     // For views
     @Published public var lastUpdated:Date? = nil
@@ -85,7 +93,8 @@ class WebOfTrust: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
     
     private init() {
-        if mainAccountWoTpubkey == "" {
+        mainAccountWoTpubkey = UserDefaults.standard.string(forKey: SettingsStore.Keys.mainWoTaccountPubkey) ?? ""
+        if _mainAccountWoTpubkey == "" {
             DispatchQueue.main.async {
                 self.guessMainAccount()
             }
@@ -94,7 +103,7 @@ class WebOfTrust: ObservableObject {
     
     // For first time guessing the main account, user can change actual main account in Settings
     public func guessMainAccount() {
-        guard mainAccountWoTpubkey == "" else { return }
+        guard _mainAccountWoTpubkey == "" else { return }
         // in prefered order:
         // 1. full account with most follows, and >50 follows
         // 2. read-only account currently logged and >50 follows
@@ -112,14 +121,14 @@ class WebOfTrust: ObservableObject {
             .sorted(by: { $0.follows_.count > $1.follows_.count }).first // sorted to get the one with the most follows
         {
             L.og.info("🕸️🕸️ WebOfTrust: Main WoT full account guessed: \(fullAccount.publicKey)")
-            mainAccountWoTpubkey = fullAccount.publicKey
+            _mainAccountWoTpubkey = fullAccount.publicKey
         }
         // the currently logged in read only account, if it has 50+ follows but not if its the guest account
         else if let readOnlyAccount = NRState.shared.accounts
             .first(where: { $0.publicKey == NRState.shared.activeAccountPublicKey && $0.follows_.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY })
         {
             L.og.info("🕸️🕸️ WebOfTrust: Main WoT read account guessed: \(readOnlyAccount.publicKey)")
-            mainAccountWoTpubkey = readOnlyAccount.publicKey
+            _mainAccountWoTpubkey = readOnlyAccount.publicKey
         }
     }
     
