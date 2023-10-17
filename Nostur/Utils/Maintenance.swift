@@ -606,6 +606,15 @@ struct Maintenance {
         
         var dmStates:[ConversationKeypair: (AccountPubkey, ContactPubkey, IsAccepted, MarkedReadAt)] = [:]
         
+        let existingDMStates = (try? context.fetch(DMState.fetchRequest())) ?? []
+        var existingDMkeys:Set<String> = []
+        for state in existingDMStates {
+            guard let accountPubkey = state.accountPubkey, let contactPubkey = state.contactPubkey else { continue }
+            let key = accountPubkey + "-"  + contactPubkey
+            dmStates[key] = (accountPubkey, contactPubkey, state.accepted, state.markedReadAt)
+            existingDMkeys.insert(key)
+        }
+        
         for account in allAccounts {
             let sent = Event.fetchRequest()
             sent.predicate = NSPredicate(format: "kind == 4 AND pubkey == %@", account.publicKey)
@@ -680,12 +689,13 @@ struct Maintenance {
             }
         }
         
-        for dmState in dmStates {
+        for (key, value) in dmStates {
+            if existingDMkeys.contains(key) { continue }
             let record = DMState(context: context)
-            record.accountPubkey = dmState.value.0
-            record.contactPubkey = dmState.value.1
-            record.accepted = dmState.value.2
-            record.markedReadAt = dmState.value.3
+            record.accountPubkey = value.0
+            record.contactPubkey = value.1
+            record.accepted = value.2
+            record.markedReadAt = value.3
         }
 
                 
@@ -812,7 +822,7 @@ struct Maintenance {
         // Run once to fix false positive results incorrectly cached
         case fixImposterFalsePositives = "fixImposterFalsePositives"
         
-        case migrateDMState = "runMigrateDMState"
+        case migrateDMState = "runMigrateDMState20231017"
         
         // Need to run it again... false positives still
         // And again - found another bug during new account onboarding
