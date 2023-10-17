@@ -35,9 +35,11 @@ struct DMs: View {
                         VStack(spacing:0) {
                             HStack {
                                 Text("Accepted", comment: "Tab title for accepted DMs (Direct Messages)").lineLimit(1)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.top, 8)
-                                    .padding(.bottom, 5)
+                                    .font(.subheadline)
+                                    .foregroundColor(themes.theme.accent)
+//                                    .frame(maxWidth: .infinity)
+//                                    .padding(.top, 8)
+//                                    .padding(.bottom, 5)
                                 if vm.unread > 0 {
                                     Menu {
                                         Button {
@@ -55,11 +57,15 @@ struct DMs: View {
                                     }
                                 }
                             }
-                            Rectangle()
+                            .padding(.horizontal, 5)
+                            .frame(height: 41)
+                            .fixedSize()
+                            themes.theme.accent
                                 .frame(height: 3)
-                                .background(themes.theme.accent)
                                 .opacity(tab == "Accepted" ? 1 : 0.15)
                         }
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
                     }
                     
                     Button {
@@ -70,9 +76,11 @@ struct DMs: View {
                         VStack(spacing:0) {
                             HStack {
                                 Text("Requests", comment: "Tab title for DM (Direct Message) requests").lineLimit(1)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.top, 8)
-                                    .padding(.bottom, 5)
+                                    .font(.subheadline)
+                                    .foregroundColor(themes.theme.accent)
+//                                    .frame(maxWidth: .infinity)
+//                                    .padding(.top, 8)
+//                                    .padding(.bottom, 5)
                                 if vm.newRequests > 0 {
                                     Menu {
                                         Button {
@@ -90,11 +98,15 @@ struct DMs: View {
                                     }
                                 }
                             }
-                            Rectangle()
+                            .padding(.horizontal, 5)
+                            .frame(height: 41)
+                            .fixedSize()
+                            themes.theme.accent
                                 .frame(height: 3)
-                                .background(themes.theme.accent)
                                 .opacity(tab == "Requests" ? 1 : 0.15)
                         }
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
                     }
                 }
                 if vm.scanningMonthsAgo != 0 {
