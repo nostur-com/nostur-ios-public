@@ -122,6 +122,7 @@ class DirectMessageViewModel: ObservableObject {
     
     public func loadAfterWoT() {
         receiveNotification(.WoTReady)
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self else { return }
                 self.load()
