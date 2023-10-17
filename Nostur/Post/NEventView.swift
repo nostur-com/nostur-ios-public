@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NEventView: View {
     public let identifier:ShareableIdentifier
+    public var forceAutoload:Bool = false
     public var theme:Theme
     @StateObject private var vm = FetchVM<NRPost>(timeout: 2.5, debounceTime: 0.05)
         
@@ -64,7 +65,7 @@ struct NEventView: View {
                         vm.fetch()
                     }
             case .ready(let nrPost):
-                EmbeddedPost(nrPost, theme: theme)
+                EmbeddedPost(nrPost, forceAutoload: forceAutoload, theme: theme)
             case .timeout:
                 Text("Unable to fetch content")
                     .padding(10)

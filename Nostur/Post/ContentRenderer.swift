@@ -30,7 +30,7 @@ struct ContentRenderer: View { // VIEW things
         self.theme = theme
     }
     
-    private var shouldAutoLoad:Bool {
+    private var shouldAutoload:Bool {
         forceAutoload || SettingsStore.shouldAutodownload(nrPost)
     }
     
@@ -39,7 +39,7 @@ struct ContentRenderer: View { // VIEW things
             ForEach(contentElements) { contentElement in
                 switch contentElement {
                 case .nrPost(let nrPost):
-                    EmbeddedPost(nrPost, theme: theme)
+                    EmbeddedPost(nrPost, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
                     //                        .fixedSize(horizontal: false, vertical: true)
@@ -48,7 +48,7 @@ struct ContentRenderer: View { // VIEW things
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .nevent1(let identifier):
-                    NEventView(identifier: identifier, theme: theme)
+                    NEventView(identifier: identifier, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
 //                        .debugDimensions("NEventView")
@@ -67,7 +67,7 @@ struct ContentRenderer: View { // VIEW things
                         .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
-                        EmbedById(id: noteHex, theme: theme)
+                        EmbedById(id: noteHex, forceAutoload: shouldAutoload, theme: theme)
 //                            .frame(minHeight: 75)
                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
 //                            .debugDimensions("QuoteById.note1")
@@ -83,7 +83,7 @@ struct ContentRenderer: View { // VIEW things
                         EmptyView()
                     }
                 case .noteHex(let hex):
-                    EmbedById(id: hex, theme: theme)
+                    EmbedById(id: hex, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
 //                        .debugDimensions("QuoteById.noteHex")
@@ -129,7 +129,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: shouldAutoLoad, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .debugDimensions("sd.video")
@@ -154,7 +154,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoLoad, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
 //                            .debugDimensions("video")
                         //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .padding(.horizontal, fullWidth ? -10 : 0)
@@ -176,7 +176,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoLoad, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .debugDimensions("sd.image")
@@ -201,7 +201,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoLoad, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
 //                            .debugDimensions("image")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
@@ -211,7 +211,7 @@ struct ContentRenderer: View { // VIEW things
 //                            .transaction { t in t.animation = nil }
                     }
                 case .linkPreview(let url):
-                    LinkPreviewView(url: url, autoload: shouldAutoLoad, theme: theme)
+                    LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
                         .padding(.vertical, 10)
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
@@ -310,11 +310,13 @@ func scaledToFit(_ dimensions: CGSize, scale screenScale: Double, maxWidth: Doub
 struct EmbeddedPost: View {
     private let nrPost:NRPost
     @ObservedObject var prd:NRPost.PostRowDeletableAttributes
+    private var forceAutoload:Bool
     private var theme:Theme
     
-    init(_ nrPost:NRPost, theme: Theme) {
+    init(_ nrPost:NRPost, forceAutoload:Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.prd = nrPost.postRowDeletableAttributes
+        self.forceAutoload = forceAutoload
         self.theme = theme
     }
     
@@ -333,7 +335,7 @@ struct EmbeddedPost: View {
             .hCentered()
         }
         else if nrPost.kind == 30023 {
-            ArticleView(nrPost, hideFooter: true, theme: theme)
+            ArticleView(nrPost, hideFooter: true, forceAutoload: forceAutoload, theme: theme)
                 .padding(20)
                 .background(
                     Color(.secondarySystemBackground)
@@ -346,7 +348,7 @@ struct EmbeddedPost: View {
 //                .debugDimensions("EmbeddedPost.ArticleView", alignment: .bottomLeading)
         }
         else {
-            QuotedNoteFragmentView(nrPost: nrPost, theme: theme)
+            QuotedNoteFragmentView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
 //                .debugDimensions("EmbeddedPost.QuotedNoteFragmentView", alignment: .bottomLeading)
         }
     }
