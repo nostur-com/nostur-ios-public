@@ -52,11 +52,11 @@ struct TryGuestAccountSheet: View {
             }
             do {
                 try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
-                L.onboarding.info("✈️✈️✈️ ONBORADING SPEED UP, FETCHING 0 + 3")
+                L.onboarding.info("✈️✈️✈️ ONBOARDING SPEED UP, FETCHING 0 + 3")
     //                    req(RM.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
             }
             catch {
-                L.onboarding.error("🔴🔴✈️✈️✈️ ONBORADING ERROR \(error)")
+                L.onboarding.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR \(error)")
             }
         }
         .onDisappear {

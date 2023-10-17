@@ -539,9 +539,9 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     var client:NewWebSocket
     
     // Managed Client Queue
-    public var mcq = DispatchQueue(label: "com.nostur.managed-client", qos: .utility, attributes: .concurrent)
+    public var mcq:DispatchQueue
     
-    private var _skipped = 0
+    private var _skipped = 0 // mcq
     public func getSkipped() async -> Int {
         await withCheckedContinuation { continuation in
             mcq.async { continuation.resume(returning: self._skipped) }
@@ -552,7 +552,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     
-    private var _exponentialReconnectBackOff = 0
+    private var _exponentialReconnectBackOff = 0 // mcq
     public func getExponentialBackoff() async -> Int {
         await withCheckedContinuation { continuation in
             mcq.async { continuation.resume(returning: self._skipped) }
@@ -565,7 +565,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     public var isConnecting = false // main
     
-    public var _activeSubscriptions:[String] = []
+    public var _activeSubscriptions:[String] = [] // mcq
     public func getActiveSubscriptions() -> [String] {
         mcq.sync { self._activeSubscriptions }
     }
@@ -573,7 +573,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         mcq.async(flags: .barrier) { self._activeSubscriptions = activeSubscriptions }
     }
     
-    public var _lastMessageReceivedAt:Date? = nil
+    public var _lastMessageReceivedAt:Date? = nil // mcq
     public func getLastMessageReceivedAt() async -> Date? {
         await withCheckedContinuation { continuation in
             mcq.async { continuation.resume(returning: self._lastMessageReceivedAt) }
@@ -590,6 +590,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     var excludedPubkeys:Set<String>
     
     init(relayId: String, url: String, client:NewWebSocket, read: Bool = true, write: Bool = false, isNWC:Bool = false, isNC:Bool = false, excludedPubkeys:Set<String> = []) {
+        self.mcq = DispatchQueue(label: "com.nostur.managed-client-" + url, qos: .utility, attributes: .concurrent)
         self.relayId = relayId
         self.url = url.lowercased()
         self.read = read
