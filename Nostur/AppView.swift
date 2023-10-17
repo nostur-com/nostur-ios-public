@@ -199,7 +199,7 @@ struct AppView: View {
                     try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
                 }
                 catch {
-                    L.og.error("🔴🔴✈️✈️✈️ ONBORADING ERROR")
+                    L.og.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR")
                 }
             }
         }

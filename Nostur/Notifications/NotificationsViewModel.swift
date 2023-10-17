@@ -11,8 +11,6 @@ import CoreData
 
 class NotificationsViewModel: ObservableObject {
     
-    @Environment(\.scenePhase) private var scenePhase
-    
     static let UNREAD_KINDS:Set<Int> = Set([1,4,6,7,9735,9802,30023]) // posts, dms, reposts, reactions, zaps, highlights, articles
     
     static let shared = NotificationsViewModel()
