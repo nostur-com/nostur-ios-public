@@ -9,6 +9,7 @@ import SwiftUI
 
 struct EmbedById: View {
     public let id:String
+    public var forceAutoload:Bool = false
     public var theme:Theme
     @StateObject private var vm = FetchVM<NRPost>(timeout: 2.5, debounceTime: 0.05)
     
@@ -49,7 +50,7 @@ struct EmbedById: View {
                     }
             case .ready(let nrPost):
                 if nrPost.kind == 30023 {
-                    ArticleView(nrPost, hideFooter: true, theme: theme)
+                    ArticleView(nrPost, hideFooter: true, forceAutoload: forceAutoload, theme: theme)
                         .padding(20)
                         .background(
                             Color(.secondarySystemBackground)
@@ -63,7 +64,7 @@ struct EmbedById: View {
 //                        .debugDimensions("EmbedById.ArticleView")
                 }
                 else {
-                    QuotedNoteFragmentView(nrPost: nrPost, theme: theme)
+                    QuotedNoteFragmentView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
 //                        .transaction { t in t.animation = nil }
 //                        .debugDimensions("EmbedById.QuotedNoteFragmentView")
                 }

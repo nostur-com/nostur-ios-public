@@ -10,11 +10,13 @@ import SwiftUI
 struct QuotedNoteFragmentView: View {
     @ObservedObject private var nrPost:NRPost
     @ObservedObject private var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
+    private var forceAutoload:Bool
     private var theme:Theme
     
-    init(nrPost: NRPost, theme: Theme) {
+    init(nrPost: NRPost, forceAutoload:Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
+        self.forceAutoload = forceAutoload
         self.theme = theme
     }
     
@@ -82,7 +84,7 @@ struct QuotedNoteFragmentView: View {
                 }
                 .frame(height: 40)
                 VStack(alignment: .leading) {
-                    NoteTextRenderView(nrPost: nrPost, theme: theme)
+                    NoteTextRenderView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 }

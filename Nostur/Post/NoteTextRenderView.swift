@@ -10,11 +10,16 @@ import SwiftUI
 struct NoteTextRenderView: View {
     @EnvironmentObject private var dim:DIMENSIONS
     public let nrPost:NRPost
+    public var forceAutoload = false
     public var theme:Theme
+    
+    private var shouldAutoload:Bool {
+        forceAutoload || SettingsStore.shouldAutodownload(nrPost)
+    }
     
     var body: some View {
         if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
-            Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: dim.availableNoteRowImageWidth(), theme: theme)
+            Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme)
         }
         else if nrPost.kind == 9802 {
             HighlightRenderer(nrPost: nrPost, theme: theme)
@@ -38,7 +43,7 @@ struct NoteTextRenderView: View {
             }
         }
         else {
-            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), theme: theme)
+            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme)
         }
     }
 }
