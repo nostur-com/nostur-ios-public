@@ -11,6 +11,8 @@ import CoreData
 
 class NotificationsViewModel: ObservableObject {
     
+    @Environment(\.scenePhase) private var scenePhase
+    
     static let UNREAD_KINDS:Set<Int> = Set([1,4,6,7,9735,9802,30023]) // posts, dms, reposts, reactions, zaps, highlights, articles
     
     static let shared = NotificationsViewModel()
@@ -138,12 +140,14 @@ class NotificationsViewModel: ObservableObject {
         // listen for account changes
         receiveNotification(.activeAccountChanged)
             .sink { [unowned self] _ in
+                self.needsUpdate = true
                 self.unreadMentions_ = 0
                 self.unreadNewFollowers_ = 0
                 self.unreadReposts_ = 0
                 self.unreadReactions_ = 0
                 self.unreadZaps_ = 0
                 self.unreadFailedZaps_ = 0
+                self.checkRelays()
             }
             .store(in: &subscriptions)
     }
@@ -169,7 +173,7 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkRelays() {
+    public func checkRelays() {
         // Check relays for newest messages NOW+NEWER ("Notifications") realtime
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             self.relayCheckNewestNotifications()
@@ -183,6 +187,7 @@ class NotificationsViewModel: ObservableObject {
     
     // From now, stays active
     private func relayCheckNewestNotifications() {
+        guard NRState.shared.activeAccountPublicKey != "" else { return }
         let calendar = Calendar.current
         let ago = calendar.date(byAdding: .minute, value: -1, to: Date())!
         let sinceNTimestamp = NTimestamp(date: ago)
@@ -192,15 +197,15 @@ class NotificationsViewModel: ObservableObject {
     }
     
     public var requestSince:Int64 { // TODO: If event .created_at, is in the future don't save date
-        let twoDaysAgo = (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24))
-        guard let account = account() else { return twoDaysAgo }
+        let oneWeekAgo = (Int64(Date.now.timeIntervalSince1970) - (7 * 3600 * 24))
+        guard let account = account() else { return oneWeekAgo }
         return [
-            (account.lastNotificationReceivedAt?.timeIntervalSince1970 as? Int64) ?? twoDaysAgo,
+            oneWeekAgo,
             account.lastSeenRepostCreatedAt,
             account.lastSeenPostCreatedAt,
             account.lastSeenZapCreatedAt,
             account.lastSeenReactionCreatedAt,
-            (DirectMessageViewModel.default.lastNotificationReceivedAt?.timeIntervalSince1970 as? Int64) ?? twoDaysAgo
+            (DirectMessageViewModel.default.lastNotificationReceivedAt?.timeIntervalSince1970 as? Int64) ?? oneWeekAgo
         ].sorted(by: >).first!
     }
     
@@ -210,6 +215,7 @@ class NotificationsViewModel: ObservableObject {
         guard NRState.shared.activeAccountPublicKey != "" else { return }
                 
         let since = NTimestamp(timestamp: Int(self.requestSince))
+        needsUpdate = true
         req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS), subscriptionId: "Notifications-CATCHUP", since: since))
     }
     
@@ -228,10 +234,6 @@ class NotificationsViewModel: ObservableObject {
         timer?.tolerance = 5.0
     }
     
-    private func stopTimer() {
-        timer?.invalidate()
-    }
-    
     private func checkForEverything() {
         shouldBeBg()
         
@@ -246,6 +248,7 @@ class NotificationsViewModel: ObservableObject {
         }
         
         needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
+        L.og.info("💜 needsUpdate, updating unread counts...")
 
         self.relayCheckNewestNotifications() // or wait 3 seconds?
         
@@ -258,29 +261,29 @@ class NotificationsViewModel: ObservableObject {
 //            }
 //        }
         
+        bg().perform { self.checkForUnreadMentions() }
+        bg().perform {
+            guard !self.muteReposts else { return }
+            self.checkForUnreadReposts()
+        }
+        bg().perform {
+            guard !self.muteFollows else { return }
+            self.checkForUnreadNewFollowers()
+        }
+        bg().perform {
+            guard !self.muteReactions else { return }
+            self.checkForUnreadReactions()
+        }
+        bg().perform {
+            guard !self.muteZaps else { return }
+            self.checkForUnreadZaps()
+        }
+        bg().perform { self.checkForUnreadFailedZaps() }
+        
 //        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            bg().perform { self.checkForUnreadMentions() }
-            bg().perform {
-                guard !self.muteReposts else { return }
-                self.checkForUnreadReposts()
-            }
-            bg().perform {
-                guard !self.muteFollows else { return }
-                self.checkForUnreadNewFollowers()
-            }
-            bg().perform {
-                guard !self.muteReactions else { return }
-                self.checkForUnreadReactions()
-            }
-            bg().perform {
-                guard !self.muteZaps else { return }
-                self.checkForUnreadZaps()
-            }
-            bg().perform { self.checkForUnreadFailedZaps() }
+//            
 //        }
         
-        NRState.shared.loggedInAccount?.lastNotificationReceivedAt = Date.now
-        L.og.info("🟢🟢 .checkForEverything(): account.lastNotificationReceivedAt set to .now")
     }
     
     

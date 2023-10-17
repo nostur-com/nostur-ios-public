@@ -193,14 +193,7 @@ class Importer {
                         }
                         self.importedMessagesFromSubscriptionIds.send(alreadySavedSubs)
                         continue
-                    }
-                    
-                    
-//                    if message.subscriptionId == "Notifications" && event.pTags().contains(NRState.shared.activeAccountPublicKey) && NotificationsViewModel.UNREAD_KINDS.contains(event.kind.id) {
-//                        NRState.shared.loggedInAccount?.lastNotificationReceivedAt = Date.now
-//                        L.og.info("🟢🟢 New \"Notification\", account.lastNotificationReceivedAt set to .now")
-//                    }
-                    
+                    }                    
                     
                     // Skip if we already have a newer kind 3
                     if  event.kind == .contactList,

@@ -129,6 +129,7 @@ struct AppView: View {
                                 sendNotification(.scenePhaseActive)
                                 SocketPool.shared.connectAll()
                                 lvmManager.restoreSubscriptions()
+                                NotificationsViewModel.shared.checkRelays()
                             case .background:
                                 L.og.notice("scenePhase background")
                                 sendNotification(.scenePhaseBackground)

@@ -150,16 +150,7 @@ final class SocketPool: ObservableObject {
         stayConnectedTimer = nil
         
         for socket in sockets {
-            if socket.value.isConnecting || socket.value.isConnected {
-                //                socket.value.activeSubscriptions.forEach { subscription in
-                //                    SocketPool.shared
-                //                        .sendMessage(ClientMessage(
-                //                            type: .CLOSE,
-                //                            message: ClientMessage.close(subscriptionId: subscription)
-                //                        ))
-                //                }
-                socket.value.disconnect()
-            }
+            socket.value.disconnect()
         }
     }
     
@@ -496,15 +487,16 @@ final class SocketPool: ObservableObject {
     
     func removeActiveAccountSubscriptions() {
         for socket in sockets {
+            let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"))
+            socket.value.client.sendMessage(closeFollowing.message)
+            let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"))
+            socket.value.client.sendMessage(closeNotifications.message)
+            
             socket.value.mcq.async(flags: .barrier) {
                 socket.value._activeSubscriptions.removeAll { subscriptionId in
                     subscriptionId == "Following" || subscriptionId == "Notifications"
                 }
             }
-            let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"))
-            socket.value.client.sendMessage(closeFollowing.message)
-            let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"))
-            socket.value.client.sendMessage(closeNotifications.message)
         }
     }
     
