@@ -191,8 +191,6 @@ class LoggedInAccount: ObservableObject {
     public var followingPublicKeys:Set<String> = []
     public var followingPFPs:[String: URL] = [:]
     
-    public var lastNotificationReceivedAt:Date? // stored here so we dont have to worry about different object contexts / threads
-    
     // View context
     @Published var account:Account {
         didSet { // REMINDER, didSet does not run on init!
@@ -229,17 +227,17 @@ class LoggedInAccount: ObservableObject {
         self.viewFollowingPublicKeys = follows
         
         // Remove currectly active "Following" subscriptions from connected sockets
+        SocketPool.shared.removeActiveAccountSubscriptions()
+        
         self.bg.perform {
             guard let bgAccount = try? self.bg.existingObject(with: self.account.objectID) as? Account else {
                 L.og.notice("🔴🔴 Problem loading bgAccount")
                 return
             }
             self.bgAccount = bgAccount
-            SocketPool.shared.removeActiveAccountSubscriptions()
             
             self.followingPublicKeys = follows
             self.followingPFPs = bgAccount.getFollowingPFPs()
-            self.lastNotificationReceivedAt = bgAccount.lastNotificationReceivedAt
             
             DispatchQueue.main.async {
                 sendNotification(.activeAccountChanged, account)
