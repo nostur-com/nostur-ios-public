@@ -9,6 +9,7 @@ import SwiftUI
 
 class NRState: ObservableObject {
     
+    @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
     @MainActor public static let shared = NRState()
     
     // view context
@@ -72,6 +73,9 @@ class NRState: ObservableObject {
         
         guard pubkey != self.activeAccountPublicKey else { return }
         self.activeAccountPublicKey = pubkey
+        if mainAccountWoTpubkey == "" {
+            wot.guessMainAccount()
+        }
     }
     
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""

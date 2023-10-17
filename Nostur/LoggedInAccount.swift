@@ -246,12 +246,13 @@ class LoggedInAccount: ObservableObject {
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                WebOfTrust.shared.loadWoT()
                 if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+                    WebOfTrust.shared.loadWoT()
                     DirectMessageViewModel.default.load()
                 }
                 else {
                     DirectMessageViewModel.default.loadAfterWoT()
+                    WebOfTrust.shared.loadWoT()
                 }
             }
         }
