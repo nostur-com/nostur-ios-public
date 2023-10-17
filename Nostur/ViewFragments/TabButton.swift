@@ -21,16 +21,13 @@ struct TabButton: View {
             VStack(spacing: 0) {
                 HStack(alignment: .bottom, spacing: 3) {
                     Text(title).lineLimit(1)
-//                        .layoutPriority(1)
+                        .font(.subheadline)
                         .foregroundColor(themes.theme.accent)
-//                        .frame(maxWidth: .infinity)
                         
                     if let secondaryText {
                         Text(secondaryText).lineLimit(1)
                             .font(.caption)
                             .foregroundColor(themes.theme.accent.opacity(0.5))
-//                            .frame(maxWidth: .infinity)
-                        
                     }
                     if let unread, unread > 0 {
                         Text("\(unread)")
@@ -42,8 +39,8 @@ struct TabButton: View {
                             .offset(y: -2)
                     }
                 }
-                .padding(.bottom, 5)
-                .padding(.top, 8)
+                .padding(.horizontal, 5)
+                .frame(height: 41)
                 .fixedSize()
                 themes.theme.accent
                     .frame(height: 3)
@@ -99,7 +96,7 @@ struct TabButton: View {
                         }, title: "Popular")
                     }
                 }
-                .padding(.horizontal, 10)
+//                .padding(.horizontal, 10)
                 .frame(minWidth: UIScreen.main.bounds.width)
             }
             
@@ -118,7 +115,7 @@ struct TabButton: View {
                         print("dede")
                     }, title: "Explore")
                 }
-                .padding(.horizontal, 10)
+//                .padding(.horizontal, 10)
                 .frame(minWidth: UIScreen.main.bounds.width)
             }
             
@@ -143,7 +140,7 @@ struct TabButton: View {
                     print("dede")
                 }, title: "testing!", selected: true)
             }
-            .padding(.horizontal, 10)
+//            .padding(.horizontal, 10)
             .frame(minWidth: UIScreen.main.bounds.width)
         }
         .frame(width: UIScreen.main.bounds.width)

@@ -96,7 +96,7 @@ struct NotificationsView: View {
                         }
                     }, title: String(localized: "Followers", comment:"Title of tab"), selected: tab == "Followers", unread: nvm.unreadNewFollowers_, muted: nvm.muteNewFollowers)
                 }
-                .padding(.horizontal, 10)
+//                .padding(.horizontal, 10)
                 .frame(minWidth: dim.listWidth)
             }
             .frame(width: dim.listWidth)

@@ -113,7 +113,7 @@ struct FollowingAndExplore: View {
                             selected: selectedSubTab == "Articles")
                     }
                 }
-                .padding(.horizontal, 10)
+//                .padding(.horizontal, 10)
                 .frame(minWidth: dim.listWidth)
                 .offset(y: tabsOffsetY)
                 .onReceive(receiveNotification(.scrollingUp)) { _ in
@@ -130,7 +130,7 @@ struct FollowingAndExplore: View {
                 }
                 .toolbar(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
             }
-            .frame(width: dim.listWidth, height: max(36.0 + tabsOffsetY,0))
+            .frame(width: dim.listWidth, height: max(44.0 + tabsOffsetY,0))
             
             ZStack {
                 themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
