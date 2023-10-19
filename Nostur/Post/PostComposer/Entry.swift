@@ -99,11 +99,11 @@ struct Entry: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    vm.sending = true
+                    vm.typingTextModel.sending = true
                     vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
                 } label: {
-                    if (vm.uploading || vm.sending) {
-                        ProgressView()
+                    if (vm.typingTextModel.uploading || vm.typingTextModel.sending) {
+                        ProgressView().colorInvert()
                     }
                     else {
                         Text("Post.verb", comment: "Button to post (publish) a post")
@@ -111,8 +111,8 @@ struct Entry: View {
                 }
                 .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 .cornerRadius(20)
-                .disabled(vm.sending || vm.uploading || typingTextModel.text.isEmpty)
-                
+                .disabled(vm.typingTextModel.sending || vm.typingTextModel.uploading || typingTextModel.text.isEmpty)
+                .opacity(typingTextModel.text.isEmpty ? 0.25 : 1.0)
             }
         }
     }
