@@ -87,7 +87,7 @@ struct ComposePost: View {
                                             Image(systemName: "photo")
                                         }
                                         .buttonStyle(.borderless)
-                                        .disabled(vm.uploading)
+                                        .disabled(vm.typingTextModel.uploading)
                 
                                     }
                                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -95,14 +95,14 @@ struct ComposePost: View {
                                             Image("GifButton")
                                         }
                                         .buttonStyle(.borderless)
-                                        .disabled(vm.uploading)
+                                        .disabled(vm.typingTextModel.uploading)
                                     }
                                 }
                                 ToolbarItem(placement: .navigationBarTrailing) {
                                     Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
                                         vm.showPreview(quotingEvent: quotingEvent)
                                     }
-                                    .disabled(vm.uploading)
+                                    .disabled(vm.typingTextModel.uploading)
                                 }
                                 
                                 if let uploadError = vm.uploadError {
@@ -139,10 +139,10 @@ struct ComposePost: View {
                             PostPreview(
                                 nrPost: nrPost,
                                 sendNow: {
-                                    vm.sending = true
+                                    vm.typingTextModel.sending = true
                                     vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
                                 },
-                                uploading: $vm.uploading
+                                uploading: $vm.typingTextModel.uploading
                             )
                         }
                         .presentationBackground(themes.theme.background)

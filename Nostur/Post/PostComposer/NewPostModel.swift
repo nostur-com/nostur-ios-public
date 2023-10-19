@@ -13,6 +13,8 @@ public final class TypingTextModel: ObservableObject {
     @Published var text: String = ""
     @Published var pastedImages:[UIImage] = []
     @Published var selectedMentions:Set<Contact> = [] // will become p-tags in the final post
+    @Published var sending = false
+    @Published var uploading = false
     private var subscriptions = Set<AnyCancellable>()
 }
 
@@ -25,8 +27,6 @@ public final class NewPostModel: ObservableObject {
     var lastHit:String = "NOHIT"
     var textView:SystemTextView?
     
-    @Published var sending = false
-    @Published var uploading = false
     @Published var uploadError:String?
     var requiredP:String? = nil
     @Published var availableContacts:Set<Contact> = [] // are available to toggle on/off for notifications
@@ -80,7 +80,7 @@ public final class NewPostModel: ObservableObject {
     
     public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
         if (!typingTextModel.pastedImages.isEmpty) {
-            uploading = true
+            typingTextModel.uploading = true
             
             uploadImages(images: typingTextModel.pastedImages)
                 .receive(on: RunLoop.main)
