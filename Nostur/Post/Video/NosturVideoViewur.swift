@@ -139,13 +139,14 @@ struct NosturVideoViewur: View {
                     HStack(spacing: 5) {
                         ProgressView()
                         Text(percent, format:.percent)
+                            .frame(width: 48, alignment: .leading)
                         Image(systemName: "multiply.circle.fill")
                             .onTapGesture {
                                 task?.cancel()
                                 videoState = .cancelled
                             }
                     }
-                    .centered()
+//                    .centered()
                     .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
                     .background(theme.lineColor.opacity(0.2))
                 }
