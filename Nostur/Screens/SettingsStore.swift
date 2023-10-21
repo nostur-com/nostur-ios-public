@@ -91,6 +91,18 @@ final class SettingsStore: ObservableObject {
     
         // no api, parse media link from response
 //        getNostrBuildService(),
+        
+        MediaUploadService(name: "Custom File Storage (NIP-96)", request: { imageData, usePNG in
+            // Dummy function body just to be compatible with MediaUploadService
+            // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
+            let url = URL(string: "https://localhost")!
+            var request = URLRequest(url: url)
+            return request
+        }, urlFromResponse: { (data, response, _) in
+            // Dummy function body just to be compatible with MediaUploadService
+            // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
+            return "https://localhost"
+        })
     ]
     
     init(defaults: UserDefaults = .standard) {
