@@ -51,7 +51,7 @@ struct Nip96Configurator: View {
                     }
                 
                 if let tosUrl = tosUrl {
-                    Text("[Terms of Service](\(tosUrl))")
+                    Link("Terms of Service", destination: URL(string: tosUrl)!)
                         .padding()
                 }
             }
