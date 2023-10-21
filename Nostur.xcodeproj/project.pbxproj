@@ -196,6 +196,8 @@
 		1F77D2E229D238520028DC95 /* ShareableIdentifierTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */; };
 		1F7A10E22AA1DB7300042CD6 /* Search+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7A10E12AA1DB7300042CD6 /* Search+Helpers.swift */; };
 		1F7B217D2AE2EFE400CE972E /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7B217C2AE2EFE400CE972E /* NostrEssentials */; };
+		1F7B218C2AE3118D00CE972E /* Settings+Nip96Configurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7B218B2AE3118D00CE972E /* Settings+Nip96Configurator.swift */; };
+		1F7B218E2AE3B14700CE972E /* MediaUploadProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7B218D2AE3B14700CE972E /* MediaUploadProgress.swift */; };
 		1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7B21902AE3D6C000CE972E /* NostrEssentials */; };
 		1F7C4CAF2AB1DDD400145D83 /* Repost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C4CAE2AB1DDD400145D83 /* Repost.swift */; };
 		1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */; };
@@ -389,6 +391,7 @@
 		1FE4D91B2A53D50F0064F649 /* ZapCustomizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */; };
 		1FE4D91D2A5442450064F649 /* SettingsDefaultZapAmount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */; };
 		1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */; };
+		1FE53EDB2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE53EDA2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift */; };
 		1FE6947A2A8B4DCD004BB949 /* FeedSettings+Hashtags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */; };
 		1FE6947C2A8B5550004BB949 /* Search+FollowHashtagTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */; };
 		1FE69EB62A2CE95000FE73B4 /* ZapNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */; };
@@ -639,6 +642,8 @@
 		1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadReplies.swift; sourceTree = "<group>"; };
 		1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareableIdentifierTest.swift; sourceTree = "<group>"; };
 		1F7A10E12AA1DB7300042CD6 /* Search+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+Helpers.swift"; sourceTree = "<group>"; };
+		1F7B218B2AE3118D00CE972E /* Settings+Nip96Configurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Settings+Nip96Configurator.swift"; sourceTree = "<group>"; };
+		1F7B218D2AE3B14700CE972E /* MediaUploadProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaUploadProgress.swift; sourceTree = "<group>"; };
 		1F7C4CAE2AB1DDD400145D83 /* Repost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repost.swift; sourceTree = "<group>"; };
 		1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadOnlyAccountInformationSheet.swift; sourceTree = "<group>"; };
 		1F7C65BE29A14BA3009FF3EA /* Zaps.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Zaps.swift; sourceTree = "<group>"; };
@@ -834,6 +839,7 @@
 		1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapCustomizer.swift; sourceTree = "<group>"; };
 		1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsDefaultZapAmount.swift; path = Nostur/Screens/SettingsDefaultZapAmount.swift; sourceTree = SOURCE_ROOT; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
+		1FE53EDA2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrcheckMeMediaUploadServiceV2.swift; sourceTree = "<group>"; };
 		1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FeedSettings+Hashtags.swift"; sourceTree = "<group>"; };
 		1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+FollowHashtagTile.swift"; sourceTree = "<group>"; };
 		1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapNotificationsView.swift; sourceTree = "<group>"; };
@@ -1082,6 +1088,7 @@
 				1F2DEDDE2ADAB52E009E360C /* Settings+LightningWalletPicker.swift */,
 				1F2DEDDA2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift */,
 				1F2FE6882AD8E5810088BF56 /* Settings+MainWoTaccountPicker.swift */,
+				1F7B218B2AE3118D00CE972E /* Settings+Nip96Configurator.swift */,
 				1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */,
 				1F21442D29A797B80090E78E /* SettingsStore.swift */,
 				1F810B2D29E65639006B1614 /* TermsAndConditions.swift */,
@@ -1221,6 +1228,7 @@
 				1F45C7F429EFB13E00F58772 /* NostrBuildMediaUploadService.swift */,
 				1FC7A49829F9389100645FEF /* NostrcheckMeService.swift */,
 				1F0A25532A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift */,
+				1FE53EDA2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift */,
 			);
 			path = MediaUploads;
 			sourceTree = "<group>";
@@ -1784,6 +1792,7 @@
 				1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */,
 				1FBCA0902AC84AFF00913E16 /* ContactsToggleSheet.swift */,
 				1F88EE8B2AD12CE1006A83C3 /* Entry.swift */,
+				1F7B218D2AE3B14700CE972E /* MediaUploadProgress.swift */,
 				1F88EE8D2AD12CFA006A83C3 /* MentionChoices.swift */,
 				1FFED8002A39718F00A0B1E8 /* NewPostModel.swift */,
 				1FFED7FE2A3970A800A0B1E8 /* PhotosPicker.swift */,
@@ -1960,6 +1969,7 @@
 				1F9A55242A3C7EE400F67627 /* View+roundedCorner.swift in Sources */,
 				1F3E135929C8B11F00D076EA /* Event+PrivateNotes.swift in Sources */,
 				1FB4FCD629B87D3D0034D03A /* ImageProcessing.swift in Sources */,
+				1F7B218E2AE3B14700CE972E /* MediaUploadProgress.swift in Sources */,
 				1F2DEDDB2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift in Sources */,
 				1FCCAC9C2AB7477E00B3F00A /* FetchVM.swift in Sources */,
 				1F995EF52A4DE349002227B3 /* NIP46TesterView.swift in Sources */,
@@ -2129,6 +2139,7 @@
 				1FC7A49929F9389100645FEF /* NostrcheckMeService.swift in Sources */,
 				1F49C80829B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift in Sources */,
 				1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */,
+				1F7B218C2AE3118D00CE972E /* Settings+Nip96Configurator.swift in Sources */,
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
 				1FF2E6C92A72AEB300BF5A4C /* StreamurRepresentable.swift in Sources */,
 				1FFED8032A39C86F00A0B1E8 /* MacListState.swift in Sources */,
@@ -2237,6 +2248,7 @@
 				1FF128482ABF090600144C0C /* Sidebar.swift in Sources */,
 				1FB6E6FD29E48109008BE8A6 /* LVMManager.swift in Sources */,
 				1F8CBFFF2AC304FD0077EF7D /* NotificationsNewFollowers.swift in Sources */,
+				1FE53EDB2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift in Sources */,
 				1F69854F29F2B63E006F813F /* Bolt11.swift in Sources */,
 				1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */,
 				1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */,

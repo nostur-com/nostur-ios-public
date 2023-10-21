@@ -66,7 +66,8 @@ struct ZapButton: View {
             .overlay {
                 if ss.nwcReady, !footerAttributes.zapped, cancellationId == nil, let contact = nrPost.contact?.contact {
                     GeometryReader { geo in
-                        Color.white.opacity(0.001)
+                        Color.clear
+                            .contentShape(Rectangle())
                             .simultaneousGesture(
                                 LongPressGesture()
                                     .onEnded { _ in

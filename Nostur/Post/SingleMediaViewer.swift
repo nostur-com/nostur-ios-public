@@ -22,10 +22,10 @@ struct SingleMediaViewer: View {
     public var upscale = false
     public var theme = Themes.default.theme
     
-    @State var imagesShown = false
-    @State var loadNonHttpsAnyway = false
-    @State var theHeight = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT
-    @State var isPlaying = false
+    @State private var imagesShown = false
+    @State private var loadNonHttpsAnyway = false
+    @State private var theHeight = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT
+    @State private var isPlaying = false
     @State private var cancelled = false
     @State private var retryId = UUID()
 
@@ -71,7 +71,7 @@ struct SingleMediaViewer: View {
                             }
                     }
                 }
-                else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
+                else if let container = state.imageContainer, container.type == .gif, let data = container.data {
                     if fullWidth {
                         GIFImage(data: data, isPlaying: $isPlaying)
                             .resizable()
