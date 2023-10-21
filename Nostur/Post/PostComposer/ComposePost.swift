@@ -130,6 +130,11 @@ struct ComposePost: View {
                         }
                     }
                     .overlay(alignment: .bottom) {
+                        MediaUploadProgress(uploader: vm.uploader)
+                            .frame(height: geo.size.height * 0.60)
+                            .background(themes.theme.background)
+                    }
+                    .overlay(alignment: .bottom) {
                         MentionChoices(vm: vm)
                             .frame(height: geo.size.height * 0.60)
                             .background(themes.theme.background)
