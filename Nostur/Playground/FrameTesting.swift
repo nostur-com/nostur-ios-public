@@ -70,3 +70,21 @@ struct FrameTesting_Previews: PreviewProvider {
             .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }
+
+#Preview("Centering") {
+    VStack {
+        HStack(spacing: 5) {
+            ProgressView()
+            Text(Int(100), format: .percent)
+                .frame(width: 48)
+            Image(systemName: "multiply.circle.fill")
+                .padding(10)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    
+                }
+        }
+//                    .centered()
+        .frame(minHeight: 100, maxHeight: 250)
+    }
+}
