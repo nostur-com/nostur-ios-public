@@ -213,8 +213,13 @@ class NotificationsViewModel: ObservableObject {
         guard NRState.shared.activeAccountPublicKey != "" else { return }
                 
         let since = NTimestamp(timestamp: Int(self.requestSince))
-        needsUpdate = true
-        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS), subscriptionId: "Notifications-CATCHUP", since: since))
+        bg().perform {
+            self.needsUpdate = true
+            
+            DispatchQueue.main.async {
+                req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS), subscriptionId: "Notifications-CATCHUP", since: since))
+            }
+        }
     }
     
     
