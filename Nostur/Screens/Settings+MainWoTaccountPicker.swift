@@ -34,6 +34,9 @@ struct MainWoTaccountPicker: View {
             Text("Main account")
         }
         .pickerStyle(.navigationLink)
+        .onChange(of: selectedMainWoTaccountPubkey) { selectedMainWoTaccountPubkey in
+            UserDefaults.standard.set(selectedMainWoTaccountPubkey, forKey: "main_wot_account_pubkey")
+        }
     }
 }
 
