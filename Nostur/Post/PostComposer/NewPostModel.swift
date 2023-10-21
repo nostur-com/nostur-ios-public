@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import NostrEssentials
 
 public final class TypingTextModel: ObservableObject {
     @Published var text: String = ""
@@ -19,6 +20,9 @@ public final class TypingTextModel: ObservableObject {
 }
 
 public final class NewPostModel: ObservableObject {
+    @AppStorage("nip96_api_url") private var nip96apiUrl = ""
+    @ObservedObject public var uploader = Nip96Uploader()
+    
     public var typingTextModel = TypingTextModel()
     private var mentioning = false
     @Published var showMentioning = false // To reduce rerendering, use this flag instead of (vm.mentioning && !vm.filteredContactSearchResults.isEmpty)
@@ -82,23 +86,73 @@ public final class NewPostModel: ObservableObject {
         if (!typingTextModel.pastedImages.isEmpty) {
             typingTextModel.uploading = true
             
-            uploadImages(images: typingTextModel.pastedImages)
-                .receive(on: RunLoop.main)
-                .sink(receiveCompletion: { result in
-                    switch result {
+            if !nip96apiUrl.isEmpty { // new nip96 media services
+                guard let nip96apiURL = URL(string: nip96apiUrl) else {
+                    sendNotification(.anyStatus, "Problem with Custom File Storage Server")
+                    return
+                }
+                guard let pk = account()?.privateKey, let keys = try? Keys(privateKeyHex: pk) else {
+                    sendNotification(.anyStatus, "Problem with account")
+                    return
+                }
+                
+                let maxWidth:CGFloat = 1800.0
+                let mediaRequestBags = typingTextModel.pastedImages
+                    .compactMap { originalImage in // Resize images
+                        let scale = originalImage.size.width > maxWidth ? originalImage.size.width / maxWidth : 1
+                        let size = CGSize(width: originalImage.size.width / scale, height: originalImage.size.height / scale)
+                        
+                        let renderer = UIGraphicsImageRenderer(size: size)
+                        let scaledImage = renderer.image { _ in
+                            originalImage.draw(in: CGRect(origin: .zero, size: size))
+                        }
+                        return scaledImage.jpegData(compressionQuality: 0.85)
+                    }
+                    .map { resizedImage in
+                        MediaRequestBag(apiUrl: nip96apiURL, mediaData: resizedImage)
+                    }
+                
+                uploader.uploadingPublishers(for: mediaRequestBags, keys: keys)
+                    .receive(on: RunLoop.main)
+                    .sink(receiveCompletion: { result in
+                        switch result {
                         case .failure(let error):
-                        L.og.error("Error uploading images: \(error.localizedDescription)")
-                        self.uploadError = "Image upload error"
-                        sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                            L.og.error("Error uploading images: \(error.localizedDescription)")
+                            self.uploadError = "Image upload error"
+                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
                         case .finished:
-                        L.og.debug("All images uploaded successfully")
-                    }
-                }, receiveValue: { urls in
-                    if (self.typingTextModel.pastedImages.count == urls.count) {
-                        self._sendNow(urls:urls, pastedImages: self.typingTextModel.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss: dismiss)
-                    }
-                })
-                .store(in: &subscriptions)
+                            L.og.debug("All images uploaded successfully")
+                        }
+                    }, receiveValue: { mediaRequestBags in
+                        for mediaRequestBag in mediaRequestBags {
+                            self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
+                        }
+                        if (self.uploader.finished) {
+                            let urls = mediaRequestBags.compactMap { $0.downloadUrl }
+                            self._sendNow(urls:urls, pastedImages: self.typingTextModel.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss: dismiss)
+                        }
+                    })
+                    .store(in: &subscriptions)
+            }
+            else { // old media upload services
+                uploadImages(images: typingTextModel.pastedImages)
+                    .receive(on: RunLoop.main)
+                    .sink(receiveCompletion: { result in
+                        switch result {
+                        case .failure(let error):
+                            L.og.error("Error uploading images: \(error.localizedDescription)")
+                            self.uploadError = "Image upload error"
+                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                        case .finished:
+                            L.og.debug("All images uploaded successfully")
+                        }
+                    }, receiveValue: { urls in
+                        if (self.typingTextModel.pastedImages.count == urls.count) {
+                            self._sendNow(urls:urls, pastedImages: self.typingTextModel.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss: dismiss)
+                        }
+                    })
+                    .store(in: &subscriptions)
+            }
         }
         else {
             self._sendNow(urls:[], pastedImages: typingTextModel.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss: dismiss)
