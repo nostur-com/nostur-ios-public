@@ -100,7 +100,9 @@ struct Entry: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     vm.typingTextModel.sending = true
-                    vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        self.vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+                    }
                 } label: {
                     if (vm.typingTextModel.uploading || vm.typingTextModel.sending) {
                         ProgressView().colorInvert()
