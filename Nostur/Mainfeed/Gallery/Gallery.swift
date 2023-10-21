@@ -157,10 +157,7 @@ struct GridItemView: View {
                     .transaction { t in t.animation = nil }
                     .overlay(alignment:.topLeading) {
                         if state.isLoading { // does this conflict with showing preview images??
-                            HStack(spacing: 5) {
-                                ImageProgressView(progress: state.progress)
-                                Text("Loading...")
-                            }
+                            ImageProgressView(state: state)
                         }
                     }
                     .overlay(alignment: .bottomLeading) {
@@ -171,10 +168,7 @@ struct GridItemView: View {
                     }
             }
             else if state.isLoading { // does this conflict with showing preview images??
-                HStack(spacing: 5) {
-                    ImageProgressView(progress: state.progress)
-                }
-                .centered()
+                ImageProgressView(state: state, numericOnly: false)
             }
             else {
                 Color(.secondarySystemBackground)

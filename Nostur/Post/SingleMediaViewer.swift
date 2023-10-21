@@ -131,10 +131,7 @@ struct SingleMediaViewer: View {
 //                            .withoutAnimation()
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
-                                    HStack(spacing: 5) {
-                                        ImageProgressView(progress: state.progress)
-                                        Text("Loading...")
-                                    }
+                                    ImageProgressView(state: state)
                                 }
                             }
 #if DEBUG
@@ -155,10 +152,7 @@ struct SingleMediaViewer: View {
 //                            .withoutAnimation()
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
-                                    HStack(spacing: 5) {
-                                        ImageProgressView(progress: state.progress)
-                                        Text("Loading...")
-                                    }
+                                    ImageProgressView(state: state)
                                 }
                             }
 #if DEBUG
@@ -169,15 +163,18 @@ struct SingleMediaViewer: View {
                 }
                 else if state.isLoading { // does this conflict with showing preview images??
                     HStack(spacing: 5) {
-                        ImageProgressView(progress: state.progress)
+                        ProgressView()
+                        ImageProgressView(state: state)
+                            .frame(width: 48)
                         Image(systemName: "multiply.circle.fill")
                             .padding(10)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 imagesShown = false
+                                cancelled = true
                             }
                     }
-                    .centered()
+//                    .centered()
                     .frame(minHeight: 100, maxHeight: theHeight)
 //                    .background(Color.red)
                     .withoutAnimation()
@@ -212,6 +209,7 @@ struct SingleMediaViewer: View {
                    TapGesture()
                        .onEnded { _ in
                            imagesShown = true
+                           cancelled = false
                        }
                 )
         }
@@ -289,24 +287,28 @@ func getGifDimensions(data: Data) -> CGSize? {
 import Combine
 
 struct ImageProgressView: View {
-    let progress: FetchImage.Progress
+    public let state: LazyImageState
+    public var numericOnly = false
+    
     @State var percent:Int = 0
     @State var subscriptions = Set<AnyCancellable>()
 
     var body: some View {
-        ProgressView()
-            .onAppear {
-                progress.objectWillChange
-                    .sink { _ in
-                        if Int(progress.fraction * 100) % 3 == 0 {
-                            if Int(ceil(progress.fraction * 100)) != percent {
-                                percent = Int(ceil(progress.fraction * 100))
+        if !numericOnly && percent == 0 {
+            Image(systemName: "hourglass.tophalf.filled")
+                .task {
+                    state.progress.objectWillChange
+                        .sink { _ in
+                            if Int(state.progress.fraction * 100) % 3 == 0 {
+                                if Int(ceil(state.progress.fraction * 100)) != percent {
+                                    percent = Int(ceil(state.progress.fraction * 100))
+                                }
                             }
                         }
-                    }
-                    .store(in: &subscriptions)
-            }
-        if (percent != 0) {
+                        .store(in: &subscriptions)
+                }
+        }
+        else { // not numeric only and not 0
             Text(percent, format: .percent)
         }
     }
