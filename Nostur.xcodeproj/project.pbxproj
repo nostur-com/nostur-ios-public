@@ -195,6 +195,8 @@
 		1F77D1EC2A1FB3CA00895DB4 /* ThreadReplies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */; };
 		1F77D2E229D238520028DC95 /* ShareableIdentifierTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */; };
 		1F7A10E22AA1DB7300042CD6 /* Search+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7A10E12AA1DB7300042CD6 /* Search+Helpers.swift */; };
+		1F7B217D2AE2EFE400CE972E /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7B217C2AE2EFE400CE972E /* NostrEssentials */; };
+		1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7B21902AE3D6C000CE972E /* NostrEssentials */; };
 		1F7C4CAF2AB1DDD400145D83 /* Repost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C4CAE2AB1DDD400145D83 /* Repost.swift */; };
 		1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */; };
 		1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65BE29A14BA3009FF3EA /* Zaps.swift */; };
@@ -209,7 +211,6 @@
 		1F810B3429E670AB006B1614 /* MutedWords+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B3229E670AB006B1614 /* MutedWords+CoreDataProperties.swift */; };
 		1F810B3529E67145006B1614 /* MutedWordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B2F29E67017006B1614 /* MutedWordsView.swift */; };
 		1F81C4A72AC033DF0006CAA2 /* NotificationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F81C4A62AC033DF0006CAA2 /* NotificationsViewModel.swift */; };
-		1F8227D72A8BD0B10034AA19 /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F8227D62A8BD0B10034AA19 /* NostrEssentials */; };
 		1F83497F29DD6F980032E52B /* LRUCache2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83497E29DD6F980032E52B /* LRUCache2.swift */; };
 		1F83498129DE28290032E52B /* ProfileRelays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498029DE28290032E52B /* ProfileRelays.swift */; };
 		1F8418992A2BDCB1001EFE7A /* NIP47SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8418982A2BDCB1001EFE7A /* NIP47SecretManager.swift */; };
@@ -883,7 +884,8 @@
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
 				1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
-				1F8227D72A8BD0B10034AA19 /* NostrEssentials in Frameworks */,
+				1F7B217D2AE2EFE400CE972E /* NostrEssentials in Frameworks */,
+				1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1826,7 +1828,8 @@
 				1F2F54E92A0236E500B6D7E4 /* Gifu */,
 				1F91D8F52A17C55F00C419A3 /* Collections */,
 				1F77AD0A2A42133000585E12 /* MarkdownUI */,
-				1F8227D62A8BD0B10034AA19 /* NostrEssentials */,
+				1F7B217C2AE2EFE400CE972E /* NostrEssentials */,
+				1F7B21902AE3D6C000CE972E /* NostrEssentials */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -1856,7 +1859,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1430;
+				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					1FB448B92965F3D000038671 = {
@@ -1887,7 +1890,7 @@
 				1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */,
 				1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
-				1F8227D52A8BD0B10034AA19 /* XCRemoteSwiftPackageReference "nostr-essentials" */,
+				1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -2740,12 +2743,12 @@
 				minimumVersion = 2.0.0;
 			};
 		};
-		1F8227D52A8BD0B10034AA19 /* XCRemoteSwiftPackageReference "nostr-essentials" */ = {
+		1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/nostur-com/nostr-essentials";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = revision;
+				revision = 3e862f3deea5b01bc3c8e3168dd920e7d6c42ac9;
 			};
 		};
 		1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */ = {
@@ -2812,9 +2815,13 @@
 			package = 1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
 		};
-		1F8227D62A8BD0B10034AA19 /* NostrEssentials */ = {
+		1F7B217C2AE2EFE400CE972E /* NostrEssentials */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1F8227D52A8BD0B10034AA19 /* XCRemoteSwiftPackageReference "nostr-essentials" */;
+			productName = NostrEssentials;
+		};
+		1F7B21902AE3D6C000CE972E /* NostrEssentials */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */;
 			productName = NostrEssentials;
 		};
 		1F91D8F52A17C55F00C419A3 /* Collections */ = {
