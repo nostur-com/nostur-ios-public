@@ -391,7 +391,6 @@
 		1FE4D91B2A53D50F0064F649 /* ZapCustomizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */; };
 		1FE4D91D2A5442450064F649 /* SettingsDefaultZapAmount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */; };
 		1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */; };
-		1FE53EDB2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE53EDA2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift */; };
 		1FE6947A2A8B4DCD004BB949 /* FeedSettings+Hashtags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */; };
 		1FE6947C2A8B5550004BB949 /* Search+FollowHashtagTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */; };
 		1FE69EB62A2CE95000FE73B4 /* ZapNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */; };
@@ -839,7 +838,6 @@
 		1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapCustomizer.swift; sourceTree = "<group>"; };
 		1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsDefaultZapAmount.swift; path = Nostur/Screens/SettingsDefaultZapAmount.swift; sourceTree = SOURCE_ROOT; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
-		1FE53EDA2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrcheckMeMediaUploadServiceV2.swift; sourceTree = "<group>"; };
 		1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FeedSettings+Hashtags.swift"; sourceTree = "<group>"; };
 		1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+FollowHashtagTile.swift"; sourceTree = "<group>"; };
 		1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapNotificationsView.swift; sourceTree = "<group>"; };
@@ -1228,7 +1226,6 @@
 				1F45C7F429EFB13E00F58772 /* NostrBuildMediaUploadService.swift */,
 				1FC7A49829F9389100645FEF /* NostrcheckMeService.swift */,
 				1F0A25532A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift */,
-				1FE53EDA2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift */,
 			);
 			path = MediaUploads;
 			sourceTree = "<group>";
@@ -2248,7 +2245,6 @@
 				1FF128482ABF090600144C0C /* Sidebar.swift in Sources */,
 				1FB6E6FD29E48109008BE8A6 /* LVMManager.swift in Sources */,
 				1F8CBFFF2AC304FD0077EF7D /* NotificationsNewFollowers.swift in Sources */,
-				1FE53EDB2ADFCBBC00C200A8 /* NostrcheckMeMediaUploadServiceV2.swift in Sources */,
 				1F69854F29F2B63E006F813F /* Bolt11.swift in Sources */,
 				1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */,
 				1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */,
