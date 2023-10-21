@@ -26,6 +26,8 @@ struct SingleMediaViewer: View {
     @State var loadNonHttpsAnyway = false
     @State var theHeight = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT
     @State var isPlaying = false
+    @State private var cancelled = false
+    @State private var retryId = UUID()
 
     var body: some View {
 //        #if DEBUG
@@ -44,7 +46,7 @@ struct SingleMediaViewer: View {
 //            .frame(height: height ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
             .background(theme.lineColor.opacity(0.2))
         }
-        else if autoload || imagesShown {
+        else if !cancelled && (autoload || imagesShown) {
             LazyImage(request: makeImageRequest(url, width: imageWidth, height: height, contentMode: contentMode, upscale: upscale, label: "SingleMediaViewer")) { state in
                 if state.error != nil {
                     if SettingsStore.shared.lowDataMode {
@@ -57,7 +59,10 @@ struct SingleMediaViewer: View {
                             .padding(.horizontal, fullWidth ? 10 : 0)
                     }
                     else {
-                        Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                        VStack {
+                            Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                            Button("Retry") { retryId = UUID() }
+                        }
                             .centered()
     //                        .frame(height: theHeight)
                             .background(theme.lineColor.opacity(0.2))
@@ -193,6 +198,7 @@ struct SingleMediaViewer: View {
                 }
             }
             .pipeline(ImageProcessing.shared.content)
+            .id(retryId)
             .onAppear {
                 if let height = height {
                     theHeight = max(100, height)
