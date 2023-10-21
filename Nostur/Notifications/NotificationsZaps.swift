@@ -281,7 +281,7 @@ struct NotificationsZaps: View {
             let firstCreatedAt = first.created_at
             bg().perform {
                 if let account = account() {
-                    if account.lastSeenZapCreatedAt != firstCreatedAt {
+                    if account.lastSeenZapCreatedAt < firstCreatedAt {
                         account.lastSeenZapCreatedAt = firstCreatedAt
                     }
                 }
