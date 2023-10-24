@@ -219,8 +219,9 @@ struct LazyNoteMenuSheet: View {
                                 account.blockedPubkeys_.insert(nrPost.pubkey)
                                 
                                 DataProvider.shared().bgSave()
+                                let blockedPubkeys = account.blockedPubkeys_
                                 DispatchQueue.main.async {
-                                    sendNotification(.blockListUpdated, account.blockedPubkeys_)
+                                    sendNotification(.blockListUpdated, blockedPubkeys)
                                 }
                             }
                         }
@@ -230,8 +231,9 @@ struct LazyNoteMenuSheet: View {
                                 account.blockedPubkeys_.insert(nrPost.pubkey)
                                 
                                 bgSave()
+                                let blockedPubkeys = account.blockedPubkeys_
                                 DispatchQueue.main.async {
-                                    sendNotification(.blockListUpdated, account.blockedPubkeys_)
+                                    sendNotification(.blockListUpdated, blockedPubkeys)
                                 }
                             }
                         }
