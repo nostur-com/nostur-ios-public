@@ -782,22 +782,22 @@ class NewWebSocket {
             // for messages (URLSessionWebSocketTask.Message).
             // URLSessionWebSocketTask.Message is an enum for either Data or String
             self.connection = webSocket.publisher
-                .sink(receiveCompletion: { completion in
+                .sink(receiveCompletion: { [weak self] completion in
                     switch completion {
                     case .finished:
-                        self.delegate?.didDisconnect()
+                        self?.delegate?.didDisconnect()
                     case .failure(let error):
-                        self.delegate?.didDisconnectWithError(error)
+                        self?.delegate?.didDisconnectWithError(error)
                     }
                 },
-                receiveValue: { message in
+                receiveValue: { [weak self] message in
                     switch message {
                     case .data(let data):
                         // Handle Data message
-                        self.delegate?.didReceiveData(data)
+                        self?.delegate?.didReceiveData(data)
                     case .string(let string):
                         // Handle String message
-                        self.delegate?.didReceiveMessage(string)
+                        self?.delegate?.didReceiveMessage(string)
                     @unknown default:
                         L.og.debug("dunno")
                     }
@@ -807,11 +807,11 @@ class NewWebSocket {
             for out in outQueue {
                 webSocket.send(out.text)
                     .subscribe(Subscribers.Sink(
-                        receiveCompletion: { completion in
+                        receiveCompletion: { [weak self] completion in
                             switch completion {
                             case .finished:
-                                self.wsq.async {
-                                    self.outQueue.removeAll(where: { $0.id == out.id })
+                                self?.wsq.async { [weak self] in
+                                    self?.outQueue.removeAll(where: { $0.id == out.id })
                                 }
                             case .failure(let error):
                                 L.og.error("🟪🔴🔴 Error sending \(error): \(out.text)")
@@ -836,27 +836,27 @@ class NewWebSocket {
             
             webSocket.ping()
                 .subscribe(Subscribers.Sink(
-                    receiveCompletion: { completion in
+                    receiveCompletion: { [weak self] completion in
                         switch completion {
                         case .failure(let error):
                             // Handle the failure case
                             #if DEBUG
-                            let _url = self.url
+                            let _url = self?.url ?? ""
                             let _error = error
                             L.sockets.info("🟪 \(_url) Ping Failure: \(_error), trying to reconnect")
                             #endif
-                            self.connect(andSend:text)
+                            self?.connect(andSend:text)
                         case .finished:
                             // The ping completed successfully
-                            L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
-                            L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
+                            L.sockets.info("🟪 Ping succeeded on \(self?.url ?? ""). Sending \(text)")
+                            L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self?.url ?? ""): \(text)")
                             webSocket.send(text)
                                 .subscribe(Subscribers.Sink(
-                                    receiveCompletion: { completion in
+                                    receiveCompletion: { [weak self] completion in
                                         switch completion {
                                         case .finished:
-                                            self.wsq.async {
-                                                self.outQueue.removeAll(where: { $0.id == socketMessage.id })
+                                            self?.wsq.async { [weak self] in
+                                                self?.outQueue.removeAll(where: { $0.id == socketMessage.id })
                                             }
                                         case .failure(let error):
                                             L.og.error("🟪🔴🔴 Error sending \(error): \(text)")
@@ -883,21 +883,21 @@ class NewWebSocket {
 
             webSocket.ping()
                 .subscribe(Subscribers.Sink(
-                    receiveCompletion: { completion in
+                    receiveCompletion: { [weak self] completion in
                         switch completion {
                         case .failure(let error):
                             // Handle the failure case
-                            let _url = self.url
+                            let _url = self?.url ?? ""
                             let _error = error
                             L.sockets.info("\(_url) Ping Failure: \(_error), trying to reconnect")
                             DispatchQueue.main.async {
-                                self.connect()
+                                self?.connect()
                             }
                         case .finished:
                             // The ping completed successfully
-                            let _url = self.url
+                            let _url = self?.url ?? ""
                             L.sockets.info("\(_url) Ping succeeded")
-                            self.delegate?.didReceivePong()
+                            self?.delegate?.didReceivePong()
         //                    sendNotification(.pong)
                         }
                     },
@@ -918,11 +918,11 @@ class NewWebSocket {
             L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
             webSocket.send(text)
                 .subscribe(Subscribers.Sink(
-                    receiveCompletion: { completion in
+                    receiveCompletion: { [weak self] completion in
                         switch completion {
                         case .finished:
-                            self.wsq.async {
-                                self.outQueue.removeAll(where: { $0.id == socketMessage.id })
+                            self?.wsq.async {
+                                self?.outQueue.removeAll(where: { $0.id == socketMessage.id })
                             }
                         case .failure(let error):
                             L.og.error("🟪🔴🔴 Error sending \(error): \(text)")
