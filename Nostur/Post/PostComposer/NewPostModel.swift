@@ -96,7 +96,7 @@ public final class NewPostModel: ObservableObject {
                     return
                 }
                 
-                let maxWidth:CGFloat = 1800.0
+                let maxWidth:CGFloat = 2800.0
                 let mediaRequestBags = typingTextModel.pastedImages
                     .compactMap { originalImage in // Resize images
                         let scale = originalImage.size.width > maxWidth ? originalImage.size.width / maxWidth : 1
