@@ -91,7 +91,7 @@ public final class NewPostModel: ObservableObject {
                     sendNotification(.anyStatus, "Problem with Custom File Storage Server")
                     return
                 }
-                guard let pk = account()?.privateKey, let keys = try? Keys(privateKeyHex: pk) else {
+                guard let pk = activeAccount?.privateKey, let keys = try? Keys(privateKeyHex: pk) else {
                     sendNotification(.anyStatus, "Problem with account")
                     return
                 }
