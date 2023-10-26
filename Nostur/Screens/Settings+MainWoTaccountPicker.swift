@@ -28,6 +28,7 @@ struct MainWoTaccountPicker: View {
                     Text(account.anyName)
                 }
                 .tag(account.publicKey)
+                .foregroundColor(themes.theme.primary)
             }
             
         } label: {
