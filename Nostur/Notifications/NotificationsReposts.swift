@@ -42,6 +42,11 @@ struct NotificationsReposts: View {
                                 }
                             }
                         }
+                        .overlay(alignment: .topTrailing) {
+                            Ago(nrPost.createdAt).layoutPriority(2)
+                                .foregroundColor(.gray)
+                                .padding(10)
+                        }
                         .id(nrPost.id)
                     }
                     VStack {
