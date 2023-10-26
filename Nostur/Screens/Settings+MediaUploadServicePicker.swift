@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-struct MediaUploadServicePicker: View {    
+struct MediaUploadServicePicker: View {  
+    @EnvironmentObject private var themes:Themes
     @State private var nip96apiUrl:String // Should just use @AppStorage("nip96_api_url") here, but this freezes on desktop. so workaround via init() and .onChange(of: nip96apiUrl).
     
     @ObservedObject private var settings: SettingsStore = .shared
@@ -22,6 +23,7 @@ struct MediaUploadServicePicker: View {
         Picker(selection: $settings.defaultMediaUploadService) {
             ForEach(SettingsStore.mediaUploadServiceOptions) {
                 Text($0.name).tag($0)
+                    .foregroundColor(themes.theme.primary)
             }
         } label: {
             Text("Media upload service", comment:"Setting on settings screen")
