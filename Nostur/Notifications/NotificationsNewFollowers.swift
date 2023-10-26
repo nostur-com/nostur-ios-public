@@ -81,7 +81,7 @@ struct NotificationsFollowers: View {
             let firstCreatedAt = first.createdAt
             bg().perform {
                 if let account = account() {
-                    if account.lastFollowerCreatedAt != Int64(firstCreatedAt.timeIntervalSince1970) {
+                    if account.lastFollowerCreatedAt < Int64(firstCreatedAt.timeIntervalSince1970) {
                         account.lastFollowerCreatedAt = Int64(firstCreatedAt.timeIntervalSince1970)
                     }
                 }

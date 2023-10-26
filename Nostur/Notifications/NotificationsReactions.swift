@@ -230,7 +230,7 @@ struct NotificationsReactions: View {
             let firstCreatedAt = first.created_at
             bg().perform {
                 if let account = account() {
-                    if account.lastSeenReactionCreatedAt != firstCreatedAt {
+                    if account.lastSeenReactionCreatedAt < firstCreatedAt {
                         account.lastSeenReactionCreatedAt = firstCreatedAt
                     }
                 }

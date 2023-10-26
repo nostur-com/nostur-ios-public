@@ -182,7 +182,7 @@ struct NotificationsMentions: View {
             let firstCreatedAt = first.created_at
             bg().perform {
                 if let account = account() {
-                    if account.lastSeenPostCreatedAt != firstCreatedAt {
+                    if account.lastSeenPostCreatedAt < firstCreatedAt {
                         account.lastSeenPostCreatedAt = firstCreatedAt
                     }
                 }
