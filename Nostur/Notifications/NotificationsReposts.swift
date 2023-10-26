@@ -191,7 +191,7 @@ struct NotificationsReposts: View {
             let firstCreatedAt = first.created_at
             bg().perform {
                 if let account = account() {
-                    if account.lastSeenRepostCreatedAt != firstCreatedAt {
+                    if account.lastSeenRepostCreatedAt < firstCreatedAt {
                         account.lastSeenRepostCreatedAt = firstCreatedAt
                     }
                 }
