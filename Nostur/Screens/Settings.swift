@@ -16,6 +16,7 @@ struct Settings: View {
     @AppStorage("devToggle") private var devToggle: Bool = false
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
+    @AppStorage("nip96_api_url") private var nip96ApiUrl = ""
     @Environment(\.managedObjectContext) var viewContext
 
     @State private var contactsCount:Int? = nil
@@ -165,6 +166,14 @@ struct Settings: View {
                 
                 Section(header: Text("Image uploading", comment:"Setting heading on settings screen")) {
                     MediaUploadServicePicker()
+                    if !nip96ApiUrl.isEmpty {
+                        VStack(alignment: .leading) {
+                            Text("Now using:")
+                            Text(nip96ApiUrl)
+                                .font(.caption)
+                        }
+                        .foregroundColor(themes.theme.secondary)
+                    }
                 }
                 .listRowBackground(themes.theme.background)
             }
