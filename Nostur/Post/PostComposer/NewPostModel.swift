@@ -116,6 +116,10 @@ public final class NewPostModel: ObservableObject {
                     .receive(on: RunLoop.main)
                     .sink(receiveCompletion: { result in
                         switch result {
+                        case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
+                            L.og.error("Error uploading images (401): \(error.localizedDescription)")
+                            self.uploadError = "Media upload authorization error"
+                            sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
                         case .failure(let error):
                             L.og.error("Error uploading images: \(error.localizedDescription)")
                             self.uploadError = "Image upload error"
