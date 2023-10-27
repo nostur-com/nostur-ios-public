@@ -152,18 +152,21 @@ struct Kind1Default: View {
 //                                t.animation = nil
 //                            }
                     }
-
-                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
-                        .frame(maxWidth: .infinity, alignment:.leading)
-
-                    if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
-                        ReadMoreButton(nrPost: nrPost)
-                            .padding(.vertical, 5)
-                            .withoutAnimation()
-                            .hCentered()
-//                            .transaction { t in
-//                                t.animation = nil
-//                            }
+                    if (isDetail) {
+                        ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
+                            .frame(maxWidth: .infinity, alignment:.leading)
+                    }
+                    else {
+                        ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
+                            .frame(maxWidth: .infinity, alignment:.leading)
+                        .frame(maxHeight: 550, alignment: .top)
+                        .clipped()
+                        if (nrPost.previewWeights?.moreItems ?? false) {
+                            ReadMoreButton(nrPost: nrPost)
+                                .padding(.vertical, 5)
+                                .withoutAnimation()
+                                .hCentered()
+                        }
                     }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {

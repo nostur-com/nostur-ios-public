@@ -114,11 +114,17 @@ struct Kind1: View {
                             .lineLimit(3)
                         
                     }
-                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
-
-                    if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
-                        ReadMoreButton(nrPost: nrPost)
-                            .hCentered()
+                    if (isDetail) {
+                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
+                    }
+                    else {
+                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
+                        .frame(maxHeight: 700, alignment: .top)
+                        .clipped()
+                        if (nrPost.previewWeights?.moreItems ?? false) {
+                            ReadMoreButton(nrPost: nrPost)
+                                .hCentered()
+                        }
                     }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
