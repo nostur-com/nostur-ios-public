@@ -13,11 +13,12 @@ struct NRContentTextRenderer: View {
     @State var text:AttributedString? = nil
     
     var body: some View {
-        Text(text ?? attributedStringWithPs.output)
-            .lineSpacing(3)
-            .lineLimit(isDetail ? 3000 : 20)
+//        Text(text ?? attributedStringWithPs.output)
+        NRText(text ?? attributedStringWithPs.output)
+//            .lineSpacing(3)
+//            .lineLimit(isDetail ? 3000 : 20)
             .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
-            .frame(maxWidth: .infinity, alignment: .leading)    
+//            .frame(maxWidth: .infinity, alignment: .leading)    
             .onReceive(
                 Importer.shared.contactSaved
                     .filter { pubkey in
@@ -30,9 +31,9 @@ struct NRContentTextRenderer: View {
                 
                 bg().perform {
                     let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
-                    DispatchQueue.main.async {
+                    if self.text != reparsed.output {
                         L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
-                        if self.text != reparsed.output {
+                        DispatchQueue.main.async {
                             self.text = reparsed.output
                         }
                     }
