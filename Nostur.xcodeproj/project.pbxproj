@@ -16,6 +16,7 @@
 		1F0088EB29D735080016F111 /* ContentRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0088EA29D735080016F111 /* ContentRenderer.swift */; };
 		1F00E8C329C2FE7800797B78 /* LVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00E8C229C2FE7800797B78 /* LVM.swift */; };
 		1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F02EA5B299F94F200FC89EB /* Onboarding.swift */; };
+		1F041F422AEBB19200B52D42 /* NRText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F041F412AEBB19200B52D42 /* NRText.swift */; };
 		1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F055A52296EE2A2009EF792 /* secp256k1 */; };
 		1F056FA62A5C2E7900578B35 /* ZapAmountButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F056FA52A5C2E7900578B35 /* ZapAmountButton.swift */; };
 		1F056FA82A5C2F3B00578B35 /* CustomZapAmountEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F056FA72A5C2F3B00578B35 /* CustomZapAmountEntry.swift */; };
@@ -466,6 +467,7 @@
 		1F0088EA29D735080016F111 /* ContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRenderer.swift; sourceTree = "<group>"; };
 		1F00E8C229C2FE7800797B78 /* LVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LVM.swift; sourceTree = "<group>"; };
 		1F02EA5B299F94F200FC89EB /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
+		1F041F412AEBB19200B52D42 /* NRText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NRText.swift; path = Nostur/ViewFragments/NRText.swift; sourceTree = "<group>"; };
 		1F056FA52A5C2E7900578B35 /* ZapAmountButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapAmountButton.swift; sourceTree = "<group>"; };
 		1F056FA72A5C2F3B00578B35 /* CustomZapAmountEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomZapAmountEntry.swift; sourceTree = "<group>"; };
 		1F0592DB2A505531003B4B3C /* DiscoverCommunities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverCommunities.swift; sourceTree = "<group>"; };
@@ -1505,6 +1507,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F041F412AEBB19200B52D42 /* NRText.swift */,
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
@@ -1948,6 +1951,7 @@
 				1F92D89C2ABBEED9002F300D /* EmbedById.swift in Sources */,
 				1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */,
 				1FD78EF92A0CE49D003E7B3E /* NRPost.swift in Sources */,
+				1F041F422AEBB19200B52D42 /* NRText.swift in Sources */,
 				1F756533296AE7910078474E /* NewRelayView.swift in Sources */,
 				1F96792F29BF613C00E78173 /* NewPrivateNoteSheet.swift in Sources */,
 				1F3D4BB72A25CC140084F939 /* AppView.swift in Sources */,
