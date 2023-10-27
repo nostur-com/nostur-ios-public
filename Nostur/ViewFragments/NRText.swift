@@ -13,13 +13,16 @@ struct NRText: View {
     @State private var height: CGFloat = .zero
     
     private let attributedString: AttributedString
+    private var maxHeight: Double?
 
-    init(_ attributedString: AttributedString) {
+    init(_ attributedString: AttributedString, maxHeight: Double? = nil) {
         self.attributedString = attributedString
+        self.maxHeight = maxHeight
     }
     
-    init(_ text: String) {
+    init(_ text: String, maxHeight: Double? = nil) {
         self.attributedString = (try? AttributedString(markdown: text)) ?? AttributedString(text)
+        self.maxHeight = maxHeight
     }
     
     var body: some View {
@@ -28,7 +31,8 @@ struct NRText: View {
                 attributedString: attributedString,
                 textColor: UIColor(themes.theme.primary),
                 width: width,
-                height: $height
+                height: $height,
+                maxHeight: maxHeight
             )
             .onAppear {
                 if geo.size.width != .zero {
@@ -51,6 +55,7 @@ struct UITextViewWrapper: UIViewRepresentable {
     public let textColor: UIColor
     public let width: CGFloat
     @Binding public var height: CGFloat
+    public var maxHeight: Double?
     
     func makeUIView(context: Context) -> UITextView {
         let uiView = UITextView()
@@ -86,14 +91,28 @@ struct UITextViewWrapper: UIViewRepresentable {
         uiView.isScrollEnabled = true
         
         DispatchQueue.main.async {
-            height = ceil(newHeight)
+            if let maxHeight = maxHeight, newHeight > maxHeight {
+                height = ceil(maxHeight)
+            }
+            else {
+                height = ceil(newHeight)
+            }
             uiView.isScrollEnabled = false
         }
     }
 }
 
 #Preview {
-    NRText("Some text with a tag [#bitcoin](nostur:t:bitcoin)")
+    VStack {
+        NRText("Some text with a tag [#bitcoin](nostur:t:bitcoin)")
+            .background(Color.red)
+        
+        NRText("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long", maxHeight: 200.0)
+            .background(Color.blue)
+        
+        Text("What")
+            .background(Color.green)
+    }
         .environmentObject(Themes.default)
 }
 
