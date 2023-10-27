@@ -47,10 +47,6 @@ struct ConversationRowView: View {
                                 .foregroundColor(.primary)
                                 .fontWeight(.bold)
                                 .lineLimit(1)
-                                .layoutPriority(2)
-                                .onTapGesture {
-                                    navigateTo(contact)
-                                }
                             
                             if contact.couldBeImposter == 1 {
                                 Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
