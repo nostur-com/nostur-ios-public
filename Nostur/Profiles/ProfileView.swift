@@ -286,8 +286,7 @@ struct ProfileView: View {
                                 }
                             }
                             
-                            Text("\(String(nrContact.about ?? ""))\n")
-                                .lineLimit(20)
+                            NRText("\(String(nrContact.about ?? ""))\n", maxHeight: 500.0)
                             
                             HStack(alignment: .center, spacing: 10) {
                                 ProfileFollowingCount(pubkey: pubkey)
