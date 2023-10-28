@@ -12,8 +12,10 @@ struct MediaUploadProgress: View {
     @ObservedObject public var uploader:Nip96Uploader
     
     var body: some View {
-        ForEach(uploader.queued) { item in
-            Bar(bag: item)
+        VStack {
+            ForEach(uploader.queued) { item in
+                Bar(bag: item)
+            }
         }
     }
 }
@@ -26,15 +28,25 @@ struct Bar:View {
     var body: some View {
         Group {
             switch bag.state {
+            case .uploading(let percentage):
+                themes.theme.secondaryBackground
+                    .overlay(alignment: .leading) {
+                        themes.theme.accent
+                            .frame(width: ((dim.listWidth * Double(percentage ?? 0) / 100) * 0.7)) // to max 70%
+                            .animation(.easeInOut, value: percentage)
+                    }
+                    .overlay {
+                        Text(Int(Double(percentage ?? 0) * 0.7), format: .percent)
+                    }
             case .processing(let percentage):
                 themes.theme.secondaryBackground
                     .overlay(alignment: .leading) {
                         themes.theme.accent
-                            .frame(width: (dim.listWidth * Double(percentage ?? 0) / 100))
+                            .frame(width: (dim.listWidth * 0.7) + ((dim.listWidth * Double(percentage ?? 0) / 100) * 0.3)) // the remaining 30%
                             .animation(.easeInOut, value: percentage)
                     }
                     .overlay {
-                        Text(percentage ?? 0, format: .percent)
+                        Text(Int(70) + Int(Double(percentage ?? 0) * 0.3), format: .percent)
                     }
             case .success(let url):
                 Color.green
@@ -48,7 +60,7 @@ struct Bar:View {
                     .overlay {
                         Text(message)
                     }
-            case .initializing, .uploading:
+            case .initializing:
                 themes.theme.background
                     .overlay {
                         Text(0, format: .percent)
