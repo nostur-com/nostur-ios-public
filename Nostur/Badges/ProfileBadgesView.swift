@@ -160,8 +160,7 @@ struct BadgeIcon: View {
                     if let container = state.imageContainer {
                         if container.type == .gif, let gifData = container.data {
                             GIFImage(data: gifData, isPlaying: .constant(true))
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
+//                                .aspectRatio(contentMode: .fit)
                                 .frame(width: 32, height: 32)
                                 .clipped()
                         }

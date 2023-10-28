@@ -147,8 +147,7 @@ struct BadgeReceivedRow: View {
                             if let container = state.imageContainer {
                                 if container.type == .gif, let gifData = container.data {
                                     GIFImage(data: gifData, isPlaying: .constant(true))
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
+//                                        .aspectRatio(contentMode: .fit)
                                         .frame(width: 50, height: 50)
                                         .clipped()
                                         .padding(10)

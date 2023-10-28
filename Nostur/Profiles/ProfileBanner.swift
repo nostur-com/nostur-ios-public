@@ -27,8 +27,7 @@ struct ProfileBanner: View {
                         if let container = state.imageContainer {
                             if !ProcessInfo.processInfo.isLowPowerModeEnabled, container.type == .gif, let gifData = container.data {
                                 GIFImage(data: gifData, isPlaying: .constant(true))
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
+//                                    .aspectRatio(contentMode: .fill)
                                     .frame(width: width, height: BANNER_HEIGHT)
                                     .clipped()
                                     .scaleEffect(1 + max(0, geoBanner.frame(in:.global).minY / BANNER_HEIGHT ), anchor: .bottom)

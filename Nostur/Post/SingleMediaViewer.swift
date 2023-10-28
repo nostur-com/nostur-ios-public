@@ -74,9 +74,9 @@ struct SingleMediaViewer: View {
                 else if let container = state.imageContainer, container.type == .gif, let data = container.data {
                     if fullWidth {
                         GIFImage(data: data, isPlaying: $isPlaying)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
 //                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
+//                            .resizable()
+//                            .aspectRatio(contentMode: .fit)
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
@@ -98,8 +98,7 @@ struct SingleMediaViewer: View {
                     }
                     else {
                         GIFImage(data: data, isPlaying: $isPlaying)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
+//                            .aspectRatio(contentMode: .fit)
 //                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
 //                            .frame(height: theHeight)
                             .transaction { t in t.animation = nil }

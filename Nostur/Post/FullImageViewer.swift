@@ -103,8 +103,7 @@ struct FullImageViewer: View {
                                 }
                                 else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
                                     GIFImage(data: data, isPlaying: .constant(true))
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
+//                                        .aspectRatio(contentMode: .fit)
                                         .frame(width: geo.size.width, height: geo.size.height)
                                         .scaleEffect(scale)
                                         .offset(position)
