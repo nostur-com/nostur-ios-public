@@ -63,8 +63,7 @@ struct GifSearcher: View {
                                 LazyImage(url: url) { state in
                                     if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
                                         GIFImage(data: data, isPlaying: .constant(true))
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
+//                                            .aspectRatio(contentMode: .fit)
                                             .hCentered()
                                             .background(themes.theme.lineColor.opacity(0.2))
                                             .onTapGesture {
@@ -86,8 +85,7 @@ struct GifSearcher: View {
                                     LazyImage(url: url) { state in
                                         if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
                                             GIFImage(data: data, isPlaying: .constant(true))
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fit)
+//                                                .aspectRatio(contentMode: .fit)
                                                 .hCentered()
                                                 .background(themes.theme.lineColor.opacity(0.2))
                                                 .onTapGesture {

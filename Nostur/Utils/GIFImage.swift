@@ -7,9 +7,7 @@ import Gifu
 import Combine
 
 public struct GIFImage: View {
-     private let source: GIFSource
-     private var loopCount:Int = 0
-     private var isResizable = false
+    private let source: GIFSource
     @Binding var isPlaying:Bool
 
      /// Initializes the view with the given GIF image data.
@@ -17,40 +15,22 @@ public struct GIFImage: View {
          self.source = .data(data)
         _isPlaying = isPlaying
      }
-
-     /// Sets the desired number of loops. By default, the number of loops infinite.
-     public func loopCount(_ value: Int) -> GIFImage {
-         var copy = self
-         copy.loopCount = value
-         return copy
-     }
-
-     /// Sets an image to fit its space.
-     public func resizable() -> GIFImage {
-         var copy = self
-         copy.isResizable = true
-         return copy
-     }
-
+    
      public var body: some View {
-         _GIFImage(source: source, loopCount: loopCount, isResizable: isResizable, isPlaying: $isPlaying)
+         _GIFImage(source: source, isPlaying: $isPlaying)
      }
  }
 
  @available(iOS 13, tvOS 13, *)
  private struct _GIFImage: UIViewRepresentable {
      let source: GIFSource
-     let loopCount: Int
-     let isResizable: Bool
      @Binding var isPlaying:Bool
      var subscriptions = Set<AnyCancellable>()
 
      func makeUIView(context: Context) -> GIFImageView {
          let imageView = GIFImageView()
-         if isResizable {
-             imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-             imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
-         }
+         imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+         imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
          receiveNotification(.scenePhaseBackground)
              .receive(on: RunLoop.main)
              .sink { _ in
@@ -67,11 +47,11 @@ public struct GIFImage: View {
          
          switch source {
          case .data(let data):
-             imageView.prepareForAnimation(withGIFData: data, loopCount: loopCount)
+             imageView.prepareForAnimation(withGIFData: data, loopCount: 0)
          case .url(let url):
-             imageView.prepareForAnimation(withGIFURL: url, loopCount: loopCount)
+             imageView.prepareForAnimation(withGIFURL: url, loopCount: 0)
          case .imageName(let imageName):
-             imageView.prepareForAnimation(withGIFNamed: imageName, loopCount: loopCount)
+             imageView.prepareForAnimation(withGIFNamed: imageName, loopCount: 0)
          }
          
          return imageView

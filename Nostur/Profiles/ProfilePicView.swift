@@ -165,8 +165,7 @@ struct InnerPFP: View {
                                     }
         
                                     GIFImage(data: gifData, isPlaying: .constant(true))
-                                        .resizable()
-                                        .scaledToFit()
+//                                        .scaledToFit()
                                         .withoutAnimation()
                                 }
                                 .frame(width: size, height: size)
