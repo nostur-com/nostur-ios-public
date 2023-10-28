@@ -9,22 +9,28 @@ import SwiftUI
 
 struct PostPreview: View {
     @EnvironmentObject private var themes:Themes
-    @StateObject var dim = DIMENSIONS()
-    @Environment(\.dismiss) var dismiss
-    let nrPost:NRPost
-    let sendNow:() -> Void
-    @Binding var uploading:Bool
-    @State var postPreviewWidth:CGFloat? = nil
+    @StateObject private var dim = DIMENSIONS()
+    @Environment(\.dismiss) private var dismiss
+    public let nrPost:NRPost
+    public let replyTo:Event?
+    public let quotingEvent:Event?
+    @ObservedObject public var vm:NewPostModel
+    @ObservedObject public var typingTextModel:TypingTextModel
+    public let fullDismiss:DismissAction
+    @State private var postPreviewWidth:CGFloat? = nil
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
     
-    init(nrPost: NRPost, sendNow: @escaping () -> Void, uploading:Binding<Bool>) {
+    init(nrPost: NRPost, replyTo: Event?, quotingEvent: Event?, vm: NewPostModel, fullDismiss: DismissAction) {
         self.nrPost = nrPost
-        self.sendNow = sendNow
-        _uploading = uploading
+        self.replyTo = replyTo
+        self.quotingEvent = quotingEvent
+        self.vm = vm
+        self.fullDismiss = fullDismiss
+        self.typingTextModel = vm.typingTextModel
     }
-    
+
     var body: some View {
         ScrollView {
             Color.clear.frame(height: 0)
@@ -50,18 +56,22 @@ struct PostPreview: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    sendNow()
+                    typingTextModel.sending = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        self.vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: fullDismiss)
+                    }
                 } label: {
-                    if (uploading) {
-                        ProgressView()
+                    if (typingTextModel.uploading || typingTextModel.sending) {
+                        ProgressView().colorInvert()
                     }
                     else {
-                        Text("Post.verb", comment: "Button to post (publish) a new post")
+                        Text("Post.verb", comment: "Button to post (publish) a post")
                     }
                 }
                 .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 .cornerRadius(20)
-                .disabled(uploading)
+                .disabled(typingTextModel.sending || typingTextModel.uploading || typingTextModel.text.isEmpty)
+                .opacity(typingTextModel.text.isEmpty ? 0.25 : 1.0)
             }
         }
         .navigationTitle(String(localized: "Post preview", comment: "Navigation title for Post Preview screen"))
@@ -138,7 +148,8 @@ func createPreviewEvent(_ event:NEvent) -> Event {
 }
 
 struct PostPreview_Previews: PreviewProvider {
-    @State static var uploading = false
+    @StateObject static var vm = NewPostModel()
+    @Environment(\.dismiss) static var dismiss
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadContacts()
@@ -146,7 +157,7 @@ struct PostPreview_Previews: PreviewProvider {
         }) {
             NavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost() {
-                    PostPreview(nrPost: nrPost, sendNow: { print("send!") }, uploading: $uploading)
+                    PostPreview(nrPost: nrPost, replyTo:nil, quotingEvent: nil, vm: vm, fullDismiss: dismiss)
                 }
             }
         }
