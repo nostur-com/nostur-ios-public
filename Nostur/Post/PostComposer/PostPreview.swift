@@ -48,6 +48,11 @@ struct PostPreview: View {
             }
             Spacer()
         }
+        .overlay(alignment: .bottom) {
+            MediaUploadProgress(uploader: vm.uploader)
+                .frame(height: Double(vm.uploader.queued.count * 38))
+                .background(themes.theme.background)
+        }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(String(localized:"Back", comment:"Button to go back")) {
