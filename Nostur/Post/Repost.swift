@@ -37,7 +37,7 @@ struct Repost: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
+        LazyVStack(alignment: .leading) {
             RepostHeader(repostedHeader: nrPost.repostedHeader, pubkey: nrPost.pubkey)
             if let firstQuote = noteRowAttributes.firstQuote {
                 // CASE - WE HAVE REPOSTED POST ALREADY
