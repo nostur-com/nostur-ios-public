@@ -9,40 +9,48 @@ import Foundation
 import SwiftUI
 import Combine
 
-func uploadImages(images: [UIImage]) -> AnyPublisher<[String], Error> {
+public struct PostedImageMeta: Hashable, Identifiable, Equatable {
+    static public func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+    public let id = UUID()
+    public let imageData:UIImage
+    public let type:ImageType
+    
+    public enum ImageType {
+        case jpeg // from pasting
+        case png // from PhotosUI
+    }
+}
+
+func uploadImages(images: [PostedImageMeta]) -> AnyPublisher<[String], Error> {
     let imagePublishers = images.map { uploadImage(image: $0) }
     return Publishers.MergeMany(imagePublishers)
         .collect()
         .eraseToAnyPublisher()
 }
 
-func uploadImage(image: UIImage, maxWidth:CGFloat = 2800.0) -> AnyPublisher<String, Error> {
-    let scale = image.size.width > maxWidth ? image.size.width / maxWidth : 1
-    let size = CGSize(width: image.size.width / scale, height: image.size.height / scale)
+func uploadImage(image: PostedImageMeta, maxWidth:CGFloat = 2800.0) -> AnyPublisher<String, Error> {
+    let scale = image.imageData.size.width > maxWidth ? image.imageData.size.width / maxWidth : 1
+    let size = CGSize(width: image.imageData.size.width / scale, height: image.imageData.size.height / scale)
     
     let format = UIGraphicsImageRendererFormat()
     format.scale = 1 // 1x scale, for 2x use 2, and so on
     let renderer = UIGraphicsImageRenderer(size: size, format: format)
     let scaledImage = renderer.image { _ in
-        image.draw(in: CGRect(origin: .zero, size: size))
+        image.imageData.draw(in: CGRect(origin: .zero, size: size))
     }
-    
-    let usePNG = false // hasTransparency(image: image) // TODO: Disabled for now
-    
-//    guard let imageData = usePNG ? scaledImage.pngData() : scaledImage.jpegData(compressionQuality: 0.85) else {
-//        return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
-//    }
     
     guard let imageData = scaledImage.jpegData(compressionQuality: 0.85) else {
         return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
     }
     
-    let request = SettingsStore.shared.defaultMediaUploadService.request(imageData, usePNG)
+    let request = SettingsStore.shared.defaultMediaUploadService.request(imageData, false)
 
     let session = URLSession(configuration: .default)
     return session.dataTaskPublisher(for: request)
         .tryMap { data, response -> String in
-            return try SettingsStore.shared.defaultMediaUploadService.urlFromResponse((data, response, usePNG))
+            return try SettingsStore.shared.defaultMediaUploadService.urlFromResponse((data, response, false))
         }
         .eraseToAnyPublisher()
 }

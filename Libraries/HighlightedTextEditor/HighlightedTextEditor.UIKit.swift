@@ -62,7 +62,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     @Binding var text: String
-    @Binding var pastedImages:[UIImage]
+    @Binding var pastedImages:[PostedImageMeta]
     
     var shouldBecomeFirstResponder: Bool
     
@@ -78,7 +78,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     
     public init(
         text: Binding<String>,
-        pastedImages: Binding<[UIImage]>,
+        pastedImages: Binding<[PostedImageMeta]>,
         shouldBecomeFirstResponder: Bool,
         highlightRules: [HighlightRule],
         photoPickerTapped: PhotoPickerTappedCallback? = nil,
@@ -185,7 +185,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     public final class Coordinator: NSObject, UITextViewDelegate, PastedImagesDelegate {
         
         func didPasteImage(_ image: UIImage) {
-            self.parent.pastedImages.append(image)
+            self.parent.pastedImages.append(PostedImageMeta(imageData: image, type: .jpeg))
         }
         
         func photoPickerTapped() {

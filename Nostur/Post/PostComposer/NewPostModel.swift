@@ -12,7 +12,7 @@ import NostrEssentials
 
 public final class TypingTextModel: ObservableObject {
     @Published var text: String = ""
-    @Published var pastedImages:[UIImage] = []
+    @Published var pastedImages:[PostedImageMeta] = []
     @Published var selectedMentions:Set<Contact> = [] // will become p-tags in the final post
     @Published var sending = false
     @Published var uploading = false
@@ -98,20 +98,24 @@ public final class NewPostModel: ObservableObject {
                 
                 let maxWidth:CGFloat = 2800.0
                 let mediaRequestBags = typingTextModel.pastedImages
-                    .compactMap { originalImage in // Resize images
-                        let scale = originalImage.size.width > maxWidth ? originalImage.size.width / maxWidth : 1
-                        let size = CGSize(width: originalImage.size.width / scale, height: originalImage.size.height / scale)
+                    .compactMap { imageMeta in // Resize images
+                        let scale = imageMeta.imageData.size.width > maxWidth ? imageMeta.imageData.size.width / maxWidth : 1
+                        let size = CGSize(width: imageMeta.imageData.size.width / scale, height: imageMeta.imageData.size.height / scale)
                         
                         let format = UIGraphicsImageRendererFormat()
                         format.scale = 1 // 1x scale, for 2x use 2, and so on
                         let renderer = UIGraphicsImageRenderer(size: size, format: format)
                         let scaledImage = renderer.image { _ in
-                            originalImage.draw(in: CGRect(origin: .zero, size: size))
+                            imageMeta.imageData.draw(in: CGRect(origin: .zero, size: size))
                         }
-                        return scaledImage.jpegData(compressionQuality: 0.85)
+                        
+                        if let imageData = scaledImage.jpegData(compressionQuality: 0.85) {
+                            return (imageData, PostedImageMeta.ImageType.jpeg)
+                        }
+                        return nil
                     }
-                    .map { resizedImage in
-                        MediaRequestBag(apiUrl: nip96apiURL, mediaData: resizedImage)
+                    .map { (resizedImage, type) in
+                        MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage)
                     }
                 
                 uploader.uploadingPublishers(for: mediaRequestBags, keys: keys)
@@ -165,7 +169,7 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
-    private func _sendNow(urls:[String], pastedImages:[UIImage], replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
+    private func _sendNow(urls:[String], pastedImages:[PostedImageMeta], replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
         guard let account = activeAccount else { return }
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
         let publicKey = account.publicKey

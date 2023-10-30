@@ -9,9 +9,9 @@ import SwiftUI
 import UIKit
 
 struct ImagePreviews: View {
-    @Binding var pastedImages:[UIImage]
+    @Binding var pastedImages:[PostedImageMeta]
     var previewImages:[Image] {
-        pastedImages.map { Image(uiImage: $0) }
+        pastedImages.map { Image(uiImage: $0.imageData) }
     }
     
     var body: some View {
@@ -40,7 +40,10 @@ struct ImagePreviews: View {
 }
 
 struct ImagePreviews_Previews: PreviewProvider {
-    @State static var images:[UIImage] = [UIImage(named:"NosturLogo")!, UIImage(named:"NosturLogoFull")!]
+    @State static var images:[PostedImageMeta] = [
+        PostedImageMeta(imageData: UIImage(named:"NosturLogo")!, type: .jpeg),
+        PostedImageMeta(imageData: UIImage(named:"NosturLogoFull")!, type: .jpeg)
+    ]
     static var previews: some View {
         VStack {
             ImagePreviews(pastedImages: $images)
