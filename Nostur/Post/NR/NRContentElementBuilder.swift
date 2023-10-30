@@ -35,7 +35,9 @@ class NRContentElementBuilder {
                 let nonMatch = (input as NSString).substring(with: nonMatchRange)
                 let matchString = (input as NSString).substring(with: matchRange)
                 
-                result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch)))
+                if !nonMatch.isEmpty {
+                    result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch)))
+                }
                 
                 if !matchString.matchingStrings(regex: Self.imageUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
@@ -127,7 +129,9 @@ class NRContentElementBuilder {
         let nonMatchRange = NSRange(location: lastMatchEnd, length: input.utf16.count - lastMatchEnd)
         let nonMatch = (input as NSString).substring(with: nonMatchRange)
         
-        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch)))
+        if !nonMatch.isEmpty {
+            result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch)))
+        }
         return (result, linkPreviewUrls)
     }
     
