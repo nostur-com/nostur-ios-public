@@ -908,17 +908,16 @@ class NewWebSocket {
     
     func sendMessage(_ text:String) {
         wsq.async { [weak self] in
-            guard let self = self else { return }
-            guard let webSocket = webSocket else {
-                L.sockets.info("🔴🔴 Not connected. Did not sendMessage \(self.url)")
+            if self?.webSocket == nil {
+                L.sockets.info("🔴🔴 Not connected. Did not sendMessage \(self?.url ?? "?")")
                 return
             }
             let socketMessage = SocketMessage(text: text)
-            self.outQueue.append(socketMessage)
-            L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-            webSocket.send(text)
+            self?.outQueue.append(socketMessage)
+            L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self?.url ?? "?"): \(text)")
+            self?.webSocket?.send(text)
                 .subscribe(Subscribers.Sink(
-                    receiveCompletion: { [weak self] completion in
+                    receiveCompletion: { completion in
                         switch completion {
                         case .finished:
                             self?.wsq.async {
