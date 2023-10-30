@@ -278,3 +278,18 @@ struct NoteRow_Previews: PreviewProvider {
         }
     }
 }
+
+
+#Preview("Debugging") {
+    PreviewContainer({ pe in
+        pe.parseMessages([
+            ###"["EVENT", "bug", {"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","content":"#[0] is there a way to link a personal domain to images uploaded to nostrcheck.me?\r\nSo, any image uploaded comes back with the URL of my own domain instead of nostrcheck.me?\r\n\r\nThis way anyone could use nostrcheck.me and still have some control over the images included in posts.\r\n\r\nEventually it would allow people to migrate to their self-hosted nostrcheck.me with all their image URLs still working. I think this aligns with your goal of encouraging anyone to self-host their files.\r\n\r\nYou could provide an option to export all your images to make migration easier and clients would be encouraged to keep copies of their images so they can easily made available again on another instance if needed.\r\n","id":"3757ec487077c85a42f3f9f396307d2ab6bf34211f221fa621a6742366b4ca16","created_at":1695552610,"sig":"b6a51d3d329550696b7f260cc61fc9ba5f1a4764b575a3a24b0a9baab17a11df995f7419c6519385e585099a87d3efd46a52dd796ff399c0a4d91f957f335362","kind":1,"tags":[["p","89e14be49ed0073da83b678279cd29ba5ad86cf000b6a3d1a4c3dc4aa4fdd02c"]]}]"###])
+    }) {
+        if let p = PreviewFetcher.fetchNRPost("3757ec487077c85a42f3f9f396307d2ab6bf34211f221fa621a6742366b4ca16") {
+            Box {
+                NoteRow(nrPost: p, theme: Themes.default.theme)
+            }
+        }
+    }
+    
+}

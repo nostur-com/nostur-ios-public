@@ -196,7 +196,6 @@
 		1F77D1EC2A1FB3CA00895DB4 /* ThreadReplies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */; };
 		1F77D2E229D238520028DC95 /* ShareableIdentifierTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */; };
 		1F7A10E22AA1DB7300042CD6 /* Search+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7A10E12AA1DB7300042CD6 /* Search+Helpers.swift */; };
-		1F7B217D2AE2EFE400CE972E /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7B217C2AE2EFE400CE972E /* NostrEssentials */; };
 		1F7B218C2AE3118D00CE972E /* Settings+Nip96Configurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7B218B2AE3118D00CE972E /* Settings+Nip96Configurator.swift */; };
 		1F7B218E2AE3B14700CE972E /* MediaUploadProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7B218D2AE3B14700CE972E /* MediaUploadProgress.swift */; };
 		1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7B21902AE3D6C000CE972E /* NostrEssentials */; };
@@ -467,7 +466,7 @@
 		1F0088EA29D735080016F111 /* ContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRenderer.swift; sourceTree = "<group>"; };
 		1F00E8C229C2FE7800797B78 /* LVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LVM.swift; sourceTree = "<group>"; };
 		1F02EA5B299F94F200FC89EB /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
-		1F041F412AEBB19200B52D42 /* NRText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NRText.swift; path = Nostur/ViewFragments/NRText.swift; sourceTree = "<group>"; };
+		1F041F412AEBB19200B52D42 /* NRText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRText.swift; sourceTree = "<group>"; };
 		1F056FA52A5C2E7900578B35 /* ZapAmountButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapAmountButton.swift; sourceTree = "<group>"; };
 		1F056FA72A5C2F3B00578B35 /* CustomZapAmountEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomZapAmountEntry.swift; sourceTree = "<group>"; };
 		1F0592DB2A505531003B4B3C /* DiscoverCommunities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverCommunities.swift; sourceTree = "<group>"; };
@@ -890,7 +889,6 @@
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
 				1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
-				1F7B217D2AE2EFE400CE972E /* NostrEssentials in Frameworks */,
 				1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 			);
@@ -1430,10 +1428,11 @@
 				1FC78F6629CA18410009C1C7 /* Ago.swift */,
 				1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */,
 				1F5BA91329A8C27200002652 /* NewNoteButton.swift */,
+				1F2245B72AA46C6F00C06342 /* NostrAddress.swift */,
 				1FBE253B2A9DC4F700F60FCF /* NRButton.swift */,
+				1F041F412AEBB19200B52D42 /* NRText.swift */,
 				1FF30DEE2A05784F00B0F011 /* SearchBox.swift */,
 				1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */,
-				1F2245B72AA46C6F00C06342 /* NostrAddress.swift */,
 			);
 			path = ViewFragments;
 			sourceTree = "<group>";
@@ -1507,7 +1506,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F041F412AEBB19200B52D42 /* NRText.swift */,
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
@@ -1837,7 +1835,6 @@
 				1F2F54E92A0236E500B6D7E4 /* Gifu */,
 				1F91D8F52A17C55F00C419A3 /* Collections */,
 				1F77AD0A2A42133000585E12 /* MarkdownUI */,
-				1F7B217C2AE2EFE400CE972E /* NostrEssentials */,
 				1F7B21902AE3D6C000CE972E /* NostrEssentials */,
 			);
 			productName = Nostur;
@@ -2711,8 +2708,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/GigaBitcoin/secp256k1.swift";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.2;
+				kind = exactVersion;
+				version = 0.9.2;
 			};
 		};
 		1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */ = {
@@ -2760,7 +2757,7 @@
 			repositoryURL = "https://github.com/nostur-com/nostr-essentials";
 			requirement = {
 				kind = revision;
-				revision = bbca6e6e754949e6b95677b1f200da6f29fcece7;
+				revision = 9631bc3fbb1ed53faeae2ca5ce3278fb924d91b5;
 			};
 		};
 		1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */ = {
@@ -2826,10 +2823,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
-		};
-		1F7B217C2AE2EFE400CE972E /* NostrEssentials */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = NostrEssentials;
 		};
 		1F7B21902AE3D6C000CE972E /* NostrEssentials */ = {
 			isa = XCSwiftPackageProductDependency;

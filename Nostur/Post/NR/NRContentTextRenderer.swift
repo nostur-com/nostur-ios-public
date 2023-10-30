@@ -17,8 +17,9 @@ struct NRContentTextRenderer: View {
         NRText(text ?? attributedStringWithPs.output)
 //            .lineSpacing(3)
 //            .lineLimit(isDetail ? 3000 : 20)
-            .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
-//            .frame(maxWidth: .infinity, alignment: .leading)    
+//            .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
+//            .frame(maxWidth: .infinity, alignment: .leading)
+//            .background(Color.red)
             .onReceive(
                 Importer.shared.contactSaved
                     .filter { pubkey in
