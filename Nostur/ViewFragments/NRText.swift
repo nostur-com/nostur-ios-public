@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NRText: View {
     @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var dim:DIMENSIONS
     @State private var width: CGFloat = .zero
     @State private var height: CGFloat = .zero
     
@@ -30,22 +31,13 @@ struct NRText: View {
             UITextViewWrapper(
                 attributedString: attributedString,
                 textColor: UIColor(themes.theme.primary),
-                width: width,
+                width: dim.availableNoteRowImageWidth(),
                 height: $height,
                 maxHeight: maxHeight
             )
-            .onAppear {
-                if geo.size.width != .zero {
-                    width = geo.size.width
-                }
-            }
-            .onChange(of: geo.size) { size in
-                if width != size.width {
-                    width = size.width
-                }
-            }
         }
         .frame(height: height)
+//        .background(Color.red)
     }
 }
 
@@ -114,6 +106,7 @@ struct UITextViewWrapper: UIViewRepresentable {
             .background(Color.green)
     }
         .environmentObject(Themes.default)
+        .environmentObject(DIMENSIONS())
 }
 
 
@@ -125,6 +118,22 @@ struct UITextViewWrapper: UIViewRepresentable {
     }) {
         if let p = PreviewFetcher.fetchNRPost("a3d05222ad9459511b66814348eff9688f24edc06d1f86897636ae7c7bb2e031") {
             PostOrThread(nrPost: p)
+        }
+    }
+}
+
+
+#Preview("PostOrThread, too high") {
+    PreviewContainer({ pe in
+        pe.parseMessages([
+            ###"["EVENT", "pp", {"pubkey":"6e75f7972397ca3295e0f4ca0fbc6eb9cc79be85bafdd56bd378220ca8eee74e","content":"Good morning #coffeechain ☕ 💜 https://nostrcheck.me/media/public/nostrcheck.me_6645701053325405701698657867.webp ","id":"f2e2b40834c8600bb93e72230d278c965ab5a95690efe02a8d028a9457891216","created_at":1698657877,"sig":"4e072eb0240e3ad03c468cee97082a8d346f34fa8eafe76f1070a622ab09e65fea96156dcba14659bdd0183e489057d7721e7fd6bb6663b9c40de8adec6fff61","kind":1,"tags":[["t","coffeechain"]]}]"###,
+            ###"["EVENT", "pp", {"pubkey":"c89cf36deea286da912d4145f7140c73495d77e2cfedfb652158daa7c771f2f8","content":"gm from 🇯🇵 to 🇩🇪 nostr:npub1de6l09erjl9r990q7n9ql0rwh8x8n059ht7a267n0q3qe28wua8q20q0sd 🫂🍶✨","id":"ea4ea2b6ec2e2208aa2be575769114378c7d73b31a35abf345a8d6a60c949182","created_at":1698658838,"sig":"8c34b3be922abc5ea573f1a7035dfc6e6b42a067afa21070e5a0046fe13ef59548f9361293c40a3aba942a7f4e90bdb80e29244ba0fe9e8e812bc652ee0a0c64","kind":1,"tags":[["e","f2e2b40834c8600bb93e72230d278c965ab5a95690efe02a8d028a9457891216"],["p","6e75f7972397ca3295e0f4ca0fbc6eb9cc79be85bafdd56bd378220ca8eee74e"],["p","6e75f7972397ca3295e0f4ca0fbc6eb9cc79be85bafdd56bd378220ca8eee74e"]]}]"###
+        ])
+    }) {
+        if let p = PreviewFetcher.fetchNRPost("ea4ea2b6ec2e2208aa2be575769114378c7d73b31a35abf345a8d6a60c949182", withReplyTo: true, withParents: true) {
+            SmoothListMock {
+                PostOrThread(nrPost: p)
+            }
         }
     }
 }
