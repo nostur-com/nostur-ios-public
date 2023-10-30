@@ -102,7 +102,9 @@ public final class NewPostModel: ObservableObject {
                         let scale = originalImage.size.width > maxWidth ? originalImage.size.width / maxWidth : 1
                         let size = CGSize(width: originalImage.size.width / scale, height: originalImage.size.height / scale)
                         
-                        let renderer = UIGraphicsImageRenderer(size: size)
+                        let format = UIGraphicsImageRendererFormat()
+                        format.scale = 1 // 1x scale, for 2x use 2, and so on
+                        let renderer = UIGraphicsImageRenderer(size: size, format: format)
                         let scaledImage = renderer.image { _ in
                             originalImage.draw(in: CGRect(origin: .zero, size: size))
                         }
