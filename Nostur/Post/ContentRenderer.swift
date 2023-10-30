@@ -215,8 +215,8 @@ struct ContentRenderer: View { // VIEW things
                         .padding(.vertical, 10)
                         .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
-                case .postPreviewImage(let uiImage):
-                    Image(uiImage: uiImage)
+                case .postPreviewImage(let postedImageMeta):
+                    Image(uiImage: postedImageMeta.imageData)
                         .resizable()
                         .scaledToFit()
                         .frame(maxWidth: 600)

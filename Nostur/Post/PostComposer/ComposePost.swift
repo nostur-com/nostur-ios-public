@@ -74,7 +74,7 @@ struct ComposePost: View {
 //                            .padding(.bottom, 100) // Need some extra space for expanding account switcher
                             .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
                             .onChange(of: ipm.newImage) { newImage in
-                                if let newImage { vm.typingTextModel.pastedImages.append(newImage) }
+                                if let newImage { vm.typingTextModel.pastedImages.append(PostedImageMeta(imageData: newImage, type: .jpeg)) }
                             }
                             .padding(10)
                             .toolbar {

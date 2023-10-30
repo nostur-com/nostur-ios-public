@@ -252,7 +252,7 @@ enum ContentElement: Hashable, Identifiable {
     case image(MediaContent)
     case video(MediaContent)
     case linkPreview(URL)
-    case postPreviewImage(UIImage)
+    case postPreviewImage(PostedImageMeta)
     case nevent1(ShareableIdentifier)
     case nprofile1(ShareableIdentifier)
     case nrPost(NRPost) // embedded post, already processed for rendering
