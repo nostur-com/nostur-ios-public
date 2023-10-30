@@ -20,7 +20,9 @@ func uploadImage(image: UIImage, maxWidth:CGFloat = 2800.0) -> AnyPublisher<Stri
     let scale = image.size.width > maxWidth ? image.size.width / maxWidth : 1
     let size = CGSize(width: image.size.width / scale, height: image.size.height / scale)
     
-    let renderer = UIGraphicsImageRenderer(size: size)
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1 // 1x scale, for 2x use 2, and so on
+    let renderer = UIGraphicsImageRenderer(size: size, format: format)
     let scaledImage = renderer.image { _ in
         image.draw(in: CGRect(origin: .zero, size: size))
     }
