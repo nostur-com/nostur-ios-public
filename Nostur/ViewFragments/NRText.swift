@@ -6,66 +6,43 @@
 //
 
 import SwiftUI
+import RepresentableKit
 
 struct NRText: View {
     @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var dim:DIMENSIONS
-    @State private var width: CGFloat = .zero
-    @State private var height: CGFloat = .zero
     
     private let attributedString: AttributedString
-    private var maxHeight: Double?
 
-    init(_ attributedString: AttributedString, maxHeight: Double? = nil) {
+    init(_ attributedString: AttributedString) {
         self.attributedString = attributedString
-        self.maxHeight = maxHeight
     }
     
-    init(_ text: String, maxHeight: Double? = nil) {
-        self.attributedString = (try? AttributedString(markdown: text)) ?? AttributedString(text)
-        self.maxHeight = maxHeight
+    init(_ text: String) {
+        self.attributedString = (try? AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(text)
     }
     
     var body: some View {
-        GeometryReader { geo in
-            UITextViewWrapper(
-                attributedString: attributedString,
-                textColor: UIColor(themes.theme.primary),
-                width: dim.availableNoteRowImageWidth(),
-                height: $height,
-                maxHeight: maxHeight
-            )
+        UIViewAdaptor {
+            makeUITextView()
         }
-        .frame(height: height)
-//        .background(Color.red)
-    }
-}
-
-struct UITextViewWrapper: UIViewRepresentable {
-    
-    public let attributedString: AttributedString
-    public let textColor: UIColor
-    public let width: CGFloat
-    @Binding public var height: CGFloat
-    public var maxHeight: Double?
-    
-    func makeUIView(context: Context) -> UITextView {
-        let uiView = UITextView()
-        uiView.isSelectable = true
-        uiView.isEditable = false
-        uiView.dataDetectorTypes = .link
-        uiView.backgroundColor = .clear
-        uiView.textContainer.lineFragmentPadding = 0
-        uiView.textContainerInset = .zero
-            
-        return uiView
+        .fixedSize(horizontal: false, vertical: true)
     }
     
-    func updateUIView(_ uiView: UITextView, context: Context) {
+    func makeUITextView() -> UITextView {
+        let view = UITextView()
+        view.isScrollEnabled = false
+        view.tintColor = UIColor(themes.theme.accent)
+        view.isSelectable = true
+        view.isEditable = false
+        view.dataDetectorTypes = .link
+        view.backgroundColor = .clear
+        view.textContainer.lineFragmentPadding = 0
+        view.textContainerInset = .zero
+        
         let mutableAttributedString = NSMutableAttributedString(attributedString)
         let attributes:[NSAttributedString.Key: NSObject] = [
             .font: UIFont.preferredFont(forTextStyle: .body),
-            .foregroundColor: textColor
+            .foregroundColor: UIColor(themes.theme.primary)
         ]
         
         mutableAttributedString.addAttributes(
@@ -73,24 +50,9 @@ struct UITextViewWrapper: UIViewRepresentable {
             range: NSRange(location: 0, length: mutableAttributedString.length)
         )
         
-        uiView.attributedText = mutableAttributedString
+        view.attributedText = mutableAttributedString
         
-        let newHeight = mutableAttributedString.boundingRect(
-            with: CGSize(width: width, height: CGFloat.greatestFiniteMagnitude),
-            options: [.usesLineFragmentOrigin, .usesFontLeading],
-            context: nil
-        ).size.height
-        uiView.isScrollEnabled = true
-        
-        DispatchQueue.main.async {
-            if let maxHeight = maxHeight, newHeight > maxHeight {
-                height = ceil(maxHeight)
-            }
-            else {
-                height = ceil(newHeight)
-            }
-            uiView.isScrollEnabled = false
-        }
+        return view
     }
 }
 
@@ -99,7 +61,7 @@ struct UITextViewWrapper: UIViewRepresentable {
         NRText("Some text with a tag [#bitcoin](nostur:t:bitcoin)")
             .background(Color.red)
         
-        NRText("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long", maxHeight: 200.0)
+        NRText("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long")
             .background(Color.blue)
         
         Text("What")

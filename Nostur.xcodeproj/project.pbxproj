@@ -195,6 +195,7 @@
 		1F77AD0D2A421DD400585E12 /* NRContentMarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77AD0C2A421DD400585E12 /* NRContentMarkdownRenderer.swift */; };
 		1F77D1EC2A1FB3CA00895DB4 /* ThreadReplies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */; };
 		1F77D2E229D238520028DC95 /* ShareableIdentifierTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */; };
+		1F78F6BD2AF17803006A417E /* RepresentableKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1F78F6BC2AF17803006A417E /* RepresentableKit */; };
 		1F7A10E22AA1DB7300042CD6 /* Search+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7A10E12AA1DB7300042CD6 /* Search+Helpers.swift */; };
 		1F7B218C2AE3118D00CE972E /* Settings+Nip96Configurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7B218B2AE3118D00CE972E /* Settings+Nip96Configurator.swift */; };
 		1F7B218E2AE3B14700CE972E /* MediaUploadProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7B218D2AE3B14700CE972E /* MediaUploadProgress.swift */; };
@@ -884,6 +885,7 @@
 				1F77AD0B2A42133000585E12 /* MarkdownUI in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
 				1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */,
+				1F78F6BD2AF17803006A417E /* RepresentableKit in Frameworks */,
 				1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
@@ -1836,6 +1838,7 @@
 				1F91D8F52A17C55F00C419A3 /* Collections */,
 				1F77AD0A2A42133000585E12 /* MarkdownUI */,
 				1F7B21902AE3D6C000CE972E /* NostrEssentials */,
+				1F78F6BC2AF17803006A417E /* RepresentableKit */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -1897,6 +1900,7 @@
 				1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */,
 				1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */,
+				1F78F6BB2AF17803006A417E /* XCRemoteSwiftPackageReference "RepresentableKit" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -2752,6 +2756,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		1F78F6BB2AF17803006A417E /* XCRemoteSwiftPackageReference "RepresentableKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/yumemi-inc/RepresentableKit";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/nostur-com/nostr-essentials";
@@ -2823,6 +2835,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
+		};
+		1F78F6BC2AF17803006A417E /* RepresentableKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F78F6BB2AF17803006A417E /* XCRemoteSwiftPackageReference "RepresentableKit" */;
+			productName = RepresentableKit;
 		};
 		1F7B21902AE3D6C000CE972E /* NostrEssentials */ = {
 			isa = XCSwiftPackageProductDependency;

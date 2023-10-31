@@ -13,13 +13,8 @@ struct NRContentTextRenderer: View {
     @State var text:AttributedString? = nil
     
     var body: some View {
-//        Text(text ?? attributedStringWithPs.output)
         NRText(text ?? attributedStringWithPs.output)
-//            .lineSpacing(3)
-//            .lineLimit(isDetail ? 3000 : 20)
-//            .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
-//            .frame(maxWidth: .infinity, alignment: .leading)
-//            .background(Color.red)
+//            .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack UPDATE: maybe not needed anymore because we use UIViewAdaptor now
             .onReceive(
                 Importer.shared.contactSaved
                     .filter { pubkey in
