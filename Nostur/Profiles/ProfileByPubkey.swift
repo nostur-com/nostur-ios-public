@@ -50,6 +50,7 @@ struct ProfileByPubkey: View {
                 }
         case .ready(let nrContact):
             ProfileView(nrContact: nrContact, tab:tab)
+                .preference(key: TabTitlePreferenceKey.self, value: nrContact.anyName)
         case .timeout:
             VStack {
                 Spacer()
