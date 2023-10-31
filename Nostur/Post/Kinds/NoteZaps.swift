@@ -51,6 +51,7 @@ struct NoteZaps: View {
                     Text("This can be caused by the receiver switching to a different lightning address")
                         .font(.caption)
                         .italic()
+                        .padding(10)
                     
                     ForEach(unverifiedZaps) { both in
                         Box {
