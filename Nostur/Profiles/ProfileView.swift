@@ -306,7 +306,6 @@ struct ProfileView: View {
             }
         }
         .background(themes.theme.background)
-        .preference(key: TabTitlePreferenceKey.self, value: nrContact.anyName)
 //        .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in // TODO: MOVE TO FOLLOWING LIST TAB
 //            let nEvent = notification.object as! NEvent
 //            if nEvent.publicKey == contact.pubkey {
