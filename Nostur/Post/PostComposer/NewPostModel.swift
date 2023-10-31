@@ -11,12 +11,23 @@ import Combine
 import NostrEssentials
 
 public final class TypingTextModel: ObservableObject {
-    @Published var text: String = ""
+    @AppStorage("simple_draft") var draft = ""
+    @Published var text: String = "" {
+        didSet {
+            draft = text
+        }
+    }
     @Published var pastedImages:[PostedImageMeta] = []
     @Published var selectedMentions:Set<Contact> = [] // will become p-tags in the final post
     @Published var sending = false
     @Published var uploading = false
     private var subscriptions = Set<AnyCancellable>()
+    
+    init() {
+        if !draft.isEmpty {
+            text = draft
+        }
+    }
 }
 
 public final class NewPostModel: ObservableObject {
@@ -294,6 +305,7 @@ public final class NewPostModel: ObservableObject {
         }
         dismiss()
         sendNotification(.didSend)
+        typingTextModel.text = ""
     }
     
     public func showPreview(quotingEvent:Event? = nil) {
