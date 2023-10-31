@@ -214,7 +214,7 @@ struct ProfileOverlayCard: View {
                 }
                 .padding(.bottom, 10)
                 
-                NRText("\(String(contact.about ?? ""))\n", maxHeight: 200.0)
+                NRText("\(String(contact.about ?? ""))\n")
                 
                 HStack(spacing:0) {
                     Button(String(localized:"Posts", comment:"Tab title")) {
