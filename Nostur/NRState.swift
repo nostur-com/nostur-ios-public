@@ -37,14 +37,6 @@ class NRState: ObservableObject {
     var rawExplorePubkeys:Set<String> = []
     
     @MainActor public func logout(_ account:Account) {
-        if (account.privateKey != nil) {
-            if account.isNC {
-                NIP46SecretManager.shared.deleteSecret(account: account)
-            }
-            else {
-                AccountManager.shared.deletePrivateKey(forPublicKeyHex: account.publicKey)
-            }
-        }
         DataProvider.shared().viewContext.delete(account)
         DataProvider.shared().save()
         self.loadAccounts() { accounts in
