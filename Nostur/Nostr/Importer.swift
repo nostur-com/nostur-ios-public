@@ -228,8 +228,6 @@ class Importer {
                             else {
                                 Event.updateRelays(noteInNote.id, relays: message.relays)
                             }
-                            event.content = "#[0]"
-                            event.tags.insert(NostrTag(["e", noteInNote.id, "", "mention"]), at: 0)
                         }
                     }
                     
@@ -445,8 +443,6 @@ class Importer {
                             else {
                                 Event.updateRelays(noteInNote.id, relays: message.relays)
                             }
-                            event.content = "#[0]"
-                            event.tags.insert(NostrTag(["e", noteInNote.id, "", "mention"]), at: 0)
                         }
                     }
                     
