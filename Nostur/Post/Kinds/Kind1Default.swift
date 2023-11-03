@@ -152,7 +152,7 @@ struct Kind1Default: View {
 //                                t.animation = nil
 //                            }
                     }
-                    if imageWidth < 25 { // Probably too many embeds in embeds in embeds in embeds, no space left
+                    if imageWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                     else if (isDetail) {
