@@ -223,6 +223,8 @@ extension Event {
 }
 
 // MARK: Generated accessors for bookmarkedBy
+// Old bookmark relations, no longer needed, but can't remove yet because needed for
+// one time migration. After migration we can remove the code but need to figure out to do that
 extension Event {
     
     @objc(addBookmarkedByObject:)

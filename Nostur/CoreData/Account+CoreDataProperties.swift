@@ -89,6 +89,8 @@ extension Account {
 }
 
 // MARK: Generated accessors for bookmarks
+// Old bookmark relations, no longer needed, but can't remove yet because needed for
+// one time migration. After migration we can remove the code but need to figure out to do that
 extension Account {
 
     @objc(addBookmarksObject:)
