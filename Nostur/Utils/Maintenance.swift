@@ -64,6 +64,7 @@ struct Maintenance {
             Self.runFixZappedContactPubkey(context: context)
             Self.runPutRepostedPubkeyInOtherPubkey(context: context)
             Self.runPutReactionToPubkeyInOtherPubkey(context: context)
+            Self.runMigrateBookmarks(context: context)
             
             do {
                 if context.hasChanges {
@@ -804,6 +805,31 @@ struct Maintenance {
         migration.migrationCode = migrationCode.runPutReactionToPubkeyInOtherPubkey.rawValue
     }
     
+    // Migrate Bookmarks to iCloud-ready table
+    static func runMigrateBookmarks(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.migrateBookmarks, context: context) else { return }
+        
+        // find all bookmarks, add them to Bookmark table
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "bookmarkedBy.@count > 0")
+        
+        var migratedBookmarks:Int = 0
+        if let bookmarks = try? context.fetch(fr) {
+            L.maintenance.info("migrateBookmarks: Found \(bookmarks.count) bookmarks")
+            for bookmark in bookmarks {
+                let migratedBookmark = Bookmark(context: context)
+                migratedBookmark.eventId = bookmark.id
+                migratedBookmark.json = bookmark.toNEvent().eventJson()
+                migratedBookmark.createdAt = bookmark.date // (We don't know when the bookmark was added, so use event created_at here)
+                migratedBookmarks += 1
+            }
+            L.maintenance.info("migrateBookmarks: Migrated \(migratedBookmarks) bokmarks")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migrateBookmarks.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -835,7 +861,9 @@ struct Maintenance {
         case runPutRepostedPubkeyInOtherPubkey = "runPutRepostedPubkeyInOtherPubkey"
         
         // Cache .reactionTo.pubkey in .otherPubkey
-        case runPutReactionToPubkeyInOtherPubkey = "runPutReactionToPubkeyInOtherPubkey"
-   
+        case runPutReactionToPubkeyInOtherPubkey = "runPutReactionToPubkeyInOtherPubkey"  
+        
+        // Migrate Bookmarks to iCloud table
+        case migrateBookmarks = "migrateBookmarks"
     }
 }
