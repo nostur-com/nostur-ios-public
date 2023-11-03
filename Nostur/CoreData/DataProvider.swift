@@ -31,44 +31,60 @@ class DataProvider: ObservableObject {
     var databaseProblemDescription:String = ""
     
     /// A persistent container to set up the Core Data stack.
-    lazy var container: NSPersistentContainer = {
+    lazy var container: NSPersistentCloudKitContainer = {
         /// - Tag: persistentContainer
-        let container = NSPersistentContainer(name: "NosturCloud")
-        
-        guard let description = container.persistentStoreDescriptions.first else {
-            fatalError("Failed to retrieve a persistent store description.")
-        }
+        let container = NSPersistentCloudKitContainer(name: "NosturCloud")
         
         let defaultDirectoryURL = NSPersistentContainer.defaultDirectoryURL()
-        //        description.url = defaultDirectoryURL.appendingPathComponent("Nostur-iCloud.sqlite")
-        description.url = defaultDirectoryURL.appendingPathComponent("Nostur.sqlite") // ("Nostur-iCloud.sqlite")
-        description.configuration = "Default"
+        
+        // Create a store description for a local store
+        let localStoreLocation = defaultDirectoryURL.appendingPathComponent("Nostur.sqlite")
+        let localStoreDescription = NSPersistentStoreDescription(url: localStoreLocation)
+        localStoreDescription.configuration = "Local"
+            
+        // Create a store description for a CloudKit-backed local store
+        let cloudStoreLocation = defaultDirectoryURL.appendingPathComponent("NosturCloud.sqlite")
+        let cloudStoreDescription = NSPersistentStoreDescription(url: cloudStoreLocation)
+        cloudStoreDescription.configuration = "Cloud"
+        cloudStoreDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        cloudStoreDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
         
         if inMemory {
-            description.url = URL(fileURLWithPath: "/dev/null")
+            localStoreDescription.url = URL(fileURLWithPath: "/dev/null")
+            cloudStoreDescription.url = URL(fileURLWithPath: "/dev/null")
         }
         else {
-            L.og.info("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(description.url?.absoluteString ?? "")")
-            description.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
+            L.og.info("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(localStoreDescription.url?.absoluteString ?? "")")
+            localStoreDescription.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
+            cloudStoreDescription.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
         }
         
-        
-        
+        // Set the container options on the cloud store
+        cloudStoreDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.nostur.data")
+            
+        // Update the container's list of store descriptions
+        container.persistentStoreDescriptions = [cloudStoreDescription, localStoreDescription]
+            
+        // Load both stores
         var newError:NSError?
         container.loadPersistentStores { storeDescription, error in
             newError = error as NSError?
         }
         if newError != nil {
-//            print("Unresolved error \(newError?.description ?? "")")
             self.databaseProblem = true
             self.databaseProblemDescription = newError?.userInfo.description ?? ""
-            description.url = URL(fileURLWithPath: "/dev/null")
+            
+            localStoreDescription.url = URL(fileURLWithPath: "/dev/null")
+            cloudStoreDescription.url = URL(fileURLWithPath: "/dev/null")
+            
             container.loadPersistentStores { storeDescription, error in
                 if let error = error as NSError? {
                     L.og.error("Unresolved error \(error), \(error.userInfo)")
                 }
             }
         }
+        
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.undoManager = nil
@@ -154,8 +170,7 @@ class DataProvider: ObservableObject {
         
         let bg = self.bgStored ?? self.bg
         
-        bg.perform { [weak self] in
-            guard let self = self else { return }
+        bg.perform {
             if bg.hasChanges {
                 do {
                     try bg.save()
