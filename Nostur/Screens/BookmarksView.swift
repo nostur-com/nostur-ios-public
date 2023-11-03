@@ -6,53 +6,47 @@
 //
 
 import SwiftUI
+import Combine
+import CoreData
 
 struct BookmarksView: View {
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var ns:NRState
     @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Bookmarks"
-
-    private let account: Account
+    
     @Binding private var navPath:NavigationPath
-    @State private var vBookmarks:[NRPost] = []
-
-//    private var accounts:[Account] {
-//        ns.accounts.filter { $0.privateKey != nil }
-//    }
-
+    @State private var bookmarks:[Bookmark] = []
+    @State private var subscriptions = Set<AnyCancellable>()
+    
     @ObservedObject private var settings:SettingsStore = .shared
-//    @State private var selectedAccount:Account? = nil
+    
     @Namespace private var top
-
-    init(account:Account, navPath:Binding<NavigationPath>) {
+    
+    init(navPath:Binding<NavigationPath>) {
         _navPath = navPath
-        self.account = account
-//        self.selectedAccount = account
     }
-
+    
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                if !vBookmarks.isEmpty {
+                if !bookmarks.isEmpty {
                     LazyVStack(spacing: 10) {
-                        ForEach(vBookmarks) { vBookmark in
-                            Box(nrPost: vBookmark) {
-                                PostRowDeletable(nrPost: vBookmark, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                        ForEach(bookmarks) { bookmark in
+                            Box(nrPost: bookmark.nrPost) {
+                                PostRowDeletable(nrPost: bookmark.nrPost!, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                             }
-    //                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-    //                        .fixedSize(horizontal: false, vertical: true)
-                            .id(vBookmark.id)
+                            .id(bookmark.nrPost!.id)
                             .onDelete {
                                 withAnimation {
-                                    vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
+                                    bookmarks = bookmarks.filter { $0.nrPost!.id != bookmark.nrPost!.id }
                                 }
                                 
                                 bg().perform {
-                                    vBookmark.event.bookmarkedBy = []
+                                    bg().delete(bookmark)
                                     DataProvider.shared().bgSave()
                                 }
                             }
@@ -60,7 +54,7 @@ struct BookmarksView: View {
                         Spacer()
                     }
                     .background(themes.theme.listBackground)
-                    .preference(key: BookmarksCountPreferenceKey.self, value: vBookmarks.count.description)
+                    .preference(key: BookmarksCountPreferenceKey.self, value: bookmarks.count.description)
                 }
                 else {
                     Text("When you bookmark a post it will show up here.")
@@ -78,15 +72,11 @@ struct BookmarksView: View {
                 }
             }
         }
-//        .overlay(alignment:.topTrailing) {
-//            AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
-//                .padding(.horizontal)
-//        }
         .onReceive(receiveNotification(.postAction)) { notification in
             let action = notification.object as! PostActionNotification
             if (action.type == .bookmark  && !action.bookmarked) {
                 withAnimation {
-                    vBookmarks = vBookmarks.filter { $0.id != action.eventId }
+                    bookmarks = bookmarks.filter { $0.nrPost!.id != action.eventId }
                 }
             }
             else if action.type == .bookmark {
@@ -96,39 +86,86 @@ struct BookmarksView: View {
         .navigationTitle(String(localized:"Bookmarks", comment:"Navigation title for Bookmarks screen"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
-//        .onChange(of: selectedAccount) { account in
-//            self.loadBookmarks(forAccount: account)
-//        }
         .task {
-            self.loadBookmarks()
+            loadBookmarks()
+            listenForRemoteChanges()
         }
         .simultaneousGesture(
-               DragGesture().onChanged({
-                   if 0 < $0.translation.height {
-                       sendNotification(.scrollingUp)
-                   }
-                   else if 0 > $0.translation.height {
-                       sendNotification(.scrollingDown)
-                   }
-               }))
+            DragGesture().onChanged({
+                if 0 < $0.translation.height {
+                    sendNotification(.scrollingUp)
+                }
+                else if 0 > $0.translation.height {
+                    sendNotification(.scrollingDown)
+                }
+            }))
     }
     
-    private func loadBookmarks(forAccount account: Account? = nil) {
-        let fr = Event.fetchRequest()
-        if let account {
-            fr.predicate = NSPredicate(format: "%@ IN bookmarkedBy", account)
-        }
-        else {
-            fr.predicate = NSPredicate(format: "bookmarkedBy.@count > 0")
-        }
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        
-        let ctx = DataProvider.shared().bg
-        ctx.perform {
-            if let bookmarks = try? ctx.fetch(fr) {
-                self.vBookmarks = bookmarks.map { NRPost(event: $0) }
+    private func loadBookmarks() {
+        bg().perform {
+            let cloudBookmarks = Bookmark.fetchAll(context: bg())
+            
+            var uniqueEventIds = Set<String>()
+            let sortedBookmarks = cloudBookmarks.sorted {
+                ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
+            }
+            
+            let duplicates = sortedBookmarks
+                .filter { bookmark in
+                    guard let eventId = bookmark.eventId else { return false }
+                    return !uniqueEventIds.insert(eventId).inserted
+                }
+            
+            duplicates.forEach { bg().delete($0) }
+            
+            do {
+                try bg().save()
+            } catch {
+                print("Failed to save context: \(error)")
+            }
+            
+            let deduplicatedBookmarks = Bookmark.fetchAll(context: bg())
+            
+            // check which events we have in db, else create from attached json
+            
+            let fr2 = Event.fetchRequest()
+            fr2.predicate = NSPredicate(format: "id IN %@", deduplicatedBookmarks.compactMap { $0.eventId } )
+            if let events = try? bg().fetch(fr2) {
+                for event in events {
+                    deduplicatedBookmarks.first(where: { $0.eventId == event.id })?.event = event
+                }
+            }
+            
+            let decoder = JSONDecoder()
+            for bookmark in deduplicatedBookmarks {
+                if bookmark.event == nil, let json = bookmark.json, let jsonData = json.data(using: .utf8, allowLossyConversion: false) {
+                    if let nEvent = try? decoder.decode(NEvent.self, from: jsonData) {
+                        let savedEvent = Event.saveEvent(event: nEvent)
+                        bookmark.event = savedEvent
+                    }
+                }
+            }
+            
+            withAnimation {
+                self.bookmarks = deduplicatedBookmarks
+                    .sorted(by: { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) })
+                    .compactMap({ bookmark in
+                        guard let event = bookmark.event else { return nil }
+                        bookmark.nrPost = NRPost(event: event)
+                        return bookmark
+                    })
             }
         }
+    }
+    
+    private func listenForRemoteChanges() {
+        NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange)
+            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: true)
+            .sink { notification in
+                L.cloud.debug("Reloading bookmarks after .NSPersistentStoreRemoteChange")
+                self.loadBookmarks()
+            }
+            .store(in: &subscriptions)
     }
 }
 
@@ -138,9 +175,7 @@ struct BookmarksView: View {
         pe.loadBookmarks()
     }) {
         VStack {
-            if let account = NRState.shared.loggedInAccount?.account {
-                BookmarksView(account: account, navPath: .constant(NavigationPath()))
-            }
+            BookmarksView(navPath: .constant(NavigationPath()))
         }
     }
 }
@@ -148,16 +183,15 @@ struct BookmarksView: View {
 
 struct BookmarksCountPreferenceKey: PreferenceKey {
     static var defaultValue: String = ""
-
+    
     static func reduce(value: inout String, nextValue: () -> String) {
         value = nextValue()
     }
 }
 struct PrivateNotesCountPreferenceKey: PreferenceKey {
     static var defaultValue: String = ""
-
+    
     static func reduce(value: inout String, nextValue: () -> String) {
         value = nextValue()
     }
 }
-
