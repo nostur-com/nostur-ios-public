@@ -146,15 +146,20 @@ struct BookmarksView: View {
                 }
             }
             
-            withAnimation {
-                self.bookmarks = deduplicatedBookmarks
-                    .sorted(by: { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) })
-                    .compactMap({ bookmark in
-                        guard let event = bookmark.event else { return nil }
-                        bookmark.nrPost = NRPost(event: event)
-                        return bookmark
-                    })
+            let processed:[Bookmark] = deduplicatedBookmarks
+                .sorted(by: { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) })
+                .compactMap({ bookmark in
+                    guard let event = bookmark.event else { return nil }
+                    bookmark.nrPost = NRPost(event: event)
+                    return bookmark
+                })
+            
+            DispatchQueue.main.async {
+                withAnimation {
+                    self.bookmarks = processed
+                }
             }
+                
         }
     }
     
