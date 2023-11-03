@@ -43,7 +43,7 @@ extension Bookmark {
             bookmark.eventId = nrPost.id
             bookmark.json = nrPost.event.toNEvent().eventJson()
             bookmark.createdAt = .now
-            bgSave()
+            DataProvider.shared().save()
         }
     }
     
@@ -51,7 +51,7 @@ extension Bookmark {
         sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: nrPost.id, bookmarked: false))
         bg().perform {
             Bookmark.removeBookmark(eventId: nrPost.id, context: bg())
-            bgSave()
+            DataProvider.shared().save()
         }
     }
 }
