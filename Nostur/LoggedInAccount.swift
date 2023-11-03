@@ -107,25 +107,6 @@ class LoggedInAccount: ObservableObject {
         }
     }
     
-    @MainActor public func addBookmark(_ nrPost:NRPost) {
-        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: nrPost.id, bookmarked: true))
-        
-        bg.perform {
-            guard let account = self.bgAccount else { return }
-            account.addToBookmarks(nrPost.event)
-            DataProvider.shared().bgSave()
-        }
-    }
-    
-    @MainActor public func removeBookmark(_ nrPost:NRPost) {
-        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: nrPost.id, bookmarked: false))
-        bg.perform {
-            guard let account = self.bgAccount else { return }
-            account.removeFromBookmarks(nrPost.event)
-            DataProvider.shared().bgSave()
-        }
-    }
-    
     @MainActor public func muteConversation(_ nrPost:NRPost) {
         bg.perform {
             guard let account = self.bgAccount else { return }

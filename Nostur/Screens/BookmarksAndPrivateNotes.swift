@@ -32,7 +32,7 @@ struct BookmarksAndPrivateNotes: View {
                 }
                 switch selectedSubTab {
                     case "Bookmarks":
-                        BookmarksView(account: fa.account, navPath: $navPath)
+                        BookmarksView(navPath: $navPath)
                     case "Private Notes":
                         PrivateNotesView(account: fa.account, navPath: $navPath)
                     default:

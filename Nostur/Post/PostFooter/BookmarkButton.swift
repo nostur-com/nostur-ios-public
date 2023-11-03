@@ -41,12 +41,12 @@ struct BookmarkButton: View {
     
     private func tap() {
         if footerAttributes.bookmarked {
-            NRState.shared.loggedInAccount?.removeBookmark(nrPost)
+            Bookmark.removeBookmark(nrPost)
         }
         else {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
-            NRState.shared.loggedInAccount?.addBookmark(nrPost)
+            Bookmark.addBookmark(nrPost)
         }
     }
 }

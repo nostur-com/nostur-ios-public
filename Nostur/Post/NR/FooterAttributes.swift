@@ -203,10 +203,10 @@ class FooterAttributes: ObservableObject {
     }
     
     static private func isBookmarked(_ event:Event) -> Bool {
-        if let account = account(), let bookmarks = account.bookmarks {
-            return bookmarks.contains(event)
-        }
-        return false
+        // TODO: Need to cache this, update cache when bookmarks change
+        let allBookmarks = Set(Bookmark.fetchAll(context: bg()).compactMap({ $0.eventId }))
+        
+        return allBookmarks.contains(event.id)
     }
     
     static private func isLiked(_ event:Event) -> Bool {
