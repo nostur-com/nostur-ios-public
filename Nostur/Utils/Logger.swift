@@ -11,6 +11,7 @@ import os
 class L {
     static let p = OSLog(subsystem: "com.nostur.Nostur", category: "Performance")
     static let og = Logger(subsystem: "com.nostur.Nostur", category: "Nostur")
+    static let cloud = Logger(subsystem: "com.nostur.Nostur", category: "iCloud")
     static let sl = Logger(subsystem: "com.nostur.Nostur", category: "SmoothList")
     static let onboarding = Logger(subsystem: "com.nostur.Nostur", category: "Onboarding")
     static let sockets = Logger(subsystem: "com.nostur.Nostur", category: "Sockets")
