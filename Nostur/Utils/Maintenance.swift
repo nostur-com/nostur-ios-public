@@ -864,6 +864,6 @@ struct Maintenance {
         case runPutReactionToPubkeyInOtherPubkey = "runPutReactionToPubkeyInOtherPubkey"  
         
         // Migrate Bookmarks to iCloud table
-        case migrateBookmarks = "migrateBookmarks"
+        case migrateBookmarks = "migrateBookmarks03112023"
     }
 }
