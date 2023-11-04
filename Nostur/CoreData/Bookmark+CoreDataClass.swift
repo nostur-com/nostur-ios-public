@@ -43,7 +43,9 @@ extension Bookmark {
             bookmark.eventId = nrPost.id
             bookmark.json = nrPost.event.toNEvent().eventJson()
             bookmark.createdAt = .now
+            bg().transactionAuthor = "addBookmark"
             DataProvider.shared().save()
+            bg().transactionAuthor = nil
         }
     }
     
@@ -51,7 +53,9 @@ extension Bookmark {
         sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: nrPost.id, bookmarked: false))
         bg().perform {
             Bookmark.removeBookmark(eventId: nrPost.id, context: bg())
+            bg().transactionAuthor = "removeBookmark"
             DataProvider.shared().save()
+            bg().transactionAuthor = nil
         }
     }
 }
