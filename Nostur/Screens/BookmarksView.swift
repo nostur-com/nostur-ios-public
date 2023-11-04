@@ -36,8 +36,13 @@ struct BookmarksView: View {
                         ForEach(bookmarks) { bookmark in
                             LazyBookmark(bookmark, events: events)
                             .onDelete {
-                                DataProvider.shared().viewContext.delete(bookmark)
-                                DataProvider.shared().save()
+                                guard let eventId = bookmark.eventId else { return }
+                                bg().perform {
+                                    Bookmark.removeBookmark(eventId: eventId, context: bg())
+                                    bg().transactionAuthor = "removeBookmark"
+                                    DataProvider.shared().save()
+                                    bg().transactionAuthor = nil
+                                }
                             }
                         }
                         Spacer()
