@@ -14,41 +14,30 @@ struct BookmarksView: View {
     @EnvironmentObject private var ns:NRState
     @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Bookmarks"
     
-    @Binding private var navPath:NavigationPath
-    @State private var bookmarks:[Bookmark] = []
-    @State private var subscriptions = Set<AnyCancellable>()
-    
+    @Binding var navPath:NavigationPath
     @ObservedObject private var settings:SettingsStore = .shared
-    
     @Namespace private var top
     
-    init(navPath:Binding<NavigationPath>) {
-        _navPath = navPath
-    }
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt, order: .reverse)])
+    private var bookmarks: FetchedResults<Bookmark>
+    
+    @State private var events:[Event] = []
+    @State private var bookmarkSnapshot: Int = 0
     
     var body: some View {
-#if DEBUG
+        #if DEBUG
         let _ = Self._printChanges()
-#endif
+        #endif
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                if !bookmarks.isEmpty {
+                if !bookmarks.isEmpty || !events.isEmpty {
                     LazyVStack(spacing: 10) {
                         ForEach(bookmarks) { bookmark in
-                            Box(nrPost: bookmark.nrPost) {
-                                PostRowDeletable(nrPost: bookmark.nrPost!, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                            }
-                            .id(bookmark.nrPost!.id)
+                            LazyBookmark(bookmark, events: events)
                             .onDelete {
-                                withAnimation {
-                                    bookmarks = bookmarks.filter { $0.nrPost!.id != bookmark.nrPost!.id }
-                                }
-                                
-                                bg().perform {
-                                    bg().delete(bookmark)
-                                    DataProvider.shared().bgSave()
-                                }
+                                DataProvider.shared().viewContext.delete(bookmark)
+                                DataProvider.shared().save()
                             }
                         }
                         Spacer()
@@ -72,23 +61,18 @@ struct BookmarksView: View {
                 }
             }
         }
-        .onReceive(receiveNotification(.postAction)) { notification in
-            let action = notification.object as! PostActionNotification
-            if (action.type == .bookmark  && !action.bookmarked) {
-                withAnimation {
-                    bookmarks = bookmarks.filter { $0.nrPost!.id != action.eventId }
-                }
-            }
-            else if action.type == .bookmark {
-                self.loadBookmarks()
-            }
-        }
         .navigationTitle(String(localized:"Bookmarks", comment:"Navigation title for Bookmarks screen"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
-        .task {
-            loadBookmarks()
-            listenForRemoteChanges()
+        .onReceive(bookmarks.publisher.collect()) { bookmarks in
+            let currentSnapshot = bookmarks.map(\.eventId).hashValue
+            if currentSnapshot != bookmarkSnapshot {
+                // Update the snapshot to the current state.
+                bookmarkSnapshot = currentSnapshot
+                if bookmarks.count != events.count {
+                    load()
+                }
+            }
         }
         .simultaneousGesture(
             DragGesture().onChanged({
@@ -101,76 +85,32 @@ struct BookmarksView: View {
             }))
     }
     
-    private func loadBookmarks() {
-        bg().perform {
-            let cloudBookmarks = Bookmark.fetchAll(context: bg())
-            
-            var uniqueEventIds = Set<String>()
-            let sortedBookmarks = cloudBookmarks.sorted {
-                ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
-            }
-            
-            let duplicates = sortedBookmarks
-                .filter { bookmark in
-                    guard let eventId = bookmark.eventId else { return false }
-                    return !uniqueEventIds.insert(eventId).inserted
-                }
-            
-            duplicates.forEach { bg().delete($0) }
-            
-            do {
-                try bg().save()
-            } catch {
-                print("Failed to save context: \(error)")
-            }
-            
-            let deduplicatedBookmarks = Bookmark.fetchAll(context: bg())
-            
-            // check which events we have in db, else create from attached json
-            
-            let fr2 = Event.fetchRequest()
-            fr2.predicate = NSPredicate(format: "id IN %@", deduplicatedBookmarks.compactMap { $0.eventId } )
-            if let events = try? bg().fetch(fr2) {
-                for event in events {
-                    deduplicatedBookmarks.first(where: { $0.eventId == event.id })?.event = event
-                }
-            }
-            
-            let decoder = JSONDecoder()
-            for bookmark in deduplicatedBookmarks {
-                if bookmark.event == nil, let json = bookmark.json, let jsonData = json.data(using: .utf8, allowLossyConversion: false) {
-                    if let nEvent = try? decoder.decode(NEvent.self, from: jsonData) {
-                        let savedEvent = Event.saveEvent(event: nEvent)
-                        bookmark.event = savedEvent
-                    }
-                }
-            }
-            
-            let processed:[Bookmark] = deduplicatedBookmarks
-                .sorted(by: { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) })
-                .compactMap({ bookmark in
-                    guard let event = bookmark.event else { return nil }
-                    bookmark.nrPost = NRPost(event: event)
-                    return bookmark
-                })
-            
-            DispatchQueue.main.async {
-                withAnimation {
-                    self.bookmarks = processed
-                }
-            }
-                
+    private func load() {
+        
+        var uniqueEventIds = Set<String>()
+        let sortedBookmarks = bookmarks.sorted {
+            ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
         }
-    }
-    
-    private func listenForRemoteChanges() {
-        NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange)
-            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: true)
-            .sink { notification in
-                L.cloud.debug("Reloading bookmarks after .NSPersistentStoreRemoteChange")
-                self.loadBookmarks()
+        
+        let duplicates = sortedBookmarks
+            .filter { bookmark in
+                guard let eventId = bookmark.eventId else { return false }
+                return !uniqueEventIds.insert(eventId).inserted
             }
-            .store(in: &subscriptions)
+        
+        L.cloud.debug("Deleting: \(duplicates.count) duplicate bookmarks")
+        duplicates.forEach {
+            DataProvider.shared().viewContext.delete($0)
+            DataProvider.shared().save()
+        }
+        
+        let bookmarkEventIds = bookmarks.compactMap { $0.eventId }
+        
+        bg().perform {
+            let fr2 = Event.fetchRequest()
+            fr2.predicate = NSPredicate(format: "id IN %@", bookmarkEventIds )
+            events = (try? bg().fetch(fr2)) ?? []
+        }
     }
 }
 
@@ -181,6 +121,70 @@ struct BookmarksView: View {
     }) {
         VStack {
             BookmarksView(navPath: .constant(NavigationPath()))
+        }
+    }
+}
+
+struct LazyBookmark: View {
+    @EnvironmentObject private var themes:Themes
+    @ObservedObject private var settings:SettingsStore = .shared
+    
+    private var bookmark:Bookmark
+    private var events:[Event]
+    
+    @State private var viewState:ViewState = .loading
+    @State private var nrPost:NRPost?
+    
+    enum ViewState {
+        case loading
+        case ready(NRPost)
+        case error(String)
+    }
+    
+    init(_ bookmark:Bookmark, events:[Event]) {
+        self.bookmark = bookmark
+        self.events = events
+    }
+    
+    var body: some View {
+        Box(nrPost: nrPost) {
+            switch viewState {
+            case .loading:
+                ProgressView()
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .task {
+                        guard let eventId = bookmark.eventId else { viewState = .error("Cannot find post"); return }
+                        let json = bookmark.json
+                        bg().perform {
+                            if let event = events.first(where: { $0.id == eventId }) {
+                                let nrPost = NRPost(event: event)
+                                DispatchQueue.main.async {
+                                    self.nrPost = nrPost
+                                    self.viewState = .ready(nrPost)
+                                }
+                            }
+                            else {
+                                let decoder = JSONDecoder()
+                                if let json = json, let jsonData = json.data(using: .utf8, allowLossyConversion: false) {
+                                    if let nEvent = try? decoder.decode(NEvent.self, from: jsonData) {
+                                        let savedEvent = Event.saveEvent(event: nEvent)
+                                        let nrPost = NRPost(event: savedEvent)
+                                        L.cloud.debug("Decoded and saved from iCloud: \(nEvent.id) ")
+                                        DispatchQueue.main.async {
+                                            self.nrPost = nrPost
+                                            self.viewState = .ready(nrPost)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+            case .ready(let nrPost):
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+            case .error(let message):
+                Text(message)
+            }
         }
     }
 }
