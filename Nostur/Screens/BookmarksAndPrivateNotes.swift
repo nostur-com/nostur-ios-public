@@ -34,7 +34,7 @@ struct BookmarksAndPrivateNotes: View {
                     case "Bookmarks":
                         BookmarksView(navPath: $navPath)
                     case "Private Notes":
-                        PrivateNotesView(account: fa.account, navPath: $navPath)
+                        PrivateNotesView(navPath: $navPath)
                     default:
                         Text("🥪")
                 }
