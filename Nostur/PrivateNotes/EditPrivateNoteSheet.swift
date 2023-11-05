@@ -11,11 +11,12 @@ struct EditPrivateNoteSheet: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     
-    @ObservedObject private var privateNote:PrivateNote
+    private var privateNote:CloudPrivateNote
     
-    @State private var privateNoteToRemove:PrivateNote?
+    @State private var privateNoteToRemove:CloudPrivateNote?
+    @State private var noteText = ""
     
-    init(privateNote: PrivateNote) {
+    init(privateNote: CloudPrivateNote) {
         self.privateNote = privateNote
     }
     
@@ -23,7 +24,7 @@ struct EditPrivateNoteSheet: View {
         NavigationStack {
             Form {
                 TextField(
-                    text: $privateNote.content_,
+                    text: $noteText,
                     prompt: Text("Enter private note for yourself", comment: "Placeholder in text field"),
                     axis: .vertical) {
                         Text("Private note", comment: "Label for private note edit field")
@@ -45,12 +46,10 @@ struct EditPrivateNoteSheet: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         do {
-//                            ns.objectWillChange.send()
-//                            privateNote.post?.objectWillChange.send()
-//                            privateNote.contact?.objectWillChange.send()
+                            privateNote.content = noteText
                             try viewContext.save()
-                            if let post = privateNote.post {
-                                sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: post.id, hasPrivateNote: true))
+                            if let type = privateNote.type, type == CloudPrivateNote.PrivateNoteType.post.rawValue, let eventId = privateNote.eventId {
+                                sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: eventId, hasPrivateNote: true))
                             }
                         }
                         catch { L.og.error("problem saving private note \(error)") }
@@ -63,13 +62,10 @@ struct EditPrivateNoteSheet: View {
                     title: Text("Delete private note", comment: "Sheet title"),
                     buttons: [
                         .destructive(Text("Delete", comment: "Button to delete"), action: {
-//                            ns.objectWillChange.send()
-//                            privateNote.post?.objectWillChange.send()
-//                            privateNote.contact?.objectWillChange.send()
                             dismiss()
                             
-                            if let post = privateNote.post {
-                                sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: post.id, hasPrivateNote: false))
+                            if let type = privateNote.type, type == CloudPrivateNote.PrivateNoteType.post.rawValue, let eventId = privateNote.eventId {
+                                sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: eventId, hasPrivateNote: false))
                             }
                             
                             viewContext.delete(privateNote)
@@ -79,6 +75,9 @@ struct EditPrivateNoteSheet: View {
                     ])
             }
         }
+        .onAppear {
+            noteText = privateNote.content_
+        }
     }
 }
 
@@ -87,13 +86,13 @@ struct EditPrivateNoteSheet_Previews: PreviewProvider {
         
         PreviewContainer {
             VStack {
-                let note:PrivateNote = {
-                    let note = PrivateNote(context: DataProvider.shared().container.viewContext)
+                let note:CloudPrivateNote = {
+                    let note = CloudPrivateNote(context: DataProvider.shared().container.viewContext)
                     note.createdAt = Date.now
                     note.updatedAt = Date.now
                     note.content = ""
-                    note.by = PreviewFetcher.fetchAccount()
-                    note.post = PreviewFetcher.fetchEvent()
+                    note.eventId = PreviewFetcher.fetchEvent()?.id
+                    note.type = CloudPrivateNote.PrivateNoteType.post.rawValue
                     return note
                 }()
                 

@@ -8,8 +8,14 @@
 import Foundation
 
 extension Event {
-    var privateNote:PrivateNote? {
-        guard let account = NRState.shared.loggedInAccount?.account else { return nil }
-        return account.privateNotes_.first(where: { $0.post == self })
+    var privateNote:CloudPrivateNote? {
+        let fr = CloudPrivateNote.fetchRequest()
+        fr.predicate = NSPredicate(format: "eventId == %@", self.id)
+        if Thread.isMainThread {
+            return try? DataProvider.shared().viewContext.fetch(fr).first
+        }
+        else {
+            return try? bg().fetch(fr).first
+        }
     }
 }

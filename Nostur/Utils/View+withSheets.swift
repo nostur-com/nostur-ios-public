@@ -24,7 +24,7 @@ private struct WithSheets: ViewModifier {
     
     
     // Sheet contents (item based)
-    @State private var privateNote:PrivateNote? = nil
+    @State private var privateNote:CloudPrivateNote? = nil
     @State private var post:Event? = nil
     @State private var contact:Contact? = nil
     @State private var fullImage:FullScreenItem? = nil
@@ -76,7 +76,7 @@ private struct WithSheets: ViewModifier {
             }
         
             .onReceive(receiveNotification(.editingPrivateNote)) { notification in
-                let note = notification.object as! PrivateNote
+                let note = notification.object as! CloudPrivateNote
                 self.privateNote = note
             }
             .sheet(item: $privateNote) { note in

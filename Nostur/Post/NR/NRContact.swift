@@ -114,10 +114,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     }
     
     private func _hasPrivateNote() -> Bool {
-        if let account = account(), let notes = account.privateNotes {
-            return notes.first(where: { $0.contact == self.contact }) != nil
-        }
-        return false
+        return contact.privateNote != nil
     }
     
     private func isFollowingListener() {

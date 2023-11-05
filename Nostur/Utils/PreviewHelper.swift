@@ -297,10 +297,10 @@ extension PreviewEnvironment {
             let randomTextEvents = try? context.fetch(randomTextEventsR)
             if let randomTextEvents {
                 for _ in 0..<10 {
-                    let privateNote = PrivateNote(context: context)
+                    let privateNote = CloudPrivateNote(context: context)
                     privateNote.content = ["Some more text here, I think I need to fix this in some way or another, I don't know how yet. But this text is a bit longer.","I made a private note here\nYo!","I made a private note here\nWith some more lines\n\nCool", "This is good"].randomElement()!
-                    privateNote.by = NRState.shared.accounts.randomElement()
-                    privateNote.post = randomTextEvents.randomElement()
+                    privateNote.eventId = randomTextEvents.randomElement()?.id
+                    privateNote.type = CloudPrivateNote.PrivateNoteType.post.rawValue
                     privateNote.createdAt = Date.now
                     privateNote.updatedAt = Date.now
                 }
