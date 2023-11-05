@@ -36,6 +36,15 @@
         <attribute name="eventId" optional="YES" attributeType="String"/>
         <attribute name="json" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="CloudPrivateNote" representedClassName="CloudPrivateNote" syncable="YES">
+        <attribute name="content" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="eventId" optional="YES" attributeType="String"/>
+        <attribute name="json" optional="YES" attributeType="String"/>
+        <attribute name="pubkey" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
     <entity name="Contact" representedClassName=".Contact" syncable="YES">
         <attribute name="about" optional="YES" attributeType="String"/>
         <attribute name="banner" optional="YES" attributeType="String"/>
@@ -188,6 +197,7 @@
     </entity>
     <configuration name="Cloud" usedWithCloudKit="YES">
         <memberEntity name="Bookmark"/>
+        <memberEntity name="CloudPrivateNote"/>
     </configuration>
     <configuration name="Local">
         <memberEntity name="Account"/>

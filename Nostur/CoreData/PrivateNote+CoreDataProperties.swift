@@ -43,50 +43,16 @@ extension PrivateNote : Identifiable {
         
     var ago: String { createdAt_.agoString }
     
-    static func fetchByAccount(_ account:Account, andPost post:Event, context:NSManagedObjectContext) -> PrivateNote? {
-        let fr = PrivateNote.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \PrivateNote.updatedAt, ascending: false)]
-        fr.predicate = NSPredicate(format: "by == %@ AND post == %@", account, post)
-        return try? context.fetch(fr).first
-    }
-    
-    static func createNewFor(_ account:Account, andPost post:Event, context:NSManagedObjectContext) -> PrivateNote? {
-        let privateNote = PrivateNote(context: context)
-        privateNote.updatedAt = Date.now
-        privateNote.createdAt = Date.now
-        privateNote.by = account
-        privateNote.post = post
-        privateNote.content = ""
-        do {
-            try context.save()
-            return privateNote
-        }
-        catch {
-            L.og.error("Problem saving new private note \(error)")
-            return nil
-        }
-    }
-    
-    static func createNewFor(_ account:Account, andContact contact:Contact, context:NSManagedObjectContext) -> PrivateNote? {
-        let privateNote = PrivateNote(context: context)
-        privateNote.updatedAt = Date.now
-        privateNote.createdAt = Date.now
-        privateNote.by = account
-        privateNote.contact = contact
-        privateNote.content = ""
-        do {
-            try context.save()
-            return privateNote
-        }
-        catch {
-            L.og.error("Problem saving new private note \(error)")
-            return nil
-        }
-    }
+//    static func fetchByAccount(_ account:Account, andPost post:Event, context:NSManagedObjectContext) -> PrivateNote? {
+//        let fr = PrivateNote.fetchRequest()
+//        fr.sortDescriptors = [NSSortDescriptor(keyPath: \PrivateNote.updatedAt, ascending: false)]
+//        fr.predicate = NSPredicate(format: "by == %@ AND post == %@", account, post)
+//        return try? context.fetch(fr).first
+//    }
 }
 
 
-struct PN: Identifiable {
-    var id:NSManagedObjectID { post.objectID }
-    let post:PrivateNote
-}
+//struct PN: Identifiable {
+//    var id:NSManagedObjectID { post.objectID }
+//    let post:PrivateNote
+//}
