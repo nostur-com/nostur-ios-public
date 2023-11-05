@@ -270,6 +270,8 @@
 		1FA0599F2A74D9690039643C /* LVM+pubkeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0599E2A74D9680039643C /* LVM+pubkeys.swift */; };
 		1FA059A12A74F87B0039643C /* LVM+relays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A02A74F87B0039643C /* LVM+relays.swift */; };
 		1FA059A32A7554DC0039643C /* EditRelaysNosturList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */; };
+		1FA1CA3A2AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */; };
+		1FA1CA3B2AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */; };
 		1FA3AB242A4E17070059F6B7 /* NIP46SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */; };
 		1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA477222A780C0E00A4CCD3 /* Binding+not.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
@@ -717,6 +719,8 @@
 		1FA0599E2A74D9680039643C /* LVM+pubkeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LVM+pubkeys.swift"; sourceTree = "<group>"; };
 		1FA059A02A74F87B0039643C /* LVM+relays.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "LVM+relays.swift"; sourceTree = "<group>"; };
 		1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditRelaysNosturList.swift; sourceTree = "<group>"; };
+		1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudPrivateNote+CoreDataClass.swift"; sourceTree = "<group>"; };
+		1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudPrivateNote+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46SecretManager.swift; sourceTree = "<group>"; };
 		1FA477222A780C0E00A4CCD3 /* Binding+not.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+not.swift"; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1103,6 +1107,8 @@
 		1F25B395297A508200A8A5A7 /* CoreData */ = {
 			isa = PBXGroup;
 			children = (
+				1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */,
+				1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */,
 				1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */,
 				1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */,
 				1F365FB82AF2F561003A82CB /* Bookmark+CoreDataClass.swift */,
@@ -2271,7 +2277,9 @@
 				1F740D9F29AF36C800EFCCA7 /* BadgesIssuedView.swift in Sources */,
 				1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */,
 				1FE9D29A2A0E1D2A00256B90 /* NRContentTextRenderer.swift in Sources */,
+				1FA1CA3A2AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift in Sources */,
 				1F88491229B537B400145340 /* HighlightedTextEditor.UIKit.swift in Sources */,
+				1FA1CA3B2AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift in Sources */,
 				1F72FB362A2BA30E001370A1 /* NWCURI.swift in Sources */,
 				1FC0F5A32A4AEB00004E4DAA /* ArticleById.swift in Sources */,
 				1F7261552A13F81D00146B1F /* GifSearcher.swift in Sources */,
