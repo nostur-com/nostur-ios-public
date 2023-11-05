@@ -8,8 +8,14 @@
 import Foundation
 
 extension Contact {
-    var privateNote:PrivateNote? {
-        guard let account = NRState.shared.loggedInAccount?.account else { return nil }
-        return account.privateNotes_.first(where: {$0.contact == self })
+    var privateNote:CloudPrivateNote? {
+        let fr = CloudPrivateNote.fetchRequest()
+        fr.predicate = NSPredicate(format: "pubkey == %@", self.pubkey)
+        if Thread.isMainThread {
+            return try? DataProvider.shared().viewContext.fetch(fr).first
+        }
+        else {
+            return try? bg().fetch(fr).first
+        }
     }
 }

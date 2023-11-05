@@ -58,14 +58,14 @@ struct NewPrivateNoteSheet: View {
                             post?.objectWillChange.send()
                             contact?.objectWillChange.send()
                             if let post {
-                                if let newPrivateNote = PrivateNote.createNewFor(account, andPost: post, context: viewContext) {
+                                if let newPrivateNote = CloudPrivateNote.createNewFor(post, context: viewContext) {
                                     newPrivateNote.content = content
                                     
                                     sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: post.id, hasPrivateNote: true))
                                 }
                             }
                             else if let contact {
-                                if let newPrivateNote = PrivateNote.createNewFor(account, andContact: contact, context: viewContext) {
+                                if let newPrivateNote = CloudPrivateNote.createNewFor(contact, context: viewContext) {
                                     newPrivateNote.content = content
                                 }
                             }

@@ -277,9 +277,6 @@ class FooterAttributes: ObservableObject {
     }
     
     static private func hasPrivateNote(_ event:Event) -> Bool {
-        if let account = account(), let notes = account.privateNotes {
-            return notes.first(where: { $0.post == event }) != nil
-        }
-        return false
+        return event.privateNote != nil
     }
 }
