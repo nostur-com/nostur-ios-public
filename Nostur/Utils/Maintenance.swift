@@ -65,6 +65,7 @@ struct Maintenance {
             Self.runPutRepostedPubkeyInOtherPubkey(context: context)
             Self.runPutReactionToPubkeyInOtherPubkey(context: context)
             Self.runMigrateBookmarks(context: context)
+            Self.runMigratePrivateNotes(context: context)
             
             do {
                 if context.hasChanges {
@@ -830,6 +831,57 @@ struct Maintenance {
         migration.migrationCode = migrationCode.migrateBookmarks.rawValue
     }
     
+    // Migrate Bookmarks to iCloud-ready table
+    static func runMigratePrivateNotes(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.migratePrivateNotes, context: context) else { return }
+        
+        // Oops code. Uncomment during testing if we need to run this again.
+//        let fr0 = CloudPrivateNote.fetchRequest()
+//        fr0.predicate = NSPredicate(value: true)
+//        if let cpns = try? context.fetch(fr0) {
+//            for cpn in cpns {
+//                context.delete(cpn)
+//            }
+//        }
+        
+        
+        // find all private notes, migrate to CloudPrivateNote
+        // set type, eventId or pubkey based on type, and json
+        let fr = PrivateNote.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+        
+        var migratedPrivateNotes:Int = 0
+        if let privateNotes = try? context.fetch(fr) {
+            L.maintenance.info("migratePrivateNotes: Found \(privateNotes.count) private notes")
+            for pn in privateNotes {
+                if let post = pn.post { // Note on post
+                    let migratedPN = CloudPrivateNote(context: context)
+                    migratedPN.type = CloudPrivateNote.PrivateNoteType.post.rawValue
+                    migratedPN.eventId = post.id
+                    migratedPN.content = pn.content
+                    migratedPN.createdAt = pn.createdAt
+                    migratedPN.updatedAt = pn.updatedAt
+                    migratedPN.json = post.toNEvent().eventJson()
+                }
+                else if let contact = pn.contact { // Note on contat
+                    let migratedPN = CloudPrivateNote(context: context)
+                    migratedPN.type = CloudPrivateNote.PrivateNoteType.contact.rawValue
+                    migratedPN.pubkey = contact.pubkey
+                    migratedPN.content = pn.content
+                    migratedPN.createdAt = pn.createdAt
+                    migratedPN.updatedAt = pn.updatedAt
+                    migratedPN.json = Event.fetchReplacableEvent(0, pubkey: contact.pubkey, context: context)?.toNEvent().eventJson() // probaby won't have the kind 0 eventd
+                    
+                }
+                migratedPrivateNotes += 1
+            }
+            L.maintenance.info("migratePrivateNotes: Migrated \(migratedPrivateNotes) private notes")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migratePrivateNotes.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -865,5 +917,8 @@ struct Maintenance {
         
         // Migrate Bookmarks to iCloud table
         case migrateBookmarks = "migrateBookmarks03112023"
+        
+        // Migrate Private Notes to iCloud
+        case migratePrivateNotes = "migratePrivateNotes"
     }
 }
