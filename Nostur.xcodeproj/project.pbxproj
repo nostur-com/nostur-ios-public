@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		1F00337129BEF141007CE040 /* View+withSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00337029BEF141007CE040 /* View+withSheets.swift */; };
 		1F00337529BF0A44007CE040 /* BookmarksAndPrivateNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */; };
-		1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00337629BF0BF0007CE040 /* PrivateNotesView.swift */; };
 		1F006B0529D08FAA0048C6DD /* Event+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F006B0429D08FAA0048C6DD /* Event+Notifications.swift */; };
 		1F006B0729D090370048C6DD /* Event+DMs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F006B0629D090370048C6DD /* Event+DMs.swift */; };
 		1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 1F006B0929D0A9BE0048C6DD /* Algorithms */; };
@@ -272,6 +271,7 @@
 		1FA059A32A7554DC0039643C /* EditRelaysNosturList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */; };
 		1FA1CA3A2AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */; };
 		1FA1CA3B2AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */; };
+		1FA1CA3D2AF6D7B6000E529B /* PrivateNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA3C2AF6D7B6000E529B /* PrivateNotesView.swift */; };
 		1FA3AB242A4E17070059F6B7 /* NIP46SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */; };
 		1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA477222A780C0E00A4CCD3 /* Binding+not.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
@@ -310,7 +310,6 @@
 		1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8221299A6F3D00FB41CE /* LUD16.swift */; };
 		1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */; };
 		1FC0A9512A0F8B9D00F9ABF6 /* ProfileZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */; };
-		1FC0A9532A1094A100F9ABF6 /* PrivateNoteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9522A1094A100F9ABF6 /* PrivateNoteRow.swift */; };
 		1FC0A9552A1094BD00F9ABF6 /* AccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9542A1094BD00F9ABF6 /* AccountSwitcher.swift */; };
 		1FC0A9572A10E44500F9ABF6 /* ReadMoreButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9562A10E44500F9ABF6 /* ReadMoreButton.swift */; };
 		1FC0F5A32A4AEB00004E4DAA /* ArticleById.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0F5A22A4AEB00004E4DAA /* ArticleById.swift */; };
@@ -465,7 +464,6 @@
 /* Begin PBXFileReference section */
 		1F00337029BEF141007CE040 /* View+withSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+withSheets.swift"; sourceTree = "<group>"; };
 		1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksAndPrivateNotes.swift; sourceTree = "<group>"; };
-		1F00337629BF0BF0007CE040 /* PrivateNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNotesView.swift; sourceTree = "<group>"; };
 		1F006B0429D08FAA0048C6DD /* Event+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+Notifications.swift"; sourceTree = "<group>"; };
 		1F006B0629D090370048C6DD /* Event+DMs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+DMs.swift"; sourceTree = "<group>"; };
 		1F0088EA29D735080016F111 /* ContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRenderer.swift; sourceTree = "<group>"; };
@@ -721,6 +719,7 @@
 		1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditRelaysNosturList.swift; sourceTree = "<group>"; };
 		1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudPrivateNote+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudPrivateNote+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1FA1CA3C2AF6D7B6000E529B /* PrivateNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNotesView.swift; sourceTree = "<group>"; };
 		1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46SecretManager.swift; sourceTree = "<group>"; };
 		1FA477222A780C0E00A4CCD3 /* Binding+not.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+not.swift"; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -761,7 +760,6 @@
 		1FBE8221299A6F3D00FB41CE /* LUD16.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LUD16.swift; sourceTree = "<group>"; };
 		1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentAmountSelector.swift; sourceTree = "<group>"; };
 		1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileZaps.swift; sourceTree = "<group>"; };
-		1FC0A9522A1094A100F9ABF6 /* PrivateNoteRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNoteRow.swift; sourceTree = "<group>"; };
 		1FC0A9542A1094BD00F9ABF6 /* AccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSwitcher.swift; sourceTree = "<group>"; };
 		1FC0A9562A10E44500F9ABF6 /* ReadMoreButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadMoreButton.swift; sourceTree = "<group>"; };
 		1FC0F5A22A4AEB00004E4DAA /* ArticleById.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleById.swift; sourceTree = "<group>"; };
@@ -1459,8 +1457,7 @@
 				1F96792C29BF611800E78173 /* EditPrivateNoteSheet.swift */,
 				1F3E135829C8B11F00D076EA /* Event+PrivateNotes.swift */,
 				1F96792E29BF613C00E78173 /* NewPrivateNoteSheet.swift */,
-				1FC0A9522A1094A100F9ABF6 /* PrivateNoteRow.swift */,
-				1F00337629BF0BF0007CE040 /* PrivateNotesView.swift */,
+				1FA1CA3C2AF6D7B6000E529B /* PrivateNotesView.swift */,
 			);
 			path = PrivateNotes;
 			sourceTree = "<group>";
@@ -2004,6 +2001,7 @@
 				1F15F0992AAF2EDC0004E706 /* FooterAttributes.swift in Sources */,
 				1FCCAC9A2AB6D6B000B3F00A /* ProfilePostsView.swift in Sources */,
 				1F740D9C29AF1BF600EFCCA7 /* Badges.swift in Sources */,
+				1FA1CA3D2AF6D7B6000E529B /* PrivateNotesView.swift in Sources */,
 				1F88491329B537B400145340 /* NSFont.swift in Sources */,
 				1F8B6A6F2A20C5DE0060EDB3 /* PreviewWeights.swift in Sources */,
 				1F2245B82AA46C6F00C06342 /* NostrAddress.swift in Sources */,
@@ -2076,7 +2074,6 @@
 				1FC0A9572A10E44500F9ABF6 /* ReadMoreButton.swift in Sources */,
 				1FB130B129C0DB07004AC98D /* NoteRow.swift in Sources */,
 				1F88EE8C2AD12CE1006A83C3 /* Entry.swift in Sources */,
-				1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */,
 				1FEC81A32A8FCB8B006FA50C /* DiscoverNostr.swift in Sources */,
 				1F3897532ABA92DD001A874E /* LoggedInAccount.swift in Sources */,
 				1F15F0A52AAF9CB00004E706 /* GalleryViewModel.swift in Sources */,
@@ -2313,7 +2310,6 @@
 				1F2DD42E2A29EACA0028A062 /* NWCConnection+CoreDataProperties.swift in Sources */,
 				1F5F5A5C29838F1D00DED8F4 /* DataProvider.swift in Sources */,
 				1FE0C71329FAE82C00381586 /* ProfileFollowButton.swift in Sources */,
-				1FC0A9532A1094A100F9ABF6 /* PrivateNoteRow.swift in Sources */,
 				1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */,
 				1F45C7F129EF9A2C00F58772 /* NostrimgMediaUploadService.swift in Sources */,
 				1FC2DFED29A90F6C00C8A9DA /* NoteMinimalContentView.swift in Sources */,
