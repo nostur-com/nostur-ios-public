@@ -66,6 +66,7 @@ struct Maintenance {
             Self.runPutReactionToPubkeyInOtherPubkey(context: context)
             Self.runMigrateBookmarks(context: context)
             Self.runMigratePrivateNotes(context: context)
+            Self.runMigrateCustomFeeds(context: context)
             
             do {
                 if context.hasChanges {
@@ -882,6 +883,63 @@ struct Maintenance {
         migration.migrationCode = migrationCode.migratePrivateNotes.rawValue
     }
     
+    // Migrate Custom feeds to iCloud-ready table
+    static func runMigrateCustomFeeds(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.migrateCustomFeeds, context: context) else { return }
+        
+        // Oops code. Uncomment during testing if we need to run this again.
+//        let fr0 = CloudFeed.fetchRequest()
+//        fr0.predicate = NSPredicate(value: true)
+//        if let cfs = try? context.fetch(fr0) {
+//            for cf in cfs {
+//                context.delete(cf)
+//            }
+//        }
+        
+        
+        // find all custom feeds, migrate to CloudPrivateNote
+        // set same attributes and convert Contacts and Relays to space seperated strings of pubkeys and relay urls
+        let fr = NosturList.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+        
+        var migratedCustomFeed:Int = 0
+        if let customFeeds = try? context.fetch(fr) {
+            L.maintenance.info("migrateCustomFeeds: Found \(customFeeds.count) custom feeds")
+            for cf in customFeeds {
+                if let type = cf.type, type == LVM.ListType.relays.rawValue {
+                    // Relays
+                    let migratedCF = CloudFeed(context: context)
+                    migratedCF.type = LVM.ListType.relays.rawValue
+                    migratedCF.createdAt = cf.createdAt ?? .now
+                    migratedCF.followingHashtags_ = cf.followingHashtags_
+                    migratedCF.id = cf.id
+                    migratedCF.name = cf.name
+                    migratedCF.refreshedAt = cf.refreshedAt
+                    migratedCF.showAsTab = cf.showAsTab
+                    migratedCF.wotEnabled = cf.wotEnabled
+                    migratedCF.relays_ = cf.relays_
+                }
+                else { // Pubkeys
+                    let migratedCF = CloudFeed(context: context)
+                    migratedCF.type = LVM.ListType.pubkeys.rawValue
+                    migratedCF.createdAt = cf.createdAt ?? .now
+                    migratedCF.followingHashtags_ = cf.followingHashtags_
+                    migratedCF.id = cf.id
+                    migratedCF.name = cf.name
+                    migratedCF.refreshedAt = cf.refreshedAt
+                    migratedCF.showAsTab = cf.showAsTab
+                    migratedCF.wotEnabled = cf.wotEnabled
+                    migratedCF.contacts_ = cf.contacts_
+                }
+                migratedCustomFeed += 1
+            }
+            L.maintenance.info("migrateCustomFeeds: Migrated \(migratedCustomFeed) custom feeds")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migrateCustomFeeds.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -919,6 +977,9 @@ struct Maintenance {
         case migrateBookmarks = "migrateBookmarks03112023"
         
         // Migrate Private Notes to iCloud
-        case migratePrivateNotes = "migratePrivateNotes"
+        case migratePrivateNotes = "migratePrivateNotes"        
+        
+        // Migrate Custom feeds to iCloud
+        case migrateCustomFeeds = "migrateCustomFeeds"
     }
 }
