@@ -36,6 +36,18 @@
         <attribute name="eventId" optional="YES" attributeType="String"/>
         <attribute name="json" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="CloudFeed" representedClassName="CloudFeed" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="followingHashtags_" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="pubkeys" optional="YES" attributeType="String"/>
+        <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="relays" optional="YES" attributeType="String"/>
+        <attribute name="showAsTab" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="wotEnabled" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+    </entity>
     <entity name="CloudPrivateNote" representedClassName="CloudPrivateNote" syncable="YES">
         <attribute name="content" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -198,6 +210,7 @@
     <configuration name="Cloud" usedWithCloudKit="YES">
         <memberEntity name="Bookmark"/>
         <memberEntity name="CloudPrivateNote"/>
+        <memberEntity name="CloudFeed"/>
     </configuration>
     <configuration name="Local">
         <memberEntity name="Account"/>
