@@ -241,7 +241,7 @@ extension Event {
             }
         }
         
-        let ctx = DataProvider.shared().bg
+        let ctx = bg()
         let newFirstEvent = ctx.performAndWait {
             return try? ctx.fetch(frBefore).last
         }

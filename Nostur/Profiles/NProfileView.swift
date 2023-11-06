@@ -55,7 +55,7 @@ struct NProfileView: View {
                             if !identifier.relays.isEmpty {
                                 fetchTask = Task {
                                     try? await Task.sleep(for: .seconds(3))
-                                    let ctx = DataProvider.shared().bg
+                                    let ctx = bg()
                                     await ctx.perform {
                                         // If we don't have the event after X seconds, fetch from relay hint
                                         if Contact.fetchByPubkey(pubkey, context: ctx) == nil {

@@ -19,7 +19,7 @@ class ZapperPubkeyVerificationQueue {
     private var subscriptions = Set<AnyCancellable>()
     
     init() {
-        ctx = DataProvider.shared().bg
+        ctx = bg()
         delayedRemove
             .sink { [unowned self] event in
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(25)) {

@@ -118,7 +118,7 @@ struct CustomNWCConnectSheet: View {
             let nwcInfoNotification = notification.object as! NWCInfoNotification
             
             bg().perform {
-                if let _ = NWCConnection.fetchConnection(awaitingConnectionId, context: DataProvider.shared().bg) {
+                if let _ = NWCConnection.fetchConnection(awaitingConnectionId, context: bg()) {
                     if nwcInfoNotification.methods.split(separator: " ").map({ String($0) }).contains("pay_invoice") {
                         DispatchQueue.main.async {
                             ss.activeNWCconnectionId = awaitingConnectionId
@@ -155,7 +155,7 @@ struct CustomNWCConnectSheet: View {
         }
         
         bg().perform {
-            guard let c = NWCConnection.createCustomConnection(context: DataProvider.shared().bg, secret: secret) else {
+            guard let c = NWCConnection.createCustomConnection(context: bg(), secret: secret) else {
                 L.og.error("Problem handling secret in NWCConnection.createCustomConnection")
                 DispatchQueue.main.async {
                     nwcErrorMessage = String(localized: "Could not parse secret from NWC connection URI", comment: "Error message during NWC setup")

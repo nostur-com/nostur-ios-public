@@ -117,7 +117,7 @@ class Importer {
     }
     
     public func importEvents() {
-        let context = DataProvider.shared().bg
+        let context = bg()
         context.perform { [unowned self] in
             if (self.isImporting) {
                 let itemsCount = MessageParser.shared.messageBucket.count
@@ -358,7 +358,7 @@ class Importer {
     }
     
     public func importPrioEvents() {
-        let context = DataProvider.shared().bg
+        let context = bg()
         context.perform { [unowned self] in
             let forImportsCount = MessageParser.shared.priorityBucket.count
             guard forImportsCount != 0 else {

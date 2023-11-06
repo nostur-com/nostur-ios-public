@@ -399,7 +399,7 @@ struct ProfileView: View {
                 req(RM.getLastSeen(pubkey: contactPubkey, subscriptionId: taskId))
             }, processResponseCommand: { taskId, _, _ in
                 bg().perform {
-                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: DataProvider.shared().bg) {
+                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: bg()) {
                         let agoString = last.date.agoString
                         DispatchQueue.main.async {
                             lastSeen = String(localized: "Last seen: \(agoString) ago", comment:"Label on profile showing when last seen, example: Last seen: 10m ago")
@@ -408,7 +408,7 @@ struct ProfileView: View {
                 }
             }, timeoutCommand: { taskId in
                 bg().perform {
-                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: DataProvider.shared().bg) {
+                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: bg()) {
                         let agoString = last.date.agoString
                         DispatchQueue.main.async {
                             lastSeen = String(localized: "Last seen: \(agoString) ago", comment:"Label on profile showing when last seen, example: Last seen: 10m ago")

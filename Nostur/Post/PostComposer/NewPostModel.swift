@@ -265,7 +265,7 @@ public final class NewPostModel: ObservableObject {
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                 if nEvent.kind == .reaction {
                     do {
-                        try Event.updateReactionTo(savedEvent, context: DataProvider.shared().bg) // TODO: Revert this on 'undo'
+                        try Event.updateReactionTo(savedEvent, context: bg()) // TODO: Revert this on 'undo'
                     } catch {
                         L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
                     }

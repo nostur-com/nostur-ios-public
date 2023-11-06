@@ -118,7 +118,7 @@ extension Search {
                     kind,
                     pubkey: pubkey,
                     definition: definition,
-                    context: DataProvider.shared().bg) {
+                    context: bg()) {
                 
                 let article = NRPost(event: article)
                 

@@ -895,7 +895,7 @@ extension Event {
     }
     
     static func updateRelays(_ id:String, relays: String) {
-        let bg = DataProvider.shared().bg
+        let bg = bg()
         bg.perform {
             if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id) {
                 let existingRelays = event.relays.split(separator: " ").map { String($0) }
@@ -937,7 +937,7 @@ extension Event {
                 fatalError("Should only be called from bg()")
             }
         #endif
-        let context = DataProvider.shared().bg
+        let context = bg()
         
         let savedEvent = Event(context: context)
         savedEvent.insertedAt = Date.now

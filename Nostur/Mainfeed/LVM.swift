@@ -375,7 +375,7 @@ class LVM: NSObject, ObservableObject {
         }
         let taskId = UUID().uuidString
         L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Start transforming \(events.count) events - \(taskId)")
-        let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg
+        let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : bg()
         
         // onScreenIds includes leafs and parents, so all posts.
         let leafsAndParentIdsOnScreen = leafsAndParentIdsOnScreen // Data race in Nostur.LVM.leafsAndParentIdsOnScreen.setter : Swift.Set<Swift.String> at 0x10e60b600 - THREAD 142
@@ -760,7 +760,7 @@ class LVM: NSObject, ObservableObject {
         self.loadHashtags()
         
         let ctx = DataProvider.shared().viewContext
-        let bg = DataProvider.shared().bg
+        let bg = bg()
         if type == .relays {
             self.relays = relays // viewContext relays
             SocketPool.shared.connectFeedRelays(relays: relays)
@@ -1572,7 +1572,7 @@ extension LVM {
         }
         
         performingLocalOlderFetch = true
-        let ctx = DataProvider.shared().bg
+        let ctx = bg()
         let hashtagRegex = self.hashtagRegex
         ctx.perform { [weak self] in
             guard let self = self else { return }

@@ -14,7 +14,7 @@ import MarkdownUI
 // DOES NOT handle note links or image links, because those are embeds, handled by ContentRenderer
 class NRTextParser { // TEXT things
     static let shared = NRTextParser()
-    private let context = DataProvider.shared().bg
+    private let context = bg()
     
     private var tags:[(String, String, String?, String?)] = [] // Faster tags, and only decode once at init
 

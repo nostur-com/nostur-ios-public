@@ -232,7 +232,7 @@ extension Contact : Identifiable {
     }
 
     static func saveOrUpdateContact(event:NEvent) {
-        let context = DataProvider.shared().bg
+        let context = bg()
                 
         context.perform {
             let decoder = JSONDecoder()

@@ -32,7 +32,7 @@ class MessageParser {
     // Subscriptions that will be kept open afte EOSE
     static let ACTIVE_SUBSCRIPTIONS = Set(["Following","Explore","Notifications","REALTIME-DETAIL", "REALTIME-DETAIL-A", "NWC", "NC"])
     
-    private var context = DataProvider.shared().bg
+    private var context = bg()
     private var sp = SocketPool.shared
     public var messageBucket = Deque<RelayMessage>()
     public var priorityBucket = Deque<RelayMessage>()
@@ -127,7 +127,7 @@ class MessageParser {
                                         if (SettingsStore.shared.nwcShowBalance) {
                                             nwcSendBalanceRequest()
                                         }
-                                        if let ev = try? Event.fetchEvent(id: eventId, context: DataProvider.shared().bg) {
+                                        if let ev = try? Event.fetchEvent(id: eventId, context: bg()) {
                                             ev.zapState = .none
                                             ev.zapStateChanged.send(.none)
                                         }
