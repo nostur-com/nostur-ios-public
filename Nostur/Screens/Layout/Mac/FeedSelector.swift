@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct FeedSelector: View {
-    let feeds:[NosturList]
-    @Binding var selected:NosturList?
+    let feeds:[CloudFeed]
+    @Binding var selected:CloudFeed?
     
     var body: some View {
         Picker("Feed", selection: $selected) {
@@ -25,7 +25,7 @@ struct FeedSelector: View {
 
 struct FeedSelectorTestur: View {
     @State var feeds = PreviewFetcher.fetchLists()
-    @State var selected:NosturList? = nil
+    @State var selected:CloudFeed? = nil
     
     var body: some View {
         FeedSelector(feeds: feeds, selected: $selected)

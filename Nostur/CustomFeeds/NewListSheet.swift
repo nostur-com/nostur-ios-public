@@ -10,7 +10,7 @@ import SwiftUI
 struct NewListSheet: View {
     
     @Environment(\.dismiss) private var dismiss
-    @State private var newList:NosturList?
+    @State private var newList:CloudFeed?
     @State private var title = ""
     @State private var wotEnabled = true
     @State private var addContactsSheetShown = false
@@ -99,13 +99,13 @@ struct NewListSheet: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Next") {
-                    newList = NosturList(context: DataProvider.shared().viewContext)
+                    newList = CloudFeed(context: DataProvider.shared().viewContext)
                     newList?.id = UUID()
                     newList?.name = title
                     newList?.showAsTab = true
                     
                     if feedType == .relays, let newList = newList {
-                        newList.relays = selectedRelays
+                        newList.relays_ = selectedRelays
                         newList.type = feedType.rawValue
                         newList.wotEnabled = wotEnabled
                         DataProvider.shared().save()

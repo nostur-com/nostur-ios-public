@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct EditNosturList: View {
-    @ObservedObject public var list:NosturList
+    @ObservedObject public var list:CloudFeed
     
     @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) private var dismiss
@@ -16,7 +16,7 @@ struct EditNosturList: View {
     @State private var confirmDeleteShown = false
     @State private var contactToRemove:Contact? = nil
     @State private var addContactsSheetShown = false
-    @State private var editList:NosturList? = nil
+    @State private var editList:CloudFeed? = nil
     @State private var selectedContacts:Set<Contact> = []
     
     var body: some View {
@@ -27,7 +27,7 @@ struct EditNosturList: View {
                 .listRowInsets(EdgeInsets())
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
-                        list.removeFromContacts(contact)
+                        list.contacts_.removeAll(where: { $0.pubkey == contact.pubkey })
                         DataProvider.shared().save()
                         sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: Set(list.contacts_.map { $0.pubkey })))
                     } label: {

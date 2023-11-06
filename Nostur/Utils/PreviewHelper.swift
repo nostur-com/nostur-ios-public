@@ -583,13 +583,13 @@ struct PreviewFetcher {
         return nil
     }
     
-    static func fetchList(context:NSManagedObjectContext? = nil) -> NosturList? {
-        let request = NosturList.fetchRequest()
+    static func fetchList(context:NSManagedObjectContext? = nil) -> CloudFeed? {
+        let request = CloudFeed.fetchRequest()
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.randomElement()
     }
     
-    static func fetchLists(context:NSManagedObjectContext? = nil) -> [NosturList] {
-        let request = NosturList.fetchRequest()
+    static func fetchLists(context:NSManagedObjectContext? = nil) -> [CloudFeed] {
+        let request = CloudFeed.fetchRequest()
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request)) ?? []
     }
     

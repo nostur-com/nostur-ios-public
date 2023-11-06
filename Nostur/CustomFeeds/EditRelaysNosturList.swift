@@ -9,7 +9,7 @@ import SwiftUI
 
 struct EditRelaysNosturList: View {
     
-    let list:NosturList
+    let list:CloudFeed
     @Environment(\.dismiss) var dismiss
     
     @State var title = ""
@@ -80,7 +80,7 @@ struct EditRelaysNosturList: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Save") {
                     list.name = title
-                    list.relays = selectedRelays
+                    list.relays_ = selectedRelays
                     list.wotEnabled = wotEnabled
                     list.showAsTab = showAsTab
                     DataProvider.shared().save()

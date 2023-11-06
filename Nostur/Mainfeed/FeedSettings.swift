@@ -10,7 +10,7 @@ import SwiftUI
 struct FeedSettings: View {
     @ObservedObject public var lvm:LVM
     @Binding public var showFeedSettings:Bool
-    public var list:NosturList? = nil
+    public var list:CloudFeed? = nil
     
     @EnvironmentObject private var la:LoggedInAccount
     

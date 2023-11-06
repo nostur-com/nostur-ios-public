@@ -21,9 +21,9 @@ struct FollowingAndExplore: View {
     @State private var showingNewNote = false
     @State private var noteCancellationId:UUID?
     
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)], predicate: NSPredicate(format: "showAsTab == true"))
-    var lists:FetchedResults<NosturList>
-    @State private var selectedList:NosturList?
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)], predicate: NSPredicate(format: "showAsTab == true"))
+    var lists:FetchedResults<CloudFeed>
+    @State private var selectedList:CloudFeed?
     @StateObject private var exploreVM:LVM = LVMManager.shared.exploreLVM()
     @StateObject private var hotVM = HotViewModel()
     @StateObject private var articlesVM = ArticlesFeedViewModel()

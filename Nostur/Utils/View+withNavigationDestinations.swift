@@ -103,7 +103,7 @@ extension View {
             .navigationDestination(for: Badge.self) { badge in
                 BadgeDetailView(badge: badge.badge)
             }
-            .navigationDestination(for: NosturList.self) { list in
+            .navigationDestination(for: CloudFeed.self) { list in
                 if list.type == LVM.ListType.relays.rawValue {
                     EditRelaysNosturList(list: list)
                 }

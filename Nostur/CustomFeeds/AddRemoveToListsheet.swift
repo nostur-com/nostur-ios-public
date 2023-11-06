@@ -14,12 +14,12 @@ struct AddRemoveToListsheet: View {
     @ObservedObject var contact:Contact
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \NosturList.createdAt, ascending: false)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \CloudFeed.createdAt, ascending: false)],
         predicate: NSPredicate(value: true),
         animation: .none)
-    var lists:FetchedResults<NosturList>
+    var lists:FetchedResults<CloudFeed>
     
-    @State var selectedLists:Set<NosturList> = []
+    @State var selectedLists:Set<CloudFeed> = []
     
     var body: some View {
         NavigationStack {

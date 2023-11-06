@@ -10,7 +10,7 @@ import SwiftUI
 struct EditListTitleSheet: View {
     
     @Environment(\.dismiss) var dismiss
-    var list:NosturList
+    var list:CloudFeed
     @State var newTitle = ""
     @State var showAsTab = false
     

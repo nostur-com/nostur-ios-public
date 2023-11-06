@@ -11,11 +11,11 @@ struct NosturListsView: View {
     @EnvironmentObject private var themes:Themes
     @Environment(\.managedObjectContext) var viewContext
     
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)])
-    var lists:FetchedResults<NosturList>
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)])
+    var lists:FetchedResults<CloudFeed>
     
     @State var confirmDeleteShown = false
-    @State var listToDelete:NosturList? = nil
+    @State var listToDelete:CloudFeed? = nil
     @State var newListSheet = false
         
     var body: some View {
@@ -64,10 +64,10 @@ struct NosturListsView: View {
 }
 
 struct ListRow: View {
-    @ObservedObject var list:NosturList
+    @ObservedObject var list:CloudFeed
     let showPin:Bool
     
-    init(list: NosturList, showPin:Bool = true) {
+    init(list: CloudFeed, showPin:Bool = true) {
         self.list = list
         self.showPin = showPin
     }
