@@ -38,12 +38,10 @@ struct PrivateNotesView: View {
                         ForEach(privateNotes) { pn in
                             LazyPrivateNote(pn: pn, events: events, contacts: contacts)
                                 .onDelete {
-                                    bg().perform {
-                                        bg().delete(pn)
-                                        bg().transactionAuthor = "removeCloudPrivateNote"
-                                        DataProvider.shared().save()
-                                        bg().transactionAuthor = nil
-                                    }
+                                    viewContext.delete(pn)
+                                    viewContext.transactionAuthor = "removeCloudPrivateNote"
+                                    DataProvider.shared().save()
+                                    viewContext.transactionAuthor = nil
                                 }
                         }
                         Spacer()
