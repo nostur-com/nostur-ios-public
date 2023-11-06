@@ -112,7 +112,7 @@ extension Event {
             frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, regex)
         }
         
-        let ctx = DataProvider.shared().bg
+        let ctx = bg()
         let newFirstEvent = ctx.performAndWait {
             return try? ctx.fetch(frBefore).last
         }

@@ -215,7 +215,7 @@ class FooterAttributes: ObservableObject {
             fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7 AND content == \"+\"", event.created_at, event.id, account.publicKey)
             fr.fetchLimit = 1
             fr.resultType = .countResultType
-            let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
+            let count = (try? bg().count(for: fr)) ?? 0
             return count > 0
         }
         return false
@@ -229,7 +229,7 @@ class FooterAttributes: ObservableObject {
             fr.fetchLimit = 20
             fr.resultType = .dictionaryResultType
             fr.propertiesToFetch = ["content"]
-            guard let reactions = try? DataProvider.shared().bg.fetch(fr) else {
+            guard let reactions = try? bg().fetch(fr) else {
                 return []
             }
             return Set(reactions.compactMap { $0["content"] as? String })
@@ -243,7 +243,7 @@ class FooterAttributes: ObservableObject {
             fr.predicate = NSPredicate(format: "created_at > %i AND replyToId == %@ AND pubkey == %@ AND kind == 1", event.created_at, event.id, account.publicKey)
             fr.fetchLimit = 1
             fr.resultType = .countResultType
-            let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
+            let count = (try? bg().count(for: fr)) ?? 0
             return count > 0
         }
         return false
@@ -257,7 +257,7 @@ class FooterAttributes: ObservableObject {
                                        event.created_at, account.publicKey, serializedE(event.id))
             fr.fetchLimit = 1
             fr.resultType = .countResultType
-            let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
+            let count = (try? bg().count(for: fr)) ?? 0
             return count > 0
         }
         return false

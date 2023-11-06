@@ -52,7 +52,7 @@ extension LVM {
                         
                         self.fetchSomeoneElsesFeed()
                     }
-                    else if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: DataProvider.shared().bg) {
+                    else if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                         self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
                         
                         let hashtags = clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -66,7 +66,7 @@ extension LVM {
                 if (self.pubkeys.isEmpty) {
                     L.og.notice("🟪  \(taskId) Timeout in fetching clEvent / pubkeys")
                     bg().perform {
-                        if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: DataProvider.shared().bg) {
+                        if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                             self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
                             
                             let hashtags = clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -93,7 +93,7 @@ extension LVM {
                 bg().perform { [weak self] in
                     guard let self = self else { return }
                     let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
-                    guard let events = try? DataProvider.shared().bg.fetch(fr) else {
+                    guard let events = try? bg().fetch(fr) else {
                         L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
                         return
                     }

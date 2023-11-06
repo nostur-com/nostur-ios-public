@@ -319,7 +319,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withReplies: withReplies, withRepliesCount: withRepliesCount))
             }
         } // why event.firstQuote_ doesn't work??
-        else if let firstQuoteId = event.firstQuoteId, let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: DataProvider.shared().bg) {
+        else if let firstQuoteId = event.firstQuoteId, let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: bg()) {
             if firstQuote.kind == 0 {
                 bg().delete(firstQuote)
                 event.firstQuote = nil
@@ -859,7 +859,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.withReplies = true
             repliesListener()
         }
-        let ctx = DataProvider.shared().bg
+        let ctx = bg()
         let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         ctx.perform { [weak self] in
             guard let self = self else { return }
@@ -895,7 +895,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             guard self.replyTo == nil else { return }
             guard let replyToId = self.replyToId else { return }
             
-            if let replyTo = try? Event.fetchEvent(id: replyToId, context: DataProvider.shared().bg) {
+            if let replyTo = try? Event.fetchEvent(id: replyToId, context: bg()) {
                 let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
                 DispatchQueue.main.async {
                     self.objectWillChange.send()
@@ -1049,7 +1049,7 @@ extension NRPost { // Helpers for grouped replies
             self.withGroupedReplies = true
             repliesToRootListener()
         }
-        let ctx = DataProvider.shared().bg
+        let ctx = bg()
         
         let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         
@@ -1064,7 +1064,7 @@ extension NRPost { // Helpers for grouped replies
                 fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1", self.id)
             }
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true )]
-            let repliesToRoot = (try? DataProvider.shared().bg.fetch(fr)) ?? []
+            let repliesToRoot = (try? bg().fetch(fr)) ?? []
             for reply in repliesToRoot { // Add to queue because some may be missing .replyTo
                 EventRelationsQueue.shared.addAwaitingEvent(reply, debugInfo: "reply in .repliesToRoot")
             }

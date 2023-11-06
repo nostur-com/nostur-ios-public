@@ -15,7 +15,7 @@ class Communities: ObservableObject {
     @Published var showNewCommunities = false
     
     private var backlog = Backlog(timeout: 0.2, auto: true)
-    private var bg = DataProvider.shared().bg
+    private var ctx = bg()
     
     public func fetchCommunities() {
         let reqTask = ReqTask(
@@ -27,9 +27,9 @@ class Communities: ObservableObject {
             },
             processResponseCommand: { [weak self] taskId, _, _ in
                 guard let self = self else { return }
-                self.bg.perform { [weak self] in
+                self.ctx.perform { [weak self] in
                     guard let self = self else { return }
-                    let events = Event.fetchCommunities(context: self.bg)
+                    let events = Event.fetchCommunities(context: self.ctx)
                     let communities = events
                         .map {
                             Community(event: $0)
@@ -55,9 +55,9 @@ class Communities: ObservableObject {
             timeoutCommand: { [weak self] taskId in
                 guard let self = self else { return }
                 if communities.isEmpty {
-                    self.bg.perform { [weak self] in
+                    self.ctx.perform { [weak self] in
                         guard let self = self else { return }
-                        let events = Event.fetchCommunities(context: self.bg)
+                        let events = Event.fetchCommunities(context: self.ctx)
                         let communities = events
                             .map {
                                 Community(event: $0)
@@ -78,9 +78,9 @@ class Communities: ObservableObject {
     }
     
     public func loadCommunities() {
-        bg.perform { [weak self] in
+        ctx.perform { [weak self] in
             guard let self = self else { return }
-            let events = Event.fetchCommunities(context: self.bg)
+            let events = Event.fetchCommunities(context: self.ctx)
             let communities = events
                 .map {
                     Community(event: $0)

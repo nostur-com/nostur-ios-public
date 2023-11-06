@@ -169,7 +169,7 @@ struct ProfileZaps: View {
     }
     
     func loadZaps() {
-        let ctx = DataProvider.shared().bg
+        let ctx = bg()
         let zapperPubkey = contact.zapperPubkey ?? "WHAT"
         ctx.perform {
             let calendar = Calendar.current

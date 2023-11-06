@@ -185,7 +185,7 @@ struct AppView: View {
         SocketPool.shared.setup(ss.activeNWCconnectionId)
         if !ss.activeNWCconnectionId.isEmpty {
             bg().perform {
-                if let nwcConnection = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: DataProvider.shared().bg) {
+                if let nwcConnection = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: bg()) {
                     NWCRequestQueue.shared.nwcConnection = nwcConnection
                     Importer.shared.nwcConnection = nwcConnection
                 }

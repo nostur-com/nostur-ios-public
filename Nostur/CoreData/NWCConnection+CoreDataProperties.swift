@@ -65,7 +65,7 @@ extension NWCConnection : Identifiable {
     
     func delete() { // Deletes connection from database, also removes key from keychain
         L.og.info("NWCConnection.delete: \(self.connectionId) (will also remove key from keychain")
-        let ctx = DataProvider.shared().bg
+        let ctx = bg()
         ctx.perform {
             NIP47SecretManager.shared.deleteSecret(connectionId: self.connectionId)
             ctx.delete(self)

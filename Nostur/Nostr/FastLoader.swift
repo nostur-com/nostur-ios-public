@@ -28,7 +28,7 @@ class FastLoader: ObservableObject {
     
     init() {
         viewContext = DataProvider.shared().viewContext
-        bgContext = DataProvider.shared().bg
+        bgContext = bg()
         loadNewerSubject
             .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
             .sink { [weak self] parameters in

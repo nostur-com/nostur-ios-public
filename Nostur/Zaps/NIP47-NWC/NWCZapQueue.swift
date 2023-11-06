@@ -45,7 +45,7 @@ class NWCZapQueue {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
-                        let notification = PersistentNotification.createFailedNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                        let notification = PersistentNotification.createFailedNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: bg())
                         NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     }
                 }
@@ -158,7 +158,7 @@ class Zap {
                 guard let self = self else { return }
                 if let eventId = self.eventId {
                     let message = String(localized: "[Zap](nostur:e:\(eventId)) failed.\n\(self.error ?? "")", comment: "Error message. don't translate the (nostur:e:...) part")
-                    let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
+                    let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: bg())
                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
                     
@@ -167,14 +167,14 @@ class Zap {
                         L.og.info("Revert from queue")
                         event.zapStateChanged.send(.none)
                     }
-                    else if let event = try? Event.fetchEvent(id: eventId, context: DataProvider.shared().bg) {
+                    else if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
                         L.og.info("Revert from DB")
                         event.zapStateChanged.send(.none)
                     }
                 }
                 else {
                     let message = String(localized:"Zap failed for [contact](nostur:p:\(self.contactPubkey)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
-                    let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
+                    let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: bg())
                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(self.contactPubkey)). \(self.error ?? "")")
                 }

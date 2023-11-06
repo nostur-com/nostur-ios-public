@@ -85,7 +85,7 @@ struct PostPreview: View {
 }
 
 func createPreviewEvent(_ event:NEvent) -> Event {
-    let context = DataProvider.shared().bg
+    let context = bg()
     let previewEvent = Event(context: context)
     previewEvent.insertedAt = Date.now
     previewEvent.id = event.id

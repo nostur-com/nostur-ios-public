@@ -230,7 +230,7 @@ class WebOfTrust: ObservableObject {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", otherPubkey)
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
-            if let list = try? DataProvider.shared().bg.fetch(fr).first {
+            if let list = try? bg().fetch(fr).first {
                 followsOfPubkey = followsOfPubkey.union( Set(list.fastPs.map { $0.1 }) )
             }
             self.followingFollowingPubkeys = self.followingFollowingPubkeys.union(followsOfPubkey)
@@ -331,7 +331,7 @@ class WebOfTrust: ObservableObject {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "kind == 3 AND pubkey IN %@", followingPubkeys)
             var followFollows = Set<String>()
-            if let contactLists = try? DataProvider.shared().bg.fetch(fr) {
+            if let contactLists = try? bg().fetch(fr) {
                 for list in contactLists {
                     let pubkeys = Set(list.fastPs.map { $0.1 })
                     followFollows = followFollows.union(pubkeys)

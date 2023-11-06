@@ -49,7 +49,7 @@ struct AlbyNWCConnectSheet: View {
                 
                 if showDisconnect {
                     Button((String(localized:"Disconnect", comment:"Button to disconnect NWC (Nostr Wallet Connection)")), role: .destructive) {
-                        let ctx = DataProvider.shared().bg
+                        let ctx = bg()
                         ctx.perform {
                             var removeKey:String?
                             SocketPool.shared.sockets.values.forEach { managedClient in
@@ -193,7 +193,7 @@ struct AlbyNWCConnectSheet: View {
     
     func startNWC() {
         bg().perform {
-            nwcConnection = NWCConnection.createAlbyConnection(context: DataProvider.shared().bg)
+            nwcConnection = NWCConnection.createAlbyConnection(context: bg())
             
             if let nwcConnection = nwcConnection, let nwcUrl = URL(string:"https://nwc.getalby.com/apps/new?c=Nostur&pubkey=\(nwcConnection.pubkey)&return_to=nostur%3A%2F%2Fnwc_callback") {
                 DispatchQueue.main.async {

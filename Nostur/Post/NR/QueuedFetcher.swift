@@ -25,7 +25,7 @@ class QueuedFetcher {
     private var dequeuePsubject = PassthroughSubject<String, Never>()
     private var enqueueIDsubject = PassthroughSubject<String, Never>()
     private var dequeueIDsubject = PassthroughSubject<String, Never>()
-    private var bg = DataProvider.shared().bg
+    private var ctx = bg()
     
     
     init() {
@@ -52,7 +52,7 @@ class QueuedFetcher {
         fetchSubject
             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             .sink { [unowned self] _ in
-                bg.perform {
+                ctx.perform {
                     guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
                     
                     if self.idQueue.isEmpty {
@@ -76,14 +76,14 @@ class QueuedFetcher {
     }
     
     public func enqueue(pTag: String) {
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             self.enqueuePsubject.send(pTag)
             self.fetch()
         }
     }
     
     public func enqueue(pTags: [String]) {
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             guard !pTags.isEmpty else { return }
             pTags.forEach { pTag in
                 self.enqueuePsubject.send(pTag)
@@ -94,7 +94,7 @@ class QueuedFetcher {
     
     public func enqueue(pTags: Set<String>) {
         guard !pTags.isEmpty else { return }
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             pTags.forEach { pTag in
                 self.enqueuePsubject.send(pTag)
             }
@@ -103,13 +103,13 @@ class QueuedFetcher {
     }
     
     public func dequeue(pTag: String) {
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             self.dequeuePsubject.send(pTag)
         }
     }
     
     public func dequeue(pTags: [String]) {
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             pTags.forEach { pTag in
                 self.dequeuePsubject.send(pTag)
             }
@@ -117,7 +117,7 @@ class QueuedFetcher {
     }
     
     public func dequeue(pTags: Set<String>) {
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             pTags.forEach { pTag in
                 self.dequeuePsubject.send(pTag)
             }
@@ -125,7 +125,7 @@ class QueuedFetcher {
     }
     
     public func enqueue(id: String) {
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             self.enqueueIDsubject.send(id)
             self.fetch()
         }
@@ -133,7 +133,7 @@ class QueuedFetcher {
     
     public func enqueue(ids: [String]) {
         guard !ids.isEmpty else { return }
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             ids.forEach { id in
                 self.enqueuePsubject.send(id)
             }
@@ -142,13 +142,13 @@ class QueuedFetcher {
     }
     
     public func dequeue(id: String) {
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             self.dequeueIDsubject.send(id)
         }
     }
     
     public func dequeue(ids: [String]) {
-        bg.perform { [unowned self] in
+        ctx.perform { [unowned self] in
             ids.forEach { id in
                 self.dequeueIDsubject.send(id)
             }

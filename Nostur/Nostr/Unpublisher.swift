@@ -124,7 +124,7 @@ class Unpublisher {
             return
         }
 
-        let bgContext = DataProvider.shared().bg
+        let bgContext = bg()
         
         // Always save event first
         // Save or update event

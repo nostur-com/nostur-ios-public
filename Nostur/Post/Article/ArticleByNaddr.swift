@@ -41,7 +41,7 @@ struct ArticleByNaddr: View {
                                 if let article = Event.fetchReplacableEvent(kind,
                                                                                  pubkey: pubkey,
                                                                                  definition: definition,
-                                                                                 context: DataProvider.shared().bg) {
+                                                                                 context: bg()) {
                                     let article = NRPost(event: article)
                                     DispatchQueue.main.async {
                                         self.article = article
@@ -66,7 +66,7 @@ struct ArticleByNaddr: View {
                                                 else if let article = Event.fetchReplacableEvent(kind,
                                                                                                  pubkey: pubkey,
                                                                                                  definition: definition,
-                                                                                                 context: DataProvider.shared().bg) {
+                                                                                                 context: bg()) {
                                                     let article = NRPost(event: article)
                                                     DispatchQueue.main.async {
                                                         self.article = article

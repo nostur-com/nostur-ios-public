@@ -13,7 +13,7 @@ typealias FastTag = (String, String, String?, String?)
 class NRContentElementBuilder {
     
     static let shared = NRContentElementBuilder()
-    let context = DataProvider.shared().bg
+    let context = bg()
     
     func buildElements(_ event:Event) -> ([ContentElement], [URL]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
