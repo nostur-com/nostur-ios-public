@@ -236,7 +236,8 @@ struct ArticleView: View {
                 
                 if let image = article.articleImageURL {
                     SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: shouldAutoload, contentMode: .aspectFill, upscale: true)
-                        .frame(minHeight: 100)
+//                        .frame(width: dim.listWidth)
+//                        .frame(minHeight: 100)
                         .padding(.horizontal, -20) // on article preview always use full width style
                         .padding(.vertical, 10)
                 }
