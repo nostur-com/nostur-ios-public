@@ -1567,7 +1567,7 @@
 				1F558B1929FD62D6002938A3 /* Highlights */,
 				1FB4D3F929BAEAE4004DB537 /* Mainfeed */,
 				1F71037B296BD98D006245CC /* Nostr */,
-				1FDF0ED729EBA26300B56AC4 /* NosturList */,
+				1FDF0ED729EBA26300B56AC4 /* CustomFeeds */,
 				1FC2DFF229A9328F00C8A9DA /* Notifications */,
 				1F02EA5D299FE52300FC89EB /* Onboarding */,
 				1F9D69D92A3096E100628460 /* Playground */,
@@ -1787,7 +1787,7 @@
 			path = NoiseFilter;
 			sourceTree = "<group>";
 		};
-		1FDF0ED729EBA26300B56AC4 /* NosturList */ = {
+		1FDF0ED729EBA26300B56AC4 /* CustomFeeds */ = {
 			isa = PBXGroup;
 			children = (
 				1FC7A49629F8EFBA00645FEF /* AddRemoveToListsheet.swift */,
@@ -1797,7 +1797,7 @@
 				1FB6E6F829E3B16A008BE8A6 /* NewListSheet.swift */,
 				1FF2C6C529EAD7D00096AC4A /* NosturListsView.swift */,
 			);
-			path = NosturList;
+			path = CustomFeeds;
 			sourceTree = "<group>";
 		};
 		1FFED7FD2A39706B00A0B1E8 /* PostComposer */ = {

@@ -62,13 +62,13 @@ class LVMManager {
         listVMs.append(lvm)
         return lvm
     }
-    func listLVM(forList list:NosturList, isDeck:Bool = false) -> LVM {
+    func listLVM(forList list:CloudFeed, isDeck:Bool = false) -> LVM {
         if let lvm = listVMs.first(where: { $0.id == list.subscriptionId }) {
             return lvm
         }
         let lvm = list.type == LVM.ListType.relays.rawValue
         ? LVM(type: .relays, pubkeys: [], listId: list.subscriptionId, name: list.name_, relays: list.relays_, wotEnabled: list.wotEnabled, isDeck: isDeck)
-            : LVM(type: .pubkeys, pubkeys: Set(list.contacts_.map { $0.pubkey }), listId: list.subscriptionId, name: list.name_, isDeck: isDeck)
+        : LVM(type: .pubkeys, pubkeys: Set((list.pubkeys ?? "").components(separatedBy: " ")), listId: list.subscriptionId, name: list.name_, isDeck: isDeck)
         
         listVMs.append(lvm)
         return lvm

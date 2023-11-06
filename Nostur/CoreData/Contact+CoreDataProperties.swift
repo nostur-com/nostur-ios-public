@@ -44,9 +44,18 @@ extension Contact {
         return URL(string: picture)
     }
 
-    var lists_:[NosturList] {
-        get { (lists?.allObjects as? [NosturList]) ?? [] }
-        set { lists = NSSet(array: newValue) }
+    var lists_:[CloudFeed] {
+        get {
+            CloudFeed.fetchAll(context: DataProvider.shared().viewContext)
+                .filter({
+                    ($0.pubkeys?.components(separatedBy: " ") ?? []).contains(where: { $0 == self.pubkey })
+                })
+        }
+        set {
+            for feed in newValue {
+                feed.contacts_.append(self)
+            }
+        }
     }
 }
 

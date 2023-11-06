@@ -13,7 +13,7 @@ struct MacListsView: View {
     @StateObject private var dim = DIMENSIONS()
     @StateObject private var vm:MacListState = .shared
     @State var lvm:LVM? = nil
-    @State var availableFeeds:[NosturList] = []
+    @State var availableFeeds:[CloudFeed] = []
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -68,7 +68,7 @@ struct MacListsView: View {
                 lvm = LVMManager.shared.followingLVM(forAccount: account)
             }
             
-            availableFeeds = NosturList.fetchLists(context: DataProvider.shared().viewContext)
+            availableFeeds = CloudFeed.fetchAll(context: DataProvider.shared().viewContext)
         }
         .withSheets()
         .environmentObject(dim)
@@ -81,8 +81,8 @@ struct MacListsView: View {
 }
 
 struct ColumnViewWrapper: View {
-    let availableFeeds:[NosturList]
-    @State private var selectedFeed:NosturList? = nil
+    let availableFeeds:[CloudFeed]
+    @State private var selectedFeed:CloudFeed? = nil
     @State private var lvm:LVM? = nil
     
     var body: some View {
@@ -92,8 +92,8 @@ struct ColumnViewWrapper: View {
 
 struct ColumnView: View {
     @EnvironmentObject private var themes:Themes
-    let availableFeeds:[NosturList]
-    @Binding var selectedFeed:NosturList?
+    let availableFeeds:[CloudFeed]
+    @Binding var selectedFeed:CloudFeed?
     @Binding var lvm:LVM?
     
     var body: some View {
