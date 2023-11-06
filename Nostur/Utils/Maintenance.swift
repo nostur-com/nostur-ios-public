@@ -104,23 +104,15 @@ struct Maintenance {
                 NSRegularExpression.escapedPattern(for: serializedP($0))
             }.joined(separator: "|") + ").*"
             
-            let ownAccountBookmarkIds = allAccounts.reduce([String]()) { partialResult, account in
-                var newResult = Array(partialResult)
-                if (account.bookmarks != nil) {
-                    let ids = account.bookmarks!.map { $0.id }
-                    newResult.append(contentsOf: ids)
-                }
-                return newResult
-            }
+            let ownAccountBookmarkIds:Set<String> = Set(Bookmark.fetchAll(context: context).compactMap { $0.eventId })
             
-            let ownAccountPrivateNoteEventIds = allAccounts.reduce([String]()) { partialResult, account in
-                var newResult = Array(partialResult)
-                if (account.privateNotes != nil) {
-                    let ids = account.privateNotes!.compactMap { $0.post?.id }
-                    newResult.append(contentsOf: ids)
-                }
-                return newResult
-            }
+            let ownAccountPrivateNoteEventIds:Set<String> = Set(CloudPrivateNote.fetchAll(context: context).compactMap({ pn in
+                guard let type = pn.type,
+                      type == CloudPrivateNote.PrivateNoteType.post.rawValue,
+                      let eventId = pn.eventId
+                else { return nil }
+                return eventId
+            }))
             
             let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
             
