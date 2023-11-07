@@ -23,6 +23,7 @@ struct BookmarksView: View {
     
     @State private var events:[Event] = []
     @State private var bookmarkSnapshot: Int = 0
+    @State private var noEvents = false
     
     var body: some View {
         #if DEBUG
@@ -31,7 +32,7 @@ struct BookmarksView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                if !bookmarks.isEmpty || !events.isEmpty {
+                if !bookmarks.isEmpty && (!events.isEmpty || noEvents) {
                     LazyVStack(spacing: 10) {
                         ForEach(bookmarks) { bookmark in
                             LazyBookmark(bookmark, events: events)
@@ -115,6 +116,9 @@ struct BookmarksView: View {
             let fr2 = Event.fetchRequest()
             fr2.predicate = NSPredicate(format: "id IN %@", bookmarkEventIds )
             events = (try? bg().fetch(fr2)) ?? []
+            if events.count == 0 {
+                noEvents = true
+            }
         }
     }
 }

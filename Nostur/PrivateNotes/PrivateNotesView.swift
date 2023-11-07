@@ -25,6 +25,8 @@ struct PrivateNotesView: View {
     @State private var events:[Event] = [] // bg
     @State private var contacts:[Contact] = [] // main
     @State private var privateNotesSnapshot: Int = 0
+    @State private var noEvents = false
+    @State private var noContacts = false
     
     var body: some View {
         #if DEBUG
@@ -33,7 +35,7 @@ struct PrivateNotesView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                if !privateNotes.isEmpty {
+                if !privateNotes.isEmpty && (!events.isEmpty || noEvents) && (!contacts.isEmpty || noContacts) {
                     LazyVStack(spacing: 10) {
                         ForEach(privateNotes) { pn in
                             LazyPrivateNote(pn: pn, events: events, contacts: contacts)
@@ -121,11 +123,17 @@ struct PrivateNotesView: View {
         fr3.predicate = NSPredicate(format: "pubkey IN %@", pnContactPubkeys )
         fr3.returnsObjectsAsFaults = false
         contacts = (try? viewContext.fetch(fr3)) ?? []
+        if contacts.count == 0 {
+            noContacts = true
+        }
         
         bg().perform {
             let fr2 = Event.fetchRequest()
             fr2.predicate = NSPredicate(format: "id IN %@", pnEventIds )
             events = (try? bg().fetch(fr2)) ?? []
+            if events.count == 0 {
+                noEvents = true
+            }
         }
     }
 }
