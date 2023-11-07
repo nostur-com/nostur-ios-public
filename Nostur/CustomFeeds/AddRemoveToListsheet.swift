@@ -20,50 +20,56 @@ struct AddRemoveToListsheet: View {
     var lists:FetchedResults<CloudFeed>
     
     @State var selectedLists:Set<CloudFeed> = []
+    @State var noSelectedLists = false
     
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack {
-                    ForEach(lists.filter { $0.type != LVM.ListType.relays.rawValue }) { list in
-                        HStack(spacing: 10) {
-                            Button {
-                                if selectedLists.contains(list) {
-                                    selectedLists.remove(list)
-                                }
-                                else {
-                                    selectedLists.insert(list)
-                                }
-                            } label: {
-                                if selectedLists.contains(list) {
-                                    Image(systemName:  "checkmark.circle.fill")
-                                        .padding(.vertical, 10)
-                                }
-                                else {
-                                    Image(systemName:  "circle")
-                                        .foregroundColor(Color.secondary)
-                                        .padding(.vertical, 10)
-                                }
-                            }
-                            ListRow(list: list, showPin: false)
-                                .padding(.vertical, 10)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
+                if !lists.isEmpty && (!selectedLists.isEmpty || noSelectedLists) {
+                    LazyVStack {
+                        ForEach(lists.filter { $0.type != LVM.ListType.relays.rawValue }) { list in
+                            HStack(spacing: 10) {
+                                Button {
                                     if selectedLists.contains(list) {
                                         selectedLists.remove(list)
                                     }
                                     else {
                                         selectedLists.insert(list)
                                     }
+                                } label: {
+                                    if selectedLists.contains(list) {
+                                        Image(systemName:  "checkmark.circle.fill")
+                                            .padding(.vertical, 10)
+                                    }
+                                    else {
+                                        Image(systemName:  "circle")
+                                            .foregroundColor(Color.secondary)
+                                            .padding(.vertical, 10)
+                                    }
                                 }
+                                ListRow(list: list, showPin: false)
+                                    .padding(.vertical, 10)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        if selectedLists.contains(list) {
+                                            selectedLists.remove(list)
+                                        }
+                                        else {
+                                            selectedLists.insert(list)
+                                        }
+                                    }
+                            }
                         }
+                        Divider()
                     }
-                    Divider()
                 }
             }
             .padding(10)
             .onAppear {
                 selectedLists = Set(contact.lists_)
+                if selectedLists.count == 0 {
+                    noSelectedLists = true
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
