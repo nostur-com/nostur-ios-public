@@ -315,7 +315,7 @@ private struct WithSheets: ViewModifier {
             .onReceive(receiveNotification(.sharePostScreenshot)) { notification in
                 let nrPost = notification.object as! NRPost
                 nrPost.following = true // Force load image for screenshot...
-                nrPost.isPreview = true // Will hide 'Sent to X relays' in footer
+                nrPost.isPreview = true // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
                 
                 let renderer = ImageRenderer(content:
                     VStack(spacing:0) {
