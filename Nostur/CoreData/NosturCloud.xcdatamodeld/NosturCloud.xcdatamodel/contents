@@ -36,6 +36,14 @@
         <attribute name="eventId" optional="YES" attributeType="String"/>
         <attribute name="json" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="CloudBlocked" representedClassName="CloudBlocked" syncable="YES">
+        <attribute name="createdAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="eventId_" optional="YES" attributeType="String"/>
+        <attribute name="fixedName_" optional="YES" attributeType="String"/>
+        <attribute name="pubkey_" optional="YES" attributeType="String"/>
+        <attribute name="type_" optional="YES" attributeType="String"/>
+        <attribute name="word_" optional="YES" attributeType="String"/>
+    </entity>
     <entity name="CloudFeed" representedClassName="CloudFeed" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="followingHashtags_" optional="YES" attributeType="String"/>
@@ -211,6 +219,7 @@
         <memberEntity name="Bookmark"/>
         <memberEntity name="CloudPrivateNote"/>
         <memberEntity name="CloudFeed"/>
+        <memberEntity name="CloudBlocked"/>
     </configuration>
     <configuration name="Local">
         <memberEntity name="Account"/>

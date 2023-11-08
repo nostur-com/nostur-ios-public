@@ -140,6 +140,8 @@
 		1F53BEA82A2B7D4700678DC1 /* CustomNWCConnectSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F53BEA72A2B7D4700678DC1 /* CustomNWCConnectSheet.swift */; };
 		1F558B3C29FE4DA0002938A3 /* EventRelationsQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */; };
 		1F57C54B299285B300DFE063 /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54A299285B300DFE063 /* Search.swift */; };
+		1F58157E2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F58157C2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift */; };
+		1F58157F2AFB03BC0014852A /* CloudBlocked+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F58157D2AFB03BC0014852A /* CloudBlocked+CoreDataProperties.swift */; };
 		1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BA91329A8C27200002652 /* NewNoteButton.swift */; };
 		1F5C82D92ACD336A00333775 /* ZapReceipt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5C82D82ACD336A00333775 /* ZapReceipt.swift */; };
 		1F5C82DC2ACD42DB00333775 /* Kind0.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5C82DB2ACD42DB00333775 /* Kind0.swift */; };
@@ -596,6 +598,8 @@
 		1F53BEA72A2B7D4700678DC1 /* CustomNWCConnectSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNWCConnectSheet.swift; sourceTree = "<group>"; };
 		1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventRelationsQueue.swift; sourceTree = "<group>"; };
 		1F57C54A299285B300DFE063 /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
+		1F58157C2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudBlocked+CoreDataClass.swift"; sourceTree = "<group>"; };
+		1F58157D2AFB03BC0014852A /* CloudBlocked+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudBlocked+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F5BA91329A8C27200002652 /* NewNoteButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteButton.swift; sourceTree = "<group>"; };
 		1F5C82D82ACD336A00333775 /* ZapReceipt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapReceipt.swift; sourceTree = "<group>"; };
 		1F5C82DB2ACD42DB00333775 /* Kind0.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind0.swift; sourceTree = "<group>"; };
@@ -1109,6 +1113,8 @@
 		1F25B395297A508200A8A5A7 /* CoreData */ = {
 			isa = PBXGroup;
 			children = (
+				1F58157C2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift */,
+				1F58157D2AFB03BC0014852A /* CloudBlocked+CoreDataProperties.swift */,
 				1FE1281A2AF8BFDF0070936C /* CloudFeed+CoreDataClass.swift */,
 				1FE1281B2AF8BFDF0070936C /* CloudFeed+CoreDataProperties.swift */,
 				1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */,
@@ -2193,6 +2199,7 @@
 				1FE1281D2AF8BFDF0070936C /* CloudFeed+CoreDataProperties.swift in Sources */,
 				1FCC2F2D2A1B2CD100202EFA /* ImageTesting1.swift in Sources */,
 				1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */,
+				1F58157F2AFB03BC0014852A /* CloudBlocked+CoreDataProperties.swift in Sources */,
 				1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */,
 				1F9A55202A3C7E9100F67627 /* DetailTabsModel.swift in Sources */,
 				1FB130B329C0E5A4004AC98D /* NoteHeaderView.swift in Sources */,
@@ -2309,6 +2316,7 @@
 				1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */,
 				1FC0F5A52A4AEB2E004E4DAA /* ArticleByNaddr.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
+				1F58157E2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift in Sources */,
 				1F810B3529E67145006B1614 /* MutedWordsView.swift in Sources */,
 				1F8836E52AA58D6500F252C1 /* DMState+CoreDataProperties.swift in Sources */,
 				1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */,
