@@ -370,8 +370,10 @@ extension PreviewEnvironment {
             randomContactsR.fetchLimit = 10
             randomContactsR.fetchOffset = Int.random(in: 0..<100)
             let randomContacts = try? context.fetch(randomContactsR)
-            if let randomContacts {
-                account.blockedPubkeys_ = account.blockedPubkeys_.union(Set(randomContacts.randomSample(count: 3).map { $0.pubkey }))
+            if let randomContacts = randomContacts {
+                for contact in randomContacts.randomSample(count: 3) {
+                    CloudBlocked.addBlock(pubkey: contact.pubkey, fixedName: contact.anyName)
+                }
             }
             
             let randomTextEventsR = Event.fetchRequest()
@@ -382,7 +384,7 @@ extension PreviewEnvironment {
             if let randomTextEvents {
                 for _ in 0..<10 {
                     if let random = randomTextEvents.randomElement() {
-                        account.mutedRootIds_.insert(random.id)
+                        CloudBlocked.addBlock(eventId: random.id)
                     }
                 }
             }

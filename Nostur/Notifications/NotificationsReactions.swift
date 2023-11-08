@@ -68,7 +68,7 @@ struct NotificationsReactions: View {
                                 fl.predicate = NSPredicate(
                                     format: "otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
                                     account.publicKey,
-                                    account.blockedPubkeys_)
+                                    NRState.shared.blockedPubkeys)
             //                    fl.offset = (fl.events.count - 1)
                                 fl.loadMore(500)
                                 if let until = fl.events.last?.created_at {
@@ -120,7 +120,7 @@ struct NotificationsReactions: View {
                     "created_at >= %i AND otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
                     currentNewestCreatedAt,
                 account.publicKey,
-                account.blockedPubkeys_
+                NRState.shared.blockedPubkeys
             )
             fl.loadNewerEvents(5000, taskId:"newReactions")
         }
@@ -178,7 +178,7 @@ struct NotificationsReactions: View {
         fl.predicate = NSPredicate(
             format: "otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
             account.publicKey,
-            account.blockedPubkeys_
+            NRState.shared.blockedPubkeys
         )
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fl.onComplete = {
@@ -212,7 +212,7 @@ struct NotificationsReactions: View {
                     format: "created_at >= %i AND otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
                     currentNewestCreatedAt,
                     account.publicKey,
-                    account.blockedPubkeys_
+                    NRState.shared.blockedPubkeys
                 )
                 fl.loadNewerEvents(5000, taskId: taskId)
             },

@@ -102,7 +102,7 @@ struct NotificationsZaps: View {
                                     "AND kind == 9735 " +
                                     "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
                                     account.publicKey,
-                                    account.blockedPubkeys_)
+                                    NRState.shared.blockedPubkeys)
             //                    fl.offset = (fl.events.count - 1)
                                 fl.loadMore(500)
                                 if let until = fl.events.last?.created_at {
@@ -157,7 +157,7 @@ struct NotificationsZaps: View {
                     "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
                     currentNewestCreatedAt,
                 account.publicKey,
-                account.blockedPubkeys_
+                NRState.shared.blockedPubkeys
             )
             fl.loadNewerEvents(5000, taskId:"newZaps")
         }
@@ -230,7 +230,7 @@ struct NotificationsZaps: View {
             format:
                 "otherPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@",
             account.publicKey,
-            account.blockedPubkeys_
+            NRState.shared.blockedPubkeys
             )
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fl.onComplete = {
@@ -263,7 +263,7 @@ struct NotificationsZaps: View {
                         "created_at >= %i AND otherPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
                         currentNewestCreatedAt,
                     account.publicKey,
-                    account.blockedPubkeys_
+                    NRState.shared.blockedPubkeys
                   )
                 fl.loadNewerEvents(5000, taskId: taskId)
             },

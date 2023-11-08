@@ -26,6 +26,24 @@ struct MinimalNoteTextRenderView: View {
     }
 }
 
+struct MinimalNoteTextRenderViewText: View {
+    
+    public var plainText:String
+    public var lineLimit:Int = 10
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(plainText)
+                .lineLimit(lineLimit, reservesSpace: false)
+                .multilineTextAlignment(TextAlignment.leading)
+                .foregroundColor(.primary.opacity(0.5))
+                .lineSpacing(3)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 5)
+        }
+    }
+}
+
 struct MinimalNoteTextRenderView_Previews: PreviewProvider {
     static var previews: some View {
         

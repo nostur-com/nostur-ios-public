@@ -75,11 +75,11 @@ struct NotificationsMentions: View {
                 format:
                     "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                     currentNewestCreatedAt,
-                account.blockedPubkeys_ + [account.publicKey],
+                NRState.shared.blockedPubkeys + [account.publicKey],
                 serializedP(account.publicKey),
-                account.mutedRootIds_,
-                account.mutedRootIds_,
-                account.mutedRootIds_
+                NRState.shared.mutedRootIds,
+                NRState.shared.mutedRootIds,
+                NRState.shared.mutedRootIds
             )
             fl.loadNewer(250, taskId:"newMentions")
         }
@@ -124,11 +124,11 @@ struct NotificationsMentions: View {
         didLoad = true
         fl.predicate = NSPredicate(
             format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
-            (account.blockedPubkeys_ + [account.publicKey]),
+            (NRState.shared.blockedPubkeys + [account.publicKey]),
             serializedP(account.publicKey),
-            account.mutedRootIds_,
-            account.mutedRootIds_,
-            account.mutedRootIds_)
+            NRState.shared.mutedRootIds,
+            NRState.shared.mutedRootIds,
+            NRState.shared.mutedRootIds)
         
         
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -160,11 +160,11 @@ struct NotificationsMentions: View {
                     format:
                         "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                         currentNewestCreatedAt,
-                    (account.blockedPubkeys_ + [account.publicKey]),
+                    (NRState.shared.blockedPubkeys + [account.publicKey]),
                     serializedP(account.publicKey),
-                    account.mutedRootIds_,
-                    account.mutedRootIds_,
-                    account.mutedRootIds_
+                    NRState.shared.mutedRootIds,
+                    NRState.shared.mutedRootIds,
+                    NRState.shared.mutedRootIds
                   )
                 fl.loadNewer(taskId: taskId)
             },
@@ -195,11 +195,11 @@ struct NotificationsMentions: View {
         guard let account = account() else { return }
         fl.predicate = NSPredicate(
             format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"",
-            (account.blockedPubkeys_ + [account.publicKey]),
+            (NRState.shared.blockedPubkeys + [account.publicKey]),
             serializedP(account.publicKey),
-            account.mutedRootIds_,
-            account.mutedRootIds_,
-            account.mutedRootIds_)
+            NRState.shared.mutedRootIds,
+            NRState.shared.mutedRootIds,
+            NRState.shared.mutedRootIds)
         fl.loadMore(25)
         let fetchMoreTask = ReqTask(
             reqCommand: { (taskId) in
@@ -214,11 +214,11 @@ struct NotificationsMentions: View {
             processResponseCommand: { (taskId, _, _) in
                 fl.predicate = NSPredicate(
                     format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"",
-                    (account.blockedPubkeys_ + [account.publicKey]),
+                    (NRState.shared.blockedPubkeys + [account.publicKey]),
                     serializedP(account.publicKey),
-                    account.mutedRootIds_,
-                    account.mutedRootIds_,
-                    account.mutedRootIds_)
+                    NRState.shared.mutedRootIds,
+                    NRState.shared.mutedRootIds,
+                    NRState.shared.mutedRootIds)
                 fl.loadMore(25)
             })
 

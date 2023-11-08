@@ -52,7 +52,7 @@ class LVMManager {
         
         let explorePubkeys:Set<String> =
             if let account = NRState.shared.loggedInAccount?.account {
-                Set([account.publicKey] + NRState.shared.rawExplorePubkeys).subtracting(Set(account.blockedPubkeys_))
+                Set([account.publicKey] + NRState.shared.rawExplorePubkeys).subtracting(NRState.shared.blockedPubkeys)
             }
             else {
                 NRState.shared.rawExplorePubkeys

@@ -80,6 +80,8 @@ class NRState: ObservableObject {
 //            sendNotification(.mutedWordsChanged, mutedWords) // TODO update listeners
         }
     }
+    public var blockedPubkeys:Set<String> = []
+    public var mutedRootIds:Set<String> = []
     
     @MainActor private init() {
         self.wot = WebOfTrust.shared
@@ -94,6 +96,8 @@ class NRState: ObservableObject {
         }
         managePowerUsage()
         loadMutedWords()
+        loadBlockedPubkeys()
+        loadMutedRootIds()
     }
     
     @MainActor public func loadAccounts(onComplete: (([Account]) -> Void)? = nil) { // main context
@@ -124,6 +128,14 @@ class NRState: ObservableObject {
             guard let mutedWords = try? bg().fetch(fr) else { return }
             self.mutedWords = mutedWords.map { $0.words }.compactMap { $0 }.filter { $0 != "" }
         }
+    }
+    
+    public func loadBlockedPubkeys() {
+        self.blockedPubkeys = CloudBlocked.blockedPubkeys()
+    }
+    
+    public func loadMutedRootIds() {
+        self.mutedRootIds = CloudBlocked.mutedRootIds()
     }
     
     @objc func powerStateChanged(_ notification: Notification) {
@@ -180,12 +192,7 @@ func follows() -> Set<String> {
 }
 
 func blocks() -> Set<String> {
-    if Thread.isMainThread {
-        NRState.shared.loggedInAccount?.account.blockedPubkeys_ ?? []
-    }
-    else {
-        NRState.shared.loggedInAccount?.bgAccount?.blockedPubkeys_ ?? []
-    }
+    NRState.shared.blockedPubkeys
 }
 
 

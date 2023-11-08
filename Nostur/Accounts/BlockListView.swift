@@ -46,34 +46,60 @@ struct BlockListView: View {
 }
 
 struct BlockedAccounts:View {
-    @EnvironmentObject var themes: Themes
-    @EnvironmentObject var la:LoggedInAccount
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var la:LoggedInAccount
+    @Environment(\.managedObjectContext) private var viewContext
     
-    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false))
-    var blockedContacts:FetchedResults<Contact>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt_, order: .reverse)], predicate: NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.contact.rawValue))
+    var blockedPubkeys:FetchedResults<CloudBlocked>
     
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 10) {
-                ForEach(blockedContacts.sorted(by: { $0.authorName < $1.authorName })) { contact in
-                    ProfileRow(withoutFollowButton: true, contact: contact)
+                ForEach(blockedPubkeys) { blockedPubkey in
+                    if let contact = Contact.fetchByPubkey(blockedPubkey.pubkey, context: viewContext) {
+                        ProfileRow(withoutFollowButton: true, contact: contact)
+                            .background(themes.theme.background)
+                            .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
+                                let updatedList = blockedPubkeys
+                                    .filter { $0.pubkey != blockedPubkey.pubkey }
+                                    .map { $0.pubkey }
+                                
+                                viewContext.delete(blockedPubkey)
+                                sendNotification(.blockListUpdated, Set(updatedList))
+                            }
+                    }
+                    else {
+                        HStack(alignment: .top) {
+                            PFP(pubkey: blockedPubkey.pubkey)
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(blockedPubkey.fixedName).font(.headline).foregroundColor(.primary)
+                                            .lineLimit(1)
+                                    }
+                                    .multilineTextAlignment(.leading)
+                                    Spacer()
+                                }
+                            }
+                        }
+                        .padding()
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            navigateTo(ContactPath(key: blockedPubkey.pubkey))
+                        }
                         .background(themes.theme.background)
                         .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
-                            la.account.blockedPubkeys_.remove(contact.pubkey)
-                            sendNotification(.blockListUpdated, la.account.blockedPubkeys_)
+                            let updatedList = blockedPubkeys
+                                .filter { $0.pubkey != blockedPubkey.pubkey }
+                                .map { $0.pubkey }
+                            
+                            viewContext.delete(blockedPubkey)
+                            sendNotification(.blockListUpdated, Set(updatedList))
                         }
+                    }
                 }
             }
-        }
-        .onAppear {
-            blockedContacts.nsPredicate = NSPredicate(format: "pubkey IN %@", la.account.blockedPubkeys_)
-        }
-        .onChange(of: la.account.blockedPubkeys_) { newValue in
-            blockedContacts.nsPredicate = NSPredicate(format: "pubkey IN %@", newValue)
-        }
-        .onReceive(receiveNotification(.blockListUpdated)) { notification in
-            let newBlockList = notification.object as! Set<String>
-            blockedContacts.nsPredicate = NSPredicate(format: "pubkey IN %@", newBlockList)
         }
     }
 }
@@ -81,57 +107,47 @@ struct BlockedAccounts:View {
 struct MutedConversations: View {
     @EnvironmentObject var themes: Themes
     @ObservedObject var settings:SettingsStore = .shared
-    @EnvironmentObject var la:LoggedInAccount
-    @StateObject var fl = FastLoader()
-    @State var didLoad = false
-    @State var backlog = Backlog()
+    
+    @Environment(\.managedObjectContext) private var viewContext
+    
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt_, order: .reverse)], predicate: NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.post.rawValue))
+    var mutedRootIds:FetchedResults<CloudBlocked>
     
     var body: some View {
-        LazyVStack(spacing: 10) {
-            ForEach(fl.nrPosts) { nrPost in
-                Box {
-                    HStack(spacing: 10) {
-                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25)
-                            .onTapGesture {
-                                if let nrContact = nrPost.pfpAttributes.contact {
-                                    navigateTo(nrContact)
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: nrPost.pubkey))
-                                }
+        ScrollView {
+            LazyVStack(spacing: 10) {
+                ForEach(mutedRootIds) { mutedRootId in
+                    Box {
+                        if let event = try? Event.fetchEvent(id: mutedRootId.eventId, context: viewContext) {
+                            HStack(spacing: 10) {
+                                PFP(pubkey: event.pubkey, contact: event.contact, size: 25)
+                                    .onTapGesture {
+                                        navigateTo(ContactPath(key: event.pubkey))
+                                    }
+                                MinimalNoteTextRenderViewText(plainText: event.plainText, lineLimit: 1)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { navigateTo(NotePath(id: event.id)) }
                             }
-                        MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: 1)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                            .onTapGesture { navigateTo(nrPost) }
+                        }
+                        else {
+                            HStack(spacing: 10) {
+                                PFP(pubkey: mutedRootId.eventId, size: 25)
+                                NRText("Can't find event id: \(note1(mutedRootId.eventId) ?? "?")")
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { navigateTo(NotePath(id: mutedRootId.eventId)) }
+                            }
+                        }
+                    }
+                    .id(mutedRootId.eventId)
+                    .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
+                        viewContext.delete(mutedRootId)
                     }
                 }
-                .id(nrPost.id)
-                .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
-                    la.account.mutedRootIds_.remove(nrPost.id)
-                    fl.nrPosts = fl.nrPosts.filter { $0.id != nrPost.id }
-                    DataProvider.shared().save()
-                }
+                Spacer()
             }
-            Spacer()
         }
-        .onChange(of: la.account.mutedRootIds_) { newValue in
-            fl.reset()
-            fl.predicate = NSPredicate(format: "id IN %@", newValue)
-            fl.loadMore(1000, includeSpam: true)
-        }
-        .onAppear {
-            guard !didLoad else { return }
-            didLoad = true
-            fl.predicate = NSPredicate(format: "id IN %@", la.account.mutedRootIds_)
-            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            fl.transformer = { event in
-                NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: true)
-            }
-            fl.loadMore(1000, includeSpam: true)
-            
-        }
-        
     }
 }
 

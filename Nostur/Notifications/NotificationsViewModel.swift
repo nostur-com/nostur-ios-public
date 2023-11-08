@@ -587,9 +587,9 @@ fileprivate class NotificationFetchRequests {
     
     func unreadMentionsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
-        let mutedRootIds = account.mutedRootIds_
+        let mutedRootIds = NRState.shared.mutedRootIds
         let pubkey = account.publicKey
-        let blockedPubkeys = account.blockedPubkeys_
+        let blockedPubkeys = NRState.shared.blockedPubkeys
         let lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
 
         let r = Event.fetchRequest()
@@ -618,9 +618,9 @@ fileprivate class NotificationFetchRequests {
     
     func unreadRepostsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
-        let mutedRootIds = account.mutedRootIds_
+        let mutedRootIds = NRState.shared.mutedRootIds
         let pubkey = account.publicKey
-        let blockedPubkeys = account.blockedPubkeys_
+        let blockedPubkeys = NRState.shared.blockedPubkeys
         let lastSeenRepostCreatedAt = account.lastSeenRepostCreatedAt
 
         let r = Event.fetchRequest()
@@ -659,7 +659,7 @@ fileprivate class NotificationFetchRequests {
     func unreadReactionsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
         let pubkey = account.publicKey
-        let blockedPubkeys = account.blockedPubkeys_
+        let blockedPubkeys = NRState.shared.blockedPubkeys
 
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
@@ -680,7 +680,7 @@ fileprivate class NotificationFetchRequests {
     func unreadZapsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
         let pubkey = account.publicKey
-        let blockedPubkeys = account.blockedPubkeys_
+        let blockedPubkeys = NRState.shared.blockedPubkeys
 
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:

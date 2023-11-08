@@ -1069,7 +1069,7 @@ extension NRPost { // Helpers for grouped replies
                 EventRelationsQueue.shared.addAwaitingEvent(reply, debugInfo: "reply in .repliesToRoot")
             }
             let nrRepliesToRoot = repliesToRoot
-                .filter { !Set(account.blockedPubkeys_).contains($0.pubkey) }
+                .filter { !NRState.shared.blockedPubkeys.contains($0.pubkey) }
                 .map { event in
                     let nrPost = NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[event.id])
                     return nrPost
@@ -1136,7 +1136,7 @@ extension NRPost { // Helpers for grouped replies
             let groupedThreads = (replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
                 .uniqued(on: { $0.id })
                 .filter({ nrPost in
-                    return !(Set(account.blockedPubkeys_)).contains(nrPost.pubkey)
+                    return !NRState.shared.blockedPubkeys.contains(nrPost.pubkey)
                 })
                 .filter { // Only take eventual replies by author, or direct replies to root by others
                     $0.pubkey == self.pubkey ||

@@ -1703,7 +1703,7 @@ func notMutedWords(in text: String, mutedWords: [String]) -> Bool {
 }
 
 func notMuted(_ nrPost:NRPost) -> Bool {
-    let mutedRootIds:Set<String> = account()?.mutedRootIds_ ?? []
+    let mutedRootIds:Set<String> = CloudBlocked.mutedRootIds()
     return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "NIL") && !mutedRootIds.contains(nrPost.replyToId ?? "NIL")
 }
 
