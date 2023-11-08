@@ -191,9 +191,7 @@ struct LazyNoteMenuSheet: View {
                                 return
                             }
                             dismiss()
-                            if (nrPost.mainEvent.contact != nil) {
-                                la.follow(nrPost.mainEvent.contact!, pubkey: nrPost.pubkey)
-                            }
+                            la.follow(nrPost.pubkey)
                         } label: {
                             Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.fill")
                         }
