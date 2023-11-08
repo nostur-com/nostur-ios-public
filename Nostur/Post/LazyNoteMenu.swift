@@ -211,32 +211,8 @@ struct LazyNoteMenuSheet: View {
                 Group {
                     Button {
                         dismiss()
-                        if (nrPost.mainEvent.contact == nil) {
-                            // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
-                            bg().perform {
-                                _ = DataProvider.shared().newContact(pubkey: nrPost.event.pubkey, context: bg())
-                                guard let account = account() else { return }
-                                account.blockedPubkeys_.insert(nrPost.pubkey)
-                                
-                                DataProvider.shared().bgSave()
-                                let blockedPubkeys = account.blockedPubkeys_
-                                DispatchQueue.main.async {
-                                    sendNotification(.blockListUpdated, blockedPubkeys)
-                                }
-                            }
-                        }
-                        else {
-                            bg().perform {
-                                guard let account = account() else { return }
-                                account.blockedPubkeys_.insert(nrPost.pubkey)
-                                
-                                bgSave()
-                                let blockedPubkeys = account.blockedPubkeys_
-                                DispatchQueue.main.async {
-                                    sendNotification(.blockListUpdated, blockedPubkeys)
-                                }
-                            }
-                        }
+                        CloudBlocked.addBlock(pubkey: nrPost.pubkey, fixedName: nrPost.anyName)
+                        sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
                     } label: {
                         Label(String(localized:"Block \(nrPost.anyName)", comment: "Post context menu action to Block (name)"), systemImage: "slash.circle")
                     }
@@ -244,7 +220,7 @@ struct LazyNoteMenuSheet: View {
                     Button {
                         dismiss()
                         L.og.info("Mute conversation")
-                        la.muteConversation(nrPost)
+                        CloudBlocked.addBlock(eventId: nrPost.id, replyToRootId: nrPost.replyToRootId, replyToId: nrPost.replyToId)
                     } label: {
                         Label(String(localized:"Mute conversation", comment: "Post context menu action to mute conversation"), systemImage: "bell.slash.fill")
                     }

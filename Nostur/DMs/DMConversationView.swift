@@ -234,9 +234,9 @@ struct DMConversationView: View {
                                                         Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
                                                     }
                                                     Button {
-                                                        la.account.blockedPubkeys_.insert(contactPubkey)
-                                                        sendNotification(.blockListUpdated, la.account.blockedPubkeys_)
                                                         dismiss()
+                                                        CloudBlocked.addBlock(pubkey: contactPubkey, fixedName: contact.anyName)
+                                                        sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
                                                     } label: {
                                                         Label(
                                                             String(localized:"Block \(contact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
@@ -266,9 +266,8 @@ struct DMConversationView: View {
                                                         Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
                                                     }
                                                     Button {
-                                                        la.account.blockedPubkeys_.insert(contactPubkey)
-                                                        sendNotification(.blockListUpdated, la.account.blockedPubkeys_)
-                                                        dismiss()
+                                                        CloudBlocked.addBlock(pubkey: contactPubkey, fixedName: contact?.anyName)
+                                                        sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
                                                     } label: {
                                                         Label(
                                                             String(localized:"Block \(String(contactPubkey.prefix(11)))", comment:"Menu action"), systemImage: "slash.circle")

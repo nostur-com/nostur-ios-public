@@ -65,10 +65,11 @@ func contactUsername(fromPubkey pubkey:String, event:Event) -> String {
         PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
         return contact.anyName
     }
-    
-    if let contact = EventRelationsQueue.shared.getAwaitingBgContacts().first(where: { $0.pubkey == pubkey }) {
-        PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
-        return contact.anyName
+    if !Thread.isMainThread {
+        if let contact = EventRelationsQueue.shared.getAwaitingBgContacts().first(where: { $0.pubkey == pubkey }) {
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+            return contact.anyName
+        }
     }
     
     if let context = event.managedObjectContext {

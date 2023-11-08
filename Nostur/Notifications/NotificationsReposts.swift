@@ -90,10 +90,10 @@ struct NotificationsReposts: View {
                     "created_at >= %i AND otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
                 currentNewestCreatedAt,
                 account.publicKey,
-                account.blockedPubkeys_ + [account.publicKey],
-                account.mutedRootIds_,
-                account.mutedRootIds_,
-                account.mutedRootIds_
+                NRState.shared.blockedPubkeys + [account.publicKey],
+                NRState.shared.mutedRootIds,
+                NRState.shared.mutedRootIds,
+                NRState.shared.mutedRootIds
             )
             fl.loadNewer(250, taskId: "newReposts")
         }
@@ -139,10 +139,10 @@ struct NotificationsReposts: View {
         fl.predicate = NSPredicate(
             format: "otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
             account.publicKey,
-            (account.blockedPubkeys_ + [account.publicKey]),
-            account.mutedRootIds_,
-            account.mutedRootIds_,
-            account.mutedRootIds_)
+            (NRState.shared.blockedPubkeys + [account.publicKey]),
+            NRState.shared.mutedRootIds,
+            NRState.shared.mutedRootIds,
+            NRState.shared.mutedRootIds)
         
         
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -175,10 +175,10 @@ struct NotificationsReposts: View {
                         "created_at >= %i AND otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
                     currentNewestCreatedAt,
                     account.publicKey,
-                    (account.blockedPubkeys_ + [account.publicKey]),
-                    account.mutedRootIds_,
-                    account.mutedRootIds_,
-                    account.mutedRootIds_
+                    (NRState.shared.blockedPubkeys + [account.publicKey]),
+                    NRState.shared.mutedRootIds,
+                    NRState.shared.mutedRootIds,
+                    NRState.shared.mutedRootIds
                   )
                 fl.loadNewer(taskId: taskId)
             },
@@ -210,10 +210,10 @@ struct NotificationsReposts: View {
         fl.predicate = NSPredicate(
             format: "otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
             account.publicKey,
-            (account.blockedPubkeys_ + [account.publicKey]),
-            account.mutedRootIds_,
-            account.mutedRootIds_,
-            account.mutedRootIds_)
+            (NRState.shared.blockedPubkeys + [account.publicKey]),
+            NRState.shared.mutedRootIds,
+            NRState.shared.mutedRootIds,
+            NRState.shared.mutedRootIds)
         fl.loadMore(25)
         let fetchMoreTask = ReqTask(
             reqCommand: { (taskId) in
@@ -229,10 +229,10 @@ struct NotificationsReposts: View {
                 fl.predicate = NSPredicate(
                     format: "otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
                     account.publicKey,
-                    (account.blockedPubkeys_ + [account.publicKey]),
-                    account.mutedRootIds_,
-                    account.mutedRootIds_,
-                    account.mutedRootIds_)
+                    (NRState.shared.blockedPubkeys + [account.publicKey]),
+                    NRState.shared.mutedRootIds,
+                    NRState.shared.mutedRootIds,
+                    NRState.shared.mutedRootIds)
                 fl.loadMore(25)
             })
 

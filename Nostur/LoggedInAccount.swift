@@ -105,31 +105,7 @@ class LoggedInAccount: ObservableObject {
                 sendNotification(.followersChanged, self.viewFollowingPublicKeys)
             }
         }
-    }
-    
-    @MainActor public func muteConversation(_ nrPost:NRPost) {
-        bg.perform {
-            guard let account = self.bgAccount else { return }
-            if let replyToRootId = nrPost.replyToRootId {
-                account.mutedRootIds_.insert(replyToRootId)
-                account.mutedRootIds_.insert(nrPost.id)
-                L.og.info("Muting \(replyToRootId)")
-            }
-            else if let replyToId = nrPost.replyToId {
-                account.mutedRootIds_.insert(replyToId)
-                account.mutedRootIds_.insert(nrPost.id)
-                L.og.info("Muting \(replyToId)")
-            }
-            else {
-                account.mutedRootIds_.insert(nrPost.id)
-                L.og.info("Muting \(nrPost.id)")
-            }
-            DataProvider.shared().bgSave()
-            DispatchQueue.main.async {
-                sendNotification(.muteListUpdated)
-            }
-        }
-    }
+    }        
     
     @MainActor public func report(_ event:Event, reportType:ReportType, note:String = "", includeProfile:Bool = false) -> NEvent? {
         guard account.privateKey != nil else { NRState.shared.readOnlyAccountSheetShown = true; return nil }
