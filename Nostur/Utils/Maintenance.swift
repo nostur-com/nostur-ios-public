@@ -67,6 +67,7 @@ struct Maintenance {
             Self.runMigrateBookmarks(context: context)
             Self.runMigratePrivateNotes(context: context)
             Self.runMigrateCustomFeeds(context: context)
+            Self.runMigrateBlocks(context: context)
             
             do {
                 if context.hasChanges {
@@ -932,6 +933,42 @@ struct Maintenance {
         migration.migrationCode = migrationCode.migrateCustomFeeds.rawValue
     }
     
+    
+    // Migrate Custom feeds to iCloud-ready table
+    static func runMigrateBlocks(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.migrateBlocks, context: context) else { return }
+        
+        // for all accounts, get mutedRootIds and blockedPubkeys
+        var mutedRootIds = Set<String>()
+        var blockedPubkeys = Set<String>()
+        
+        for account in Account.fetchAccounts(context: context) {
+            blockedPubkeys.formUnion(account.blockedPubkeys_)
+            mutedRootIds.formUnion(account.mutedRootIds_)
+        }
+        
+        L.maintenance.info("runMigrateBlocks: migrating \(mutedRootIds.count) muted conversations and \(blockedPubkeys.count) blocked contacts")
+        
+        // Create new records in iCloud tables
+        for blockedPubkey in blockedPubkeys {
+            let block = CloudBlocked(context: context)
+            block.type = .contact
+            block.fixedName = Contact.fetchByPubkey(blockedPubkey, context: context)?.fixedName ?? ""
+            block.pubkey = blockedPubkey
+            block.createdAt_ = .now // use .now because we don't know at migration
+        }
+        
+        for mutedRootId in mutedRootIds {
+            let block = CloudBlocked(context: context)
+            block.type = .post
+            block.eventId = mutedRootId
+            block.createdAt_ = .now // use .now because we don't know at migration
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migrateBlocks.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -973,5 +1010,8 @@ struct Maintenance {
         
         // Migrate Custom feeds to iCloud
         case migrateCustomFeeds = "migrateCustomFeeds"
+        
+        // Migrate blocks/mutes to iCloud
+        case migrateBlocks = "migrateBlocks"
     }
 }
