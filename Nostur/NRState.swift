@@ -21,10 +21,51 @@ class NRState: ObservableObject {
                 self.accountPubkeys = accountPubkeys
                 self.fullAccountPubkeys = fullAccountPubkeys
             }
+            
+            // No account selected
+            if activeAccountPublicKey.isEmpty {
+                self.loggedInAccount = nil
+                self.onBoardingIsShown = true
+                sendNotification(.clearNavigation)
+                LVMManager.shared.listVMs.removeAll()
+                Task { @MainActor in
+                    self.changeAccount(nil)
+                }
+                return
+            }
+            else {
+                // activeAccountPublicKey but CloudAccounts changed (deduplicated?)
+                if let account = accounts.first(where: { $0.publicKey == activeAccountPublicKey }) {
+                    if loggedInAccount?.account != account {
+                        Task { @MainActor in
+                            changeAccount(account)
+                        }
+                    }
+                }
+                else if let nextAccount = accounts.last { // can't find account, change to next account
+                    Task { @MainActor in
+                        changeAccount(nextAccount)
+                    }
+                }
+                else { // we don't have any accounts
+                    self.loggedInAccount = nil
+                    self.onBoardingIsShown = true
+                    sendNotification(.clearNavigation)
+                    LVMManager.shared.listVMs.removeAll()
+                    Task { @MainActor in
+                        self.changeAccount(nil)
+                    }
+                    return
+                }
+            }
         }
     }
 
-    @Published public var loggedInAccount:LoggedInAccount? = nil
+    @Published public var loggedInAccount:LoggedInAccount? = nil {
+        didSet {
+            loggedInAccount?.account.lastLoginAt = .now
+        }
+    }
     public var wot:WebOfTrust
     public var nsecBunker:NSecBunkerManager
     
@@ -36,23 +77,12 @@ class NRState: ObservableObject {
     @Published var readOnlyAccountSheetShown:Bool = false
     var rawExplorePubkeys:Set<String> = []
     
-    @MainActor public func logout(_ account:Account) {
+    @MainActor public func logout(_ account: CloudAccount) {
         DataProvider.shared().viewContext.delete(account)
         DataProvider.shared().save()
-        self.loadAccounts() { accounts in
-            guard let nextAccount = accounts.last else {
-                sendNotification(.clearNavigation)
-                self.activeAccountPublicKey = ""
-                self.onBoardingIsShown = true
-                self.loggedInAccount = nil
-                return
-            }
-            
-            self.loadAccount(nextAccount)
-        }
     }
     
-    @MainActor public func changeAccount(_ account:Account? = nil) {
+    @MainActor public func changeAccount(_ account: CloudAccount? = nil) {
         guard let account = account else {
             self.loggedInAccount = nil
             self.activeAccountPublicKey = ""
@@ -87,27 +117,20 @@ class NRState: ObservableObject {
         self.wot = WebOfTrust.shared
         self.nsecBunker = NSecBunkerManager.shared
         signpost(self, "LAUNCH", .begin, "Initializing Nostur App State")
-        let activeAccountPublicKey = activeAccountPublicKey
-        loadAccounts() { accounts in
-            guard !activeAccountPublicKey.isEmpty,
-                    let account = try? Account.fetchAccount(publicKey: activeAccountPublicKey, context: DataProvider.shared().viewContext)
-            else { return }
-            self.loadAccount(account)
-        }
         managePowerUsage()
         loadMutedWords()
         loadBlockedPubkeys()
         loadMutedRootIds()
     }
     
-    @MainActor public func loadAccounts(onComplete: (([Account]) -> Void)? = nil) { // main context
-        let r = Account.fetchRequest()
-        guard let accounts = try? DataProvider.shared().viewContext.fetch(r) else { return }
-        self.accounts = accounts
-        onComplete?(accounts)
-    }
+//    @MainActor public func loadAccounts(onComplete: (([CloudAccount]) -> Void)? = nil) { // main context
+//        let r = CloudAccount.fetchRequest()
+//        guard let accounts = try? DataProvider.shared().viewContext.fetch(r) else { return }
+//        self.accounts = accounts
+//        onComplete?(accounts)
+//    }
     
-    @MainActor public func loadAccount(_ account:Account) { // main context
+    @MainActor public func loadAccount(_ account: CloudAccount) { // main context
         guard loggedInAccount == nil || account.publicKey != self.activeAccountPublicKey else {
             L.og.notice("🔴🔴 This account is already loaded")
             return
