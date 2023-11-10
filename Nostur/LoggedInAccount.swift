@@ -29,14 +29,14 @@ class LoggedInAccount: ObservableObject {
             guard let account = self.bgAccount else { return }
             if let contact = Contact.contactBy(pubkey: pubkey, context: self.bg) {
                 contact.couldBeImposter = 0
-                account.addToFollows(contact)
+                account.followingPubkeys.insert(pubkey)
             }
             else {
                 // if nil, create new contact
                 let contact = Contact(context: self.bg)
                 contact.pubkey = pubkey
                 contact.couldBeImposter = 0
-                account.addToFollows(contact)
+                account.followingPubkeys.insert(pubkey)
             }
             self.followingPublicKeys = self.viewFollowingPublicKeys
             self.followingPFPs = self.account.getFollowingPFPs()
@@ -58,7 +58,7 @@ class LoggedInAccount: ObservableObject {
             }
             guard let account = self.bgAccount else { return }
             contact.couldBeImposter = 0
-            account.addToFollows(contact)
+            account.followingPubkeys.insert(pubkey)
             bgSave()
             
             self.followingPublicKeys = self.viewFollowingPublicKeys
@@ -76,10 +76,7 @@ class LoggedInAccount: ObservableObject {
         viewFollowingPublicKeys.remove(pubkey)
         bg.perform {
             guard let account = self.bgAccount else { return }
-            guard let contact = Contact.contactBy(pubkey: pubkey, context: self.bg) else {
-                return
-            }
-            account.removeFromFollows(contact)
+            account.followingPubkeys.remove(pubkey)
             bgSave()
             self.followingPublicKeys = self.viewFollowingPublicKeys
             self.followingPFPs = account.getFollowingPFPs()
@@ -90,22 +87,6 @@ class LoggedInAccount: ObservableObject {
             }
         }
     }
-    
-    @MainActor public func unfollow(_ contact:Contact, pubkey:String) {
-        viewFollowingPublicKeys.remove(pubkey)
-        bg.perform {
-            guard let account = self.bgAccount else { return }
-            account.removeFromFollows(contact)
-            bgSave()
-            self.followingPublicKeys = self.viewFollowingPublicKeys
-            self.followingPFPs = account.getFollowingPFPs()
-            
-            account.publishNewContactList()
-            DispatchQueue.main.async {
-                sendNotification(.followersChanged, self.viewFollowingPublicKeys)
-            }
-        }
-    }        
     
     @MainActor public func report(_ event:Event, reportType:ReportType, note:String = "", includeProfile:Bool = false) -> NEvent? {
         guard account.privateKey != nil else { NRState.shared.readOnlyAccountSheetShown = true; return nil }
@@ -149,7 +130,7 @@ class LoggedInAccount: ObservableObject {
     public var followingPFPs:[String: URL] = [:]
     
     // View context
-    @Published var account:Account {
+    @Published var account:CloudAccount {
         didSet { // REMINDER, didSet does not run on init!
             Task { @MainActor in
                 self.setupAccount(account)
@@ -158,18 +139,18 @@ class LoggedInAccount: ObservableObject {
     }
     
     // BG context
-    public var bgAccount:Account? = nil
+    public var bgAccount:CloudAccount? = nil
     
     public var mutedWords:[String] = []
     
-    @MainActor public init(_ account:Account) {
+    @MainActor public init(_ account:CloudAccount) {
         self.bg = Nostur.bg()
         self.pubkey = account.publicKey
         self.account = account
         self.setupAccount(account)
     }
     
-    @MainActor private func setupAccount(_ account:Account) {
+    @MainActor private func setupAccount(_ account:CloudAccount) {
         self.pubkey = pubkey
         
         // Set to true only if it is a brand new account, otherwise set to false and wait for kind 3 from relay
@@ -187,7 +168,7 @@ class LoggedInAccount: ObservableObject {
         SocketPool.shared.removeActiveAccountSubscriptions()
         
         self.bg.perform {
-            guard let bgAccount = try? self.bg.existingObject(with: self.account.objectID) as? Account else {
+            guard let bgAccount = try? self.bg.existingObject(with: self.account.objectID) as? CloudAccount else {
                 L.og.notice("🔴🔴 Problem loading bgAccount")
                 return
             }
@@ -213,7 +194,7 @@ class LoggedInAccount: ObservableObject {
         }
     }
     
-    public func changeAccount(account: Account) {
+    public func changeAccount(account: CloudAccount) {
         self.account = account
     }
     

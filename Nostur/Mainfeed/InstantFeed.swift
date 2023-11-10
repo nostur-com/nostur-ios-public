@@ -77,9 +77,9 @@ class InstantFeed {
         Task.detached {
             bg().perform { [weak self] in
                 guard let self = self else { return }
-                if let account = try? Account.fetchAccount(publicKey: pubkey, context: bg()), !account.follows_.isEmpty {
+                if let account = try? CloudAccount.fetchAccount(publicKey: pubkey, context: bg()), !account.followingPubkeys.isEmpty {
                     L.og.notice("🟪 Using account.follows")
-                    self.pubkeys = Set(((account.follows_.map { $0.pubkey }) + [account.publicKey]))
+                    self.pubkeys = account.followingPubkeys.union(Set([account.publicKey]))
                 }
                 else if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                     L.og.notice("🟪 Found clEvent in database")

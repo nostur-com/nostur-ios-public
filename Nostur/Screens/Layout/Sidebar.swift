@@ -16,10 +16,10 @@ final class SideBarModel: ObservableObject {
 struct SideBar: View {
     @EnvironmentObject private var themes:Themes
     @ObservedObject private var sm:SideBarModel = .shared
-    @ObservedObject public var account:Account
+    @ObservedObject public var account:CloudAccount
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @State private var accountsSheetIsShown = false
-    @State private var logoutAccount:Account? = nil
+    @State private var logoutAccount:CloudAccount? = nil
     @State private var showAnySigner = false
     @State private var sidebarOffset:CGFloat = -NOSTUR_SIDEBAR_WIDTH
     
@@ -72,7 +72,7 @@ struct SideBar: View {
                     HStack(alignment: .bottom) {
                         VStack(alignment: .leading) {
                             Text("\(account.name)").font(.headline)
-                            Text("**\(account.follows?.count ?? 0)**  Following", comment: "Number of people following").font(.caption)
+                            Text("**\(account.followingPubkeys.count)**  Following", comment: "Number of people following").font(.caption)
                         }
                         Spacer()
                         NWCWalletBalance()

@@ -61,7 +61,7 @@ struct NotificationsFollowers: View {
         }
         .background(themes.theme.listBackground)
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
-            let account = notification.object as! Account
+            let account = notification.object as! CloudAccount
             notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", account.publicKey, PNType.newFollowers.rawValue)
         }
         .simultaneousGesture(

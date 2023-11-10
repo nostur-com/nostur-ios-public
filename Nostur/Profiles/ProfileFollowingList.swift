@@ -32,7 +32,7 @@ struct ProfileFollowingList: View {
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     
                                     let silentFollows = clEvent.pubkey == account()?.publicKey
-                                        ? ((account()?.follows_.filter { $0.privateFollow }.map { $0.pubkey }) ?? [])
+                                        ? ((account()?.follows.filter { $0.privateFollow }.map { $0.pubkey }) ?? [])
                                         : []
                                     
                                     let pubkeys = clEvent.fastPs.map({ $0.1 })
@@ -46,7 +46,7 @@ struct ProfileFollowingList: View {
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     let silentFollows = clEvent.pubkey == account()?.publicKey
-                                        ? ((account()?.follows_.filter { $0.privateFollow }.map { $0.pubkey }) ?? [])
+                                        ? ((account()?.follows.filter { $0.privateFollow }.map { $0.pubkey }) ?? [])
                                         : []
                                     
                                     let pubkeys = clEvent.fastPs.map({ $0.1 })

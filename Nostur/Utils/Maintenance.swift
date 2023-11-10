@@ -92,7 +92,7 @@ struct Maintenance {
         L.maintenance.info("Starting time based maintenance")
         
         context.perform {
-            let frA = Account.fetchRequest()
+            let frA = CloudAccount.fetchRequest()
             let allAccounts = Array(try! context.fetch(frA))
             let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
                 var newResult = Array(partialResult)
@@ -280,7 +280,7 @@ struct Maintenance {
             var followingPubkeys = Set(ownAccountPubkeys)
             for account in allAccounts {
                 if account.privateKey != nil {
-                    followingPubkeys = followingPubkeys.union(Set(account.follows_.map { $0.pubkey }))
+                    followingPubkeys = followingPubkeys.union(account.followingPubkeys)
                 }
             }
             
@@ -554,14 +554,14 @@ struct Maintenance {
     static func runFixImposterFalsePositivesAgainAgain(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.fixImposterFalsePositivesAgainAgain, context: context) else { return }
         
-        let frA = Account.fetchRequest()
+        let frA = CloudAccount.fetchRequest()
         let allAccounts = Array(try! context.fetch(frA))
         
         var imposterCacheFixedCount = 0
         var imposterCacheFollowCount = 0
         for account in allAccounts {
 //            guard account.privateKey != nil else { continue }
-            for contact in account.follows_ { // We are following so can't be imposter
+            for contact in account.follows { // We are following so can't be imposter
                 if contact.couldBeImposter == 1 {
                     contact.couldBeImposter = 0
                     imposterCacheFixedCount += 1
@@ -583,7 +583,7 @@ struct Maintenance {
     static func runMigrateDMState(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.migrateDMState, context: context) else { return }
         
-        let frA = Account.fetchRequest()
+        let frA = CloudAccount.fetchRequest()
         let allAccounts = Array(try! context.fetch(frA))
         // This one includes read-only accounts
         _ = allAccounts.reduce([String]()) { partialResult, account in

@@ -19,7 +19,7 @@ struct PFP: View, Equatable {
     
     public var contact:Contact?
     public var nrContact:NRContact?
-    public var account:Account?
+    public var account:CloudAccount?
     public var size:CGFloat? = 50.0
     public var forceFlat = false
 
@@ -69,7 +69,7 @@ struct NRContactPFP: View {
 
 struct AccountPFP: View {
     
-    @ObservedObject public var account:Account
+    @ObservedObject public var account:CloudAccount
     private var pubkey:String { account.publicKey }
     private var pictureUrl:URL? { account.pictureUrl }
     public var size:CGFloat? = 50.0

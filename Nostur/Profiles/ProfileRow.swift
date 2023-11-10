@@ -129,7 +129,7 @@ struct ProfileRow: View {
                             else if (isFollowing && contact.privateFollow) {
                                 isFollowing = false
                                 contact.privateFollow = false
-                                la.unfollow(contact, pubkey: contact.pubkey)
+                                la.unfollow(contact.pubkey)
                             }
                             else {
                                 isFollowing = true
@@ -176,7 +176,7 @@ struct ProfileRow: View {
                 bg().perform {
                     guard let account = la.bgAccount else { return }
                     guard account.publicKey == currentAccountPubkey else { return }
-                    guard let similarContact = account.follows_.first(where: {
+                    guard let similarContact = account.follows.first(where: {
                         $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                     }) else { return }
                     guard similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }

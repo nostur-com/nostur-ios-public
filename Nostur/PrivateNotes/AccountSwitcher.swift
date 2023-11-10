@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct AccountSwitcher: View {
-    let accounts:[Account]
-    @Binding var selectedAccount:Account?
+    let accounts:[CloudAccount]
+    @Binding var selectedAccount: CloudAccount?
     
     var body: some View {
         Menu {
@@ -55,7 +55,7 @@ struct AccountSwitcher: View {
 
 struct AccountSwitcher_Previews: PreviewProvider {
     
-    @State static var selectedAccount:Account? = nil
+    @State static var selectedAccount: CloudAccount? = nil
     
     static var previews: some View {
         PreviewContainer({ pe in

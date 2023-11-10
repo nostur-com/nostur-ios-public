@@ -14,7 +14,7 @@ struct HighlightComposer: View {
     public var highlight:NewHighlight
     @State private var selectedAuthor:Contact?
     @State private var isAuthorSelectionShown = false
-    @State private var activeAccount:Account? = nil
+    @State private var activeAccount:CloudAccount? = nil
     
     var body: some View {
         VStack(spacing: 0) {

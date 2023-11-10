@@ -13,7 +13,7 @@ struct ProfileByPubkey: View {
     public let pubkey:String
     public var tab:String?
         
-    @State private var editingAccount:Account? = nil
+    @State private var editingAccount:CloudAccount? = nil
     @StateObject private var vm = FetchVM<NRContact>()
 
     var body: some View {

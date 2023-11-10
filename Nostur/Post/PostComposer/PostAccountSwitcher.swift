@@ -12,13 +12,13 @@ struct PostAccountSwitcher: View, Equatable {
         lhs.activeAccount == rhs.activeAccount //&& lhs.accounts.count == rhs.accounts.count
     }
     
-    public var activeAccount:Account
-    public var onChange:(Account) -> ()
+    public var activeAccount:CloudAccount
+    public var onChange:(CloudAccount) -> ()
     @State private var expanded = false
     
-    @State private var accounts:[Account] = []
+    @State private var accounts:[CloudAccount] = []
     
-    private var accountsSorted:[Account] {
+    private var accountsSorted:[CloudAccount] {
         accounts.sorted(by: {
             $0 == activeAccount && $1 != activeAccount
         })
@@ -55,7 +55,7 @@ struct PostAccountSwitcher: View, Equatable {
             }
     }
     
-    private func accountTapped(_ account:Account) {
+    private func accountTapped(_ account:CloudAccount) {
         if !expanded {
             withAnimation {
                 expanded = true

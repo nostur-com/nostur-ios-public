@@ -19,7 +19,7 @@ struct RelayEditView: View {
     @State private var relayUrl =  ""
     
     @State private var excludedPubkeys:Set<String> = []
-    private var accounts:[Account] {
+    private var accounts:[CloudAccount] {
         NRState.shared.accounts
             .sorted(by: { $0.publicKey < $1.publicKey })
             .filter { $0.privateKey != nil }
@@ -36,7 +36,7 @@ struct RelayEditView: View {
         return managedClient
     }
     
-    private func toggleAccount(_ account:Account) {
+    private func toggleAccount(_ account:CloudAccount) {
         if excludedPubkeys.contains(account.publicKey) {
             excludedPubkeys.remove(account.publicKey)
         }
@@ -45,7 +45,7 @@ struct RelayEditView: View {
         }
     }
     
-    private func isExcluded(_ account:Account) -> Bool {
+    private func isExcluded(_ account:CloudAccount) -> Bool {
         return excludedPubkeys.contains(account.publicKey)
     }
     

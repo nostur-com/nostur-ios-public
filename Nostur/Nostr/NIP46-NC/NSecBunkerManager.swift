@@ -28,7 +28,7 @@ class NSecBunkerManager: ObservableObject {
     
     var backlog = Backlog(timeout: 15, auto: true)
     let decoder = JSONDecoder()
-    var account:Account? = nil
+    var account:CloudAccount? = nil
     var subscriptions = Set<AnyCancellable>()
     
     // Queue of commands to execute when we receive a response
@@ -137,7 +137,7 @@ class NSecBunkerManager: ObservableObject {
         _ = SocketPool.shared.addNCSocket(sessionPublicKey: sessionPublicKey, url: "wss://relay.nsecbunker.com")
     }
     
-    public func setAccount(_ account:Account) {
+    public func setAccount(_ account: CloudAccount) {
         self.account = account
         guard let sessionPrivateKey = account.privateKey else { return }
         guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
@@ -150,7 +150,7 @@ class NSecBunkerManager: ObservableObject {
         }
     }
     
-    public func connect(_ account:Account, token:String) {
+    public func connect(_ account: CloudAccount, token: String) {
         // When the connection is made, we set ns.setAccount with connectingAccount
         state = .connecting
         self.account = account
@@ -217,7 +217,7 @@ class NSecBunkerManager: ObservableObject {
     }
     
     // Ask nsecBunker for signature for given event, runs whenSigned(..) callback with signed event after
-    public func requestSignature(forEvent event: NEvent, usingAccount: Account? = nil, whenSigned: ((NEvent) -> Void)? = nil) {
+    public func requestSignature(forEvent event: NEvent, usingAccount: CloudAccount? = nil, whenSigned: ((NEvent) -> Void)? = nil) {
         guard let account = (usingAccount ?? (Thread.isMainThread ? account : account?.toBG())) else { return }
         
         // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead

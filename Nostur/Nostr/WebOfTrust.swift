@@ -117,15 +117,15 @@ class WebOfTrust: ObservableObject {
         // never use the built-in guest account
         
         if let fullAccount = NRState.shared.accounts
-            .filter({ $0.privateKey != nil && $0.follows_.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY }) // only full accounts with 50+ follows (exclude guest account)
-            .sorted(by: { $0.follows_.count > $1.follows_.count }).first // sorted to get the one with the most follows
+            .filter({ $0.privateKey != nil && $0.followingPubkeys.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY }) // only full accounts with 50+ follows (exclude guest account)
+            .sorted(by: { $0.followingPubkeys.count > $1.followingPubkeys.count }).first // sorted to get the one with the most follows
         {
             L.og.info("🕸️🕸️ WebOfTrust: Main WoT full account guessed: \(fullAccount.publicKey)")
             _mainAccountWoTpubkey = fullAccount.publicKey
         }
         // the currently logged in read only account, if it has 50+ follows but not if its the guest account
         else if let readOnlyAccount = NRState.shared.accounts
-            .first(where: { $0.publicKey == NRState.shared.activeAccountPublicKey && $0.follows_.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY })
+            .first(where: { $0.publicKey == NRState.shared.activeAccountPublicKey && $0.followingPubkeys.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY })
         {
             L.og.info("🕸️🕸️ WebOfTrust: Main WoT read account guessed: \(readOnlyAccount.publicKey)")
             _mainAccountWoTpubkey = readOnlyAccount.publicKey
@@ -183,7 +183,7 @@ class WebOfTrust: ObservableObject {
     private func addOwnFollowsIfNeeded() {
         guard let account = Nostur.account() else { return }
         guard mainAccountWoTpubkey != account.publicKey else { return }
-        let ownFollows = Set(account.follows_.map { $0.pubkey })
+        let ownFollows = account.followingPubkeys
         self.followingPubkeys = self.followingPubkeys.union(ownFollows)
     }
     

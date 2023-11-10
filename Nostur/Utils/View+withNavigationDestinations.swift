@@ -58,7 +58,7 @@ struct ArticleCommentsPath: Identifiable, Hashable {
 enum ViewPath: Hashable {
     case Post(nrPost:NRPost)
     case Blocklist
-    case Bookmarks(account:Account)
+    case Bookmarks(account:CloudAccount)
     case NoteReactions(id:String)
     case NoteReposts(id:String)
     case NoteZaps(id:String)

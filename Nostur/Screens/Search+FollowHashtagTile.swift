@@ -13,7 +13,7 @@ struct FollowHashtagTile: View {
     private var hashtagNormalized:String {
         hashtag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    @ObservedObject public var account:Account
+    @ObservedObject public var account:CloudAccount
     var body: some View {
         HStack {
             Text(String(format:"#%@", hashtagNormalized))

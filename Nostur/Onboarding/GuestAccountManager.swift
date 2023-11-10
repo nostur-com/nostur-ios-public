@@ -12,13 +12,12 @@ class GuestAccountManager {
     
     private var context = DataProvider.shared().viewContext
     
-    public func createGuestAccount() -> Account {
-        if let account = try? Account.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: context) {
+    public func createGuestAccount() -> CloudAccount {
+        if let account = try? CloudAccount.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: context) {
             return account
         }
         return context.performAndWait {
-            let account = Account(context: context)
-            account.id = UUID()
+            let account = CloudAccount(context: context)
             account.createdAt = Date()
             account.createdAt = Date()
 //            account.display_name = "Nostur Rookie"
@@ -26,9 +25,6 @@ class GuestAccountManager {
             account.about = "Just trying things out"
             account.publicKey = GUEST_ACCOUNT_PUBKEY
             try! context.save()
-            DispatchQueue.main.async {
-                NRState.shared.loadAccounts()
-            }
             return account
         }
     }

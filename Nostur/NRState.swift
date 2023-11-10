@@ -13,7 +13,7 @@ class NRState: ObservableObject {
     @MainActor public static let shared = NRState()
     
     // view context
-    @Published public var accounts:[Account] = [] {
+    public var accounts:[CloudAccount] = [] {
         didSet {
             let accountPubkeys = Set(accounts.map { $0.publicKey })
             let fullAccountPubkeys = Set(accounts.filter { $0.privateKey != nil }.map { $0.publicKey })
@@ -173,7 +173,7 @@ func followingPFP(_ pubkey: String) -> URL? {
     NRState.shared.loggedInAccount?.followingPFPs[pubkey]
 }
 
-func account() -> Account? {
+func account() -> CloudAccount? {
     if Thread.isMainThread {
         NRState.shared.loggedInAccount?.account
     }
@@ -196,7 +196,7 @@ func blocks() -> Set<String> {
 }
 
 
-func isFullAccount(_ account:Account? = nil ) ->Bool {
+func isFullAccount(_ account: CloudAccount? = nil ) ->Bool {
     if Thread.isMainThread {
         return (account ?? NRState.shared.loggedInAccount?.account)?.privateKey != nil
     }

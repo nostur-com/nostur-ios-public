@@ -33,7 +33,7 @@ struct Settings: View {
     
 //    @State var showDocPicker = false
     @State private var showExporter = false
-    @State private var exportAccount:Account? = nil
+    @State private var exportAccount:CloudAccount? = nil
     @State private var createRelayPresented = false
     
     private var fiatPrice:String {

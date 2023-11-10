@@ -15,13 +15,13 @@ struct MultiFollowSheet: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var themes:Themes
     
-    private var accounts:[Account] { // Only accounts with private key
+    private var accounts:[CloudAccount] { // Only accounts with private key
         NRState.shared.accounts.filter { $0.privateKey != nil }
     }
     
     @State private var followingOn = Set<String>()
     
-    private func toggleAccount(_ account:Account) {
+    private func toggleAccount(_ account: CloudAccount) {
         if followingOn.contains(account.publicKey) {
             followingOn.remove(account.publicKey)
             Task {
@@ -36,7 +36,7 @@ struct MultiFollowSheet: View {
         }
     }
     
-    private func isFollowingOn(_ account:Account) -> Bool {
+    private func isFollowingOn(_ account: CloudAccount) -> Bool {
         followingOn.contains(account.publicKey)
     }
     
@@ -83,17 +83,17 @@ struct MultiFollowSheet: View {
         }
     }
     
-    private func follow(_ pubkey:String, account:Account) {
+    private func follow(_ pubkey:String, account:CloudAccount) {
         if let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) {
             contact.couldBeImposter = 0
-            account.addToFollows(contact)
+            account.followingPubkeys.insert(pubkey)
         }
         else {
             // if nil, create new contact
             let contact = Contact(context: viewContext)
             contact.pubkey = pubkey
             contact.couldBeImposter = 0
-            account.addToFollows(contact)
+            account.followingPubkeys.insert(pubkey)
         }
         if account == Nostur.account() {
             NRState.shared.loggedInAccount?.reloadFollows()            
@@ -104,11 +104,11 @@ struct MultiFollowSheet: View {
     }
     
 
-    private func unfollow(_ pubkey: String, account:Account) {
+    private func unfollow(_ pubkey: String, account:CloudAccount) {
         guard let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) else {
             return
         }
-        account.removeFromFollows(contact)
+        account.followingPubkeys.remove(pubkey)
         if account == Nostur.account() {
             NRState.shared.loggedInAccount?.reloadFollows()
         }
