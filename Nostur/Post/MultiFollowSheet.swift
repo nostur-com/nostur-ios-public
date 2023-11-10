@@ -19,6 +19,18 @@ struct MultiFollowSheet: View {
         NRState.shared.accounts.filter { $0.privateKey != nil }
     }
     
+    private var firstRow:ArraySlice<CloudAccount> {
+        accounts.prefix(6)
+    }
+    
+    private var secondRow:ArraySlice<CloudAccount> {
+        accounts.dropFirst(6).prefix(6)
+    }
+    
+    private var thirdRow:ArraySlice<CloudAccount> {
+        accounts.dropFirst(12).prefix(6)
+    }
+    
     @State private var followingOn = Set<String>()
     
     private func toggleAccount(_ account: CloudAccount) {
@@ -41,29 +53,107 @@ struct MultiFollowSheet: View {
     }
     
     var body: some View {
-        VStack(alignment: .center) {
+        VStack(alignment: .center, spacing: 30) {
             Text("Follow \(name) on")
-            HStack {
-                ForEach(accounts) { account in
-                    PFP(pubkey: account.publicKey, account: account, size: 50)
-                        .overlay(alignment: .bottom) {
-                            if isFollowingOn(account) {
-                                Text("Following", comment: "Shown when you follow someone in the multi follow sheet")
-                                    .font(.system(size: 10))
-                                    .lineLimit(1)
-                                    .fixedSize()
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 7)
-                                    .padding(.vertical, 2)
-                                    .background(themes.theme.accent)
-                                    .cornerRadius(13)
-                                    .offset(y: 10)
-                            }
+            VStack(spacing: 30) {
+                HStack {
+                    ForEach(firstRow) { account in
+                        VStack {
+                            PFP(pubkey: account.publicKey, account: account, size: 50)
+                                .overlay(alignment: .top) {
+                                    Text(account.anyName)
+                                        .font(.system(size: 10))
+                                        .lineLimit(1)
+                                        .frame(width: 50)
+                                        .fixedSize()
+                                        .offset(y: -15)
+                                }
+                                .overlay(alignment: .bottom) {
+                                    if isFollowingOn(account) {
+                                        Text("Following", comment: "Shown when you follow someone in the multi follow sheet")
+                                            .font(.system(size: 10))
+                                            .lineLimit(1)
+                                            .fixedSize()
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 7)
+                                            .padding(.vertical, 2)
+                                            .background(themes.theme.accent)
+                                            .cornerRadius(13)
+                                            .offset(y: 10)
+                                    }
+                                }
+                                .onTapGesture {
+                                    toggleAccount(account)
+                                }
+                                .opacity(isFollowingOn(account) ? 1.0 : 0.25)
                         }
-                        .onTapGesture {
-                            toggleAccount(account)
+                    }
+                }
+                HStack {
+                    ForEach(secondRow) { account in
+                        VStack {
+                            PFP(pubkey: account.publicKey, account: account, size: 50)
+                                .overlay(alignment: .top) {
+                                    Text(account.anyName)
+                                        .font(.system(size: 10))
+                                        .lineLimit(1)
+                                        .frame(width: 50)
+                                        .fixedSize()
+                                        .offset(y: -15)
+                                }
+                                .overlay(alignment: .bottom) {
+                                    if isFollowingOn(account) {
+                                        Text("Following", comment: "Shown when you follow someone in the multi follow sheet")
+                                            .font(.system(size: 10))
+                                            .lineLimit(1)
+                                            .fixedSize()
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 7)
+                                            .padding(.vertical, 2)
+                                            .background(themes.theme.accent)
+                                            .cornerRadius(13)
+                                            .offset(y: 10)
+                                    }
+                                }
+                                .onTapGesture {
+                                    toggleAccount(account)
+                                }
+                                .opacity(isFollowingOn(account) ? 1.0 : 0.25)
                         }
-                        .opacity(isFollowingOn(account) ? 1.0 : 0.25)
+                    }
+                }
+                HStack {
+                    ForEach(thirdRow) { account in
+                        VStack {
+                            PFP(pubkey: account.publicKey, account: account, size: 50)
+                                .overlay(alignment: .top) {
+                                    Text(account.anyName)
+                                        .font(.system(size: 10))
+                                        .lineLimit(1)
+                                        .frame(width: 50)
+                                        .fixedSize()
+                                        .offset(y: -15)
+                                }
+                                .overlay(alignment: .bottom) {
+                                    if isFollowingOn(account) {
+                                        Text("Following", comment: "Shown when you follow someone in the multi follow sheet")
+                                            .font(.system(size: 10))
+                                            .lineLimit(1)
+                                            .fixedSize()
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 7)
+                                            .padding(.vertical, 2)
+                                            .background(themes.theme.accent)
+                                            .cornerRadius(13)
+                                            .offset(y: 10)
+                                    }
+                                }
+                                .onTapGesture {
+                                    toggleAccount(account)
+                                }
+                                .opacity(isFollowingOn(account) ? 1.0 : 0.25)
+                        }
+                    }
                 }
             }
         }
