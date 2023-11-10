@@ -36,6 +36,33 @@
         <attribute name="eventId" optional="YES" attributeType="String"/>
         <attribute name="json" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="CloudAccount" representedClassName="CloudAccount" syncable="YES">
+        <attribute name="about_" optional="YES" attributeType="String"/>
+        <attribute name="banner_" optional="YES" attributeType="String"/>
+        <attribute name="blockedPubkeys" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="display_name_" optional="YES" attributeType="String"/>
+        <attribute name="flags" optional="YES" attributeType="String"/>
+        <attribute name="followingHashtags_" optional="YES" attributeType="String"/>
+        <attribute name="followingPubkeys_" optional="YES" attributeType="String"/>
+        <attribute name="isNC" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastFollowerCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastLoginAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastProfileReceivedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastSeenDMRequestCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenPostCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenReactionCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenRepostCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenZapCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lud06_" optional="YES" attributeType="String"/>
+        <attribute name="lud16_" optional="YES" attributeType="String"/>
+        <attribute name="mutedRootIds" optional="YES" attributeType="String"/>
+        <attribute name="name_" optional="YES" attributeType="String"/>
+        <attribute name="ncRelay_" optional="YES" attributeType="String"/>
+        <attribute name="nip05_" optional="YES" attributeType="String"/>
+        <attribute name="picture_" optional="YES" attributeType="String"/>
+        <attribute name="publicKey_" optional="YES" attributeType="String"/>
+    </entity>
     <entity name="CloudBlocked" representedClassName="CloudBlocked" syncable="YES">
         <attribute name="createdAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="eventId_" optional="YES" attributeType="String"/>
@@ -220,6 +247,7 @@
         <memberEntity name="CloudPrivateNote"/>
         <memberEntity name="CloudFeed"/>
         <memberEntity name="CloudBlocked"/>
+        <memberEntity name="CloudAccount"/>
     </configuration>
     <configuration name="Local">
         <memberEntity name="Account"/>
