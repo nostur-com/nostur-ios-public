@@ -19,9 +19,10 @@ struct FastAccountSwitcher: View, Equatable {
     public var sm:SideBarModel
     private let MAX_ACCOUNTS = 4
     
-    var fewAccounts:ArraySlice<Account> {
+    var fewAccounts:ArraySlice<CloudAccount> {
         ns.accounts
             .filter { $0.publicKey != activePubkey }
+            .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
             .sorted(by: { $0.privateKey != nil && $1.privateKey == nil })
             .prefix(MAX_ACCOUNTS)
     }
