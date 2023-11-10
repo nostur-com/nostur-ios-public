@@ -57,6 +57,11 @@ struct AppView: View {
     @StateObject private var ns:NRState = .shared
     @StateObject private var themes:Themes = .default
     
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt, order: .reverse)])
+    private var accounts:FetchedResults<CloudAccount>
+    
+    @State private var noAccounts = false
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -82,12 +87,15 @@ struct AppView: View {
                 .padding()
                 
             }
-            else if !didAcceptTerms || isOnboarding || ns.accounts.isEmpty || ns.activeAccountPublicKey.isEmpty {
+            else if !didAcceptTerms || isOnboarding || (accounts.isEmpty && noAccounts) || ns.activeAccountPublicKey.isEmpty {
                 Onboarding()
                     .environmentObject(ns)
                     .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
-                    .onAppear { isOnboarding = true }
-                
+                    .onAppear {
+                        if ns.activeAccountPublicKey.isEmpty {
+                            isOnboarding = true
+                        }
+                    }
             }
             else {
                 if let loggedInAccount = ns.loggedInAccount {
@@ -163,7 +171,45 @@ struct AppView: View {
                 isOnboarding = onBoardingIsShown
             }
         }
+        .onReceive(accounts.publisher.collect(), perform: { accounts in
+            if accounts.count != NRState.shared.accounts.count {
+                if ns.activeAccountPublicKey.isEmpty && !isOnboarding {
+                    ns.activeAccountPublicKey = accounts.last?.publicKey ?? ""
+                }
+                print("loading \(accounts.count) accounts. \(ns.activeAccountPublicKey)")
+                removeDuplicateAccounts()
+                NRState.shared.accounts = Array(accounts)
+            }
+            if accounts.isEmpty {
+                noAccounts = true
+            }
+        })
         .environmentObject(themes)
+    }
+    
+    private func removeDuplicateAccounts() {
+        var uniqueAccounts = Set<String>()
+        let sortedAccounts = accounts.sorted { $0.mostRecentItemDate > $1.mostRecentItemDate }
+        
+        let duplicates = sortedAccounts
+            .filter { account in
+                guard let publicKey = account.publicKey_ else { return false }
+                return !uniqueAccounts.insert(publicKey).inserted
+            }
+        
+        L.cloud.debug("Deleting: \(duplicates.count) duplicate accounts")
+        duplicates.forEach({ duplicateAccount in
+            // Before deleting, .union the follows to the existing account
+            let existingAccount = sortedAccounts.first { existingAccount in
+                return existingAccount.publicKey == duplicateAccount.publicKey
+            }
+            existingAccount?.followingPubkeys.formUnion(duplicateAccount.followingPubkeys)
+            existingAccount?.followingHashtags.formUnion(duplicateAccount.followingHashtags)
+            DataProvider.shared().viewContext.delete(duplicateAccount)
+        })
+        if !duplicates.isEmpty {
+            DataProvider.shared().save()
+        }
     }
     
     private func startNosturing() {
