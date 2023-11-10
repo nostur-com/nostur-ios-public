@@ -80,6 +80,7 @@ class EventRelationsQueue {
         else {
             guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
             if isBGevent {
+                guard self.waitingEvents[event.id] == nil else { return }
                 self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
                 if self.waitingEvents.count % 25 == 0 {
                     L.og.info("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
