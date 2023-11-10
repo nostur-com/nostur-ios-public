@@ -17,26 +17,35 @@ struct NosturListsView: View {
     @State var confirmDeleteShown = false
     @State var listToDelete:CloudFeed? = nil
     @State var newListSheet = false
+    @State private var didRemoveDuplicates = false
         
     var body: some View {
-        List(lists) { list in
-            NavigationLink(value: list) {
-                ListRow(list: list)
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            listToDelete = list
-                            confirmDeleteShown = true
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                        
+        VStack {
+            if !lists.isEmpty {
+                List(lists) { list in
+                    NavigationLink(value: list) {
+                        ListRow(list: list)
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    listToDelete = list
+                                    confirmDeleteShown = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                                
+                            }
                     }
+                    .listRowBackground(themes.theme.background)
+                }
+                .scrollContentBackground(.hidden)
+                .background(themes.theme.listBackground)
+                .onReceive(lists.publisher.collect()) { lists in
+                    if !didRemoveDuplicates {
+                        removeDuplicateLists()
+                    }
+                }
             }
-            .listRowBackground(themes.theme.background)
         }
-        .scrollContentBackground(.hidden)
-        .background(themes.theme.listBackground)
-        
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(String(localized:"Create new feed", comment: "Button to create a new feed")) {
@@ -59,6 +68,36 @@ struct NosturListsView: View {
                 NewListSheet()
             }
             .presentationBackground(themes.theme.background)
+        }
+    }
+    
+    func removeDuplicateLists() {
+        var uniqueLists = Set<String>()
+        let sortedLists = lists.sorted {
+            if ($0.showAsTab && !$1.showAsTab) { return true }
+            else {
+                return ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
+            }
+        }
+        
+        sortedLists.forEach { feed in
+            print("feed: \(feed.id?.uuidString ?? "?") \(feed.name_)")
+        }
+        
+        
+        let duplicates = sortedLists
+            .filter { list in
+                guard let id = list.id else { return false }
+                return !uniqueLists.insert(id.uuidString).inserted
+            }
+        
+        duplicates.forEach {
+            DataProvider.shared().viewContext.delete($0)
+        }
+        if !duplicates.isEmpty {
+            L.cloud.debug("Deleting: \(duplicates.count) duplicate feeds")
+            DataProvider.shared().save()
+            didRemoveDuplicates = true
         }
     }
 }
