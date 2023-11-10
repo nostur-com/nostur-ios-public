@@ -89,7 +89,7 @@ class FollowerNotifier {
         receiveNotification(.activeAccountChanged)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                let account = notification.object as! Account
+                let account = notification.object as! CloudAccount
                 let pubkey = account.publicKey
                 
                 bg().perform {
@@ -104,7 +104,7 @@ class FollowerNotifier {
             .sink { [weak self] notification in
                 guard !SettingsStore.shared.lowDataMode else { return }
                 guard let self = self else { return }
-                let account = notification.object as! Account
+                let account = notification.object as! CloudAccount
                 L.og.info("Checking for new followers after account switch")
                 let pubkey = account.publicKey
                 
