@@ -100,7 +100,7 @@ struct FollowingAndExplore: View {
                     }
                     
                     TabButton(
-                        action: { selectedSubTab = "Explore"},
+                        action: { selectedSubTab = "Explore" },
                         title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
                         selected: selectedSubTab == "Explore")
                     
@@ -241,6 +241,35 @@ struct FollowingAndExplore: View {
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             showFeedSettings = true
+        }
+        .onReceive(lists.publisher.collect()) { lists in
+            if !lists.isEmpty && self.lists.count != lists.count {
+                removeDuplicateLists()
+            }
+        }
+    }
+    
+    func removeDuplicateLists() {
+        var uniqueLists = Set<UUID>()
+        let sortedLists = lists.sorted {
+            if ($0.showAsTab && !$1.showAsTab) { return true }
+            else {
+                return ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
+            }
+        }
+        
+        let duplicates = sortedLists
+            .filter { list in
+                guard let id = list.id else { return false }
+                return !uniqueLists.insert(id).inserted
+            }
+        
+        duplicates.forEach {
+            DataProvider.shared().viewContext.delete($0)
+        }
+        if !duplicates.isEmpty {
+            L.cloud.debug("Deleting: \(duplicates.count) duplicate feeds")
+            DataProvider.shared().save()
         }
     }
 }
