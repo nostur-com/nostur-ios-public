@@ -392,6 +392,8 @@
 		1FE0F0842AA7352400580FD8 /* DMSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE0F0832AA7352400580FD8 /* DMSettings.swift */; };
 		1FE1281C2AF8BFDF0070936C /* CloudFeed+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE1281A2AF8BFDF0070936C /* CloudFeed+CoreDataClass.swift */; };
 		1FE1281D2AF8BFDF0070936C /* CloudFeed+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE1281B2AF8BFDF0070936C /* CloudFeed+CoreDataProperties.swift */; };
+		1FE128202AF9A53D0070936C /* CloudAccount+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE1281E2AF9A53D0070936C /* CloudAccount+CoreDataClass.swift */; };
+		1FE128212AF9A53D0070936C /* CloudAccount+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE1281F2AF9A53D0070936C /* CloudAccount+CoreDataProperties.swift */; };
 		1FE2A2172AD4D99D00470E11 /* ViewModelCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE2A2162AD4D99D00470E11 /* ViewModelCache.swift */; };
 		1FE31EE12A587F60008A4A6F /* ProfileOverlayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE31EE02A587D78008A4A6F /* ProfileOverlayCard.swift */; };
 		1FE31EE42A58889A008A4A6F /* ProfileZapButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */; };
@@ -847,6 +849,8 @@
 		1FE0F0832AA7352400580FD8 /* DMSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMSettings.swift; sourceTree = "<group>"; };
 		1FE1281A2AF8BFDF0070936C /* CloudFeed+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudFeed+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FE1281B2AF8BFDF0070936C /* CloudFeed+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudFeed+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1FE1281E2AF9A53D0070936C /* CloudAccount+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudAccount+CoreDataClass.swift"; sourceTree = "<group>"; };
+		1FE1281F2AF9A53D0070936C /* CloudAccount+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudAccount+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FE2A2162AD4D99D00470E11 /* ViewModelCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelCache.swift; sourceTree = "<group>"; };
 		1FE31EE02A587D78008A4A6F /* ProfileOverlayCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileOverlayCard.swift; sourceTree = "<group>"; };
 		1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileZapButton.swift; sourceTree = "<group>"; };
@@ -1115,6 +1119,8 @@
 			children = (
 				1F58157C2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift */,
 				1F58157D2AFB03BC0014852A /* CloudBlocked+CoreDataProperties.swift */,
+				1FE1281E2AF9A53D0070936C /* CloudAccount+CoreDataClass.swift */,
+				1FE1281F2AF9A53D0070936C /* CloudAccount+CoreDataProperties.swift */,
 				1FE1281A2AF8BFDF0070936C /* CloudFeed+CoreDataClass.swift */,
 				1FE1281B2AF8BFDF0070936C /* CloudFeed+CoreDataProperties.swift */,
 				1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */,
@@ -2178,6 +2184,7 @@
 				1F8CC0012AC324710077EF7D /* NotificationsRepostsGrouped.swift in Sources */,
 				1F685B582A0D7800009EEC9B /* QueuedFetcher.swift in Sources */,
 				1F5C82DC2ACD42DB00333775 /* Kind0.swift in Sources */,
+				1FE128212AF9A53D0070936C /* CloudAccount+CoreDataProperties.swift in Sources */,
 				1FA059A12A74F87B0039643C /* LVM+relays.swift in Sources */,
 				1F7A10E22AA1DB7300042CD6 /* Search+Helpers.swift in Sources */,
 				1F81C4A72AC033DF0006CAA2 /* NotificationsViewModel.swift in Sources */,
@@ -2187,6 +2194,7 @@
 				1F3309832989819700D4D8CF /* Maintenance.swift in Sources */,
 				1FCCAC9E2AB747CF00B3F00A /* ProfileFollowingCount.swift in Sources */,
 				1F2DD4302A29F5B70028A062 /* AlbyNWCConnectSheet.swift in Sources */,
+				1FE128202AF9A53D0070936C /* CloudAccount+CoreDataClass.swift in Sources */,
 				1F6943B72A2B017500064DBA /* LightningEffect.swift in Sources */,
 				1FBE253E2A9E5A7400F60FCF /* Settings+ThemePicker.swift in Sources */,
 				1F20939F2A43FDCA0085E7D2 /* DetailFooterFragment.swift in Sources */,
