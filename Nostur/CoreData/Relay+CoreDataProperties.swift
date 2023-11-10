@@ -41,6 +41,10 @@ extension Relay {
             excludedPubkeys_ = newValue.joined(separator: " ")
         }
     }
+    
+    public func toStruct() -> RelayData {
+        return RelayData(read: read, url: (url ?? ""), write: write, excludedPubkeys: excludedPubkeys)
+    }
 }
 
 // MARK: Generated accessors for contacts
@@ -62,4 +66,14 @@ extension Relay {
 
 extension Relay : Identifiable {
     
+}
+
+
+// Struct to pass around and avoid all the multi threading NSManagedContext problems
+public struct RelayData: Identifiable, Hashable, Equatable {
+    public var id: String { url.lowercased() }
+    public var read: Bool
+    public var url: String
+    public var write: Bool
+    public var excludedPubkeys:Set<String>
 }

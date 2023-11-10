@@ -15,6 +15,11 @@ struct EditRelaysNosturList: View {
     @State var title = ""
     @State var wotEnabled = true
     @State var selectedRelays:Set<Relay> = []
+    
+    private var selectedRelaysData:Set<RelayData> {
+        Set(selectedRelays.map { $0.toStruct() })
+    }
+    
     @State var showAsTab = true
     
     @FetchRequest(
@@ -85,7 +90,7 @@ struct EditRelaysNosturList: View {
                     list.showAsTab = showAsTab
                     DataProvider.shared().save()
                     dismiss()
-                    sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: list.subscriptionId, relays: selectedRelays, wotEnabled: wotEnabled))
+                    sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: list.subscriptionId, relays: selectedRelaysData, wotEnabled: wotEnabled))
                 }
                 .disabled(!formIsValid)
             }

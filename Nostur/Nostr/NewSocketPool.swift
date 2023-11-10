@@ -14,21 +14,24 @@ import Combine
 // Structure is:
 // SocketPool
 //  .sockets
-//      [NSManagedObjectID.URIRepresentation.absoluteString] = ManagedClient
-//                                    .client
-//                                    .activeSubscriptions
+//      [relay.id] = ManagedClient
+//            .client
+//            .activeSubscriptions
 //
-//      [NSManagedObjectID.URIRepresentation.absoluteString] = ManagedClient
-//                                    .client
-//                                    .activeSubscriptions
+//      [relay.id] = ManagedClient
+//            .client
+//            .activeSubscriptions
 //
-//      [NSManagedObjectID.URIRepresentation.absoluteString] = ManagedClient
-//                                    .client
-//                                    .activeSubscriptions
+//      [relay.id] = ManagedClient
+//            .client
+//            .activeSubscriptions
 //
-//      [NSManagedObjectID.URIRepresentation.absoluteString] = ManagedClient
-//                                    .client
-//                                    .activeSubscriptions
+//      [relay.id] = ManagedClient
+//            .client
+//            .activeSubscriptions
+//
+// relay.id is always .lowercased()
+// so compare with: someUrl.lowercased() == relay.id
 
 final class SocketPool: ObservableObject {
     
@@ -48,7 +51,7 @@ final class SocketPool: ObservableObject {
                 
                 // CONNECT TO RELAYS
                 for relay in relays {
-                    _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read:relay.read, write: relay.write, excludedPubkeys: relay.excludedPubkeys)
+                    _ = sp.addSocket(relay: relay.toStruct())
                 }
                 // If we have NWC relays, connect to those too
                 if !activeNWCconnectionId.isEmpty, let nwc = NWCConnection.fetchConnection(activeNWCconnectionId, context: DataProvider.shared().viewContext) {
@@ -100,14 +103,14 @@ final class SocketPool: ObservableObject {
     }
     
     // Connect to relays selected for globalish feed, reuse existing connections
-    func connectFeedRelays(relays:Set<Relay>) {
+    func connectFeedRelays(relays:Set<RelayData>) {
         
         for relay in relays {
-            guard let relayUrl = relay.url else { continue }
-            guard socketByUrl(relayUrl) == nil else { continue }
+            guard !relay.url.isEmpty else { continue }
+            guard socketByUrl(relay.url) == nil else { continue }
             
             // Add connection socket if we don't already have it from our normal connections
-            _ = SocketPool.shared.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relayUrl, read:true, write: false, excludedPubkeys: relay.excludedPubkeys)
+            _ = SocketPool.shared.addSocket(relay: relay)
         }
         
         // .connect() to the given relays
@@ -154,27 +157,27 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func addSocket(relayId:String, url:String, read:Bool = true, write: Bool = false, excludedPubkeys:Set<String> = []) -> NewManagedClient {
-        if (!sockets.keys.contains(relayId)) {
-            let urlURL:URL = URL(string: url) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
+    func addSocket(relay: RelayData) -> NewManagedClient {
+        if (!sockets.keys.contains(relay.id)) {
+            let urlURL:URL = URL(string: relay.url) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
             var request = URLRequest(url: urlURL)
             //             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
             
             request.timeoutInterval = 15
             
-            let client = NewWebSocket(url: url)
-            let managedClient = NewManagedClient(relayId: relayId, url: url, client:client, read: read, write: write, excludedPubkeys: excludedPubkeys)
+            let client = NewWebSocket(url: relay.url)
+            let managedClient = NewManagedClient(relayId: relay.id, url: relay.url, client: client, read: relay.read, write: relay.write, excludedPubkeys: relay.excludedPubkeys)
             
             client.delegate = managedClient
             
-            if (read || write) {
+            if (relay.read || relay.write) {
                 managedClient.connect()
             }
-            sockets[relayId] = managedClient
+            sockets[relay.id] = managedClient
             return managedClient
         }
         else {
-            return sockets[relayId]!
+            return sockets[relay.id]!
         }
     }
     
@@ -243,19 +246,13 @@ final class SocketPool: ObservableObject {
         return managedClient!.isConnected
     }
     
-    func removeSocket(_ relayId:NSManagedObjectID) {
-        if (sockets.keys.contains(relayId.uriRepresentation().absoluteString)) {
-            sockets.removeValue(forKey: relayId.uriRepresentation().absoluteString)
-        }
-    }
-    
     func removeSocket(_ relayId:String) {
         if (sockets.keys.contains(relayId)) {
             sockets.removeValue(forKey: relayId)
         }
     }
     
-    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<Relay> = [], accountPubkey:String? = nil) {
+    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<RelayData> = [], accountPubkey:String? = nil) {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             print("Canvas.sendMessage: \(message.type) \(message.message)")
             return
@@ -265,7 +262,7 @@ final class SocketPool: ObservableObject {
             if read > 0 && subscriptionId == nil { L.sockets.info("⬇️⬇️ REQ \(subscriptionId) ON \(read) RELAYS: \(message.message)") }
         }
         
-        let limitToRelayIds = relays.map({ $0.objectID.uriRepresentation().absoluteString })
+        let limitToRelayIds = relays.map({ $0.id })
         
         Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {
@@ -359,7 +356,7 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func sendMessageAfterPing(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<Relay> = [], accountPubkey:String? = nil) {
+    func sendMessageAfterPing(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<RelayData> = [], accountPubkey:String? = nil) {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             print("Canvas.sendMessage: \(message.type) \(message.message)")
             return
@@ -369,7 +366,7 @@ final class SocketPool: ObservableObject {
             if read > 0 && subscriptionId == nil { L.sockets.info("⬇️⬇️🟪 REQ ON \(read) RELAYS: \(message.message)") }
         }
         
-        let limitToRelayIds = relays.map({ $0.objectID.uriRepresentation().absoluteString })
+        let limitToRelayIds = relays.map({ $0.id })
         
         Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {

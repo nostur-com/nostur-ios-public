@@ -33,7 +33,7 @@ struct Maintenance {
                     }
                     let sp = SocketPool.shared
                     for relay in relays { // CONNECT TO RELAYS
-                        _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read:relay.read, write: relay.write)
+                        _ = sp.addSocket(relay: relay.toStruct())
                     }
                 }
             }

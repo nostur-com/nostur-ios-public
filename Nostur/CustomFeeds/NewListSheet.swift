@@ -19,6 +19,10 @@ struct NewListSheet: View {
     @State private var feedType:LVM.ListType = .pubkeys
     @State private var selectedRelays:Set<Relay> = []
     
+    private var selectedRelaysData:Set<RelayData> {
+        Set(selectedRelays.map { $0.toStruct() })
+    }
+    
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Relay.createdAt, order: .forward)],
         animation: .default)
@@ -109,7 +113,7 @@ struct NewListSheet: View {
                         newList.type = feedType.rawValue
                         newList.wotEnabled = wotEnabled
                         DataProvider.shared().save()
-                        sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: newList.subscriptionId, relays: selectedRelays, wotEnabled: wotEnabled))
+                        sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: newList.subscriptionId, relays: selectedRelaysData, wotEnabled: wotEnabled))
                         dismiss()
                     }
                     else {
