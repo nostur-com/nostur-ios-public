@@ -113,6 +113,8 @@ struct PrivateNotesView: View {
         L.cloud.debug("Deleting: \(duplicates.count) duplicate private notes")
         duplicates.forEach {
             DataProvider.shared().viewContext.delete($0)
+        }
+        if !duplicates.isEmpty {
             DataProvider.shared().save()
         }
         
