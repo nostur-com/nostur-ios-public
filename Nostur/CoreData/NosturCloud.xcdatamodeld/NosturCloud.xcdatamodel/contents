@@ -11,7 +11,6 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isNC" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="lastFollowerCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="lastNotificationReceivedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="lastProfileReceivedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="lastSeenDMRequestCreatedAt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="lastSeenPostCreatedAt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>

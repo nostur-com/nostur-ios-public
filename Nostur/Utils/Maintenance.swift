@@ -1070,7 +1070,7 @@ struct Maintenance {
         case migratePrivateNotes = "migratePrivateNotes"        
         
         // Migrate Custom feeds to iCloud
-        case migrateCustomFeeds = "migrateCustomFeeds"
+        case migrateCustomFeeds = "migrateCustomFeeds"   
         
         // Migrate blocks/mutes to iCloud
         case migrateBlocks = "migrateBlocks"
