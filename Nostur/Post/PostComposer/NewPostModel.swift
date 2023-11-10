@@ -50,7 +50,7 @@ public final class NewPostModel: ObservableObject {
     @Published var gifSheetShown = false
     
     @Published var contactSearchResults:[Contact] = []
-    @Published var activeAccount:Account? = nil
+    @Published var activeAccount:CloudAccount? = nil
     
     private var subscriptions = Set<AnyCancellable>()
     

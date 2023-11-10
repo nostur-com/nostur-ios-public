@@ -52,7 +52,7 @@ class FollowingGuardian: ObservableObject {
         receiveNotification(.activeAccountChanged)
             .debounce(for: .seconds(15), scheduler: RunLoop.main)
             .sink { notification in
-                let account = notification.object as! Account
+                let account = notification.object as! CloudAccount
                 guard account.privateKey != nil else { return }
                 reqP(RM.getAuthorContactsList(pubkey: account.publicKey, subscriptionId: "RM.getAuthorContactsList"))
                 reqP(RM.getUserMetadata(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
@@ -70,7 +70,7 @@ class FollowingGuardian: ObservableObject {
                 guard let account = NRState.shared.loggedInAccount?.account else { return }
                 
                 // TODO: Make this work for all accounts, not just active
-                let pubkeysOwn = Set(account.follows?.filter { !$0.privateFollow } .map({ c in c.pubkey }) ?? [])
+                let pubkeysOwn = Set(account.follows.filter { !$0.privateFollow } .map({ c in c.pubkey }) ?? [])
                 let pubkeysRelay = Set(nEvent.pTags())
                 
                 let removed = pubkeysOwn.subtracting(pubkeysRelay)
@@ -102,7 +102,7 @@ class FollowingGuardian: ObservableObject {
             .store(in: &subscriptions)
     }
     
-    func followNewContacts(added:Set<String>, account:Account) {
+    func followNewContacts(added:Set<String>, account:CloudAccount) {
         guard !added.isEmpty else { return }
         account.objectWillChange.send()
         
@@ -111,7 +111,7 @@ class FollowingGuardian: ObservableObject {
             let contact = Contact.fetchByPubkey(pubkey, context: context)
             if let contact {
                 contact.couldBeImposter = 0
-                account.addToFollows(contact)
+                account.followingPubkeys.insert(pubkey)
             }
             else {
                 let newContact = Contact(context: context)
@@ -119,14 +119,14 @@ class FollowingGuardian: ObservableObject {
                 newContact.metadata_created_at = 0
                 newContact.updated_at = 0
                 newContact.couldBeImposter = 0
-                account.addToFollows(newContact)
+                account.followingPubkeys.insert(pubkey)
             }
         }
         DataProvider.shared().save()
         NRState.shared.loggedInAccount?.reloadFollows()
     }
     
-    func followTags(_ tags:[String], account:Account) {
+    func followTags(_ tags:[String], account: CloudAccount) {
         guard !tags.isEmpty else { return }
         account.objectWillChange.send()
         for tag in tags {
@@ -143,7 +143,7 @@ class FollowingGuardian: ObservableObject {
             let contact = Contact.fetchByPubkey(pubkey, context: context)
             if let contact {
                 contact.couldBeImposter = 0
-                account.addToFollows(contact)
+                account.followingPubkeys.insert(pubkey)
             }
             else {
                 let newContact = Contact(context: context)
@@ -151,7 +151,7 @@ class FollowingGuardian: ObservableObject {
                 newContact.metadata_created_at = 0
                 newContact.updated_at = 0
                 newContact.couldBeImposter = 0
-                account.addToFollows(newContact)
+                account.followingPubkeys.insert(pubkey)
             }
         }
         NRState.shared.loggedInAccount?.reloadFollows()
@@ -161,11 +161,7 @@ class FollowingGuardian: ObservableObject {
     
     func removeFollowing(_ pubkeys:Set<String>) {
         guard let account = account() else { return }
-        for contact in account.follows_ {
-            if pubkeys.contains(contact.pubkey) {
-                account.removeFromFollows(contact)
-            }
-        }
+        account.followingPubkeys.subtract(pubkeys)
         NRState.shared.loggedInAccount?.reloadFollows()
         DataProvider.shared().save()
     }

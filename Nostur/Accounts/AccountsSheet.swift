@@ -16,18 +16,23 @@ struct AccountsSheet: View {
     public var withDismissButton:Bool = true
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Account.createdAt, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \CloudAccount.createdAt, ascending: false)],
         animation: .default)
-    private var accounts: FetchedResults<Account>
+    private var accounts: FetchedResults<CloudAccount>
+    private var accountsSorted:[CloudAccount] {
+        accounts
+            .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
+            .sorted(by: { $0.privateKey != nil && $1.privateKey == nil })
+    }
     
-    @State private var logoutAccount:Account? = nil
+    @State private var logoutAccount:CloudAccount? = nil
     
     var body: some View {
 //        let _ = Self._printChanges()
         NavigationStack {
             VStack(spacing: 15) {
                 List {
-                    ForEach(accounts) { account in
+                    ForEach(accountsSorted) { account in
                         AccountRow(account: account)
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -111,7 +116,7 @@ struct AccountsSheet: View {
 }
 
 struct AccountRow: View {
-    @ObservedObject public var account:Account
+    @ObservedObject public var account:CloudAccount
     @EnvironmentObject private var ns:NRState
     
     var body: some View {

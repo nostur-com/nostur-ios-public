@@ -177,7 +177,7 @@ struct AddExistingAccountSheet: View {
                     if let account = bunkerManager.account {
                         NIP46SecretManager.shared.deleteSecret(account: account)
                         viewContext.delete(account)
-                        NRState.shared.loadAccounts()
+//                        NRState.shared.loadAccounts()
                     }
                 }
             }
@@ -190,7 +190,7 @@ struct AddExistingAccountSheet: View {
             return
         }
         
-        if let existingAccount = (try? Account.fetchAccount(publicKey: keys.publicKeyHex(), context: viewContext)) {
+        if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: keys.publicKeyHex(), context: viewContext)) {
             existingAccount.privateKey = keys.privateKeyHex()
             existingAccount.isNC = false
             NRState.shared.changeAccount(existingAccount)
@@ -198,8 +198,7 @@ struct AddExistingAccountSheet: View {
             return
         }
         
-        let account = Account(context: viewContext)
-        account.id = UUID()
+        let account = CloudAccount(context: viewContext)
         account.createdAt = Date()        
         account.publicKey = keys.publicKeyHex()
         account.privateKey = keys.privateKeyHex()
@@ -227,7 +226,7 @@ struct AddExistingAccountSheet: View {
         }
 
         try! viewContext.save()
-        NRState.shared.loadAccounts()
+//        NRState.shared.loadAccounts()
         NRState.shared.changeAccount(account)
         NRState.shared.onBoardingIsShown = false
         
@@ -240,14 +239,13 @@ struct AddExistingAccountSheet: View {
     }
     
     private func addExistingReadOnlyAccount(pubkey:String) {
-        if let existingAccount = (try? Account.fetchAccount(publicKey: pubkey, context: viewContext)) {
+        if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
             NRState.shared.changeAccount(existingAccount)
             NRState.shared.onBoardingIsShown = false
             return
         }
 
-        let account = Account(context: viewContext)
-        account.id = UUID()
+        let account = CloudAccount(context: viewContext)
         account.createdAt = Date()
         account.publicKey = pubkey
         
@@ -273,7 +271,7 @@ struct AddExistingAccountSheet: View {
         }
         
         try! viewContext.save()
-        NRState.shared.loadAccounts()
+//        NRState.shared.loadAccounts()
         NRState.shared.changeAccount(account)
         NRState.shared.onBoardingIsShown = false
         
@@ -286,16 +284,15 @@ struct AddExistingAccountSheet: View {
     }
     
     private func addExistingBunkerAccount(pubkey:String, token:String) {
-        if let existingAccount = (try? Account.fetchAccount(publicKey: pubkey, context: viewContext)) {
+        if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
             bunkerManager.connect(existingAccount, token: token)
             return
         }
 
-        let account = Account(context: viewContext)
-        account.id = UUID()
+        let account = CloudAccount(context: viewContext)
         account.createdAt = Date()
         account.publicKey = pubkey
-        NRState.shared.loadAccounts()
+//        NRState.shared.loadAccounts()
         bunkerManager.connect(account, token: token)
         return
     }

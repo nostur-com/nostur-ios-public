@@ -11,7 +11,7 @@ import Combine
 struct FollowingAndExplore: View {
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
-    @ObservedObject var account:Account
+    @ObservedObject var account:CloudAccount
     @Binding var showingOtherContact:NRContact?
     @ObservedObject private var ss:SettingsStore = .shared
     @AppStorage("selected_tab") private var selectedTab = "Main"
@@ -81,7 +81,7 @@ struct FollowingAndExplore: View {
                         Spacer()
                     }
                     
-                    if account.follows_.count > 10 {
+                    if account.followingPubkeys.count > 10 {
                         TabButton(
                             action: { selectedSubTab = "Hot" },
                             title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
@@ -90,7 +90,7 @@ struct FollowingAndExplore: View {
                         Spacer()
                     }
                     
-                    if account.follows_.count > 10 {
+                    if account.followingPubkeys.count > 10 {
                         TabButton(
                             action: { selectedSubTab = "Gallery" },
                             title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
@@ -104,7 +104,7 @@ struct FollowingAndExplore: View {
                         title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
                         selected: selectedSubTab == "Explore")
                     
-                    if account.follows_.count > 10 {
+                    if account.followingPubkeys.count > 10 {
                         Spacer()
                         TabButton(
                             action: { selectedSubTab = "Articles" },
@@ -136,7 +136,7 @@ struct FollowingAndExplore: View {
                 themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
                 
                 // FOLLOWING
-                if (showingOtherContact == nil && account.follows_.count <= 1 && !didSend) {
+                if (showingOtherContact == nil && account.followingPubkeys.count <= 1 && !didSend) {
                     VStack {
                         Spacer()
                         Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -176,7 +176,7 @@ struct FollowingAndExplore: View {
                 
                 
                 // HOT/ARTICLES/GALLERY
-                if account.follows_.count > 10 {
+                if account.followingPubkeys.count > 10 {
                     Hot(hotVM: hotVM)
                         .opacity(selectedSubTab == "Hot" ? 1 : 0)
                     
@@ -233,7 +233,7 @@ struct FollowingAndExplore: View {
             LVMManager.shared.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
             LVMManager.shared.followingLVM(forAccount: newAccount).restoreSubscription()
             
-            if newAccount.follows_.count <= 10 && selectedSubTab == "Hot" {
+            if newAccount.followingPubkeys.count <= 10 && selectedSubTab == "Hot" {
                 selectedSubTab = "Following"
             }
         })

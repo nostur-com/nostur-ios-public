@@ -13,7 +13,7 @@ struct ProfileFollowButton: View {
     @EnvironmentObject private var la:LoggedInAccount
     @ObservedObject private var fg:FollowingGuardian = .shared
     @State private var isFollowing = false
-    @State private var editingAccount:Account?
+    @State private var editingAccount:CloudAccount?
     
     var body: some View {
         if (contact.pubkey != la.pubkey) {
@@ -25,7 +25,7 @@ struct ProfileFollowButton: View {
                 else if (isFollowing && contact.privateFollow) {
                     isFollowing = false
                     contact.privateFollow = false
-                    la.unfollow(contact, pubkey: contact.pubkey)
+                    la.unfollow(contact.pubkey)
                 }
                 else {
                     isFollowing = true

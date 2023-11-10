@@ -13,13 +13,12 @@ class AccountManager {
     
     static var shared = AccountManager()
     
-    func generateAccount(name:String = "", about:String = "", context: NSManagedObjectContext) -> Account {
+    func generateAccount(name:String = "", about:String = "", context: NSManagedObjectContext) -> CloudAccount {
         let newKeys = NKeys.newKeys()
         storeKeys(newKeys)
         
         let account = context.performAndWait {
-            let account = Account(context: context)
-            account.id = UUID()
+            let account = CloudAccount(context: context)
             account.createdAt = Date()
             account.name = name
             account.about = about
@@ -27,15 +26,12 @@ class AccountManager {
             account.flags = "nostur_created" // need this to know if we can enable to follow button, normally we wait after we received contact list
             
             try! context.save()
-            DispatchQueue.main.async {
-                NRState.shared.loadAccounts()
-            }
             return account
         }
         return account
     }
     
-    func getPrivateKeyHex(pubkey:String, account: Account) -> String? {
+    func getPrivateKeyHex(pubkey:String, account: CloudAccount) -> String? {
         let keychain = Keychain(service: "nostur.com.Nostur")
             .synchronizable(true)
         do {
@@ -99,7 +95,7 @@ class AccountManager {
     }
     
     // Wipes kind 0 and 3, publishes wiped events. Deletes key fron keychain, account from db
-    @MainActor func wipeAccount(_ account:Account) {
+    @MainActor func wipeAccount(_ account: CloudAccount) {
         guard let pk = account.privateKey else { return }
     
         let metaData = NSetMetadata(name: "ACCOUNT_DELETED", display_name: "ACCOUNT_DELETED", about: "", picture: "", banner: "", nip05: "", lud16: "", lud06: "")
@@ -145,26 +141,14 @@ class AccountManager {
             // delete account
             
             DataProvider.shared().viewContext.delete(account)
-            try DataProvider.shared().viewContext.save()
-            
-            NRState.shared.loadAccounts() { accounts in
-                if (accounts.isEmpty) {
-                    NRState.shared.onBoardingIsShown = true
-                    sendNotification(.clearNavigation)
-                    LVMManager.shared.listVMs.removeAll()
-                    NRState.shared.changeAccount(nil)
-                }
-                else {
-                    NRState.shared.changeAccount(accounts.first)
-                }
-            }            
+            try DataProvider.shared().viewContext.save()         
         }
         catch {
             L.og.error("🔴🔴🔴🔴🔴 Could not wipe or delete account 🔴🔴🔴🔴🔴")
         }
     }
     
-    static func createMetadataEvent(account:Account) throws -> NEvent? {
+    static func createMetadataEvent(account: CloudAccount) throws -> NEvent? {
         guard account.privateKey != nil else {
             throw "Account has no private key"
         }
@@ -197,7 +181,7 @@ class AccountManager {
         return nil
     }
     
-    static func createContactListEvent(account:Account) throws -> NEvent? {
+    static func createContactListEvent(account:CloudAccount) throws -> NEvent? {
         guard let ctx = account.managedObjectContext else {
             L.og.error("🔴🔴 createContactListEvent: account does not have managedObjectContext??")
             return nil
@@ -219,7 +203,7 @@ class AccountManager {
                     newKind3Event.content = existingKind3.content ?? ""
                 }
                 
-                for contact in (Array(account.follows ?? Set<Contact>()).filter { $0.privateFollow == false } ) {
+                for contact in (account.follows.filter { $0.privateFollow == false } ) {
                     newKind3Event.tags.append(NostrTag(["p", contact.pubkey]))
                 }
                 
@@ -248,7 +232,7 @@ class AccountManager {
 }
 
 
-func publishMetadataEvent(_ account:Account) throws {
+func publishMetadataEvent(_ account: CloudAccount) throws {
     guard let pk = account.privateKey else {
         throw "Account has no private key"
     }

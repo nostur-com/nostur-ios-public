@@ -87,12 +87,11 @@ extension PreviewEnvironment {
     @MainActor func loadAccount() -> Bool {
 //        guard !didLoad else { return false }
 //        didLoad = true
-        NRState.shared.loadAccounts()
+//        NRState.shared.loadAccounts()
         context.performAndWait {
             print("💄💄LOADING ACCOUNT")
-            let account = Account(context: self.context)
+            let account = CloudAccount(context: self.context)
             account.createdAt = Date()
-            account.id = UUID()
             account.publicKey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
             account.name = "Fabian"
             account.nip05 = "fabian@nostur.com"
@@ -108,9 +107,8 @@ extension PreviewEnvironment {
     
     @MainActor func loadAccounts() {
         context.performAndWait {
-            let account = Account(context: self.context)
+            let account = CloudAccount(context: self.context)
             account.createdAt = Date()
-            account.id = UUID()
             account.publicKey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
             account.name = "Fabian"
             account.nip05 = "fabian@nostur.com"
@@ -118,41 +116,39 @@ extension PreviewEnvironment {
             account.picture = "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972"
             account.banner = "https://profilepics.nostur.com/banner_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/banner.jpg?1682440972"
             
-            let account2 = Account(context: self.context)
+            let account2 = CloudAccount(context: self.context)
             account2.createdAt = Date()
-            account2.id = UUID()
             account2.publicKey = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
             account2.name = "Rookie"
             account2.about = "Second account"
             
-            let account3 = Account(context: self.context)
+            let account3 = CloudAccount(context: self.context)
             account3.createdAt = Date()
-            account3.id = UUID()
             account3.publicKey = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320"
             account3.name = "Explorer"
             account3.about = "Third account"
             
             
             let account4keys = NKeys.newKeys()
-            let account4 = Account(context: self.context)
+            let account4 = CloudAccount(context: self.context)
             account4.createdAt = Date()
-            account4.id = UUID()
             account4.publicKey = account4keys.publicKeyHex()
             account4.privateKey = account4keys.privateKeyHex()
             account4.name = "The Poster"
             account4.about = "4th account, with private key"
             
             let account5keys = NKeys.newKeys()
-            let account5 = Account(context: self.context)
+            let account5 = CloudAccount(context: self.context)
             account5.createdAt = Date()
-            account5.id = UUID()
             account5.publicKey = account5keys.publicKeyHex()
             account5.privateKey = account5keys.privateKeyHex()
             account5.name = "Alt"
             account5.about = "5th account, with private kay"
+            
+            NRState.shared.accounts = [account, account2, account3, account4, account5]
         }
+//        NRState.shared.loadAccounts()
         
-        NRState.shared.loadAccounts()
         if let account = NRState.shared.accounts.first {
             NRState.shared.loadAccount(account)
         }
@@ -247,7 +243,7 @@ extension PreviewEnvironment {
                     newContact.updated_at = 0
                     existingAndCreatedContacts.append(newContact)
                 }
-                account.addToFollows(NSSet(array: existingAndCreatedContacts))
+                account.followingPubkeys.formUnion(Set(pTags))
             }
         }
     }
@@ -279,8 +275,10 @@ extension PreviewEnvironment {
             if let randomTextEvents {
                 for _ in 0..<10 {
                     if let random = randomTextEvents.randomElement() {
-                        NRState.shared.accounts.randomElement()?
-                            .addToBookmarks(random)
+                        let bookmark = Bookmark(context: context)
+                        bookmark.eventId = random.id
+                        bookmark.createdAt = .now
+                        bookmark.json = random.toNEvent().eventJson()
                     }
                 }
             }
@@ -536,10 +534,10 @@ struct PreviewFetcher {
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request)) ?? []
     }
     
-    static func fetchAccount(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> Account? {
+    static func fetchAccount(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> CloudAccount? {
         let accountKey = pubkey ?? PREVIEW_ACCOUNT_ID
-        let request = Account.fetchRequest()
-        request.predicate = NSPredicate(format: "publicKey == %@", accountKey)
+        let request = CloudAccount.fetchRequest()
+        request.predicate = NSPredicate(format: "publicKey_ == %@", accountKey)
         request.sortDescriptors = []
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.first
     }

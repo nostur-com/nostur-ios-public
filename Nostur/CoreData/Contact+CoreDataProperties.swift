@@ -379,7 +379,7 @@ extension Contact : Identifiable {
         #endif
 
         guard NRState.shared.accountPubkeys.contains(contact.pubkey) else { return }
-        guard let account = try? Account.fetchAccount(publicKey: contact.pubkey, context: bg()) else { return }
+        guard let account = try? CloudAccount.fetchAccount(publicKey: contact.pubkey, context: bg()) else { return }
         
         account.name = contact.name ?? ""
         account.about = contact.about ?? ""

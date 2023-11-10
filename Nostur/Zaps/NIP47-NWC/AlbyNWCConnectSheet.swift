@@ -175,7 +175,7 @@ struct AlbyNWCConnectSheet: View {
         }
     }
     
-    func updateZapperPubkey(_ account:Account) {
+    func updateZapperPubkey(_ account: CloudAccount) {
         guard account.lud16 != "" else { return }
         guard let contact = Contact.fetchByPubkey(account.publicKey, context: DataProvider.shared().viewContext) else { return }
         guard let contactLud16 = contact.lud16, contactLud16 != account.lud16 else { return }

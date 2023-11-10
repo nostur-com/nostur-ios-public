@@ -39,7 +39,7 @@ struct NotificationsContainer: View {
 }
 
 struct NotificationsView: View {
-    @ObservedObject public var account:Account
+    @ObservedObject public var account:CloudAccount
     @Binding public var tab:String
     @Binding public var navPath:NavigationPath
     

@@ -14,7 +14,7 @@ struct MainView: View {
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @State private var navPath = NavigationPath()
-    @State private var account:Account? = nil
+    @State private var account:CloudAccount? = nil
     @State private var showingNewNote = false
     @ObservedObject private var settings:SettingsStore = .shared
     @State private var showingOtherContact:NRContact? = nil
@@ -132,7 +132,7 @@ struct MainView: View {
             showingOtherContact = nrContact
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
-            let account = notification.object as! Account
+            let account = notification.object as! CloudAccount
             guard self.account != account else { return }
             self.account = account
             if selectedSubTab != "Following" {

@@ -24,7 +24,7 @@ struct ProfileView: View {
     @State private var backlog = Backlog(timeout: 4.0, auto: true)
     @State private var lastSeen:String? = nil
     @State private var isFollowingYou = false
-    @State private var editingAccount:Account?
+    @State private var editingAccount:CloudAccount?
     @State private var similarPFP = false
     @State private var showingNewNote = false
     
@@ -371,7 +371,7 @@ struct ProfileView: View {
             bg().perform {
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
-                guard let similarContact = account.follows_.first(where: {
+                guard let similarContact = account.follows.first(where: {
                     $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
                 guard similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }

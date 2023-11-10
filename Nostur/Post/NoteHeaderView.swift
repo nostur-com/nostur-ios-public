@@ -162,7 +162,7 @@ struct PostHeader: View {
             bg().perform {
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
-                guard let similarContact = account.follows_.first(where: {
+                guard let similarContact = account.follows.first(where: {
                     $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
                 guard let cPic = contact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }

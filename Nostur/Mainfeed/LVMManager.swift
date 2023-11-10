@@ -36,7 +36,7 @@ class LVMManager {
             .store(in: &subscriptions)
     }
     
-    func followingLVM(forAccount account:Account, isDeck:Bool = false) -> LVM {
+    func followingLVM(forAccount account:CloudAccount, isDeck:Bool = false) -> LVM {
         if let lvm = listVMs.first(where: { $0.pubkey == account.publicKey && $0.id == "Following" }) {
             return lvm
         }

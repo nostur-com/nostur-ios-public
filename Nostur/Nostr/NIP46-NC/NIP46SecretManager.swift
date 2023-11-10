@@ -17,7 +17,7 @@ class NIP46SecretManager {
     
     // Store the new private key under the account public key, returns the new public key.
     // NOTE: This new key is a "session" key for NC. Not an account key
-    func generateKeysForAccount(_ account:Account) -> String {
+    func generateKeysForAccount(_ account: CloudAccount) -> String {
         let newKeys = NKeys.newKeys()
         if !hasSecret(account: account) { // don't override existing keys
             storeSecret(newKeys, account: account)
@@ -25,7 +25,7 @@ class NIP46SecretManager {
         return newKeys.publicKeyHex()
     }
     
-    func getSecret(account:Account) -> String? {
+    func getSecret(account: CloudAccount) -> String? {
         let keychain = Keychain(service: SERVICE)
             .synchronizable(true)
         do {
@@ -43,7 +43,7 @@ class NIP46SecretManager {
         }
     }
     
-    func hasSecret(account:Account) -> Bool {
+    func hasSecret(account: CloudAccount) -> Bool {
         let keychain = Keychain(service: SERVICE)
             .synchronizable(true)
         do {
@@ -55,7 +55,7 @@ class NIP46SecretManager {
         }
     }
     
-    func storeSecret(_ keys:NKeys, account:Account) {
+    func storeSecret(_ keys:NKeys, account: CloudAccount) {
         let keychain = Keychain(service: SERVICE)
             .synchronizable(true)
         do {
@@ -68,7 +68,7 @@ class NIP46SecretManager {
         }
     }
     
-    func deleteSecret(account: Account) {
+    func deleteSecret(account: CloudAccount) {
         let keychain = Keychain(service: SERVICE)
             .synchronizable(true)
         do {

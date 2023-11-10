@@ -270,7 +270,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
             guard let account = account() else { return }
             self.contact.privateFollow = privateFollow // TODO: need to fix for multi account
             self.contact.couldBeImposter = 0
-            account.addToFollows(self.contact)
+            account.followingPubkeys.insert(self.pubkey)
             DataProvider.shared().bgSave()
             account.publishNewContactList()
             
@@ -289,7 +289,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         bg().perform {
             guard let account = account() else { return }
             self.contact.privateFollow = false // TODO: need to fix for multi account
-            account.removeFromFollows(self.contact)
+            account.followingPubkeys.remove(self.pubkey)
             DataProvider.shared().bgSave()
             account.publishNewContactList()
             

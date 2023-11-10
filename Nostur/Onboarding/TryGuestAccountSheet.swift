@@ -61,7 +61,7 @@ struct TryGuestAccountSheet: View {
         }
         .onDisappear {
             // back without trying out guest, so should cancel onboarding and creating guest
-            let guestAccount = try? Account.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: viewContext)
+            let guestAccount = try? CloudAccount.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: viewContext)
             
             if let guestAccount, !letsGo && didCreate {
                 viewContext.delete(guestAccount)
@@ -76,7 +76,7 @@ struct TryGuestAccountSheet: View {
     func tryGuestAccount() {
         letsGo = true
         NRState.shared.onBoardingIsShown = false
-        let guestAccount = try? Account.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: viewContext)
+        let guestAccount = try? CloudAccount.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: viewContext)
         
         if let guestAccount {
             NRState.shared.changeAccount(guestAccount)

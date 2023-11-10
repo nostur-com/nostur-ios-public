@@ -18,7 +18,7 @@ struct AccountEditView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     private let up:Unpublisher = .shared
-    @ObservedObject private var account: Account
+    @ObservedObject private var account: CloudAccount
     @State private var newPrivateKey = ""
     @State private var contactsPresented = false
     @State private var invalidPrivateKey = false
@@ -29,7 +29,7 @@ struct AccountEditView: View {
     @State private var newBanner:UIImage?
     @State private var anyLud = ""
     
-    init(account: Account) {
+    init(account: CloudAccount) {
         self.account = account
     }
     
@@ -293,15 +293,15 @@ extension AccountEditView {
     
     private func loadFromRelays() {
         // 1. Prefill from cached event (if in cache)
-        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
-        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
+        CloudAccount.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
+        CloudAccount.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
         let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey))
         
         sp.sendMessage(message)
     }
     
-    private func loadFollowers(account:Account) {
+    private func loadFollowers(account: CloudAccount) {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", account.publicKey)
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -315,7 +315,7 @@ extension AccountEditView {
             let contacts = try! viewContext.fetch(cr)
             
             for contact in contacts {
-                account.addToFollows(contact)
+                account.followingPubkeys.insert(contact.pubkey)
 //                print("Adding to followers: \(contact.name ?? "??")")
             }
             try! viewContext.save();
@@ -323,9 +323,9 @@ extension AccountEditView {
     }
     
     private func updateContacts() { // move this method to somewhere more global maybe
-        let pubkeys = account.follows?.map { $0.pubkey }
-        if (pubkeys != nil) {
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys!)))
+        let pubkeys = Array(account.followingPubkeys)
+        if (!pubkeys.isEmpty) {
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
         }
     }
 }

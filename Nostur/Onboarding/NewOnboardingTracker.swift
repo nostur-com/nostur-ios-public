@@ -42,7 +42,7 @@ class NewOnboardingTracker {
     }
     
     private var bg = DataProvider.shared().bg
-    private var account:Account?
+    private var account:CloudAccount?
     
     public var isOnboarding:Bool {
         account != nil
@@ -72,7 +72,7 @@ class NewOnboardingTracker {
         
         L.onboarding.info("✈️✈️ OnboardingTracker.start(\(pubkey.short))")
         try self.bg.performAndWait {
-            if let account = try? Account.fetchAccount(publicKey: pubkey, context: self.bg) {
+            if let account = try? CloudAccount.fetchAccount(publicKey: pubkey, context: self.bg) {
                 self.account = account
             }
             else {
@@ -168,7 +168,7 @@ class NewOnboardingTracker {
             didFetchKind3.send(kind3)
             let pTags = kind3.fastPs.map { $0.1 }
             let existingAndCreatedContacts = self.createContactsFromPs(pTags, isOwnAccount: account.privateKey != nil)
-            account.addToFollows(NSSet(array: existingAndCreatedContacts))
+            account.followingPubkeys.formUnion(Set(existingAndCreatedContacts.map { $0.pubkey }))
             let followingPublicKeys = account.getFollowingPublicKeys(includeBlocked: true)
             
             let tTags = kind3.fastTs.map { $0.1 }
