@@ -158,6 +158,21 @@ class DataProvider: ObservableObject {
                     }
                 }
             }
+            else {
+                Task {
+                    self.container.viewContext.perform {
+                        if self.container.viewContext.hasChanges {
+                            do {
+                                try self.container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
+                                L.og.info("🟢🟢 viewContext saved")
+                            }
+                            catch {
+                                L.og.error("🔴🔴 Could not save viewContext")
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     
