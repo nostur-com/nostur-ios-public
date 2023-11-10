@@ -107,6 +107,8 @@ struct BookmarksView: View {
         L.cloud.debug("Deleting: \(duplicates.count) duplicate bookmarks")
         duplicates.forEach {
             DataProvider.shared().viewContext.delete($0)
+        }
+        if !duplicates.isEmpty {
             DataProvider.shared().save()
         }
         
