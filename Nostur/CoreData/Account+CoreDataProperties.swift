@@ -34,7 +34,6 @@ extension Account {
     @NSManaged public var bookmarks: Set<Event>?
     @NSManaged public var mutedRootIds: String? // Serialized
     @NSManaged public var blockedPubkeys: String? // Serialized
-    @NSManaged public var lastNotificationReceivedAt: Date?
     @NSManaged public var lastProfileReceivedAt: Date?
     
     @NSManaged public var isNC: Bool
@@ -132,13 +131,13 @@ extension Account {
 
 extension Account : Identifiable {
 
-    var anyName:String {
-        if name != "" { return name }
-        if display_name != "" { return display_name }
-        return String(npub.prefix(11))
-    }
+//    var anyName:String {
+//        if name != "" { return name }
+//        if display_name != "" { return display_name }
+//        return String(npub.prefix(11))
+//    }
     
-    var npub:String { try! NIP19(prefix: "npub", hexString: publicKey).displayString }
+//    var npub:String { try! NIP19(prefix: "npub", hexString: publicKey).displayString }
     
     var privateKey:String? {
         get {
@@ -169,84 +168,84 @@ extension Account : Identifiable {
         }
     }
     
-    var nsec:String? {
-        get {
-            guard self.privateKey != nil else { return nil }
-            guard let nsec = try? NIP19(prefix: "nsec", hexString: self.privateKey!).displayString else {
-                return nil
-            }
-            return nsec
-        }
-    }
+//    var nsec:String? {
+//        get {
+//            guard self.privateKey != nil else { return nil }
+//            guard let nsec = try? NIP19(prefix: "nsec", hexString: self.privateKey!).displayString else {
+//                return nil
+//            }
+//            return nsec
+//        }
+//    }
     
     
     // For when adding read only accounts, prefill with kind.0 info from relays (FROM CACHE)
-    static func preFillReadOnlyAccountInfo(account:Account, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
-        
-        guard let kind0 = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: context)?.first else {
-            return
-        }
-        
-        let decoder = JSONDecoder()
-        guard let metaData = try? decoder.decode(NSetMetadata.self, from: kind0.content!.data(using: .utf8, allowLossyConversion: false)!) else {
-            return
-        }
-
-        if (account.privateKey == nil || forceOverwrite) { // Don't overwrite non-read-only accounts
-            account.objectWillChange.send()
-//            account.display_name = metaData.display_name ?? ""
-            account.name = metaData.name ?? ""
-            account.about = metaData.about ?? ""
-            account.picture = metaData.picture ?? ""
-            account.banner = metaData.banner ?? ""
-            account.nip05 = metaData.nip05 ?? ""
-            account.lud16 = metaData.lud16 ?? ""
-            account.lud06 = metaData.lud06 ?? ""
-        }
-    }
+//    static func preFillReadOnlyAccountInfo(account:Account, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
+//        
+//        guard let kind0 = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: context)?.first else {
+//            return
+//        }
+//        
+//        let decoder = JSONDecoder()
+//        guard let metaData = try? decoder.decode(NSetMetadata.self, from: kind0.content!.data(using: .utf8, allowLossyConversion: false)!) else {
+//            return
+//        }
+//
+//        if (account.privateKey == nil || forceOverwrite) { // Don't overwrite non-read-only accounts
+//            account.objectWillChange.send()
+////            account.display_name = metaData.display_name ?? ""
+//            account.name = metaData.name ?? ""
+//            account.about = metaData.about ?? ""
+//            account.picture = metaData.picture ?? ""
+//            account.banner = metaData.banner ?? ""
+//            account.nip05 = metaData.nip05 ?? ""
+//            account.lud16 = metaData.lud16 ?? ""
+//            account.lud06 = metaData.lud06 ?? ""
+//        }
+//    }
     
     // For when adding read only accounts, prefill with kind.0 info from relays (NEW EVENT FROM IMPORTER)
-    static func preFillReadOnlyAccountInfo(event:NEvent, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
-        
-        let decoder = JSONDecoder()
-        guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
-            return
-        }
-        
-        let fr = Account.fetchRequest()
-        fr.predicate = NSPredicate(format: "publicKey = %@", event.publicKey)
-        if let account = try? context.fetch(fr).first {
-            if (account.privateKey == nil || forceOverwrite == true) { // Don't overwrite non-read-only accounts
-                account.objectWillChange.send()
-//                account.display_name = metaData.display_name ?? ""
-                account.name = metaData.name ?? ""
-                account.about = metaData.about ?? ""
-                account.picture = metaData.picture ?? ""
-                account.banner = metaData.banner ?? ""
-                account.nip05 = metaData.nip05 ?? ""
-                account.lud16 = metaData.lud16 ?? ""
-                account.lud06 = metaData.lud06 ?? ""
-            }
-        }
-    }
+//    static func preFillReadOnlyAccountInfo(event:NEvent, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
+//        
+//        let decoder = JSONDecoder()
+//        guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
+//            return
+//        }
+//        
+//        let fr = Account.fetchRequest()
+//        fr.predicate = NSPredicate(format: "publicKey = %@", event.publicKey)
+//        if let account = try? context.fetch(fr).first {
+//            if (account.privateKey == nil || forceOverwrite == true) { // Don't overwrite non-read-only accounts
+//                account.objectWillChange.send()
+////                account.display_name = metaData.display_name ?? ""
+//                account.name = metaData.name ?? ""
+//                account.about = metaData.about ?? ""
+//                account.picture = metaData.picture ?? ""
+//                account.banner = metaData.banner ?? ""
+//                account.nip05 = metaData.nip05 ?? ""
+//                account.lud16 = metaData.lud16 ?? ""
+//                account.lud06 = metaData.lud06 ?? ""
+//            }
+//        }
+//    }
     
     // For when adding read only accounts, prefill with kind.3 info from relays (FROM CACHE)
-    static func preFillReadOnlyAccountFollowing(account:Account, context:NSManagedObjectContext) {
-        
-        guard let kind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: context)?.first else {
-            return
-        }
-        
-        let contacts = Contact.ensureContactsCreated(event: kind3.toNEvent(), context: context, limit:999)
-        
-        // if read only account, import follows. Or pendingFirstContactsFetch
-        if (!contacts.isEmpty) {
-//            account.objectWillChange.send()
-            for contact in contacts {
-                account.addToFollows(contact)
-            }
-        }
-    }
+//    static func preFillReadOnlyAccountFollowing(account:Account, context:NSManagedObjectContext) {
+//        
+//        guard let kind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: context)?.first else {
+//            return
+//        }
+//        
+//        let contacts = Contact.ensureContactsCreated(event: kind3.toNEvent(), context: context, limit:999)
+//        
+//        // if read only account, import follows. Or pendingFirstContactsFetch
+//        if (!contacts.isEmpty) {
+////            account.objectWillChange.send()
+//            for contact in contacts {
+//                account.addToFollows(contact)
+//            }
+//        }
+//    }
     
     var mutedRootIds_:Set<String> {
         get {
@@ -282,48 +281,105 @@ extension Account : Identifiable {
         }
     }
     
-    func toBG() -> Account? {
-        bg().object(with: self.objectID) as? Account
-    }
+//    func toBG() -> Account? {
+//        bg().object(with: self.objectID) as? Account
+//    }
     
     
-    func signEvent(_ event:NEvent) throws -> NEvent {
-        guard let privateKey = self.privateKey else {
-            L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴")
-            throw "account or keys missing, could not sign"
-        }
-        
-        var eventToSign = event
+//    func signEvent(_ event:NEvent) throws -> NEvent {
+//        guard let privateKey = self.privateKey else {
+//            L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴")
+//            throw "account or keys missing, could not sign"
+//        }
+//        
+//        var eventToSign = event
+//        do {
+//            let keys = try NKeys(privateKeyHex: privateKey)
+//            let signedEvent = try eventToSign.sign(keys)
+//            return signedEvent
+//        }
+//        catch {
+//            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
+//            throw "Could not sign event"
+//        }
+//    }
+//    
+//    func signEventBg(_ event:NEvent) throws -> NEvent {
+//        guard let account = self.toBG() else {
+//            L.og.error("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴")
+//            throw "account missing, could not sign"
+//        }
+//        guard let pk = account.privateKey else {
+//            L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴")
+//            throw "keys missing, could not sign"
+//        }
+//        
+//        var eventToSign = event
+//        do {
+//            let keys = try NKeys(privateKeyHex: pk)
+//            let signedEvent = try eventToSign.sign(keys)
+//            return signedEvent
+//        }
+//        catch {
+//            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
+//            throw "Could not sign event"
+//        }
+//    }
+}
+
+
+import KeychainAccess
+
+// Copy pasta of a few needed functions for one time migration, they work with CloudAccount on the base class, but use the old Account here for migration.
+extension NIP46SecretManager {
+    func getSecret(account: Account) -> String? {
+        let keychain = Keychain(service: SERVICE)
+            .synchronizable(true)
         do {
-            let keys = try NKeys(privateKeyHex: privateKey)
-            let signedEvent = try eventToSign.sign(keys)
-            return signedEvent
+            let privateKeyHex = try keychain
+                .get(account.publicKey)
+            return privateKeyHex
+        }
+        catch Status.itemNotFound {
+            account.noPrivateKey = true
+            return nil
         }
         catch {
-            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
-            throw "Could not sign event"
+            L.og.error("🔴🔴🔴 could not get key from keychain")
+            return nil
         }
     }
     
-    func signEventBg(_ event:NEvent) throws -> NEvent {
-        guard let account = self.toBG() else {
-            L.og.error("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴")
-            throw "account missing, could not sign"
-        }
-        guard let pk = account.privateKey else {
-            L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴")
-            throw "keys missing, could not sign"
-        }
-        
-        var eventToSign = event
+    func storeSecret(_ keys:NKeys, account: Account) {
+        let keychain = Keychain(service: SERVICE)
+            .synchronizable(true)
         do {
-            let keys = try NKeys(privateKeyHex: pk)
-            let signedEvent = try eventToSign.sign(keys)
-            return signedEvent
+            try keychain
+                .accessibility(.whenUnlocked)
+                .label("nostr connect")
+                .set(keys.privateKeyHex(), key: account.publicKey)
+        } catch {
+            L.og.error("🔴🔴🔴 could not store key in keychain")
+        }
+    }
+}
+
+// Copy pasta of a few needed functions for one time migration, they work with CloudAccount on the base class, but use the old Account here for migration.
+extension AccountManager {
+    func getPrivateKeyHex(pubkey:String, account: Account) -> String? {
+        let keychain = Keychain(service: "nostur.com.Nostur")
+            .synchronizable(true)
+        do {
+            let privateKeyHex = try keychain
+                .get(pubkey)
+            return privateKeyHex
+        }
+        catch Status.itemNotFound {
+            account.noPrivateKey = true
+            return nil
         }
         catch {
-            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
-            throw "Could not sign event"
+            return nil
         }
     }
 }
