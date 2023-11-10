@@ -55,10 +55,40 @@ struct BlockedAccounts:View {
     
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(blockedPubkeys) { blockedPubkey in
-                    if let contact = Contact.fetchByPubkey(blockedPubkey.pubkey, context: viewContext) {
-                        ProfileRow(withoutFollowButton: true, contact: contact)
+            if !blockedPubkeys.isEmpty {
+                LazyVStack(spacing: 10) {
+                    ForEach(blockedPubkeys) { blockedPubkey in
+                        if let contact = Contact.fetchByPubkey(blockedPubkey.pubkey, context: viewContext) {
+                            ProfileRow(withoutFollowButton: true, contact: contact)
+                                .background(themes.theme.background)
+                                .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
+                                    let updatedList = blockedPubkeys
+                                        .filter { $0.pubkey != blockedPubkey.pubkey }
+                                        .map { $0.pubkey }
+                                    
+                                    viewContext.delete(blockedPubkey)
+                                    sendNotification(.blockListUpdated, Set(updatedList))
+                                }
+                        }
+                        else {
+                            HStack(alignment: .top) {
+                                PFP(pubkey: blockedPubkey.pubkey)
+                                VStack(alignment: .leading) {
+                                    HStack {
+                                        VStack(alignment: .leading) {
+                                            Text(blockedPubkey.fixedName).font(.headline).foregroundColor(.primary)
+                                                .lineLimit(1)
+                                        }
+                                        .multilineTextAlignment(.leading)
+                                        Spacer()
+                                    }
+                                }
+                            }
+                            .padding()
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(ContactPath(key: blockedPubkey.pubkey))
+                            }
                             .background(themes.theme.background)
                             .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
                                 let updatedList = blockedPubkeys
@@ -68,38 +98,34 @@ struct BlockedAccounts:View {
                                 viewContext.delete(blockedPubkey)
                                 sendNotification(.blockListUpdated, Set(updatedList))
                             }
-                    }
-                    else {
-                        HStack(alignment: .top) {
-                            PFP(pubkey: blockedPubkey.pubkey)
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    VStack(alignment: .leading) {
-                                        Text(blockedPubkey.fixedName).font(.headline).foregroundColor(.primary)
-                                            .lineLimit(1)
-                                    }
-                                    .multilineTextAlignment(.leading)
-                                    Spacer()
-                                }
-                            }
-                        }
-                        .padding()
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            navigateTo(ContactPath(key: blockedPubkey.pubkey))
-                        }
-                        .background(themes.theme.background)
-                        .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
-                            let updatedList = blockedPubkeys
-                                .filter { $0.pubkey != blockedPubkey.pubkey }
-                                .map { $0.pubkey }
-                            
-                            viewContext.delete(blockedPubkey)
-                            sendNotification(.blockListUpdated, Set(updatedList))
                         }
                     }
                 }
+                .onAppear {
+                    removeDuplicates()
+                }
             }
+        }
+    }
+    
+    private func removeDuplicates() {
+        var uniqueBlockedPubkeys = Set<String>()
+        let sortedBlockedPubkeys = blockedPubkeys.sorted {
+            ($0.createdAt_ as Date?) ?? Date.distantPast > ($1.createdAt_ as Date?) ?? Date.distantPast
+        }
+        
+        let duplicates = sortedBlockedPubkeys
+            .filter { blockedPubkey in
+                guard let pubkey = blockedPubkey.pubkey_ else { return false }
+                return !uniqueBlockedPubkeys.insert(pubkey).inserted
+            }
+        
+        L.cloud.debug("Deleting: \(duplicates.count) duplicate blocked contacts")
+        duplicates.forEach {
+            DataProvider.shared().viewContext.delete($0)
+        }
+        if !duplicates.isEmpty {
+            DataProvider.shared().save()
         }
     }
 }
@@ -115,38 +141,64 @@ struct MutedConversations: View {
     
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(mutedRootIds) { mutedRootId in
-                    Box {
-                        if let event = try? Event.fetchEvent(id: mutedRootId.eventId, context: viewContext) {
-                            HStack(spacing: 10) {
-                                PFP(pubkey: event.pubkey, contact: event.contact, size: 25)
-                                    .onTapGesture {
-                                        navigateTo(ContactPath(key: event.pubkey))
-                                    }
-                                MinimalNoteTextRenderViewText(plainText: event.plainText, lineLimit: 1)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture { navigateTo(NotePath(id: event.id)) }
+            if !mutedRootIds.isEmpty {
+                LazyVStack(spacing: 10) {
+                    ForEach(mutedRootIds) { mutedRootId in
+                        Box {
+                            if let event = try? Event.fetchEvent(id: mutedRootId.eventId, context: viewContext) {
+                                HStack(spacing: 10) {
+                                    PFP(pubkey: event.pubkey, contact: event.contact, size: 25)
+                                        .onTapGesture {
+                                            navigateTo(ContactPath(key: event.pubkey))
+                                        }
+                                    MinimalNoteTextRenderViewText(plainText: event.plainText, lineLimit: 1)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { navigateTo(NotePath(id: event.id)) }
+                                }
+                            }
+                            else {
+                                HStack(spacing: 10) {
+                                    PFP(pubkey: mutedRootId.eventId, size: 25)
+                                    NRText("Can't find event id: \(note1(mutedRootId.eventId) ?? "?")")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { navigateTo(NotePath(id: mutedRootId.eventId)) }
+                                }
                             }
                         }
-                        else {
-                            HStack(spacing: 10) {
-                                PFP(pubkey: mutedRootId.eventId, size: 25)
-                                NRText("Can't find event id: \(note1(mutedRootId.eventId) ?? "?")")
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture { navigateTo(NotePath(id: mutedRootId.eventId)) }
-                            }
+                        .id(mutedRootId.eventId)
+                        .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
+                            viewContext.delete(mutedRootId)
                         }
                     }
-                    .id(mutedRootId.eventId)
-                    .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
-                        viewContext.delete(mutedRootId)
-                    }
+                    Spacer()
                 }
-                Spacer()
+                .onAppear {
+                    removeDuplicates()
+                }
             }
+        }
+    }
+    
+    private func removeDuplicates() {
+        var uniqueMutedRootIds = Set<String>()
+        let sortedMutedRootIds = mutedRootIds.sorted {
+            ($0.createdAt_ as Date?) ?? Date.distantPast > ($1.createdAt_ as Date?) ?? Date.distantPast
+        }
+        
+        let duplicates = sortedMutedRootIds
+            .filter { mutedRootId in
+                guard let eventId = mutedRootId.eventId_ else { return false }
+                return !uniqueMutedRootIds.insert(eventId).inserted
+            }
+        
+        L.cloud.debug("Deleting: \(duplicates.count) duplicate muted conversations")
+        duplicates.forEach {
+            DataProvider.shared().viewContext.delete($0)
+        }
+        if !duplicates.isEmpty {
+            DataProvider.shared().save()
         }
     }
 }
