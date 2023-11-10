@@ -110,8 +110,11 @@ struct RelayEditView: View {
                                 // url change?
                                 if (edittingSocket?.url != relayUrl) {
                                     edittingSocket?.client.disconnect()
-                                    sp.removeSocket(relay.objectID)
-                                    let replacedSocket = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relayUrl, read: relay.read, write: relay.write, excludedPubkeys: excludedPubkeys)
+                                    if let oldUrl = relay.url {
+                                        sp.removeSocket(oldUrl.lowercased())
+                                    }
+                                    let newRelayData = RelayData(read: relay.read, url: relayUrl, write: relay.write, excludedPubkeys:  relay.excludedPubkeys)
+                                    let replacedSocket = sp.addSocket(relay: newRelayData)
                                     replacedSocket.connect(true)
 //                                    replacedSocket.client.connect()
                                 }
@@ -140,7 +143,9 @@ struct RelayEditView: View {
                 .confirmationDialog("Remove this relay: \(relay.url ?? "")?", isPresented: $confirmRemoveShown, titleVisibility: .visible) {
                     Button("Remove", role: .destructive) {
                         socket.client.disconnect()
-                        sp.removeSocket(relay.objectID)
+                        if let oldUrl = relay.url {
+                            sp.removeSocket(oldUrl.lowercased())
+                        }
                         viewContext.delete(relay)
                         edittingSocket?.disconnect()
                         dismiss()
@@ -163,8 +168,11 @@ struct RelayEditView: View {
                         // url change?
                         if (socket.url != correctedRelayUrl) {
                             socket.client.disconnect()
-                            sp.removeSocket(relay.objectID)
-                            _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: correctedRelayUrl, read: relay.read, write: relay.write, excludedPubkeys: excludedPubkeys)
+                            if let oldUrl = relay.url {
+                                sp.removeSocket(oldUrl.lowercased())
+                            }
+                            let newRelayData = RelayData(read: relay.read, url: correctedRelayUrl, write: relay.write, excludedPubkeys: relay.excludedPubkeys)
+                            _ = sp.addSocket(relay: newRelayData)
                         }
                         else {
                             // read/write/exclude change?
@@ -206,8 +214,9 @@ struct RelayEditView_Previews: PreviewProvider {
         let sp:SocketPool = .shared
         
         func socketForRelay(relay: Relay) -> NewManagedClient {
-            guard let socket = sp.sockets[relay.objectID.uriRepresentation().absoluteString] else {
-                let addedSocket = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read: relay.read, write: relay.write)
+            let relayData = relay.toStruct()
+            guard let socket = sp.sockets[relayData.id] else {
+                let addedSocket = sp.addSocket(relay: relayData)
                 return addedSocket
             }
             return socket

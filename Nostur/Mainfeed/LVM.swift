@@ -115,8 +115,7 @@ class LVM: NSObject, ObservableObject {
     }
     
     // TODO: Switch entire SocketPool .sockets to bg context, so we don't have to deal with viewContext relays
-    var relays:Set<Relay> = []
-    var bgRelays:Set<Relay> = []
+    var relays:Set<RelayData> = []
     
     // for Relay feeds
     @Published var wotEnabled = true {
@@ -762,12 +761,8 @@ class LVM: NSObject, ObservableObject {
         let ctx = DataProvider.shared().viewContext
         let bg = bg()
         if type == .relays {
-            self.relays = relays // viewContext relays
-            SocketPool.shared.connectFeedRelays(relays: relays)
-            bg.performAndWait {
-                let relays = relays.map { bg.object(with: $0.objectID) as! Relay }
-                self.bgRelays = Set(relays) // bgContext relays
-            }
+            self.relays = Set(relays.map { $0.toStruct() })
+            SocketPool.shared.connectFeedRelays(relays: self.relays)
         }
         var ls:ListState?
         if let pubkey {
@@ -888,7 +883,7 @@ class LVM: NSObject, ObservableObject {
         }
         else if type == .relays {
             L.lvm.notice("🟪 instantFeed.start \(self.name) \(self.id)")
-            instantFeed.start(bgRelays, onComplete: completeInstantFeed)
+            instantFeed.start(relays, onComplete: completeInstantFeed)
         }
         else {
             L.lvm.notice("🟪 instantFeed.start \(self.name) \(self.id) - pubkeys: \(self.pubkeys.count)")
@@ -1222,10 +1217,6 @@ extension LVM {
                 
                 SocketPool.shared.closeSubscription(self.id)
                 SocketPool.shared.connectFeedRelays(relays: relays)
-                bg().performAndWait {
-                    let relays = newRelaysInfo.relays.map { bg().object(with: $0.objectID) as! Relay }
-                    self.bgRelays = Set(relays) // bgContext relays
-                }
                 
                 if newRelaysInfo.wotEnabled == self.wotEnabled {
                     // if WoT did not change, manual clear:
@@ -1486,7 +1477,7 @@ extension LVM {
             if let mostRecentEvent = mostRecentEvent {
                 //            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
                 let fr = type == .relays
-                    ? Event.postsByRelays(self.bgRelays, mostRecent: mostRecentEvent, hideReplies: self.hideReplies)
+                    ? Event.postsByRelays(self.relays, mostRecent: mostRecentEvent, hideReplies: self.hideReplies)
                     : Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
                 
                 
@@ -1496,7 +1487,7 @@ extension LVM {
             else {
 //                print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
                 let fr = type == .relays
-                    ? Event.postsByRelays(self.bgRelays, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies)
+                    ? Event.postsByRelays(self.relays, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies)
                     : Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
 
                 guard let posts = try? bg().fetch(fr) else { return }
@@ -1578,7 +1569,7 @@ extension LVM {
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalOlderFetch LVM.id (\(self.uuid)")
             let fr = type == .relays
-                ? Event.postsByRelays(self.bgRelays, until: oldestEvent, hideReplies: self.hideReplies)
+                ? Event.postsByRelays(self.relays, until: oldestEvent, hideReplies: self.hideReplies)
                 : Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
             guard let posts = try? ctx.fetch(fr) else {
                 DispatchQueue.main.async {
@@ -1722,6 +1713,6 @@ struct NewPubkeysForList {
 
 struct NewRelaysForList {
     var subscriptionId:String
-    var relays:Set<Relay>
+    var relays:Set<RelayData>
     var wotEnabled:Bool
 }

@@ -31,7 +31,7 @@ class InstantFeed {
             }
         }
     }
-    private var relays:Set<Relay> = []
+    private var relays:Set<RelayData> = []
     public var isRunning = false
     
     public func start(_ pubkey:Pubkey, onComplete: @escaping CompletionHandler) {
@@ -52,7 +52,7 @@ class InstantFeed {
         fetchPostsFromRelays()
     }
     
-    public func start(_ relays:Set<Relay>, onComplete: @escaping CompletionHandler) {
+    public func start(_ relays:Set<RelayData>, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(relays.count) relays)")
         self.isRunning = true
         self.onComplete = onComplete

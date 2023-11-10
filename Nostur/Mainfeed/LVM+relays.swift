@@ -43,7 +43,7 @@ extension LVM {
 
 extension Event {
     
-    static func postsByRelays(_ relays:Set<Relay>, mostRecent:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
+    static func postsByRelays(_ relays:Set<RelayData>, mostRecent:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -65,7 +65,7 @@ extension Event {
     }
     
     
-    static func postsByRelays(_ relays:Set<Relay>, until:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
+    static func postsByRelays(_ relays:Set<RelayData>, until:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -87,7 +87,7 @@ extension Event {
         return fr
     }
     
-    static func postsByRelays(_ relays:Set<Relay>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false) -> NSFetchRequest<Event> {
+    static func postsByRelays(_ relays:Set<RelayData>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)

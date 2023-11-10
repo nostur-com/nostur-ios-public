@@ -17,7 +17,7 @@ struct RelayRowView: View {
     }
     
     var socket:NewManagedClient? {
-        sp.sockets.first(where: { $0.key == relay.objectID.uriRepresentation().absoluteString } )?.value
+        sp.sockets.first(where: { $0.key == (relay.url?.lowercased() ?? "") } )?.value
     }
     
     var body: some View {
@@ -71,8 +71,9 @@ struct RelaysView: View {
     @ObservedObject var sp:SocketPool = .shared
 
     func socketForRelay(relay: Relay) -> NewManagedClient {
-        guard let socket = sp.sockets[relay.objectID.uriRepresentation().absoluteString] else {
-            let addedSocket = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url ?? "wss://localhost:123456/invalid_relay_url", read: relay.read, write: relay.write, excludedPubkeys: relay.excludedPubkeys)
+        let relayData = relay.toStruct()
+        guard let socket = sp.sockets[relayData.id] else {
+            let addedSocket = sp.addSocket(relay: relayData)
             return addedSocket
         }
         return socket
