@@ -68,6 +68,7 @@ struct Maintenance {
             Self.runMigratePrivateNotes(context: context)
             Self.runMigrateCustomFeeds(context: context)
             Self.runMigrateBlocks(context: context)
+            Self.runMigrateAccounts(context: context)
             
             do {
                 if context.hasChanges {
@@ -969,6 +970,66 @@ struct Maintenance {
         migration.migrationCode = migrationCode.migrateBlocks.rawValue
     }
     
+    // Migrate Accounts to iCloud-ready table
+    static func runMigrateAccounts(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.migrateAccounts, context: context) else { return }
+        
+        // Oops code. Uncomment during testing if we need to run this again.
+//        let fr0 = CloudAccount.fetchRequest()
+//        fr0.predicate = NSPredicate(value: true)
+//        if let cfs = try? context.fetch(fr0) {
+//            for cf in cfs {
+//                context.delete(cf)
+//            }
+//        }
+        
+        
+        // find all Accounts, migrate to CloudAccount
+        // set same attributes and convert follows to followingPubkeys
+        let fr = Account.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+        
+        var migratedAccounts:Int = 0
+        if let accounts = try? context.fetch(fr) {
+            L.maintenance.info("migrateAccounts: Found \(accounts.count) accounts")
+            for account in accounts {
+                let migrated = CloudAccount(context: context)
+                migrated.about_ = account.about
+                migrated.banner_ = account.banner
+                migrated.createdAt = account.createdAt
+                migrated.display_name_ = account.display_name
+                migrated.flags = account.flags
+                migrated.followingHashtags_ = account.followingHashtags_
+                migrated.followingPubkeys_ = account.follows_.map { $0.pubkey }.joined(separator: " ")
+                migrated.isNC = account.isNC
+                migrated.lastFollowerCreatedAt = account.lastFollowerCreatedAt
+                migrated.lastProfileReceivedAt = account.lastProfileReceivedAt
+                migrated.lastSeenDMRequestCreatedAt = account.lastSeenDMRequestCreatedAt
+                migrated.lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
+                migrated.lastSeenReactionCreatedAt = account.lastSeenReactionCreatedAt
+                migrated.lastSeenRepostCreatedAt = account.lastSeenRepostCreatedAt
+                migrated.lastSeenZapCreatedAt = account.lastSeenZapCreatedAt
+                migrated.lud06_ = account.lud06
+                migrated.lud16_ = account.lud16
+                migrated.name_ = account.name
+                migrated.ncRelay_ = account.ncRelay
+                migrated.nip05_ = account.nip05
+                migrated.picture_ = account.picture
+                migrated.publicKey_ = account.publicKey
+                
+                if let pk = account.privateKey { // This should sync for accounts that may not have .synchronizable(true) when initially created
+                    AccountManager.shared.storePrivateKey(privateKeyHex: pk, forPublicKeyHex: account.publicKey)
+                }
+                
+                migratedAccounts += 1
+            }
+            L.maintenance.info("migrateAccounts: Migrated \(migratedAccounts) accounts")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migrateAccounts.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -1013,5 +1074,8 @@ struct Maintenance {
         
         // Migrate blocks/mutes to iCloud
         case migrateBlocks = "migrateBlocks"
+        
+        // Migrate Accounts to iCloud
+        case migrateAccounts = "migrateAccounts"
     }
 }
