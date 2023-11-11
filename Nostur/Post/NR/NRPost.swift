@@ -242,7 +242,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     var aTag:String = ""
-    var isPreview = false // hide 'Sent to 0 relays' in preview footer
+    var isPreview = false // hide 'Sent to 0 relays' in preview footer, disable animated gifs, Text instead of NRText
     
     var anyName:String {
         if let contact = contact {

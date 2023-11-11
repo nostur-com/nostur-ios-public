@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NEventView: View {
+    @EnvironmentObject private var dim:DIMENSIONS
     public let identifier:ShareableIdentifier
     public var forceAutoload:Bool = false
     public var theme:Theme
@@ -30,7 +31,7 @@ struct NEventView: View {
                             req: { taskId in
                                 bg().perform { // 1. CHECK LOCAL DB
                                     if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
-                                        vm.ready(NRPost(event: event, withFooter: false))
+                                        vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                     }
                                     else { // 2. ELSE CHECK RELAY
                                         req(RM.getEvent(id: eventId, subscriptionId: taskId))
@@ -39,13 +40,13 @@ struct NEventView: View {
                             },
                             onComplete: { relayMessage, event in
                                 if let event = event {
-                                    vm.ready(NRPost(event: event, withFooter: false))
+                                    vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                 }
                                 else if let event = try? Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
                                     if vm.state == .altLoading, let relay = identifier.relays.first {
                                         L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
                                     }
-                                    vm.ready(NRPost(event: event, withFooter: false))
+                                    vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                 }
                                 // Still don't have the event? try to fetch from relay hint
                                 // TODO: Should try a relay we don't already have in our relay set

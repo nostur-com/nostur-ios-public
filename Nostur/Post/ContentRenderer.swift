@@ -41,7 +41,7 @@ struct ContentRenderer: View { // VIEW things
                 case .nrPost(let nrPost):
                     EmbeddedPost(nrPost, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
                     //                        .fixedSize(horizontal: false, vertical: true)
 //                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
@@ -50,7 +50,7 @@ struct ContentRenderer: View { // VIEW things
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
                         .withoutAnimation()
@@ -69,7 +69,7 @@ struct ContentRenderer: View { // VIEW things
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, forceAutoload: shouldAutoload, theme: theme)
 //                            .frame(minHeight: 75)
-                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
+                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
 //                            .debugDimensions("QuoteById.note1")
                             .padding(.vertical, 10)
                             .withoutAnimation()
@@ -85,7 +85,7 @@ struct ContentRenderer: View { // VIEW things
                 case .noteHex(let hex):
                     EmbedById(id: hex, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth))
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
 //                        .debugDimensions("QuoteById.noteHex")
                         .padding(.vertical, 10)
                         .withoutAnimation()

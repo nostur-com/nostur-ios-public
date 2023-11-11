@@ -59,7 +59,7 @@ struct Kind1Default: View {
 //        let _ = Self._printChanges()
 //        #endif
         HStack(alignment: .top, spacing: 10) {
-            ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+            ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isPreview)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {

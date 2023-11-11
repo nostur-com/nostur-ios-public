@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct EmbedById: View {
+    @EnvironmentObject private var dim:DIMENSIONS
     public let id:String
     public var forceAutoload:Bool = false
     public var theme:Theme
@@ -26,7 +27,7 @@ struct EmbedById: View {
                             req: { taskId in
                                 bg().perform {
                                     if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
-                                        vm.ready(NRPost(event: event, withFooter: false))
+                                        vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                     }
                                     else {
                                         req(RM.getEvent(id: self.id, subscriptionId: taskId))
@@ -35,10 +36,10 @@ struct EmbedById: View {
                             },
                             onComplete: { relayMessage, event in
                                 if let event = event {
-                                    vm.ready(NRPost(event: event, withFooter: false))
+                                    vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                 }
                                 else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
-                                    vm.ready(NRPost(event: event, withFooter: false))
+                                    vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                 }
                                 else {
                                     vm.timeout()

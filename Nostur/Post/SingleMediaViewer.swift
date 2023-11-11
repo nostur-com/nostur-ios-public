@@ -10,6 +10,7 @@ import NukeUI
 import Nuke
 
 struct SingleMediaViewer: View {
+    @EnvironmentObject private var dim:DIMENSIONS
     @Environment(\.openURL) private var openURL
     public let url:URL
     public let pubkey:String
@@ -71,7 +72,7 @@ struct SingleMediaViewer: View {
                             }
                     }
                 }
-                else if let container = state.imageContainer, container.type == .gif, let data = container.data {
+                else if !dim.isScreenshot, let container = state.imageContainer, container.type == .gif, let data = container.data {
                     if fullWidth {
                         GIFImage(data: data, isPlaying: $isPlaying)
 //                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
