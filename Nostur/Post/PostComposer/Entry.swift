@@ -20,6 +20,10 @@ struct Entry: View {
     static let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
 //    @Namespace private var images
     
+    private var shouldDisablePostButton:Bool {
+        vm.typingTextModel.sending || vm.typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty)
+    }
+    
     init(vm:NewPostModel, photoPickerShown:Binding<Bool>, gifSheetShown:Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention:Contact? = nil) {
         self.replyTo = replyTo
         self.quotingEvent = quotingEvent
@@ -113,8 +117,8 @@ struct Entry: View {
                 }
                 .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 .cornerRadius(20)
-                .disabled(vm.typingTextModel.sending || vm.typingTextModel.uploading || typingTextModel.text.isEmpty)
-                .opacity(typingTextModel.text.isEmpty ? 0.25 : 1.0)
+                .disabled(shouldDisablePostButton)
+                .opacity(shouldDisablePostButton ? 0.25 : 1.0)
             }
         }
     }
