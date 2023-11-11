@@ -342,7 +342,7 @@ private struct WithSheets: ViewModifier {
                     .frame(width: 600)
                     .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                     .padding(.vertical, 10)
-                    .environmentObject(DIMENSIONS.embeddedDim(availableWidth: 600))
+                    .environmentObject(DIMENSIONS.embeddedDim(availableWidth: 600, isScreenshot: true))
                     .environmentObject(NRState.shared)
                     .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                     .environment(\.colorScheme, colorScheme)

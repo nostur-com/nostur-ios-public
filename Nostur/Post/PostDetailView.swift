@@ -438,7 +438,7 @@ struct DetailPost: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment:.top, spacing: 10) {
-                ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+                ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isPreview)
                     .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                     .onTapGesture {
                         if !IS_APPLE_TYRANNY {
