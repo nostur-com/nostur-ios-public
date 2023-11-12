@@ -89,5 +89,7 @@
 			</dict>
 		</dict>
 	</array>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>To save a post screenshot to your Photo Library</string>
 </dict>
 </plist>
