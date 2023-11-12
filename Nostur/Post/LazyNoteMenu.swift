@@ -89,7 +89,7 @@ struct LazyNoteMenuSheet: View {
                             sendNotification(.addRemoveToListsheet, contact)
                         }
                     } label: {
-                        Label(String(localized:"Add/Remove \(nrPost.anyName) from lists", comment: "Post context menu button"), systemImage: "person.2.crop.square.stack")
+                        Label(String(localized:"Add/Remove \(nrPost.anyName) from custom feed", comment: "Post context menu button"), systemImage: "person.2.crop.square.stack")
                     }
                     Button {
                         dismiss()

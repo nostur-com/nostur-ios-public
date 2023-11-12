@@ -156,7 +156,7 @@ Navigation title for Add Existing Account screen */
 "Add relay" = "Voeg relay toe";
 
 /* Post context menu button */
-"Add/Remove %@ from lists" = "Voeg toe/Verwijder %@ van lijsten";
+"Add/Remove %@ from custom feed" = "Voeg toe/Verwijder %@ van feeds";
 
 /* Navigation title for screen to add or remove contacts to a feed */
 "Add/Remove from feed" = "Toevoegen/Verwijderen van feed";
