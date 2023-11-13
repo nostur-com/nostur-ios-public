@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 import UIKit
 import Combine
+//import Photos
 
 public extension View {
     func withSheets() -> some View {
@@ -313,6 +314,18 @@ private struct WithSheets: ViewModifier {
         
         // Share post screenshot
             .onReceive(receiveNotification(.sharePostScreenshot)) { notification in
+                
+                // TODO: Disabled for now, for some reason even after requesting permissions
+                // we still don't get the "Save to Photos" option
+                // Request write access to the user's photo library.
+//                PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+//                    L.og.debug("Requested access to write screenshot to photo library")
+//                    // don't care if allowed or denied, will just show 1 less option in share sheet if denied
+//                    // (Save to Photos)
+//                    
+//                }
+                
+                
                 let nrPost = notification.object as! NRPost
                 nrPost.following = true // Force load image for screenshot...
                 nrPost.isPreview = true // Will hide 'Sent to X relays' in footer + Use Text instead of NRText

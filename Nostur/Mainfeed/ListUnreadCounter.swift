@@ -45,9 +45,9 @@ struct ListUnreadCounter: View {
             }
             .overlay(alignment: .trailing) {
                 Image(systemName: "arrow.up")
-                    .padding(.trailing, 10)
+                    .padding(.trailing, 8)
             }
-            .padding(10)
+//            .padding(0)
             .fontWeight(.bold)
             .foregroundColor(.white)
 
@@ -75,7 +75,7 @@ struct Previews_ListUnreadCounter_PreviewsWrapper: View {
             .padding(.top, 30)
         }
         .onAppear {
-            lvm.lvmCounter.count = 7
+            lvm.lvmCounter.count = 17
         }
     }
 }
