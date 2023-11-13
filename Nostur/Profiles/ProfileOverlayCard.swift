@@ -216,6 +216,8 @@ struct ProfileOverlayCard: View {
                 
                 NRText("\(String(contact.about ?? ""))\n")
                 
+                FollowedBy(pubkey: contact.pubkey)
+                
                 HStack(spacing:0) {
                     Button(String(localized:"Posts", comment:"Tab title")) {
                         dismiss()
