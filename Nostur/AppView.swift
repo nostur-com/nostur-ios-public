@@ -146,6 +146,7 @@ struct AppView: View {
                                     lvmManager.stopSubscriptions()
                                 }
                                 saveState()
+                                Maintenance.dailyMaintenance(context: DataProvider.shared().viewContext)
                             case .inactive:
                                 L.og.notice("scenePhase inactive")
                                 if IS_CATALYST {
@@ -217,11 +218,9 @@ struct AppView: View {
         
         // Daily cleanup.
         if (firstTimeCompleted) {
-            Maintenance.maintenance(context:DataProvider.shared().container.viewContext)
+            Maintenance.upgradeDatabase(context:DataProvider.shared().container.viewContext)
         }
-        else {
-            Importer.shared.preloadExistingIdsCache()
-        }
+        Importer.shared.preloadExistingIdsCache()
         
         if (!firstTimeCompleted) {
             Maintenance.ensureBootstrapRelaysExist(context: DataProvider.shared().container.viewContext)
