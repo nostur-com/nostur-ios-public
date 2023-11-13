@@ -271,6 +271,9 @@ extension Contact : Identifiable {
                         }
                     }
                     
+                    if (contact.fixedName ?? "").isEmpty && contact.anyName != contact.authorKey { // Store previous name
+                        contact.fixedName = contact.anyName
+                    }
                     // update contact
                     contact.objectWillChange.send()
                     contact.name = metaData.name
