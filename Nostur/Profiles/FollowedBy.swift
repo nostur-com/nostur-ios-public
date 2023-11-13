@@ -24,7 +24,7 @@ struct FollowedBy: View {
     var body: some View {
         VStack(alignment: .leading) {
             if !commonFollowerPFPs.isEmpty {
-                Text("Followed by")
+                Text("Followed by").font(.caption)
                 ZStack(alignment:.leading) {
                     ForEach(firstRow.indices, id:\.self) { index in
                         MiniPFP(pictureUrl: commonFollowerPFPs[index].1)
@@ -50,10 +50,10 @@ struct FollowedBy: View {
                 }
             }
             if commonFollowerPFPs.count > 31 {
-                Text("and \(commonFollowerPFPs.count - 30) others you follow.")
+                Text("and \(commonFollowerPFPs.count - 30) others you follow.").font(.caption)
             }
             else if commonFollowerPFPs.count > 30 {
-                Text("and 1 other person you follow.")
+                Text("and 1 other person you follow.").font(.caption)
             }
         }
         .task {
