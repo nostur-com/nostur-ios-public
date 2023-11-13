@@ -216,3 +216,12 @@ func bg() -> NSManagedObjectContext {
 func bgSave() {
     DataProvider.shared().bgSave()
 }
+
+func context() -> NSManagedObjectContext {
+    if Thread.isMainThread {
+        return DataProvider.shared().viewContext
+    }
+    else {
+        return (DataProvider.shared().bgStored ?? DataProvider.shared().bg)
+    }
+}
