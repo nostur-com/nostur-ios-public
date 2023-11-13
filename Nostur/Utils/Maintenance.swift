@@ -41,16 +41,9 @@ struct Maintenance {
         }
     }
     
-    // Clean up things older than X days
-    // Deletes ALL KIND=0 Events (except own), because should have Contact entity.
-    // Keeps bookmarks
-    // Keeps own events
-    // Keeps contacts/posts with private notes
-    
-    // TODO: hmm should also keep kind 3 + 10002 of follows for WoT spam filter
-    static func maintenance(context:NSManagedObjectContext) {
-        
-        // Version based migrations
+    // Version based migrations
+    // Runs on viewContext. Must finish before app can continue launch
+    static func upgradeDatabase(context:NSManagedObjectContext) {
         L.maintenance.info("Starting version based maintenance")
         context.perform {
             Self.runDeleteEventsWithoutId(context: context)
@@ -79,13 +72,23 @@ struct Maintenance {
                 L.maintenance.error("🧹🧹 🔴🔴 Version based maintenance could not save: \(error)")
             }
         }
+    }
+    
+    
+    // Clean up things older than X days
+    // Deletes ALL KIND=0 Events (except own), because should have Contact entity.
+    // Keeps bookmarks
+    // Keeps own events
+    // Keeps contacts/posts with private notes
+    // Could run in background, maybe on app minimize
+    static func dailyMaintenance(context:NSManagedObjectContext) {
+        
         // Time based migrations
     
         let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
         let hoursAgo = Date(timeIntervalSinceNow: (-24 * 60 * 60))
         guard lastMaintenanceTimestamp < hoursAgo else { // don't do maintenance more than once every 24 hours
             L.maintenance.info("Skipping maintenance");
-            Importer.shared.preloadExistingIdsCache()
             return
         }
         SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
@@ -331,7 +334,6 @@ struct Maintenance {
             Importer.shared.preloadExistingIdsCache()
         }
     }
-    
     
     // SetMetadata can have a banner field now.
     func rescanForBannerFields() {
