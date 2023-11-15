@@ -195,9 +195,6 @@ struct MultiFollowSheet: View {
     
 
     private func unfollow(_ pubkey: String, account:CloudAccount) {
-        guard let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) else {
-            return
-        }
         account.followingPubkeys.remove(pubkey)
         if account == Nostur.account() {
             NRState.shared.loggedInAccount?.reloadFollows()

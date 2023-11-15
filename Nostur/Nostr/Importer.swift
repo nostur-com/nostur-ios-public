@@ -151,7 +151,7 @@ class Importer {
                 var subscriptionIds = Set<String>()
                 while let message = MessageParser.shared.messageBucket.popFirst() {
                     count = count + 1
-                    guard var event = message.event else {
+                    guard let event = message.event else {
                         L.importing.error("🔴🔴 message.event is nil \(message.message)")
                         continue
                     }
@@ -373,7 +373,7 @@ class Importer {
                 
                 while let message = MessageParser.shared.priorityBucket.popFirst() {
                     count = count + 1
-                    guard var event = message.event else {
+                    guard let event = message.event else {
                         L.importing.error("🔴🔴 message.event is nil \(message.message)")
                         continue
                     }

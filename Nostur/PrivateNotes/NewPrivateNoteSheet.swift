@@ -53,7 +53,6 @@ struct NewPrivateNoteSheet: View {
                     Button("Save") {
                         dismiss()
                         do {
-                            guard let account = account() else { return }
                             guard post != nil || contact != nil else { return }
                             post?.objectWillChange.send()
                             contact?.objectWillChange.send()

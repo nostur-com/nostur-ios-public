@@ -32,7 +32,7 @@ struct Maintenance {
                         relays.append(bootstrapRelay.toStruct())
                     }
                     for relay in relays {
-                        ConnectionPool.shared.addConnection(relay)
+                        _ = ConnectionPool.shared.addConnection(relay)
                     }
                 }
             }

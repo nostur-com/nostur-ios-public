@@ -361,7 +361,6 @@ extension PreviewEnvironment {
     
     // Needs account, some kind = 1 events, and some contacts first
     func loadBlockedAndMuted() {
-        guard let account = account() else { L.og.debug("Preview.loadBlockedAndMuted - missing Account"); return }
         context.performAndWait {
             let randomContactsR = Contact.fetchRequest()
             randomContactsR.fetchLimit = 10
