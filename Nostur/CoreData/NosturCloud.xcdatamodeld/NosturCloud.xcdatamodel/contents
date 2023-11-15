@@ -70,6 +70,14 @@
         <attribute name="type_" optional="YES" attributeType="String"/>
         <attribute name="word_" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="CloudDMState" representedClassName="CloudDMState" syncable="YES">
+        <attribute name="accepted" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="accountPubkey_" optional="YES" attributeType="String"/>
+        <attribute name="contactPubkey_" optional="YES" attributeType="String"/>
+        <attribute name="isHidden" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="isPinned" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="markedReadAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
     <entity name="CloudFeed" representedClassName="CloudFeed" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="followingHashtags_" optional="YES" attributeType="String"/>
@@ -247,6 +255,7 @@
         <memberEntity name="CloudFeed"/>
         <memberEntity name="CloudBlocked"/>
         <memberEntity name="CloudAccount"/>
+        <memberEntity name="CloudDMState"/>
     </configuration>
     <configuration name="Local">
         <memberEntity name="Account"/>

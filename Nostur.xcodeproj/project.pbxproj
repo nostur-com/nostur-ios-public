@@ -279,6 +279,8 @@
 		1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA477222A780C0E00A4CCD3 /* Binding+not.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
+		1FA70F932B053C9500BB636F /* CloudDMState+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA70F912B053C9500BB636F /* CloudDMState+CoreDataClass.swift */; };
+		1FA70F942B053C9500BB636F /* CloudDMState+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA70F922B053C9500BB636F /* CloudDMState+CoreDataProperties.swift */; };
 		1FAC3F3B2AD049D7009BA810 /* ComposePost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */; };
 		1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
 		1FAE1FCE2A2361CC0044E141 /* LazyNoteMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */; };
@@ -734,6 +736,8 @@
 		1FA477222A780C0E00A4CCD3 /* Binding+not.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+not.swift"; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1FA70F912B053C9500BB636F /* CloudDMState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudDMState+CoreDataClass.swift"; sourceTree = "<group>"; };
+		1FA70F922B053C9500BB636F /* CloudDMState+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudDMState+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposePost.swift; sourceTree = "<group>"; };
 		1FAC67AF29F5527800798661 /* DisabledAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DisabledAssets.xcassets; sourceTree = "<group>"; };
 		1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyNoteMenu.swift; sourceTree = "<group>"; };
@@ -1128,18 +1132,20 @@
 		1F25B395297A508200A8A5A7 /* CoreData */ = {
 			isa = PBXGroup;
 			children = (
-				1F58157C2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift */,
-				1F58157D2AFB03BC0014852A /* CloudBlocked+CoreDataProperties.swift */,
-				1FE1281E2AF9A53D0070936C /* CloudAccount+CoreDataClass.swift */,
-				1FE1281F2AF9A53D0070936C /* CloudAccount+CoreDataProperties.swift */,
-				1FE1281A2AF8BFDF0070936C /* CloudFeed+CoreDataClass.swift */,
-				1FE1281B2AF8BFDF0070936C /* CloudFeed+CoreDataProperties.swift */,
-				1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */,
-				1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */,
 				1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */,
 				1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */,
 				1F365FB82AF2F561003A82CB /* Bookmark+CoreDataClass.swift */,
 				1F365FB92AF2F561003A82CB /* Bookmark+CoreDataProperties.swift */,
+				1FE1281E2AF9A53D0070936C /* CloudAccount+CoreDataClass.swift */,
+				1FE1281F2AF9A53D0070936C /* CloudAccount+CoreDataProperties.swift */,
+				1F58157C2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift */,
+				1F58157D2AFB03BC0014852A /* CloudBlocked+CoreDataProperties.swift */,
+				1FA70F912B053C9500BB636F /* CloudDMState+CoreDataClass.swift */,
+				1FA70F922B053C9500BB636F /* CloudDMState+CoreDataProperties.swift */,
+				1FE1281A2AF8BFDF0070936C /* CloudFeed+CoreDataClass.swift */,
+				1FE1281B2AF8BFDF0070936C /* CloudFeed+CoreDataProperties.swift */,
+				1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */,
+				1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */,
 				1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */,
 				1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */,
 				1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */,
@@ -2134,6 +2140,7 @@
 				1FF209162AB0A92800876DB2 /* ProfileGalleryViewModel.swift in Sources */,
 				1FB6E70329E52EF3008BE8A6 /* SmoothList.swift in Sources */,
 				1F099DA62ADC29710069F2DF /* Settings+AutodownloadLevelPicker.swift in Sources */,
+				1FA70F942B053C9500BB636F /* CloudDMState+CoreDataProperties.swift in Sources */,
 				1F00E8C329C2FE7800797B78 /* LVM.swift in Sources */,
 				1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */,
 				1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */,
@@ -2189,6 +2196,7 @@
 				1F210B0629F853BB00159814 /* ProfileMediaView.swift in Sources */,
 				1FCC2F292A19275200202EFA /* NIP05Verifier.swift in Sources */,
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
+				1FA70F932B053C9500BB636F /* CloudDMState+CoreDataClass.swift in Sources */,
 				1F05FA0A2A35FDEF00DAB8E8 /* NosturVideoViewur.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */,

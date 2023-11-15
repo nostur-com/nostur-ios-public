@@ -8,8 +8,9 @@
 
 import Foundation
 import CoreData
+import Combine
 
 @objc(CloudDMState)
 public class CloudDMState: NSManagedObject {
-
+    var didUpdate = PassthroughSubject<Void, Never>()
 }
