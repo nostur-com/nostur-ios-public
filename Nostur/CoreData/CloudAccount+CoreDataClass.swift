@@ -30,7 +30,7 @@ public class CloudAccount: NSManagedObject {
             return withSelfIncluded
         }
         let withoutBlocked = withSelfIncluded.subtracting(NRState.shared.blockedPubkeys)
-        return withSelfIncluded
+        return withoutBlocked
     }
     
     public func getSilentFollows() -> Set<String> {
