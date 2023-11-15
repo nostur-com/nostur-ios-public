@@ -37,18 +37,18 @@ struct PaymentAmountSelector: View {
                             let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                             
                             if response.pr != nil {
-                                if SettingsStore.shared.nwcReady {
-                                    // NWC WALLET INSTANT ZAPS
-                                    if nwcSendPayInvoiceRequest(response.pr!) {
-                                        dismiss()
+                                await MainActor.run {
+                                    if SettingsStore.shared.nwcReady {
+                                        // NWC WALLET INSTANT ZAPS
+                                        if nwcSendPayInvoiceRequest(response.pr!) {
+                                            dismiss()
+                                        }
+                                        else {
+                                            errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
+                                        }
                                     }
                                     else {
-                                        errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
-                                    }
-                                }
-                                else {
-                                    // OLD STYLE WALLET
-                                    await MainActor.run {
+                                        // OLD STYLE WALLET
                                         openURL(URL(string: "\(SettingsStore.shared.defaultLightningWallet.scheme)\(response.pr!)")!)
                                     }
                                 }
@@ -64,18 +64,18 @@ struct PaymentAmountSelector: View {
                         let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                         
                         if response.pr != nil {
-                            if SettingsStore.shared.nwcReady {
-                                // NWC WALLET INSTANT ZAPS
-                                if nwcSendPayInvoiceRequest(response.pr!) {
-                                    dismiss()
+                            await MainActor.run {
+                                if SettingsStore.shared.nwcReady {
+                                    // NWC WALLET INSTANT ZAPS
+                                    if nwcSendPayInvoiceRequest(response.pr!) {
+                                        dismiss()
+                                    }
+                                    else {
+                                        errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
+                                    }
                                 }
                                 else {
-                                    errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
-                                }
-                            }
-                            else {
-                             // OLD STYLE WALLET
-                                await MainActor.run {
+                                 // OLD STYLE WALLET
                                     openURL(URL(string: "\(SettingsStore.shared.defaultLightningWallet.scheme)\(response.pr!)")!)
                                 }
                             }
@@ -93,19 +93,18 @@ struct PaymentAmountSelector: View {
                     let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000))
                     
                     if response.pr != nil {
-                        
-                        if SettingsStore.shared.nwcReady {
-                            // NWC WALLET INSTANT ZAPS
-                            if nwcSendPayInvoiceRequest(response.pr!) {
-                                dismiss()
+                        await MainActor.run {
+                            if SettingsStore.shared.nwcReady {
+                                // NWC WALLET INSTANT ZAPS
+                                if nwcSendPayInvoiceRequest(response.pr!) {
+                                    dismiss()
+                                }
+                                else {
+                                    errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
+                                }
                             }
                             else {
-                                errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
-                            }
-                        }
-                        else {
-                         // OLD STYLE WALLET
-                            await MainActor.run {
+                             // OLD STYLE WALLET
                                 openURL(URL(string: "\(SettingsStore.shared.defaultLightningWallet.scheme)\(response.pr!)")!)
                             }
                         }
