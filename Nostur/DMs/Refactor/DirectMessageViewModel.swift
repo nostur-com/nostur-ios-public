@@ -13,8 +13,21 @@ class DirectMessageViewModel: ObservableObject {
     
     static public let `default` = DirectMessageViewModel()
     
+    public var dmStates:[CloudDMState] = [] {
+        didSet {
+            if didLoad {
+                // normally we load in LoggedInAccount.setupAccount() after WoT or not.
+                // Once we loaded once, didLoad is set, and then we can reload on
+                // .dmStates being set (which only happens after external iCloud sync on AppView)
+                // so this .load() updates the unread counts after sync
+                self.load()
+            }
+        }
+    }
+    
     var pubkey:String?
     var lastNotificationReceivedAt:Date? = nil
+    var didLoad = false
     
     @Published var conversationRows:[Conversation] = []
     @Published var requestRows:[Conversation] = []
@@ -118,6 +131,7 @@ class DirectMessageViewModel: ObservableObject {
         self.loadAcceptedConversations()
         self.loadMessageRequests()
         self.loadOutSideWoT() // even if we don't show it, we need to load to show how many there are in toggle.
+        didLoad = true
     }
     
     public func loadAfterWoT() {
