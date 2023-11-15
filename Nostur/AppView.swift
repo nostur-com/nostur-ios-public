@@ -179,11 +179,16 @@ struct AppView: View {
                 if ns.activeAccountPublicKey.isEmpty && !isOnboarding {
                     ns.activeAccountPublicKey = accounts.last?.publicKey ?? ""
                 }
-                print("loading \(accounts.count) accounts. \(ns.activeAccountPublicKey)")
+                L.og.debug("loading \(accounts.count) accounts. \(ns.activeAccountPublicKey)")
                 removeDuplicateAccounts()
                 NRState.shared.accounts = Array(accounts)
             }
-            if accounts.isEmpty {
+            else if NRState.shared.accounts.isEmpty && !accounts.isEmpty {
+                L.og.debug("loading \(accounts.count) accounts. \(ns.activeAccountPublicKey)")
+                removeDuplicateAccounts()
+                NRState.shared.accounts = Array(accounts)
+            }
+            else if accounts.isEmpty {
                 noAccounts = true
             }
         })
