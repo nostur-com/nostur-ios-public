@@ -88,10 +88,10 @@ struct NewListSheet: View {
             ContactsSearch(followingPubkeys: follows(),
                            prompt: String(localized:"Search contacts", comment:"Placeholder in search contacts input field"), onSelectContacts: { selectedContacts in
                 guard let newList = newList else { return }
-                newList.contacts_.append(contentsOf: selectedContacts)
+                newList.contactPubkeys.formUnion(Set(selectedContacts.map { $0.pubkey }))
                 contactSelectionVisible = false
                 DataProvider.shared().save()
-                sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: newList.subscriptionId, pubkeys: Set(newList.contacts_.map { $0.pubkey })))
+                sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: newList.subscriptionId, pubkeys: newList.contactPubkeys))
                 dismiss()
             })
             .equatable()
