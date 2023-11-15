@@ -27,11 +27,11 @@ class Conversation: Identifiable, Hashable, ObservableObject {
     let mostRecentEvent:Event // bg context
     @Published var unread:Int
     @Published var accepted:Bool
-    var dmState:DMState
+    var dmState: CloudDMState
     
     var subscriptions = Set<AnyCancellable>()
     
-    init(contactPubkey: String, nrContact: NRContact? = nil, mostRecentMessage: String, mostRecentDate: Date, mostRecentEvent: Event, unread: Int, dmState: DMState) {
+    init(contactPubkey: String, nrContact: NRContact? = nil, mostRecentMessage: String, mostRecentDate: Date, mostRecentEvent: Event, unread: Int, dmState: CloudDMState, accepted:Bool) {
         self.contactPubkey = contactPubkey
         self.nrContact = nrContact
         self.mostRecentMessage = mostRecentMessage
@@ -39,15 +39,15 @@ class Conversation: Identifiable, Hashable, ObservableObject {
         self.mostRecentEvent = mostRecentEvent
         self.unread = unread
         self.dmState = dmState
-        self.accepted = dmState.accepted
+        self.accepted = accepted
         
         dmState.didUpdate
             .sink { _ in
+                let unreadSince = self.dmState.markedReadAt_ ?? Date(timeIntervalSince1970: 0)
+                let accepted = dmState.accepted
                 bg().perform {
                     let allReceived = Event.fetchEventsBy(pubkey: self.contactPubkey, andKind: 4, context: bg())
-                    let unreadSince = self.dmState.markedReadAt ?? Date(timeIntervalSince1970: 0)
                     let unread = allReceived.filter { $0.date > unreadSince }.count
-                    let accepted = dmState.accepted
                     Task { @MainActor in
                         self.unread = unread
                         self.accepted = accepted
