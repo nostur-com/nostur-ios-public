@@ -62,6 +62,11 @@ struct AppView: View {
     
     @State private var noAccounts = false
     
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.markedReadAt_, order: .reverse)])
+    private var dmStates:FetchedResults<CloudDMState>
+    
+    @State private var noDMStates = false
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -192,6 +197,20 @@ struct AppView: View {
                 noAccounts = true
             }
         })
+        
+        .onReceive(dmStates.publisher.collect(), perform: { dmStates in
+            if dmStates.count != dm.dmStates.count {
+                removeDuplicateDMStates()
+                dm.dmStates = Array(dmStates)
+            }
+            else if dm.dmStates.isEmpty && !dmStates.isEmpty {
+                removeDuplicateDMStates()
+                dm.dmStates = Array(dmStates)
+            }
+            else if dmStates.isEmpty {
+                noDMStates = true
+            }
+        })
         .environmentObject(themes)
     }
     
@@ -214,6 +233,29 @@ struct AppView: View {
             existingAccount?.followingPubkeys.formUnion(duplicateAccount.followingPubkeys)
             existingAccount?.followingHashtags.formUnion(duplicateAccount.followingHashtags)
             DataProvider.shared().viewContext.delete(duplicateAccount)
+        })
+        if !duplicates.isEmpty {
+            DataProvider.shared().save()
+        }
+    }
+    
+    private func removeDuplicateDMStates() {
+        var uniqueDMStates = Set<String>()
+        let sortedDMStates = dmStates.sorted { ($0.markedReadAt_ ?? .distantPast) > ($1.markedReadAt_ ?? .distantPast) }
+        
+        let duplicates = sortedDMStates
+            .filter { dmState in
+                guard let contactPubkey = dmState.contactPubkey_ else { return false }
+                guard let accountPubkey = dmState.accountPubkey_ else { return false }
+                return !uniqueDMStates.insert(dmState.conversionId).inserted
+            }
+        
+        L.cloud.debug("Deleting: \(duplicates.count) duplicate DM conversation states")
+        duplicates.forEach({ duplicateDMState in
+            let existingDMState = sortedDMStates.first { existingDMState in
+                return existingDMState.conversionId == duplicateDMState.conversionId
+            }
+            DataProvider.shared().viewContext.delete(duplicateDMState)
         })
         if !duplicates.isEmpty {
             DataProvider.shared().save()
