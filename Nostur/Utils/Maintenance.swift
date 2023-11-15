@@ -16,6 +16,7 @@ struct Maintenance {
     // Removed: time out... "wss://nostr.fmt.wiz.biz"
     // Removed: too many subscriptions "wss://relay.snort.social"
     
+    @MainActor
     static func ensureBootstrapRelaysExist(context:NSManagedObjectContext) {
         context.performAndWait {
             let r = Relay.fetchRequest()
@@ -893,7 +894,7 @@ struct Maintenance {
     }
     
     
-    // Migrate Custom feeds to iCloud-ready table
+    // Migrate Blocks/Muted Conversations to iCloud-ready table
     static func runMigrateBlocks(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.migrateBlocks, context: context) else { return }
         

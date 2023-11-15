@@ -124,7 +124,7 @@ class DirectMessageViewModel: ObservableObject {
     }
     
     // .load is called from:
-    // NosturState on startup if WoT is disabled
+    // NRState on startup if WoT is disabled
     // receiveNotification(.WoTReady) if WoT is enabled, after WoT has loaded
     public func load() {
         guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
