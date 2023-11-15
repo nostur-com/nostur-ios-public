@@ -173,12 +173,12 @@ struct CustomNWCConnectSheet: View {
             removeExistingNWCsocket()
             DispatchQueue.main.async {
                 L.og.info("⚡️ Adding NWC connection")
-                _ = SocketPool.shared.addNWCSocket(connectionId:connectionId, url: relay)
+                ConnectionPool.shared.addNWCConnection(connectionId:connectionId, url: relay)
                 NWCRequestQueue.shared.nwcConnection = c
                 Importer.shared.nwcConnection = c
                 
                 L.og.info("⚡️ Fetching 13194 (info) from NWC relay")
-                SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNWCRelay: true, message: RM.getNWCInfo(walletPubkey: walletPubkey)))
+                ConnectionPool.shared.sendMessage(ClientMessage(onlyForNWCRelay: true, message: RM.getNWCInfo(walletPubkey: walletPubkey)), afterPing: true)
             }
         }
         
@@ -190,16 +190,14 @@ struct CustomNWCConnectSheet: View {
     
     func removeExistingNWCsocket() {
         var removeKey:String?
-        SocketPool.shared.sockets.values.forEach { managedClient in
-            if managedClient.isNWC {
-                managedClient.disconnect()
-                removeKey = managedClient.relayId
+        ConnectionPool.shared.connections.values.forEach { connection in
+            if connection.isNWC {
+                connection.disconnect()
+                removeKey = connection.url
             }
         }
         if let removeKey {
-            DispatchQueue.main.async {
-                SocketPool.shared.removeSocket(removeKey)
-            }
+            ConnectionPool.shared.removeConnection(removeKey)
         }
         if !ss.activeNWCconnectionId.isEmpty {
             NWCConnection.delete(ss.activeNWCconnectionId, context: DataProvider.shared().viewContext)

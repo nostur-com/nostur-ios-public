@@ -59,8 +59,11 @@ struct NProfileView: View {
                                     await ctx.perform {
                                         // If we don't have the event after X seconds, fetch from relay hint
                                         if Contact.fetchByPubkey(pubkey, context: ctx) == nil {
-                                            if let relay = identifier.relays.first {
-                                                EphemeralSocketPool.shared.sendMessage(RM.getUserMetadata(pubkey: pubkey), relay: relay)
+                                            if let relay = identifier.relays.first {    
+                                                ConnectionPool.shared.sendEphemeralMessage(
+                                                    RM.getUserMetadata(pubkey: pubkey),
+                                                    relay: relay
+                                                )
                                             }
                                         }
                                     }

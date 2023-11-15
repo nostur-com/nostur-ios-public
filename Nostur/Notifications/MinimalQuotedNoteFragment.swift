@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct MinimalQuotedNoteFragment: View {
-    var sp:SocketPool = .shared
     @ObservedObject var nrPost:NRPost
     
     var body: some View {

@@ -32,20 +32,20 @@ class MessageParser {
     // Subscriptions that will be kept open afte EOSE
     static let ACTIVE_SUBSCRIPTIONS = Set(["Following","Explore","Notifications","REALTIME-DETAIL", "REALTIME-DETAIL-A", "NWC", "NC"])
     
-    private var context = bg()
-    private var sp = SocketPool.shared
+    private var bgQueue = bg()
+    private var poolQueue = ConnectionPool.shared.queue
     public var messageBucket = Deque<RelayMessage>()
     public var priorityBucket = Deque<RelayMessage>()
     public var isSignatureVerificationEnabled = true
     
     init() {
-        context.perform {
+        bgQueue.perform {
             self.isSignatureVerificationEnabled = SettingsStore.shared.isSignatureVerificationEnabled
         }
     }
     
-    func socketReceivedMessage(text:String, relayUrl:String, client:NewWebSocket) {
-        self.context.perform { [unowned self] in
+    func socketReceivedMessage(text:String, relayUrl:String, client: RelayConnection) {
+        bgQueue.perform {
             do {
                 let message = try RelayMessage.parseRelayMessage(text: text, relay: relayUrl)
                 
@@ -82,7 +82,7 @@ class MessageParser {
                         guard let nEvent = message.event else { L.sockets.info("🔴🔴 uhh, where is nEvent "); return }
                         
                         if nEvent.kind == .ncMessage {
-                            guard try !isSignatureVerificationEnabled || nEvent.verified() else {
+                            guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
                                 throw RelayMessage.error.INVALID_SIGNATURE
                             }
                             // Don't save to database, just handle response directly
@@ -93,7 +93,7 @@ class MessageParser {
                         }
                         
                         if nEvent.kind == .nwcResponse {
-                            guard try !isSignatureVerificationEnabled || nEvent.verified() else {
+                            guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
                                 throw RelayMessage.error.INVALID_SIGNATURE
                             }
                             
@@ -121,20 +121,20 @@ class MessageParser {
                                     L.og.info("⚡️ NWC response with error: \(error.code) - \(error.message)")
                                     if let eventId = awaitingZap.eventId {
                                         let message = "[Zap](nostur:e:\(eventId)) may have failed.\n\(error.message)"
-                                        let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
+                                        let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
                                         NotificationsViewModel.shared.checkNeedsUpdate(notification)
                                         L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
                                         if (SettingsStore.shared.nwcShowBalance) {
                                             nwcSendBalanceRequest()
                                         }
-                                        if let ev = try? Event.fetchEvent(id: eventId, context: bg()) {
+                                        if let ev = try? Event.fetchEvent(id: eventId, context: self.bgQueue) {
                                             ev.zapState = .none
                                             ev.zapStateChanged.send(.none)
                                         }
                                     }
                                     else {
                                         let message = "Zap may have failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)).\n\(error.message)"
-                                        let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
+                                        let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
                                         NotificationsViewModel.shared.checkNeedsUpdate(notification)
                                         L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)). \(error.message)")
                                     }
@@ -160,7 +160,7 @@ class MessageParser {
                                 // HANDLE OLD BOLT11 INVOICE PAYMENT
                                 if let error = nwcResponse.error {
                                     let message = "Failed to pay lightning invoice.\n\(error.message)"
-                                    let notification = PersistentNotification.createFailedLightningInvoice(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: context)
+                                    let notification = PersistentNotification.createFailedLightningInvoice(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
                                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
                                     L.og.error("⚡️ Failed to pay lightning invoice. \(error.message)")
                                     NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
@@ -184,7 +184,7 @@ class MessageParser {
                         }
                         
                         if let subscriptionId = message.subscriptionId, subscriptionId.prefix(5) == "prio-" {
-                            let sameMessageInQueue = self.priorityBucket.first(where: { 
+                            let sameMessageInQueue = self.priorityBucket.first(where: {
                                  nEvent.id == $0.event?.id && $0.type == .EVENT
                             })
                             
@@ -239,6 +239,6 @@ class MessageParser {
             catch {
                 L.sockets.info("🔴🔴 \(relayUrl) \(error)")
             }
-        }
+        }        
     }
 }

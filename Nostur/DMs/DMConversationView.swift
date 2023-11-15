@@ -298,7 +298,7 @@ struct DMConversationView: View {
                         .onAppear {
                             if (contact == nil) {
                                 if let contactPubkey {
-                                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactPubkey)))
+                                    ConnectionPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactPubkey)))
                                 }
                             }
                         }

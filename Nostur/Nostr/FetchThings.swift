@@ -14,7 +14,7 @@ func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {
     let sinceNTimestamp = since != nil ? NTimestamp(date: since!) : nil
     L.fetching.info("checking profiles since: \(since?.description ?? "")")
     
-    SocketPool.shared
+    ConnectionPool.shared
         .sendMessage(ClientMessage(
             type: .REQ,
             message: RequestMessage.getUserMetadata(pubkeys: Array(pubkeys),
@@ -37,7 +37,7 @@ func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, su
             message: req
         )
         
-        SocketPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
+        ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
     }
     else {
         let req = RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!, subscriptionId: subscriptionId)
@@ -45,7 +45,7 @@ func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, su
             type: .REQ,
             message: req
         )
-        SocketPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
+        ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
     }
 }
 
@@ -66,7 +66,7 @@ func fetchEvents(pubkeysString:String, amount:Int? = 5000, since:Int64? = nil, s
             message: req
         )
         
-        SocketPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
+        ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
     }
     else {
         let req = RequestMessage.getFollowingEvents(pubkeysString: pubkeysString, limit: amount!, subscriptionId: subscriptionId)
@@ -74,7 +74,7 @@ func fetchEvents(pubkeysString:String, amount:Int? = 5000, since:Int64? = nil, s
             type: .REQ,
             message: req
         )
-        SocketPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
+        ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
     }
 }
 

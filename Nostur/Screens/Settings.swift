@@ -259,7 +259,7 @@ struct Settings: View {
                             do {
                                 try viewContext.save()
                                 if (relay.read || relay.write) {
-                                    _ = SocketPool.shared.addSocket(relay: relay.toStruct())
+                                    _ = ConnectionPool.shared.addConnection(relay.toStruct())
                                 }
                             } catch {
                                 L.og.error("Unresolved error \(error)")

@@ -59,7 +59,11 @@ struct NEventView: View {
                             },
                             altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
                                 guard let relay = identifier.relays.first else { vm.timeout(); return }
-                                EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: eventId, subscriptionId: taskId), relay: relay)
+                                
+                                ConnectionPool.shared.sendEphemeralMessage(
+                                    RM.getEvent(id: eventId, subscriptionId: taskId),
+                                    relay: relay
+                                )
                             }
                             
                         ))

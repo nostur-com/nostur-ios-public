@@ -20,7 +20,7 @@ struct Maintenance {
         context.performAndWait {
             let r = Relay.fetchRequest()
             if let relaysCount = try? context.fetch(r).count {
-                var relays:[Relay] = []
+                var relays:[RelayData] = []
                 
                 if (relaysCount == 0) {
                     for url in BOOTSTRAP_RELAYS {
@@ -29,11 +29,10 @@ struct Maintenance {
                         bootstrapRelay.write = true
                         bootstrapRelay.createdAt = Date.now
                         bootstrapRelay.url = url
-                        relays.append(bootstrapRelay)
+                        relays.append(bootstrapRelay.toStruct())
                     }
-                    let sp = SocketPool.shared
-                    for relay in relays { // CONNECT TO RELAYS
-                        _ = sp.addSocket(relay: relay.toStruct())
+                    for relay in relays {
+                        ConnectionPool.shared.addConnection(relay)
                     }
                 }
             }

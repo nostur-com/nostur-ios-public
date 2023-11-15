@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct NoteMinimalContentView: View {
-    
-    private let sp:SocketPool = .shared
     @ObservedObject var nrPost:NRPost
     var lineLimit:Int = 0
     

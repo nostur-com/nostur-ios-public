@@ -85,7 +85,7 @@ struct DetailPane: View {
                                         else {
                                             // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
                                             let closeMessage = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "REALTIME-DETAIL"))
-                                            SocketPool.shared.sendMessage(closeMessage)
+                                            ConnectionPool.shared.sendMessage(closeMessage)
                                         }
                                     }
                                     // TODO make tabs identifiable, and make animation

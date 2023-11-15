@@ -10,19 +10,19 @@ import CoreData
 
 struct RelayRowView: View {
     @ObservedObject var relay:Relay
-    @ObservedObject var sp:SocketPool = .shared
+    @ObservedObject private var cp:ConnectionPool = .shared
     
     var isConnected:Bool {
-        socket?.isConnected ?? false
+        connection?.isConnected ?? false
     }
     
-    var socket:NewManagedClient? {
-        sp.sockets.first(where: { $0.key == (relay.url?.lowercased() ?? "") } )?.value
-    }
+    @State var connection:RelayConnection? = nil
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         HStack {
-            
             if (isConnected) {
                 Image(systemName: "circle.fill").foregroundColor(.green)
                     .opacity(1.0)
@@ -41,7 +41,10 @@ struct RelayRowView: View {
                 .opacity(relay.read ? 1.0 : 0.2)
                 .onTapGesture {
                     relay.read.toggle()
-                    socket?.read = relay.read
+                    connection?.relayData.setRead(relay.read)
+                    if relay.read {
+                        connection?.connect(forceConnectionAttempt: true)
+                    }
                     DataProvider.shared().save()
                 }
             
@@ -49,10 +52,20 @@ struct RelayRowView: View {
                 .opacity(relay.write ? 1.0 : 0.2)
                 .onTapGesture {
                     relay.write.toggle()
-                    socket?.write = relay.write
+                    connection?.relayData.setWrite(relay.write)
                     DataProvider.shared().save()
                 }
         }
+        .task {
+            let relayUrl = relay.url ?? ""
+            connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
+            print("connection is now \(connection?.url ?? "")")
+        }
+        .onReceive(cp.objectWillChange, perform: { _ in
+            let relayUrl = relay.url ?? ""
+            connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
+            print("connection is now \(connection?.url ?? "")")
+        })
     }
 }
 
@@ -68,17 +81,6 @@ struct RelaysView: View {
         animation: .default)
     var relays: FetchedResults<Relay>
 
-    @ObservedObject var sp:SocketPool = .shared
-
-    func socketForRelay(relay: Relay) -> NewManagedClient {
-        let relayData = relay.toStruct()
-        guard let socket = sp.sockets[relayData.id] else {
-            let addedSocket = sp.addSocket(relay: relayData)
-            return addedSocket
-        }
-        return socket
-    }
-    
     var body: some View {
         VStack {
             ForEach(relays, id:\.objectID) { relay in
@@ -91,7 +93,7 @@ struct RelaysView: View {
         }
         .sheet(item: $editRelay, content: { relay in
             NavigationStack {
-                RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
+                RelayEditView(relay: relay)
             }
             .presentationBackground(themes.theme.background)
         })

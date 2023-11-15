@@ -219,9 +219,7 @@ class LVM: NSObject, ObservableObject {
 //            5    62.00 ms    0.1%    5.00 ms               LVM.performLocalFetch(refreshInBackground:) 
 //            1    32.00 ms    0.0%    1.00 ms                LVM.closeSubAndTimer() 
 //            7    30.00 ms    0.0%    7.00 ms                 SocketPool.closeSubscription(_:)
-            DispatchQueue.global().async { // .closeSubAndTimer eventually hits main, but doesn't need to block.
-                SocketPool.shared.closeSubscription(self.id)
-            }
+            ConnectionPool.shared.closeSubscription(self.id)
         }
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = nil
@@ -762,7 +760,7 @@ class LVM: NSObject, ObservableObject {
         let bg = bg()
         if type == .relays {
             self.relays = Set(relays.map { $0.toStruct() })
-            SocketPool.shared.connectFeedRelays(relays: self.relays)
+            ConnectionPool.shared.connectFeedRelays(relays: self.relays)
         }
         var ls:ListState?
         if let pubkey {
@@ -1164,7 +1162,7 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 guard self.id == "Following" else { return }
-                SocketPool.shared.allowNewFollowingSubscriptions()
+                ConnectionPool.shared.allowNewFollowingSubscriptions()
                 let pubkeys = notification.object as! Set<String>
                 self.pubkeys = pubkeys.subtracting(blocks())
                 self.performLocalFetch.send(true)
@@ -1215,8 +1213,8 @@ extension LVM {
                 
                 self.relays = newRelaysInfo.relays // viewContext relays
                 
-                SocketPool.shared.closeSubscription(self.id)
-                SocketPool.shared.connectFeedRelays(relays: relays)
+                ConnectionPool.shared.closeSubscription(self.id)
+                ConnectionPool.shared.connectFeedRelays(relays: relays)
                 
                 if newRelaysInfo.wotEnabled == self.wotEnabled {
                     // if WoT did not change, manual clear:

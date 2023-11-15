@@ -55,7 +55,7 @@ struct BadgesIssuedView: View {
             // or just all...
             let req = RequestMessage.getBadgesCreatedAndAwarded(pubkey: pubkey)
             let message = ClientMessage(type: .REQ, message: req)
-            SocketPool.shared.sendMessage(message)
+            ConnectionPool.shared.sendMessage(message)
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

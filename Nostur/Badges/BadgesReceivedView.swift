@@ -76,13 +76,13 @@ struct BadgesReceivedView: View {
             let req = RequestMessage.getEvents(ids: badgeAwardsToMe.map { $0.id })
             let message = ClientMessage(type: .REQ, message: req)
 //            print(message)
-            SocketPool.shared.sendMessage(message)
+            ConnectionPool.shared.sendMessage(message)
             
             // Fetch other badges received
             let reqR = RequestMessage.getBadgesReceived(pubkey)
             let messageR = ClientMessage(type: .REQ, message: reqR)
 //            print(messageR)
-            SocketPool.shared.sendMessage(messageR)
+            ConnectionPool.shared.sendMessage(messageR)
         }
         .navigationTitle("Badges received")
     }

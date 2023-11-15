@@ -130,11 +130,11 @@ class NSecBunkerManager: ObservableObject {
     }
     
     private func connectToSelfHostedNsecbunker(sessionPublicKey: String, relay:String) {
-        _ = SocketPool.shared.addNCSocket(sessionPublicKey: sessionPublicKey, url: relay)
+        ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: relay)
     }
     
     private func connectToHardcodedNsecbunker(sessionPublicKey: String) {
-        _ = SocketPool.shared.addNCSocket(sessionPublicKey: sessionPublicKey, url: "wss://relay.nsecbunker.com")
+        ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: "wss://relay.nsecbunker.com")
     }
     
     public func setAccount(_ account: CloudAccount) {
@@ -205,7 +205,7 @@ class NSecBunkerManager: ObservableObject {
             req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: bunkerManagedPublicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
             
             // Send connection request
-            SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey)
+            ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey, afterPing: true)
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) { // Must wait until connected to bunker relay
@@ -259,7 +259,7 @@ class NSecBunkerManager: ObservableObject {
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey)
+        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey, afterPing: true)
     }
     
     
@@ -297,13 +297,13 @@ class NSecBunkerManager: ObservableObject {
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey)
+        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey, afterPing: true)
     }
     
     private func handleSignedEvent(eventString:String) {
         L.og.info("🏰 NSECBUNKER signed event received, ready to publish: \(eventString)")
         let accountPubkey = parsePubkey(eventString)
-        SocketPool.shared.sendMessage(ClientMessage(message: "[\"EVENT\",\(eventString)"), accountPubkey: accountPubkey)
+        ConnectionPool.shared.sendMessage(ClientMessage(message: "[\"EVENT\",\(eventString)"), accountPubkey: accountPubkey)
     }
     
     enum STATE {

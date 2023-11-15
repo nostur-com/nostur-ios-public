@@ -12,9 +12,9 @@ struct RelayEditView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     @ObservedObject var relay: Relay
-    @ObservedObject var socket: NewManagedClient
+    @ObservedObject private var cp:ConnectionPool = .shared
+    @State private var connection: RelayConnection?
     @State private var refresh: Bool = false
-    @ObservedObject private var sp:SocketPool = .shared
     @State private var confirmRemoveShown = false
     @State private var relayUrl =  ""
     
@@ -26,14 +26,7 @@ struct RelayEditView: View {
     }
     
     private var isConnected:Bool {
-        edittingSocket?.isConnected ?? false
-    }
-    
-    private var edittingSocket:NewManagedClient? {
-        let managedClient = sp.sockets.filter { relayId, managedClient in
-            managedClient.url == relayUrl.lowercased()
-        }.first?.value
-        return managedClient
+        connection?.isConnected ?? false
     }
     
     private func toggleAccount(_ account:CloudAccount) {
@@ -61,8 +54,8 @@ struct RelayEditView: View {
                 }
                 .onChange(of: relayUrl) { newValue in
                     guard relayUrl != newValue else { return } // same url
-                    guard newValue != edittingSocket?.url else { return } // init from "" to socket.url
-                    edittingSocket?.disconnect()
+                    guard newValue != connection?.url else { return } // init from "" to socket.url
+                    connection?.disconnect()
                 }
                 Section(header: Text("Relay settings", comment: "Relay settings header") ) {
                     Toggle(isOn: $relay.read) {
@@ -95,7 +88,7 @@ struct RelayEditView: View {
                             Text("Connected", comment: "Relay status when connected")
                             Spacer()
                             Button {
-                                edittingSocket?.disconnect()
+                                connection?.disconnect()
                             } label: {
                                 Text("Disconnect", comment: "Button to disconnect from relay")
                             }
@@ -107,19 +100,22 @@ struct RelayEditView: View {
                             Text("Disconnected", comment: "Relay status when disconnected")
                             Spacer()
                             Button {
-                                // url change?
-                                if (edittingSocket?.url != relayUrl) {
-                                    edittingSocket?.client.disconnect()
+                                if (connection?.url != relayUrl) { // url change?
+                                    connection?.disconnect()
+                                    
+                                    // Replace the connection first
                                     if let oldUrl = relay.url {
-                                        sp.removeSocket(oldUrl.lowercased())
+                                        ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                                     }
                                     let newRelayData = RelayData(read: relay.read, url: relayUrl, write: relay.write, excludedPubkeys:  relay.excludedPubkeys)
-                                    let replacedSocket = sp.addSocket(relay: newRelayData)
-                                    replacedSocket.connect(true)
-//                                    replacedSocket.client.connect()
+                                    
+                                    let replacedConnection = ConnectionPool.shared.addConnection(newRelayData)
+                                    connection = replacedConnection
                                 }
-                                edittingSocket?.connect(true)
-//                                edittingSocket?.client.connect()
+                                
+                                // Then connect (force)
+                                connection?.connect(forceConnectionAttempt: true)
+                                }
                             } label: {
                                 Text("Connect", comment: "Button to connect to relay")
                             }
@@ -142,12 +138,11 @@ struct RelayEditView: View {
                 }
                 .confirmationDialog("Remove this relay: \(relay.url ?? "")?", isPresented: $confirmRemoveShown, titleVisibility: .visible) {
                     Button("Remove", role: .destructive) {
-                        socket.client.disconnect()
+                        connection?.disconnect()
                         if let oldUrl = relay.url {
-                            sp.removeSocket(oldUrl.lowercased())
+                            ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                         }
                         viewContext.delete(relay)
-                        edittingSocket?.disconnect()
                         dismiss()
                         do {
                             try viewContext.save()
@@ -166,19 +161,23 @@ struct RelayEditView: View {
                         try viewContext.save()
                         // Update existing connections
                         // url change?
-                        if (socket.url != correctedRelayUrl) {
-                            socket.client.disconnect()
+                        if (connection?.url != correctedRelayUrl) {
+                            connection?.disconnect()
                             if let oldUrl = relay.url {
-                                sp.removeSocket(oldUrl.lowercased())
+                                ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                             }
                             let newRelayData = RelayData(read: relay.read, url: correctedRelayUrl, write: relay.write, excludedPubkeys: relay.excludedPubkeys)
-                            _ = sp.addSocket(relay: newRelayData)
+                            let relayConnection = ConnectionPool.shared.addConnection(newRelayData)
+                            if relay.read {
+                                relayConnection.connect()
+                            }
+                            connection = relayConnection
                         }
                         else {
                             // read/write/exclude change?
-                            socket.write = relay.write
-                            socket.read = relay.read
-                            socket.excludedPubkeys = excludedPubkeys
+                            connection?.relayData.setRead(relay.read)
+                            connection?.relayData.setWrite(relay.write)
+                            connection?.relayData.setExcludedPubkeys(relay.excludedPubkeys)
                         }
                     }
                     catch {
@@ -189,15 +188,23 @@ struct RelayEditView: View {
             }
         }
         .onChange(of: relay.read) { newValue in
-            socket.read = newValue
+            if let connection = connection, connection.relayData.read != newValue {
+                connection.relayData.setRead(newValue)
+            }
         }
         .onChange(of: relay.write) { newValue in
-            socket.write = newValue
+            if let connection = connection, connection.relayData.write != newValue {
+                connection.relayData.setWrite(newValue)
+            }
         }
         .onAppear {
             relayUrl = relay.url ?? ""
             excludedPubkeys = relay.excludedPubkeys
+            connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
         }
+        .onReceive(cp.objectWillChange, perform: { _ in
+            connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
+        })
     }
 }
 
@@ -211,20 +218,9 @@ struct RelayEditView_Previews: PreviewProvider {
         relay.write = false
         relay.createdAt = Date()
         
-        let sp:SocketPool = .shared
-        
-        func socketForRelay(relay: Relay) -> NewManagedClient {
-            let relayData = relay.toStruct()
-            guard let socket = sp.sockets[relayData.id] else {
-                let addedSocket = sp.addSocket(relay: relayData)
-                return addedSocket
-            }
-            return socket
-        }
-        
         return NavigationStack {
             PreviewContainer({ pe in pe.loadAccounts() }) {
-                RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
+                RelayEditView(relay: relay)
             }
         }
     }

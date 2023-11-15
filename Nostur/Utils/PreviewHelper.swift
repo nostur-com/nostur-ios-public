@@ -14,7 +14,6 @@ let PREVIEW_DEVICE = "iPhone 15"
 public class PreviewEnvironment {
     
     var didLoad = false
-    let sp:SocketPool = .shared
     let er:ExchangeRateModel = .shared
     let tm:DetailTabsModel = .shared
     let dim:DIMENSIONS = .shared
@@ -462,7 +461,6 @@ struct PreviewContainer<Content: View>: View {
                     .environment(\.managedObjectContext, pe.context)
                     .environmentObject(NRState.shared)
                     .environmentObject(la)
-                    .environmentObject(pe.sp)
                     .environmentObject(pe.ss)
                     .environmentObject(pe.er)
                     .environmentObject(pe.ss)
