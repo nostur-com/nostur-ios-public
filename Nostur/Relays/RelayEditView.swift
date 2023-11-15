@@ -42,6 +42,10 @@ struct RelayEditView: View {
         return excludedPubkeys.contains(account.publicKey)
     }
     
+//    @State private var a = ""
+//    @State private var b = ""
+//    @State private var c = ""
+    
     var body: some View {
 //        let _ = Self._printChanges()
         VStack {
@@ -115,7 +119,20 @@ struct RelayEditView: View {
                                 
                                 // Then connect (force)
                                 connection?.connect(forceConnectionAttempt: true)
-                                }
+//                                if let connection = connection {
+//                                    a = connection.isConnected.description
+//                                    ConnectionPool.shared.queue.async {
+//                                        let b = connection.isSocketConnecting
+//                                        DispatchQueue.main.async {
+//                                            self.b = b.description
+//                                        }
+//                                        
+//                                        let c = connection.isSocketConnected
+//                                        DispatchQueue.main.async {
+//                                            self.c = c.description
+//                                        }
+//                                    }
+//                                }
                             } label: {
                                 Text("Connect", comment: "Button to connect to relay")
                             }
@@ -123,6 +140,10 @@ struct RelayEditView: View {
                     }
                 }
             }
+//            
+//            Text("isConnected: \(a)")
+//            Text("isSocketConnecting: \(b)")
+//            Text("isSocketConnected: \(c)")
         }
         .navigationTitle(String(localized:"Edit relay", comment:"Navigation title for Edit relay screen"))
         .navigationBarTitleDisplayMode(.inline)
@@ -201,9 +222,41 @@ struct RelayEditView: View {
             relayUrl = relay.url ?? ""
             excludedPubkeys = relay.excludedPubkeys
             connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
+//            print("connection is now \(connection?.url ?? "")")
+            
+//            if let connection = connection {
+//                a = connection.isConnected.description
+//                ConnectionPool.shared.queue.async {
+//                    let b = connection.isSocketConnecting
+//                    DispatchQueue.main.async {
+//                        self.b = b.description
+//                    }
+//                    
+//                    let c = connection.isSocketConnected
+//                    DispatchQueue.main.async {
+//                        self.c = c.description
+//                    }
+//                }
+//            }
         }
         .onReceive(cp.objectWillChange, perform: { _ in
             connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
+//            print("connection is now \(connection?.url ?? "")")
+            
+//            if let connection = connection {
+//                a = connection.isConnected.description
+//                ConnectionPool.shared.queue.async {
+//                    let b = connection.isSocketConnecting
+//                    DispatchQueue.main.async {
+//                        self.b = b.description
+//                    }
+//                    
+//                    let c = connection.isSocketConnected
+//                    DispatchQueue.main.async {
+//                        self.c = c.description
+//                    }
+//                }
+//            }
         })
     }
 }

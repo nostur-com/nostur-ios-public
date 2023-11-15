@@ -101,7 +101,6 @@
 		1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */; };
 		1F33096129891C4800D4D8CF /* ProfileLikesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33096029891C4800D4D8CF /* ProfileLikesView.swift */; };
 		1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3309622989598600D4D8CF /* NosturRootMenuView.swift */; };
-		1F33096529895D1600D4D8CF /* SidebarStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33096429895D1600D4D8CF /* SidebarStack.swift */; };
 		1F3309832989819700D4D8CF /* Maintenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3309822989819700D4D8CF /* Maintenance.swift */; };
 		1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */; };
 		1F33EC3729B613F800615FB9 /* FullImageViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33EC3629B613F800615FB9 /* FullImageViewer.swift */; };
@@ -564,7 +563,6 @@
 		1F313DED296980D8004C7366 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Nostur/Info.plist; sourceTree = "<group>"; };
 		1F33096029891C4800D4D8CF /* ProfileLikesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileLikesView.swift; sourceTree = "<group>"; };
 		1F3309622989598600D4D8CF /* NosturRootMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturRootMenuView.swift; sourceTree = "<group>"; };
-		1F33096429895D1600D4D8CF /* SidebarStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarStack.swift; sourceTree = "<group>"; };
 		1F3309822989819700D4D8CF /* Maintenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Maintenance.swift; sourceTree = "<group>"; };
 		1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+withNavigationDestinations.swift"; sourceTree = "<group>"; };
 		1F33EC3629B613F800615FB9 /* FullImageViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullImageViewer.swift; sourceTree = "<group>"; };
@@ -1538,7 +1536,6 @@
 				1F3309622989598600D4D8CF /* NosturRootMenuView.swift */,
 				1F14CC42299D1D7E00131B8D /* NosturStyles.swift */,
 				1FB448C42965F3D000038671 /* NosturTabsView.swift */,
-				1F33096429895D1600D4D8CF /* SidebarStack.swift */,
 				1FF128472ABF090600144C0C /* Sidebar.swift */,
 			);
 			path = Layout;
@@ -2115,7 +2112,6 @@
 				1F065A9D29A3E9E0003421D3 /* FetchThings.swift in Sources */,
 				1F4C1C282A07AB090010573F /* NEventView.swift in Sources */,
 				1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */,
-				1F33096529895D1600D4D8CF /* SidebarStack.swift in Sources */,
 				1FAE1FCE2A2361CC0044E141 /* LazyNoteMenu.swift in Sources */,
 				1F91D8F82A186E5200C419A3 /* AnimatedNumber.swift in Sources */,
 				1F740DA529AF5F6900EFCCA7 /* ContactsSearch.swift in Sources */,

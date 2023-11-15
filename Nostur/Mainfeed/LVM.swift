@@ -215,10 +215,6 @@ class LVM: NSObject, ObservableObject {
     
     func closeSubAndTimer() {
         if type == .relays {
-//            15    95.00 ms    0.1%    15.00 ms LVM.performLocalFetchAfterImport()
-//            5    62.00 ms    0.1%    5.00 ms               LVM.performLocalFetch(refreshInBackground:) 
-//            1    32.00 ms    0.0%    1.00 ms                LVM.closeSubAndTimer() 
-//            7    30.00 ms    0.0%    7.00 ms                 SocketPool.closeSubscription(_:)
             ConnectionPool.shared.closeSubscription(self.id)
         }
         self.fetchFeedTimer?.invalidate()
