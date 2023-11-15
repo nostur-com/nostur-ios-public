@@ -1185,25 +1185,25 @@ extension Event {
             savedEvent.otherPubkey = event.firstP()
             
             if let contactPubkey = savedEvent.otherPubkey { // If we have a DM kind 4, but no p, then something is wrong
-                if let dmState = DMState.fetchExisting(event.publicKey, contactPubkey: contactPubkey, context: context) {
+                if let dmState = CloudDMState.fetchExisting(event.publicKey, contactPubkey: contactPubkey, context: context) {
                     
                     // if we already track the conversation, consider accepted if we replied to the DM
                     // DM is sent from one of our current logged in pubkey
                     if !dmState.accepted && NRState.shared.accountPubkeys.contains(event.publicKey) {
                         dmState.accepted = true
                         
-                        if let current = dmState.markedReadAt, savedEvent.date > current {
-                            dmState.markedReadAt = savedEvent.date
+                        if let current = dmState.markedReadAt_, savedEvent.date > current {
+                            dmState.markedReadAt_ = savedEvent.date
                         }
-                        else if dmState.markedReadAt == nil {
-                            dmState.markedReadAt = savedEvent.date
+                        else if dmState.markedReadAt_ == nil {
+                            dmState.markedReadAt_ = savedEvent.date
                         }
                     }
                     // Let DirectMessageViewModel handle view updates
                     DirectMessageViewModel.default.newMessage(dmState)
                 }
                 // Same but account / contact switched, because we support multiple accounts so we need to be able to track both ways
-                else if let dmState = DMState.fetchExisting(contactPubkey, contactPubkey: event.publicKey, context: context) {
+                else if let dmState = CloudDMState.fetchExisting(contactPubkey, contactPubkey: event.publicKey, context: context) {
                     
                     // if we already track the conversation, consider accepted if we replied to the DM
                     if !dmState.accepted && NRState.shared.accountPubkeys.contains(event.publicKey) {
@@ -1216,20 +1216,20 @@ extension Event {
                     
                     // if we are sender
                     if NRState.shared.accountPubkeys.contains(event.publicKey) {
-                        let dmState = DMState(context: context)
-                        dmState.accountPubkey = event.publicKey
-                        dmState.contactPubkey = contactPubkey
+                        let dmState = CloudDMState(context: context)
+                        dmState.accountPubkey_ = event.publicKey
+                        dmState.contactPubkey_ = contactPubkey
                         dmState.accepted = true
-                        dmState.markedReadAt = savedEvent.date
+                        dmState.markedReadAt_ = savedEvent.date
                         // Let DirectMessageViewModel handle view updates
                         DirectMessageViewModel.default.newMessage(dmState)
                     }
                     
                     // if we are receiver
                     else if NRState.shared.accountPubkeys.contains(contactPubkey) {
-                        let dmState = DMState(context: context)
-                        dmState.accountPubkey = contactPubkey
-                        dmState.contactPubkey = event.publicKey
+                        let dmState = CloudDMState(context: context)
+                        dmState.accountPubkey_ = contactPubkey
+                        dmState.contactPubkey_ = event.publicKey
                         dmState.accepted = false
                         // Let DirectMessageViewModel handle view updates
                         DirectMessageViewModel.default.newMessage(dmState)

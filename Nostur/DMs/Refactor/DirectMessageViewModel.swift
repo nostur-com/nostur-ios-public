@@ -134,13 +134,8 @@ class DirectMessageViewModel: ObservableObject {
         objectWillChange.send()
         for conv in conversationRows {
             conv.unread = 0
-        }
-        bg().perform {
-            for conv in self.conversationRows {
-                conv.dmState.markedReadAt = Date.now
-                conv.dmState.didUpdate.send()
-            }
-            DataProvider.shared().bgSave()
+            conv.dmState.markedReadAt_ = Date.now
+            conv.dmState.didUpdate.send()
         }
     }
     
@@ -148,13 +143,8 @@ class DirectMessageViewModel: ObservableObject {
         objectWillChange.send()
         for conv in requestRows {
             conv.unread = 0
-        }
-        bg().perform {
-            for conv in self.requestRows {
-                conv.dmState.markedReadAt = Date.now
-                conv.dmState.didUpdate.send()
-            }
-            DataProvider.shared().bgSave()
+            conv.dmState.markedReadAt_ = Date.now
+            conv.dmState.didUpdate.send()
         }
     }
     
@@ -173,21 +163,28 @@ class DirectMessageViewModel: ObservableObject {
         guard let pubkey = self.pubkey else { return }
         let blockedPubkeys = blocks()
         
-        bg().perform {
-            var lastNotificationReceivedAt:Date? = nil
+        let conversations = dmStates
+            .filter { !$0.isHidden && $0.accountPubkey_ == pubkey }
+            .filter { $0.accepted && !blockedPubkeys.contains($0.contactPubkey_ ?? "HMMICECREAMSOGOOD") }
+        
+        var lastNotificationReceivedAt:Date? = nil
+        
+        var conversationRows = [Conversation]()
+        
+        
+        for conv in conversations {
+            guard let accountPubkey = conv.accountPubkey_, let contactPubkey = conv.contactPubkey_
+            else {
+                L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
+                continue
+            }
+            let convMarkedReadAt = conv.markedReadAt_
+            let accepted = conv.accepted
             
-            let conversations = DMState.fetchByAccount(pubkey, context: bg())
-                .filter { $0.accepted && !blockedPubkeys.contains($0.contactPubkey ?? "HMMICECREAMSOGOOD") }
-            
-            var conversationRows = [Conversation]()
-            
-            for conv in conversations {
-                guard let accountPubkey = conv.accountPubkey, let contactPubkey = conv.contactPubkey
-                else {
-                    L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
-                    continue
-                }
+            bg().perform {
                 let mostRecentSent = Event.fetchMostRecentEventBy(pubkey: accountPubkey, andOtherPubkey: contactPubkey, andKind: 4, context: bg())
+                
+                let unreadSince = (convMarkedReadAt ?? (mostRecentSent?.date ?? Date(timeIntervalSince1970: 0)))
                 
                 // Not just most recent, but all so we can also count unread
                 let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKind: 4, context: bg())
@@ -213,8 +210,6 @@ class DirectMessageViewModel: ObservableObject {
                 
                 let lastMessageByOwnAccount = mostRecent?.pubkey == pubkey
                 
-                let unreadSince = (conv.markedReadAt ?? (mostRecentSent?.date ?? Date(timeIntervalSince1970: 0)))
-                
                 let unread = lastMessageByOwnAccount
                 ? 0
                 : allReceived.filter { $0.date > unreadSince }.count
@@ -225,12 +220,15 @@ class DirectMessageViewModel: ObservableObject {
                     nrContact = NRContact(contact: contact, following: isFollowing(contactPubkey))
                 }
                 
-                guard let mostRecent = mostRecent else { continue }
+                guard let mostRecent = mostRecent else { return }
                 
                 conversationRows
-                    .append(Conversation(contactPubkey: contactPubkey, nrContact: nrContact, mostRecentMessage: mostRecent.noteText, mostRecentDate: mostRecent.date, mostRecentEvent: mostRecent, unread: unread, dmState: conv))
+                    .append(Conversation(contactPubkey: contactPubkey, nrContact: nrContact, mostRecentMessage: mostRecent.noteText, mostRecentDate: mostRecent.date, mostRecentEvent: mostRecent, unread: unread, dmState: conv, accepted: accepted))
             }
-            
+        }
+        
+        // Wrap in bg().perform so it happens after the last bg() loop above
+        bg().perform {
             DispatchQueue.main.async {
                 
                 if let lastNotificationReceivedAt, self.lastNotificationReceivedAt == nil { // set most recent if we dont have it set yet
@@ -249,27 +247,31 @@ class DirectMessageViewModel: ObservableObject {
     private func loadMessageRequests() {
         guard let pubkey = self.pubkey else { return }
         let blockedPubkeys = blocks()
-        bg().perform {
+        
+        let conversations = dmStates
+            .filter { !$0.isHidden && $0.accountPubkey_ == pubkey }
+            .filter { !$0.accepted && !blockedPubkeys.contains($0.contactPubkey_ ?? "HMMICECREAMSOGOOD") }
+            .filter { dmState in
+                if (!WOT_FILTER_ENABLED()) { return true }
+                guard let contactPubkey = dmState.contactPubkey_ else { return false }
+                return WebOfTrust.shared.isAllowed(contactPubkey)
+            }
             
-            var lastNotificationReceivedAt:Date? = nil
+        var lastNotificationReceivedAt:Date? = nil
+
+        var conversationRows = [Conversation]()
+        
+        for conv in conversations {
+            guard let contactPubkey = conv.contactPubkey_
+            else {
+                L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
+                continue
+            }
             
-            let conversations = DMState.fetchByAccount(pubkey, context: bg())
-                .filter { !$0.accepted && !blockedPubkeys.contains($0.contactPubkey ?? "HMMICECREAMSOGOOD") }
-                .filter { dmState in
-                    if (!WOT_FILTER_ENABLED()) { return true }
-                    guard let contactPubkey = dmState.contactPubkey else { return false }
-                    return WebOfTrust.shared.isAllowed(contactPubkey)
-                }
+            let unreadSince = conv.markedReadAt_ ?? Date(timeIntervalSince1970: 0)
+            let accepted = conv.accepted
             
-            var conversationRows = [Conversation]()
-            
-            for conv in conversations {
-                guard let contactPubkey = conv.contactPubkey
-                else {
-                    L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
-                    continue
-                }
-                
+            bg().perform {
                 // Not just most recent, but all so we can also count unread
                 let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKind: 4, context: bg())
                     .filter { $0.pTags().contains(where: { $0 == pubkey }) }
@@ -286,8 +288,6 @@ class DirectMessageViewModel: ObservableObject {
                 // Unread count is based on (in the following fallback order):
                 // - Manual markedReadAt date
                 // - Since beginning of time (all)
-                                        
-                let unreadSince = conv.markedReadAt ?? Date(timeIntervalSince1970: 0)
                 
                 let unread = allReceived.filter { $0.date > unreadSince }.count
                 
@@ -297,12 +297,15 @@ class DirectMessageViewModel: ObservableObject {
                     nrContact = NRContact(contact: contact, following: isFollowing(contactPubkey))
                 }
                 
-                guard let mostRecent = mostRecent else { continue }
+                guard let mostRecent = mostRecent else { return }
                 
                 conversationRows
-                    .append(Conversation(contactPubkey: contactPubkey, nrContact: nrContact, mostRecentMessage: mostRecent.noteText, mostRecentDate: mostRecent.date, mostRecentEvent: mostRecent, unread: unread, dmState: conv))
+                    .append(Conversation(contactPubkey: contactPubkey, nrContact: nrContact, mostRecentMessage: mostRecent.noteText, mostRecentDate: mostRecent.date, mostRecentEvent: mostRecent, unread: unread, dmState: conv, accepted: accepted))
             }
+        }
 
+        // Wrap in bg().perform so it happens after the last bg() loop above
+        bg().perform {
             DispatchQueue.main.async {
                 
                 if let lastNotificationReceivedAt, self.lastNotificationReceivedAt == nil { // set most recent if we dont have it set yet
@@ -322,24 +325,28 @@ class DirectMessageViewModel: ObservableObject {
         guard WOT_FILTER_ENABLED() else { return }
         guard let pubkey = self.pubkey else { return }
         let blockedPubkeys = blocks()
-        bg().perform {
-
-            let conversations = DMState.fetchByAccount(pubkey, context: bg())
-                .filter { !$0.accepted && !blockedPubkeys.contains($0.contactPubkey ?? "HMMICECREAMSOGOOD") }
-                .filter { dmState in
-                    guard let contactPubkey = dmState.contactPubkey else { return false }
-                    return !WebOfTrust.shared.isAllowed(contactPubkey)
-                }
+        
+        let conversations = dmStates
+            .filter { !$0.isHidden && $0.accountPubkey_ == pubkey }
+            .filter { !$0.accepted && !blockedPubkeys.contains($0.contactPubkey_ ?? "HMMICECREAMSOGOOD") }
+            .filter { dmState in
+                guard let contactPubkey = dmState.contactPubkey_ else { return false }
+                return !WebOfTrust.shared.isAllowed(contactPubkey)
+            }
+        
+        var conversationRows = [Conversation]()
+        
+        for conv in conversations {
+            guard let contactPubkey = conv.contactPubkey_
+            else {
+                L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
+                continue
+            }
             
-            var conversationRows = [Conversation]()
+            let unreadSince = conv.markedReadAt_ ?? Date(timeIntervalSince1970: 0)
+            let accepted = conv.accepted
             
-            for conv in conversations {
-                guard let contactPubkey = conv.contactPubkey
-                else {
-                    L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
-                    continue
-                }
-                
+            bg().perform {
                 // Not just most recent, but all so we can also count unread
                 let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKind: 4, context: bg())
                     .filter { $0.pTags().contains(where: { $0 == pubkey }) }
@@ -349,8 +356,6 @@ class DirectMessageViewModel: ObservableObject {
                 // Unread count is based on (in the following fallback order):
                 // - Manual markedReadAt date
                 // - Since beginning of time (all)
-                                        
-                let unreadSince = conv.markedReadAt ?? Date(timeIntervalSince1970: 0)
                 
                 let unread = allReceived.filter { $0.date > unreadSince }.count
                 
@@ -360,20 +365,36 @@ class DirectMessageViewModel: ObservableObject {
                     nrContact = NRContact(contact: contact, following: isFollowing(contactPubkey))
                 }
                 
-                guard let mostRecent = mostRecent else { continue }
+                guard let mostRecent = mostRecent else { return }
                 
                 conversationRows
-                    .append(Conversation(contactPubkey: contactPubkey, nrContact: nrContact, mostRecentMessage: mostRecent.noteText, mostRecentDate: mostRecent.date, mostRecentEvent: mostRecent, unread: unread, dmState: conv))
+                    .append(Conversation(contactPubkey: contactPubkey, nrContact: nrContact, mostRecentMessage: mostRecent.noteText, mostRecentDate: mostRecent.date, mostRecentEvent: mostRecent, unread: unread, dmState: conv, accepted: accepted))
             }
+        }
 
+        // Wrap in bg().perform so it happens after the last bg() loop above
+        bg().perform {
             DispatchQueue.main.async {
                 self.requestRowsNotWoT = conversationRows
                     .sorted(by: { $0.mostRecentDate > $1.mostRecentDate })
+                    .sorted(by: { $0.dmState.isPinned && !$1.dmState.isPinned })
+                
+                if self.showNotWoT {
+                    self.requestRows = self.requestRows + self.requestRowsNotWoT
+                }
             }
         }
     }
     
-    public func newMessage(_ dmState:DMState) {
+    public func unhideAll() {
+        for dmState in dmStates {
+            if dmState.isHidden {
+                dmState.isHidden = false
+            }
+        }
+    }
+    
+    public func newMessage(_ dmState: CloudDMState) {
         reloadAccepted()
         reloadMessageRequests()
         reloadMessageRequestsNotWot()

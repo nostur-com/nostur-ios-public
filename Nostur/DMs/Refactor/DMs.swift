@@ -16,8 +16,7 @@ struct DMs: View {
     @State private var tab = "Accepted"
     
     public let pubkey:String
-    @EnvironmentObject private var vm:DirectMessageViewModel
-    
+    @EnvironmentObject private var vm:DirectMessageViewModel    
     
     @State private var showingNewDM = false
     @State private var showDMToggles = false
@@ -152,10 +151,8 @@ struct DMs: View {
                         .onAppear {
                             DirectMessageViewModel.default.objectWillChange.send()
                             conv.unread = 0
-                            bg().perform {
-                                conv.dmState.markedReadAt = Date.now
-                                conv.dmState.didUpdate.send()
-                            }
+                            conv.dmState.markedReadAt_ = Date.now
+                            conv.dmState.didUpdate.send()
                         }
                 }
             }
