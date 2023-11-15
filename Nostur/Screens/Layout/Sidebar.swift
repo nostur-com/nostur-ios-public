@@ -23,6 +23,10 @@ struct SideBar: View {
     @State private var showAnySigner = false
     @State private var sidebarOffset:CGFloat = -NOSTUR_SIDEBAR_WIDTH
     
+    static let ICON_WIDTH = 30.0
+    static let MENU_TEXT_WIDTH = NOSTUR_SIDEBAR_WIDTH - 70.0
+    static let BUTTON_VPADDING = 12.0
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -67,8 +71,9 @@ struct SideBar: View {
                     .offset(x: -10, y: 37)
                 }
                 .zIndex(30)
-            List {
-                Group {
+            
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
                     HStack(alignment: .bottom) {
                         VStack(alignment: .leading) {
                             Text("\(account.name)").font(.headline)
@@ -77,7 +82,8 @@ struct SideBar: View {
                         Spacer()
                         NWCWalletBalance()
                     }
-                    
+                    .padding(.bottom, 20)
+                     
                     Button {
                         if IS_IPAD {
                             sm.showSidebar = false
@@ -90,29 +96,59 @@ struct SideBar: View {
                             sm.showSidebar = false
                         }
                     } label: {
-                        Label(String(localized:"Profile", comment:"Side bar navigation button"), systemImage: "person")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(themes.theme.accent)
-                            .contentShape(Rectangle())
+                        Label(
+                            title: { 
+                                Text("Profile", comment: "Side bar navigation button")
+                                    .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                            },
+                            icon: { Image(systemName: "person")
+                                .frame(width: Self.ICON_WIDTH) }
+                        )
+                        .padding(.vertical, Self.BUTTON_VPADDING)
+                        .contentShape(Rectangle())
+                        .overlay(alignment: .bottom) {
+                            themes.theme.lineColor.opacity(0.2)
+                                .frame(height: 1)
+                        }
                     }
                     Button {
                         if selectedTab != "Main" { selectedTab = "Main" }
                         navigateToOnMain(ViewPath.Lists)
                         sm.showSidebar = false
                     } label: {
-                        Label(String(localized:"Feeds", comment:"Side bar navigation button"), systemImage: "list.bullet.rectangle")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(themes.theme.accent)
-                            .contentShape(Rectangle())
+                        Label(
+                            title: { 
+                                Text("Feeds", comment: "Side bar navigation button")
+                                    .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                            },
+                            icon: { Image(systemName: "list.bullet.rectangle")
+                                .frame(width: Self.ICON_WIDTH) }
+                        )
+                        .padding(.vertical, Self.BUTTON_VPADDING)
+                        .contentShape(Rectangle())
+                        .overlay(alignment: .bottom) {
+                            themes.theme.lineColor.opacity(0.2)
+                                .frame(height: 1)
+                        }
                     }
                     Button {
                         selectedTab = "Bookmarks"
                         sm.showSidebar = false
                     } label: {
-                        Label(String(localized:"Bookmarks", comment:"Side bar navigation button"), systemImage: "bookmark")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(themes.theme.accent)
-                            .contentShape(Rectangle())
+                        Label(
+                            title: {
+                                Text("Bookmarks", comment: "Side bar navigation button")
+                                    .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                            },
+                            icon: { Image(systemName: "bookmark")
+                                .frame(width: Self.ICON_WIDTH) }
+                        )
+                        .padding(.vertical, Self.BUTTON_VPADDING)
+                        .contentShape(Rectangle())
+                        .overlay(alignment: .bottom) {
+                            themes.theme.lineColor.opacity(0.2)
+                                .frame(height: 1)
+                        }
                     }
                     if !account.isNC {
                         Button {
@@ -120,10 +156,20 @@ struct SideBar: View {
                             navigateToOnMain(ViewPath.Badges)
                             sm.showSidebar = false
                         } label: {
-                            Label(String(localized:"Badges", comment:"Side bar navigation button"), systemImage: "medal")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .foregroundColor(themes.theme.accent)
-                                .contentShape(Rectangle())
+                            Label(
+                                title: {
+                                    Text("Badges", comment: "Side bar navigation button")
+                                        .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                                },
+                                icon: { Image(systemName: "medal")
+                                    .frame(width: Self.ICON_WIDTH) }
+                            )
+                            .padding(.vertical, Self.BUTTON_VPADDING)
+                            .contentShape(Rectangle())
+                            .overlay(alignment: .bottom) {
+                                themes.theme.lineColor.opacity(0.2)
+                                    .frame(height: 1)
+                            }
                         }
                     }
                     Button {
@@ -131,29 +177,59 @@ struct SideBar: View {
                         navigateToOnMain(ViewPath.Settings)
                         sm.showSidebar = false
                     } label: {
-                        Label(String(localized:"Settings", comment:"Side bar navigation button"), systemImage: "gearshape")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(themes.theme.accent)
-                            .contentShape(Rectangle())
+                        Label(
+                            title: {
+                                Text("Settings", comment: "Side bar navigation button")
+                                    .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                            },
+                            icon: { Image(systemName: "gearshape")
+                                .frame(width: Self.ICON_WIDTH) }
+                        )
+                        .padding(.vertical, Self.BUTTON_VPADDING)
+                        .contentShape(Rectangle())
+                        .overlay(alignment: .bottom) {
+                            themes.theme.lineColor.opacity(0.2)
+                                .frame(height: 1)
+                        }
                     }
                     Button {
                         if selectedTab != "Main" { selectedTab = "Main" }
                         navigateToOnMain(ViewPath.Blocklist)
                         sm.showSidebar = false
                     } label: {
-                        Label(String(localized:"Block list", comment:"Side bar navigation button"), systemImage: "person.badge.minus")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(themes.theme.accent)
-                            .contentShape(Rectangle())
+                        Label(
+                            title: {
+                                Text("Block list", comment: "Side bar navigation button")
+                                    .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                            },
+                            icon: { Image(systemName: "person.badge.minus")
+                                .frame(width: Self.ICON_WIDTH) }
+                        )
+                        .padding(.vertical, Self.BUTTON_VPADDING)
+                        .contentShape(Rectangle())
+                        .overlay(alignment: .bottom) {
+                            themes.theme.lineColor.opacity(0.2)
+                                .frame(height: 1)
+                        }
                     }
                     if !account.isNC {
                         Button {
                             showAnySigner = true
                         } label: {
-                            Label(String(localized:"Signer", comment:"Side bar navigation button"), systemImage: "signature")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .foregroundColor(themes.theme.accent)
-                                .contentShape(Rectangle())
+                            Label(
+                                title: {
+                                    Text("Signer", comment: "Side bar navigation button")
+                                        .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                                },
+                                icon: { Image(systemName: "signature")
+                                    .frame(width: Self.ICON_WIDTH) }
+                            )
+                            .padding(.vertical, Self.BUTTON_VPADDING)
+                            .contentShape(Rectangle())
+                            .overlay(alignment: .bottom) {
+                                themes.theme.lineColor.opacity(0.2)
+                                    .frame(height: 1)
+                            }
                         }
                     }
                     //                Button {} label: {
@@ -162,18 +238,21 @@ struct SideBar: View {
                     Button {
                         logoutAccount = account
                     } label: {
-                        Label(String(localized:"Log out", comment:"Side bar navigation button"), systemImage: "rectangle.portrait.and.arrow.right")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(themes.theme.accent)
-                            .contentShape(Rectangle())
+                        Label(
+                            title: {
+                                Text("Log out", comment: "Side bar navigation button")
+                                    .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                            },
+                            icon: { Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .frame(width: Self.ICON_WIDTH) }
+                        )
+                        .padding(.vertical, Self.BUTTON_VPADDING)
+                        .contentShape(Rectangle())
                     }
                 }
-                .listRowBackground(themes.theme.listBackground)
+                .padding(10)
             }
-            .scrollContentBackground(.hidden)
-            .background(themes.theme.listBackground)
             .zIndex(20)
-            .listStyle(.plain)
             .padding(.top, 45)
             Spacer()
         }
