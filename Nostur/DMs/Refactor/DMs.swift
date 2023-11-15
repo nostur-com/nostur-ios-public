@@ -23,6 +23,9 @@ struct DMs: View {
     @State private var preloadNewDMInfo:(String, Contact)? = nil // pubkey and Contact
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         NavigationStack(path: $navPath) {
             VStack {
                 HStack {
