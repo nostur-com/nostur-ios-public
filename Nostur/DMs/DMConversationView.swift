@@ -218,8 +218,8 @@ struct DMConversationView: View {
                                                     .cornerRadius(13)
                                             }
                                             
-                                            Text("\n**\(contact.followingPubkeys.count)** Following", comment: "Text that shows how many people this account follows")
-                                            
+                                            FollowedBy(pubkey: contactPubkey, alignment: .center)
+                                                .padding(.vertical, 15)
                                             
                                             HStack {
                                                 Menu {
