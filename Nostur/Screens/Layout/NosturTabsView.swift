@@ -33,6 +33,7 @@ struct NosturTabsView: View {
                         guard size.width > 0 else { return }
                         dim.listWidth = size.width
                     }
+                NoInternetConnectionBanner()
                 TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
                     tabTapped(newTab, oldTab: oldTab)
                 }) {
@@ -68,10 +69,10 @@ struct NosturTabsView: View {
                     .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
                 }
                 .withSheets()
+                .edgesIgnoringSafeArea(.all)
             }
             .frame(maxWidth: 600)
             .environmentObject(dim)
-            .edgesIgnoringSafeArea(.all)
             if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                 DetailPane()
             }
@@ -156,5 +157,24 @@ extension Binding {
             wrappedValue = newValue
             closure(oldValue, newValue)
         })
+    }
+}
+
+
+struct NoInternetConnectionBanner: View {
+    @EnvironmentObject private var networkMonitor:NetworkMonitor
+    
+    var body: some View {
+        if networkMonitor.isDisconnected {
+            Text("No internet connection")
+                .font(.caption)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(5)
+                .background(.red)
+        }
+        else {
+            EmptyView()
+        }
     }
 }

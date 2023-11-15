@@ -41,6 +41,7 @@ struct AppView: View {
     @State private var ot:NewOnboardingTracker = .shared
     @State private var dd:Deduplicator = .shared
     @State private var vmc:ViewModelCache = .shared
+    @State private var networkMonitor = NetworkMonitor()
     
 //    @EnvironmentObject private var themes:Themes
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
@@ -89,6 +90,7 @@ struct AppView: View {
             else if !didAcceptTerms || isOnboarding || (accounts.isEmpty && noAccounts) || ns.activeAccountPublicKey.isEmpty {
                 Onboarding()
                     .environmentObject(ns)
+                    .environmentObject(networkMonitor)
                     .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                     .onAppear {
                         if ns.activeAccountPublicKey.isEmpty {
@@ -109,6 +111,7 @@ struct AppView: View {
                         .environmentObject(ns)
                         .environmentObject(dm)
                         .environmentObject(nvm)
+                        .environmentObject(networkMonitor)
                         .environmentObject(loggedInAccount)
                         .onReceive(priceLoop) { time in
 //                            if (!isViewDisplayed) { return }
