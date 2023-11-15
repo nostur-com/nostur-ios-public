@@ -9,7 +9,9 @@ import SwiftUI
 import Collections
 
 struct FollowedBy: View {
-    public var pubkey:Pubkey
+    
+    public var pubkey:Pubkey? = nil
+    public var alignment: HorizontalAlignment = .leading
     
     @State private var commonFollowerPFPs:[(Pubkey, URL)] = []
     
@@ -22,30 +24,26 @@ struct FollowedBy: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: alignment) {
             if !commonFollowerPFPs.isEmpty {
                 Text("Followed by").font(.caption)
-                ZStack(alignment:.leading) {
+                HStack(spacing: 2) {
                     ForEach(firstRow.indices, id:\.self) { index in
                         MiniPFP(pictureUrl: commonFollowerPFPs[index].1)
                             .onTapGesture {
                                 navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
                             }
                             .id(index)
-                            .zIndex(-Double(index))
-                            .offset(x:Double(0 + (22*index)))
                     }
                 }
                 
-                ZStack(alignment:.leading) {
+                HStack(spacing: 2) {
                     ForEach(secondRow.indices, id:\.self) { index in
                         MiniPFP(pictureUrl: commonFollowerPFPs[index].1)
                             .onTapGesture {
                                 navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
                             }
                             .id(index)
-                            .zIndex(-Double(index))
-                            .offset(x:Double(0 + (22*(index-15))))
                     }
                 }
             }
@@ -57,7 +55,9 @@ struct FollowedBy: View {
             }
         }
         .task {
-            guard let followingPFPs = NRState.shared.loggedInAccount?.followingPFPs else { return }
+            guard let pubkey, let followingPFPs = NRState.shared.loggedInAccount?.followingPFPs else {
+                return
+            }
             commonFollowerPFPs = commonFollowers(for: pubkey).compactMap({ pubkey in
                 if let url = followingPFPs[pubkey] {
                     return (pubkey, url)
@@ -83,7 +83,6 @@ func commonFollowers(for pubkey: Pubkey) -> [Pubkey] {
 }
 
 
-
 //#Preview {
-//    FollowedBy(pubkey: )
+//    FollowedBy()
 //}
