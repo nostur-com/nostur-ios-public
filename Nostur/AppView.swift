@@ -25,8 +25,7 @@ struct AppView: View {
     @State private var lvmManager:LVMManager = .shared
     @State private var importer:Importer = .shared
     @State private var queuedFetcher:QueuedFetcher = .shared
-    @State private var sp:SocketPool = .shared
-    @State private var esp:EphemeralSocketPool = .shared
+    @State private var cp:ConnectionPool = .shared
     @State private var mp:MessageParser = .shared
     @State private var zpvq:ZapperPubkeyVerificationQueue = .shared
     @State private var nip05verifier:NIP05Verifier = .shared
@@ -135,14 +134,14 @@ struct AppView: View {
                             case .active:
                                 L.og.notice("scenePhase active")
                                 sendNotification(.scenePhaseActive)
-                                SocketPool.shared.connectAll()
+                                cp.connectAll()
                                 lvmManager.restoreSubscriptions()
                                 NotificationsViewModel.shared.checkRelays()
                             case .background:
                                 L.og.notice("scenePhase background")
                                 sendNotification(.scenePhaseBackground)
                                 if !IS_CATALYST {
-                                    SocketPool.shared.disconnectAll()
+                                    cp.disconnectAll()
                                     lvmManager.stopSubscriptions()
                                 }
                                 saveState()
@@ -215,20 +214,28 @@ struct AppView: View {
     
     private func startNosturing() {
         UserDefaults.standard.register(defaults: ["selected_subtab" : "Following"])
-        
+        let viewContext = DataProvider.shared().container.viewContext
         // Daily cleanup.
         if (firstTimeCompleted) {
-            Maintenance.upgradeDatabase(context:DataProvider.shared().container.viewContext)
+            Maintenance.upgradeDatabase(context: viewContext)
         }
         Importer.shared.preloadExistingIdsCache()
         
         if (!firstTimeCompleted) {
-            Maintenance.ensureBootstrapRelaysExist(context: DataProvider.shared().container.viewContext)
+            Maintenance.ensureBootstrapRelaysExist(context: viewContext)
         }
         
         // Setup connections
-        SocketPool.shared.setup(ss.activeNWCconnectionId)
-        if !ss.activeNWCconnectionId.isEmpty {
+        let relays:[RelayData] = Relay.fetchAll(context: viewContext).map { $0.toStruct() }
+        
+        for relay in relays {
+            _ = cp.addConnection(relay)
+        }
+        cp.connectAll()
+        
+        if !ss.activeNWCconnectionId.isEmpty, let nwc = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: DataProvider.shared().viewContext) {
+            let addedConnection = cp.addNWCConnection(connectionId: nwc.connectionId, url: nwc.relay)
+            addedConnection.connect()
             bg().perform {
                 if let nwcConnection = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: bg()) {
                     NWCRequestQueue.shared.nwcConnection = nwcConnection

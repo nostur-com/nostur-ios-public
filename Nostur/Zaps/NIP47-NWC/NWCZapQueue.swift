@@ -213,8 +213,8 @@ class Zap {
     
     private func fetchInvoice() {
         guard let callbackUrl = self.callbackUrl else { state = .ERROR; return }
-        let relays = SocketPool.shared.sockets.values
-            .filter { $0.write && !$0.isNWC }
+        let relays = ConnectionPool.shared.connections.values
+            .filter { $0.relayData.write && !$0.isNWC }
             .map { $0.url }
         
         if (self.supportsZap) {

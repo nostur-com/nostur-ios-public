@@ -524,7 +524,7 @@ func fasterShort(_ pubkeys:[String], prefixLength:Int = 10) -> String {
 //        since: 0
 //    ))
 func req(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> = []) {
-    SocketPool.shared.sendMessage(
+    ConnectionPool.shared.sendMessage(
         ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm),
         subscriptionId: activeSubscriptionId,
         relays: relays
@@ -532,10 +532,11 @@ func req(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> 
 }
 
 func reqP(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> = []) {
-    SocketPool.shared.sendMessageAfterPing(
+    ConnectionPool.shared.sendMessage(
         ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm),
         subscriptionId: activeSubscriptionId,
-        relays: relays
+        relays: relays,
+        afterPing: true
     )
 }
 

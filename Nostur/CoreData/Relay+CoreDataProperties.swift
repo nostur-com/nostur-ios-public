@@ -66,6 +66,10 @@ extension Relay {
 
 extension Relay : Identifiable {
     
+    static func fetchAll(context: NSManagedObjectContext) -> [Relay] {
+        let fr = Relay.fetchRequest()
+        return (try? context.fetch(fr)) ?? []
+    }
 }
 
 
@@ -76,4 +80,16 @@ public struct RelayData: Identifiable, Hashable, Equatable {
     public var url: String
     public var write: Bool
     public var excludedPubkeys:Set<String>
+    
+    mutating func setRead(_ value:Bool) {
+        self.read = value
+    }
+    
+    mutating func setWrite(_ value:Bool) {
+        self.write = value
+    }
+    
+    mutating func setExcludedPubkeys(_ value:Set<String>) {
+        self.excludedPubkeys = value
+    }
 }

@@ -11,7 +11,6 @@ import NostrEssentials
 // Copy pasta from NoteReactions and adjusted a bit. ReactionRow replaced with ProfileRows
 struct NoteReposts: View {
     @EnvironmentObject private var themes:Themes
-    let sp:SocketPool = .shared
     
     let id:String
     

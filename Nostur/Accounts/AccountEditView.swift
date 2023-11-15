@@ -14,7 +14,6 @@ import CryptoKit
 
 struct AccountEditView: View {
     
-    private var sp:SocketPool = .shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     private let up:Unpublisher = .shared
@@ -221,7 +220,7 @@ struct AccountEditView: View {
             
             if (account.privateKey == nil) {
                 let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: account.publicKey))
-                sp.sendMessage(message)
+                ConnectionPool.shared.sendMessage(message)
             }
         }
     }
@@ -298,7 +297,7 @@ extension AccountEditView {
         
         let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey))
         
-        sp.sendMessage(message)
+        ConnectionPool.shared.sendMessage(message)
     }
     
     private func loadFollowers(account: CloudAccount) {
@@ -325,7 +324,7 @@ extension AccountEditView {
     private func updateContacts() { // move this method to somewhere more global maybe
         let pubkeys = Array(account.followingPubkeys)
         if (!pubkeys.isEmpty) {
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
+            ConnectionPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
         }
     }
 }

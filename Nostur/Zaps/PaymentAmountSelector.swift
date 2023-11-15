@@ -22,8 +22,8 @@ struct PaymentAmountSelector: View {
         guard let anyLud = paymentInfo.contact?.anyLud, anyLud == true else { return }
         let pubkey = paymentInfo.contact!.pubkey
         let eventId = paymentInfo.nrPost?.id ?? nil
-        let relays = SocketPool.shared.sockets.values
-            .filter { $0.write }
+        let relays = ConnectionPool.shared.connections.values
+            .filter { $0.relayData.write }
             .map { $0.url }
         let isNC = account.isNC
         

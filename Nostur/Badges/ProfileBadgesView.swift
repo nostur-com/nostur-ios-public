@@ -56,13 +56,13 @@ struct ProfileBadgesContainer: View {
                     if (!allEs.isEmpty) {
                         let reqE = RequestMessage.getEvents(ids: allEs)
                         let messageE = ClientMessage(type: .REQ, message: reqE)
-                        SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
+                        ConnectionPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
                     }
                     
                     if (!filters.isEmpty) {
                         let reqD = RequestMessage.getBadgeDefinitions(filters: Array(filters.prefix(10)))
                         let messageD = ClientMessage(type: .REQ, message: reqD)
-                        SocketPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
+                        ConnectionPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
                     }
                 }
                 .onChange(of: profileBadgesSorted.first) { newValue in
@@ -84,14 +84,14 @@ struct ProfileBadgesContainer: View {
                         if (!allEs.isEmpty) {
                             let reqE = RequestMessage.getEvents(ids: allEs)
                             let messageE = ClientMessage(type: .REQ, message: reqE)
-                            SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
+                            ConnectionPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
                             
                         }
                         
                         if (!filters.isEmpty) {
                             let reqD = RequestMessage.getBadgeDefinitions(filters: filters)
                             let messageD = ClientMessage(type: .REQ, message: reqD)
-                            SocketPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
+                            ConnectionPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
                         }
                         refreshHack.toggle()
                     }

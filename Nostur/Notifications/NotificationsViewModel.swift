@@ -723,7 +723,7 @@ fileprivate class NotificationFetchRequests {
 
 class OfflinePosts {
     static func checkForOfflinePosts(_ maxAgo:TimeInterval = 3600 * 24 * 3) { // 3 days
-        guard SocketPool.shared.anyConnected else { return }
+        guard ConnectionPool.shared.anyConnected else { return }
         guard let account = account() else { return }
         let pubkey = account.publicKey
         let xDaysAgo = Date.now.addingTimeInterval(-(maxAgo))

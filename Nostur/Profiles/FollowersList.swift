@@ -10,7 +10,6 @@ import SwiftUI
 struct FollowersList: View {
     
     var pubkey:String // Pubkey of whose followers to view
-    let sp:SocketPool = .shared
     
     @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false), animation: .none)
     var clEvents:FetchedResults<Event>

@@ -52,16 +52,14 @@ struct AlbyNWCConnectSheet: View {
                         let ctx = bg()
                         ctx.perform {
                             var removeKey:String?
-                            SocketPool.shared.sockets.values.forEach { managedClient in
-                                if managedClient.isNWC {
-                                    managedClient.disconnect()
-                                    removeKey = managedClient.relayId
+                            ConnectionPool.shared.connections.values.forEach { connection in
+                                if connection.isNWC {
+                                    connection.disconnect()
+                                    removeKey = connection.url
                                 }
                             }
                             if let removeKey {
-                                DispatchQueue.main.async {
-                                    SocketPool.shared.removeSocket(removeKey)
-                                }
+                                ConnectionPool.shared.removeConnection(removeKey)
                             }
                             if !ss.activeNWCconnectionId.isEmpty {
                                 NWCConnection.delete(ss.activeNWCconnectionId, context: ctx)
@@ -146,10 +144,7 @@ struct AlbyNWCConnectSheet: View {
                 let relay = nwcConnection.relay
                 
                 L.og.info("⚡️ Adding NWC connection")
-                DispatchQueue.main.async {
-                    _ = SocketPool.shared.addNWCSocket(connectionId:connectionId, url: relay)
-                }
-                
+                ConnectionPool.shared.addNWCConnection(connectionId: connectionId, url: relay)
                 NWCRequestQueue.shared.nwcConnection = nwcConnection
                 Importer.shared.nwcConnection = nwcConnection
                 

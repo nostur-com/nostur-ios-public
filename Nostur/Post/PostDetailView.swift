@@ -139,7 +139,6 @@ let THREAD_LINE_OFFSET = 24.0
 // so it recursively renders up to the root
 struct PostAndParent: View {
     @EnvironmentObject private var themes:Themes
-    private var sp:SocketPool = .shared
     @ObservedObject private var nrPost:NRPost
     @EnvironmentObject private var dim:DIMENSIONS
     
@@ -253,7 +252,7 @@ struct PostAndParent: View {
                         // Fetch all related (e and p.kind=0)
                         // (the events and contacts mentioned in this DETAIL NOTE.
                         if let message = RequestMessage.getFastTags(nrPost.fastTags) {
-                            sp.sendMessage(ClientMessage(type: .REQ, message: message))
+                            ConnectionPool.shared.sendMessage(ClientMessage(type: .REQ, message: message))
                         }
                         
                         // Fetch all that reference this detail note (Replies, zaps, reactions)

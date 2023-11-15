@@ -165,7 +165,7 @@ class LoggedInAccount: ObservableObject {
         self.viewFollowingPublicKeys = follows
         
         // Remove currectly active "Following" subscriptions from connected sockets
-        SocketPool.shared.removeActiveAccountSubscriptions()
+        ConnectionPool.shared.removeActiveAccountSubscriptions()
         
         self.bg.perform {
             guard let bgAccount = try? self.bg.existingObject(with: self.account.objectID) as? CloudAccount else {

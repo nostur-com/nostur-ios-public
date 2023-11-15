@@ -96,7 +96,7 @@ extension Search {
                 // If we don't have the event after X seconds, fetch from relay hint
                 if Contact.fetchByPubkey(pubkey, context: bg()) == nil {
                     if let relay = identifier.relays.first {
-                        EphemeralSocketPool.shared.sendMessage(RM.getUserMetadata(pubkey: pubkey), relay: relay)
+                        ConnectionPool.shared.sendEphemeralMessage(RM.getUserMetadata(pubkey: pubkey), relay: relay)
                     }
                 }
             }
@@ -163,15 +163,15 @@ extension Search {
                                 
                                 guard let relay = naddr.relays.first else { return }
                                     
-                                EphemeralSocketPool
+                                ConnectionPool
                                     .shared
-                                    .sendMessage(
+                                    .sendEphemeralMessage(
                                         RM.getArticle(
-                                            pubkey: pubkey,
-                                            kind: Int(kind),
-                                            definition: definition,
-                                            subscriptionId: taskId
-                                        ),
+                                                pubkey: pubkey,
+                                                kind: Int(kind),
+                                                definition: definition,
+                                                subscriptionId: taskId
+                                        ), 
                                         relay: relay
                                     )
                             }
@@ -234,9 +234,7 @@ extension Search {
                 else { return }
                 
                 guard let relay = identifier.relays.first else { return }
-                
-                EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: noteHex, subscriptionId:searchTask1.subscriptionId), relay: relay)
-                
+                ConnectionPool.shared.sendEphemeralMessage(RM.getEvent(id: noteHex, subscriptionId:searchTask1.subscriptionId), relay: relay)
             }
         }
     }
