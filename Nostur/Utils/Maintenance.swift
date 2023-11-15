@@ -924,7 +924,7 @@ struct Maintenance {
                     migratedCF.refreshedAt = cf.refreshedAt
                     migratedCF.showAsTab = cf.showAsTab
                     migratedCF.wotEnabled = cf.wotEnabled
-                    migratedCF.contacts_ = cf.contacts_
+                    migratedCF.contactPubkeys = Set(cf.contacts_.map { $0.pubkey })
                 }
                 migratedCustomFeed += 1
             }

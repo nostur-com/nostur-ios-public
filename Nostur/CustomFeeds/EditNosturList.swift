@@ -27,9 +27,9 @@ struct EditNosturList: View {
                 .listRowInsets(EdgeInsets())
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
-                        list.contacts_.removeAll(where: { $0.pubkey == contact.pubkey })
+                        list.contactPubkeys.remove(contact.pubkey)
                         DataProvider.shared().save()
-                        sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: Set(list.contacts_.map { $0.pubkey })))
+                        sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
                     } label: {
                         Label("Remove", systemImage: "trash")
                     }
@@ -68,10 +68,10 @@ struct EditNosturList: View {
             NavigationStack {
                 ContactsSearch(followingPubkeys: follows(),
                                prompt: "Search", onSelectContacts: { selectedContacts in
-                    list.contacts_.append(contentsOf: selectedContacts)
+                    list.contactPubkeys.formUnion(Set(selectedContacts.map { $0.pubkey }))
                     addContactsSheetShown = false
                     DataProvider.shared().save()
-                    sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: Set(list.contacts_.map { $0.pubkey })))
+                    sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
                 })
                 .equatable()
                 .navigationTitle(String(localized:"Add contacts", comment:"Navigation title of sheet to add contacts to feed"))

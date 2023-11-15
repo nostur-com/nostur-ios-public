@@ -61,6 +61,16 @@ extension CloudFeed : Identifiable {
         set { self.pubkeys = newValue.map { $0.pubkey }.joined(separator: " ") }
     }
     
+    var contactPubkeys:Set<String> {
+        get {
+            guard let pubkeys else { return [] }
+            return Set(pubkeys.split(separator: " ").map { String($0) })
+        }
+        set {
+            pubkeys = newValue.joined(separator: " ")
+        }
+    }
+    
     var relays_:Set<Relay> {
         get {  
             let context = Thread.isMainThread ? DataProvider.shared().viewContext : bg()
