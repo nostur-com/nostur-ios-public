@@ -121,50 +121,6 @@ struct Maintenance {
             let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
             
             
-            // Steps .. get ALL list states (This is ordered by most recent updated at)
-            let listStates = ListState.fetchListStates(context: context)
-            
-            // ListStates we don't delete are in this bag:
-            var keepListStates:[ListState] = []
-            
-            // Keep 1 (most recent) "Explore", it is not tied to account
-            if let explore = listStates.first(where: { $0.listId == "Explore"}) {
-                keepListStates.append(explore)
-            }
-            // For every account keep the most recent "Following"
-            ownAccountPubkeys.forEach {  pubkey in
-                if let following = listStates.first(where: { $0.listId == "Following" && $0.pubkey == pubkey}) {
-                    keepListStates.append(following)
-                }
-            }
-            // For every NosturList, keep most recent
-            let nosturLists = NosturList.fetchLists(context: context)
-            nosturLists.forEach { nosturList in
-                if nosturList.id == nil {
-                    nosturList.id = UUID()
-                }
-                if let list = listStates.first(where: { $0.listId == nosturList.subscriptionId }) {
-                    keepListStates.append(list)
-                }
-            }
-            
-            // Ok, now delete all listStates not in keepListStates
-            var deletedLists = 0
-            var postsIdToKeep = Set<String>()
-            listStates.forEach { listState in
-                if !keepListStates.contains(listState) {
-                    context.delete(listState)
-                    deletedLists += 1
-                }
-                else {
-                    postsIdToKeep = postsIdToKeep.union(Set(listState.leafIds))
-                }
-            }
-            
-            L.maintenance.info("Deleted \(deletedLists) old list states")
-            L.maintenance.info("Going to keep \(postsIdToKeep.count) posts that are part of listState.leafs")
-          
-            
             
             // CLEAN UP EVENTS WITHOUT SIG (BUG FROM PostPreview)
             let frNoSig = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
@@ -193,8 +149,8 @@ struct Maintenance {
             // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
             // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
             
-            // Ids to keep: own bookmarks, privatenotes, leafs from list states
-            let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds)).union(postsIdToKeep)
+            // Ids to keep: own bookmarks, privatenotes
+            let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds))
             
             let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
             fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,5,6,9802,30023} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
