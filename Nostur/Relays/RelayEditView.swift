@@ -184,7 +184,7 @@ struct RelayEditView: View {
                         // url change?
                         if (connection?.url != correctedRelayUrl) {
                             connection?.disconnect()
-                            if let oldUrl = relay.url {
+                            if let oldUrl = connection?.url {
                                 ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                             }
                             let newRelayData = RelayData(read: relay.read, url: correctedRelayUrl, write: relay.write, excludedPubkeys: relay.excludedPubkeys)
