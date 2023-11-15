@@ -166,7 +166,7 @@ struct NoInternetConnectionBanner: View {
     
     var body: some View {
         if networkMonitor.isDisconnected {
-            Text("No internet connection")
+            Text("\(Image(systemName: "wifi.exclamationmark")) No internet connection")
                 .font(.caption)
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .center)
