@@ -404,7 +404,6 @@ public final class NewPostModel: ObservableObject {
     }
     
     private func searchContacts(_ mentionTerm:String) {
-        guard let account = account() else { return }
         let fr = Contact.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)]
         fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), NRState.shared.blockedPubkeys)

@@ -1055,7 +1055,6 @@ extension NRPost { // Helpers for grouped replies
         
         ctx.perform { [weak self] in
             guard let self = self else { return }
-            guard let account = account() else { return }
             let fr = Event.fetchRequest()
             if let replyToRootId = self.replyToRootId { // We are not root, so load replies for actual root instead
                 fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1", replyToRootId)
@@ -1126,10 +1125,6 @@ extension NRPost { // Helpers for grouped replies
     private func _groupRepliesToRoot(_ newReplies:[NRPost]) {
         bg().perform { [weak self] in
             guard let self = self else { return }
-            guard let account = account() else {
-                L.og.error("_groupRepliesToRoot: We should have an account here");
-                return
-            }
             renderedReplyIds.removeAll()
             let replies = (newReplies.isEmpty ? self.replies : newReplies)
             // Load parents/replyTo
