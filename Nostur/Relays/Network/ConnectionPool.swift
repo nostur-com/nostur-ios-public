@@ -16,7 +16,10 @@ public class ConnectionPool: ObservableObject {
     static public let shared = ConnectionPool()
     public var queue = DispatchQueue(label: "connection-pool", qos: .utility, attributes: .concurrent)
     
+    // .connections should be read/mutated from main context
     public var connections:[CanonicalRelayUrl: RelayConnection] = [:]
+    
+    // .ephemeralConnections should be read/mutated from main context
     private var ephemeralConnections:[CanonicalRelayUrl: RelayConnection] = [:]
     
     public var anyConnected:Bool {
@@ -25,6 +28,7 @@ public class ConnectionPool: ObservableObject {
     
     private var stayConnectedTimer:Timer?
     
+    @MainActor
     public func addConnection(_ relayData: RelayData) -> RelayConnection {
         if let existingConnection = connections[relayData.id] {
             return existingConnection
@@ -36,6 +40,7 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    @MainActor
     public func addEphemeralConnection(_ relayData: RelayData) -> RelayConnection {
         if let existingConnection = ephemeralConnections[relayData.id] {
             return existingConnection
@@ -48,6 +53,7 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    @MainActor
     public func addNWCConnection(connectionId:String, url:String) -> RelayConnection  {
         if let existingConnection = connections[connectionId] {
             return existingConnection
@@ -60,6 +66,7 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    @MainActor
     public func addNCConnection(connectionId:String, url:String) -> RelayConnection {
         if let existingConnection = connections[connectionId] {
             return existingConnection
@@ -67,19 +74,22 @@ public class ConnectionPool: ObservableObject {
         else {
             let relayData = RelayData(read: true, url: url, write: true, excludedPubkeys: [])
             let newConnection = RelayConnection(relayData, isNC: true, queue: queue)
-            connections[connectionId] = newConnection
+            queue.async(flags: .barrier) {
+                self.connections[connectionId] = newConnection
+            }
             return newConnection
         }
     }
     
     public func connectAll() {
-        queue.async {
-            for (_, connection) in self.connections {
-                guard connection.relayData.read || connection.relayData.write else { continue }
-                guard !connection.isSocketConnected else { continue }
+        for (_, connection) in self.connections {
+            queue.async {
+                guard connection.relayData.read || connection.relayData.write else { return }
+                guard !connection.isSocketConnected else { return }
                 connection.connect()
             }
         }
+        
         
         stayConnectedTimer?.invalidate()
         stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { _ in
@@ -90,10 +100,10 @@ public class ConnectionPool: ObservableObject {
     }
     
     public func connectAllWrite() {
-        queue.async {
-            for (_, connection) in self.connections {
-                guard connection.relayData.write else { continue }
-                guard !connection.isSocketConnected else { continue }
+        for (_, connection) in self.connections {
+            queue.async {
+                guard connection.relayData.write else { return }
+                guard !connection.isSocketConnected else { return }
                 connection.connect()
             }
         }
@@ -104,11 +114,11 @@ public class ConnectionPool: ObservableObject {
     }
     
     private func stayConnectedPing() {
-        queue.async {
-            for (_, connection) in self.connections {
-                guard connection.relayData.read || connection.relayData.write else { continue }
-                guard !connection.isNWC else { continue }
-                guard !connection.isNC else { continue }
+        for (_, connection) in self.connections {
+            queue.async {
+                guard connection.relayData.read || connection.relayData.write else { return }
+                guard !connection.isNWC else { return }
+                guard !connection.isNC else { return }
                 
                 if let lastReceivedMessageAt = connection.lastMessageReceivedAt {
                     if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
@@ -125,6 +135,7 @@ public class ConnectionPool: ObservableObject {
     }
     
     // Connect to relays selected for globalish feed, reuse existing connections
+    @MainActor 
     func connectFeedRelays(relays:Set<RelayData>) {
         for relay in relays {
             guard !relay.url.isEmpty else { continue }
@@ -138,12 +149,15 @@ public class ConnectionPool: ObservableObject {
         let relayUrls = relays.compactMap { $0.url }
         for (_, connection) in connections {
             guard relayUrls.contains(connection.url) else { continue }
-            if !connection.isConnected {
-                connection.connect()
+            queue.async {
+                if !connection.isConnected {
+                    connection.connect()
+                }
             }
         }
     }
     
+    @MainActor
     func connectionByUrl(_ url:String) -> RelayConnection? {
         let relayConnection = connections.filter { relayId, relayConnection in
             relayConnection.url == url.lowercased()
@@ -152,6 +166,7 @@ public class ConnectionPool: ObservableObject {
     }
     
     // For view?
+    @MainActor
     func isUrlConnected(_ url:String) -> Bool {
         let relayConnection = connections.filter { relayId, relayConnection in
             relayConnection.url == url.lowercased()
@@ -162,6 +177,7 @@ public class ConnectionPool: ObservableObject {
         return relayConnection!.isConnected
     }
     
+    @MainActor
     func removeConnection(_ relayId: String) {
         if let connection = connections[relayId] {
             connection.disconnect()
@@ -169,6 +185,7 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    @MainActor
     func disconnectAll() {
         stayConnectedTimer?.invalidate()
         stayConnectedTimer = nil
@@ -178,6 +195,7 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    @MainActor
     func ping() {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             print("ping")
@@ -185,11 +203,14 @@ public class ConnectionPool: ObservableObject {
         }
         
         for (_, connection) in connections {
-            guard connection.relayData.read else { continue }
-            connection.ping()
+            queue.async {
+                guard connection.relayData.read else { return }
+                connection.ping()
+            }
         }
     }
     
+    @MainActor
     func removeActiveAccountSubscriptions() {
         for (_, connection) in connections {
             let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"))
@@ -207,10 +228,11 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    @MainActor
     func allowNewFollowingSubscriptions() {
         // removes "Following" from the active subscriptions so when we try a new one when following keys has changed, it would be ignored because didn't pass !contains..
-        queue.async {
-            for (_, connection) in self.connections {
+        for (_, connection) in self.connections {
+            self.queue.async {
                 if connection.nreqSubscriptions.contains("Following") {
                     self.queue.async(flags: .barrier) {
                         connection.nreqSubscriptions.remove("Following")
@@ -220,6 +242,7 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    @MainActor
     func closeSubscription(_ subscriptionId:String) {
         queue.async {
             for (_, connection) in self.connections {
@@ -237,6 +260,7 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    @MainActor
     private func removeAfterDelay(_ url:String) {
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(60)) { [weak self] in
             if let (_ ,connection) = self?.ephemeralConnections.first(where: { (key: String, value: RelayConnection) in
@@ -376,6 +400,7 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    @MainActor
     func sendEphemeralMessage(_ message:String, relay:String) {
         let connection = addEphemeralConnection(RelayData(read: true, url: relay, write: false, excludedPubkeys: []))
         connection.connect(andSend: message)
@@ -793,7 +818,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
 }
 
 
-func fetchEventFromRelayHint(_ eventId:String, fastTags:[(String, String, String?, String?)]) {
+@MainActor func fetchEventFromRelayHint(_ eventId:String, fastTags:[(String, String, String?, String?)]) {
     // EventRelationsQueue.shared.addAwaitingEvent(event) <-- not needed, should already be awaiting
     //    [
     //      "e",

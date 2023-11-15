@@ -191,7 +191,9 @@ class LVM: NSObject, ObservableObject {
                 self.didAppear()
             }
             else if oldValue != selectedSubTab && !viewIsVisible {
-                self.didDisappear()
+                Task { @MainActor in
+                    self.didDisappear()
+                }
             }
         }
     }
@@ -201,7 +203,9 @@ class LVM: NSObject, ObservableObject {
                 self.didAppear()
             }
             else if oldValue != selectedListId && !viewIsVisible {
-                self.didDisappear()
+                Task { @MainActor in
+                    self.didDisappear()
+                }
             }
         }
     }
@@ -209,10 +213,12 @@ class LVM: NSObject, ObservableObject {
     var restoreScrollToId:String? = nil
     var initialIndex:Int = 0 // derived from restoreScrollToId's index
     
+    @MainActor
     func didDisappear() {
         self.closeSubAndTimer()
     }
     
+    @MainActor
     func closeSubAndTimer() {
         if type == .relays {
             ConnectionPool.shared.closeSubscription(self.id)
@@ -756,7 +762,9 @@ class LVM: NSObject, ObservableObject {
         let bg = bg()
         if type == .relays {
             self.relays = Set(relays.map { $0.toStruct() })
-            ConnectionPool.shared.connectFeedRelays(relays: self.relays)
+            Task { @MainActor in
+                ConnectionPool.shared.connectFeedRelays(relays: self.relays)
+            }
         }
         var ls:ListState?
         if let pubkey {
@@ -1158,7 +1166,9 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 guard self.id == "Following" else { return }
-                ConnectionPool.shared.allowNewFollowingSubscriptions()
+                Task { @MainActor in
+                    ConnectionPool.shared.allowNewFollowingSubscriptions()
+                }
                 let pubkeys = notification.object as! Set<String>
                 self.pubkeys = pubkeys.subtracting(blocks())
                 self.performLocalFetch.send(true)
@@ -1209,8 +1219,10 @@ extension LVM {
                 
                 self.relays = newRelaysInfo.relays // viewContext relays
                 
-                ConnectionPool.shared.closeSubscription(self.id)
-                ConnectionPool.shared.connectFeedRelays(relays: relays)
+                Task { @MainActor in
+                    ConnectionPool.shared.closeSubscription(self.id)
+                    ConnectionPool.shared.connectFeedRelays(relays: self.relays)
+                }
                 
                 if newRelaysInfo.wotEnabled == self.wotEnabled {
                     // if WoT did not change, manual clear:
@@ -1458,7 +1470,9 @@ extension LVM {
         guard visibleOrInRefreshInBackground else {
 //            L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch cancelled - view is not visible")
             // For some reason the subscription is not closed when switching tab, so close here
-            self.closeSubAndTimer()
+            Task { @MainActor in
+                self.closeSubAndTimer()
+            }
             return
         }
 
