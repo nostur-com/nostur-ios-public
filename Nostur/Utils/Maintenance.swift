@@ -61,6 +61,7 @@ struct Maintenance {
             Self.runMigrateCustomFeeds(context: context)
             Self.runMigrateBlocks(context: context)
             Self.runMigrateAccounts(context: context)
+            Self.runMigrateDMsToCloud(context: context)
             
             do {
                 if context.hasChanges {
@@ -987,6 +988,45 @@ struct Maintenance {
         migration.migrationCode = migrationCode.migrateAccounts.rawValue
     }
     
+    // Migrate DM conversation states to iCloud-ready table
+    static func runMigrateDMsToCloud(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.migrateDMsToCloud, context: context) else { return }
+        
+        // Oops code. Uncomment during testing if we need to run this again.
+//        let fr0 = CloudDMState.fetchRequest()
+//        fr0.predicate = NSPredicate(value: true)
+//        if let dmStates = try? context.fetch(fr0) {
+//            for dmState in dmStates {
+//                context.delete(dmState)
+//            }
+//        }
+        
+        
+        // find all custom feeds, migrate to CloudPrivateNote
+        // set same attributes and convert Contacts and Relays to space seperated strings of pubkeys and relay urls
+        let fr = DMState.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+        
+        var migratedDMStates:Int = 0
+        if let dmStates = try? context.fetch(fr) {
+            L.maintenance.info("migrateDMs: Found \(dmStates.count) DM conversations")
+            for dmState in dmStates {
+                let migratedDMState = CloudDMState(context: context)
+                migratedDMState.accepted = dmState.accepted
+                migratedDMState.accountPubkey_ = dmState.accountPubkey
+                migratedDMState.contactPubkey_ = dmState.contactPubkey
+                migratedDMState.markedReadAt_ = dmState.markedReadAt
+                migratedDMState.isPinned = false
+                migratedDMState.isHidden = false
+                migratedDMStates += 1
+            }
+            L.maintenance.info("migrateDMs: Migrated \(migratedDMStates) DM conversations")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migrateDMsToCloud.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -1034,5 +1074,8 @@ struct Maintenance {
         
         // Migrate Accounts to iCloud
         case migrateAccounts = "migrateAccounts"
+        
+        // Migrate DM conversation state to iCloud
+        case migrateDMsToCloud = "migrateDMs"
     }
 }
