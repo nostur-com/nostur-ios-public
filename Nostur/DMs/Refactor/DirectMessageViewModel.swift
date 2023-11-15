@@ -55,6 +55,10 @@ class DirectMessageViewModel: ObservableObject {
         requestRowsNotWoT.count
     }
     
+    public var hiddenDMs:Int {
+        dmStates.filter { $0.accountPubkey_ == self.pubkey && $0.isHidden }.count
+    }
+    
     private var subscriptions = Set<AnyCancellable>()
     
     private init() {
@@ -254,6 +258,7 @@ class DirectMessageViewModel: ObservableObject {
                 
                 self.conversationRows = conversationRows
                     .sorted(by: { $0.mostRecentDate > $1.mostRecentDate })
+                    .sorted(by: { $0.dmState.isPinned && !$1.dmState.isPinned })
             }
         }
     }
@@ -331,6 +336,7 @@ class DirectMessageViewModel: ObservableObject {
                 
                 self.requestRows = conversationRows
                     .sorted(by: { $0.mostRecentDate > $1.mostRecentDate })
+                    .sorted(by: { $0.dmState.isPinned && !$1.dmState.isPinned })
             }
         }
     }

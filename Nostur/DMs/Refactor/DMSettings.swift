@@ -62,6 +62,20 @@ struct DMSettings: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             
                         }
+                        
+                        if (DirectMessageViewModel.default.hiddenDMs > 0) {
+                            Divider()
+                            HStack {
+                                Text("\(DirectMessageViewModel.default.hiddenDMs) conversation(s) hidden by you")
+                                Button("Unhide") {
+                                    DirectMessageViewModel.default.unhideAll()
+                                    DirectMessageViewModel.default.load()
+                                    showDMToggles = false
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            
+                        }
                     }
                 }
                 .padding(20)
