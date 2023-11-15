@@ -9,6 +9,7 @@ import SwiftUI
 
 struct Onboarding: View {
     @AppStorage("did_accept_terms") var didAcceptTerms = false
+    @EnvironmentObject private var networkMonitor:NetworkMonitor
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -20,6 +21,18 @@ struct Onboarding: View {
                 WelcomeSheet(offerTryOut: true)
                     .interactiveDismissDisabled()
                     .withNavigationDestinations()
+                    .fullScreenCover(isPresented: $networkMonitor.isDisconnected, content: {
+                        VStack(alignment: .center) {
+                            Image(systemName: "wifi.exclamationmark")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 100)
+                            Text("Internet connection unavailable")
+                                .font(.title)
+                            Text("Please try again when there is a connection")
+                        }
+                        .padding(10)
+                    })
             }
         }
     }
