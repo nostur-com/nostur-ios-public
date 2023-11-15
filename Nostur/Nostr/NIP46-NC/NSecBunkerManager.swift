@@ -129,11 +129,13 @@ class NSecBunkerManager: ObservableObject {
             .store(in: &subscriptions)
     }
     
+    @MainActor
     private func connectToSelfHostedNsecbunker(sessionPublicKey: String, relay:String) {
         let newConnection = ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: relay)
         newConnection.connect()
     }
     
+    @MainActor
     private func connectToHardcodedNsecbunker(sessionPublicKey: String) {
         let newConnection = ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: "wss://relay.nsecbunker.com")
         newConnection.connect()
@@ -145,10 +147,14 @@ class NSecBunkerManager: ObservableObject {
         guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
         // connect to NC relay, the session public key is used as id
         if account.ncRelay != "" {
-            self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: account.ncRelay)
+            Task { @MainActor in
+                self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: account.ncRelay)
+            }
         }
         else {
-            self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+            Task { @MainActor in
+                self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+            }
         }
     }
     
@@ -169,10 +175,14 @@ class NSecBunkerManager: ObservableObject {
         
         // connect to NC relay, the session public key is used as id
         if isSelfHostedNsecBunker {
-            self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: self.ncRelay)
+            Task { @MainActor in
+                self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: self.ncRelay)
+            }
         }
         else {
-            self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+            Task { @MainActor in
+                self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+            }
         }
         
         // the connect request, params are our session public key and the bunker provided redemption token
