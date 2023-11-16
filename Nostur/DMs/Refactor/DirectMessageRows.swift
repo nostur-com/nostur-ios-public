@@ -30,6 +30,7 @@ struct DirectMessageRows: View {
                                     Label("Hide", systemImage: "trash")
                                 }
                             }
+                            .tint(Color.red)
    
                             Button {
                                 conv.dmState.isPinned.toggle()
