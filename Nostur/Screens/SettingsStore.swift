@@ -43,6 +43,7 @@ final class SettingsStore: ObservableObject {
         static let nwcShowBalance:String = "nwc_show_balance"
         static let appWideSeenTracker:String = "app_wide_seen_tracker"
         static let mainWoTaccountPubkey:String = "main_wot_account_pubkey"
+        static let displayUserAgentEnabled:String = "display_user_agent_enabled"
     }
 
 //    private let cancellable: Cancellable
@@ -134,6 +135,7 @@ final class SettingsStore: ObservableObject {
             Keys.footerButtons: IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖",
             Keys.appWideSeenTracker: true,
             Keys.mainWoTaccountPubkey: ""
+            Keys.displayUserAgentEnabled: true
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -149,6 +151,7 @@ final class SettingsStore: ObservableObject {
         _animatedPFPenabledCache = defaults.bool(forKey: Keys.animatedPFPenabled)
         _lowDataModeCache = defaults.bool(forKey: Keys.lowDataMode)
         _rowFooterEnabled = defaults.bool(forKey: Keys.rowFooterEnabled)
+        _displayUserAgentEnabled = defaults.bool(forKey: Keys.displayUserAgentEnabled)
         _restrictAutoDownload = defaults.bool(forKey: Keys.restrictAutoDownload)
         _autoDownloadFrom = defaults.string(forKey: Keys.autoDownloadFrom) ?? AutodownloadLevel.onlyWoT.rawValue
         _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
@@ -314,6 +317,17 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _rowFooterEnabled:Bool = true
+    
+    var displayUserAgentEnabled: Bool {
+        set {
+            objectWillChange.send()
+            _displayUserAgentEnabled = newValue
+            defaults.set(newValue, forKey: Keys.displayUserAgentEnabled);
+        }
+        get { _displayUserAgentEnabled }
+    }
+    
+    private var _displayUserAgentEnabled:Bool = true
     
     public var restrictAutoDownload: Bool {
         set {
