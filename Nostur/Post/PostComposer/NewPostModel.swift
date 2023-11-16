@@ -227,6 +227,10 @@ public final class NewPostModel: ObservableObject {
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
         }
+        
+        if (SettingsStore.shared.postUserAgentEnabled) {
+            nEvent.tags.append(NostrTag(["client", "Nostur"]))
+        }
 
         
         let cancellationId = UUID()
@@ -342,6 +346,10 @@ public final class NewPostModel: ObservableObject {
         
         for index in typingTextModel.pastedImages.indices {
             nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
+        }
+        
+        if (SettingsStore.shared.postUserAgentEnabled) {
+            nEvent.tags.append(NostrTag(["client", "Nostur"]))
         }
     
         
