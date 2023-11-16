@@ -286,9 +286,9 @@ public final class NewPostModel: ObservableObject {
         }
         
         if let replyTo {
+            let replyToNEvent = replyTo.toNEvent()
+            let replyToId = replyTo.id
             bg().perform {
-                let replyToNEvent = replyTo.toNEvent()
-                let replyToId = replyTo.id
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
                     // Republish post being replied to
@@ -297,9 +297,9 @@ public final class NewPostModel: ObservableObject {
             }
         }
         if let quotingEvent {
+            let quotingNEvent = quotingEvent.toNEvent()
+            let quotingEventId = quotingEvent.id
             bg().perform {
-                let quotingNEvent = quotingEvent.toNEvent()
-                let quotingEventId = quotingEvent.id
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEventId))
                     // Republish post being quoted
