@@ -227,6 +227,14 @@ struct Settings: View {
                 }
                 .listRowBackground(themes.theme.background)
                 
+                Section(header: Text("Posting", comment:"Setting heading on settings screen")) {
+                    Toggle(isOn: $settings.postUserAgentEnabled) {
+                        Text("Include Nostur in post metadata", comment:"Setting on settings screen")
+                        Text("Lets others know you are posting from Nostur", comment:"Setting on settings screen")
+                    }
+                }
+                .listRowBackground(themes.theme.background)
+                
                 Section(header: Text("Data export")) {
                     Button("Save to file...") {
                         guard let account = account() else { L.og.error("Cannot export, no account"); return }

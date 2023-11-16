@@ -43,6 +43,8 @@ final class SettingsStore: ObservableObject {
         static let nwcShowBalance:String = "nwc_show_balance"
         static let appWideSeenTracker:String = "app_wide_seen_tracker"
         static let mainWoTaccountPubkey:String = "main_wot_account_pubkey"
+        
+        static let postUserAgentEnabled:String = "post_user_agent_enabled"
         static let displayUserAgentEnabled:String = "display_user_agent_enabled"
     }
 
@@ -134,7 +136,8 @@ final class SettingsStore: ObservableObject {
             Keys.nwcShowBalance: false,
             Keys.footerButtons: IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖",
             Keys.appWideSeenTracker: true,
-            Keys.mainWoTaccountPubkey: ""
+            Keys.mainWoTaccountPubkey: "",
+            Keys.postUserAgentEnabled: true,
             Keys.displayUserAgentEnabled: true
         ])
 
@@ -195,6 +198,11 @@ final class SettingsStore: ObservableObject {
     var includeSharedFrom: Bool {
         set { defaults.set(newValue, forKey: Keys.includeSharedFrom); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.includeSharedFrom) }
+    }
+    
+    var postUserAgentEnabled: Bool {
+        set { defaults.set(newValue, forKey: Keys.postUserAgentEnabled); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.postUserAgentEnabled) }
     }
 
     var statusBubble: Bool {
