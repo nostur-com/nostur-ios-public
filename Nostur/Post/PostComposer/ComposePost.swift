@@ -176,6 +176,7 @@ struct ComposePost: View {
                     }
                 }
             }
+            ConnectionPool.shared.connectAllWrite()
         }
     }
 }
