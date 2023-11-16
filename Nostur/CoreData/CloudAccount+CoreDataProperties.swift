@@ -24,6 +24,7 @@ extension CloudAccount {
     @NSManaged public var flags: String?
     @NSManaged public var followingHashtags_: String?
     @NSManaged public var followingPubkeys_: String?
+    @NSManaged public var privateFollowingPubkeys_: String?
     @NSManaged public var isNC: Bool
     @NSManaged public var lastFollowerCreatedAt: Int64
     @NSManaged public var lastProfileReceivedAt: Date?
@@ -76,11 +77,12 @@ extension CloudAccount {
     
     var follows:[Contact] {
         get {
-            guard let followingPubkeys = followingPubkeys_ else { return [] }
-            return Contact.fetchByPubkeys(followingPubkeys.split(separator: " ").map { String($0) }, context: Thread.isMainThread ? DataProvider.shared().viewContext : bg())
+            let followsIncludingPrivate = followingPubkeys.union(privateFollowingPubkeys)
+            return Contact.fetchByPubkeys(Array(followsIncludingPrivate), context: Thread.isMainThread ? DataProvider.shared().viewContext : bg())
         }
         set {
-            followingPubkeys_ = newValue.map { $0.pubkey }.joined(separator: " ")
+            followingPubkeys_ = newValue.filter { !$0.privateFollow }.map { $0.pubkey }.joined(separator: " ")
+            privateFollowingPubkeys_ = newValue.filter { $0.privateFollow }.map { $0.pubkey }.joined(separator: " ")
         }
     }
     
@@ -91,6 +93,16 @@ extension CloudAccount {
         }
         set {
             followingPubkeys_ = newValue.joined(separator: " ")
+        }
+    }
+    
+    var privateFollowingPubkeys:Set<String> {
+        get {
+            guard let privateFollowingPubkeys = privateFollowingPubkeys_ else { return [] }
+            return Set(privateFollowingPubkeys.split(separator: " ").map { String($0) })
+        }
+        set {
+            privateFollowingPubkeys_ = newValue.joined(separator: " ")
         }
     }
     
