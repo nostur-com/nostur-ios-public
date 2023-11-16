@@ -959,7 +959,8 @@ struct Maintenance {
                 migrated.display_name_ = account.display_name
                 migrated.flags = account.flags
                 migrated.followingHashtags_ = account.followingHashtags_
-                migrated.followingPubkeys_ = account.follows_.map { $0.pubkey }.joined(separator: " ")
+                migrated.followingPubkeys_ = account.follows_.filter { !$0.privateFollow } .map { $0.pubkey }.joined(separator: " ")
+                migrated.privateFollowingPubkeys_ = account.follows_.filter { $0.privateFollow } .map { $0.pubkey }.joined(separator: " ")
                 migrated.isNC = account.isNC
                 migrated.lastFollowerCreatedAt = account.lastFollowerCreatedAt
                 migrated.lastProfileReceivedAt = account.lastProfileReceivedAt
@@ -1028,6 +1029,30 @@ struct Maintenance {
         migration.migrationCode = migrationCode.migrateDMsToCloud.rawValue
     }
     
+    // Fix private follows
+    static func runFixPrivateFollows(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.fixPrivateFollows, context: context) else { return }
+        
+        // find all Accounts, migrate to CloudAccount
+        // set same attributes and convert follows to followingPubkeys
+        let fr = CloudAccount.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+        
+        var fixed:Int = 0
+        if let accounts = try? context.fetch(fr) {
+            L.maintenance.info("fixPrivateFollows: Found \(accounts.count) accounts")
+            for account in accounts {
+                let privateFollows = Set(account.follows.filter { $0.privateFollow }.map { $0.pubkey })
+                account.privateFollowingPubkeys = privateFollows
+                fixed += 1
+            }
+            L.maintenance.info("fixPrivateFollows: Fixed \(fixed) accounts")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.fixPrivateFollows.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -1077,6 +1102,9 @@ struct Maintenance {
         case migrateAccounts = "migrateAccounts"
         
         // Migrate DM conversation state to iCloud
-        case migrateDMsToCloud = "migrateDMs"
+        case migrateDMsToCloud = "migrateDMs"   
+        
+        // Fix private follows
+        case fixPrivateFollows = "fixPrivateFollows"
     }
 }

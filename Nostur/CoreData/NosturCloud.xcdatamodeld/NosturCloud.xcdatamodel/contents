@@ -60,6 +60,7 @@
         <attribute name="ncRelay_" optional="YES" attributeType="String"/>
         <attribute name="nip05_" optional="YES" attributeType="String"/>
         <attribute name="picture_" optional="YES" attributeType="String"/>
+        <attribute name="privateFollowingPubkeys_" optional="YES" attributeType="String"/>
         <attribute name="publicKey_" optional="YES" attributeType="String"/>
     </entity>
     <entity name="CloudBlocked" representedClassName="CloudBlocked" syncable="YES">
