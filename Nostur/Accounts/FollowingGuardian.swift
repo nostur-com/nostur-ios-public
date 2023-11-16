@@ -70,7 +70,7 @@ class FollowingGuardian: ObservableObject {
                 guard let account = NRState.shared.loggedInAccount?.account else { return }
                 
                 // TODO: Make this work for all accounts, not just active
-                let pubkeysOwn = Set(account.follows.filter { !$0.privateFollow } .map({ c in c.pubkey }) )
+                let pubkeysOwn = account.followingPubkeys
                 let pubkeysRelay = Set(nEvent.pTags())
                 
                 let removed = pubkeysOwn.subtracting(pubkeysRelay)

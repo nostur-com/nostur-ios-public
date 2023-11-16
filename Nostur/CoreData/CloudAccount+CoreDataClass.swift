@@ -33,10 +33,6 @@ public class CloudAccount: NSManagedObject {
         return withoutBlocked
     }
     
-    public func getSilentFollows() -> Set<String> {
-        return Set(follows.filter { $0.privateFollow }.map { $0.pubkey })
-    }
-    
     public func publishNewContactList() {
         guard let clEvent = try? AccountManager.createContactListEvent(account: self)
         else {

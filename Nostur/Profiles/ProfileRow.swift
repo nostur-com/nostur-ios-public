@@ -122,13 +122,13 @@ struct ProfileRow: View {
                     if (!withoutFollowButton) {
                         Button {
                             guard isFullAccount() else { showReadOnlyMessage(); return }
-                            if (isFollowing && !contact.privateFollow) {
-                                contact.privateFollow = true
+                            if (isFollowing && !contact.isPrivateFollow) {
+                                contact.isPrivateFollow = true
                                 la.follow(contact, pubkey: contact.pubkey)
                             }
-                            else if (isFollowing && contact.privateFollow) {
+                            else if (isFollowing && contact.isPrivateFollow) {
                                 isFollowing = false
-                                contact.privateFollow = false
+                                contact.isPrivateFollow = false
                                 la.unfollow(contact.pubkey)
                             }
                             else {
@@ -136,7 +136,7 @@ struct ProfileRow: View {
                                 la.follow(contact, pubkey: contact.pubkey)
                             }
                         } label: {
-                            FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.privateFollow)
+                            FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.isPrivateFollow)
                         }
                         .disabled(!fg.didReceiveContactListThisSession)
                     }

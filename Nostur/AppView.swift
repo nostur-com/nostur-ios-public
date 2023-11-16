@@ -231,6 +231,7 @@ struct AppView: View {
                 return existingAccount.publicKey == duplicateAccount.publicKey
             }
             existingAccount?.followingPubkeys.formUnion(duplicateAccount.followingPubkeys)
+            existingAccount?.privateFollowingPubkeys.formUnion(duplicateAccount.privateFollowingPubkeys)
             existingAccount?.followingHashtags.formUnion(duplicateAccount.followingHashtags)
             DataProvider.shared().viewContext.delete(duplicateAccount)
         })
@@ -245,16 +246,13 @@ struct AppView: View {
         
         let duplicates = sortedDMStates
             .filter { dmState in
-                guard let contactPubkey = dmState.contactPubkey_ else { return false }
-                guard let accountPubkey = dmState.accountPubkey_ else { return false }
+                guard dmState.contactPubkey_ != nil else { return false }
+                guard dmState.accountPubkey_ != nil else { return false }
                 return !uniqueDMStates.insert(dmState.conversionId).inserted
             }
         
         L.cloud.debug("Deleting: \(duplicates.count) duplicate DM conversation states")
         duplicates.forEach({ duplicateDMState in
-            let existingDMState = sortedDMStates.first { existingDMState in
-                return existingDMState.conversionId == duplicateDMState.conversionId
-            }
             DataProvider.shared().viewContext.delete(duplicateDMState)
         })
         if !duplicates.isEmpty {

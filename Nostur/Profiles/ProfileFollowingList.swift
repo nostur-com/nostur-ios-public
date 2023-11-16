@@ -31,13 +31,14 @@ struct ProfileFollowingList: View {
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     
-                                    let silentFollows = clEvent.pubkey == account()?.publicKey
-                                        ? ((account()?.follows.filter { $0.privateFollow }.map { $0.pubkey }) ?? [])
+                                    let silentFollows:Set<String> = clEvent.pubkey == account()?.publicKey
+                                        ? (account()?.privateFollowingPubkeys ?? [])
                                         : []
                                     
                                     let pubkeys = clEvent.fastPs.map({ $0.1 })
                                     
-                                    vm.ready(FollowsInfo(follows: pubkeys, silentFollows: silentFollows))
+                                    vm.ready(FollowsInfo(follows: pubkeys, silentFollows: 
+                                                            Array(silentFollows)))
                                 }
                                 else { req(RM.getAuthorContactsList(pubkey: pubkey)) }
                             }
@@ -45,13 +46,13 @@ struct ProfileFollowingList: View {
                         onComplete: { relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
-                                    let silentFollows = clEvent.pubkey == account()?.publicKey
-                                        ? ((account()?.follows.filter { $0.privateFollow }.map { $0.pubkey }) ?? [])
+                                    let silentFollows:Set<String> = clEvent.pubkey == account()?.publicKey
+                                        ? (account()?.privateFollowingPubkeys ?? [])
                                         : []
                                     
                                     let pubkeys = clEvent.fastPs.map({ $0.1 })
                                     
-                                    vm.ready(FollowsInfo(follows: pubkeys, silentFollows: silentFollows))
+                                    vm.ready(FollowsInfo(follows: pubkeys, silentFollows: Array(silentFollows)))
                                 }
                                 else { vm.timeout() }
                             }
