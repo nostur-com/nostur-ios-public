@@ -34,6 +34,7 @@ struct NoteHeaderViewEvent: View {
 }
 
 struct PlaceholderPostHeaderEvent: View {
+    @ObservedObject private var settings:SettingsStore = .shared
     let event:Event
     let singleLine:Bool
     
@@ -49,23 +50,41 @@ struct PlaceholderPostHeaderEvent: View {
                 if (singleLine) {
                     Ago(event.date)
                         .equatable()
+                        .font(.subheadline)
                         .layoutPriority(2)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
+                    
+                    if settings.postUserAgentEnabled {
+                        Text(String(format: "via %@", "Nostur"))
+                            .foregroundColor(.secondary)
+                            .font(.subheadline)
+                            .layoutPriority(3)
+                    }
                 }
             }
         }
         if (!singleLine) {
-            Ago(event.date)
-                .equatable()
-                .layoutPriority(2)
-                .foregroundColor(.secondary)
-                .lineLimit(1)
+            HStack {
+                Ago(event.date)
+                    .equatable()
+                    .layoutPriority(2)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                
+                if settings.postUserAgentEnabled {
+                    Text(String(format: "via %@", "Nostur"))
+                        .foregroundColor(.secondary)
+                        .font(.subheadline)
+                        .layoutPriority(3)
+                }
+            }
         }
     }
 }
 
 struct PostHeaderEvent: View {
+    @ObservedObject private var settings:SettingsStore = .shared
     @EnvironmentObject private var themes:Themes
     @ObservedObject var contact:Contact
     let event:Event
@@ -91,6 +110,14 @@ struct PostHeaderEvent: View {
                         .layoutPriority(2)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
+                    
+                    if settings.displayUserAgentEnabled, let via = event.via {
+                        Text(String(format: "via %@", via))
+                            .font(.subheadline)
+                            .lineLimit(1)
+                            .layoutPriority(3)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
         }
@@ -106,11 +133,21 @@ struct PostHeaderEvent: View {
             }
         }
         if (!singleLine) {
-            Ago(event.date)
-                .equatable()
-                .layoutPriority(2)
-                .foregroundColor(.secondary)
-                .lineLimit(1)
+            HStack {
+                Ago(event.date)
+                    .equatable()
+                    .layoutPriority(2)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                
+                if settings.displayUserAgentEnabled, let via = event.via {
+                    Text(String(format: "via %@", via))
+                        .font(.subheadline)
+                        .lineLimit(1)
+                        .layoutPriority(3)
+                        .foregroundColor(.secondary)
+                }
+            }
         }
     }
 }

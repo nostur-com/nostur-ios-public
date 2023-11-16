@@ -115,6 +115,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var plainText:String = ""
     var contentElements:[ContentElement] = [] // NoteRow.Kind1
     var contentElementsDetail:[ContentElement] = [] // PostDetail.Kind1
+    var via:String?
     
     var contact:NRContact?  {
         get { pfpAttributes.contact }
@@ -359,6 +360,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.inWoT = event.inWoT
         self.isSpam = event.isSpam
         self.aTag = event.aTag
+        
+        self.via = self.fastTags.first(where: { $0.0 == "client" })?.1
         
         // article?
         if kind == 30023 {

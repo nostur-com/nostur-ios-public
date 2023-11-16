@@ -273,6 +273,10 @@ struct LazyNoteMenuSheet: View {
                 
                 if nrPost.relays != "" {
                     VStack(alignment: .leading) {
+                        if let via = nrPost.via {
+                            Text("Posted via \(via)", comment: "Showing from which app this post was posted")
+                                .lineLimit(1)
+                        }
                         if NRState.shared.activeAccountPublicKey == nrPost.pubkey {
                             Text("Sent to:", comment:"Heading for list of relays sent to")
                         }

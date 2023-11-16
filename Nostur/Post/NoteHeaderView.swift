@@ -46,6 +46,7 @@ struct NoteHeaderView: View {
 struct PlaceholderPostHeader: View {
     let nrPost:NRPost
     let singleLine:Bool
+    @ObservedObject var settings:SettingsStore = .shared
     
     var body: some View {
         HStack(spacing:2) {
@@ -70,10 +71,18 @@ struct PlaceholderPostHeader: View {
                 if (singleLine) {
                     Group {
                         Text(verbatim:"@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
-                        Text(verbatim:" · ") //
                         Ago(nrPost.createdAt, agoText: nrPost.ago)
                             .equatable()
+                            .font(.subheadline)
                             .layoutPriority(2)
+                        
+                        if settings.displayUserAgentEnabled, let via = nrPost.via {
+                            Text(String(format: "via %@", via))
+                                .font(.subheadline)
+                                .lineLimit(1)
+                                .layoutPriority(3)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .foregroundColor(.secondary)
                     .lineLimit(1)
@@ -83,10 +92,18 @@ struct PlaceholderPostHeader: View {
         if (!singleLine) {
             HStack {
                 Text(verbatim:"@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
-                Text(verbatim:" · ") //
                 Ago(nrPost.createdAt, agoText: nrPost.ago)
                     .equatable()
+                    .font(.subheadline)
                     .layoutPriority(2)
+                
+                if settings.displayUserAgentEnabled, let via = nrPost.via {
+                    Text(String(format: "via %@", via))
+                        .font(.subheadline)
+                        .lineLimit(1)
+                        .layoutPriority(3)
+                        .foregroundColor(.secondary)
+                }
             }
             .foregroundColor(.secondary)
             .lineLimit(1)
@@ -96,11 +113,12 @@ struct PlaceholderPostHeader: View {
 
 struct PostHeader: View {
     @ObservedObject public var contact:NRContact
+    @ObservedObject var settings:SettingsStore = .shared
     public let nrPost:NRPost
     public let singleLine:Bool
     
     var body: some View {
-        HStack(alignment: .top, spacing: 5) {
+        HStack(alignment: .bottom, spacing: 5) {
             Group {
                 Text(contact.anyName)
                     .foregroundColor(.primary)
@@ -133,8 +151,17 @@ struct PostHeader: View {
                     Ago(nrPost.createdAt, agoText: nrPost.ago)
                         .equatable()
                         .layoutPriority(2)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
+                
+                    if settings.displayUserAgentEnabled, let via = nrPost.via {
+                        Text(String(format: "via %@", via))
+                            .font(.subheadline)
+                            .lineLimit(1)
+                            .layoutPriority(3)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
         }
@@ -186,23 +213,34 @@ struct PostHeader: View {
             }
         }
         if (!singleLine) {
-            Ago(nrPost.createdAt, agoText: nrPost.ago)
-                .equatable()
-                .layoutPriority(2)
-                .foregroundColor(.secondary)
-                .lineLimit(1)
+            HStack {
+                Ago(nrPost.createdAt, agoText: nrPost.ago)
+                    .equatable()
+                    .layoutPriority(2)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                
+                if settings.displayUserAgentEnabled, let via = nrPost.via {
+                    Text(String(format: "via %@", via))
+                        .font(.subheadline)
+                        .lineLimit(1)
+                        .layoutPriority(3)
+                        .foregroundColor(.secondary)
+                }
+            }
         }
     }
 }
 
 struct PreviewHeaderView: View {
-    
+    @ObservedObject var settings:SettingsStore = .shared
     var authorName:String
     var singleLine:Bool = true
     
     var body: some View {
         VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
-            HStack(spacing:2) {
+            HStack(alignment: .bottom, spacing: 2) {
                 Group {
                     
                     Text(authorName) // Name
@@ -213,19 +251,35 @@ struct PreviewHeaderView: View {
                     
                     if (singleLine) {
                         Group {
-                            Text(verbatim:" · ") //
-                            Text(verbatim:"1s")
+                            Text(verbatim:"1m")
                                 .layoutPriority(2)
+                            
+                            if settings.postUserAgentEnabled {
+                                Text(String(format: "via %@", "Nostur"))
+                                    .layoutPriority(3)
+                            }
                         }
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                     }
                 }
             }
             if (!singleLine) {
-                Text(verbatim: "1s")
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                HStack {
+                    Text(verbatim: "1m")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                    
+                    if settings.postUserAgentEnabled {
+                        Text(String(format: "via %@", "Nostur"))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                            .layoutPriority(3)
+                    }
+                }
             }
         }
     }

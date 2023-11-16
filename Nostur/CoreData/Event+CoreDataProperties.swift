@@ -372,6 +372,8 @@ extension Event {
     
     var npub:String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
     
+    var via:String? { fastTags.first(where: { $0.0 == "client" })?.1 }
+    
     static func textNotes(byAuthorPubkey:String? = nil) -> NSFetchRequest<Event> {
         
         let request: NSFetchRequest<Event> = Event.fetchRequest()
