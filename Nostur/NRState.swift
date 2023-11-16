@@ -237,7 +237,8 @@ final class ExchangeRateModel: ObservableObject {
     @Published var bitcoinPrice:Double = 0.0
 }
 
-
+let APP_VERSION = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+let CI_BUILD_NUMBER = Bundle.main.infoDictionary?["CI_BUILD_NUMBER"] as? String ?? "?"
 let IS_IPAD = UIDevice.current.userInterfaceIdiom == .pad
 let IS_CATALYST = ProcessInfo.processInfo.isMacCatalystApp
 let IS_APPLE_TYRANNY = ((Bundle.main.infoDictionary?["NOSTUR_IS_DESKTOP"] as? String) ?? "NO") == "NO"

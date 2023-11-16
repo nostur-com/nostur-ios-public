@@ -255,6 +255,10 @@ struct SideBar: View {
             .zIndex(20)
             .padding(.top, 45)
             Spacer()
+            Text("Nostur \(APP_VERSION) (Build: \(CI_BUILD_NUMBER))")
+                .font(.footnote)
+                .opacity(0.5)
+                .padding(10)
         }
         .edgesIgnoringSafeArea(.all)
         .onReceive(receiveNotification(.hideSideBar), perform: { _ in
