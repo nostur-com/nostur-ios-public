@@ -74,6 +74,11 @@ struct Settings: View {
                         Text("Show post stats on timeline", comment:"Setting on settings screen")
                         Text("Counters for replies, likes, zaps etc.", comment:"Setting on settings screen")
                     }
+                    
+                    Toggle(isOn: $settings.displayUserAgentEnabled) {
+                        Text("Show from which app someone posted", comment:"Setting on settings screen")
+                        Text("Will show from which app/client something was posted, if available", comment:"Setting on settings screen")
+                    }
                                         
                     FooterConfiguratorLink() // Put NavigationLink in own view or freeze.
                 }
