@@ -203,8 +203,8 @@ class AccountManager {
                     newKind3Event.content = existingKind3.content ?? ""
                 }
                 
-                for contact in (account.follows.filter { $0.privateFollow == false } ) {
-                    newKind3Event.tags.append(NostrTag(["p", contact.pubkey]))
+                for pubkey in account.followingPubkeys {
+                    newKind3Event.tags.append(NostrTag(["p", pubkey]))
                 }
                 
                 for tag in account.followingHashtags {

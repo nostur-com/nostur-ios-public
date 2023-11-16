@@ -102,7 +102,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.zapperPubkey = contact.zapperPubkey
         
         self.following = isFollowing(contact.pubkey)
-        self.privateFollow = contact.privateFollow
+        self.privateFollow = contact.isPrivateFollow
         self.zappableAttributes = ZappableAttributes(zapState: contact.zapState)
         
         self.hasPrivateNote = _hasPrivateNote()
@@ -268,7 +268,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         
         bg().perform {
             guard let account = account() else { return }
-            self.contact.privateFollow = privateFollow // TODO: need to fix for multi account
+            self.contact.isPrivateFollow = privateFollow 
             self.contact.couldBeImposter = 0
             account.followingPubkeys.insert(self.pubkey)
             DataProvider.shared().bgSave()
@@ -288,7 +288,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         
         bg().perform {
             guard let account = account() else { return }
-            self.contact.privateFollow = false // TODO: need to fix for multi account
+            self.contact.isPrivateFollow = false
             account.followingPubkeys.remove(self.pubkey)
             DataProvider.shared().bgSave()
             account.publishNewContactList()

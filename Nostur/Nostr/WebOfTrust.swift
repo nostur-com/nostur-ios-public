@@ -138,7 +138,7 @@ class WebOfTrust: ObservableObject {
         guard let account = NRState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) else { return }
         L.og.info("🕸️🕸️ WebOfTrust: Main account: \(account.anyName)")
         
-        let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.getSilentFollows()) // We don't include silent follows in WoT
+        let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.privateFollowingPubkeys) // We don't include silent follows in WoT
         let followingPubkeys = account.getFollowingPublicKeys(includeBlocked: true)
         
         bg().perform {
