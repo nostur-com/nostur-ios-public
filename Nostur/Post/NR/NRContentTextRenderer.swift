@@ -24,6 +24,7 @@ struct NRContentTextRenderer: View {
             }
             else {
                 NRText(text ?? attributedStringWithPs.output)
+                    .id(text ?? attributedStringWithPs.output)
             }
         }
         .onReceive(
