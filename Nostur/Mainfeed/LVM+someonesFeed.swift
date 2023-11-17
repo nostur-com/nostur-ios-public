@@ -16,13 +16,13 @@ extension LVM {
         instantFeed.backlog.clear()
         backlog.clear()
         
-        pubkeys = []
         hashtags = []
         lvmCounter.count = 0
         L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.loadSomeonesFeed()")
         posts = [:]
         instantFinished = false
         bg().perform {
+            self.pubkeys = []
             self.nrPostLeafs = []
             if !SettingsStore.shared.appWideSeenTracker {
                 self.onScreenSeen = []
@@ -149,13 +149,14 @@ extension LVM {
         backlog.clear()
         
         self.pubkey = account.publicKey
-        self.pubkeys = account.getFollowingPublicKeys(includeBlocked: false)
+        let pubkeys = account.getFollowingPublicKeys(includeBlocked: false)
         self.loadHashtags()
         lvmCounter.count = 0
         L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.revertBackToOwnFeed()")
         instantFinished = false
         posts = [:]
         bg().perform {
+            self.pubkeys = pubkeys
             self.nrPostLeafs = []
             if !SettingsStore.shared.appWideSeenTracker {
                 self.onScreenSeen = []

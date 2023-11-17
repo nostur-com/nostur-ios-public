@@ -521,7 +521,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                 self.outQueue.append(SocketMessage(text: andSend))
             }
             
-            self.webSocketSub?.cancel()
+//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self.webSocketSub = nil
             
             self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
@@ -677,7 +677,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self.nreqSubscriptions = []
             self.lastMessageReceivedAt = nil
             self.isSocketConnected = false
-            self.webSocketSub?.cancel()
+//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self.webSocketSub = nil
         }
     }
@@ -742,7 +742,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self.nreqSubscriptions = []
             self.lastMessageReceivedAt = nil
             self.isSocketConnected = false
-            self.webSocketSub?.cancel()
+//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self.webSocketSub = nil
             DispatchQueue.main.async {
                 sendNotification(.socketNotification, "Disconnected: \(self.url)")
@@ -762,7 +762,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                 self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
             }
             self.isSocketConnected = false
-            self.webSocketSub?.cancel()
+//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self.webSocketSub = nil
             let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
             DispatchQueue.main.async {
@@ -806,7 +806,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self.skipped = 0
             self.lastMessageReceivedAt = .now
             self.isSocketConnected = false
-            self.webSocketSub?.cancel()
+//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self.webSocketSub = nil
             DispatchQueue.main.async {
                 sendNotification(.socketNotification, "Disconnected: \(self.url)")

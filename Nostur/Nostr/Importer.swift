@@ -100,10 +100,13 @@ class Importer {
         fr.propertiesToFetch = ["id", "relays"]
         
         if let results = try? DataProvider.shared().viewContext.fetch(fr) {
-            self.existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
+            let existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
                 dict[event.id] = EventState(status: .SAVED, relays: event.relays)
             }
-            L.og.debug("\(self.existingIds.count) existing ids added to cache")
+            bg().performAndWait {
+                self.existingIds = existingIds
+                L.og.debug("\(self.existingIds.count) existing ids added to cache")
+            }
         }
         
 //        bg().performAndWait { [unowned self] in // AndWait because existingIds MUST be in sync with db
