@@ -56,7 +56,7 @@ class NWCRequestQueue: ObservableObject {
     @Published public var balance:Int? {
         didSet {
             if let balanceString {
-                balanceState = .ready(balanceString)
+                balanceState = .ready(balanceString, balance)
             }
             else {
                 balanceState = .timeout
@@ -73,7 +73,7 @@ class NWCRequestQueue: ObservableObject {
     public enum BalanceState:Equatable {
         case initial
         case loading
-        case ready(String)
+        case ready(String, Int?)
         case timeout
     }
     

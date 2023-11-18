@@ -11,6 +11,12 @@ struct NWCWalletBalance: View {
     @EnvironmentObject private var themes:Themes
     @ObservedObject private var ss:SettingsStore = .shared
     @ObservedObject private var nrq:NWCRequestQueue = .shared
+    public var noIcon = false
+    
+    private func fiatPrice(_ amount:Double) -> String? {
+        guard ExchangeRateModel.shared.bitcoinPrice > 0 else { return nil }
+        return String(format: "($%.02f)",(amount / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
+    }
 
     var body: some View {
         if ss.nwcShowBalance && ss.nwcReady {
@@ -32,11 +38,19 @@ struct NWCWalletBalance: View {
                             
                         }
                     }
-            case .ready(let balance):
-                Text("\(Image(systemName:"bolt.fill")) \(balance) sats")
-                    .onTapGesture {
-                        nwcSendBalanceRequest()
-                    }
+            case .ready(let balance, let sats):
+                if noIcon {
+                    Text("\(balance) sats \(sats != nil ? (fiatPrice(Double(sats!)) ?? "") : "")")
+                        .onTapGesture {
+                            nwcSendBalanceRequest()
+                        }
+                }
+                else {
+                    Text("\(Image(systemName:"bolt.fill")) \(balance) \(sats != nil ? (fiatPrice(Double(sats!)) ?? "") : "")")
+                        .onTapGesture {
+                            nwcSendBalanceRequest()
+                        }
+                }
             case .timeout:
                 Image(systemName:"bolt.trianglebadge.exclamationmark.fill")
                     .opacity(0.5)
