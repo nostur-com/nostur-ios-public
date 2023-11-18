@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ZapCustomizerSheet: View {
     @EnvironmentObject private var themes:Themes
+    @ObservedObject private var ss:SettingsStore = .shared
     public var name:String
     public var customZapId:UUID?
     public var supportsZap = false
@@ -25,6 +26,12 @@ struct ZapCustomizerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 10) {
+                if ss.nwcShowBalance && ss.nwcReady {
+                    HStack {
+                        Text("Your balance:")
+                        NWCWalletBalance(noIcon: true)
+                    }
+                }
                 Grid {
                     GridRow {
                         ZapAmountButton(3, isSelected: selectedAmount == 3).onTapGesture {
