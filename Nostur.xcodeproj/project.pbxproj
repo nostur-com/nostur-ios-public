@@ -578,7 +578,7 @@
 		1F38AFF32A2789C70035641E /* MacListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacListsView.swift; sourceTree = "<group>"; };
 		1F39756C2AB5A229004F9D77 /* NIP42.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP42.swift; sourceTree = "<group>"; };
 		1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiFollowSheet.swift; sourceTree = "<group>"; };
-		1F3D4BB62A25CC140084F939 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppView.swift; path = Nostur/AppView.swift; sourceTree = "<group>"; };
+		1F3D4BB62A25CC140084F939 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
 		1F3E135829C8B11F00D076EA /* Event+PrivateNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+PrivateNotes.swift"; sourceTree = "<group>"; };
 		1F3E135A29C8B21200D076EA /* Contact+PrivateNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+PrivateNotes.swift"; sourceTree = "<group>"; };
 		1F41527E2A95B12800EC63B2 /* PostAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostAccountSwitcher.swift; sourceTree = "<group>"; };
@@ -749,7 +749,7 @@
 		1FB130BE29C1A314004AC98D /* QuotedNoteFragmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotedNoteFragmentView.swift; sourceTree = "<group>"; };
 		1FB38B6029E29CEC00B85156 /* ProfilePicPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicPicker.swift; sourceTree = "<group>"; };
 		1FB448BA2965F3D000038671 /* Nostur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nostur.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1FB448BD2965F3D000038671 /* NosturApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NosturApp.swift; path = Nostur/NosturApp.swift; sourceTree = "<group>"; };
+		1FB448BD2965F3D000038671 /* NosturApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturApp.swift; sourceTree = "<group>"; };
 		1FB448C42965F3D000038671 /* NosturTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturTabsView.swift; sourceTree = "<group>"; };
 		1FB448C62965F3D200038671 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1FB448C82965F3D200038671 /* Nostur.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Nostur.entitlements; path = Nostur/Nostur.entitlements; sourceTree = "<group>"; };
@@ -981,12 +981,12 @@
 		1F02EA5D299FE52300FC89EB /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				1F80EF6A2A0B77DE00FF8F3B /* GuestAccountManager.swift */,
+				1F80EF682A0B680C00FF8F3B /* NewOnboardingTracker.swift */,
 				1F02EA5B299F94F200FC89EB /* Onboarding.swift */,
 				1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */,
 				1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */,
 				1F9499C8299F568900F628B4 /* WelcomeSheet.swift */,
-				1F80EF682A0B680C00FF8F3B /* NewOnboardingTracker.swift */,
-				1F80EF6A2A0B77DE00FF8F3B /* GuestAccountManager.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -1041,8 +1041,8 @@
 		1F09D2752B03B130000B9B2B /* Network */ = {
 			isa = PBXGroup;
 			children = (
-				1F09D2762B03B16E000B9B2B /* NetworkMonitor.swift */,
 				1F09D2782B03B687000B9B2B /* ConnectionPool.swift */,
+				1F09D2762B03B16E000B9B2B /* NetworkMonitor.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -1112,16 +1112,16 @@
 				1FB6E6FA29E3B827008BE8A6 /* MainView.swift */,
 				1F810B2F29E67017006B1614 /* MutedWordsView.swift */,
 				1F57C54A299285B300DFE063 /* Search.swift */,
-				1F7A10E12AA1DB7300042CD6 /* Search+Helpers.swift */,
 				1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */,
+				1F7A10E12AA1DB7300042CD6 /* Search+Helpers.swift */,
 				1F21442B29A797930090E78E /* Settings.swift */,
 				1F099DA52ADC29710069F2DF /* Settings+AutodownloadLevelPicker.swift */,
-				1FBE253D2A9E5A7400F60FCF /* Settings+ThemePicker.swift */,
-				1F2DEDDC2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift */,
 				1F2DEDDE2ADAB52E009E360C /* Settings+LightningWalletPicker.swift */,
-				1F2DEDDA2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift */,
 				1F2FE6882AD8E5810088BF56 /* Settings+MainWoTaccountPicker.swift */,
+				1F2DEDDC2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift */,
 				1F7B218B2AE3118D00CE972E /* Settings+Nip96Configurator.swift */,
+				1FBE253D2A9E5A7400F60FCF /* Settings+ThemePicker.swift */,
+				1F2DEDDA2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift */,
 				1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */,
 				1F21442D29A797B80090E78E /* SettingsStore.swift */,
 				1F810B2D29E65639006B1614 /* TermsAndConditions.swift */,
@@ -1235,6 +1235,7 @@
 			children = (
 				1F45C7EF29EF99A600F58772 /* MediaUploads */,
 				1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */,
+				1FA477222A780C0E00A4CCD3 /* Binding+not.swift */,
 				1F1ABC4A29819CAC00D03FA9 /* Cache.swift */,
 				1F33EC3829B6849800615FB9 /* Centered.swift */,
 				1FECAC4629A08255006FEE72 /* Collection+subscript.swift */,
@@ -1253,12 +1254,11 @@
 				1F987EB229805F33001E352E /* String+matchingStrings.swift */,
 				1F927C6E297DB3490024F665 /* ThreadWarning.swift */,
 				1FC78F7029CADEED0009C1C7 /* View+centered.swift */,
+				1F1580D22AAD11A100E5CCAA /* View+onBecomingVisible.swift */,
 				1F21CE422A067EC10021E2C7 /* View+onDelete.swift */,
 				1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */,
 				1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */,
 				1F00337029BEF141007CE040 /* View+withSheets.swift */,
-				1FA477222A780C0E00A4CCD3 /* Binding+not.swift */,
-				1F1580D22AAD11A100E5CCAA /* View+onBecomingVisible.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1360,8 +1360,8 @@
 		1F7261512A13F79700146B1F /* GIFs */ = {
 			isa = PBXGroup;
 			children = (
-				1F7261522A13F7A900146B1F /* Tenor.swift */,
 				1F7261542A13F81D00146B1F /* GifSearcher.swift */,
+				1F7261522A13F7A900146B1F /* Tenor.swift */,
 			);
 			path = GIFs;
 			sourceTree = "<group>";
@@ -1377,11 +1377,11 @@
 		1F740D9D29AF36AB00EFCCA7 /* Badges */ = {
 			isa = PBXGroup;
 			children = (
+				1F740DA229AF524100EFCCA7 /* BadgeDetailView.swift */,
 				1F740D9B29AF1BF600EFCCA7 /* Badges.swift */,
 				1F740D9E29AF36C800EFCCA7 /* BadgesIssuedView.swift */,
 				1F740DAC29AF8A5200EFCCA7 /* BadgesReceivedView.swift */,
 				1F740DAA29AF898400EFCCA7 /* BadgesView.swift */,
-				1F740DA229AF524100EFCCA7 /* BadgeDetailView.swift */,
 				1F740DA029AF381F00EFCCA7 /* CreateNewBadgeSheet.swift */,
 				1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */,
 			);
@@ -1408,11 +1408,11 @@
 		1F8836E62AA5A80600F252C1 /* Refactor */ = {
 			isa = PBXGroup;
 			children = (
-				1F8836E72AA5A82000F252C1 /* DMs.swift */,
-				1F0CA5D72AA68DF200DC10CD /* DirectMessageRows.swift */,
 				1F0CA5D92AA68E1300DC10CD /* Conversation.swift */,
 				1F0CA5DB2AA68E4A00DC10CD /* ConversationRowView.swift */,
+				1F0CA5D72AA68DF200DC10CD /* DirectMessageRows.swift */,
 				1F0CA5DD2AA6914900DC10CD /* DirectMessageViewModel.swift */,
+				1F8836E72AA5A82000F252C1 /* DMs.swift */,
 				1FE0F0832AA7352400580FD8 /* DMSettings.swift */,
 			);
 			path = Refactor;
@@ -1523,14 +1523,14 @@
 		1F9D69D92A3096E100628460 /* Playground */ = {
 			isa = PBXGroup;
 			children = (
+				1F2C86B62AA8D29E00D2D7B3 /* FrameTesting.swift */,
 				1F210B0329F7ED2D00159814 /* ImageTest.swift */,
 				1FCC2F2C2A1B2CD100202EFA /* ImageTesting1.swift */,
-				1F2BD4A32A22206500F006AC /* SnapshotTest.swift */,
-				1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */,
 				1FF78BB72A45421500CA3DDA /* PaddingsTesting.swift */,
-				1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */,
 				1FFE7F5F2A7927E2001E8D80 /* PostTest.swift */,
-				1F2C86B62AA8D29E00D2D7B3 /* FrameTesting.swift */,
+				1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */,
+				1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */,
+				1F2BD4A32A22206500F006AC /* SnapshotTest.swift */,
 			);
 			path = Playground;
 			sourceTree = "<group>";
@@ -1552,11 +1552,8 @@
 			children = (
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
-				1F3D4BB62A25CC140084F939 /* AppView.swift */,
-				1F0F0F612A9CC75300E23BA7 /* Theme.swift */,
 				1F7483562A67904900CA7026 /* CREDITS.md */,
 				1F7483572A6797F600CA7026 /* MISSION.md */,
-				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1F06D2D92A584318007B9373 /* README.md */,
 				1F313DED296980D8004C7366 /* Info.plist */,
 				1F0F356A2A31C76900AA9C41 /* Localizable.strings */,
@@ -1588,13 +1585,13 @@
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
 				1F0592DA2A5054FD003B4B3C /* Communities */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
+				1FDF0ED729EBA26300B56AC4 /* CustomFeeds */,
 				1FC78F7229CB45520009C1C7 /* DMs */,
 				1F7265C029B2146900E4F9D4 /* Export */,
 				1F7261512A13F79700146B1F /* GIFs */,
 				1F558B1929FD62D6002938A3 /* Highlights */,
 				1FB4D3F929BAEAE4004DB537 /* Mainfeed */,
 				1F71037B296BD98D006245CC /* Nostr */,
-				1FDF0ED729EBA26300B56AC4 /* CustomFeeds */,
 				1FC2DFF229A9328F00C8A9DA /* Notifications */,
 				1F02EA5D299FE52300FC89EB /* Onboarding */,
 				1F9D69D92A3096E100628460 /* Playground */,
@@ -1608,8 +1605,11 @@
 				1F45C7EE29EF998D00F58772 /* Utils */,
 				1F91D8F92A188DE800C419A3 /* ViewFragments */,
 				1FCA273A299A4F2100298881 /* Zaps */,
-				1F3897502AB9822B001A874E /* NRState.swift */,
+				1F3D4BB62A25CC140084F939 /* AppView.swift */,
 				1F3897522ABA92DD001A874E /* LoggedInAccount.swift */,
+				1FB448BD2965F3D000038671 /* NosturApp.swift */,
+				1F3897502AB9822B001A874E /* NRState.swift */,
+				1F0F0F612A9CC75300E23BA7 /* Theme.swift */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -1621,6 +1621,9 @@
 				1F21D6792AAB68F400CCF3B1 /* Gallery */,
 				1F1F13012AA9A65D00DDED82 /* Hot */,
 				1FDBD89A2A7641F9001D9F34 /* NoiseFilter */,
+				1F2884A92A77D11D0006766E /* FeedSettings.swift */,
+				1F1F13062AA9C09400DDED82 /* FeedSettings+AppThemeSwitcher.swift */,
+				1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */,
 				1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */,
 				1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */,
 				1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */,
@@ -1631,9 +1634,6 @@
 				1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */,
 				1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */,
 				1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */,
-				1F2884A92A77D11D0006766E /* FeedSettings.swift */,
-				1F1F13062AA9C09400DDED82 /* FeedSettings+AppThemeSwitcher.swift */,
-				1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */,
 			);
 			path = Mainfeed;
 			sourceTree = "<group>";
@@ -1683,11 +1683,11 @@
 				1F8CBFFE2AC304FD0077EF7D /* NotificationsNewFollowers.swift */,
 				1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */,
 				1F8CBFFC2AC3028D0077EF7D /* NotificationsReposts.swift */,
+				1F8CC0002AC324710077EF7D /* NotificationsRepostsGrouped.swift */,
 				1F7525832997B21D00477AF2 /* NotificationsView.swift */,
 				1F81C4A62AC033DF0006CAA2 /* NotificationsViewModel.swift */,
 				1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */,
 				1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */,
-				1F8CC0002AC324710077EF7D /* NotificationsRepostsGrouped.swift */,
 			);
 			path = Notifications;
 			sourceTree = "<group>";
@@ -1733,8 +1733,8 @@
 		1FCA273A299A4F2100298881 /* Zaps */ = {
 			isa = PBXGroup;
 			children = (
-				1F056FA42A5C2E4F00578B35 /* ZapCustomizer */,
 				1F2DD4272A29C0AA0028A062 /* NIP47-NWC */,
+				1F056FA42A5C2E4F00578B35 /* ZapCustomizer */,
 				1F69854E29F2B63E006F813F /* Bolt11.swift */,
 				1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */,
 				1FCA273D299A6A1A00298881 /* LightningButton.swift */,
@@ -1746,8 +1746,8 @@
 				1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */,
 				1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */,
 				1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */,
-				1F7C65BE29A14BA3009FF3EA /* Zaps.swift */,
 				1F5C82D82ACD336A00333775 /* ZapReceipt.swift */,
+				1F7C65BE29A14BA3009FF3EA /* Zaps.swift */,
 			);
 			path = Zaps;
 			sourceTree = "<group>";
@@ -1767,20 +1767,23 @@
 				1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */,
 				1F740DA629AF61A700EFCCA7 /* ContactSearchResultRow.swift */,
 				1F740DA429AF5F6900EFCCA7 /* ContactsSearch.swift */,
+				1F09D2732B024678000B9B2B /* FollowedBy.swift */,
 				1FC4D40C2998ED0E004E88CD /* FollowersList.swift */,
 				1F7483542A67823300CA7026 /* ImposterChecker.swift */,
 				1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */,
 				1FC7A49A29F95AD400645FEF /* ProfileByPubkey.swift */,
+				1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */,
 				1FCCAC9D2AB747CF00B3F00A /* ProfileFollowingCount.swift */,
 				1FCCAC9F2AB7562500B3F00A /* ProfileFollowingList.swift */,
-				1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */,
+				1FF209152AB0A92800876DB2 /* ProfileGalleryViewModel.swift */,
 				1F33096029891C4800D4D8CF /* ProfileLikesView.swift */,
 				1FCCACA12AB764D300B3F00A /* ProfileLikesViewModel.swift */,
 				1F210B0529F853BB00159814 /* ProfileMediaView.swift */,
-				1FCCAC992AB6D6B000B3F00A /* ProfilePostsView.swift */,
 				1FE31EE02A587D78008A4A6F /* ProfileOverlayCard.swift */,
 				1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */,
 				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
+				1FCCAC992AB6D6B000B3F00A /* ProfilePostsView.swift */,
+				1FCCAC972AB6D41000B3F00A /* ProfilePostsViewModel.swift */,
 				1F83498029DE28290032E52B /* ProfileRelays.swift */,
 				1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */,
 				1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */,
@@ -1788,9 +1791,6 @@
 				1F716C742A14D4F300B202CA /* ProfileTabs.swift */,
 				1F65121A29C75AC9009FD4AE /* ProfileView.swift */,
 				1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */,
-				1FF209152AB0A92800876DB2 /* ProfileGalleryViewModel.swift */,
-				1FCCAC972AB6D41000B3F00A /* ProfilePostsViewModel.swift */,
-				1F09D2732B024678000B9B2B /* FollowedBy.swift */,
 			);
 			path = Profiles;
 			sourceTree = "<group>";
