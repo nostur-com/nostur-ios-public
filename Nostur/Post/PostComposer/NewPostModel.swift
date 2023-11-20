@@ -12,6 +12,7 @@ import NostrEssentials
 
 public final class TypingTextModel: ObservableObject {
     @AppStorage("simple_draft") var draft = ""
+    @AppStorage("undo_send_restore_draft") var restoreDraft = ""
     @Published var text: String = "" {
         didSet {
             draft = text
@@ -24,9 +25,14 @@ public final class TypingTextModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
     
     init() {
-        if !draft.isEmpty {
+        if !draft.isEmpty { // Restore after Cancel
             text = draft
         }
+        else if !restoreDraft.isEmpty { // Restore after Undo send
+            text = restoreDraft
+        }
+        
+        restoreDraft = ""
     }
 }
 
@@ -255,6 +261,7 @@ public final class NewPostModel: ObservableObject {
                             savedEvent.cancellationId = cancellationId
                             savedEvent.updateNRPost.send(savedEvent)
                             DispatchQueue.main.async {
+                                self.typingTextModel.restoreDraft = self.typingTextModel.draft
                                 _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
                             }
                         }
@@ -282,6 +289,7 @@ public final class NewPostModel: ObservableObject {
                     }
                 }
             }
+            self.typingTextModel.restoreDraft = self.typingTextModel.draft
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
         }
         
@@ -292,6 +300,7 @@ public final class NewPostModel: ObservableObject {
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
                     // Republish post being replied to
+                    self.typingTextModel.restoreDraft = self.typingTextModel.draft
                     Unpublisher.shared.publishNow(replyToNEvent)
                 }
             }
@@ -303,6 +312,7 @@ public final class NewPostModel: ObservableObject {
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEventId))
                     // Republish post being quoted
+                    self.typingTextModel.restoreDraft = self.typingTextModel.draft
                     Unpublisher.shared.publishNow(quotingNEvent)
                 }
             }
