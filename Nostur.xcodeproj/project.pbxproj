@@ -2271,6 +2271,7 @@
 				1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */,
 				1F2BD4A42A22206500F006AC /* SnapshotTest.swift in Sources */,
 				1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */,
+				1F6629142B0D49BD00508988 /* RelayData.swift in Sources */,
 				1F88EE8E2AD12CFA006A83C3 /* MentionChoices.swift in Sources */,
 				1F39756F2AB622C1004F9D77 /* MultiFollowSheet.swift in Sources */,
 				1FCFDDD229FCEA91005320B8 /* HighlightComposer.swift in Sources */,
