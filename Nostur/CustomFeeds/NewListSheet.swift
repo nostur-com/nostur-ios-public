@@ -24,7 +24,7 @@ struct NewListSheet: View {
     }
     
     @FetchRequest(
-        sortDescriptors: [SortDescriptor(\CloudRelay.createdAt, order: .forward)],
+        sortDescriptors: [SortDescriptor(\CloudRelay.createdAt_, order: .forward)],
         animation: .default)
     private var relays: FetchedResults<CloudRelay>
     

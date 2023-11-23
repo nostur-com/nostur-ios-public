@@ -10,7 +10,7 @@ import Combine
 import CombineWebSocket
 import CoreData
 
-public typealias CanonicalRelayUrl = String
+public typealias CanonicalRelayUrl = String // lowercased, without trailing slash on root domain
 
 public class ConnectionPool: ObservableObject {
     static public let shared = ConnectionPool()
