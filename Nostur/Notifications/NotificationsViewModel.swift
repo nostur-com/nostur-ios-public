@@ -18,7 +18,6 @@ class NotificationsViewModel: ObservableObject {
     private init() {
         startTimer()
         setupSubscriptions()
-        checkRelays()
         if IS_CATALYST {
             setupBadgeNotifications()
         }
@@ -127,6 +126,7 @@ class NotificationsViewModel: ObservableObject {
     @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false
     @AppStorage("notifications_mute_new_followers") var muteNewFollowers:Bool = false
     
+    private var restoreSubscriptionsSubject = PassthroughSubject<Void, Never>()
     private var subscriptions = Set<AnyCancellable>()
     private var timer: Timer?
     
@@ -145,9 +145,23 @@ class NotificationsViewModel: ObservableObject {
                 self.unreadReactions_ = 0
                 self.unreadZaps_ = 0
                 self.unreadFailedZaps_ = 0
-                self.checkRelays()
+                self.addNotificationSubscriptions()
             }
             .store(in: &subscriptions)
+        
+        restoreSubscriptionsSubject
+            .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
+            .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                self.relayCheckNewestNotifications()
+                self.relayCheckSinceNotifications()
+            }
+            .store(in: &subscriptions)
+    }
+    
+    public func restoreSubscriptions() {
+        restoreSubscriptionsSubject.send()
     }
     
     private func setupBadgeNotifications() {
@@ -171,14 +185,12 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    public func checkRelays() {
+    public func addNotificationSubscriptions() {
         // Check relays for newest messages NOW+NEWER ("Notifications") realtime
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            self.relayCheckNewestNotifications()
-        }
+        self.relayCheckNewestNotifications()
         
         // Check relays for since... later
-        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { // TODO: Change to event based instead of timer. (after instant feed finished)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.relayCheckSinceNotifications()
         }
     }
