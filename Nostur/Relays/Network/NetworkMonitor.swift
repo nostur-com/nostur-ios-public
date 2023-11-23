@@ -16,7 +16,7 @@ public class NetworkMonitor: ObservableObject {
     private let monitor = NWPathMonitor()
     private var queue = DispatchQueue(label: "network-monitor")
     
-    @Published public var isConnected: Bool = false
+    @Published public var isConnected: Bool = true
     
     // Helper for SwiftUI views where a negative binding is needed
     // (example: .fullScreenCover(isPresented: $networkMonitor.isDisconnected)
@@ -27,7 +27,7 @@ public class NetworkMonitor: ObservableObject {
     }
     
     private var subscriptions = Set<AnyCancellable>()
-    public var isConnectedSubject = CurrentValueSubject<Bool, Never>(false)
+    public var isConnectedSubject = PassthroughSubject<Bool, Never>()
     
     init() {
         isConnectedSubject
