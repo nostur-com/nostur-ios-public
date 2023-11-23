@@ -65,7 +65,12 @@ struct AppView: View {
     @FetchRequest(sortDescriptors: [SortDescriptor(\.markedReadAt_, order: .reverse)])
     private var dmStates:FetchedResults<CloudDMState>
     
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.updatedAt_, order: .reverse)])
+    private var relays:FetchedResults<CloudRelay>
+    
     @State private var noDMStates = false
+    
+    @State private var didRemoveDuplicateRelays = false
     
     var body: some View {
         #if DEBUG
@@ -198,6 +203,12 @@ struct AppView: View {
             }
         })
         
+        .onReceive(relays.publisher.collect(), perform: { relays in
+            if !relays.isEmpty && !didRemoveDuplicateRelays {
+                removeDuplicateRelays()
+            }
+        })
+        
         .onReceive(dmStates.publisher.collect(), perform: { dmStates in
             if dmStates.count != dm.dmStates.count {
                 removeDuplicateDMStates()
@@ -254,6 +265,27 @@ struct AppView: View {
         L.cloud.debug("Deleting: \(duplicates.count) duplicate DM conversation states")
         duplicates.forEach({ duplicateDMState in
             DataProvider.shared().viewContext.delete(duplicateDMState)
+        })
+        if !duplicates.isEmpty {
+            DataProvider.shared().save()
+        }
+    }
+    
+    private func removeDuplicateRelays() {
+        guard !didRemoveDuplicateRelays else { return }
+        var uniqueRelays = Set<String>()
+        let sortedRelays = relays.sorted { $0.updatedAt > $1.updatedAt }
+        
+        let duplicates = sortedRelays
+            .filter { relay in
+                guard let url = relay.url_ else { return false }
+                let normalizedUrl = normalizeRelayUrl(url)
+                return !uniqueRelays.insert(normalizedUrl).inserted
+            }
+        
+        L.cloud.debug("Deleting: \(duplicates.count) duplicate relays")
+        duplicates.forEach({ duplicateRelay in
+            DataProvider.shared().viewContext.delete(duplicateRelay)
         })
         if !duplicates.isEmpty {
             DataProvider.shared().save()
