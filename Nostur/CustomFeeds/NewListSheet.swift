@@ -17,16 +17,16 @@ struct NewListSheet: View {
     @State private var selectedContacts:Set<Contact> = []
     @State private var contactSelectionVisible = false
     @State private var feedType:LVM.ListType = .pubkeys
-    @State private var selectedRelays:Set<Relay> = []
+    @State private var selectedRelays:Set<CloudRelay> = []
     
     private var selectedRelaysData:Set<RelayData> {
         Set(selectedRelays.map { $0.toStruct() })
     }
     
     @FetchRequest(
-        sortDescriptors: [SortDescriptor(\Relay.createdAt, order: .forward)],
+        sortDescriptors: [SortDescriptor(\CloudRelay.createdAt, order: .forward)],
         animation: .default)
-    private var relays: FetchedResults<Relay>
+    private var relays: FetchedResults<CloudRelay>
     
     private var formIsValid:Bool {
         guard !title.isEmpty else { return false }
@@ -57,7 +57,7 @@ struct NewListSheet: View {
                             HStack {
                                 Image(systemName: selectedRelays.contains(relay) ? "checkmark.circle.fill" : "circle")
                                     .foregroundColor(selectedRelays.contains(relay) ? Color.primary : Color.secondary)
-                                Text(relay.url ?? "(Missing relay address)")
+                                Text(relay.url_ ?? "(Missing relay address)")
                             }
                             .id(relay.objectID)
                             .contentShape(Rectangle())

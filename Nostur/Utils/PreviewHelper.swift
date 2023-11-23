@@ -307,19 +307,35 @@ extension PreviewEnvironment {
     
     func loadRelays() {
         context.performAndWait {
-            let relay = Relay(context: context)
-            relay.url = "ws://localhost:3000"
+            let relay = CloudRelay(context: context)
+            relay.url_ = "ws://localhost:3000/both"
             relay.createdAt = Date()
-            relay.id = UUID()
-            relay.read = false
-            relay.write = false
+            relay.read = true
+            relay.write = true
             
-            let relay2 = Relay(context: context)
-            relay2.url = "ws://localhost:3001"
+            let relay2 = CloudRelay(context: context)
+            relay2.url_ = "ws://localhost:3001/both"
             relay2.createdAt = Date()
-            relay2.id = UUID()
-            relay2.read = false
-            relay2.write = false
+            relay2.read = true
+            relay2.write = true
+            
+            let relay3 = CloudRelay(context: context)
+            relay3.url_ = "ws://localhost:3008/write"
+            relay3.createdAt = Date()
+            relay3.read = false
+            relay3.write = true
+            
+            let relay4 = CloudRelay(context: context)
+            relay4.url_ = "ws://localhost:3008/read"
+            relay4.createdAt = Date()
+            relay4.read = true
+            relay4.write = false
+            
+            let relay5 = CloudRelay(context: context)
+            relay5.url_ = "ws://localhost:3008/other"
+            relay5.createdAt = Date()
+            relay5.read = true
+            relay5.write = true
         }
     }
     
@@ -329,12 +345,12 @@ extension PreviewEnvironment {
         }
     }
     
-    func loadRelayNosturLists() {
-        context.performAndWait {
-            NosturList.generateRelayExamples(context: context)
-        }
-    }
-    
+//    func loadRelayNosturLists() {
+//        context.performAndWait {
+//            NosturList.generateRelayExamples(context: context)
+//        }
+//    }
+//    
     func loadRepliesAndReactions() {
         context.performAndWait {
             self.parseMessages(testRepliesAndReactions())
@@ -525,8 +541,8 @@ struct PreviewFetcher {
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request)) ?? []
     }
     
-    static func fetchRelays(context:NSManagedObjectContext? = nil) -> [Relay] {
-        let request = Relay.fetchRequest()
+    static func fetchRelays(context:NSManagedObjectContext? = nil) -> [CloudRelay] {
+        let request = CloudRelay.fetchRequest()
         request.predicate = NSPredicate(value: true)
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request)) ?? []
     }

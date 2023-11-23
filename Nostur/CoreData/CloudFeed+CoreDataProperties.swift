@@ -71,22 +71,22 @@ extension CloudFeed : Identifiable {
         }
     }
     
-    var relays_:Set<Relay> {
-        get {  
+    var relays_:Set<CloudRelay> {
+        get {
             let context = Thread.isMainThread ? DataProvider.shared().viewContext : bg()
             let relayUrls = Set(self.relays?.components(separatedBy: " ") ?? [])
-            let fr = Relay.fetchRequest()
+            let fr = CloudRelay.fetchRequest()
             fr.predicate = NSPredicate(value: true)
             let allRelays = (try? context.fetch(fr)) ?? []
-            var relays:[Relay] = []
+            var relays:[CloudRelay] = []
             var didAddNew = false
             for url in relayUrls {
-                if let relay = allRelays.first(where: { $0.url == url || (($0.url ?? "") + "/") == url || $0.url == (url + "/") }) {
+                if let relay = allRelays.first(where: { $0.url_ == url || (($0.url_ ?? "") + "/") == url || $0.url_ == (url + "/") }) {
                     relays.append(relay)
                 }
                 else {
-                    let newRelay = Relay(context: context)
-                    newRelay.url = url
+                    let newRelay = CloudRelay(context: context)
+                    newRelay.url_ = url
                     newRelay.write = false
                     newRelay.read = false
                     newRelay.createdAt = .now
@@ -99,7 +99,7 @@ extension CloudFeed : Identifiable {
             }
             return Set(relays)
         }
-        set { self.relays = newValue.compactMap { $0.url }.joined(separator: " ") }
+        set { self.relays = newValue.compactMap { $0.url_ }.joined(separator: " ") }
     }
     
     var name_:String {

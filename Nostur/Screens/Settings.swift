@@ -264,10 +264,9 @@ struct Settings: View {
                     }
                     .sheet(isPresented: $createRelayPresented) {
                         NewRelayView { url in
-                            let relay = Relay(context: viewContext)
-                            relay.id = UUID()
+                            let relay = CloudRelay(context: viewContext)
                             relay.createdAt = Date()
-                            relay.url = url
+                            relay.url_ = url
                             
                             do {
                                 try viewContext.save()

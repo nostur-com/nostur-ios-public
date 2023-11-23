@@ -19,17 +19,17 @@ struct Maintenance {
     @MainActor
     static func ensureBootstrapRelaysExist(context:NSManagedObjectContext) {
         context.performAndWait {
-            let r = Relay.fetchRequest()
+            let r = CloudRelay.fetchRequest()
             if let relaysCount = try? context.fetch(r).count {
                 var relays:[RelayData] = []
                 
                 if (relaysCount == 0) {
                     for url in BOOTSTRAP_RELAYS {
-                        let bootstrapRelay = Relay(context: context)
                         bootstrapRelay.read = url == "wss://nostr.mutinywallet.com" ? false : true // this one is write only
+                        let bootstrapRelay = CloudRelay(context: context)
                         bootstrapRelay.write = true
                         bootstrapRelay.createdAt = Date.now
-                        bootstrapRelay.url = url
+                        bootstrapRelay.url_ = url
                         relays.append(bootstrapRelay.toStruct())
                     }
                     for relay in relays {
@@ -871,7 +871,7 @@ struct Maintenance {
                     migratedCF.refreshedAt = cf.refreshedAt
                     migratedCF.showAsTab = cf.showAsTab
                     migratedCF.wotEnabled = cf.wotEnabled
-                    migratedCF.relays_ = cf.relays_
+                    migratedCF.relays = cf.relays_.compactMap { $0.url }.joined(separator: " ")
                 }
                 else { // Pubkeys
                     let migratedCF = CloudFeed(context: context)

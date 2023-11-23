@@ -11,7 +11,7 @@ struct RelayEditView: View {
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
-    @ObservedObject var relay: Relay
+    @ObservedObject var relay: CloudRelay
     @ObservedObject private var cp:ConnectionPool = .shared
     @State private var connection: RelayConnection?
     @State private var refresh: Bool = false
@@ -108,7 +108,7 @@ struct RelayEditView: View {
                                     connection?.disconnect()
                                     
                                     // Replace the connection first
-                                    if let oldUrl = relay.url {
+                                    if let oldUrl = relay.url_ {
                                         ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                                     }
                                     let newRelayData = RelayData(read: relay.read, url: relayUrl, write: relay.write, excludedPubkeys:  relay.excludedPubkeys)
@@ -157,10 +157,10 @@ struct RelayEditView: View {
                 } label: {
                     Label("Remove", systemImage: "trash")
                 }
-                .confirmationDialog("Remove this relay: \(relay.url ?? "")?", isPresented: $confirmRemoveShown, titleVisibility: .visible) {
+                .confirmationDialog("Remove this relay: \(relay.url_ ?? "")?", isPresented: $confirmRemoveShown, titleVisibility: .visible) {
                     Button("Remove", role: .destructive) {
                         connection?.disconnect()
-                        if let oldUrl = relay.url {
+                        if let oldUrl = relay.url_ {
                             ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                         }
                         viewContext.delete(relay)
@@ -177,7 +177,7 @@ struct RelayEditView: View {
                 Button("Save") {
                     do {
                         let correctedRelayUrl = (relayUrl.prefix(6) != "wss://" && relayUrl.prefix(5) != "ws://"  ? ("wss://" + relayUrl) : relayUrl).lowercased()
-                        relay.url = correctedRelayUrl
+                        relay.url_ = correctedRelayUrl
                         relay.excludedPubkeys = excludedPubkeys
                         try viewContext.save()
                         // Update existing connections
@@ -219,7 +219,7 @@ struct RelayEditView: View {
             }
         }
         .onAppear {
-            relayUrl = relay.url ?? ""
+            relayUrl = relay.url_ ?? ""
             excludedPubkeys = relay.excludedPubkeys
             connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
 //            print("connection is now \(connection?.url ?? "")")
@@ -264,9 +264,8 @@ struct RelayEditView: View {
 struct RelayEditView_Previews: PreviewProvider {
     
     static var previews: some View {
-        let relay = Relay(context: DataProvider.shared().container.viewContext)
-        relay.id = UUID()
-        relay.url = "ws://localhost:3000"
+        let relay = CloudRelay(context: DataProvider.shared().container.viewContext)
+        relay.url_ = "ws://localhost:3000"
         relay.read = true
         relay.write = false
         relay.createdAt = Date()

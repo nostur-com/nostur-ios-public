@@ -10,6 +10,7 @@ import CoreData
 
 struct RelayRowView: View {
     @ObservedObject var relay:Relay
+    @ObservedObject public var relay:CloudRelay
     @ObservedObject private var cp:ConnectionPool = .shared
     
     var isConnected:Bool {
@@ -33,7 +34,7 @@ struct RelayRowView: View {
                     .opacity(0.2)
             }
             
-            Text("\(relay.url ?? "(Unknown)")")
+            Text("\(relay.url_ ?? "(Unknown)")")
             
             Spacer()
             
@@ -57,12 +58,12 @@ struct RelayRowView: View {
                 }
         }
         .task {
-            let relayUrl = relay.url ?? ""
+            let relayUrl = relay.url_ ?? ""
             connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
             print("connection is now \(connection?.url ?? "")")
         }
         .onReceive(cp.objectWillChange, perform: { _ in
-            let relayUrl = relay.url ?? ""
+            let relayUrl = relay.url_ ?? ""
             connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
             print("connection is now \(connection?.url ?? "")")
         })
@@ -72,14 +73,14 @@ struct RelayRowView: View {
 struct RelaysView: View {
     @EnvironmentObject private var themes:Themes
     @State var createRelayPresented = false
-    @State var editRelay:Relay?
+    @State var editRelay:CloudRelay?
 
     @Environment(\.managedObjectContext) private var viewContext
 
     @FetchRequest(
-        sortDescriptors: [SortDescriptor(\Relay.createdAt, order: .forward)],
+        sortDescriptors: [SortDescriptor(\CloudRelay.createdAt_, order: .forward)],
         animation: .default)
-    var relays: FetchedResults<Relay>
+    var relays: FetchedResults<CloudRelay>
 
     var body: some View {
         VStack {
