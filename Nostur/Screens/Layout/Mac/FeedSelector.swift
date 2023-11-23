@@ -37,7 +37,7 @@ struct FeedSelector_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadNosturLists()
-            pe.loadRelayNosturLists()
+//            pe.loadRelayNosturLists()
         }) {
             FeedSelectorTestur()
         }

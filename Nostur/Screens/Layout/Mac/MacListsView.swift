@@ -265,7 +265,7 @@ struct MacListsView_Previews: PreviewProvider {
             
             pe.loadContacts()
             pe.loadNosturLists()
-            pe.loadRelayNosturLists()
+//            pe.loadRelayNosturLists()
             
         }, previewDevice:PreviewDevice(rawValue: "My Mac (Mac Catalyst)"), content: {
             MacListsView()
