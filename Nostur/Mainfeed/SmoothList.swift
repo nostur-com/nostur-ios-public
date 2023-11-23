@@ -146,7 +146,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 coordinator.data = data
                 guard let dataSource = collectionViewHolder.dataSource else { return }
                 let currentNumberOfItems = dataSource.snapshot().numberOfItems(inSection: .main)
-                let isInitialApply = currentNumberOfItems == 0
+                let isInitialApply = coordinator.initialApply
                 var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
                 snapshot.appendSections([SingleSection.main])
                 snapshot.appendItems(data.keys.elements, toSection: .main)
@@ -171,24 +171,31 @@ struct SmoothList: UIViewControllerRepresentable {
                     signpost(NRState.shared, "LAUNCH", .event, "SmoothList: Applying snapshot")
                 }
                 dataSource.apply(snapshot, animatingDifferences: shouldAnimate) {
-                    if (isInitialApply) { // Scroll to initial position
-                        // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
-                        if data.count > 0 {
-                            signpost(NRState.shared, "LAUNCH", .end, "SmoothList: snapshot applied")
-                        }
-                        if (coordinator.lvm.initialIndex > 4) {
-                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
-                            coordinator.lvm.isAtTop = false
-                            collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
-                        }
-                        else if (collectionViewHolder.collectionView.contentOffset.y == 0) {
-                            DispatchQueue.main.async {
-                                // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
-                                L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
-                                coordinator.lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
-                                coordinator.lvm.lastReadId = coordinator.lvm.posts.keys.elements.first
-                            }
-                        }
+                    if (isInitialApply) {
+                        coordinator.initialApply = false
+                        // Scroll to initial position
+//                        // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
+//                        if data.count > 0 {
+//                            signpost(NRState.shared, "LAUNCH", .end, "SmoothList: snapshot applied")
+//                        }
+//                        if (coordinator.lvm.initialIndex > 4) {
+//                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
+//                            coordinator.lvm.isAtTop = false
+//                            collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
+//                        }
+//                        else if (collectionViewHolder.collectionView.contentOffset.y == 0) {
+//                            // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
+////                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
+////                            coordinator.lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
+//                            coordinator.lvm.lastReadId = coordinator.lvm.posts.keys.elements.first
+//                            
+//                            DispatchQueue.main.async {
+//                                // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
+//                                L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
+//                                coordinator.lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
+//                                coordinator.lvm.lastReadId = coordinator.lvm.posts.keys.elements.first
+//                            }
+//                        }
                     }
                     else {
                         // KEEP POSITION AFTER INSERT, IF AUTOSCROLL IS DISABLED
@@ -220,6 +227,7 @@ struct SmoothList: UIViewControllerRepresentable {
         private var lastCalledTimestamp: TimeInterval = 0
         private let debounceInterval: TimeInterval = 0.3 // Adjust this value to control the throttling
         
+        public var initialApply = true
         
         init(parent: SmoothList) {
             self.parent = parent
