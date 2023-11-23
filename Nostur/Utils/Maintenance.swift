@@ -48,7 +48,7 @@ struct Maintenance {
     // Runs on viewContext. Must finish before app can continue launch
     static func upgradeDatabase(context:NSManagedObjectContext) {
         L.maintenance.info("Starting version based maintenance")
-        context.perform {
+        context.performAndWait {
             Self.runDeleteEventsWithoutId(context: context)
             Self.runUseDtagForReplacableEvents(context: context)
             Self.runInsertFixedNames(context: context)
