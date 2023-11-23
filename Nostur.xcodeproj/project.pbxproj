@@ -151,6 +151,8 @@
 		1F62F4C62A2C572700783892 /* KrakenApiResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */; };
 		1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */; };
 		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
+		1F6629122B0D429D00508988 /* RelayConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629112B0D429D00508988 /* RelayConnection.swift */; };
+		1F6629142B0D49BD00508988 /* RelayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629132B0D49BD00508988 /* RelayData.swift */; };
 		1F685B522A0D18D2009EEC9B /* NRContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B512A0D18D2009EEC9B /* NRContact.swift */; };
 		1F685B562A0D6E96009EEC9B /* NRReplyingToBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B552A0D6E96009EEC9B /* NRReplyingToBuilder.swift */; };
 		1F685B582A0D7800009EEC9B /* QueuedFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B572A0D7800009EEC9B /* QueuedFetcher.swift */; };
@@ -616,6 +618,8 @@
 		1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KrakenApiResponse.swift; sourceTree = "<group>"; };
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
 		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		1F6629112B0D429D00508988 /* RelayConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayConnection.swift; sourceTree = "<group>"; };
+		1F6629132B0D49BD00508988 /* RelayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayData.swift; sourceTree = "<group>"; };
 		1F685B512A0D18D2009EEC9B /* NRContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContact.swift; sourceTree = "<group>"; };
 		1F685B552A0D6E96009EEC9B /* NRReplyingToBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRReplyingToBuilder.swift; sourceTree = "<group>"; };
 		1F685B572A0D7800009EEC9B /* QueuedFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueuedFetcher.swift; sourceTree = "<group>"; };
@@ -1047,6 +1051,8 @@
 			children = (
 				1F09D2782B03B687000B9B2B /* ConnectionPool.swift */,
 				1F09D2762B03B16E000B9B2B /* NetworkMonitor.swift */,
+				1F6629112B0D429D00508988 /* RelayConnection.swift */,
+				1F6629132B0D49BD00508988 /* RelayData.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -2171,6 +2177,7 @@
 				1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */,
 				1FF8BD1229D41BBD00C8C96A /* SingleMediaViewer.swift in Sources */,
 				1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */,
+				1F6629122B0D429D00508988 /* RelayConnection.swift in Sources */,
 				1FB6E6EE29E308E2008BE8A6 /* LinkPreviewThings.swift in Sources */,
 				1F71E8B229EB4E4900B99340 /* NosturList+CoreDataClass.swift in Sources */,
 				1F83498129DE28290032E52B /* ProfileRelays.swift in Sources */,
