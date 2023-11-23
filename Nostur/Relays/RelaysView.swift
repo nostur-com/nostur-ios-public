@@ -9,15 +9,15 @@ import SwiftUI
 import CoreData
 
 struct RelayRowView: View {
-    @ObservedObject var relay:Relay
+    @EnvironmentObject private var themes:Themes
     @ObservedObject public var relay:CloudRelay
     @ObservedObject private var cp:ConnectionPool = .shared
     
-    var isConnected:Bool {
+    private var isConnected:Bool {
         connection?.isConnected ?? false
     }
     
-    @State var connection:RelayConnection? = nil
+    @State private var connection:RelayConnection? = nil
     
     var body: some View {
         #if DEBUG
@@ -38,12 +38,25 @@ struct RelayRowView: View {
             
             Spacer()
             
+            Image(systemName:"magnifyingglass.circle.fill").foregroundColor(relay.search ? themes.theme.accent : .gray)
+                .opacity(relay.search ? 1.0 : 0.2)
+                .onTapGesture {
+                    relay.search.toggle()
+                    relay.updatedAt = .now
+                    connection?.relayData.setSearch(relay.search)
+                    if relay.search && !isConnected {
+                        connection?.connect(forceConnectionAttempt: true)
+                    }
+                    DataProvider.shared().save()
+                }
+            
             Image(systemName:"arrow.down.circle.fill").foregroundColor(relay.read ? .green : .gray)
                 .opacity(relay.read ? 1.0 : 0.2)
                 .onTapGesture {
                     relay.read.toggle()
+                    relay.updatedAt = .now
                     connection?.relayData.setRead(relay.read)
-                    if relay.read {
+                    if relay.read && !isConnected {
                         connection?.connect(forceConnectionAttempt: true)
                     }
                     DataProvider.shared().save()
@@ -53,6 +66,7 @@ struct RelayRowView: View {
                 .opacity(relay.write ? 1.0 : 0.2)
                 .onTapGesture {
                     relay.write.toggle()
+                    relay.updatedAt = .now
                     connection?.relayData.setWrite(relay.write)
                     DataProvider.shared().save()
                 }
@@ -90,7 +104,7 @@ struct RelaysView: View {
                         editRelay = relay
                     }
                 Divider()
-            }
+            }            
         }
         .sheet(item: $editRelay, content: { relay in
             NavigationStack {

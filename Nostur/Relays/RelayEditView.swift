@@ -42,12 +42,7 @@ struct RelayEditView: View {
         return excludedPubkeys.contains(account.publicKey)
     }
     
-//    @State private var a = ""
-//    @State private var b = ""
-//    @State private var c = ""
-    
     var body: some View {
-//        let _ = Self._printChanges()
         VStack {
             Form {
                 Section(header: Text("Relay URL", comment: "Relay URL header") ) {
@@ -62,6 +57,9 @@ struct RelayEditView: View {
                     connection?.disconnect()
                 }
                 Section(header: Text("Relay settings", comment: "Relay settings header") ) {
+                    Toggle(isOn: $relay.search) {
+                        Text("Use relay for Search", comment: "Label for toggle to search on this relay")
+                    }
                     Toggle(isOn: $relay.read) {
                         Text("Receive from this relay", comment: "Label for toggle to receive from this relay")
                     }
@@ -111,7 +109,7 @@ struct RelayEditView: View {
                                     if let oldUrl = relay.url_ {
                                         ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                                     }
-                                    let newRelayData = RelayData(read: relay.read, url: relayUrl, write: relay.write, excludedPubkeys:  relay.excludedPubkeys)
+                                    let newRelayData = RelayData.new(url: relayUrl, read: relay.read, write: relay.write, search: relay.search, excludedPubkeys:  relay.excludedPubkeys)
                                     
                                     let replacedConnection = ConnectionPool.shared.addConnection(newRelayData)
                                     connection = replacedConnection
@@ -119,20 +117,6 @@ struct RelayEditView: View {
                                 
                                 // Then connect (force)
                                 connection?.connect(forceConnectionAttempt: true)
-//                                if let connection = connection {
-//                                    a = connection.isConnected.description
-//                                    ConnectionPool.shared.queue.async {
-//                                        let b = connection.isSocketConnecting
-//                                        DispatchQueue.main.async {
-//                                            self.b = b.description
-//                                        }
-//                                        
-//                                        let c = connection.isSocketConnected
-//                                        DispatchQueue.main.async {
-//                                            self.c = c.description
-//                                        }
-//                                    }
-//                                }
                             } label: {
                                 Text("Connect", comment: "Button to connect to relay")
                             }
@@ -179,6 +163,7 @@ struct RelayEditView: View {
                         let correctedRelayUrl = (relayUrl.prefix(6) != "wss://" && relayUrl.prefix(5) != "ws://"  ? ("wss://" + relayUrl) : relayUrl).lowercased()
                         relay.url_ = correctedRelayUrl
                         relay.excludedPubkeys = excludedPubkeys
+                        relay.updatedAt = .now
                         try viewContext.save()
                         // Update existing connections
                         // url change?
@@ -187,7 +172,7 @@ struct RelayEditView: View {
                             if let oldUrl = connection?.url {
                                 ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                             }
-                            let newRelayData = RelayData(read: relay.read, url: correctedRelayUrl, write: relay.write, excludedPubkeys: relay.excludedPubkeys)
+                            let newRelayData = RelayData.new(url: correctedRelayUrl, read: relay.read, write: relay.write, search: relay.search, excludedPubkeys: relay.excludedPubkeys)
                             let relayConnection = ConnectionPool.shared.addConnection(newRelayData)
                             if relay.read {
                                 relayConnection.connect()
@@ -222,41 +207,9 @@ struct RelayEditView: View {
             relayUrl = relay.url_ ?? ""
             excludedPubkeys = relay.excludedPubkeys
             connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
-//            print("connection is now \(connection?.url ?? "")")
-            
-//            if let connection = connection {
-//                a = connection.isConnected.description
-//                ConnectionPool.shared.queue.async {
-//                    let b = connection.isSocketConnecting
-//                    DispatchQueue.main.async {
-//                        self.b = b.description
-//                    }
-//                    
-//                    let c = connection.isSocketConnected
-//                    DispatchQueue.main.async {
-//                        self.c = c.description
-//                    }
-//                }
-//            }
         }
         .onReceive(cp.objectWillChange, perform: { _ in
             connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
-//            print("connection is now \(connection?.url ?? "")")
-            
-//            if let connection = connection {
-//                a = connection.isConnected.description
-//                ConnectionPool.shared.queue.async {
-//                    let b = connection.isSocketConnecting
-//                    DispatchQueue.main.async {
-//                        self.b = b.description
-//                    }
-//                    
-//                    let c = connection.isSocketConnected
-//                    DispatchQueue.main.async {
-//                        self.c = c.description
-//                    }
-//                }
-//            }
         })
     }
 }

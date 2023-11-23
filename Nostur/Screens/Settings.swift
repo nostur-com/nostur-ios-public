@@ -22,9 +22,6 @@ struct Settings: View {
     @State private var contactsCount:Int? = nil
     @State private var eventsCount:Int? = nil
     
-    @FetchRequest(fetchRequest: Relay.fetchRequest())
-    private var allRelays:FetchedResults<Relay>
-    
     @State private var deleteAll = false
     @State private var showDeleteAllEventsConfirmation = false
     @State private var albyNWCsheetShown = false
@@ -282,6 +279,9 @@ struct Settings: View {
                     }
                 }
                 .listRowBackground(themes.theme.background)
+                
+                RelayMasteryLink() // Wrapped in View else SwiftUI will freeze
+                    .listRowBackground(themes.theme.background)
                 
                 Section(header: Text("Caches", comment: "Settings heading")) {
                     HStack {
@@ -561,5 +561,23 @@ struct FooterConfiguratorLink: View {
                 Text(settings.footerButtons)
             }
         })
+    }
+}
+
+struct RelayMasteryLink: View {
+    @State private var relays:[CloudRelay] = []
+    
+    var body: some View {
+        NavigationLink(destination: {
+            RelayMastery(relays: relays)
+                .onAppear {
+                    relays = CloudRelay.fetchAll()
+                }
+        }, label: {
+            Text("Relay Mastery")
+        })
+        .onAppear {
+            
+        }
     }
 }

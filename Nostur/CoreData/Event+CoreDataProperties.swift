@@ -1309,6 +1309,20 @@ extension Event {
             }
         }
         
+        if (event.kind == .relayList) {
+            // delete older events
+            let r = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            r.predicate = NSPredicate(format: "kind == 10002 AND pubkey == %@ AND created_at < %d", event.publicKey, savedEvent.created_at)
+            let batchDelete = NSBatchDeleteRequest(fetchRequest: r)
+            batchDelete.resultType = .resultTypeCount
+            
+            do {
+                _ = try context.execute(batchDelete) as! NSBatchDeleteResult
+            } catch {
+                L.og.error("🔴🔴 Failed to delete older kind 10002 events")
+            }
+        }
+        
         if event.kind == .delete {
             let eventIdsToDelete = event.eTags()
             
