@@ -39,7 +39,7 @@ struct RepostButton: View {
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard !footerAttributes.reposted else { return }
+//                guard !footerAttributes.reposted else { return }
                 sendNotification(.createNewQuoteOrRepost, nrPost.event.toMain())
             }
     }
