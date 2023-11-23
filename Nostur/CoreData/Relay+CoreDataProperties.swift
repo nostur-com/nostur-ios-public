@@ -43,7 +43,7 @@ extension Relay {
     }
     
     public func toStruct() -> RelayData {
-        return RelayData(read: read, url: (url ?? ""), write: write, excludedPubkeys: excludedPubkeys)
+        return RelayData.new(url: (url ?? ""), read: read, write: write, search: false, excludedPubkeys: excludedPubkeys)
     }
 }
 
@@ -69,27 +69,5 @@ extension Relay : Identifiable {
     static func fetchAll(context: NSManagedObjectContext) -> [Relay] {
         let fr = Relay.fetchRequest()
         return (try? context.fetch(fr)) ?? []
-    }
-}
-
-
-// Struct to pass around and avoid all the multi threading NSManagedContext problems
-public struct RelayData: Identifiable, Hashable, Equatable {
-    public var id: String { url.lowercased() }
-    public var read: Bool
-    public var url: String
-    public var write: Bool
-    public var excludedPubkeys:Set<String>
-    
-    mutating func setRead(_ value:Bool) {
-        self.read = value
-    }
-    
-    mutating func setWrite(_ value:Bool) {
-        self.write = value
-    }
-    
-    mutating func setExcludedPubkeys(_ value:Set<String>) {
-        self.excludedPubkeys = value
     }
 }

@@ -274,7 +274,7 @@ struct AppView: View {
         }
         
         // Setup connections
-        let relays:[RelayData] = Relay.fetchAll(context: viewContext).map { $0.toStruct() }
+        let relays:[RelayData] = CloudRelay.fetchAll(context: viewContext).map { $0.toStruct() }
         
         for relay in relays {
             _ = cp.addConnection(relay)

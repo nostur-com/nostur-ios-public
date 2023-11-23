@@ -22,22 +22,22 @@ public class NosturList: NSManagedObject {
         }
     }
     
-    static func generateRelayExamples(context: NSManagedObjectContext) {
-        
-        let relays = PreviewFetcher.fetchRelays()
-        
-        let list = NosturList(context: context)
-        list.id = UUID()
-        list.name = "Globalish"
-        list.type = LVM.ListType.relays.rawValue
-        list.relays = Set(relays)
-        
-        let list2 = NosturList(context: context)
-        list2.id = UUID()
-        list2.name = "Welcome"
-        list2.type = LVM.ListType.relays.rawValue
-        list2.relays = Set(relays)
-    }
+//    static func generateRelayExamples(context: NSManagedObjectContext) {
+//        
+//        let relays = PreviewFetcher.fetchRelays()
+//        
+//        let list = NosturList(context: context)
+//        list.id = UUID()
+//        list.name = "Globalish"
+//        list.type = LVM.ListType.relays.rawValue
+//        list.relays = Set(relays)
+//        
+//        let list2 = NosturList(context: context)
+//        list2.id = UUID()
+//        list2.name = "Welcome"
+//        list2.type = LVM.ListType.relays.rawValue
+//        list2.relays = Set(relays)
+//    }
     
     static func fetchLists(context:NSManagedObjectContext) -> [NosturList] {
         let request = NSFetchRequest<NosturList>(entityName: "NosturList")

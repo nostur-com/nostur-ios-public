@@ -277,7 +277,7 @@ class NewOnboardingTracker {
                     L.onboarding.info("✈️✈️✈️ found \(relays.relays.count) existing relays")
                 }
                 relays.relays.forEach { relay in
-                    let fr = Relay.fetchRequest()
+                    let fr = CloudRelay.fetchRequest()
                     if relay.url.suffix(1) == "/" {
                         let relayWithoutSlash = String(relay.url.dropLast(1))
                         fr.predicate = NSPredicate(format: "url == %@ OR url == %@", relay.url.lowercased(), relayWithoutSlash.lowercased())
@@ -292,8 +292,8 @@ class NewOnboardingTracker {
                         existingRelay.write = relay.readWrite.write ?? false
                     }
                     else {
-                        let newRelay = Relay(context: self.bg)
-                        newRelay.url = relay.url.lowercased()
+                        let newRelay = CloudRelay(context: self.bg)
+                        newRelay.url_ = relay.url.lowercased()
                         newRelay.read = relay.readWrite.read ?? false
                         newRelay.write = relay.readWrite.write ?? false
                         newRelay.createdAt = Date()
