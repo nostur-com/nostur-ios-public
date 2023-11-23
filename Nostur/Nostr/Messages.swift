@@ -15,10 +15,18 @@ struct ClientMessage {
         case CLOSE
     }
     
+    enum RelayType {
+        case READ
+        case WRITE
+        case SEARCH
+    }
+    
     var onlyForNWCRelay:Bool = false
     var onlyForNCRelay:Bool = false
     var type:ClientMessage.type = .EVENT
     var message:String
+    var relayType:RelayType
+    var accountPubkey:String = "APP"
     
     static func close(subscriptionId:String) -> String {
         return "[\"CLOSE\", \"\(subscriptionId)\"]"
@@ -523,17 +531,17 @@ func fasterShort(_ pubkeys:[String], prefixLength:Int = 10) -> String {
 //        limit: 500,
 //        since: 0
 //    ))
-func req(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> = []) {
+func req(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> = [], accountPubkey:String? = nil, relayType:ClientMessage.RelayType = .READ) {
     ConnectionPool.shared.sendMessage(
-        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm),
+        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm, relayType: relayType, accountPubkey: (accountPubkey ?? NRState.shared.activeAccountPublicKey)),
         subscriptionId: activeSubscriptionId,
         relays: relays
     )
 }
 
-func reqP(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> = []) {
+func reqP(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> = [], accountPubkey:String? = nil, relayType:ClientMessage.RelayType = .READ) {
     ConnectionPool.shared.sendMessage(
-        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm),
+        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm, relayType: relayType, accountPubkey: (accountPubkey ?? NRState.shared.activeAccountPublicKey)),
         subscriptionId: activeSubscriptionId,
         relays: relays,
         afterPing: true

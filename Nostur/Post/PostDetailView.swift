@@ -252,7 +252,7 @@ struct PostAndParent: View {
                         // Fetch all related (e and p.kind=0)
                         // (the events and contacts mentioned in this DETAIL NOTE.
                         if let message = RequestMessage.getFastTags(nrPost.fastTags) {
-                            ConnectionPool.shared.sendMessage(ClientMessage(type: .REQ, message: message))
+                            req(message)
                         }
                         
                         // Fetch all that reference this detail note (Replies, zaps, reactions)

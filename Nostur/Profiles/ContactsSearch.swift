@@ -130,7 +130,7 @@ struct ContactsSearch: View, Equatable {
                     searching = true
                     let key = try NIP19(displayString: searchTrimmed)
                     contacts.nsPredicate = NSPredicate(format: "pubkey = %@", key.hexString)
-                    ConnectionPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
+                    req(RM.getUserMetadata(pubkey: key.hexString), relayType: .SEARCH)
                 }
                 catch {
                     L.og.debug("npub1 search fail \(error)")

@@ -15,10 +15,18 @@ func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {
     L.fetching.info("checking profiles since: \(since?.description ?? "")")
     
     ConnectionPool.shared
-        .sendMessage(ClientMessage(
-            type: .REQ,
-            message: RequestMessage.getUserMetadata(pubkeys: Array(pubkeys),
-                                                    subscriptionId: subscriptionId, since: sinceNTimestamp)), subscriptionId: subscriptionId)
+        .sendMessage(
+            ClientMessage(
+                type: .REQ,
+                message: RM.getUserMetadata(
+                    pubkeys: Array(pubkeys),
+                    subscriptionId: subscriptionId,
+                    since: sinceNTimestamp
+                ),
+                relayType: .READ
+            ),
+            subscriptionId: subscriptionId
+        )
 }
 
 func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, subscriptionId:String? = nil) {
@@ -34,7 +42,8 @@ func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, su
         
         let clientMessage = ClientMessage(
             type: .REQ,
-            message: req
+            message: req,
+            relayType: .READ
         )
         
         ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
@@ -43,7 +52,8 @@ func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, su
         let req = RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!, subscriptionId: subscriptionId)
         let clientMessage = ClientMessage(
             type: .REQ,
-            message: req
+            message: req,
+            relayType: .READ
         )
         ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
     }
@@ -53,28 +63,16 @@ func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, su
 func fetchEvents(pubkeysString:String, amount:Int? = 5000, since:Int64? = nil, subscriptionId:String? = nil) {
 //    print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
     if (since != nil) {
-        
-        let req = RequestMessage.getFollowingEvents(
+        let getFollowingEvents = RM.getFollowingEvents(
             pubkeysString: pubkeysString,
             limit: amount!,
             subscriptionId: subscriptionId,
             since: NTimestamp(timestamp: Int(since!))
         )
-        
-        let clientMessage = ClientMessage(
-            type: .REQ,
-            message: req
-        )
-        
-        ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
+        req(getFollowingEvents, activeSubscriptionId: subscriptionId)
     }
     else {
-        let req = RequestMessage.getFollowingEvents(pubkeysString: pubkeysString, limit: amount!, subscriptionId: subscriptionId)
-        let clientMessage = ClientMessage(
-            type: .REQ,
-            message: req
-        )
-        ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
+        req(RM.getFollowingEvents(pubkeysString: pubkeysString, limit: amount!, subscriptionId: subscriptionId), activeSubscriptionId: subscriptionId)
     }
 }
 

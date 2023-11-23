@@ -179,7 +179,7 @@ struct CustomNWCConnectSheet: View {
                 Importer.shared.nwcConnection = c
                 
                 L.og.info("⚡️ Fetching 13194 (info) from NWC relay")
-                ConnectionPool.shared.sendMessage(ClientMessage(onlyForNWCRelay: true, message: RM.getNWCInfo(walletPubkey: walletPubkey)), afterPing: true)
+                ConnectionPool.shared.sendMessage(ClientMessage(onlyForNWCRelay: true, message: RM.getNWCInfo(walletPubkey: walletPubkey), relayType: .READ), afterPing: true)
             }
         }
         

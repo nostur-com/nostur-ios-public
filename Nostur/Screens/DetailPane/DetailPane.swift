@@ -84,7 +84,7 @@ struct DetailPane: View {
                                         }
                                         else {
                                             // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
-                                            let closeMessage = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "REALTIME-DETAIL"))
+                                            let closeMessage = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "REALTIME-DETAIL"), relayType: .READ)
                                             ConnectionPool.shared.sendMessage(closeMessage)
                                         }
                                     }

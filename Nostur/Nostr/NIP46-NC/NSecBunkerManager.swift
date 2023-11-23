@@ -217,7 +217,7 @@ class NSecBunkerManager: ObservableObject {
             req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: bunkerManagedPublicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
             
             // Send connection request
-            ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey, afterPing: true)
+            ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey, afterPing: true)
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) { // Must wait until connected to bunker relay
@@ -271,7 +271,7 @@ class NSecBunkerManager: ObservableObject {
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey, afterPing: true)
+        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey, afterPing: true)
     }
     
     
@@ -309,13 +309,13 @@ class NSecBunkerManager: ObservableObject {
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()), accountPubkey: signedReq.publicKey, afterPing: true)
+        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey, afterPing: true)
     }
     
     private func handleSignedEvent(eventString:String) {
         L.og.info("🏰 NSECBUNKER signed event received, ready to publish: \(eventString)")
         let accountPubkey = parsePubkey(eventString)
-        ConnectionPool.shared.sendMessage(ClientMessage(message: "[\"EVENT\",\(eventString)"), accountPubkey: accountPubkey)
+        ConnectionPool.shared.sendMessage(ClientMessage(message: "[\"EVENT\",\(eventString)", relayType: .READ, accountPubkey: accountPubkey ?? "APP"), accountPubkey: accountPubkey)
     }
     
     enum STATE {
