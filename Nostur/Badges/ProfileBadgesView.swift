@@ -54,15 +54,13 @@ struct ProfileBadgesContainer: View {
                     
                     L.og.debug("🚺🚺 \(allEs.count)")
                     if (!allEs.isEmpty) {
-                        let reqE = RequestMessage.getEvents(ids: allEs)
-                        let messageE = ClientMessage(type: .REQ, message: reqE)
-                        ConnectionPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
+                        // Get badge awards (kind .8)
+                        req(RM.getEvents(ids: allEs))
                     }
                     
                     if (!filters.isEmpty) {
-                        let reqD = RequestMessage.getBadgeDefinitions(filters: Array(filters.prefix(10)))
-                        let messageD = ClientMessage(type: .REQ, message: reqD)
-                        ConnectionPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
+                        // Get badge definitions (kind 30009)
+                        req(RM.getBadgeDefinitions(filters: Array(filters.prefix(10))))
                     }
                 }
                 .onChange(of: profileBadgesSorted.first) { newValue in
@@ -82,16 +80,13 @@ struct ProfileBadgesContainer: View {
                         
                         L.og.debug("🚺🚺🚺🚺🚺 \(allEs.count)")
                         if (!allEs.isEmpty) {
-                            let reqE = RequestMessage.getEvents(ids: allEs)
-                            let messageE = ClientMessage(type: .REQ, message: reqE)
-                            ConnectionPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
-                            
+                            // Get badge awards (kind .8)
+                            req(RM.getEvents(ids: allEs))
                         }
                         
                         if (!filters.isEmpty) {
-                            let reqD = RequestMessage.getBadgeDefinitions(filters: filters)
-                            let messageD = ClientMessage(type: .REQ, message: reqD)
-                            ConnectionPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
+                            // Get badge definitions (kind 30009)
+                            req(RM.getBadgeDefinitions(filters: filters))
                         }
                         refreshHack.toggle()
                     }

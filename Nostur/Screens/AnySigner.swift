@@ -17,7 +17,7 @@ struct AnySigner: View {
     
     private func publish() {
         if let signedNEvent = signedNEvent {
-            ConnectionPool.shared.sendMessage(ClientMessage(message: signedNEvent.wrappedEventJson()), accountPubkey: signedNEvent.publicKey)
+            ConnectionPool.shared.sendMessage(ClientMessage(message: signedNEvent.wrappedEventJson(), relayType: .WRITE, accountPubkey: signedNEvent.publicKey!), accountPubkey: signedNEvent.publicKey)
             
             // TODO: Should also save in database, but AnyNEvent is not NEvent so can't call saveEvent()
             // Need to refactor AnyNEvent to just be NEvent...

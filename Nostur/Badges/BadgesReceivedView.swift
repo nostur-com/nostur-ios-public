@@ -73,16 +73,10 @@ struct BadgesReceivedView: View {
         .onAppear {
             // fetch missing badge definitions:
             // or just all...
-            let req = RequestMessage.getEvents(ids: badgeAwardsToMe.map { $0.id })
-            let message = ClientMessage(type: .REQ, message: req)
-//            print(message)
-            ConnectionPool.shared.sendMessage(message)
+            req(RequestMessage.getEvents(ids: badgeAwardsToMe.map { $0.id }))
             
             // Fetch other badges received
-            let reqR = RequestMessage.getBadgesReceived(pubkey)
-            let messageR = ClientMessage(type: .REQ, message: reqR)
-//            print(messageR)
-            ConnectionPool.shared.sendMessage(messageR)
+            req(RequestMessage.getBadgesReceived(pubkey))
         }
         .navigationTitle("Badges received")
     }

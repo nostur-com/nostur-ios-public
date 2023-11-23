@@ -115,9 +115,11 @@ class Zap {
     var supportsZap = false
     var callbackUrl:String? = nil
     var pr:String? = nil // payment request (invoice)
+    var fromAccountPubkey:String
     
     init(isNC:Bool = false, amount:Int64, contact:Contact, eventId:String? = nil, event:Event? = nil, cancellationId:UUID, zapMessage:String = "") {
         self.isNC = isNC
+        self.fromAccountPubkey = NRState.shared.activeAccountPublicKey
         self.queuedAt = .now
         self.amount = amount
         self.contact = contact

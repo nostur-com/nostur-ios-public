@@ -219,8 +219,7 @@ struct AccountEditView: View {
             }
             
             if (account.privateKey == nil) {
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: account.publicKey))
-                ConnectionPool.shared.sendMessage(message)
+                req(RM.getUserMetadata(pubkey: account.publicKey))
             }
         }
     }
@@ -295,9 +294,7 @@ extension AccountEditView {
         CloudAccount.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
         CloudAccount.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
-        let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey))
-        
-        ConnectionPool.shared.sendMessage(message)
+        req(RM.getUserMetadataAndContactList(pubkey: account.publicKey))
     }
     
     private func loadFollowers(account: CloudAccount) {
@@ -324,7 +321,7 @@ extension AccountEditView {
     private func updateContacts() { // move this method to somewhere more global maybe
         let pubkeys = Array(account.followingPubkeys)
         if (!pubkeys.isEmpty) {
-            ConnectionPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
+            req(RM.getUserMetadata(pubkeys: pubkeys))
         }
     }
 }

@@ -86,7 +86,7 @@ extension Search {
         searching = true
         contacts.nsPredicate = NSPredicate(format: "pubkey = %@", pubkey)
         nrPosts = []
-        req(RM.getUserMetadata(pubkey: pubkey))
+        req(RM.getUserMetadata(pubkey: pubkey), relayType: .SEARCH)
         
         guard !identifier.relays.isEmpty else { return }
         
@@ -130,7 +130,7 @@ extension Search {
                 let reqTask = ReqTask(
                     prefix: "ARTICLESEARCH-",
                     reqCommand: { taskId in
-                        req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId))
+                        req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId), relayType: .SEARCH)
                     },
                     processResponseCommand: { taskId, _, _ in
                         bg().perform {
@@ -207,7 +207,7 @@ extension Search {
         }
             
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
-            req(RM.getEvent(id: noteHex, subscriptionId: taskId))
+            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH)
         }, processResponseCommand: { taskId, _, _ in
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "id = %@", noteHex)
@@ -247,7 +247,7 @@ extension Search {
         let pubkey = Keys.hex(npub: term)
         contacts.nsPredicate = NSPredicate(format: "pubkey = %@", pubkey)
         nrPosts = []
-        req(RM.getUserMetadata(pubkey: pubkey))
+        req(RM.getUserMetadata(pubkey: pubkey), relayType: .SEARCH)
     }
     
     func nametagSearch(_ term:String) {
@@ -284,7 +284,7 @@ extension Search {
                                
             let filters = [Filters(tagFilter: TagFilter(tag: "t", values: tags))]
             if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
-                req(message)
+                req(message, relayType: .SEARCH)
             }
         }, processResponseCommand: { taskId, _, _ in
             let fr = Event.fetchRequest()
@@ -325,7 +325,7 @@ extension Search {
             }
             
             let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
-                req(RM.getEvent(id: key.hexString, subscriptionId: taskId))
+                req(RM.getEvent(id: key.hexString, subscriptionId: taskId), relayType: .SEARCH)
             }, processResponseCommand: { taskId, _, _ in
                 let fr = Event.fetchRequest()
                 fr.predicate = NSPredicate(format: "id = %@", key.hexString)
@@ -353,7 +353,7 @@ extension Search {
         else { return }
         searching = true
         contacts.nsPredicate = NSPredicate(format: "pubkey = %@", term)
-        req(RM.getUserMetadata(pubkey: term))
+        req(RM.getUserMetadata(pubkey: term), relayType: .SEARCH)
         
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "id = %@", term)
@@ -367,7 +367,7 @@ extension Search {
         }
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
-            req(RM.getEvent(id: term, subscriptionId: taskId))
+            req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .SEARCH)
         }, processResponseCommand: { taskId, _, _ in
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "id = %@", term)

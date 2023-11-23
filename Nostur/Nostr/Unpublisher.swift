@@ -119,7 +119,7 @@ class Unpublisher {
     private func sendToRelays(_ nEvent:NEvent) {
         if nEvent.kind == .nwcRequest {
             L.og.info("⚡️ Sending .nwcRequest to NWC relay")
-            ConnectionPool.shared.sendMessage(ClientMessage(onlyForNWCRelay: true, message: nEvent.wrappedEventJson()), accountPubkey: nEvent.publicKey)
+            ConnectionPool.shared.sendMessage(ClientMessage(onlyForNWCRelay: true, message: nEvent.wrappedEventJson(), relayType: .READ), accountPubkey: nEvent.publicKey)
             return
         }
 
@@ -135,7 +135,7 @@ class Unpublisher {
                 DispatchQueue.main.async {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                 }
-                ConnectionPool.shared.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()), accountPubkey: nEvent.publicKey)
+                ConnectionPool.shared.sendMessage(ClientMessage(message: nEvent.wrappedEventJson(), relayType: .WRITE), accountPubkey: nEvent.publicKey)
                 
                 dbEvent.flags = ""
                 dbEvent.cancellationId = nil
@@ -162,7 +162,7 @@ class Unpublisher {
                 DispatchQueue.main.async {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                 }
-                ConnectionPool.shared.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()), accountPubkey: nEvent.publicKey)
+                ConnectionPool.shared.sendMessage(ClientMessage(message: nEvent.wrappedEventJson(), relayType: .WRITE), accountPubkey: nEvent.publicKey)
             }
         }
     }
