@@ -17,6 +17,7 @@ extension CloudRelay {
     }
 
     @NSManaged public var createdAt_: Date?
+    @NSManaged public var updatedAt_: Date?
     @NSManaged public var excludedPubkeys_: String?
     @NSManaged public var read: Bool
     @NSManaged public var write: Bool
@@ -32,12 +33,22 @@ extension CloudRelay {
         }
     }
     
+    public var updatedAt:Date {
+        get {
+            updatedAt_ ?? .distantPast
+        }
+        set {
+            updatedAt_ = newValue
+        }
+    }
+    
     public var excludedPubkeys:Set<String> {
         get {
             guard let pubkeysString = excludedPubkeys_ else { return [] }
             return Set(pubkeysString.split(separator: " ", omittingEmptySubsequences: true).map { String($0) })
         }
         set {
+            updatedAt_ = .now
             excludedPubkeys_ = newValue.joined(separator: " ")
         }
     }
