@@ -63,6 +63,7 @@ struct Maintenance {
             Self.runMigrateBlocks(context: context)
             Self.runMigrateAccounts(context: context)
             Self.runMigrateDMsToCloud(context: context)
+            Self.runMigrateRelays(context: context)
             
             do {
                 if context.hasChanges {
@@ -1053,6 +1054,42 @@ struct Maintenance {
         migration.migrationCode = migrationCode.fixPrivateFollows.rawValue
     }
     
+    // Migrate Relays to iCloud-ready table
+    static func runMigrateRelays(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.migrateRelays, context: context) else { return }
+        
+        // Oops code. Uncomment during testing if we need to run this again.
+        let fr0 = CloudRelay.fetchRequest()
+        fr0.predicate = NSPredicate(value: true)
+        if let cfs = try? context.fetch(fr0) {
+            for cf in cfs {
+                context.delete(cf)
+            }
+        }
+        
+        let fr = Relay.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+        
+        var migrateRelays:Int = 0
+        if let relays = try? context.fetch(fr) {
+            L.maintenance.info("migrateRelays: Found \(relays.count) relays")
+            for r in relays {
+                // Relays
+                let migratedRelay = CloudRelay(context: context)
+                migratedRelay.createdAt_ = (r.createdAt ?? .now)
+                migratedRelay.excludedPubkeys_ = r.excludedPubkeys_
+                migratedRelay.read = r.read
+                migratedRelay.write = r.write
+                migratedRelay.url_ = r.url
+                migrateRelays += 1
+            }
+            L.maintenance.info("migrateCustomFeeds: Migrated \(migrateRelays) relays")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migrateRelays.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -1106,5 +1143,8 @@ struct Maintenance {
         
         // Fix private follows
         case fixPrivateFollows = "fixPrivateFollows"
+        
+        // Migrate relays state to iCloud
+        case migrateRelays = "migrateRelays"
     }
 }
