@@ -82,7 +82,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
         self.queue = queue
         self.isNC = isNC
         self.isNWC = isNWC
-        
+        self.isDeviceConnected = NetworkMonitor.shared.isConnected
         super.init()
         
         NetworkMonitor.shared.isConnectedSubject
@@ -411,6 +411,24 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                 LVMManager.shared.restoreSubscriptions()
                 NotificationsViewModel.shared.restoreSubscriptions()
                 sendNotification(.socketConnected, "Connected: \(self.url)")
+            }
+            
+            guard !self.outQueue.isEmpty else { return }
+            for out in self.outQueue {
+                self.webSocket?.send(out.text)
+                    .subscribe(Subscribers.Sink(
+                        receiveCompletion: { [weak self] completion in
+                            switch completion {
+                            case .finished:
+                                self?.queue.async(flags: .barrier) {
+                                    self?.outQueue.removeAll(where: { $0.id == out.id })
+                                }
+                            case .failure(let error):
+                                L.og.error("🟪🔴🔴 Error sending \(error): \(out.text)")
+                            }
+                        },
+                        receiveValue: { _ in }
+                    ))
             }
         }
         L.sockets.info("🏎️🏎️🔌 CONNECTED \(self.url)")
