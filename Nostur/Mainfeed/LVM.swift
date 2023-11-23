@@ -188,7 +188,9 @@ class LVM: NSObject, ObservableObject {
     var selectedSubTab = "" {
         didSet {
             if oldValue != selectedSubTab && viewIsVisible {
-                self.didAppear()
+                Task { @MainActor in
+                    self.didAppear()
+                }
             }
             else if oldValue != selectedSubTab && !viewIsVisible {
                 Task { @MainActor in
@@ -200,7 +202,9 @@ class LVM: NSObject, ObservableObject {
     var selectedListId = "" {
         didSet {
             if oldValue != selectedListId && viewIsVisible {
-                self.didAppear()
+                Task { @MainActor in
+                    self.didAppear()
+                }
             }
             else if oldValue != selectedListId && !viewIsVisible {
                 Task { @MainActor in
@@ -227,6 +231,7 @@ class LVM: NSObject, ObservableObject {
         self.fetchFeedTimer = nil
     }
     
+    @MainActor 
     func didAppear() {
         guard instantFinished else {
             startInstantFeed()
@@ -744,7 +749,7 @@ class LVM: NSObject, ObservableObject {
     var instantFeed = InstantFeed()
     var isDeck = false
     
-    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<Relay> = [], wotEnabled:Bool = true, isDeck:Bool = false, feed:NosturList? = nil) {
+    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<CloudRelay> = [], wotEnabled:Bool = true, isDeck:Bool = false, feed:NosturList? = nil) {
         self.feed = feed
         self.type = type
         self.name = name
@@ -987,7 +992,7 @@ class LVM: NSObject, ObservableObject {
 
 extension LVM {
     
-    func restoreSubscription() {
+    @MainActor func restoreSubscription() {
         guard instantFinished else {
             L.lvm.debug("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") instantFinished=false, not restoring subscription! \(self.selectedSubTab) and selectedListId: \(self.selectedListId)")
             if viewIsVisible {
@@ -1015,24 +1020,22 @@ extension LVM {
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
         // Continue from first (newest) on screen?
-        let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
+        let since = (self.posts.elements.first?.value.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
 
-        DispatchQueue.main.async {
-            if (!self.didCatchup) {
-                // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
-                    guard let self = self else { return }
-                    if self.type == .relays {
-                        self.fetchRelaysNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
-                    }
-                    else {
-                        self.fetchNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
-                        fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
-                    }
-                    L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") restoreSubscription + 8 seconds fetchNewerSince()")
+        if (!self.didCatchup) {
+            // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
+                guard let self = self else { return }
+                if self.type == .relays {
+                    self.fetchRelaysNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                 }
-                self.didCatchup = true
+                else {
+                    self.fetchNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                    fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+                }
+                L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") restoreSubscription + 8 seconds fetchNewerSince()")
             }
+            self.didCatchup = true
         }
     }
     
