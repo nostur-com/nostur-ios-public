@@ -24,6 +24,7 @@ extension CloudAccount {
     @NSManaged public var flags: String?
     @NSManaged public var followingHashtags_: String?
     @NSManaged public var followingPubkeys_: String?
+    @NSManaged public var accountRelays_: String? // Account based relays (instead of app-shared)
     @NSManaged public var privateFollowingPubkeys_: String?
     @NSManaged public var isNC: Bool
     @NSManaged public var lastFollowerCreatedAt: Int64
@@ -104,6 +105,20 @@ extension CloudAccount {
         }
         set {
             privateFollowingPubkeys_ = newValue.joined(separator: " ")
+        }
+    }
+    
+    var accountRelays:Set<AccountRelayData> {
+        get {
+            guard let accountRelays = accountRelays_, let data = accountRelays.data(using: .utf8) else { return [] }
+            let decoder = JSONDecoder()
+            guard let accountRelayData = try? decoder.decode([AccountRelayData].self, from: data) else { return [] }
+            return Set(accountRelayData)
+        }
+        set {
+            let encoder = JSONEncoder()
+            guard let accountRelayJSONdata = try? encoder.encode(Array(newValue)) else { accountRelays_ = nil; return }
+            accountRelays_ = String(data: accountRelayJSONdata, encoding: .utf8)
         }
     }
     
