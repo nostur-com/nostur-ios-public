@@ -21,7 +21,9 @@ class LVMManager {
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 self.listVMs.forEach { lvm in
-                    lvm.restoreSubscription()
+                    Task { @MainActor in
+                        lvm.restoreSubscription()
+                    }
                 }
             }
             .store(in: &subscriptions)
