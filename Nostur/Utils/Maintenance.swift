@@ -25,11 +25,14 @@ struct Maintenance {
                 
                 if (relaysCount == 0) {
                     for url in BOOTSTRAP_RELAYS {
-                        bootstrapRelay.read = url == "wss://nostr.mutinywallet.com" ? false : true // this one is write only
                         let bootstrapRelay = CloudRelay(context: context)
+                        bootstrapRelay.read = (url == "wss://nostr.mutinywallet.com" || url == "wss://relay.nostr.band") ? false : true // this one is write only
                         bootstrapRelay.write = true
                         bootstrapRelay.createdAt = Date.now
                         bootstrapRelay.url_ = url
+                        if (url == "wss://relay.nostr.band") {
+                            bootstrapRelay.search = true
+                        }
                         relays.append(bootstrapRelay.toStruct())
                     }
                     for relay in relays {
