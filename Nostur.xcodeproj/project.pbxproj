@@ -352,6 +352,8 @@
 		1FC7A54C29FA46F000645FEF /* Action.js in Resources */ = {isa = PBXBuildFile; fileRef = 1FC7A54B29FA46F000645FEF /* Action.js */; };
 		1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3129AE0C0700B81CE5 /* Mentions.swift */; };
 		1FC82F3429AE261C00B81CE5 /* DetailPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3329AE261C00B81CE5 /* DetailPane.swift */; };
+		1FC85CA92B0C23CF00789615 /* CloudRelay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC85CA72B0C23CF00789615 /* CloudRelay+CoreDataClass.swift */; };
+		1FC85CAA2B0C23CF00789615 /* CloudRelay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC85CA82B0C23CF00789615 /* CloudRelay+CoreDataProperties.swift */; };
 		1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCA273D299A6A1A00298881 /* LightningButton.swift */; };
 		1FCB526F2A530A7F006D08DF /* CommunityImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCB526E2A530A7F006D08DF /* CommunityImporter.swift */; };
 		1FCB52722A533027006D08DF /* Migration+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCB52702A533027006D08DF /* Migration+CoreDataClass.swift */; };
@@ -813,6 +815,8 @@
 		1FC7A55129FA46F000645FEF /* Highlight with Nostur.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Highlight with Nostur.entitlements"; sourceTree = "<group>"; };
 		1FC82F3129AE0C0700B81CE5 /* Mentions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mentions.swift; sourceTree = "<group>"; };
 		1FC82F3329AE261C00B81CE5 /* DetailPane.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailPane.swift; sourceTree = "<group>"; };
+		1FC85CA72B0C23CF00789615 /* CloudRelay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudRelay+CoreDataClass.swift"; sourceTree = "<group>"; };
+		1FC85CA82B0C23CF00789615 /* CloudRelay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudRelay+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FCA273D299A6A1A00298881 /* LightningButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningButton.swift; sourceTree = "<group>"; };
 		1FCB526E2A530A7F006D08DF /* CommunityImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityImporter.swift; sourceTree = "<group>"; };
 		1FCB52702A533027006D08DF /* Migration+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Migration+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1146,6 +1150,8 @@
 				1FE1281B2AF8BFDF0070936C /* CloudFeed+CoreDataProperties.swift */,
 				1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */,
 				1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */,
+				1FC85CA72B0C23CF00789615 /* CloudRelay+CoreDataClass.swift */,
+				1FC85CA82B0C23CF00789615 /* CloudRelay+CoreDataProperties.swift */,
 				1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */,
 				1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */,
 				1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */,
@@ -2091,6 +2097,7 @@
 				1F00337529BF0A44007CE040 /* BookmarksAndPrivateNotes.swift in Sources */,
 				1FC7A49B29F95AD400645FEF /* ProfileByPubkey.swift in Sources */,
 				1F8CBFFD2AC3028D0077EF7D /* NotificationsReposts.swift in Sources */,
+				1FC85CAA2B0C23CF00789615 /* CloudRelay+CoreDataProperties.swift in Sources */,
 				1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */,
 				1F810B3329E670AB006B1614 /* MutedWords+CoreDataClass.swift in Sources */,
 				1F1F13032AA9A68100DDED82 /* Hot.swift in Sources */,
@@ -2267,6 +2274,7 @@
 				1F88EE8E2AD12CFA006A83C3 /* MentionChoices.swift in Sources */,
 				1F39756F2AB622C1004F9D77 /* MultiFollowSheet.swift in Sources */,
 				1FCFDDD229FCEA91005320B8 /* HighlightComposer.swift in Sources */,
+				1FC85CA92B0C23CF00789615 /* CloudRelay+CoreDataClass.swift in Sources */,
 				1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */,
 				1F09D2772B03B16E000B9B2B /* NetworkMonitor.swift in Sources */,
 				1F8CBFFB2AC3002D0077EF7D /* NotificationsMentions.swift in Sources */,
