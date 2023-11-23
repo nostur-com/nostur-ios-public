@@ -153,6 +153,7 @@
 		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
 		1F6629122B0D429D00508988 /* RelayConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629112B0D429D00508988 /* RelayConnection.swift */; };
 		1F6629142B0D49BD00508988 /* RelayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629132B0D49BD00508988 /* RelayData.swift */; };
+		1F6629182B0E672500508988 /* Kind10002ConfigurationWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629172B0E672500508988 /* Kind10002ConfigurationWizard.swift */; };
 		1F685B522A0D18D2009EEC9B /* NRContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B512A0D18D2009EEC9B /* NRContact.swift */; };
 		1F685B562A0D6E96009EEC9B /* NRReplyingToBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B552A0D6E96009EEC9B /* NRReplyingToBuilder.swift */; };
 		1F685B582A0D7800009EEC9B /* QueuedFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B572A0D7800009EEC9B /* QueuedFetcher.swift */; };
@@ -354,6 +355,7 @@
 		1FC7A54C29FA46F000645FEF /* Action.js in Resources */ = {isa = PBXBuildFile; fileRef = 1FC7A54B29FA46F000645FEF /* Action.js */; };
 		1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3129AE0C0700B81CE5 /* Mentions.swift */; };
 		1FC82F3429AE261C00B81CE5 /* DetailPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3329AE261C00B81CE5 /* DetailPane.swift */; };
+		1FC85CA62B0C1BC500789615 /* RelayMastery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC85CA52B0C1BC500789615 /* RelayMastery.swift */; };
 		1FC85CA92B0C23CF00789615 /* CloudRelay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC85CA72B0C23CF00789615 /* CloudRelay+CoreDataClass.swift */; };
 		1FC85CAA2B0C23CF00789615 /* CloudRelay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC85CA82B0C23CF00789615 /* CloudRelay+CoreDataProperties.swift */; };
 		1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCA273D299A6A1A00298881 /* LightningButton.swift */; };
@@ -620,6 +622,7 @@
 		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		1F6629112B0D429D00508988 /* RelayConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayConnection.swift; sourceTree = "<group>"; };
 		1F6629132B0D49BD00508988 /* RelayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayData.swift; sourceTree = "<group>"; };
+		1F6629172B0E672500508988 /* Kind10002ConfigurationWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind10002ConfigurationWizard.swift; sourceTree = "<group>"; };
 		1F685B512A0D18D2009EEC9B /* NRContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContact.swift; sourceTree = "<group>"; };
 		1F685B552A0D6E96009EEC9B /* NRReplyingToBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRReplyingToBuilder.swift; sourceTree = "<group>"; };
 		1F685B572A0D7800009EEC9B /* QueuedFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueuedFetcher.swift; sourceTree = "<group>"; };
@@ -819,6 +822,7 @@
 		1FC7A55129FA46F000645FEF /* Highlight with Nostur.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Highlight with Nostur.entitlements"; sourceTree = "<group>"; };
 		1FC82F3129AE0C0700B81CE5 /* Mentions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mentions.swift; sourceTree = "<group>"; };
 		1FC82F3329AE261C00B81CE5 /* DetailPane.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailPane.swift; sourceTree = "<group>"; };
+		1FC85CA52B0C1BC500789615 /* RelayMastery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayMastery.swift; sourceTree = "<group>"; };
 		1FC85CA72B0C23CF00789615 /* CloudRelay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudRelay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FC85CA82B0C23CF00789615 /* CloudRelay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudRelay+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FCA273D299A6A1A00298881 /* LightningButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningButton.swift; sourceTree = "<group>"; };
@@ -1656,7 +1660,9 @@
 				1F09D2752B03B130000B9B2B /* Network */,
 				1F756532296AE7910078474E /* NewRelayView.swift */,
 				1FB62D0D296FFF1400A0055B /* RelayEditView.swift */,
+				1F6629172B0E672500508988 /* Kind10002ConfigurationWizard.swift */,
 				1F756530296AE4260078474E /* RelaysView.swift */,
+				1FC85CA52B0C1BC500789615 /* RelayMastery.swift */,
 			);
 			path = Relays;
 			sourceTree = "<group>";
@@ -2225,6 +2231,7 @@
 				1F006B0729D090370048C6DD /* Event+DMs.swift in Sources */,
 				1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */,
 				1FC4556129CB677F00DE3239 /* NewDMButton.swift in Sources */,
+				1F6629182B0E672500508988 /* Kind10002ConfigurationWizard.swift in Sources */,
 				1F3309832989819700D4D8CF /* Maintenance.swift in Sources */,
 				1FCCAC9E2AB747CF00B3F00A /* ProfileFollowingCount.swift in Sources */,
 				1F2DD4302A29F5B70028A062 /* AlbyNWCConnectSheet.swift in Sources */,
@@ -2359,6 +2366,7 @@
 				1F39756D2AB5A229004F9D77 /* NIP42.swift in Sources */,
 				1F1F13052AA9BE8C00DDED82 /* Hot+FeedSettings.swift in Sources */,
 				1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */,
+				1FC85CA62B0C1BC500789615 /* RelayMastery.swift in Sources */,
 				1FC0F5A52A4AEB2E004E4DAA /* ArticleByNaddr.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
 				1F58157E2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift in Sources */,
