@@ -62,6 +62,23 @@ func replaceMentionsWithNpubs(_ text:String, selected:Set<Contact> = []) -> Stri
     return newText
 }
 
+// Replace "@npub1..." with "nostr:npub1..." and return an array of all 
+// replaced npubs for turning into pTags
+func replaceAtWithNostr(_ input:String) -> (String, [String]) {
+    let regex = try! NSRegularExpression(pattern: "@(npub1[023456789acdefghjklmnpqrstuvwxyz]{58})", options: [])
+        var matches: [String] = []
+
+        let newString = regex.stringByReplacingMatches(in: input, options: [], range: NSRange(input.startIndex..., in: input), withTemplate: "nostr:$1")
+
+        regex.enumerateMatches(in: input, options: [], range: NSRange(input.startIndex..., in: input)) { result, _, _ in
+            if let range = result?.range(at: 1), let swiftRange = Range(range, in: input) {
+                matches.append(String(input[swiftRange]))
+            }
+        }
+
+        return (newString, matches)
+}
+
 func toHex(_ bech:String) -> String? {
     guard let nip19 = try? NIP19(displayString: bech) else { return nil }
     return nip19.hexString

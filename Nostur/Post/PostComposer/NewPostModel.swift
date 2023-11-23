@@ -191,6 +191,7 @@ public final class NewPostModel: ObservableObject {
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
         let publicKey = account.publicKey
         var nEvent = nEvent ?? NEvent(content: "")
+        var pTags:[String] = []
         nEvent.createdAt = NTimestamp.init(date: Date())
         
         if !pastedImages.isEmpty && urls.count > 0 {
@@ -202,20 +203,25 @@ public final class NewPostModel: ObservableObject {
         // @mentions to nostr:npub
         nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
         
+        // @npubs to nostr:npub and return pTags
+        let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
+        nEvent.content = content
+        let atPtags = atNpubs.map { Keys.hex(npub: $0) }
+        
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
         
         // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
         if let requiredP = requiredP {
-            nEvent.tags.append(NostrTag(["p", requiredP]))
+            pTags.append(requiredP)
         }
 
         // Include .p tags for @mentions
-        let selectedPtags = typingTextModel.selectedMentions
-            .filter { $0.pubkey != requiredP } // don't include requiredP twice
-            .map { NostrTag(["p", $0.pubkey]) }
+        let selectedPtags = typingTextModel.selectedMentions.map { $0.pubkey }
         
-        nEvent.tags.append(contentsOf: selectedPtags)
+        let nostrTags = Set(pTags + selectedPtags + atPtags).map { NostrTag(["p", $0]) }
+        
+        nEvent.tags.append(contentsOf: nostrTags)
         
         // If we are quote reposting, include the quoted post as nostr:note1 at the end
         // TODO: maybe at .q tag, need to look up if there is a spec
@@ -325,17 +331,31 @@ public final class NewPostModel: ObservableObject {
     public func showPreview(quotingEvent:Event? = nil) {
         guard let account = activeAccount else { return }
         var nEvent = nEvent ?? NEvent(content: "")
+        var pTags:[String] = []
         nEvent.publicKey = account.publicKey
         
         // @mentions to nostr:npub
         nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
+        
+        // @npubs to nostr:npub and return pTags
+        let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
+        nEvent.content = content
+        let atPtags = atNpubs.map { Keys.hex(npub: $0) }
 
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
         
-        // Also include .p tags other @mentions
-        let selectedPtags = typingTextModel.selectedMentions.map { NostrTag(["p", $0.pubkey]) }
-        nEvent.tags.append(contentsOf: selectedPtags)
+        // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
+        if let requiredP = requiredP {
+            pTags.append(requiredP)
+        }
+        
+        // Include .p tags for @mentions
+        let selectedPtags = typingTextModel.selectedMentions.map { $0.pubkey }
+        
+        let nostrTags = Set(pTags + selectedPtags + atPtags).map { NostrTag(["p", $0]) }
+        
+        nEvent.tags.append(contentsOf: nostrTags)
         
         // If we are quote reposting, include the quoted post as nostr:note1 at the end
         // TODO: maybe at .q tag, need to look up if there is a spec
