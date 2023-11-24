@@ -41,7 +41,7 @@ struct Entry: View {
         VStack(alignment: .leading, spacing: 3) {
             if replyTo != nil {
                 HStack(alignment: .top) { // name + reply + context menu
-                    ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $typingTextModel.selectedMentions)
+                    ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $typingTextModel.selectedMentions, unselected: $typingTextModel.unselectedMentions)
                         .offset(x: 5.0, y: 4.0)
                 }
                 .frame(height: 21.0)

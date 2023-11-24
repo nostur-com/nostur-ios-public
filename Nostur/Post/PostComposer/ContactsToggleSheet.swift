@@ -12,6 +12,7 @@ struct ContactsToggleSheet: View {
     public var requiredP:String? = nil
     public var available:Set<Contact>
     @Binding public var selected:Set<Contact>
+    @Binding public var unselected:Set<Contact>
     
     private var contactList:[Contact] {
         Array(available)
@@ -49,9 +50,11 @@ struct ContactsToggleSheet: View {
                                 guard contact.pubkey != requiredP else { return }
                                 if selected.contains(contact) {
                                     selected.remove(contact)
+                                    unselected.insert(contact)
                                 }
                                 else {
                                     selected.insert(contact)
+                                    unselected.remove(contact)
                                 }
                             } label: {
                                 if selected.contains(contact) {
@@ -82,9 +85,11 @@ struct ContactsToggleSheet: View {
                             guard contact.pubkey != requiredP else { return }
                             if selected.contains(contact) {
                                 selected.remove(contact)
+                                unselected.insert(contact)
                             }
                             else {
                                 selected.insert(contact)
+                                unselected.remove(contact)
                             }
                         }
                         Divider()

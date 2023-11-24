@@ -13,6 +13,7 @@ struct ReplyingToEditable: View {
     public var requiredP:String? = nil
     public var available:Set<Contact>
     @Binding var selected:Set<Contact>
+    @Binding var unselected:Set<Contact>
     
     private var selectedSorted:[Contact] {
         Array(selected)
@@ -40,7 +41,7 @@ struct ReplyingToEditable: View {
             showContactsToggleSheet = true
         }
         .sheet(isPresented: $showContactsToggleSheet) {
-            ContactsToggleSheet(requiredP: requiredP, available: available, selected: $selected)
+            ContactsToggleSheet(requiredP: requiredP, available: available, selected: $selected, unselected: $unselected)
             .presentationDetents([.medium])
         }
     }
@@ -50,9 +51,10 @@ struct ReplyingToEditableTester: View {
     @State private var requiredP:String? = nil
     @State private var available:Set<Contact> = []
     @State private var selected:Set<Contact> = []
+    @State private var unselected:Set<Contact> = []
     
     var body: some View {
-        ReplyingToEditable(requiredP: requiredP, available: available, selected: $selected)
+        ReplyingToEditable(requiredP: requiredP, available: available, selected: $selected, unselected: $unselected)
             .onAppear {
                 let contacts = PreviewFetcher.allContacts()
                 available = Set(contacts.prefix(6))

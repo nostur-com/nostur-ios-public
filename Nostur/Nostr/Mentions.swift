@@ -13,11 +13,11 @@ func replaceMentionsWithNpubs(_ text:String, selected:Set<Contact> = []) -> Stri
     var newText = text
     let mentionsByLongest = mentions.sorted(by: { $0.output.3.count > $1.output.3.count })
     for mention in mentionsByLongest {
-//        print("replaceMentionsWithNpubs")
-//        print(mention.output.0) // @Tester
-//        print(mention.output.1) // @Tester
-//        print(mention.output.2) // @Tester
-//        print(mention.output.3) // Tester
+        //        print("replaceMentionsWithNpubs")
+        //        print(mention.output.0) // @Tester
+        //        print(mention.output.1) // @Tester
+        //        print(mention.output.2) // @Tester
+        //        print(mention.output.3) // Tester
         let term = mention.output.3.trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
             .replacingOccurrences(of: "\u{2063}", with: "")
@@ -34,7 +34,7 @@ func replaceMentionsWithNpubs(_ text:String, selected:Set<Contact> = []) -> Stri
             if name == term { return true }
             return false
         }) {
-//            print("selected [exact!] result: \(result.authorName)")
+            //            print("selected [exact!] result: \(result.authorName)")
             newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(result.npub)", options: [.caseInsensitive])
             continue
         }
@@ -48,35 +48,50 @@ func replaceMentionsWithNpubs(_ text:String, selected:Set<Contact> = []) -> Stri
             if name.contains(term) { return true }
             return false
         }) {
-//            print("selected [contains!] result: \(result.authorName)")
+            //            print("selected [contains!] result: \(result.authorName)")
             newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(result.npub)", options: [.caseInsensitive])
             continue
         }
-                
+        
         
         else if let result = try? DataProvider.shared().viewContext.fetch(fr).first {
-//            print("any! result \(result.handle) \(result.npub)")
+            //            print("any! result \(result.handle) \(result.npub)")
             newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(result.npub)", options: [.caseInsensitive])
         }
     }
     return newText
 }
 
-// Replace "@npub1..." with "nostr:npub1..." and return an array of all 
+// Replace "@npub1..." with "nostr:npub1..." and return an array of all
 // replaced npubs for turning into pTags
 func replaceAtWithNostr(_ input:String) -> (String, [String]) {
     let regex = try! NSRegularExpression(pattern: "@(npub1[023456789acdefghjklmnpqrstuvwxyz]{58})", options: [])
-        var matches: [String] = []
-
-        let newString = regex.stringByReplacingMatches(in: input, options: [], range: NSRange(input.startIndex..., in: input), withTemplate: "nostr:$1")
-
-        regex.enumerateMatches(in: input, options: [], range: NSRange(input.startIndex..., in: input)) { result, _, _ in
-            if let range = result?.range(at: 1), let swiftRange = Range(range, in: input) {
-                matches.append(String(input[swiftRange]))
-            }
+    var matches: [String] = []
+    
+    let newString = regex.stringByReplacingMatches(in: input, options: [], range: NSRange(input.startIndex..., in: input), withTemplate: "nostr:$1")
+    
+    regex.enumerateMatches(in: input, options: [], range: NSRange(input.startIndex..., in: input)) { result, _, _ in
+        if let range = result?.range(at: 1), let swiftRange = Range(range, in: input) {
+            matches.append(String(input[swiftRange]))
         }
+    }
+    
+    return (newString, matches)
+}
 
-        return (newString, matches)
+
+// Scan for any "nostr:npub1..." and return as array of npubs
+// so they can be added to pTags
+func getNostrNpubs(_ input:String) -> [String] {
+    do {
+        let regex = try NSRegularExpression(pattern: "nostr:(npub1[023456789acdefghjklmnpqrstuvwxyz]{58})")
+        let results = regex.matches(in: input, range: NSRange(input.startIndex..., in: input))
+        return results.compactMap {
+            Range($0.range(at: 1), in: input).map { String(input[$0]) }
+        }
+    } catch {
+        return []
+    }
 }
 
 func toHex(_ bech:String) -> String? {
