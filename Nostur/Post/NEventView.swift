@@ -50,7 +50,8 @@ struct NEventView: View {
                                 }
                                 // Still don't have the event? try to fetch from relay hint
                                 // TODO: Should try a relay we don't already have in our relay set
-                                else if [.initializing, .loading].contains(vm.state) && identifier.relays.first != nil { // 4. TIMEOUT BUT WE TRY RELAY HINT
+                                else if [.initializing, .loading].contains(vm.state) {
+                                    // try search relays and relay hint
                                     vm.altFetch()
                                 }
                                 else { // 5. TIMEOUT
@@ -58,7 +59,9 @@ struct NEventView: View {
                                 }
                             },
                             altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
-                                guard let relay = identifier.relays.first else { vm.timeout(); return }
+                                // Try search relays
+                                req(RM.getEvent(id: eventId, subscriptionId: taskId), relayType: .SEARCH)
+                                guard let relay = identifier.relays.first else { return }
                                 
                                 ConnectionPool.shared.sendEphemeralMessage(
                                     RM.getEvent(id: eventId, subscriptionId: taskId),

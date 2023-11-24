@@ -40,11 +40,18 @@ struct NoteById: View {
                             else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
                                 vm.ready(NRPost(event: event, withFooter: false))
                             }
+                            else if [.initializing, .loading].contains(vm.state) {
+                                // try search relays
+                                vm.altFetch()
+                            }
                             else {
                                 vm.timeout()
                             }
                         },
-                        altReq: nil
+                        altReq: { taskId in
+                            // Try search relays
+                            req(RM.getEvent(id: self.id, subscriptionId: taskId), relayType: .SEARCH)
+                        }
                     ))
                     vm.fetch()
                 }
@@ -199,6 +206,9 @@ struct PostAndParent: View {
                         timerTask = Task {
                             try? await Task.sleep(for: .seconds(4))
                             if nrPost.replyTo == nil {
+                                // try search relays
+                                req(RM.getEvent(id: replyToId), relayType: .SEARCH)
+                                // try relay hint
                                 fetchEventFromRelayHint(replyToId, fastTags: nrPost.fastTags)
                             }
                         }
