@@ -23,7 +23,7 @@ struct EditRelaysNosturList: View {
     @State var showAsTab = true
     
     @FetchRequest(
-        sortDescriptors: [SortDescriptor(\CloudRelay.createdAt, order: .forward)],
+        sortDescriptors: [SortDescriptor(\CloudRelay.createdAt_, order: .forward)],
         animation: .default)
     var relays: FetchedResults<CloudRelay>
     
