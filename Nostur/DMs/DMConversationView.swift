@@ -168,14 +168,11 @@ struct DMConversationView: View {
                                             Divider()
                                             Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
                                                 conv.accepted = true
-                                                bg().perform {
-                                                    conv.dmState.accepted = true
-                                                    conv.dmState.didUpdate.send()
-                                                    DataProvider.shared().bgSave()
-                                                    DispatchQueue.main.async {
-                                                        DirectMessageViewModel.default.reloadAccepted()
-                                                    }
-                                                }
+                                                conv.dmState.accepted = true
+                                                conv.dmState.didUpdate.send()
+                                                DataProvider.shared().save()
+                                                DirectMessageViewModel.default.reloadAccepted()
+                                                
                                             }
                                             .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                                         }
