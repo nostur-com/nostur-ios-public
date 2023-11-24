@@ -20,6 +20,7 @@ public final class TypingTextModel: ObservableObject {
     }
     @Published var pastedImages:[PostedImageMeta] = []
     @Published var selectedMentions:Set<Contact> = [] // will become p-tags in the final post
+    @Published var unselectedMentions:Set<Contact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
     @Published var sending = false
     @Published var uploading = false
     private var subscriptions = Set<AnyCancellable>()
@@ -200,26 +201,35 @@ public final class NewPostModel: ObservableObject {
                 nEvent.content += "\n\(url)"
             }
         }
-        // @mentions to nostr:npub
+        // Typed @mentions to nostr:npub
         nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
         
-        // @npubs to nostr:npub and return pTags
+        // Pasted @npubs to nostr:npub and return pTags
         let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
         nEvent.content = content
         let atPtags = atNpubs.map { Keys.hex(npub: $0) }
         
+        // Scan for any nostr:npub and return pTags
+        let npubs = getNostrNpubs(nEvent.content)
+        let nostrNpubTags = npubs.map { Keys.hex(npub: $0) }
+        
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
+
+        // Include .p tags for @mentions (should no longer be needed, because we get them nostr:npubs in text now)
+        let selectedPtags = typingTextModel.selectedMentions.map { $0.pubkey }
+        var unselectedPtags = typingTextModel.unselectedMentions.map { $0.pubkey }
         
         // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
         if let requiredP = requiredP {
             pTags.append(requiredP)
+            unselectedPtags.removeAll(where: { $0 == requiredP })
         }
-
-        // Include .p tags for @mentions
-        let selectedPtags = typingTextModel.selectedMentions.map { $0.pubkey }
         
-        let nostrTags = Set(pTags + selectedPtags + atPtags).map { NostrTag(["p", $0]) }
+        // Merge and deduplicate all p pubkeys, remove all unselected p pubkeys and turn into NostrTag
+        let nostrTags = Set(pTags + selectedPtags + atPtags + nostrNpubTags)
+            .subtracting(Set(unselectedPtags))
+            .map { NostrTag(["p", $0]) }
         
         nEvent.tags.append(contentsOf: nostrTags)
         
@@ -341,19 +351,28 @@ public final class NewPostModel: ObservableObject {
         let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
         nEvent.content = content
         let atPtags = atNpubs.map { Keys.hex(npub: $0) }
+        
+        // Scan for any nostr:npub and return pTags
+        let npubs = getNostrNpubs(nEvent.content)
+        let nostrNpubTags = npubs.map { Keys.hex(npub: $0) }
 
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
         
+        // Include .p tags for @mentions (should no longer be needed, because we get them nostr:npubs in text now)
+        let selectedPtags = typingTextModel.selectedMentions.map { $0.pubkey }
+        var unselectedPtags = typingTextModel.unselectedMentions.map { $0.pubkey }
+        
         // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
         if let requiredP = requiredP {
             pTags.append(requiredP)
+            unselectedPtags.removeAll(where: { $0 == requiredP })
         }
         
-        // Include .p tags for @mentions
-        let selectedPtags = typingTextModel.selectedMentions.map { $0.pubkey }
-        
-        let nostrTags = Set(pTags + selectedPtags + atPtags).map { NostrTag(["p", $0]) }
+        // Merge and deduplicate all p pubkeys, remove all unselected p pubkeys and turn into NostrTag
+        let nostrTags = Set(pTags + selectedPtags + atPtags + nostrNpubTags)
+            .subtracting(Set(unselectedPtags))
+            .map { NostrTag(["p", $0]) }
         
         nEvent.tags.append(contentsOf: nostrTags)
         
