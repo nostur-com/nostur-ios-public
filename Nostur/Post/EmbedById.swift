@@ -41,11 +41,18 @@ struct EmbedById: View {
                                 else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
                                     vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                 }
+                                else if [.initializing, .loading].contains(vm.state) {
+                                    // try search relays
+                                    vm.altFetch()
+                                }
                                 else {
                                     vm.timeout()
                                 }
                             },
-                            altReq: nil
+                            altReq: { taskId in
+                                // Try search relays
+                                req(RM.getEvent(id: self.id, subscriptionId: taskId), relayType: .SEARCH)
+                            }
                         ))
                         vm.fetch()
                     }
