@@ -90,6 +90,10 @@ struct Kind10002ConfigurationWizard: View {
                             .foregroundColor(.secondary)
                         RelaySelector(availableRelays: allRelays, selectedRelays: $selectedWriteRelays)
                     }
+                    
+                    Section("Tip") {
+                        Text("Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues.")
+                    }
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -121,6 +125,10 @@ struct Kind10002ConfigurationWizard: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                         RelaySelector(availableRelays: allRelays, selectedRelays: $selectedReadRelays)
+                    }
+                    
+                    Section("Tip") {
+                        Text("Choose one or more public relays you read from so you can receive notifications when others mention you.")
                     }
                 }
                 .toolbar {
