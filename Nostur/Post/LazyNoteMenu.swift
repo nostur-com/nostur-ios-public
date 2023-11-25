@@ -43,6 +43,7 @@ struct LazyNoteMenuSheet: View {
     @Environment(\.dismiss) private var dismiss
     private let NEXT_SHEET_DELAY = 0.05
     @State private var followToggles = false
+    @State private var blockOptions = false
     
     var body: some View {
         NavigationStack {
@@ -207,12 +208,20 @@ struct LazyNoteMenuSheet: View {
                 .listRowBackground(themes.theme.background)
                 
                 Group {
-                    Button {
-                        dismiss()
-                        CloudBlocked.addBlock(pubkey: nrPost.pubkey, fixedName: nrPost.anyName)
-                        sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
-                    } label: {
-                        Label(String(localized:"Block \(nrPost.anyName)", comment: "Post context menu action to Block (name)"), systemImage: "slash.circle")
+                    HStack {
+                        Button {
+                            dismiss()
+                            CloudBlocked.addBlock(pubkey: nrPost.pubkey, fixedName: nrPost.anyName)
+                            sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
+                        } label: {
+                            Label(String(localized:"Block \(nrPost.anyName)", comment: "Post context menu action to Block (name)"), systemImage: "slash.circle")
+                        }
+                        .buttonStyle(.plain)
+                        Spacer()
+                        Divider()
+                        Button { blockOptions = true } label: {
+                            Image(systemName: "chevron.right")
+                        }
                     }
                     
                     Button {
@@ -306,8 +315,11 @@ struct LazyNoteMenuSheet: View {
                     
                 }
             }
-            .navigationDestination(isPresented: $followToggles) {
+            .navigationDestination(isPresented: $followToggles) { 
                 MultiFollowSheet(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
+            }
+            .navigationDestination(isPresented: $blockOptions) {
+                BlockOptions(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
             }
             .onAppear {
                 signpost(NRState.shared, "Post Context Menu", .begin, "onAppear")
@@ -341,5 +353,37 @@ struct LazyNoteMenuSheet_Previews: PreviewProvider {
             }
         }
         .withSheets()
+    }
+}
+
+struct BlockOptions: View {
+    @EnvironmentObject private var themes:Themes
+    
+    public let pubkey:String
+    public let name:String
+    public var onDismiss:(() -> Void)?
+
+    var body: some View {
+        Form {
+            Section("Duration") {
+                Button("Block for 1 hour") { block(pubkey: pubkey, forHours: 1, name: name); onDismiss?() }
+                Button("Block for 4 hours") { block(pubkey: pubkey, forHours: 4, name: name); onDismiss?() }
+                Button("Block for 8 hours") { block(pubkey: pubkey, forHours: 8, name: name); onDismiss?() }
+                Button("Block for 1 day") { block(pubkey: pubkey, forHours: 24, name: name); onDismiss?() }
+                Button("Block for 1 week") { block(pubkey: pubkey, forHours: 24*7, name: name); onDismiss?() }
+                Button("Block for 1 month") { block(pubkey: pubkey, forHours: 24*31, name: name); onDismiss?() }
+            }
+        }
+        .foregroundColor(themes.theme.accent)
+        .listRowBackground(themes.theme.background)
+        .navigationTitle("Block \(name)")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done") {
+                    onDismiss?()
+                }
+            }
+        }
     }
 }

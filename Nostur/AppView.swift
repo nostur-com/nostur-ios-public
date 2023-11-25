@@ -149,6 +149,7 @@ struct AppView: View {
                                 sendNotification(.scenePhaseActive)
                                 cp.connectAll()
                                 lvmManager.restoreSubscriptions()
+                                ns.startTaskTimers()
                             case .background:
                                 L.og.notice("scenePhase background")
                                 sendNotification(.scenePhaseBackground)
@@ -302,6 +303,10 @@ struct AppView: View {
         
         if (!firstTimeCompleted) {
             Maintenance.ensureBootstrapRelaysExist(context: viewContext)
+        }
+        
+        DispatchQueue.main.async {
+            ns.startTaskTimers()
         }
         
         // Setup connections
