@@ -74,6 +74,12 @@ struct CustomNWCConnectSheet: View {
                 
                 if !nwcErrorMessage.isEmpty {
                     Text(nwcErrorMessage).fontWeight(.bold).foregroundColor(.red)
+                    Button("Try to use anyway") {
+                        DispatchQueue.main.async {
+                            ss.activeNWCconnectionId = awaitingConnectionId
+                            nwcConnectSuccess = true
+                        }
+                    }
                 }
                 else {
                     if !tryingConnection {
@@ -212,6 +218,7 @@ struct CustomNWCConnectSheet_Previews: PreviewProvider {
             CustomNWCConnectSheet()
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+        .environmentObject(Themes.default)
     }
 }
 
