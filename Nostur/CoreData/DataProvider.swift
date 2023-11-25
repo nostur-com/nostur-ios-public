@@ -217,6 +217,17 @@ func bgSave() {
     DataProvider.shared().bgSave()
 }
 
+func save(context: NSManagedObjectContext = context()) {
+    if context.hasChanges {
+        do {
+            try context.save()
+        }
+        catch {
+            L.og.error("🔴🔴 Could not save() context \(error)")
+        }
+    }
+}
+
 func context() -> NSManagedObjectContext {
     if Thread.isMainThread {
         return DataProvider.shared().viewContext
