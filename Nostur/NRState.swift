@@ -173,6 +173,77 @@ class NRState: ObservableObject {
     public var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
     
     let agoTimer = Timer.publish(every: 60, tolerance: 15.0, on: .main, in: .default).autoconnect()
+    
+    // task timers
+    private var taskTimers:[Timer] = []
+    
+    public func startTaskTimers() {
+        // We (re)create all timers, so invalidate and remove any existing
+        for timer in taskTimers {
+            timer.invalidate()
+        }
+        taskTimers = []
+        
+        // Get all tasks of type .blockUntil
+        let tasks = CloudTask.fetchAll(byType: .blockUntil)
+        guard !tasks.isEmpty else { return }
+        
+        // flag to track if we deleted any because its timer has already expired
+        var didRemoveBlockUntilTask = false
+        
+        for task in tasks {
+            if .now >= task.date { // if the task has already expired we remove the task from database
+                // fetch the related block we need to remove also
+                if let block = CloudBlocked.fetchBlock(byPubkey: task.value) {
+                    context().delete(block)
+                    didRemoveBlockUntilTask = true
+                }
+                // remove the task
+                context().delete(task)
+            }
+            else { // not expired, so we create the timer
+                createTimer(fireDate: task.date, pubkey: task.value)
+            }
+        }
+        
+        // Send notification to update views if we deleted any blocks
+        if didRemoveBlockUntilTask {
+            sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
+        }
+    }
+    
+    @objc func timerAction(_ timer: Timer) {
+        let pubkey = timer.userInfo as! String
+        
+        // Remove task from database
+        if let task = CloudTask.fetchTask(byType: .blockUntil, andPubkey: pubkey) {
+            context().delete(task)
+        }
+        
+        // Remove related block from database
+        if let block = CloudBlocked.fetchBlock(byPubkey: pubkey) {
+            context().delete(block)
+            
+            // Update views
+            sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
+        }
+        
+        // Invalidate and remove the timer
+        timer.invalidate()
+        removeTimer(timer)
+    }
+    
+    func createTimer(fireDate: Date, pubkey: String) {
+        let timer = Timer(fireAt: fireDate, interval: 0, target: self, selector: #selector(timerAction(_:)), userInfo: pubkey, repeats: false)
+        taskTimers.append(timer)
+        RunLoop.main.add(timer, forMode: .common)
+    }
+    
+    func removeTimer(_ timer: Timer) {
+        if let index = taskTimers.firstIndex(where: { $0 === timer }) {
+            taskTimers.remove(at: index)
+        }
+    }
 }
 
 func notMain() {
