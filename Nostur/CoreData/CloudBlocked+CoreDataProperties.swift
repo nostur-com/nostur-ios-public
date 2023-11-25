@@ -118,6 +118,13 @@ extension CloudBlocked : Identifiable {
         return Set(((try? (Thread.isMainThread ? DataProvider.shared().viewContext : bg()).fetch(fr)) ?? []).compactMap { $0.pubkey_ })
     }
     
+    static func fetchBlock(byPubkey pubkey: String, context: NSManagedObjectContext = context()) -> CloudBlocked? {
+        let fr = CloudBlocked.fetchRequest()
+        fr.predicate = NSPredicate(format: "type_ == %@ AND pubkey_ == %@", CloudBlocked.BlockType.contact.rawValue, pubkey)
+        fr.fetchLimit = 1
+        return try? context.fetch(fr).first
+    }
+    
     static func mutedRootIds() -> Set<String> {
         let fr = CloudBlocked.fetchRequest()
         fr.predicate = NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.post.rawValue)
