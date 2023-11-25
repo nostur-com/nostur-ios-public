@@ -279,6 +279,8 @@
 		1FA1CA3B2AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */; };
 		1FA1CA3D2AF6D7B6000E529B /* PrivateNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA3C2AF6D7B6000E529B /* PrivateNotesView.swift */; };
 		1FA3AB242A4E17070059F6B7 /* NIP46SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */; };
+		1FA451AA2B101F6A00810367 /* CloudTask+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA451A82B101F6A00810367 /* CloudTask+CoreDataClass.swift */; };
+		1FA451AB2B101F6A00810367 /* CloudTask+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA451A92B101F6A00810367 /* CloudTask+CoreDataProperties.swift */; };
 		1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA477222A780C0E00A4CCD3 /* Binding+not.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
@@ -742,6 +744,8 @@
 		1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudPrivateNote+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FA1CA3C2AF6D7B6000E529B /* PrivateNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNotesView.swift; sourceTree = "<group>"; };
 		1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46SecretManager.swift; sourceTree = "<group>"; };
+		1FA451A82B101F6A00810367 /* CloudTask+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudTask+CoreDataClass.swift"; sourceTree = "<group>"; };
+		1FA451A92B101F6A00810367 /* CloudTask+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudTask+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FA477222A780C0E00A4CCD3 /* Binding+not.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+not.swift"; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -1162,6 +1166,8 @@
 				1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */,
 				1FC85CA72B0C23CF00789615 /* CloudRelay+CoreDataClass.swift */,
 				1FC85CA82B0C23CF00789615 /* CloudRelay+CoreDataProperties.swift */,
+				1FA451A82B101F6A00810367 /* CloudTask+CoreDataClass.swift */,
+				1FA451A92B101F6A00810367 /* CloudTask+CoreDataProperties.swift */,
 				1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */,
 				1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */,
 				1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */,
@@ -2040,6 +2046,7 @@
 				1FE31EE72A588AC8008A4A6F /* ZappablePFP.swift in Sources */,
 				1F00337129BEF141007CE040 /* View+withSheets.swift in Sources */,
 				1F0A25542A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift in Sources */,
+				1FA451AB2B101F6A00810367 /* CloudTask+CoreDataProperties.swift in Sources */,
 				1F21442C29A797930090E78E /* Settings.swift in Sources */,
 				1F88491029B537B400145340 /* Markdown.swift in Sources */,
 				1F006B0529D08FAA0048C6DD /* Event+Notifications.swift in Sources */,
@@ -2268,6 +2275,7 @@
 				1FAE9B442A2F0ADB00439A63 /* ProfileImagesHelpers.swift in Sources */,
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
 				1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */,
+				1FA451AA2B101F6A00810367 /* CloudTask+CoreDataClass.swift in Sources */,
 				1F2DEDDD2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift in Sources */,
 				1F0CA5DE2AA6914900DC10CD /* DirectMessageViewModel.swift in Sources */,
 				1F7E38EC2A2D9AED00ABAA85 /* DIMENSIONS.swift in Sources */,

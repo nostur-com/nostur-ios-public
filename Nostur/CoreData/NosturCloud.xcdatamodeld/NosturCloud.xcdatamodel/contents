@@ -110,6 +110,12 @@
         <attribute name="url_" optional="YES" attributeType="String"/>
         <attribute name="write" optional="YES" attributeType="Boolean" defaultValueString="0.0" usesScalarValueType="YES"/>
     </entity>
+    <entity name="CloudTask" representedClassName="CloudTask" syncable="YES">
+        <attribute name="createdAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="type_" optional="YES" attributeType="String"/>
+        <attribute name="value_" optional="YES" attributeType="String"/>
+    </entity>
     <entity name="Contact" representedClassName=".Contact" syncable="YES">
         <attribute name="about" optional="YES" attributeType="String"/>
         <attribute name="banner" optional="YES" attributeType="String"/>
@@ -268,6 +274,7 @@
         <memberEntity name="CloudAccount"/>
         <memberEntity name="CloudDMState"/>
         <memberEntity name="CloudRelay"/>
+        <memberEntity name="CloudTask"/>
     </configuration>
     <configuration name="Local">
         <memberEntity name="Account"/>
