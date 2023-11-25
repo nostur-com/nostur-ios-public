@@ -53,6 +53,8 @@ struct BlockedAccounts:View {
     @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt_, order: .reverse)], predicate: NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.contact.rawValue))
     var blockedPubkeys:FetchedResults<CloudBlocked>
     
+    @State private var blocksUntil:[String: Date] = [:] // [pubkey: blocked until]
+    
     var body: some View {
         ScrollView {
             if !blockedPubkeys.isEmpty {
@@ -68,6 +70,14 @@ struct BlockedAccounts:View {
                                     
                                     viewContext.delete(blockedPubkey)
                                     sendNotification(.blockListUpdated, Set(updatedList))
+                                }
+                                .overlay(alignment: .topTrailing) {
+                                    if let until = blocksUntil[blockedPubkey.pubkey] {
+                                        Text("blocked until \(until.formatted(date: .abbreviated, time: .shortened))")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .padding([.top,.trailing], 5)
+                                    }
                                 }
                         }
                         else {
@@ -98,6 +108,14 @@ struct BlockedAccounts:View {
                                 viewContext.delete(blockedPubkey)
                                 sendNotification(.blockListUpdated, Set(updatedList))
                             }
+                            .overlay(alignment: .topTrailing) {
+                                if let until = blocksUntil[blockedPubkey.pubkey] {
+                                    Text("blocked until \(until.formatted(date: .abbreviated, time: .shortened))")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .padding([.top,.trailing], 5)
+                                }
+                            }
                         }
                     }
                 }
@@ -105,6 +123,12 @@ struct BlockedAccounts:View {
                     removeDuplicates()
                 }
             }
+        }
+        .task {
+            CloudTask.fetchAll(byType: .blockUntil)
+                .forEach { task in
+                    blocksUntil[task.value] = task.date
+                }
         }
     }
     
