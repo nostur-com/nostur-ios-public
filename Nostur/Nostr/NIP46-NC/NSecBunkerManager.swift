@@ -230,7 +230,7 @@ class NSecBunkerManager: ObservableObject {
     
     // Ask nsecBunker for signature for given event, runs whenSigned(..) callback with signed event after
     public func requestSignature(forEvent event: NEvent, usingAccount: CloudAccount? = nil, whenSigned: ((NEvent) -> Void)? = nil) {
-        guard let account = (usingAccount ?? (Thread.isMainThread ? account : account?.toBG())) else { return }
+        guard let account = (usingAccount ?? account) else { return }
         
         // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead
         guard let sessionPrivateKey = account.privateKey else { return }
@@ -262,6 +262,9 @@ class NSecBunkerManager: ObservableObject {
         guard let signedReq = try? ncReq.sign(keys) else { return }
         
         L.og.debug("🏰 ncReqSigned (encrypted): \(signedReq.wrappedEventJson())")
+        
+        // set account so the response is decrypted using the correct account
+        self.setAccount(account)
         
         if let whenSigned {
             responseCommmandQueue[commandId] = whenSigned
