@@ -49,9 +49,15 @@ struct Settings: View {
     var body: some View {
 
         Form {
-
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Group {
+                    #if DEBUG
+                    Toggle(isOn: $settings.proMode) {
+                        Text("Nostur Pro", comment:"Setting on settings screen")
+                        Text("Multi-columns and more")
+                    }
+                    #endif
+                    
                     ThemePicker()
 
                     Toggle(isOn: $settings.fullWidthImages) {

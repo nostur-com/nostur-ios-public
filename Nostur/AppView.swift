@@ -16,7 +16,7 @@ import AVFoundation
 /// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
 struct AppView: View {
     @Environment(\.scenePhase) private var scenePhase
-    
+    @Environment(\.openWindow) private var openWindow
     // These singletons always exists during the apps lifetime
     @State private var tm:DetailTabsModel = .shared
     @State private var er:ExchangeRateModel = .shared
@@ -25,7 +25,7 @@ struct AppView: View {
     @State private var lvmManager:LVMManager = .shared
     @State private var importer:Importer = .shared
     @State private var queuedFetcher:QueuedFetcher = .shared
-    @State private var cp:ConnectionPool = .shared
+    private var cp:ConnectionPool = .shared
     @State private var mp:MessageParser = .shared
     @State private var zpvq:ZapperPubkeyVerificationQueue = .shared
     @State private var nip05verifier:NIP05Verifier = .shared
@@ -174,6 +174,11 @@ struct AppView: View {
                     ProgressView()
                 }
             }
+        }
+        .onAppear {
+            #if DEBUG
+            openWindow(id: "debug-window")
+            #endif
         }
 //        .onAppear  { startNosturing(); self.isViewDisplayed = true }
         .onAppear  { startNosturing() }

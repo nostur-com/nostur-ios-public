@@ -150,12 +150,13 @@ struct NosturRootMenu: View {
 }
 
 struct NosturMainView: View {
+    @ObservedObject private var ss:SettingsStore = .shared
     var body: some View {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             Color.random
         }
         else {
-            if 1 == 2 && IS_CATALYST {
+            if IS_CATALYST && ss.proMode {
                 MacListsView()
             }
             else {
