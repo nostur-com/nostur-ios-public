@@ -12,6 +12,7 @@ typealias FastTag = (String, String, String?, String?)
 
 class NRContentElementBuilder {
     
+    private init() { }
     static let shared = NRContentElementBuilder()
     let context = bg()
     

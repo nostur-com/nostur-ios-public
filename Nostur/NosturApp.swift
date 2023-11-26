@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct NosturApp: App {
+    private let ceb = NRContentElementBuilder.shared
     var body: some Scene {
         WindowGroup {
             // Not sure why the preview canvas is loading this on every other view so wrap in condition:
