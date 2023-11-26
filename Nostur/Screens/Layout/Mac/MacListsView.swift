@@ -244,6 +244,10 @@ struct SideTabs:View {
                 }
             }
             Spacer()
+            
+            Button { SettingsStore.shared.proMode = false } label:  {
+                Image(systemName: "star.fill")
+            }
         }
 //        .padding(.top, 100)
     }

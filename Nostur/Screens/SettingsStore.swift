@@ -46,6 +46,8 @@ final class SettingsStore: ObservableObject {
         
         static let postUserAgentEnabled:String = "post_user_agent_enabled"
         static let displayUserAgentEnabled:String = "display_user_agent_enabled"
+        
+        static let proMode:String = "nostur_pro_mode"
     }
 
 //    private let cancellable: Cancellable
@@ -138,7 +140,8 @@ final class SettingsStore: ObservableObject {
             Keys.appWideSeenTracker: true,
             Keys.mainWoTaccountPubkey: "",
             Keys.postUserAgentEnabled: true,
-            Keys.displayUserAgentEnabled: true
+            Keys.displayUserAgentEnabled: true,
+            Keys.proMode: false
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -240,9 +243,14 @@ final class SettingsStore: ObservableObject {
         set { defaults.set(newValue, forKey: Keys.replaceNsecWithHunter2) }
         get { defaults.bool(forKey: Keys.replaceNsecWithHunter2) }
     }
+    
+    var proMode: Bool {
+        set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.proMode) }
+        get { defaults.bool(forKey: Keys.proMode) }
+    }
 
     var defaultZapAmount: Double {
-        set {  objectWillChange.send(); defaults.set(newValue, forKey: Keys.defaultZapAmount) }
+        set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.defaultZapAmount) }
         get { defaults.double(forKey: Keys.defaultZapAmount) }
     }
     

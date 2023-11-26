@@ -82,6 +82,7 @@
 		1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2884A92A77D11D0006766E /* FeedSettings.swift */; };
 		1F2AC53D2B12B75E00F70662 /* CashuToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53C2B12B75E00F70662 /* CashuToken.swift */; };
 		1F2AC53F2B12B99300F70662 /* CashuTokenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */; };
+		1F2AC5412B12F00E00F70662 /* DebugWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC5402B12F00E00F70662 /* DebugWindow.swift */; };
 		1F2BD4A42A22206500F006AC /* SnapshotTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2BD4A32A22206500F006AC /* SnapshotTest.swift */; };
 		1F2C86B72AA8D29E00D2D7B3 /* FrameTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2C86B62AA8D29E00D2D7B3 /* FrameTesting.swift */; };
 		1F2DD4292A29C1170028A062 /* NIP47.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD4282A29C1170028A062 /* NIP47.swift */; };
@@ -556,6 +557,7 @@
 		1F2884A92A77D11D0006766E /* FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSettings.swift; sourceTree = "<group>"; };
 		1F2AC53C2B12B75E00F70662 /* CashuToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuToken.swift; sourceTree = "<group>"; };
 		1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuTokenView.swift; sourceTree = "<group>"; };
+		1F2AC5402B12F00E00F70662 /* DebugWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugWindow.swift; sourceTree = "<group>"; };
 		1F2BD4A32A22206500F006AC /* SnapshotTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTest.swift; sourceTree = "<group>"; };
 		1F2C86B62AA8D29E00D2D7B3 /* FrameTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameTesting.swift; sourceTree = "<group>"; };
 		1F2DD4282A29C1170028A062 /* NIP47.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP47.swift; sourceTree = "<group>"; };
@@ -1644,6 +1646,7 @@
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
 				1F3897522ABA92DD001A874E /* LoggedInAccount.swift */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
+				1F2AC5402B12F00E00F70662 /* DebugWindow.swift */,
 				1F3897502AB9822B001A874E /* NRState.swift */,
 				1F0F0F612A9CC75300E23BA7 /* Theme.swift */,
 			);
@@ -2369,6 +2372,7 @@
 				1F88491229B537B400145340 /* HighlightedTextEditor.UIKit.swift in Sources */,
 				1FA1CA3B2AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift in Sources */,
 				1F72FB362A2BA30E001370A1 /* NWCURI.swift in Sources */,
+				1F2AC5412B12F00E00F70662 /* DebugWindow.swift in Sources */,
 				1FC0F5A32A4AEB00004E4DAA /* ArticleById.swift in Sources */,
 				1F7261552A13F81D00146B1F /* GifSearcher.swift in Sources */,
 				1F0A3C252A0C113700B30D7E /* Kind1063.swift in Sources */,

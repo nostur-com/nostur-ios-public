@@ -21,7 +21,7 @@ protocol RelayConnectionDelegate: URLSessionWebSocketDelegate {
     func didReceivePong()
 }
 
-public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObject {
+public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObject, Identifiable {
     
     // for views (viewContext)
     @Published private(set) var isConnected = false { // don't set directly, set isDeviceConnected or isSocketConnected
