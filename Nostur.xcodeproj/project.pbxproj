@@ -80,6 +80,8 @@
 		1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 1F21DDC029F01B3000C564EF /* CombineWebSocket */; };
 		1F2245B82AA46C6F00C06342 /* NostrAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2245B72AA46C6F00C06342 /* NostrAddress.swift */; };
 		1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2884A92A77D11D0006766E /* FeedSettings.swift */; };
+		1F2AC53D2B12B75E00F70662 /* CashuToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53C2B12B75E00F70662 /* CashuToken.swift */; };
+		1F2AC53F2B12B99300F70662 /* CashuTokenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */; };
 		1F2BD4A42A22206500F006AC /* SnapshotTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2BD4A32A22206500F006AC /* SnapshotTest.swift */; };
 		1F2C86B72AA8D29E00D2D7B3 /* FrameTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2C86B62AA8D29E00D2D7B3 /* FrameTesting.swift */; };
 		1F2DD4292A29C1170028A062 /* NIP47.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD4282A29C1170028A062 /* NIP47.swift */; };
@@ -552,6 +554,8 @@
 		1F21D67C2AAB69FA00CCF3B1 /* GalleryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryViewModel.swift; sourceTree = "<group>"; };
 		1F2245B72AA46C6F00C06342 /* NostrAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrAddress.swift; sourceTree = "<group>"; };
 		1F2884A92A77D11D0006766E /* FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSettings.swift; sourceTree = "<group>"; };
+		1F2AC53C2B12B75E00F70662 /* CashuToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuToken.swift; sourceTree = "<group>"; };
+		1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuTokenView.swift; sourceTree = "<group>"; };
 		1F2BD4A32A22206500F006AC /* SnapshotTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTest.swift; sourceTree = "<group>"; };
 		1F2C86B62AA8D29E00D2D7B3 /* FrameTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameTesting.swift; sourceTree = "<group>"; };
 		1F2DD4282A29C1170028A062 /* NIP47.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP47.swift; sourceTree = "<group>"; };
@@ -1197,6 +1201,15 @@
 			path = CoreData;
 			sourceTree = "<group>";
 		};
+		1F2AC53B2B12B72C00F70662 /* Cashu */ = {
+			isa = PBXGroup;
+			children = (
+				1F2AC53C2B12B75E00F70662 /* CashuToken.swift */,
+				1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */,
+			);
+			path = Cashu;
+			sourceTree = "<group>";
+		};
 		1F2DD4272A29C0AA0028A062 /* NIP47-NWC */ = {
 			isa = PBXGroup;
 			children = (
@@ -1605,6 +1618,7 @@
 			children = (
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
+				1F2AC53B2B12B72C00F70662 /* Cashu */,
 				1F0592DA2A5054FD003B4B3C /* Communities */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
 				1FDF0ED729EBA26300B56AC4 /* CustomFeeds */,
@@ -2069,6 +2083,7 @@
 				1F33EC3729B613F800615FB9 /* FullImageViewer.swift in Sources */,
 				1F57C54B299285B300DFE063 /* Search.swift in Sources */,
 				1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */,
+				1F2AC53D2B12B75E00F70662 /* CashuToken.swift in Sources */,
 				1F7E40EB29BD9AD6003F9F71 /* PrivateNote+CoreDataProperties.swift in Sources */,
 				1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */,
 				1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */,
@@ -2314,6 +2329,7 @@
 				1F7525802997854200477AF2 /* OldNewPost.swift in Sources */,
 				1F740DAD29AF8A5200EFCCA7 /* BadgesReceivedView.swift in Sources */,
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
+				1F2AC53F2B12B99300F70662 /* CashuTokenView.swift in Sources */,
 				1F2C86B72AA8D29E00D2D7B3 /* FrameTesting.swift in Sources */,
 				1F8B135E297B36DB002EB8CF /* HexEncoding.swift in Sources */,
 				1FCB52772A5369BB006D08DF /* Communities.swift in Sources */,

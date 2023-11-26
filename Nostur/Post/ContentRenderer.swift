@@ -116,6 +116,9 @@ struct ContentRenderer: View { // VIEW things
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, theme: theme)
                         .padding(.vertical, 10)
+                case .cashu(let text):
+                    CashuTokenView(token: text, theme: theme)
+                        .padding(.vertical, 10)
                 case .video(let mediaContent):
                     if let dimensions = mediaContent.dimensions {
                         // for video, dimensions are points not pixels? Scale set to 1.0 always
