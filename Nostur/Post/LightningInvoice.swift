@@ -127,24 +127,9 @@ struct LightningInvoice: View {
                     }
                 }
             
-                guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD"), let amount = bolt11.amount else { return }
-                let request = URLRequest(url: url)
-                
-                do {
-                    // Fetch the remote data.
-                    let (data, _) = try await URLSession.shared.data(for: request)
-                    
-                    // Decode data to a CatFact object.
-                    let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
-                    
-                    // Return the fact string value.
-                    DispatchQueue.main.async {
-                        self.fiatPrice = String(format: "($%.02f)",(Double(amount.int64) / 100000000 * Double(response.result.XXBTZUSD.c[0])!))
-                    }
-                }
-                catch {
-                    L.og.debug("could not get price from kraken")
-                }
+                guard let amount = bolt11.amount else { return }
+               
+                self.fiatPrice = String(format: "($%.02f)",(Double(amount.int64) / 100000000 * ExchangeRateModel.shared.bitcoinPrice))
             }
         }
         
@@ -156,13 +141,8 @@ func fetchBitcoinPrice() async -> Double? {
     let request = URLRequest(url: url)
     
     do {
-        // Fetch the remote data.
         let (data, _) = try await URLSession.shared.data(for: request)
-        
-        // Decode data to a CatFact object.
         let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
-        
-        // Return the fact string value.
         return Double(response.result.XXBTZUSD.c[0])
     }
     catch {
@@ -192,7 +172,7 @@ struct LightningInvoice_Previews: PreviewProvider {
                         PostRowDeletable(nrPost: nrPost)
                     }
                 }
-                .padding(20)
+                .padding(10)
             }
             .withLightningEffect()
         }
