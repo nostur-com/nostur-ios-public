@@ -153,9 +153,11 @@ struct SmoothList: UIViewControllerRepresentable {
                 
                 let restoreToId:String? = collectionViewHolder.collectionView.contentOffset.y == 0 ? dataSource.snapshot(for: .main).items.first : nil
                                 
+                var shouldCommit = false
                 if !SettingsStore.shared.autoScroll && restoreToId != nil {
                     CATransaction.begin()
                     CATransaction.setDisableActions(true)
+                    shouldCommit = true
                 }
                 
                 // Never animate on the first load (!isInitialApply)
@@ -205,9 +207,9 @@ struct SmoothList: UIViewControllerRepresentable {
                                 collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
                             }
                         }
-                        if !SettingsStore.shared.autoScroll && restoreToId != nil {
-                            CATransaction.commit()
-                        }
+                    }
+                    if shouldCommit {
+                        CATransaction.commit()
                     }
                 }
             }
