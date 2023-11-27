@@ -18,8 +18,8 @@ class Deduplicator {
     private init() { }
 }
 
-// LVM handles the main feed and other lists
-// Posts are loaded from local database andprocessed in background,
+// LVM handles the main feed and other lists (custom feeds)
+// Posts are loaded from local database and processed in background,
 // turning any Event (from database) into a NRPost (for view)
 // The posts are in .nrPostLeafs and any update to .nrPostLeafs is reflected in SmoothList
 // Uses InstantFeed() to go from start-up to posts on screen as fast as possible
@@ -40,6 +40,11 @@ class LVM: NSObject, ObservableObject {
             var posts:Posts = [:]
             for nrPost in nrPostLeafs {
                 posts[nrPost.id] = nrPost
+            }
+
+            if let index = lastAppearedIndex, (index + LVM_MAX_VISIBLE) < posts.count {
+                L.sl.debug("⭐️⭐️ \(posts.count) -> \(posts.count - LVM_MAX_VISIBLE/2)")
+                posts.removeLast(LVM_MAX_VISIBLE/2)
             }
             
             leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs)
@@ -481,7 +486,7 @@ class LVM: NSObject, ObservableObject {
             // IF AT TOP, TRUNCATE:
             
             let dropCount = max(0, nrPostLeafsWithNew.count - LVM_MAX_VISIBLE) // Drop any above LVM_MAX_VISIBLE
-            if self.isAtTop && dropCount > 5 { // No need to drop all the time, do in batches of 5, or 10? // Data race in Nostur.LVM.isAtTop.setter : Swift.Bool at 0x112b87480 (Thread 1)
+            if self.isAtTop && dropCount > 5 { // No need to drop all the time, do in batches of 5, or 10?
                 let nrPostLeafsWithNewTruncated = nrPostLeafsWithNew.dropLast(dropCount)
                 self.nrPostLeafs = Array(nrPostLeafsWithNewTruncated)
                 self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
