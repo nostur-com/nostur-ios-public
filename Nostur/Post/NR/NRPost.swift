@@ -361,7 +361,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.isSpam = event.isSpam
         self.aTag = event.aTag
         
-        self.via = self.fastTags.first(where: { $0.0 == "client" })?.1
+        // Show if ["client", "Name", ""31990:..." ...]
+        // Hide if ["client", ""31990:..." ..]
+        self.via = self.fastTags.first(where: { $0.0 == "client" && $0.1.prefix(6) != "31990:" })?.1
         
         // article?
         if kind == 30023 {
