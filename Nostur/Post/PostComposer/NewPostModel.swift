@@ -251,7 +251,7 @@ public final class NewPostModel: ObservableObject {
         }
         
         if (SettingsStore.shared.postUserAgentEnabled) {
-            nEvent.tags.append(NostrTag(["client", "Nostur"]))
+            nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
 
         

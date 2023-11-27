@@ -38,8 +38,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>TENOR_API_KEY</key>
-	<string>$(TENOR_API_KEY)</string>
+    <key>TENOR_API_KEY</key>
+    <string>$(TENOR_API_KEY)</string>	
+    <key>NIP89_APP_REFERENCE</key>
+	<string>$(NIP89_APP_REFERENCE)</string>
 	<key>TENOR_CLIENT_KEY</key>
 	<string>$(TENOR_CLIENT_KEY)</string>
 	<key>UIApplicationSceneManifest</key>
