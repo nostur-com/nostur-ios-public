@@ -156,8 +156,11 @@ public final class NewPostModel: ObservableObject {
                             self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
                         }
                         if (self.uploader.finished) {
-                            let urls = mediaRequestBags.compactMap { $0.downloadUrl }
-                            self._sendNow(urls:urls, pastedImages: self.typingTextModel.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss: dismiss)
+                            let imetas:[Imeta] = mediaRequestBags.compactMap {
+                                guard let url = $0.downloadUrl else { return nil }
+                                return Imeta(url: url, dim: $0.dim, hash: $0.hash)
+                            }
+                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
                         }
                     })
                     .store(in: &subscriptions)
@@ -176,18 +179,19 @@ public final class NewPostModel: ObservableObject {
                         }
                     }, receiveValue: { urls in
                         if (self.typingTextModel.pastedImages.count == urls.count) {
-                            self._sendNow(urls:urls, pastedImages: self.typingTextModel.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss: dismiss)
+                            let imetas = urls.map { Imeta(url: $0) }
+                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
                         }
                     })
                     .store(in: &subscriptions)
             }
         }
         else {
-            self._sendNow(urls:[], pastedImages: typingTextModel.pastedImages, replyTo:replyTo, quotingEvent:quotingEvent, dismiss: dismiss)
+            self._sendNow(imetas: [], replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
         }
     }
     
-    private func _sendNow(urls:[String], pastedImages:[PostedImageMeta], replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
+    private func _sendNow(imetas: [Imeta], replyTo: Event? = nil, quotingEvent: Event? = nil, dismiss: DismissAction) {
         guard let account = activeAccount else { return }
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
         let publicKey = account.publicKey
@@ -195,10 +199,20 @@ public final class NewPostModel: ObservableObject {
         var pTags:[String] = []
         nEvent.createdAt = NTimestamp.init(date: Date())
         
-        if !pastedImages.isEmpty && urls.count > 0 {
+        if !imetas.isEmpty {
             // send message with images
-            for url in urls {
-                nEvent.content += "\n\(url)"
+            for imeta in imetas {
+                nEvent.content += "\n\(imeta.url)"
+                
+                var imetaParts:[String] = ["imeta", "url \(imeta.url)"]
+                if let dim = imeta.dim {
+                    imetaParts.append("dim \(dim)")
+                }
+                if let hash = imeta.hash {
+                    imetaParts.append("sha256 \(hash)")
+                }
+
+                nEvent.tags.append(NostrTag(imetaParts))
             }
         }
         // Typed @mentions to nostr:npub
@@ -543,4 +557,10 @@ func mentionTerm(_ text:String) -> String? {
         return extractedString
     }
     return nil
+}
+
+struct Imeta {
+    let url:String
+    var dim:String?
+    var hash:String?
 }
