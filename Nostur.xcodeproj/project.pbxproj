@@ -2879,7 +2879,7 @@
 			repositoryURL = "https://github.com/nostur-com/nostr-essentials";
 			requirement = {
 				kind = revision;
-				revision = 1c4195432b14a423b42680006871ca360150e314;
+				revision = 8ef289e716d9e77871a56ad7510df955a509177e;
 			};
 		};
 		1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */ = {
