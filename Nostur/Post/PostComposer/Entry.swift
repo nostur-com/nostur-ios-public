@@ -14,6 +14,7 @@ struct Entry: View {
     @ObservedObject var typingTextModel:TypingTextModel
     @Binding var photoPickerShown:Bool
     @Binding var gifSheetShown:Bool
+    @Binding var cameraSheetShown:Bool
     private var replyTo:Event?
     private var quotingEvent:Event?
     private var directMention:Contact?
@@ -24,7 +25,7 @@ struct Entry: View {
         vm.typingTextModel.sending || vm.typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty)
     }
     
-    init(vm:NewPostModel, photoPickerShown:Binding<Bool>, gifSheetShown:Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention:Contact? = nil) {
+    init(vm:NewPostModel, photoPickerShown:Binding<Bool>, gifSheetShown:Binding<Bool>, cameraSheetShown:Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention:Contact? = nil) {
         self.replyTo = replyTo
         self.quotingEvent = quotingEvent
         self.directMention = directMention
@@ -32,6 +33,7 @@ struct Entry: View {
         self.typingTextModel = vm.typingTextModel
         _photoPickerShown = photoPickerShown
         _gifSheetShown = gifSheetShown
+        _cameraSheetShown = cameraSheetShown
     }
     
     var body: some View {
@@ -57,6 +59,9 @@ struct Entry: View {
                 },
                 gifsTapped: {
                     gifSheetShown = true
+                },
+                cameraTapped: {
+                    cameraSheetShown = true
                 }
             )
             .introspect { editor in
@@ -80,6 +85,14 @@ struct Entry: View {
                     GifSearcher { gifUrl in
                         typingTextModel.text += gifUrl + "\n"
                     }
+                }
+                .presentationBackground(themes.theme.background)
+            }
+            .sheet(isPresented: $cameraSheetShown) {
+                NavigationStack {
+                    CameraView(onUse: { uiImage in
+                        typingTextModel.pastedImages.append(PostedImageMeta(imageData: uiImage, type: .jpeg)) 
+                    })
                 }
                 .presentationBackground(themes.theme.background)
             }
