@@ -23,6 +23,7 @@ struct ComposePost: View {
     @StateObject private var ipm = ImagePickerModel()
     @State private var gifSheetShown = false
     @State private var photoPickerShown = false
+    @State private var cameraSheetShown = false
     
     @Namespace private var textfield
     @State private var replyToNRPost:NRPost?
@@ -60,7 +61,7 @@ struct ComposePost: View {
                                         vm.activeAccount = account
                                     }).equatable()
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
                                         .frame(height: replyTo == nil && quotingEvent == nil ? (geo.size.height - 20) : ((geo.size.height - 20) * 0.5 ) )
                                         .id(textfield)
                                 }
@@ -82,6 +83,14 @@ struct ComposePost: View {
                                     Button { dismiss() } label: { Text("Cancel") }
                                 }
                                 if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+                                    ToolbarItem(placement: .navigationBarTrailing) {
+                                        Button { cameraSheetShown = true } label: {
+                                            Image(systemName: "camera")
+                                        }
+                                        .buttonStyle(.borderless)
+                                        .disabled(vm.typingTextModel.uploading)
+                
+                                    }
                                     ToolbarItem(placement: .navigationBarTrailing) {
                                         Button { photoPickerShown = true } label: {
                                             Image(systemName: "photo")

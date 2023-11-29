@@ -11,11 +11,13 @@ import UIKit
 
 public typealias PhotoPickerTappedCallback = () -> Void
 public typealias GifsTappedCallback = () -> Void
+public typealias CameraTappedCallback = () -> Void
 
 protocol PastedImagesDelegate: UITextViewDelegate {
     func didPasteImage(_ image:UIImage)
     func photoPickerTapped()
     func gifsTapped()
+    func cameraTapped()
 }
 
 class NosturTextView: UITextView {
@@ -52,6 +54,10 @@ class NosturTextView: UITextView {
         pastedImageDelegate?.gifsTapped()
     }
     
+    @objc func cameraTapped() {
+        pastedImageDelegate?.cameraTapped()
+    }
+    
 }
 
 public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor {
@@ -70,6 +76,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     let highlightRules: [HighlightRule]
     var photoPickerTapped: PhotoPickerTappedCallback?
     var gifsTapped: GifsTappedCallback?
+    var cameraTapped: CameraTappedCallback?
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
     private(set) var onCommit: OnCommitCallback?
@@ -82,7 +89,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         shouldBecomeFirstResponder: Bool,
         highlightRules: [HighlightRule],
         photoPickerTapped: PhotoPickerTappedCallback? = nil,
-        gifsTapped: GifsTappedCallback? = nil
+        gifsTapped: GifsTappedCallback? = nil,
+        cameraTapped: CameraTappedCallback? = nil
     ) {
         _text = text
         _pastedImages = pastedImages
@@ -90,6 +98,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         self.highlightRules = highlightRules
         self.photoPickerTapped = photoPickerTapped
         self.gifsTapped = gifsTapped
+        self.cameraTapped = cameraTapped
     }
     
     public func makeCoordinator() -> Coordinator {
@@ -113,6 +122,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
         doneToolbar.barStyle = .default
+        
+        let cameraButton = UIButton(type: .system)
+        cameraButton.setImage(UIImage(systemName: "camera"), for: .normal)
+        cameraButton.tintColor = UIColor(Themes.default.theme.accent)
+        cameraButton.addTarget(self, action: #selector(textView.cameraTapped), for: .touchUpInside)
+        let camera = UIBarButtonItem(customView: cameraButton)
                        
         let photoButton = UIButton(type: .system)
         photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
@@ -133,7 +148,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
 
         let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
-        let toolbarItems: [UIBarButtonItem] = [photos, gifs, flexibleSpace]
+        let toolbarItems: [UIBarButtonItem] = [camera, photos, gifs, flexibleSpace]
 
         doneToolbar.setItems(toolbarItems, animated: false)
       
@@ -196,6 +211,11 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         func gifsTapped() {
             guard let gifsTapped = self.parent.gifsTapped else { return }
             gifsTapped()
+        }     
+        
+        func cameraTapped() {
+            guard let cameraTapped = self.parent.cameraTapped else { return }
+            cameraTapped()
         }
         
         var parent: HighlightedTextEditor
