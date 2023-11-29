@@ -320,7 +320,7 @@ public class CameraService {
             }
         }
         catch {
-            L.og.debug(error.localizedDescription)
+            L.og.debug("error: \(error)")
         }
     }
     
