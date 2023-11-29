@@ -93,5 +93,7 @@
 	</array>
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>To save a post screenshot to your Photo Library</string>
+    <key>NSCameraUsageDescription</key>
+    <string>To take pictures you want to post on nostr</string>
 </dict>
 </plist>
