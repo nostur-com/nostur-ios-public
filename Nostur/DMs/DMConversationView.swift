@@ -232,8 +232,7 @@ struct DMConversationView: View {
                                                     }
                                                     Button {
                                                         dismiss()
-                                                        CloudBlocked.addBlock(pubkey: contactPubkey, fixedName: contact.anyName)
-                                                        sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
+                                                        block(pubkey: contactPubkey, name: contact.anyName)
                                                     } label: {
                                                         Label(
                                                             String(localized:"Block \(contact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
@@ -263,8 +262,7 @@ struct DMConversationView: View {
                                                         Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
                                                     }
                                                     Button {
-                                                        CloudBlocked.addBlock(pubkey: contactPubkey, fixedName: contact?.anyName)
-                                                        sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
+                                                        block(pubkey: contactPubkey, name: contact?.anyName)
                                                     } label: {
                                                         Label(
                                                             String(localized:"Block \(String(contactPubkey.prefix(11)))", comment:"Menu action"), systemImage: "slash.circle")

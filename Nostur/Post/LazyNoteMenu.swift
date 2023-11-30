@@ -211,8 +211,7 @@ struct LazyNoteMenuSheet: View {
                     HStack {
                         Button {
                             dismiss()
-                            CloudBlocked.addBlock(pubkey: nrPost.pubkey, fixedName: nrPost.anyName)
-                            sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
+                            block(pubkey: nrPost.pubkey, name: nrPost.anyName)
                         } label: {
                             Label(String(localized:"Block \(nrPost.anyName)", comment: "Post context menu action to Block (name)"), systemImage: "slash.circle")
                         }
@@ -227,7 +226,7 @@ struct LazyNoteMenuSheet: View {
                     Button {
                         dismiss()
                         L.og.info("Mute conversation")
-                        CloudBlocked.addBlock(eventId: nrPost.id, replyToRootId: nrPost.replyToRootId, replyToId: nrPost.replyToId)
+                        mute(eventId: nrPost.id, replyToRootId: nrPost.replyToRootId, replyToId: nrPost.replyToId)
                     } label: {
                         Label(String(localized:"Mute conversation", comment: "Post context menu action to mute conversation"), systemImage: "bell.slash.fill")
                     }
@@ -366,12 +365,12 @@ struct BlockOptions: View {
     var body: some View {
         Form {
             Section("Duration") {
-                Button("Block for 1 hour") { block(pubkey: pubkey, forHours: 1, name: name); onDismiss?() }
-                Button("Block for 4 hours") { block(pubkey: pubkey, forHours: 4, name: name); onDismiss?() }
-                Button("Block for 8 hours") { block(pubkey: pubkey, forHours: 8, name: name); onDismiss?() }
-                Button("Block for 1 day") { block(pubkey: pubkey, forHours: 24, name: name); onDismiss?() }
-                Button("Block for 1 week") { block(pubkey: pubkey, forHours: 24*7, name: name); onDismiss?() }
-                Button("Block for 1 month") { block(pubkey: pubkey, forHours: 24*31, name: name); onDismiss?() }
+                Button("Block for 1 hour") { temporaryBlock(pubkey: pubkey, forHours: 1, name: name); onDismiss?() }
+                Button("Block for 4 hours") { temporaryBlock(pubkey: pubkey, forHours: 4, name: name); onDismiss?() }
+                Button("Block for 8 hours") { temporaryBlock(pubkey: pubkey, forHours: 8, name: name); onDismiss?() }
+                Button("Block for 1 day") { temporaryBlock(pubkey: pubkey, forHours: 24, name: name); onDismiss?() }
+                Button("Block for 1 week") { temporaryBlock(pubkey: pubkey, forHours: 24*7, name: name); onDismiss?() }
+                Button("Block for 1 month") { temporaryBlock(pubkey: pubkey, forHours: 24*31, name: name); onDismiss?() }
             }
         }
         .foregroundColor(themes.theme.accent)
