@@ -72,8 +72,8 @@ extension CloudBlocked : Identifiable {
     }
     
     
-    static func addBlock(pubkey: String, fixedName: String? = nil) {
-        let block = CloudBlocked(context: Thread.isMainThread ? DataProvider.shared().viewContext : bg())
+    static func addBlock(pubkey: String, fixedName: String? = nil, context: NSManagedObjectContext = context()) {
+        let block = CloudBlocked(context: context)
         block.createdAt_ = .now
         block.type = .contact
         block.pubkey = pubkey
@@ -99,10 +99,6 @@ extension CloudBlocked : Identifiable {
             block.type = .post
             block.eventId_ = replyToId
         }
-        
-        DispatchQueue.main.async {
-            sendNotification(.muteListUpdated)
-        }
     }
     
     static func addBlock(word: String) {
@@ -112,10 +108,10 @@ extension CloudBlocked : Identifiable {
         block.word_ = word
     }
     
-    static func blockedPubkeys() -> Set<String> {
+    static func blockedPubkeys(context: NSManagedObjectContext = context()) -> Set<String> {
         let fr = CloudBlocked.fetchRequest()
         fr.predicate = NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.contact.rawValue)
-        return Set(((try? (Thread.isMainThread ? DataProvider.shared().viewContext : bg()).fetch(fr)) ?? []).compactMap { $0.pubkey_ })
+        return Set(((try? context.fetch(fr)) ?? []).compactMap { $0.pubkey_ })
     }
     
     static func fetchBlock(byPubkey pubkey: String, context: NSManagedObjectContext = context()) -> CloudBlocked? {

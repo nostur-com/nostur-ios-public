@@ -255,8 +255,7 @@ struct ProfileView: View {
                                     
                                     
                                     Button {
-                                        CloudBlocked.addBlock(pubkey: nrContact.pubkey, fixedName: nrContact.anyName)
-                                        sendNotification(.blockListUpdated, CloudBlocked.blockedPubkeys())
+                                        block(pubkey: nrContact.pubkey, name: nrContact.anyName)
                                     } label: {
                                         Label(
                                             String(localized:"Block \(nrContact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
