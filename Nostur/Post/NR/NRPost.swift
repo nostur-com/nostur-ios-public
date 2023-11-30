@@ -816,10 +816,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
                 bg().perform { [weak self] in
                     guard let self = self else { return }
-                    let nrReplies = replies.map { event in
-                        let nrPost = NRPost(event: event, cancellationId: cancellationIds[event.id])
-                        return nrPost
-                    }
+                    let nrReplies = replies
+                            .filter { !blocks().contains($0.pubkey) }
+                            .map { event in
+                                let nrPost = NRPost(event: event, cancellationId: cancellationIds[event.id])
+                                return nrPost
+                            }
                     
                     let replyPFPs = nrReplies
                         .compactMap { reply in
@@ -870,7 +872,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             guard let self = self else { return }
             
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "kind == 1 AND replyToId == %@", String(self.id)) // _PFManagedObject_coerceValueForKeyWithDescription + 1472 (NSManagedObject.m:0) - Maybe fix with String(self.id)
+            fr.predicate = NSPredicate(format: "kind == 1 AND replyToId == %@ AND NOT pubkey IN %@", String(self.id), blocks()) // _PFManagedObject_coerceValueForKeyWithDescription + 1472 (NSManagedObject.m:0) - Maybe fix with String(self.id)
             if let foundReplies = try? ctx.fetch(fr) {
                 if let existingReplies = self.event.replies {
                     self.event.replies = existingReplies.union(Set(foundReplies))
@@ -879,7 +881,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     self.event.replies = Set(foundReplies)
                 }
             }
-            let nrReplies = self.event.replies_.map { NRPost(event: $0, cancellationId: cancellationIds[$0.id]) }
+            let nrReplies = self.event.replies_
+                .filter { !blocks().contains($0.pubkey) }
+                .map { NRPost(event: $0, cancellationId: cancellationIds[$0.id]) }
             self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
             DispatchQueue.main.async {
                 self.objectWillChange.send()
@@ -1062,10 +1066,10 @@ extension NRPost { // Helpers for grouped replies
             guard let self = self else { return }
             let fr = Event.fetchRequest()
             if let replyToRootId = self.replyToRootId { // We are not root, so load replies for actual root instead
-                fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1", replyToRootId)
+                fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1 AND NOT pubkey IN %@", replyToRootId, blocks())
             }
             else {
-                fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1", self.id)
+                fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1 AND NOT pubkey IN %@", self.id, blocks())
             }
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true )]
             let repliesToRoot = (try? bg().fetch(fr)) ?? []
