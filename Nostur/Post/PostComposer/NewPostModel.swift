@@ -27,12 +27,11 @@ public final class TypingTextModel: ObservableObject {
     
     init() {
         if !draft.isEmpty { // Restore after Cancel
-            text = draft
+            let isMentionPrefix = draft.hasPrefix("@") && draft.count < 20
+            if !isMentionPrefix {
+                text = draft
+            }
         }
-        else if !restoreDraft.isEmpty { // Restore after Undo send
-            text = restoreDraft
-        }
-        
         restoreDraft = ""
     }
 }
@@ -268,6 +267,8 @@ public final class NewPostModel: ObservableObject {
             nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
 
+        // Need draft here because it might be cleared before we need it because async later
+        let draft = self.typingTextModel.draft
         
         let cancellationId = UUID()
         if account.isNC {
@@ -291,7 +292,7 @@ public final class NewPostModel: ObservableObject {
                             savedEvent.cancellationId = cancellationId
                             savedEvent.updateNRPost.send(savedEvent)
                             DispatchQueue.main.async {
-                                self.typingTextModel.restoreDraft = self.typingTextModel.draft
+                                self.typingTextModel.restoreDraft = draft
                                 _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
                             }
                         }
@@ -319,7 +320,7 @@ public final class NewPostModel: ObservableObject {
                     }
                 }
             }
-            self.typingTextModel.restoreDraft = self.typingTextModel.draft
+            self.typingTextModel.restoreDraft = draft
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
         }
         
@@ -330,7 +331,7 @@ public final class NewPostModel: ObservableObject {
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
                     // Republish post being replied to
-                    self.typingTextModel.restoreDraft = self.typingTextModel.draft
+                    self.typingTextModel.restoreDraft = draft
                     Unpublisher.shared.publishNow(replyToNEvent)
                 }
             }
@@ -342,14 +343,13 @@ public final class NewPostModel: ObservableObject {
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEventId))
                     // Republish post being quoted
-                    self.typingTextModel.restoreDraft = self.typingTextModel.draft
+                    self.typingTextModel.restoreDraft = draft
                     Unpublisher.shared.publishNow(quotingNEvent)
                 }
             }
         }
         dismiss()
         sendNotification(.didSend)
-        typingTextModel.text = ""
     }
     
     public func showPreview(quotingEvent:Event? = nil) {
