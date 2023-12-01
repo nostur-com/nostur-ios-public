@@ -177,7 +177,7 @@ struct AppView: View {
         }
         .onAppear {
             #if DEBUG
-            openWindow(id: "debug-window")
+           // openWindow(id: "debug-window")
             #endif
         }
 //        .onAppear  { startNosturing(); self.isViewDisplayed = true }

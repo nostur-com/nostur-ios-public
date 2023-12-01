@@ -10,11 +10,11 @@ import NostrEssentials
 import CoreData
 import Combine
 
+let PROFILE_KINDS = Set([1,6,9802,30023])
+
 // For profile view, try to load first 10 posts as fast as possible
 // Then reload remaining later
 class ProfilePostsViewModel: ObservableObject {
-    
-    static let PROFILE_KINDS = Set([1,6,9802,30023])
     
     @Published var state:State
     private var backlog:Backlog
@@ -86,7 +86,7 @@ class ProfilePostsViewModel: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: Set([self.pubkey]),
-                                                kinds: Self.PROFILE_KINDS,
+                                                kinds: PROFILE_KINDS,
                                                 limit: 10
                                             )
                                            ]
@@ -121,7 +121,7 @@ class ProfilePostsViewModel: ObservableObject {
         
         bg().perform {
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@", self.pubkey, Self.PROFILE_KINDS)
+            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@", self.pubkey, PROFILE_KINDS)
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             fr.fetchOffset = 0
             fr.fetchLimit = 10
@@ -171,7 +171,7 @@ class ProfilePostsViewModel: ObservableObject {
                                    filters: [
                                     Filters(
                                         authors: Set([self.pubkey]),
-                                        kinds: Self.PROFILE_KINDS,
+                                        kinds: PROFILE_KINDS,
                                         until: Int(oldestPostDate.timeIntervalSince1970),
                                         limit: 50
                                     )
@@ -244,7 +244,7 @@ class ProfilePostsViewModel: ObservableObject {
         
         bg().perform {
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND created_at <= %i", self.pubkey, Self.PROFILE_KINDS, Int(firstPostCreatedAt))
+            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND created_at <= %i", self.pubkey, PROFILE_KINDS, Int(firstPostCreatedAt))
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             fr.fetchOffset = offset
             fr.fetchLimit = amount
@@ -280,7 +280,7 @@ class ProfilePostsViewModel: ObservableObject {
                                    filters: [
                                     Filters(
                                         authors: Set([self.pubkey]),
-                                        kinds: Self.PROFILE_KINDS,
+                                        kinds: PROFILE_KINDS,
                                         until: Int(after.created_at),
                                         limit: amount
                                     )

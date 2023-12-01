@@ -218,7 +218,12 @@ extension Notification.Name {
     
     static var newMentions: Notification.Name {
         return Notification.Name("newMentions")
-    }    
+    }   
+    
+    static var unreadNewPosts: Notification.Name {
+        return Notification.Name("unreadNewPosts")
+    }
+    
     static var newReposts: Notification.Name {
         return Notification.Name("newReposts")
     }
