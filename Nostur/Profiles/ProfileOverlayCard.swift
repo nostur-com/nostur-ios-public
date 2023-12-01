@@ -78,6 +78,7 @@ struct ProfileOverlayCard: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
+    @EnvironmentObject private var npn:NewPostNotifier
     @ObservedObject private var fg:FollowingGuardian = .shared
     
     @State private var similarPFP = false
@@ -132,6 +133,39 @@ struct ProfileOverlayCard: View {
                             }
                         }
                         HStack {
+                            if npn.isEnabled(for: contact.pubkey) {
+                                Image(systemName: "bell")
+                                    .resizable()
+                                    .frame(width: 20, height: 20)
+                                    .overlay(alignment: .topTrailing) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .resizable()
+                                            .frame(width: 10, height: 10)
+                                            .foregroundColor(.green)
+                                            .background(themes.theme.background)
+                                            .offset(y: -3)
+                                    }
+                                    .offset(y: 3)
+                                    .onTapGesture { npn.toggle(contact.pubkey) }
+                                    .padding(.trailing, 10)
+                            }
+                            else {
+                                Image(systemName: "bell")
+                                    .resizable()
+                                    .frame(width: 20, height: 20)
+                                    .overlay(alignment: .topTrailing) {
+                                        Image(systemName: "plus")
+                                            .resizable()
+                                            .frame(width: 10, height: 10)
+                                            .background(themes.theme.background)
+                                            .border(themes.theme.background, width: 2.0)
+                                            .offset(y: -3)
+                                    }
+                                    .offset(y: 3)
+                                    .onTapGesture { npn.toggle(contact.pubkey) }
+                                    .padding(.trailing, 10)
+                            }
+                            
                             if account()?.privateKey != nil {
                                 Button {
                                     UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
