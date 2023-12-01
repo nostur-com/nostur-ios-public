@@ -51,10 +51,15 @@ class NotificationsViewModel: ObservableObject {
     
     // Total for the notifications tab on the main tab bar
     public var unread: Int {
-        unreadMentions + (muteReactions ? 0 : unreadReactions) + (muteZaps ? 0 : (unreadZaps + unreadFailedZaps)) + (muteFollows ? 0 : unreadNewFollowers) + (muteReposts ? 0 : unreadReposts)
+        unreadMentions + (muteNewPosts ? 0 : unreadNewPosts) + (muteReactions ? 0 : unreadReactions) + (muteZaps ? 0 : (unreadZaps + unreadFailedZaps)) + (muteFollows ? 0 : unreadNewFollowers) + (muteReposts ? 0 : unreadReposts)
     }
     
     public var unreadMentions:Int { unreadMentions_ }
+    
+    public var unreadNewPosts:Int {
+        guard !muteNewPosts else { return 0 }
+        return unreadNewPosts_
+    }
         
     public var unreadNewFollowers:Int {
         guard !muteFollows else { return 0 }
@@ -84,6 +89,13 @@ class NotificationsViewModel: ObservableObject {
         didSet {
             if unreadMentions_ > oldValue {
                 sendNotification(.newMentions)
+            }
+        }
+    }
+    @Published var unreadNewPosts_:Int = 0 {      // 1,9802,30023
+        didSet {
+            if unreadNewPosts_ > oldValue {
+                sendNotification(.unreadNewPosts)
             }
         }
     }
@@ -124,7 +136,7 @@ class NotificationsViewModel: ObservableObject {
     @AppStorage("notifications_mute_reactions") var muteReactions:Bool = false
     @AppStorage("notifications_mute_reposts") var muteReposts:Bool = false
     @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false
-    @AppStorage("notifications_mute_new_followers") var muteNewFollowers:Bool = false
+    @AppStorage("notifications_mute_new_posts") var muteNewPosts:Bool = false
     
     private var restoreSubscriptionsSubject = PassthroughSubject<Void, Never>()
     private var subscriptions = Set<AnyCancellable>()
@@ -140,6 +152,7 @@ class NotificationsViewModel: ObservableObject {
             .sink { [unowned self] _ in
                 self.needsUpdate = true
                 self.unreadMentions_ = 0
+                self.unreadNewPosts_ = 0
                 self.unreadNewFollowers_ = 0
                 self.unreadReposts_ = 0
                 self.unreadReactions_ = 0
@@ -278,6 +291,10 @@ class NotificationsViewModel: ObservableObject {
         
         bg().perform { self.checkForUnreadMentions() }
         bg().perform {
+            guard !self.muteNewPosts else { return }
+            self.checkForUnreadNewPosts()
+        }
+        bg().perform {
             guard !self.muteReposts else { return }
             self.checkForUnreadReposts()
         }
@@ -294,11 +311,6 @@ class NotificationsViewModel: ObservableObject {
             self.checkForUnreadZaps()
         }
         bg().perform { self.checkForUnreadFailedZaps() }
-        
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-//            
-//        }
-        
     }
     
     
@@ -319,6 +331,25 @@ class NotificationsViewModel: ObservableObject {
                 }
                 else {
                     self.unreadMentions_ = min(unreadMentions,9999)
+                }
+            }
+        }
+    }    
+    
+    private func checkForUnreadNewPosts() {
+        shouldBeBg()
+        
+        guard let fetchRequest = q.unreadNewPostsQuery() else { return }
+        
+        let unreadNewPosts = (try? bg().count(for: fetchRequest)) ?? 0
+        
+        DispatchQueue.main.async {
+            if unreadNewPosts != self.unreadNewPosts_ {
+                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "New Posts" {
+                    self.unreadNewPosts_ = 0
+                }
+                else {
+                    self.unreadNewPosts_ = min(unreadNewPosts,9999)
                 }
             }
         }
@@ -456,6 +487,29 @@ class NotificationsViewModel: ObservableObject {
             bgSave()
             DispatchQueue.main.async { // Maybe another query was running in parallel, so set to 0 again here.
                 self.unreadMentions_ = 0
+            }
+        }
+    }
+    
+    @MainActor public func markNewPostsAsRead() {
+        self.unreadNewPosts_ = 0
+        
+        bg().perform { [weak self] in
+            guard let self = self else { return }
+            guard let account = Nostur.account() else { return }
+            let pubkey = account.publicKey
+                    
+            let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
+            r3.propertiesToUpdate = ["readAt": NSDate()]
+            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@",
+                                       pubkey, PNType.newPosts.rawValue)
+            r3.resultType = .updatedObjectIDsResultType
+
+            let _ = try? bg().execute(r3) as? NSBatchUpdateResult
+
+            bgSave()
+            DispatchQueue.main.async { // Maybe another query was running in parallel, so set to 0 again here.
+                self.unreadNewPosts_ = 0
             }
         }
     }
@@ -628,6 +682,20 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
+    func unreadNewPostsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
+        guard let account = account() else { return nil }
+        let pubkey = account.publicKey
+
+        let r = PersistentNotification.fetchRequest()
+        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@", PNType.newPosts.rawValue, pubkey)
+        r.fetchLimit = Self.FETCH_LIMIT
+        r.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
+        r.resultType = .countResultType
+        r.resultType = resultType
+         
+        return r
+    }
+    
     func unreadRepostsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
         let mutedRootIds = NRState.shared.mutedRootIds
@@ -776,6 +844,10 @@ struct NotificationsDebugger: View {
             VStack {
                 Text("mentions")
                 Text(String(nvm.unreadMentions))
+            }            
+            VStack {
+                Text("new posts")
+                Text(String(nvm.unreadNewPosts))
             }
             VStack {
                 Text("new followers")

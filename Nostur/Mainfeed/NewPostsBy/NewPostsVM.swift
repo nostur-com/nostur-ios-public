@@ -1,0 +1,147 @@
+//
+//  NewPostsVM.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 01/12/2023.
+//
+
+import SwiftUI
+import NostrEssentials
+import Combine
+
+class NewPostsVM: ObservableObject {
+    
+    @Published var state:FeedState
+    @Published var posts:[NRPost] = []
+    
+    private var backlog:Backlog
+    private var pubkeys:Set<Pubkey>
+    private var since:Date?
+    private var didLoad = false
+    private static let POSTS_LIMIT = 75
+    private var prefetchedIds = Set<String>()
+    
+    
+    
+    public func timeout() {
+        self.state = .timeout
+        didLoad = false
+    }
+    
+    public init(pubkeys: Set<String>? = nil, since:Date? = nil) {
+        self.state = .initializing
+        self.backlog = Backlog(timeout: 1.5, auto: true)
+        self.pubkeys = pubkeys ?? NewPostNotifier.shared.enabledPubkeys
+    }
+    
+    private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
+        bg().perform {
+            let reqTask = ReqTask(
+                debounceTime: 0.1,
+                subscriptionId: "NEWPOSTS",
+                reqCommand: { taskId in
+                    if let cm = NostrEssentials
+                        .ClientMessage(type: .REQ,
+                                       subscriptionId: taskId,
+                                       filters: [
+                                        Filters(
+                                            authors: self.pubkeys,
+                                            kinds: PROFILE_KINDS,
+                                            since: self.since != nil ? Int(self.since!.timeIntervalSince1970) : nil,
+                                            limit: 150
+                                        )
+                                       ]
+                        ).json() {
+                        req(cm)
+                    }
+                    else {
+                        L.og.info("New Posts feed: unable to create REQ")
+                    }
+                },
+                processResponseCommand: { taskId, relayMessage, _ in
+                    self.fetchPostsFromDB(onComplete)
+                    self.backlog.clear()
+                    L.og.info("New Posts feed: ready to process relay response")
+                },
+                timeoutCommand: { taskId in
+                    self.fetchPostsFromDB(onComplete)
+                    self.backlog.clear()
+                    L.og.info("New Posts feed: timeout ")
+                })
+            
+            self.backlog.add(reqTask)
+            reqTask.fetch()
+            
+        }
+    }
+    
+    private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
+        bg().perform {
+            let fr = Event.fetchRequest()
+            fr.predicate = NSPredicate(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS)
+            fr.fetchLimit = 75
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            
+            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
+            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
+            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
+            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
+            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
+            
+            guard let events = try? bg().fetch(fr) else { return }
+            
+            print("events.count: \(events.count)")
+            
+            let nrPosts = events
+                .map { NRPost(event: $0, withReplyTo: true, withParents: false, withReplies: true) }
+            
+            print("nrPosts.count: \(nrPosts.count)")
+            
+            DispatchQueue.main.async {
+                onComplete?()
+                self.posts = nrPosts
+                self.state = .ready
+                self.didLoad = true
+            }
+            
+            guard !nrPosts.isEmpty else { return }
+            
+            guard SettingsStore.shared.fetchCounts else { return }
+            for nrPost in nrPosts.prefix(5) {
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+            }
+            let eventIds = nrPosts.prefix(5).map { $0.id }
+            L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+            fetchStuffForLastAddedNotes(ids: eventIds)
+            self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
+        }
+    }
+    
+    public func prefetch(_ post:NRPost) {
+        guard SettingsStore.shared.fetchCounts else { return }
+        guard !self.prefetchedIds.contains(post.id) else { return }
+        guard let index = self.posts.firstIndex(of: post) else { return }
+        guard index % 5 == 0 else { return }
+        
+        let nextIds = self.posts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
+        guard !nextIds.isEmpty else { return }
+        L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
+        fetchStuffForLastAddedNotes(ids: nextIds)
+        self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
+    }
+    
+    public func load() {
+        guard !didLoad else { return }
+        self.state = .loading
+        self.posts = []
+        self.fetchPostsFromRelays()
+        //        self.fetchPostsFromDB()
+    }
+    
+    public enum FeedState {
+        case initializing
+        case loading
+        case ready
+        case timeout
+    }
+}

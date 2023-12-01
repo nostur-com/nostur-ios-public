@@ -11,7 +11,7 @@ import CoreData
 struct NotificationsContainer: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject var la:LoggedInAccount
-    @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_tab") private var selectedTab = "Notifications"
     @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Mentions"
     @State private var navPath = NavigationPath()
     
@@ -66,35 +66,42 @@ struct NotificationsView: View {
                             tab = "Mentions"
                             nvm.markMentionsAsRead()
                         }
-                    }, title: String(localized: "Mentions", comment:"Title of tab"), selected: tab == "Mentions", unread: nvm.unreadMentions)
+                    }, icon: "text.bubble", selected: tab == "Mentions", unread: nvm.unreadMentions)
+                    
+                    TabButton(action: {
+                        withAnimation {
+                            tab = "New Posts"
+                            nvm.markNewPostsAsRead()
+                        }
+                    }, icon: "bell", selected: tab == "New Posts", unread: nvm.unreadNewPosts)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Reactions"
                             nvm.markReactionsAsRead()
                         }
-                    }, title: String(localized: "Reactions", comment:"Title of tab"), selected: tab == "Reactions", unread: nvm.unreadReactions_, muted: nvm.muteReactions)
+                    }, icon: "heart", selected: tab == "Reactions", unread: nvm.unreadReactions_, muted: nvm.muteReactions)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Reposts"
                             nvm.markRepostsAsRead()
                         }
-                    }, title: String(localized: "Reposts", comment:"Title of tab"), selected: tab == "Reposts", unread: nvm.unreadReposts_, muted: nvm.muteReposts)
+                    }, icon: "arrow.2.squarepath", selected: tab == "Reposts", unread: nvm.unreadReposts_, muted: nvm.muteReposts)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Zaps"
                             nvm.markZapsAsRead()
                         }
-                    }, title: String(localized: "Zaps", comment:"Title of tab"), selected: tab == "Zaps", unread: nvm.muteZaps ? nvm.unreadFailedZaps_ : (nvm.unreadZaps_ + nvm.unreadFailedZaps_), muted: nvm.muteZaps)
+                    }, icon: "bolt", selected: tab == "Zaps", unread: nvm.muteZaps ? nvm.unreadFailedZaps_ : (nvm.unreadZaps_ + nvm.unreadFailedZaps_), muted: nvm.muteZaps)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Followers"
                             nvm.markNewFollowersAsRead()
                         }
-                    }, title: String(localized: "Followers", comment:"Title of tab"), selected: tab == "Followers", unread: nvm.unreadNewFollowers_, muted: nvm.muteNewFollowers)
+                    }, icon: "person.3", selected: tab == "Followers", unread: nvm.unreadNewFollowers_, muted: nvm.muteFollows)
                 }
 //                .padding(.horizontal, 10)
                 .frame(minWidth: dim.listWidth)
@@ -103,7 +110,9 @@ struct NotificationsView: View {
             
             switch (tab) {
                 case "Mentions", "Posts": // (old name was "Posts")
-                    NotificationsMentions(navPath: $navPath)
+                    NotificationsMentions(navPath: $navPath)   
+                case "New Posts":
+                    NotificationsNewPosts(pubkey: account.publicKey, navPath: $navPath)
                 case "Reactions":
                     NotificationsReactions(navPath: $navPath)
                 case "Reposts":
@@ -158,7 +167,9 @@ struct NotificationsView: View {
     func markActiveTabAsRead(_ tab:String) {
         switch tab {
         case "Mentions":
-            nvm.markMentionsAsRead()
+            nvm.markMentionsAsRead()   
+        case "New Posts":
+            nvm.markNewPostsAsRead()
         case "Reactions":
             nvm.markReactionsAsRead()
         case "Reposts":
