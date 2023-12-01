@@ -268,6 +268,7 @@
 		1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB229805F33001E352E /* String+matchingStrings.swift */; };
 		1F995EF32A4DE046002227B3 /* NIP46.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F995EF22A4DE046002227B3 /* NIP46.swift */; };
 		1F995EF52A4DE349002227B3 /* NIP46TesterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F995EF42A4DE349002227B3 /* NIP46TesterView.swift */; };
+		1F99B9842B145CDD006346EE /* NewPostNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F99B9832B145CDD006346EE /* NewPostNotifier.swift */; };
 		1F9A55202A3C7E9100F67627 /* DetailTabsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9A551F2A3C7E9100F67627 /* DetailTabsModel.swift */; };
 		1F9A55222A3C7EB500F67627 /* NosturTabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9A55212A3C7EB500F67627 /* NosturTabButton.swift */; };
 		1F9A55242A3C7EE400F67627 /* View+roundedCorner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */; };
@@ -744,6 +745,7 @@
 		1F987EB229805F33001E352E /* String+matchingStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+matchingStrings.swift"; sourceTree = "<group>"; };
 		1F995EF22A4DE046002227B3 /* NIP46.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46.swift; sourceTree = "<group>"; };
 		1F995EF42A4DE349002227B3 /* NIP46TesterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46TesterView.swift; sourceTree = "<group>"; };
+		1F99B9832B145CDD006346EE /* NewPostNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostNotifier.swift; sourceTree = "<group>"; };
 		1F9A551F2A3C7E9100F67627 /* DetailTabsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailTabsModel.swift; sourceTree = "<group>"; };
 		1F9A55212A3C7EB500F67627 /* NosturTabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturTabButton.swift; sourceTree = "<group>"; };
 		1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+roundedCorner.swift"; sourceTree = "<group>"; };
@@ -1739,6 +1741,7 @@
 				1FC2DFEE29A9128D00C8A9DA /* MinimalNoteTextRenderView.swift */,
 				1FC2DFF029A9142400C8A9DA /* MinimalQuotedNoteFragment.swift */,
 				1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */,
+				1F99B9832B145CDD006346EE /* NewPostNotifier.swift */,
 				1FC2DFEC29A90F6C00C8A9DA /* NoteMinimalContentView.swift */,
 				1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */,
 				1F8CBFFA2AC3002D0077EF7D /* NotificationsMentions.swift */,
@@ -2330,6 +2333,7 @@
 				1F740DA129AF381F00EFCCA7 /* CreateNewBadgeSheet.swift in Sources */,
 				1F83497F29DD6F980032E52B /* LRUCache2.swift in Sources */,
 				1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */,
+				1F99B9842B145CDD006346EE /* NewPostNotifier.swift in Sources */,
 				1F05FA0C2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift in Sources */,
 				1F7E40EA29BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift in Sources */,
 				1FDF0EDD29ED732500B56AC4 /* AnyStatus.swift in Sources */,
