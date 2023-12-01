@@ -27,17 +27,32 @@ extension CloudTask {
     // a value needed by the task, post id / pubkey / whatever
     @NSManaged public var value_: String?
     
-    static func fetchTask(byType type:CloudTaskType, andPubkey pubkey:String, context: NSManagedObjectContext = context()) -> CloudTask? {
+    // account the task should be restricted to. Blocks are app wide, but other tasks could be limited to an account
+    @NSManaged public var accountPubkey_: String?
+    
+    static func fetchTask(byType type:CloudTaskType, andPubkey pubkey:String, andAccountPubkey accountPubkey: String? = nil, context: NSManagedObjectContext = context()) -> CloudTask? {
         let fr = CloudTask.fetchRequest()
-        fr.predicate = NSPredicate(format: "type_ == %@ AND value_ == %@", type.rawValue, pubkey)
+        if let accountPubkey {
+            fr.predicate = NSPredicate(format: "type_ == %@ AND value_ == %@ AND accountPubkey_ == %@", type.rawValue, pubkey, accountPubkey)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "type_ == %@ AND value_ == %@", type.rawValue, pubkey)
+        }
         fr.fetchLimit = 1
         return try? context.fetch(fr).first
     }
     
-    static func fetchAll(byType type:CloudTaskType? = nil, context: NSManagedObjectContext = context()) -> [CloudTask] {
+    static func fetchAll(byType type:CloudTaskType? = nil, andAccountPubkey accountPubkey: String? = nil, context: NSManagedObjectContext = context()) -> [CloudTask] {
         let fr = CloudTask.fetchRequest()
-        if let type = type {
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudTask.createdAt_, ascending: false)]
+        if let type = type, let accountPubkey = accountPubkey {
+            fr.predicate = NSPredicate(format: "type_ == %@ AND accountPubkey_ == %@", type.rawValue, accountPubkey)
+        }
+        else if let type = type {
             fr.predicate = NSPredicate(format: "type_ == %@", type.rawValue)
+        }
+        else if let accountPubkey = accountPubkey {
+            fr.predicate = NSPredicate(format: "accountPubkey_ == %@", accountPubkey)
         }
         return (try? context.fetch(fr)) ?? []
     }

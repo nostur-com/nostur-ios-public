@@ -111,6 +111,7 @@
         <attribute name="write" optional="YES" attributeType="Boolean" defaultValueString="0.0" usesScalarValueType="YES"/>
     </entity>
     <entity name="CloudTask" representedClassName="CloudTask" syncable="YES">
+        <attribute name="accountPubkey_" optional="YES" attributeType="String"/>
         <attribute name="createdAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="type_" optional="YES" attributeType="String"/>
