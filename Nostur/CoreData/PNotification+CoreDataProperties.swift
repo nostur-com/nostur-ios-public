@@ -18,6 +18,8 @@ extension PersistentNotification {
     @NSManaged public var id: UUID
     @NSManaged public var createdAt: Date
     @NSManaged public var content: String
+    
+    // account pubkey! not contact pubkey
     @NSManaged public var pubkey: String
     @NSManaged public var readAt: Date?
     @NSManaged public var type_: String
@@ -26,11 +28,17 @@ extension PersistentNotification {
         get { PersistentNotificationType(rawValue: type_) ?? PersistentNotificationType.none }
         set { type_ = newValue.rawValue }
     }
+    
+    var contactsInfo: [ContactInfo] {
+        guard type == .newPosts, !content.isEmpty, let contentData = content.data(using: .utf8) else { return [] }
+        guard let contactsInfo = try? JSONDecoder().decode([ContactInfo].self, from: contentData) else { return [] }
+        return contactsInfo
+    }
 
 }
 
 extension PersistentNotification : Identifiable {
-    static func fetchPersistentNotification(byPubkey pubkey:String? = nil, id:String? = nil, type:PersistentNotificationType? = nil, context:NSManagedObjectContext) -> PersistentNotification? {
+    static func fetchPersistentNotification(byPubkey pubkey:String? = nil, id:String? = nil, type:PersistentNotificationType? = nil, context:NSManagedObjectContext = context()) -> PersistentNotification? {
         let request = NSFetchRequest<PersistentNotification>(entityName: "PersistentNotification")
         
         if let id {
