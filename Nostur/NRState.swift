@@ -100,6 +100,7 @@ class NRState: ObservableObject {
         }
     }
     
+    // Instruments: wtf? --> 70.00 ms    2.4%    70.00 ms             NRState.activeAccountPublicKey.getter
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     
     // BG high speed vars
