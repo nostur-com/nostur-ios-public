@@ -100,6 +100,22 @@ struct Maintenance {
         L.maintenance.info("Starting time based maintenance")
         
         context.perform {
+            let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
+            let fiveDaysAgo = Date(timeIntervalSinceNow: (-5 * 24 * 60 * 60)).timeIntervalSince1970
+            pfr.predicate = NSPredicate(format: "createdAt < %i AND NOT readAt = nil", fiveDaysAgo)
+            
+            let pfrBatchDelete = NSBatchDeleteRequest(fetchRequest: pfr)
+            pfrBatchDelete.resultType = .resultTypeCount
+            
+            do {
+                let result = try context.execute(pfrBatchDelete) as! NSBatchDeleteResult
+                if let count = result.result as? Int, count > 0 {
+                    L.maintenance.info("🧹🧹 Deleted \(count) old notifications")
+                }
+            } catch {
+                L.maintenance.info("🔴🔴 Failed to delete old notifications")
+            }
+            
             let frA = CloudAccount.fetchRequest()
             let allAccounts = Array(try! context.fetch(frA))
             let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
