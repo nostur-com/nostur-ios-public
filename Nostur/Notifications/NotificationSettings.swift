@@ -14,6 +14,7 @@ struct NotificationSettings: View {
     @AppStorage("notifications_mute_reactions") var muteReactions:Bool = false
     @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false
     @AppStorage("notifications_mute_reposts") var muteReposts:Bool = false
+    @AppStorage("notifications_mute_new_posts") var muteNewPosts:Bool = false
     
     var body: some View {
         Rectangle().fill(.thinMaterial)
@@ -44,6 +45,10 @@ struct NotificationSettings: View {
                         
                         Toggle(isOn: $muteZaps) {
                             Text("Mute zap notifications")
+                        }        
+                        
+                        Toggle(isOn: $muteNewPosts) {
+                            Text("Mute new post notifications")
                         }
                     }
                 }

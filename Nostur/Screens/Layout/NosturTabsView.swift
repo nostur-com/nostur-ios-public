@@ -93,13 +93,16 @@ struct NosturTabsView: View {
                     if NotificationsViewModel.shared.unreadMentions > 0 {
                         selectedNotificationsTab = "Mentions"
                     }
+                    else if NotificationsViewModel.shared.unreadNewPosts > 0 {
+                        selectedNotificationsTab = "New Posts"
+                    }
                     else if NotificationsViewModel.shared.unreadReactions > 0 {
                         selectedNotificationsTab = "Reactions"
                     }
                     else if NotificationsViewModel.shared.unreadZaps > 0 {
                         selectedNotificationsTab = "Zaps"
                     }
-                    else if NotificationsViewModel.shared.unreadReposts > 0{
+                    else if NotificationsViewModel.shared.unreadReposts > 0 {
                         selectedNotificationsTab = "Reposts"
                     }
                     else if NotificationsViewModel.shared.unreadNewFollowers > 0 {
