@@ -10,6 +10,7 @@ import SwiftUI
 struct TabButton: View {
     @EnvironmentObject private var themes:Themes
     var action:() -> Void
+    var icon:String? = nil
     var title:String = ""
     var secondaryText:String? = nil
     var selected:Bool = false
@@ -20,9 +21,16 @@ struct TabButton: View {
         Button { action() } label: {
             VStack(spacing: 0) {
                 HStack(alignment: .bottom, spacing: 3) {
-                    Text(title).lineLimit(1)
-                        .font(.subheadline)
-                        .foregroundColor(themes.theme.accent)
+                    if let icon = icon {
+                        Image(systemName: icon)
+                            .font(.subheadline)
+                            .foregroundColor(themes.theme.accent)
+                    }
+                    else {
+                        Text(title).lineLimit(1)
+                            .font(.subheadline)
+                            .foregroundColor(themes.theme.accent)
+                    }
                         
                     if let secondaryText {
                         Text(secondaryText).lineLimit(1)
