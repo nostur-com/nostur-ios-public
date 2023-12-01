@@ -20,6 +20,7 @@ public class PreviewEnvironment {
     let sm:SideBarModel = .shared
     let themes:Themes = .default
     let kind0:Kind0Processor = .shared
+    let npn:NewPostNotifier = NewPostNotifier.shared
     
     static let shared = PreviewEnvironment()
         
@@ -254,6 +255,14 @@ extension PreviewEnvironment {
             let _ = PersistentNotification.create(pubkey: account.publicKey, followers: followers, context: context)
         }
     }
+    
+    
+    func loadNewPostsNotification() {
+        guard let account = account() else { L.og.debug("Preview.loadNewPostsNotification - missing Account"); return }
+        context.performAndWait {
+            let _ = PersistentNotification.createNewPostsNotification(pubkey: account.publicKey, context: context, contacts: [ContactInfo(name: "John", pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e")])
+        }
+    }
 
     func loadZapsNotifications() {
         guard let account = account() else { L.og.debug("Preview.loadZapsNotifications - missing Account"); return }
@@ -484,6 +493,7 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.dim)
                     .environmentObject(pe.themes)
                     .environmentObject(pe.dim)
+                    .environmentObject(pe.npn)
                     .buttonStyle(NRButtonStyle(theme: pe.themes.theme))
                     .tint(pe.themes.theme.accent)
             }

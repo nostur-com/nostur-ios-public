@@ -20,6 +20,9 @@ struct NosturRootMenu: View {
         let _ = Self._printChanges()
         #endif
         NosturMainView()
+            .onReceive(NRState.shared.agoTimer) { _ in
+                NewPostNotifier.shared.runCheck()
+            }
             .environmentObject(sm)
             .onOpenURL { url in
                 self.handleUrl(url)
