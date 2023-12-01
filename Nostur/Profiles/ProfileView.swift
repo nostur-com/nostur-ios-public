@@ -13,6 +13,7 @@ struct ProfileView: View {
     private let pubkey:String
     private var tab:String?
     
+    @EnvironmentObject private var npn:NewPostNotifier
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var settings:SettingsStore = .shared
@@ -139,6 +140,40 @@ struct ProfileView: View {
                                 }
                                 
                                 Spacer()
+                                
+                                if npn.isEnabled(for: nrContact.pubkey) {
+                                    Image(systemName: "bell")
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
+                                        .overlay(alignment: .topTrailing) {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .resizable()
+                                                .frame(width: 10, height: 10)
+                                                .foregroundColor(.green)
+                                                .background(themes.theme.background)
+                                                .offset(y: -3)
+                                        }
+                                        .offset(y: 3)
+                                        .onTapGesture { npn.toggle(nrContact.pubkey) }
+                                        .padding([.trailing, .top], 5)
+                                }
+                                else {
+                                    Image(systemName: "bell")
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
+                                        .overlay(alignment: .topTrailing) {
+                                            Image(systemName: "plus")
+                                                .resizable()
+                                                .frame(width: 10, height: 10)
+                                                .background(themes.theme.background)
+                                                .border(themes.theme.background, width: 2.0)
+                                                .offset(y: -3)
+                                        }
+                                        .offset(y: 3)
+                                        .onTapGesture { npn.toggle(nrContact.pubkey) }
+                                        .padding([.trailing, .top], 5)
+                                }
+                                
                                 
                                 if account()?.privateKey != nil {
                                     Button {
