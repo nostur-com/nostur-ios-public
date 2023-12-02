@@ -11,8 +11,24 @@ import Combine
 import NostrEssentials
 
 public final class TypingTextModel: ObservableObject {
-    @AppStorage("simple_draft") var draft = ""
-    @AppStorage("undo_send_restore_draft") var restoreDraft = ""
+    var draft: String {
+        get { NRState.shared.draft  }
+        set { 
+            DispatchQueue.main.async {
+                NRState.shared.draft = newValue
+            }
+        }
+    }
+    
+    var restoreDraft: String {
+        get { NRState.shared.restoreDraft  }
+        set { 
+            DispatchQueue.main.async {
+                NRState.shared.restoreDraft = newValue
+            }
+        }
+    }
+    
     @Published var text: String = "" {
         didSet {
             draft = text
@@ -254,7 +270,7 @@ public final class NewPostModel: ObservableObject {
             }
             nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
             
-            if !nEvent.pTags().contains(quotingEvent.pubkey) { // TODO: Add notification toggles to turn off
+            if !nEvent.pTags().contains(quotingEvent.pubkey) {
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
             }
         }
@@ -268,7 +284,7 @@ public final class NewPostModel: ObservableObject {
         }
 
         // Need draft here because it might be cleared before we need it because async later
-        let draft = self.typingTextModel.draft
+        self.typingTextModel.restoreDraft = self.typingTextModel.draft
         
         let cancellationId = UUID()
         if account.isNC {
@@ -292,7 +308,6 @@ public final class NewPostModel: ObservableObject {
                             savedEvent.cancellationId = cancellationId
                             savedEvent.updateNRPost.send(savedEvent)
                             DispatchQueue.main.async {
-                                self.typingTextModel.restoreDraft = draft
                                 _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
                             }
                         }
@@ -320,7 +335,6 @@ public final class NewPostModel: ObservableObject {
                     }
                 }
             }
-            self.typingTextModel.restoreDraft = draft
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
         }
         
@@ -331,7 +345,6 @@ public final class NewPostModel: ObservableObject {
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
                     // Republish post being replied to
-                    self.typingTextModel.restoreDraft = draft
                     Unpublisher.shared.publishNow(replyToNEvent)
                 }
             }
@@ -343,7 +356,6 @@ public final class NewPostModel: ObservableObject {
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEventId))
                     // Republish post being quoted
-                    self.typingTextModel.restoreDraft = draft
                     Unpublisher.shared.publishNow(quotingNEvent)
                 }
             }
@@ -412,7 +424,7 @@ public final class NewPostModel: ObservableObject {
         }
         
         if (SettingsStore.shared.postUserAgentEnabled) {
-            nEvent.tags.append(NostrTag(["client", "Nostur"]))
+            nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
     
         
@@ -489,13 +501,13 @@ public final class NewPostModel: ObservableObject {
     }
     
     public func loadQuotingEvent(_ quotingEvent:Event) {
-        var newQuoteRepost = NEvent(content: "")
+        var newQuoteRepost = NEvent(content: typingTextModel.text)
         newQuoteRepost.kind = .textNote
         nEvent = newQuoteRepost
     }
     
     public func loadReplyTo(_ replyTo:Event) {
-        var newReply = NEvent(content: "")
+        var newReply = NEvent(content: typingTextModel.text)
         newReply.kind = .textNote
         guard let replyTo = replyTo.toMain() else {
             L.og.error("🔴🔴 Problem getting event from viewContext")
