@@ -34,8 +34,9 @@ struct NosturApp: App {
             switch newPhase {
             case .active:
                 npn.reload()
-            case .background: 
-                scheduleAppRefresh()
+            case .background:
+                break
+//                scheduleAppRefresh()
             default: 
                 break
             }
