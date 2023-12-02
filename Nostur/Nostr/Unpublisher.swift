@@ -137,8 +137,8 @@ class Unpublisher {
                     
                     // Clear draft
                     if nEvent.kind == .textNote {
-                        UserDefaults.standard.set("", forKey: "simple_draft")
-                        UserDefaults.standard.set("", forKey: "undo_send_restore_draft")
+                        NRState.shared.draft = ""
+                        NRState.shared.restoreDraft = ""
                     }
                 }
                 ConnectionPool.shared.sendMessage(ClientMessage(message: nEvent.wrappedEventJson(), relayType: .WRITE), accountPubkey: nEvent.publicKey)
@@ -169,8 +169,8 @@ class Unpublisher {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     // Clear draft
                     if nEvent.kind == .textNote {
-                        UserDefaults.standard.set("", forKey: "simple_draft")
-                        UserDefaults.standard.set("", forKey: "undo_send_restore_draft")
+                        NRState.shared.draft = ""
+                        NRState.shared.restoreDraft = ""
                     }
                 }
                 ConnectionPool.shared.sendMessage(ClientMessage(message: nEvent.wrappedEventJson(), relayType: .WRITE), accountPubkey: nEvent.publicKey)

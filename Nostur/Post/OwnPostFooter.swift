@@ -40,9 +40,6 @@ struct OwnPostFooter: View {
     @State private var unpublishing = false
     private var theme:Theme
     
-    @AppStorage("simple_draft") var draft = ""
-    @AppStorage("undo_send_restore_draft") var restoreDraft = ""
-    
     init(nrPost: NRPost, theme: Theme) {
         self.nrPost = nrPost
         self.own = nrPost.ownPostAttributes
@@ -62,9 +59,11 @@ struct OwnPostFooter: View {
                     Spacer()
                     if own.flags != "nsecbunker_unsigned" {
                         Button("Send now") {
-                            draft = ""
-                            restoreDraft = ""
                             nrPost.sendNow()
+                            DispatchQueue.main.async {
+                                NRState.shared.draft = ""
+                                NRState.shared.restoreDraft = ""
+                            }
                         }
                         .buttonStyle(.borderless)
                         .foregroundColor(theme.accent)
@@ -78,8 +77,11 @@ struct OwnPostFooter: View {
                         Button("Undo") {
                             unpublishing = true
                             nrPost.unpublish()
-                            draft = restoreDraft
-                            restoreDraft = ""
+                            DispatchQueue.main.async {
+                                NRState.shared.draft = NRState.shared.restoreDraft
+                                NRState.shared.restoreDraft = ""
+                            }
+                            
                         }
                         .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                         .foregroundColor(Color.white)
