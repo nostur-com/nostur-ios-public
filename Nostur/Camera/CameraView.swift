@@ -174,38 +174,41 @@ struct CameraView: View {
                                 }
                             
                             
-                            HStack {
-                                if model.photo == nil {
-                                    Button(action: {
-                                        model.switchFlash()
-                                    }, label: {
-                                        Image(systemName: model.isFlashOn ? "bolt.fill" : "bolt.slash.fill")
-                                            .font(.system(size: 20, weight: .medium, design: .default))
-                                    })
-                                    .accentColor(model.isFlashOn ? .yellow : .white)
-                                }
-                                else {
-                                    Button(action: {
-                                        withAnimation {
-                                            model.photo = nil
-                                        }
-                                    }, label: {
-                                        Text("Retake")
-                                            .foregroundColor(.white)
-                                    })
-                                }
-                                
-                                Spacer()
-                                
+                            ZStack {
                                 captureButton
                                     .offset(y: -10)
-                                
-                                Spacer()
-                                
-                                flipCameraButton
-                                
+                                HStack {
+                                    if model.photo == nil {
+                                        Button(action: {
+                                            model.switchFlash()
+                                        }, label: {
+                                            Image(systemName: model.isFlashOn ? "bolt.fill" : "bolt.slash.fill")
+                                                .font(.system(size: 20, weight: .medium, design: .default))
+                                                .padding(10)
+                                                .contentShape(Rectangle())
+                                        })
+                                        .accentColor(model.isFlashOn ? .yellow : .white)
+                                    }
+                                    else {
+                                        Button(action: {
+                                            withAnimation {
+                                                model.photo = nil
+                                            }
+                                        }, label: {
+                                            Text("Retake")
+                                                .foregroundColor(.white)
+                                                .padding(10)
+                                                .padding(10)
+                                                .contentShape(Rectangle())
+                                        })
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    flipCameraButton
+                                }
+                                .padding(.horizontal, 20)
                             }
-                            .padding(.horizontal, 20)
                         }
                     }
                 }
