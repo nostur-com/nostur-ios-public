@@ -148,7 +148,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
 
         let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
-        let toolbarItems: [UIBarButtonItem] = [camera, photos, gifs, flexibleSpace]
+        let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
+        fixedSpace.width = 9
+    
+    
+        
+        let toolbarItems: [UIBarButtonItem] = [camera, fixedSpace, photos, gifs, flexibleSpace]
 
         doneToolbar.setItems(toolbarItems, animated: false)
       
