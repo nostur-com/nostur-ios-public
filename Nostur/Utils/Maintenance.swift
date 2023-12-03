@@ -101,7 +101,7 @@ struct Maintenance {
         
         context.perform {
             let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
-            let fiveDaysAgo = Date(timeIntervalSinceNow: (-5 * 24 * 60 * 60)).timeIntervalSince1970
+            let fiveDaysAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 24 * 5)  
             pfr.predicate = NSPredicate(format: "createdAt < %i AND NOT readAt = nil", fiveDaysAgo)
             
             let pfrBatchDelete = NSBatchDeleteRequest(fetchRequest: pfr)
