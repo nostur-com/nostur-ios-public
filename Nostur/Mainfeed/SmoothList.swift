@@ -71,7 +71,10 @@ struct SmoothList: UIViewControllerRepresentable {
                     }
                     return
                 }
-                guard let row = context.coordinator.lvm.lastReadIdIndex else { return }
+
+
+                // last read index, or if nil, first index that is visible, minus 1
+                let row = context.coordinator.lvm.lastReadIdIndex ?? ((cvh.collectionView.indexPathsForVisibleItems.first?.row ?? 0) - 1)
                 let index = row-1
                 guard (cvh.dataSource?.snapshot().numberOfItems(inSection: .main) ?? 0) > index+1 else {
                     L.og.error("🔴🔴 not scrolling: index+1: \(index+1) is > than cvh.dataSource?.snapshot().numberOfItems(inSection: .main)")
