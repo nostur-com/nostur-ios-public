@@ -88,8 +88,8 @@ struct NotificationsNewPosts: View {
                                 Image(systemName: "plus")
                                     .resizable()
                                     .frame(width: 10, height: 10)
-                                    .background(themes.theme.background)
-                                    .border(themes.theme.background, width: 2.0)
+                                    .background(themes.theme.listBackground)
+                                    .border(themes.theme.listBackground, width: 2.0)
                                     .offset(y: -3)
                             }
                             .offset(y: 3)
@@ -102,7 +102,7 @@ struct NotificationsNewPosts: View {
                                     .resizable()
                                     .frame(width: 10, height: 10)
                                     .foregroundColor(.green)
-                                    .background(themes.theme.background)
+                                    .background(themes.theme.listBackground)
                                     .offset(y: -3)
                             }
                             .offset(y: 3)
