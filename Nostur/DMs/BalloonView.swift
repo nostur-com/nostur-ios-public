@@ -11,6 +11,7 @@ struct BalloonView: View {
     @EnvironmentObject var themes: Themes
     var message: String
     var isSentByCurrentUser: Bool
+    var time: String
     
     var renderedMessage:String {
         if message == "(Encrypted content)" {
@@ -41,6 +42,14 @@ struct BalloonView: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(isSentByCurrentUser ? .leading : .trailing, 50)
+                .overlay(alignment: isSentByCurrentUser ? .bottomLeading : .bottomTrailing) {
+                    Text(time)
+                        .frame(alignment: isSentByCurrentUser ? .leading : .trailing)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .padding(.bottom, 8)
+                        .padding(isSentByCurrentUser ? .leading : .trailing, 19)
+                }
             
             if !isSentByCurrentUser {
                 Spacer()
@@ -73,12 +82,12 @@ func convertToHieroglyphs(text: String) -> String {
 struct BalloonView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            BalloonView(message: "Some message \nLonger text blablabl still looks good \nanother line yeee", isSentByCurrentUser: true)
-            BalloonView(message: "https://image.nostr.build/24ad61d249914f423a87440da3b49006963befcecd6517ef7689c4302b88bf78.jpg\nddsd", isSentByCurrentUser: true)
-            BalloonView(message: "https://image.nostr.build/24ad61d249914f423a87440da3b49006963befcecd6517ef7689c4302b88bf78.jpg", isSentByCurrentUser: true)
-            BalloonView(message: "Some message", isSentByCurrentUser: false)
-            BalloonView(message: "Some message", isSentByCurrentUser: false)
-            BalloonView(message: "Some message", isSentByCurrentUser: true)
+            BalloonView(message: "Some message \nLonger text blablabl still looks good \nanother line yeee", isSentByCurrentUser: true, time: Date.now.formatted(date: .omitted, time: .standard))
+            BalloonView(message: "https://image.nostr.build/24ad61d249914f423a87440da3b49006963befcecd6517ef7689c4302b88bf78.jpg\nddsd", isSentByCurrentUser: true, time: Date.now.formatted(date: .omitted, time: .standard))
+            BalloonView(message: "https://image.nostr.build/24ad61d249914f423a87440da3b49006963befcecd6517ef7689c4302b88bf78.jpg", isSentByCurrentUser: true, time: Date.now.formatted(date: .omitted, time: .standard))
+            BalloonView(message: "Some message", isSentByCurrentUser: false, time: Date.now.formatted(date: .omitted, time: .standard))
+            BalloonView(message: "Some message", isSentByCurrentUser: false, time: Date.now.formatted(date: .omitted, time: .standard))
+            BalloonView(message: "Some message", isSentByCurrentUser: true, time: Date.now.formatted(date: .omitted, time: .standard))
             Spacer()
         }
         .environmentObject(Themes.default)
