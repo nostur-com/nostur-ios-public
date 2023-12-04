@@ -82,7 +82,7 @@ struct SingleMediaViewer: View {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
                             .padding(.horizontal, -contentPadding)
-                            .transaction { t in t.animation = nil }
+//                            .transaction { t in t.animation = nil }
 //                            .withoutAnimation()
                             .task(id: url.absoluteString) {
                                 try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
@@ -102,7 +102,7 @@ struct SingleMediaViewer: View {
                             .aspectRatio(contentMode: .fit)
 //                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
 //                            .frame(height: theHeight)
-                            .transaction { t in t.animation = nil }
+//                            .transaction { t in t.animation = nil }
 //                            .background(Color.green)
 //                            .withoutAnimation()
                             .onTapGesture {
@@ -134,7 +134,7 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-                            .transaction { t in t.animation = nil }
+//                            .transaction { t in t.animation = nil }
 //                            .withoutAnimation()
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
@@ -155,7 +155,7 @@ struct SingleMediaViewer: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView, FullScreenItem(url: url))
                             }
-                            .transaction { t in t.animation = nil }
+//                            .transaction { t in t.animation = nil }
 //                            .withoutAnimation()
                             .overlay(alignment:.topLeading) {
                                 if state.isLoading { // does this conflict with showing preview images??
@@ -184,7 +184,7 @@ struct SingleMediaViewer: View {
 //                    .centered()
                     .frame(minHeight: 100, maxHeight: theHeight)
 //                    .background(Color.red)
-                    .withoutAnimation()
+//                    .withoutAnimation()
 #if DEBUG
 //                    .opacity(0.25)
 //                    .debugDimensions("loading")
@@ -195,7 +195,7 @@ struct SingleMediaViewer: View {
 //                        .frame(height: theHeight)
                         .frame(minHeight: 100, maxHeight: theHeight)
 //                        .background(Color.white)
-                        .transaction { t in t.animation = nil }
+//                        .transaction { t in t.animation = nil }
 //                        .withoutAnimation()
                 }
             }

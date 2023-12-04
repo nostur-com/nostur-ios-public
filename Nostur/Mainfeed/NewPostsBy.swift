@@ -54,9 +54,9 @@ struct NewPostsBy: View {
                                     PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                                 }
                                 .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-                                .transaction { t in
-                                    t.animation = nil
-                                }
+//                                .transaction { t in
+//                                    t.animation = nil
+//                                }
                                 .onBecomingVisible {
                                     // SettingsStore.shared.fetchCounts should be true for below to work
                                     vm.prefetch(post)

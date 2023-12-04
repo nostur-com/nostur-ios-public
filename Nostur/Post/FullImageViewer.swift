@@ -235,7 +235,7 @@ struct MediaPostPreview: View {
         HStack(alignment: .center) {
             ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-                .transaction { t in t.animation = nil }
+//                .transaction { t in t.animation = nil }
                 .onTapGesture {
                     withAnimation {
                         showMiniProfile = true

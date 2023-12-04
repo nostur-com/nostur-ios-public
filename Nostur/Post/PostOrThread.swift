@@ -34,21 +34,21 @@ struct PostOrThread: View {
 //                    }
             }
             .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-            .withoutAnimation()
+//            .withoutAnimation()
 //            .transaction { t in
 //                t.animation = nil
 //            }
             .background {
                 if nrPost.kind == 30023 {
                     themes.theme.secondaryBackground
-                        .withoutAnimation()
+//                        .withoutAnimation()
     //                    .transaction { t in
     //                        t.animation = nil
     //                    }
                 }
                 else {
                     themes.theme.background
-                        .withoutAnimation()
+//                        .withoutAnimation()
     //                    .transaction { t in
     //                        t.animation = nil
     //                    }
@@ -57,7 +57,7 @@ struct PostOrThread: View {
             .padding(.top, 10)
             .background { // This is the background between PostOrThread's.
                 themes.theme.listBackground
-                    .withoutAnimation()
+//                    .withoutAnimation()
     //                .transaction { t in t.animation = nil }
             }
         }
@@ -74,8 +74,8 @@ struct PostOrThread: View {
                     }
                     .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                     //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
-                    .withoutAnimation()
-                    .fixedSize(horizontal: false, vertical: true)
+//                    .withoutAnimation()
+                    .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
     //                .transaction { t in
     //                    t.animation = nil
     //                }
@@ -88,8 +88,8 @@ struct PostOrThread: View {
     //                    }
                 }
                 .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-                .withoutAnimation()
-                .fixedSize(horizontal: false, vertical: true)
+//                .withoutAnimation()
+                .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
     //            .transaction { t in
     //                t.animation = nil
     //            }
@@ -97,14 +97,14 @@ struct PostOrThread: View {
             .background {
                 if nrPost.kind == 30023 {
                     themes.theme.secondaryBackground
-                        .withoutAnimation()
+//                        .withoutAnimation()
     //                    .transaction { t in
     //                        t.animation = nil
     //                    }
                 }
                 else {
                     themes.theme.background
-                        .withoutAnimation()
+//                        .withoutAnimation()
     //                    .transaction { t in
     //                        t.animation = nil
     //                    }
@@ -113,7 +113,7 @@ struct PostOrThread: View {
             .padding(.top, 10)
             .background { // This is the background between PostOrThread's.
                 themes.theme.listBackground
-                    .withoutAnimation()
+//                    .withoutAnimation()
     //                .transaction { t in t.animation = nil }
             }
         }

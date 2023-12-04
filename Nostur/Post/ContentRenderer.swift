@@ -45,7 +45,7 @@ struct ContentRenderer: View { // VIEW things
                     //                        .fixedSize(horizontal: false, vertical: true)
 //                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
-                        .withoutAnimation()
+//                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, forceAutoload: shouldAutoload, theme: theme)
@@ -53,18 +53,18 @@ struct ContentRenderer: View { // VIEW things
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
-                        .withoutAnimation()
+//                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey, theme: theme)
                             .padding(.vertical, 10)
-                            .withoutAnimation()
+//                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
-                        .transaction { t in t.animation = nil }
+//                        .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, forceAutoload: shouldAutoload, theme: theme)
@@ -72,7 +72,7 @@ struct ContentRenderer: View { // VIEW things
                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
 //                            .debugDimensions("QuoteById.note1")
                             .padding(.vertical, 10)
-                            .withoutAnimation()
+//                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                             .onTapGesture {
                                 guard !isDetail else { return }
@@ -88,7 +88,7 @@ struct ContentRenderer: View { // VIEW things
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
 //                        .debugDimensions("QuoteById.noteHex")
                         .padding(.vertical, 10)
-                        .withoutAnimation()
+//                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                         .onTapGesture {
                             guard !isDetail else { return }
@@ -144,7 +144,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .withoutAnimation()
+//                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
                     else {
@@ -163,7 +163,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .withoutAnimation()
+//                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
                     
@@ -191,7 +191,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .withoutAnimation()
+//                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
                     else {
@@ -210,13 +210,13 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
 //                            .background(Color.yellow)
-                            .withoutAnimation()
+//                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
                 case .linkPreview(let url):
                     LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
                         .padding(.vertical, 10)
-                        .withoutAnimation()
+//                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .postPreviewImage(let postedImageMeta):
                     Image(uiImage: postedImageMeta.imageData)

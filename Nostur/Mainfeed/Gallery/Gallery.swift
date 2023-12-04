@@ -154,7 +154,7 @@ struct GridItemView: View {
                     .onTapGesture {
                         sendNotification(.fullScreenView, FullScreenItem(url: url, galleryItem: item))
                     }
-                    .transaction { t in t.animation = nil }
+//                    .transaction { t in t.animation = nil }
                     .overlay(alignment:.topLeading) {
                         if state.isLoading { // does this conflict with showing preview images??
                             ImageProgressView(state: state)
@@ -175,7 +175,7 @@ struct GridItemView: View {
             }
         }
         .pipeline(ImageProcessing.shared.content)
-        .transaction { t in t.animation = nil }
+//        .transaction { t in t.animation = nil }
         .frame(width: size, height: size)
     }
 }

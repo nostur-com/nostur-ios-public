@@ -67,12 +67,12 @@ struct Kind1Default: View {
                             .opacity(0.2)
                             .frame(width: 2, height: 20)
                             .offset(x:0, y: -10)
-                            .transaction { t in
-                                t.animation = nil
-                            }
+//                            .transaction { t in
+//                                t.animation = nil
+//                            }
                     }
                 }
-                .withoutAnimation() // seems to fix flying PFPs
+//                .withoutAnimation() // seems to fix flying PFPs
                 .onTapGesture {
                     withAnimation {
                         showMiniProfile = true
@@ -120,14 +120,14 @@ struct Kind1Default: View {
 //                }
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
-                        .withoutAnimation()
+//                        .withoutAnimation()
 //                        .transaction { t in
 //                            t.animation = nil
 //                        }
                 }
                 if let fileMetadata = nrPost.fileMetadata {
                     Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, theme: theme)
-                        .withoutAnimation()
+//                        .withoutAnimation()
 //                        .transaction { transaction in
 //                            transaction.animation = nil
 //                        }
@@ -138,7 +138,7 @@ struct Kind1Default: View {
                             .hCentered()
                             .frame(maxWidth: .infinity)
                             .background(theme.lineColor.opacity(0.2))
-                            .withoutAnimation()
+//                            .withoutAnimation()
 //                            .transaction { t in
 //                                t.animation = nil
 //                            }
@@ -147,7 +147,7 @@ struct Kind1Default: View {
                         Text(subject)
                             .fontWeight(.bold)
                             .lineLimit(3)
-                            .withoutAnimation()
+//                            .withoutAnimation()
 //                            .transaction { t in
 //                                t.animation = nil
 //                            }
@@ -167,7 +167,7 @@ struct Kind1Default: View {
                         if (nrPost.previewWeights?.moreItems ?? false) {
                             ReadMoreButton(nrPost: nrPost)
                                 .padding(.vertical, 5)
-                                .withoutAnimation()
+//                                .withoutAnimation()
                                 .hCentered()
                         }
                     }
@@ -189,7 +189,7 @@ struct Kind1Default: View {
                     .frame(width: 2)
                     .opacity(0.2)
                     .offset(x: THREAD_LINE_OFFSET, y: 20)
-                    .withoutAnimation()
+//                    .withoutAnimation()
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
