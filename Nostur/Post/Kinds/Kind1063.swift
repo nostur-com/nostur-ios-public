@@ -70,7 +70,7 @@ struct Kind1063: View {
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .withoutAnimation()
+//                    .withoutAnimation()
             }
             else if let height {
                 SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, theme: theme)

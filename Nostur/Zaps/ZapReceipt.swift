@@ -41,7 +41,7 @@ struct ZapReceipt: View {
                             .foregroundColor(themes.theme.accent)
                             .offset(x: 6, y: 6)
                     }
-                    .withoutAnimation() // seems to fix flying PFPs
+//                    .withoutAnimation() // seems to fix flying PFPs
                     .onTapGesture {
                         withAnimation { showMiniProfile = true }
                     }

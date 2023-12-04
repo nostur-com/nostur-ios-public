@@ -166,9 +166,9 @@ struct Highlight: View {
                     .frame(width: 2)
                     .opacity(0.2)
                     .offset(x: THREAD_LINE_OFFSET, y: 20)
-                    .transaction { t in
-                        t.animation = nil
-                    }
+//                    .transaction { t in
+//                        t.animation = nil
+//                    }
             }
         }
     }

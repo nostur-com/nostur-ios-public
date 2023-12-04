@@ -91,7 +91,7 @@ struct NosturVideoViewur: View {
                                         .frame(width: 80, height: 80)
 //                                        .centered()
                                         .contentShape(Rectangle())
-                                        .withoutAnimation()
+//                                        .withoutAnimation()
                                 }
                             }
                         }

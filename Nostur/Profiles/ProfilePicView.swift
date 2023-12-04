@@ -137,13 +137,13 @@ struct InnerPFP: View {
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: size, height: size)
                                     .cornerRadius(size/2)
-                                    .withoutAnimation()
+//                                    .withoutAnimation()
                             }
                             else {
                                 image.interpolation(.none)
                                     .frame(width: size, height: size)
                                     .cornerRadius(size/2)
-                                    .withoutAnimation()
+//                                    .withoutAnimation()
                             }
                         }
                         else { color.cornerRadius(size/2) }
@@ -161,12 +161,12 @@ struct InnerPFP: View {
                                             .interpolation(.none)
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
-                                            .withoutAnimation()
+//                                            .withoutAnimation()
                                     }
         
                                     GIFImage(data: gifData, isPlaying: .constant(true))
 //                                        .scaledToFit()
-                                        .withoutAnimation()
+//                                        .withoutAnimation()
                                 }
                                 .frame(width: size, height: size)
                                 .cornerRadius(size/2)
@@ -178,7 +178,7 @@ struct InnerPFP: View {
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: size, height: size)
                                     .cornerRadius(size/2)
-                                    .withoutAnimation()
+//                                    .withoutAnimation()
                             }
 
                         }

@@ -28,7 +28,7 @@ struct MainView: View {
         NavigationStack(path: $navPath) {
             if let account = account {
                 FollowingAndExplore(account: account, showingOtherContact: $showingOtherContact)
-                    .transaction { t in t.animation = nil }
+//                    .transaction { t in t.animation = nil }
                     .background(themes.theme.listBackground)
                     .withNavigationDestinations()
                     .overlay(alignment: .bottomTrailing) {

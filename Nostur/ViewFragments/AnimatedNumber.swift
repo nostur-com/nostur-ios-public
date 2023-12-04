@@ -105,9 +105,9 @@ extension View {
     
     // This seems to work to stop views from flying around the screen
     // Works better than .transaction { t in t.animation = nil }
-    func withoutAnimation() -> some View {
-        self.animation(nil, value: UUID())
-    }
+//    func withoutAnimation() -> some View {
+//        self.animation(nil, value: UUID())
+//    }
 }
 
 struct AnimatedNumberPreviewContainer: View {
@@ -128,7 +128,7 @@ struct AnimatedNumberPreviewContainer: View {
 //                .transaction { t in t.animation = nil } // this breaks animation in child views
             
             
-                .withoutAnimation() // <-- this doesn't break animation in child views, and correctly stop this view from moving around the screen
+//                .withoutAnimation() // <-- this doesn't break animation in child views, and correctly stop this view from moving around the screen
             
                 
             

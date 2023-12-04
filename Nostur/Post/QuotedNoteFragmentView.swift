@@ -85,7 +85,7 @@ struct QuotedNoteFragmentView: View {
                 .frame(height: 40)
                 VStack(alignment: .leading) {
                     NoteTextRenderView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
-                        .withoutAnimation()
+//                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 }
             }
@@ -100,13 +100,13 @@ struct QuotedNoteFragmentView: View {
             .background(
                 theme.background
                     .cornerRadius(15)
-                    .withoutAnimation()
+//                    .withoutAnimation()
 //                    .transaction { t in t.animation = nil }
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
                     .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
-                    .withoutAnimation()
+//                    .withoutAnimation()
 //                    .transaction { t in t.animation = nil }
             )
             .onAppear {
