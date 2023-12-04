@@ -493,6 +493,7 @@ final class TViewHolder {
         self.coordinator = coordinator
         
         tableView = UITableView()
+        tableView.separatorStyle = .none
         tableView.backgroundColor = UIColor.clear // This color flashes visible for a milisecond and is then covered by all other things
         tableView.allowsSelection = false
         tableView.delegate = coordinator
