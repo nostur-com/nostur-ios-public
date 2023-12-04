@@ -103,17 +103,17 @@ struct SmoothTable: UIViewControllerRepresentable {
     private func makeViewHolder(parent viewController: UIViewControllerType,
                                           coordinator: Coordinator) -> ViewHolderType {
         L.sl.info("⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeViewHolder")
-        let viewHolder = TViewHolder(coordinator: coordinator) { uiCollectionView in
+        let viewHolder = TViewHolder(coordinator: coordinator) { uiView in
             //            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
-            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
-            uiCollectionView.backgroundColor = UIColor(theme.listBackground) // UIColor(named: "ListBackground")
-            viewController.view.addSubview(uiCollectionView)
+            uiView.translatesAutoresizingMaskIntoConstraints = false
+            uiView.backgroundColor = UIColor(theme.listBackground) // UIColor(named: "ListBackground")
+            viewController.view.addSubview(uiView)
             
             NSLayoutConstraint.activate([
-                viewController.view.leadingAnchor.constraint(equalTo: uiCollectionView.leadingAnchor),
-                viewController.view.trailingAnchor.constraint(equalTo: uiCollectionView.trailingAnchor),
-                viewController.view.topAnchor.constraint(equalTo: uiCollectionView.topAnchor), // Add this line
-                viewController.view.bottomAnchor.constraint(equalTo: uiCollectionView.bottomAnchor)
+                viewController.view.leadingAnchor.constraint(equalTo: uiView.leadingAnchor),
+                viewController.view.trailingAnchor.constraint(equalTo: uiView.trailingAnchor),
+                viewController.view.topAnchor.constraint(equalTo: uiView.topAnchor), // Add this line
+                viewController.view.bottomAnchor.constraint(equalTo: uiView.bottomAnchor)
             ])
         }
         return viewHolder
