@@ -79,6 +79,8 @@
 		1F21CE432A067EC10021E2C7 /* View+onDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21CE422A067EC10021E2C7 /* View+onDelete.swift */; };
 		1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 1F21DDC029F01B3000C564EF /* CombineWebSocket */; };
 		1F2245B82AA46C6F00C06342 /* NostrAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2245B72AA46C6F00C06342 /* NostrAddress.swift */; };
+		1F2810BB2B1E150B00042928 /* NRBalloonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2810BA2B1E150B00042928 /* NRBalloonView.swift */; };
+		1F2810BD2B1E155F00042928 /* DMContentRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */; };
 		1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2884A92A77D11D0006766E /* FeedSettings.swift */; };
 		1F2AC53D2B12B75E00F70662 /* CashuToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53C2B12B75E00F70662 /* CashuToken.swift */; };
 		1F2AC53F2B12B99300F70662 /* CashuTokenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */; };
@@ -565,6 +567,8 @@
 		1F21D67B2AAB69F900CCF3B1 /* Gallery+FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Gallery+FeedSettings.swift"; sourceTree = "<group>"; };
 		1F21D67C2AAB69FA00CCF3B1 /* GalleryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryViewModel.swift; sourceTree = "<group>"; };
 		1F2245B72AA46C6F00C06342 /* NostrAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrAddress.swift; sourceTree = "<group>"; };
+		1F2810BA2B1E150B00042928 /* NRBalloonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRBalloonView.swift; sourceTree = "<group>"; };
+		1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMContentRenderer.swift; sourceTree = "<group>"; };
 		1F2884A92A77D11D0006766E /* FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSettings.swift; sourceTree = "<group>"; };
 		1F2AC53C2B12B75E00F70662 /* CashuToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuToken.swift; sourceTree = "<group>"; };
 		1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuTokenView.swift; sourceTree = "<group>"; };
@@ -986,6 +990,7 @@
 				1F38AFED2A2715250035641E /* Video */,
 				1F922FDD2A9775EB00C84867 /* Box.swift */,
 				1F0088EA29D735080016F111 /* ContentRenderer.swift */,
+				1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */,
 				1F20939E2A43FDCA0085E7D2 /* DetailFooterFragment.swift */,
 				1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */,
 				1F92D89B2ABBEED9002F300D /* EmbedById.swift */,
@@ -1775,6 +1780,7 @@
 			children = (
 				1F8836E62AA5A80600F252C1 /* Refactor */,
 				1FC78F7329CB45750009C1C7 /* BalloonView.swift */,
+				1F2810BA2B1E150B00042928 /* NRBalloonView.swift */,
 				1FC78F7529CB4A920009C1C7 /* ChatInputField.swift */,
 				1FC78F6E29CAD3510009C1C7 /* DMConversationView.swift */,
 				1F006B0629D090370048C6DD /* Event+DMs.swift */,
@@ -2220,6 +2226,7 @@
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
 				1F15F09C2AAF2FCC0004E706 /* ReplyButton.swift in Sources */,
 				1FC2DFF429A9330600C8A9DA /* ProfileLightningButton.swift in Sources */,
+				1F2810BB2B1E150B00042928 /* NRBalloonView.swift in Sources */,
 				1FBCA0912AC84AFF00913E16 /* ContactsToggleSheet.swift in Sources */,
 				1F740DA329AF524100EFCCA7 /* BadgeDetailView.swift in Sources */,
 				1FFA89A52B197AE600D9BE26 /* NewPostsVM.swift in Sources */,
@@ -2387,6 +2394,7 @@
 				1F84189B2A2BDD1A001EFE7A /* NIP47TesterView.swift in Sources */,
 				1FC0F5A72A4AEB62004E4DAA /* TabTitlePreferenceKey.swift in Sources */,
 				1F7525802997854200477AF2 /* OldNewPost.swift in Sources */,
+				1F2810BD2B1E155F00042928 /* DMContentRenderer.swift in Sources */,
 				1F740DAD29AF8A5200EFCCA7 /* BadgesReceivedView.swift in Sources */,
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
 				1F2AC53F2B12B99300F70662 /* CashuTokenView.swift in Sources */,

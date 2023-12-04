@@ -123,14 +123,16 @@ struct DMConversationView: View {
                                 VStack {
                                     ForEach(messagesByDay.keys.sorted(by: { $0 < $1 }), id:\.self) { date in
                                         if let messages = messagesByDay[date] {
-                                            VStack {
+                                            LazyVStack {
                                                 Text(dateHeaderFormatter.string(from: date))
                                                     .font(.caption).foregroundColor(.gray)
                                                     .padding(.top, 15)
                                                 ForEach(messages.sorted(by: { $0.created_at < $1.created_at })) { event in
-                                                    BalloonView(message: event.noteText,
-                                                                isSentByCurrentUser: event.pubkey == pubkey, time: event.date.formatted(date: .omitted, time: .shortened))
+                                                    NRBalloonView(event: event, isSentByCurrentUser: event.pubkey == pubkey, time: event.date.formatted(date: .omitted, time: .shortened))
+//                                                    BalloonView(message: event.noteText,
+//                                                                isSentByCurrentUser: event.pubkey == pubkey, time: event.date.formatted(date: .omitted, time: .shortened))
                                                     .id(event.id)
+                                                    .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                                                 }
                                             }
                                             .id(date)

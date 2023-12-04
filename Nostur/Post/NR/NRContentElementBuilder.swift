@@ -16,12 +16,12 @@ class NRContentElementBuilder {
     static let shared = NRContentElementBuilder()
     let context = bg()
     
-    func buildElements(_ event:Event) -> ([ContentElement], [URL]) {
+    func buildElements(_ event:Event, dm:Bool = false) -> ([ContentElement], [URL]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
         }
         
-        let input = event.noteTextPrepared
+        let input = dm ? event.noteText : event.noteTextPrepared
         
         let range = NSRange(location: 0, length: input.utf16.count)
         
@@ -251,6 +251,7 @@ class NRContentElementBuilder {
 
 public typealias Ptag = String
 
+// NOTE: When adding types, update ContentRenderer AND DMContentRenderer
 enum ContentElement: Hashable, Identifiable {
     var id:Self { self }
     case code(String) // dont parse anything here
