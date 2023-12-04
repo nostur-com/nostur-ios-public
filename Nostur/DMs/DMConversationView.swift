@@ -129,7 +129,7 @@ struct DMConversationView: View {
                                                     .padding(.top, 15)
                                                 ForEach(messages.sorted(by: { $0.created_at < $1.created_at })) { event in
                                                     BalloonView(message: event.noteText,
-                                                                isSentByCurrentUser: event.pubkey == pubkey)
+                                                                isSentByCurrentUser: event.pubkey == pubkey, time: event.date.formatted(date: .omitted, time: .shortened))
                                                     .id(event.id)
                                                 }
                                             }
