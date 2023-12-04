@@ -579,7 +579,6 @@ class LVM: NSObject, ObservableObject {
             processResponseCommand: { [weak self] (taskId, _, _) in
                 guard let self = self else { return }
                 L.lvm.info("😈😈 processResponseCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) dng: \(danglers.count)")
-                let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                 let idsOnScreen = self.leafsAndParentIdsOnScreen
                 bg().perform { [weak self] in
                     guard let self = self else { return }
@@ -588,6 +587,7 @@ class LVM: NSObject, ObservableObject {
                         self.setOlderEvents(events: self.filterMutedWords(danglingEvents))
                     }
                     else {
+                        let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                         self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
                     }
                 }
