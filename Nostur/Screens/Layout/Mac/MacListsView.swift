@@ -169,17 +169,17 @@ struct MacListHeader: View {
 
 struct MacList<Content: View>: View {
     
-    let content: Content
+    private let content: () -> Content
     let dim:DIMENSIONS
 
-    init(availableWidth:CGFloat = 600, @ViewBuilder content: ()->Content) {
-        self.content = content()
+    init(availableWidth:CGFloat = 600, @ViewBuilder content: @escaping () -> Content) {
+        self.content = content
         self.dim = DIMENSIONS()
         self.dim.listWidth = CGFloat(availableWidth)
     }
     
     var body: some View {
-        content
+        content()
             .environmentObject(dim)
     }
 }

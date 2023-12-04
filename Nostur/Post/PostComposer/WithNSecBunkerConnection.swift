@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct WithNSecBunkerConnection<Content: View>: View {
-    let content: Content
+    private let content: () -> Content
     @ObservedObject var nsecBunker:NSecBunkerManager
     
-    init(nsecBunker: NSecBunkerManager, @ViewBuilder content: ()->Content) {
+    init(nsecBunker: NSecBunkerManager, @ViewBuilder content: @escaping () -> Content) {
         self.nsecBunker = nsecBunker
-        self.content = content()
+        self.content = content
     }
     
     var body: some View {
@@ -28,7 +28,7 @@ struct WithNSecBunkerConnection<Content: View>: View {
                 .padding(.horizontal, 10)
                 Divider()
             }
-            content
+            content()
                 .task {
                     nsecBunker.state = .connecting
                     nsecBunker.describe()
