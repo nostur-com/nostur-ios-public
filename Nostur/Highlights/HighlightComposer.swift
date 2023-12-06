@@ -28,7 +28,7 @@ struct HighlightComposer: View {
 
                         VStack(alignment:.leading, spacing: 3) {
                             HStack { // name + reply + context menu
-                                PreviewHeaderView(authorName: account.anyName)
+                                PreviewHeaderView(authorName: account.anyName, accountPubkey: account.publicKey)
                                 Spacer()
                             }
 
@@ -122,20 +122,25 @@ struct HighlightComposer: View {
         }
     }
     
+    // TODO: Need to move to NewPostModel
     func send() {
         guard let account = activeAccount else { return }
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
         var nEvent = NEvent(content: highlight.selectedText)
+        nEvent.publicKey = account.publicKey
         nEvent.createdAt = NTimestamp.init(date: Date())
         nEvent.kind = .highlight
         if let selectedAuthor = selectedAuthor {
             nEvent.tags.append(NostrTag(["p", selectedAuthor.pubkey]))
         }
         nEvent.tags.append(NostrTag(["r", highlight.url]))
+        
+        if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
+            nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+        }
                 
         let cancellationId = UUID()
         if account.isNC {
-            nEvent.publicKey = account.publicKey
             nEvent = nEvent.withId()
             
             // Save unsigned event:

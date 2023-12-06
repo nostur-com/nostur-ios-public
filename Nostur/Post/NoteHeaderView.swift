@@ -233,9 +233,11 @@ struct PostHeader: View {
     }
 }
 
+// TODO: This is only used in HighlightComposer? Needs refactor
 struct PreviewHeaderView: View {
     @ObservedObject var settings:SettingsStore = .shared
     var authorName:String
+    var accountPubkey:String
     var singleLine:Bool = true
     
     var body: some View {
@@ -254,7 +256,7 @@ struct PreviewHeaderView: View {
                             Text(verbatim:"1m")
                                 .layoutPriority(2)
                             
-                            if settings.postUserAgentEnabled {
+                            if settings.postUserAgentEnabled && !settings.excludedUserAgentPubkeys.contains(accountPubkey) {
                                 Text(String(format: "via %@", "Nostur"))
                                     .layoutPriority(3)
                             }
@@ -272,7 +274,7 @@ struct PreviewHeaderView: View {
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                     
-                    if settings.postUserAgentEnabled {
+                    if settings.postUserAgentEnabled && !settings.excludedUserAgentPubkeys.contains(accountPubkey) {
                         Text(String(format: "via %@", "Nostur"))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -327,7 +329,7 @@ struct NoteHeaderView_Previews: PreviewProvider {
             pe.loadPosts()
         }) {
             VStack {
-                PreviewHeaderView(authorName: "Fabian")
+                PreviewHeaderView(authorName: "Fabian", accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e")
                 
                 if let p = PreviewFetcher.fetchNRPost("953dbf6a952f43f70dbb4d6432593ba5b7f149a786d1750e4aa4cef40522c0a0") {
                     NoteHeaderView(nrPost: p)
