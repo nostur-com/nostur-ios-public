@@ -12,13 +12,16 @@ struct NRText: View {
     @EnvironmentObject private var themes:Themes
     
     private let attributedString: AttributedString
+    private let plain: Bool
 
-    init(_ attributedString: AttributedString) {
+    init(_ attributedString: AttributedString, plain: Bool = false) {
         self.attributedString = attributedString
+        self.plain = plain
     }
     
-    init(_ text: String) {
+    init(_ text: String, plain: Bool = false) {
         self.attributedString = (try? AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(text)
+        self.plain = plain
     }
     
     var body: some View {
@@ -34,7 +37,7 @@ struct NRText: View {
         view.tintColor = UIColor(themes.theme.accent)
         view.isSelectable = true
         view.isEditable = false
-        view.dataDetectorTypes = .link
+        view.dataDetectorTypes = plain ? [] : [.link]
         view.backgroundColor = .clear
         view.textContainer.lineFragmentPadding = 0
         view.textContainerInset = .zero
