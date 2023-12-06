@@ -29,6 +29,8 @@ struct ProfileTabs: View {
                         ProfileLikesView(pubkey: pubkey)
                     case "Zaps":
                         ProfileZaps(pubkey: pubkey, contact: nrContact.mainContact)
+                    case "Relays":
+                        ProfileRelays(pubkey: pubkey, name: nrContact.anyName)
                     case "Followers":
                         VStack {
                             Text("Followers", comment: "Heading").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
@@ -69,11 +71,11 @@ struct ProfileTabs: View {
                         action: { selectedSubTab = "Zaps" },
                         title: String(localized:"Zaps", comment:"Tab title"),
                         selected: selectedSubTab == "Zaps")
-                    //                                Spacer()
-                    //                                TabButton(
-                    //                                    action: { selectedSubTab = "Relays" },
-                    //                                    title: "Relays",
-                    //                                    selected: selectedSubTab == "Relays")
+                    Spacer()
+                    TabButton(
+                        action: { selectedSubTab = "Relays" },
+                        title: "Relays",
+                        selected: selectedSubTab == "Relays")
                 }
                 .frame(width: dim.listWidth)
             }

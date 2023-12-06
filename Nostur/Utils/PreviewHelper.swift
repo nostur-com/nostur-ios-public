@@ -21,6 +21,7 @@ public class PreviewEnvironment {
     let themes:Themes = .default
     let kind0:Kind0Processor = .shared
     let npn:NewPostNotifier = NewPostNotifier.shared
+    let cp:ConnectionPool = ConnectionPool.shared
     
     static let shared = PreviewEnvironment()
         
@@ -494,6 +495,7 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.themes)
                     .environmentObject(pe.dim)
                     .environmentObject(pe.npn)
+                    .environmentObject(pe.cp)
                     .buttonStyle(NRButtonStyle(theme: pe.themes.theme))
                     .tint(pe.themes.theme.accent)
             }
