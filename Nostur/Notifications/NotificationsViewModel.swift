@@ -29,7 +29,9 @@ class NotificationsViewModel: ObservableObject {
     public func checkNeedsUpdate(_ failedZapNotification:PersistentNotification) {
         guard let account = account() else { return }
         if failedZapNotification.pubkey == account.publicKey {
-            needsUpdate = true
+            bg().perform {
+                self.needsUpdate = true
+            }
         }
     }
     
@@ -150,7 +152,9 @@ class NotificationsViewModel: ObservableObject {
         // listen for account changes
         receiveNotification(.activeAccountChanged)
             .sink { [unowned self] _ in
-                self.needsUpdate = true
+                bg().perform {
+                    self.needsUpdate = true
+                }
                 self.unreadMentions_ = 0
                 self.unreadNewPosts_ = 0
                 self.unreadNewFollowers_ = 0
