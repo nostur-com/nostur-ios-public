@@ -126,7 +126,7 @@ class DataProvider: ObservableObject {
         return taskContext
     }
     
-    func save() { // TODO: replace all viewContext.save() with this save
+    func save(_ completion: (() -> Void)? = nil) { // TODO: replace all viewContext.save() with this save
         #if DEBUG
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return
@@ -149,11 +149,15 @@ class DataProvider: ObservableObject {
                         if self.container.viewContext.hasChanges {
                             do {
                                 try self.container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
+                                completion?()
                                 L.og.info("🟢🟢 viewContext saved")
                             }
                             catch {
                                 L.og.error("🔴🔴 Could not save viewContext")
                             }
+                        }
+                        else {
+                            completion?()
                         }
                     }
                 }
@@ -164,11 +168,15 @@ class DataProvider: ObservableObject {
                         if self.container.viewContext.hasChanges {
                             do {
                                 try self.container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
+                                completion?()
                                 L.og.info("🟢🟢 viewContext saved")
                             }
                             catch {
                                 L.og.error("🔴🔴 Could not save viewContext")
                             }
+                        }
+                        else {
+                            completion?()
                         }
                     }
                 }
