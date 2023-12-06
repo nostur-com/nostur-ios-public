@@ -179,10 +179,10 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions)
                         //                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(width: max(25,scaledDimensions.width), height: max(25,scaledDimensions.height))
-//                            .debugDimensions("sd.image")
+                            .frame(width: max(25,scaledDimensions.width + 10), height: max(25,scaledDimensions.height))
+//                            .debugDimensions("sd.image \(scaledDimensions.width)x\(scaledDimensions.height)")
                             .background {
                                 if SettingsStore.shared.lowDataMode {
                                     theme.lineColor.opacity(0.2)
@@ -205,7 +205,7 @@ struct ContentRenderer: View { // VIEW things
 #endif
                         
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
-//                            .debugDimensions("image")
+                            .debugDimensions("image")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
