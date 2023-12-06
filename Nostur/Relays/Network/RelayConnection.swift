@@ -389,7 +389,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     }
     
     func didReceivePong() {
-        queue.sync(flags: .barrier) {
+        queue.async(flags: .barrier) {
             if self.isSocketConnecting {
                 self.isSocketConnecting = false
             }
