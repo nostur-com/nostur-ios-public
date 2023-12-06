@@ -206,6 +206,7 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
+    // TODO: NOTE: When updating this func, also update HighlightComposer.send or refactor.
     private func _sendNow(imetas: [Imeta], replyTo: Event? = nil, quotingEvent: Event? = nil, dismiss: DismissAction) {
         guard let account = activeAccount else { return }
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
