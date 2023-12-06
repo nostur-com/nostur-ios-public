@@ -231,10 +231,7 @@ struct Settings: View {
                 .listRowBackground(themes.theme.background)
                 
                 Section(header: Text("Posting", comment:"Setting heading on settings screen")) {
-                    Toggle(isOn: $settings.postUserAgentEnabled) {
-                        Text("Include Nostur in post metadata", comment:"Setting on settings screen")
-                        Text("Lets others know you are posting from Nostur", comment:"Setting on settings screen")
-                    }
+                    PostingToggle()
                 }
                 .listRowBackground(themes.theme.background)
                 

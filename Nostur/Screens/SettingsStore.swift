@@ -46,6 +46,7 @@ final class SettingsStore: ObservableObject {
         
         static let postUserAgentEnabled:String = "post_user_agent_enabled"
         static let displayUserAgentEnabled:String = "display_user_agent_enabled"
+        static let excludedUserAgentPubkeys:String = "excluded_user_agent_pubkeys"
         
         static let proMode:String = "nostur_pro_mode"
     }
@@ -141,6 +142,7 @@ final class SettingsStore: ObservableObject {
             Keys.mainWoTaccountPubkey: "",
             Keys.postUserAgentEnabled: true,
             Keys.displayUserAgentEnabled: true,
+            Keys.excludedUserAgentPubkeys: "",
             Keys.proMode: false
         ])
 
@@ -261,6 +263,17 @@ final class SettingsStore: ObservableObject {
             updateNWCreadyCache()
         }
         get { defaults.string(forKey: Keys.activeNWCconnectionId) ?? "" }
+    }
+    
+    var excludedUserAgentPubkeys: Set<String> {
+        set {
+            objectWillChange.send();
+            defaults.set(newValue.joined(separator: " "), forKey: Keys.excludedUserAgentPubkeys)
+        }
+        get {
+            guard let pubkeys = defaults.string(forKey: Keys.excludedUserAgentPubkeys) else { return [] }
+            return Set(pubkeys.components(separatedBy: " "))
+        }
     }
 
     var autoHideBars: Bool {
