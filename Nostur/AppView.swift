@@ -157,12 +157,20 @@ struct AppView: View {
                                     cp.disconnectAll()
                                     lvmManager.stopSubscriptions()
                                 }
-                                saveState()
-                                Maintenance.dailyMaintenance(context: DataProvider.shared().viewContext)
+                                // 1. Clean up
+                                Maintenance.dailyMaintenance(context: DataProvider.shared().viewContext) { didRun in
+                                    // 2. Save
+                                    DataProvider.shared().save() {
+                                        // 3. If Clean up "didRun", need to preload cache again
+                                        if didRun {
+                                            Importer.shared.preloadExistingIdsCache()
+                                        }
+                                    }
+                                }
                             case .inactive:
                                 L.og.notice("scenePhase inactive")
                                 if IS_CATALYST {
-                                    saveState()
+                                    DataProvider.shared().save()
                                 }
 
                             default:
@@ -368,12 +376,6 @@ struct AppView: View {
         } catch {
             L.og.error("Failed to configure audio session: \(error.localizedDescription)")
         }
-    }
-    
-    /// Saves state to disk
-    func saveState() {
-        DataProvider.shared().save()
-        L.og.notice("State saved")
     }
 }
 

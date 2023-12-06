@@ -86,7 +86,7 @@ struct Maintenance {
     // Keeps own events
     // Keeps contacts/posts with private notes
     // Could run in background, maybe on app minimize
-    static func dailyMaintenance(context:NSManagedObjectContext) {
+    static func dailyMaintenance(context:NSManagedObjectContext, completion: @escaping (Bool) -> Void) {
         
         // Time based migrations
     
@@ -94,6 +94,7 @@ struct Maintenance {
         let hoursAgo = Date(timeIntervalSinceNow: (-24 * 60 * 60))
         guard lastMaintenanceTimestamp < hoursAgo else { // don't do maintenance more than once every 24 hours
             L.maintenance.info("Skipping maintenance");
+            completion(false)
             return
         }
         SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
@@ -299,16 +300,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(olderKind3DeletedCount) older kind 3,10002 events")
             }
             
-            do {
-                if context.hasChanges {
-                    try context.save()
-                }
-            }
-            catch {
-                L.maintenance.error("🧹🧹 🔴🔴 Time based maintenance could not save: \(error)")
-            }
-            
-            Importer.shared.preloadExistingIdsCache()
+            completion(true)
         }
     }
     
