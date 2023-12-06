@@ -246,6 +246,7 @@
 		1F88491729B537B400145340 /* UITextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490D29B537B400145340 /* UITextView.swift */; };
 		1F88EE8C2AD12CE1006A83C3 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88EE8B2AD12CE1006A83C3 /* Entry.swift */; };
 		1F88EE8E2AD12CFA006A83C3 /* MentionChoices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88EE8D2AD12CFA006A83C3 /* MentionChoices.swift */; };
+		1F8AB1BB2B20BCCB00E4BD07 /* Settings+PostingToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8AB1BA2B20BCCB00E4BD07 /* Settings+PostingToggle.swift */; };
 		1F8B1349297B34D7002EB8CF /* Bech32.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1348297B34D7002EB8CF /* Bech32.swift */; };
 		1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B134A297B3551002EB8CF /* NIP19.swift */; };
 		1F8B135E297B36DB002EB8CF /* HexEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1353297B36DB002EB8CF /* HexEncoding.swift */; };
@@ -728,6 +729,7 @@
 		1F88490D29B537B400145340 /* UITextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextView.swift; sourceTree = "<group>"; };
 		1F88EE8B2AD12CE1006A83C3 /* Entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry.swift; sourceTree = "<group>"; };
 		1F88EE8D2AD12CFA006A83C3 /* MentionChoices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentionChoices.swift; sourceTree = "<group>"; };
+		1F8AB1BA2B20BCCB00E4BD07 /* Settings+PostingToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Settings+PostingToggle.swift"; sourceTree = "<group>"; };
 		1F8B1348297B34D7002EB8CF /* Bech32.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bech32.swift; sourceTree = "<group>"; };
 		1F8B134A297B3551002EB8CF /* NIP19.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP19.swift; sourceTree = "<group>"; };
 		1F8B1353297B36DB002EB8CF /* HexEncoding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HexEncoding.swift; sourceTree = "<group>"; };
@@ -1171,6 +1173,7 @@
 				1F099DA52ADC29710069F2DF /* Settings+AutodownloadLevelPicker.swift */,
 				1F2DEDDE2ADAB52E009E360C /* Settings+LightningWalletPicker.swift */,
 				1F2FE6882AD8E5810088BF56 /* Settings+MainWoTaccountPicker.swift */,
+				1F8AB1BA2B20BCCB00E4BD07 /* Settings+PostingToggle.swift */,
 				1F2DEDDC2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift */,
 				1F7B218B2AE3118D00CE972E /* Settings+Nip96Configurator.swift */,
 				1FBE253D2A9E5A7400F60FCF /* Settings+ThemePicker.swift */,
@@ -2100,6 +2103,7 @@
 				1F96792F29BF613C00E78173 /* NewPrivateNoteSheet.swift in Sources */,
 				1F3D4BB72A25CC140084F939 /* AppView.swift in Sources */,
 				1FCFDDBD2A2881250096CD84 /* PNotification+CoreDataClass.swift in Sources */,
+				1F8AB1BB2B20BCCB00E4BD07 /* Settings+PostingToggle.swift in Sources */,
 				1FD281542B16B0BB00978A9D /* CameraService+Enums.swift in Sources */,
 				1FF8BD1429D444D900C8C96A /* ProcessingStatus.swift in Sources */,
 				1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */,

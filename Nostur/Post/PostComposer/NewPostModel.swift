@@ -279,7 +279,7 @@ public final class NewPostModel: ObservableObject {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
         }
         
-        if (SettingsStore.shared.postUserAgentEnabled) {
+        if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
             nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
 
@@ -423,7 +423,7 @@ public final class NewPostModel: ObservableObject {
             nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
         }
         
-        if (SettingsStore.shared.postUserAgentEnabled) {
+        if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
             nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
     

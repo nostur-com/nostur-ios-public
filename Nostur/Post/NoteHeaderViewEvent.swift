@@ -55,7 +55,7 @@ struct PlaceholderPostHeaderEvent: View {
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                     
-                    if settings.postUserAgentEnabled {
+                    if settings.postUserAgentEnabled && !settings.excludedUserAgentPubkeys.contains(event.pubkey) {
                         Text(String(format: "via %@", "Nostur"))
                             .foregroundColor(.secondary)
                             .font(.subheadline)
@@ -72,7 +72,7 @@ struct PlaceholderPostHeaderEvent: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                 
-                if settings.postUserAgentEnabled {
+                if settings.postUserAgentEnabled && !settings.excludedUserAgentPubkeys.contains(event.pubkey) {
                     Text(String(format: "via %@", "Nostur"))
                         .foregroundColor(.secondary)
                         .font(.subheadline)
