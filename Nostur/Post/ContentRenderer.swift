@@ -36,8 +36,8 @@ struct ContentRenderer: View { // VIEW things
     
     var body: some View {
         VStack(alignment:.leading, spacing: 0) {
-            ForEach(contentElements) { contentElement in
-                switch contentElement {
+            ForEach(contentElements.indices, id:\.self) { index in
+                switch contentElements[index] {
                 case .nrPost(let nrPost):
                     EmbeddedPost(nrPost, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
@@ -45,6 +45,7 @@ struct ContentRenderer: View { // VIEW things
                     //                        .fixedSize(horizontal: false, vertical: true)
 //                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
+                        .id(index)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .nevent1(let identifier):
@@ -53,17 +54,24 @@ struct ContentRenderer: View { // VIEW things
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
+                        .id(index)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey, theme: theme)
                             .padding(.vertical, 10)
+                            .id(index)
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
+                    else {
+                        EmptyView()
+                            .id(index)
+                    }
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
+                        .id(index)
 //                        .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
@@ -78,9 +86,11 @@ struct ContentRenderer: View { // VIEW things
                                 guard !isDetail else { return }
                                 navigateTo(nrPost)
                             }
+                            .id(index)
                     }
                     else {
                         EmptyView()
+                            .id(index)
                     }
                 case .noteHex(let hex):
                     EmbedById(id: hex, forceAutoload: shouldAutoload, theme: theme)
@@ -94,6 +104,7 @@ struct ContentRenderer: View { // VIEW things
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
+                        .id(index)
                 case .code(let code): // For text notes
                     Text(verbatim: code)
                         .font(.system(.body, design: .monospaced))
@@ -101,24 +112,29 @@ struct ContentRenderer: View { // VIEW things
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
+                        .id(index)
                 case .text(let attributedStringWithPs): // For text notes
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isPreview: nrPost.isPreview)
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
+                        .id(index)
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme)
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
+                        .id(index)
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, theme: theme)
                         .padding(.vertical, 10)
+                        .id(index)
                 case .cashu(let text):
                     CashuTokenView(token: text, theme: theme)
                         .padding(.vertical, 10)
+                        .id(index)
                 case .video(let mediaContent):
                     if let dimensions = mediaContent.dimensions {
                         // for video, dimensions are points not pixels? Scale set to 1.0 always
@@ -144,6 +160,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+                            .id(index)
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
@@ -163,6 +180,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+                            .id(index)
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
@@ -191,6 +209,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+                            .id(index)
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
@@ -205,10 +224,11 @@ struct ContentRenderer: View { // VIEW things
 #endif
                         
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
-                            .debugDimensions("image")
+//                            .debugDimensions("image")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+                            .id(index)
 //                            .background(Color.yellow)
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
@@ -216,6 +236,7 @@ struct ContentRenderer: View { // VIEW things
                 case .linkPreview(let url):
                     LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
                         .padding(.vertical, 10)
+                        .id(index)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .postPreviewImage(let postedImageMeta):
@@ -225,12 +246,14 @@ struct ContentRenderer: View { // VIEW things
                         .frame(maxWidth: 600)
                         .padding(.top, 10)
                         .frame(maxWidth: .infinity, alignment: .center)
+                        .id(index)
                 default:
                     EmptyView()
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
+                        .id(index)
                 }
             }
         }
