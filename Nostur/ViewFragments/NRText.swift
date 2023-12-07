@@ -11,16 +11,49 @@ import RepresentableKit
 struct NRText: View {
     @EnvironmentObject private var themes:Themes
     
-    private let attributedString: AttributedString
+    private let attributedString: NSAttributedString
     private let plain: Bool
 
-    init(_ attributedString: AttributedString, plain: Bool = false) {
+    init(_ attributedString: NSAttributedString, plain: Bool = false) {
         self.attributedString = attributedString
         self.plain = plain
     }
     
     init(_ text: String, plain: Bool = false) {
-        self.attributedString = (try? AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(text)
+        
+        do {
+            let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+            
+            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let attributes:[NSAttributedString.Key: NSObject] = [
+                .font: UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor: UIColor(Themes.default.theme.primary)
+            ]
+            
+            mutableAttributedString.addAttributes(
+                attributes,
+                range: NSRange(location: 0, length: mutableAttributedString.length)
+            )
+            
+            self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
+        }
+        catch {
+            let finalText = AttributedString(text)
+            
+            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let attributes:[NSAttributedString.Key: NSObject] = [
+                .font: UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor: UIColor(Themes.default.theme.primary)
+            ]
+            
+            mutableAttributedString.addAttributes(
+                attributes,
+                range: NSRange(location: 0, length: mutableAttributedString.length)
+            )
+            
+            L.og.error("NRTextParser: \(error)")
+            self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
+        }
         self.plain = plain
     }
     
@@ -42,18 +75,7 @@ struct NRText: View {
         view.textContainer.lineFragmentPadding = 0
         view.textContainerInset = .zero
         
-        let mutableAttributedString = NSMutableAttributedString(attributedString)
-        let attributes:[NSAttributedString.Key: NSObject] = [
-            .font: UIFont.preferredFont(forTextStyle: .body),
-            .foregroundColor: UIColor(themes.theme.primary)
-        ]
-        
-        mutableAttributedString.addAttributes(
-            attributes,
-            range: NSRange(location: 0, length: mutableAttributedString.length)
-        )
-        
-        view.attributedText = mutableAttributedString
+        view.attributedText = attributedString
         
         return view
     }
