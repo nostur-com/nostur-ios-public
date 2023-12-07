@@ -119,8 +119,6 @@ struct InnerPFP: View {
             .strokeBorder(.regularMaterial, lineWidth: 2)
             .background(innerColor)
             .frame(width: size, height: size)
-            .cornerRadius(size/2)
-            
             .overlay {
                 switch renderCase {
                     
@@ -136,17 +134,15 @@ struct InnerPFP: View {
                                     .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: size, height: size)
-                                    .cornerRadius(size/2)
 //                                    .withoutAnimation()
                             }
                             else {
                                 image.interpolation(.none)
                                     .frame(width: size, height: size)
-                                    .cornerRadius(size/2)
 //                                    .withoutAnimation()
                             }
                         }
-                        else { color.cornerRadius(size/2) }
+                        else { color }
                     }
                     .pipeline(ImageProcessing.shared.pfp)
                     .drawingGroup()
@@ -169,7 +165,7 @@ struct InnerPFP: View {
 //                                        .withoutAnimation()
                                 }
                                 .frame(width: size, height: size)
-                                .cornerRadius(size/2)
+//                                .cornerRadius(size/2)
                             }
                             else if let image = state.image {
                                 image
@@ -177,7 +173,7 @@ struct InnerPFP: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: size, height: size)
-                                    .cornerRadius(size/2)
+//                                    .cornerRadius(size/2)
 //                                    .withoutAnimation()
                             }
 
@@ -187,6 +183,7 @@ struct InnerPFP: View {
                     .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
                 }
             }
+            .cornerRadius(size/2)
     }
 }
 

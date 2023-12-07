@@ -33,8 +33,8 @@ struct ListUnreadCounter: View {
         // TODO: Add mini profile icons
         RoundedRectangle(cornerRadius: 20)
             .foregroundColor(theme.accent)
-            .opacity(0.85)
-            .shadow(color: Color.gray.opacity(0.5), radius: 5)
+//            .opacity(0.85)
+//            .shadow(color: Color.gray.opacity(0.5), radius: 5)
             .frame(width: 65, height: 40)
             .overlay(alignment: .leading) {
                 Text(String(vmCounter.count))
