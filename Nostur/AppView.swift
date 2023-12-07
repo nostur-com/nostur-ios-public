@@ -146,17 +146,30 @@ struct AppView: View {
                             switch newScenePhase {
                             case .active:
                                 L.og.notice("scenePhase active")
-                                sendNotification(.scenePhaseActive)
-                                cp.connectAll()
-                                lvmManager.restoreSubscriptions()
-                                ns.startTaskTimers()
+                                if !IS_CATALYST {
+                                    if (NRState.shared.appIsSuspended) { // if we were actually suspended (from .background, not just a few seconds .inactive)
+                                        cp.connectAll()
+                                        sendNotification(.scenePhaseActive)
+                                        lvmManager.restoreSubscriptions()
+                                        ns.startTaskTimers()
+                                    }
+                                    NRState.shared.appIsSuspended = false
+                                }
+                                else {
+                                    cp.connectAll()
+                                    sendNotification(.scenePhaseActive)
+                                    lvmManager.restoreSubscriptions()
+                                    ns.startTaskTimers()
+                                }
+                                
                             case .background:
                                 L.og.notice("scenePhase background")
-                                sendNotification(.scenePhaseBackground)
                                 if !IS_CATALYST {
+                                    NRState.shared.appIsSuspended = true
                                     cp.disconnectAll()
                                     lvmManager.stopSubscriptions()
                                 }
+                                sendNotification(.scenePhaseBackground)
                                 // 1. Clean up
                                 Maintenance.dailyMaintenance(context: DataProvider.shared().viewContext) { didRun in
                                     // 2. Save
@@ -169,9 +182,9 @@ struct AppView: View {
                                 }
                             case .inactive:
                                 L.og.notice("scenePhase inactive")
-                                if IS_CATALYST {
-                                    DataProvider.shared().save()
-                                }
+//                                if IS_CATALYST {
+//                                    DataProvider.shared().save()
+//                                }
 
                             default:
                                 break

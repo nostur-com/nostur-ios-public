@@ -185,6 +185,7 @@ class ArticlesFeedViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
+        L.og.info("Article feed: load()")
         self.follows = Nostur.follows()
         self.nothingFound = false
         self.articles = []

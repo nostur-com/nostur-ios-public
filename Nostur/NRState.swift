@@ -9,6 +9,8 @@ import SwiftUI
 
 class NRState: ObservableObject {
     
+    public var appIsSuspended = false
+    
     @AppStorage("simple_draft") public var draft = ""
     @AppStorage("undo_send_restore_draft") public var restoreDraft = ""
     

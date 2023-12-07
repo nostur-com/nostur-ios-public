@@ -46,6 +46,7 @@ class NewPostNotifier: ObservableObject {
     
     @MainActor
     public func runCheck() {
+        guard !NRState.shared.appIsSuspended else { L.lvm.debug("NewPostNotifier.runCheck(): skipping, app suspended."); return }
         L.og.debug("NewPostNotifier.runCheck()")
         if let lastCheck = lastCheck {
             guard (Date.now.timeIntervalSince1970 - lastCheck.timeIntervalSince1970) > 60
