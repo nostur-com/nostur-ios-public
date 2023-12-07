@@ -35,7 +35,7 @@ struct LinkPreviewView: View {
                         .pipeline(ImageProcessing.shared.content)
                         .frame(width: (DIMENSIONS.PREVIEW_HEIGHT * Self.aspect))
                         .background(Color.gray)
-                        .clipped()
+//                        .clipped()
                     }
                     else {
                         Image(systemName: "link")
@@ -67,7 +67,8 @@ struct LinkPreviewView: View {
                 }
                 .background(theme.listBackground)
                 .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
-                .clipShape(RoundedRectangle(cornerRadius: 10.0))
+//                .cornerRadius(10.0)
+//                .clipShape(RoundedRectangle(cornerRadius: 10.0))
             }
             .onTapGesture {
                 UIApplication.shared.open(url)
