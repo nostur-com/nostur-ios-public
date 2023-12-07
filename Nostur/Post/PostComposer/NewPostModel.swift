@@ -212,6 +212,7 @@ public final class NewPostModel: ObservableObject {
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
         let publicKey = account.publicKey
         var nEvent = nEvent ?? NEvent(content: "")
+        nEvent.publicKey = publicKey
         var pTags:[String] = []
         nEvent.createdAt = NTimestamp.init(date: Date())
         
@@ -289,7 +290,6 @@ public final class NewPostModel: ObservableObject {
         
         let cancellationId = UUID()
         if account.isNC {
-            nEvent.publicKey = publicKey
             nEvent = nEvent.withId()
             
             // Save unsigned event:
