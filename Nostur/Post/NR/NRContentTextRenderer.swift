@@ -6,17 +6,18 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct NRContentTextRenderer: View {
     public let attributedStringWithPs:AttributedStringWithPs
     public var isDetail = false
     public var isPreview = false
-    @State var text:AttributedString? = nil
+    @State var text:NSAttributedString? = nil
     
     var body: some View {
         Group {
             if isPreview {
-                Text(text ?? attributedStringWithPs.output)
+                NRText(text ?? attributedStringWithPs.output)
                     .lineSpacing(3)
                     .lineLimit(isDetail ? 3000 : 20)
                     .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
@@ -47,8 +48,8 @@ struct NRContentTextRenderer: View {
                 }
             }
         }
-        //            .transaction { t in
-        //                t.animation = nil
-        //            }
+        .transaction { t in
+            t.animation = nil
+        }
     }
 }

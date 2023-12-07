@@ -292,7 +292,7 @@ struct AttributedStringWithPs: Hashable {
     }
     
     var input:String
-    var output:AttributedString
+    var output:NSAttributedString
     var pTags:[Ptag]
     var event:Event
 }

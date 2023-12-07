@@ -7,6 +7,7 @@
 
 import Foundation
 import MarkdownUI
+import UIKit
 // Renders links for the text parts of post contents (in TEXT)
 // Handles profile links
 // Tag links
@@ -43,13 +44,37 @@ class NRTextParser { // TEXT things
         do {
             let finalText = try AttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             
-            let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let attributes:[NSAttributedString.Key: NSObject] = [
+                .font: UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor: UIColor(Themes.default.theme.primary)
+            ]
+            
+            mutableAttributedString.addAttributes(
+                attributes,
+                range: NSRange(location: 0, length: mutableAttributedString.length)
+            )
+            
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            
             return a
         }
         catch {
             let finalText = AttributedString(newerTextWithPs.text)
+            
+            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let attributes:[NSAttributedString.Key: NSObject] = [
+                .font: UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor: UIColor(Themes.default.theme.primary)
+            ]
+            
+            mutableAttributedString.addAttributes(
+                attributes,
+                range: NSRange(location: 0, length: mutableAttributedString.length)
+            )
+            
             L.og.error("NRTextParser: \(error)")
-            let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             return a
         }
     }
