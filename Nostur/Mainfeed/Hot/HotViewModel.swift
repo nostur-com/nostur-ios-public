@@ -304,6 +304,7 @@ class HotViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
+        L.og.info("Hot feed: load()")
         self.follows = Nostur.follows()
         self.state = .loading
         self.hotPosts = []

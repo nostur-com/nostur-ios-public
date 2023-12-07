@@ -934,6 +934,7 @@ class LVM: NSObject, ObservableObject {
         
     // MARK: STEP 0: FETCH FROM RELAYS
     func fetchFeedTimerNextTick() {
+        guard !NRState.shared.appIsSuspended else { L.lvm.debug("fetchFeedTimerNextTick: skipping, app suspended."); return }
         guard self.viewIsVisible else {
             if self.id == "Following" {
                 L.lvm.debug("fetchFeedTimerNextTick: view not visible, skipped.")

@@ -279,6 +279,7 @@ class GalleryViewModel: ObservableObject {
     
     public func load() {
         guard shouldReload else { return }
+        L.og.info("Gallery feed: load()")
         self.follows = Nostur.follows()
         self.state = .loading
         self.items = []

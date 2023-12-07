@@ -9,7 +9,6 @@ import SwiftUI
 import UIKit
 
 struct DetailPane: View {
-    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var themes:Themes
     @StateObject private var dim = DIMENSIONS.shared
     @StateObject private var tm = DetailTabsModel()
