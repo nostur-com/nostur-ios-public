@@ -271,6 +271,8 @@ struct ImportedPrioNotification {
 
 class Backlog {
     
+    static let shared = Backlog(auto: true)
+    
     private var tasks = Set<ReqTask>()
     private var timer:Timer?
     public var timeout = 60.0
