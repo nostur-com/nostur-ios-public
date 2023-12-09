@@ -147,13 +147,13 @@ struct AppView: View {
                             case .active:
                                 L.og.notice("scenePhase active")
                                 if !IS_CATALYST {
-                                    if (NRState.shared.appIsSuspended) { // if we were actually suspended (from .background, not just a few seconds .inactive)
                                         cp.connectAll()
+                                    if (NRState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
                                         sendNotification(.scenePhaseActive)
                                         lvmManager.restoreSubscriptions()
                                         ns.startTaskTimers()
                                     }
-                                    NRState.shared.appIsSuspended = false
+                                    NRState.shared.appIsInBackground = false
                                 }
                                 else {
                                     cp.connectAll()
@@ -165,8 +165,8 @@ struct AppView: View {
                             case .background:
                                 L.og.notice("scenePhase background")
                                 if !IS_CATALYST {
-                                    NRState.shared.appIsSuspended = true
                                     cp.disconnectAll()
+                                    NRState.shared.appIsInBackground = true
                                     lvmManager.stopSubscriptions()
                                 }
                                 sendNotification(.scenePhaseBackground)
