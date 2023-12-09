@@ -112,39 +112,51 @@ func scheduleDMNotification(name: String) {
 }
 
 // The background fetch task will run this to check for new notifications
-func checkForNotifications() {
-    bg().perform {
-        guard let account = account() else { return }
-        let lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
-        let accountPubkey = account.publicKey
+func checkForNotifications() async {
+    await withCheckedContinuation { continuation in
+        bg().perform {
+            guard let account = account() else { continuation.resume(); return }
+            let lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
+            let accountPubkey = account.publicKey
 
-        ConnectionPool.shared.connectAll()
-        
-        let reqTask = ReqTask(
-            subscriptionId: "BG",
-            reqCommand: { taskId in
-                L.og.debug("checkForNotifications.reqCommand")
-                let since = NTimestamp(timestamp: Int(lastSeenPostCreatedAt))
-                bg().perform {
-                    NotificationsViewModel.shared.needsUpdate = true
-                    
-                    DispatchQueue.main.async {
-                        // Mentions kinds (1,9802,30023) and DM (4)
-                        req(RM.getMentions(pubkeys: [accountPubkey], kinds:[1,4,9802,30023], subscriptionId: "Notifications-BG", since: since))
+            ConnectionPool.shared.connectAll()
+            
+            let reqTask = ReqTask(
+                debounceTime: 0.05,
+                timeout: 5.0,
+                subscriptionId: "BG",
+                reqCommand: { taskId in
+                    L.og.debug("checkForNotifications.reqCommand")
+                    let since = NTimestamp(timestamp: Int(lastSeenPostCreatedAt))
+                    bg().perform {
+                        NotificationsViewModel.shared.needsUpdate = true
+                        
+                        DispatchQueue.main.async {
+                            // Mentions kinds (1,9802,30023) and DM (4)
+                            req(RM.getMentions(pubkeys: [accountPubkey], kinds:[1,4,9802,30023], subscriptionId: taskId, since: since))
+                        }
                     }
+                },
+                processResponseCommand: { taskId, relayMessage, event in
+                    L.og.debug("checkForNotifications.processResponseCommand")
+                    Task {
+                        await NotificationsViewModel.shared.checkForUnreadMentionsBackground()
+                        if let thisTask = Backlog.shared.task(with: taskId) {
+                            Backlog.shared.remove(thisTask)
+                        }
+                        continuation.resume()
+                    }
+                },
+                timeoutCommand: { taskId in
+                    L.og.debug("checkForNotifications.timeoutCommand")
+                    if let thisTask = Backlog.shared.task(with: taskId) {
+                        Backlog.shared.remove(thisTask)
+                    }
+                    continuation.resume()
                 }
-            },
-            processResponseCommand: { taskId, relayMessage, event in
-                L.og.debug("checkForNotifications.processResponseCommand")
-                bg().perform {
-                    NotificationsViewModel.shared.checkForUnreadMentions()
-                }
-            },
-            timeoutCommand: { taskId in
-                L.og.debug("checkForNotifications.timeoutCommand")
-            }
-        )
-        Backlog.shared.add(reqTask)
-        reqTask.fetch()
+            )
+            Backlog.shared.add(reqTask)
+            reqTask.fetch()
+        }
     }
 }
