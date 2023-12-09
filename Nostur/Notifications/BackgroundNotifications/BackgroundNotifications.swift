@@ -7,6 +7,39 @@
 
 import SwiftUI
 import BackgroundTasks
+import UserNotifications
+
+// AppDelegate is needed to handle notification taps
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        // Wire notification delegate
+        UNUserNotificationCenter.current().delegate = self
+        return true
+    }
+
+    // Handle notification type, go to proper tab/subtab on tap
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void) {
+
+        L.og.debug("userNotificationCenter.didReceive")
+        let userInfo = response.notification.request.content.userInfo
+        
+        if let tapDestination = userInfo["tapDestination"] as? String {
+            switch tapDestination {
+            case "Mentions":
+                UserDefaults.standard.setValue("Notifications", forKey: "selected_tab")
+                UserDefaults.standard.setValue("Mentions", forKey: "selected_notifications_tab")
+            case "Messages":
+                UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
+            default:
+                break
+            }
+        }
+        completionHandler()
+    }
+}
 
 // Schedule a background fetch task
 func scheduleAppRefresh() {
