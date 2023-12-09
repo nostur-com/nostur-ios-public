@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import BackgroundTasks
 
 struct NotificationSettings: View {
-
-    @Binding var showFeedSettings:Bool
+    @ObservedObject private var ss:SettingsStore = .shared
+    
+    @Environment(\.dismiss) private var dismiss
     @AppStorage("notifications_mute_follows") var muteFollows:Bool = false
     @AppStorage("notifications_mute_reactions") var muteReactions:Bool = false
     @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false
@@ -17,55 +19,69 @@ struct NotificationSettings: View {
     @AppStorage("notifications_mute_new_posts") var muteNewPosts:Bool = false
     
     var body: some View {
-        Rectangle().fill(.thinMaterial)
-            .ignoresSafeArea()
-            .onTapGesture {
-                showFeedSettings = false
+        Form {
+            Section("App theme") {
+                AppThemeSwitcher()
             }
-            .overlay(alignment: .top) {
-                Box {
-                    VStack(alignment: .leading) {
-                        AppThemeSwitcher(showFeedSettings: $showFeedSettings)
-                        .padding(.bottom, 15)
-                        Text("Notification settings")
-                            .fontWeight(.bold)
-                            .hCentered()
-                        
-                        Toggle(isOn: $muteFollows) {
-                            Text("Mute new follower notifications")
-                        }
-                        
-                        Toggle(isOn: $muteReposts) {
-                            Text("Mute repost notifications")
-                        }
-                        
-                        Toggle(isOn: $muteReactions) {
-                            Text("Mute reaction notifications")
-                        }
-                        
-                        Toggle(isOn: $muteZaps) {
-                            Text("Mute zap notifications")
-                        }        
-                        
-                        Toggle(isOn: $muteNewPosts) {
-                            Text("Mute new post notifications")
-                        }
+            
+            Section("Show unread count badge") {
+                Toggle(isOn: $muteFollows.not) {
+                    Text("New followers")
+                }
+                
+                Toggle(isOn: $muteReposts.not) {
+                    Text("New reposts")
+                }
+                
+                Toggle(isOn: $muteReactions.not) {
+                    Text("New reactions")
+                }
+                
+                Toggle(isOn: $muteZaps.not) {
+                    Text("New zaps")
+                }
+                
+                Toggle(isOn: $muteNewPosts.not) {
+                    Text("New posts")
+                }
+            }
+           
+            Section {
+                Toggle(isOn: $ss.receiveLocalNotifications) {
+                    Text("Mentions or replies")
+                    Text("Receive notifications when Nostur is in background")
+                }
+                .onChange(of: ss.receiveLocalNotifications) { receiveLocalNotifications in
+                    if receiveLocalNotifications {
+                        requestNotificationPermission()
+                    }
+                    else {
+                        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: "com.nostur.app-refresh")
                     }
                 }
-                .padding(20)
-                .ignoresSafeArea()
-                .offset(y: 1.0)
+                
+                if ss.receiveLocalNotifications {
+                    Toggle(isOn: $ss.receiveLocalNotificationsLimitToFollows) {
+                        Text("Only from follows")
+                        Text("Limit Home/Lock screen notifications to only from people you follow")
+                    }
+                }
+            } header: { Text("Home/Lock screen notifications") } footer: { Text("Home/Lock screen notifications are only active for the currently logged in account and can be a bit delayed") }
+        }
+        .navigationTitle("Notification settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Done") { dismiss() }
             }
+        }
     }
 }
 
 struct NotificationSettingsTester: View {
     var body: some View {
         NavigationStack {
-            VStack {
-                NotificationSettings(showFeedSettings: .constant(true))
-                Spacer()
-            }
+            NotificationSettings()
         }
         .onAppear {
             Themes.default.loadPurple()

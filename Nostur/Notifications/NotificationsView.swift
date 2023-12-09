@@ -157,11 +157,11 @@ struct NotificationsView: View {
                     }
             }
         }
-        .overlay(alignment: .top) {
-            if showNotificationSettings {
-                NotificationSettings(showFeedSettings: $showNotificationSettings)
+        .sheet(isPresented: $showNotificationSettings, content: {
+            NavigationStack {
+                NotificationSettings()
             }
-        }
+        })
     }
     
     func markActiveTabAsRead(_ tab:String) {
