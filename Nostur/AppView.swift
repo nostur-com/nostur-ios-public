@@ -15,33 +15,31 @@ import AVFoundation
 ///
 /// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
 struct AppView: View {
+    @EnvironmentObject private var ns:NRState
+    @EnvironmentObject private var networkMonitor:NetworkMonitor
+    @EnvironmentObject private var dm:DirectMessageViewModel
+    @EnvironmentObject private var nvm:NotificationsViewModel
+    
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openWindow) private var openWindow
     // These singletons always exists during the apps lifetime
     @State private var tm:DetailTabsModel = .shared
     @State private var er:ExchangeRateModel = .shared
-    @State private var dataProvider = DataProvider.shared()
     @State private var eventRelationsQueue:EventRelationsQueue = .shared
     @State private var lvmManager:LVMManager = .shared
-    @State private var importer:Importer = .shared
     @State private var queuedFetcher:QueuedFetcher = .shared
-    private var cp:ConnectionPool = .shared
     @State private var mp:MessageParser = .shared
     @State private var zpvq:ZapperPubkeyVerificationQueue = .shared
     @State private var nip05verifier:NIP05Verifier = .shared
     @State private var ip:ImageProcessing = .shared
     @State private var avcache:AVAssetCache = .shared
     @State private var idr:ImageDecoderRegistry = .shared
-    @State private var nm:NotificationsViewModel = .shared
+    
     @State private var kind0:Kind0Processor = .shared
     @State private var nwcRQ:NWCRequestQueue = .shared
-    @State private var ss:SettingsStore = .shared
-    @State private var dm:DirectMessageViewModel = .default
-    @State private var nvm:NotificationsViewModel = .shared
     @State private var ot:NewOnboardingTracker = .shared
     @State private var dd:Deduplicator = .shared
     @State private var vmc:ViewModelCache = .shared
-    @State private var networkMonitor = NetworkMonitor()
     
 //    @EnvironmentObject private var themes:Themes
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
@@ -54,7 +52,6 @@ struct AppView: View {
     @State private var priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
     
-    @StateObject private var ns:NRState = .shared
     @StateObject private var themes:Themes = .default
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt, order: .reverse)])
@@ -135,7 +132,6 @@ struct AppView: View {
                         }
                         .background(themes.theme.listBackground)
                         .environmentObject(themes)
-                        .environmentObject(nm)
                         .buttonStyle(NRButtonStyle(theme: themes.theme))
                         .tint(themes.theme.accent)
                         .onAppear {
@@ -147,8 +143,8 @@ struct AppView: View {
                             case .active:
                                 L.og.notice("scenePhase active")
                                 if !IS_CATALYST {
-                                        cp.connectAll()
                                     if (NRState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
+                                        ConnectionPool.shared.connectAll()
                                         sendNotification(.scenePhaseActive)
                                         lvmManager.restoreSubscriptions()
                                         ns.startTaskTimers()
@@ -156,7 +152,7 @@ struct AppView: View {
                                     NRState.shared.appIsInBackground = false
                                 }
                                 else {
-                                    cp.connectAll()
+                                    ConnectionPool.shared.connectAll()
                                     sendNotification(.scenePhaseActive)
                                     lvmManager.restoreSubscriptions()
                                     ns.startTaskTimers()
@@ -165,8 +161,8 @@ struct AppView: View {
                             case .background:
                                 L.og.notice("scenePhase background")
                                 if !IS_CATALYST {
-                                    cp.disconnectAll()
                                     NRState.shared.appIsInBackground = true
+//                                    ConnectionPool.shared.disconnectAll()
                                     lvmManager.stopSubscriptions()
                                 }
                                 sendNotification(.scenePhaseBackground)
@@ -339,12 +335,13 @@ struct AppView: View {
         let relays:[RelayData] = CloudRelay.fetchAll(context: viewContext).map { $0.toStruct() }
         
         for relay in relays {
-            _ = cp.addConnection(relay)
+            _ = ConnectionPool.shared.addConnection(relay)
         }
-        cp.connectAll()
+        ConnectionPool.shared.connectAll()
         
+        let ss = SettingsStore.shared
         if !ss.activeNWCconnectionId.isEmpty, let nwc = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: DataProvider.shared().viewContext) {
-            let addedConnection = cp.addNWCConnection(connectionId: nwc.connectionId, url: nwc.relay)
+            let addedConnection = ConnectionPool.shared.addNWCConnection(connectionId: nwc.connectionId, url: nwc.relay)
             addedConnection.connect()
             bg().perform {
                 if let nwcConnection = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: bg()) {

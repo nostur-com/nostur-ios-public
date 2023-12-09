@@ -10,9 +10,22 @@ import SwiftUI
 @main
 struct NosturApp: App {
     @Environment(\.openWindow) private var openWindow
-    private let ceb = NRContentElementBuilder.shared
-    private var cp:ConnectionPool = .shared
+    private let dataProvider = DataProvider.shared()
+    private let ceb:NRContentElementBuilder = .shared
+    private let cp:ConnectionPool = .shared
     private let npn:NewPostNotifier = .shared
+    private let ss:SettingsStore = .shared
+    private let nvm:NotificationsViewModel = .shared
+    private let dm:DirectMessageViewModel = .default
+    private let networkMonitor = NetworkMonitor()
+    private let ns:NRState = .shared
+    private let importer:Importer = .shared
+    private let backlog:Backlog = .shared
+    
+    private let puc:LRUCache2<String, String> = PubkeyUsernameCache.shared
+    private let fuc:LRUCache2<String, Date> = FailedURLCache.shared
+    private let lpc:LRUCache2<URL, [String: String]> = LinkPreviewCache.shared
+    
     @Environment(\.scenePhase) private var phase
     
     var body: some Scene {
@@ -28,6 +41,12 @@ struct NosturApp: App {
                     .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                     .environmentObject(cp)
                     .environmentObject(npn)
+                    .environmentObject(ss)
+                    .environmentObject(nvm)
+                    .environmentObject(dm)
+                    .environmentObject(networkMonitor)
+                    .environmentObject(ns)
+                    .environmentObject(dataProvider)
             }
         }
         .onChange(of: phase) { newPhase in
