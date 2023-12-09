@@ -18,6 +18,7 @@ struct NRContentMarkdownRenderer: View {
     
     var body: some View {
         Markdown(text ?? markdownContentWithPs.output)
+            .textSelection(.enabled)
             .markdownTextStyle() {
                 FontFamily(.custom("Charter"))
                 ForegroundColor(Color.primary)
