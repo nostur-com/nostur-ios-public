@@ -11,6 +11,8 @@ import CoreData
 
 class NotificationsViewModel: ObservableObject {
     
+    @AppStorage("last_local_notification_timestamp") private var lastLocalNotifcationAt: Int = 0
+    
     static let UNREAD_KINDS:Set<Int> = Set([1,4,6,7,9735,9802,30023]) // posts, dms, reposts, reactions, zaps, highlights, articles
     
     static let shared = NotificationsViewModel()
@@ -260,7 +262,12 @@ class NotificationsViewModel: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             guard NRState.shared.activeAccountPublicKey != "" else { return }
             bg().perform { [weak self] in
-                self?.checkForEverything()
+                if NRState.shared.appIsInBackground {
+                    self?.checkForUnreadMentions()
+                }
+                else {
+                    self?.checkForEverything()
+                }
             }
         }
         timer?.tolerance = 5.0
@@ -318,24 +325,44 @@ class NotificationsViewModel: ObservableObject {
         bg().perform { self.checkForUnreadFailedZaps() }
     }
     
-    
-    private func checkForUnreadMentions() {
+    public func checkForUnreadMentions() {
         //TODO: Should check if there is actual mention in .content
         shouldBeBg()
-        
+        guard let account = account() else { return }
         guard let fetchRequest = q.unreadMentionsQuery(resultType: .managedObjectResultType) else { return }
          
         let unreadMentions = ((try? bg().fetch(fetchRequest)) ?? [])
-            .filter { !$0.isSpam } // need to filter so can't use .countResultType
-            .count
+            .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notificatios now.
+            
+        let unreadMentionsCount = unreadMentions.count
+        
+        // For notifications we don't need to total unread, we need total new since last notification, because we don't want to repeat the same notification
+        // Most accurate would be to track per mention if we already had a local notification for it. (TODO)
+        // For now we just track the timestamp since last notification. (potential problems: inaccurate timestamps? time zones? not account-based?)
+        let mentionsForNotification = unreadMentions
+            .filter { ($0.created_at > lastLocalNotifcationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || account.followingPubkeys.contains($0.pubkey)) }
+            .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
         
         DispatchQueue.main.async {
-            if unreadMentions != self.unreadMentions_ {
+            if unreadMentionsCount != self.unreadMentions_ {
+                if SettingsStore.shared.receiveLocalNotifications {
+                    
+                    // Show notification on Mac: ALWAYS
+                    // On iOS: Only if app is in background
+                    if (IS_CATALYST || NRState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
+                        scheduleMentionNotification(mentionsForNotification)
+                    }
+                    if NRState.shared.appIsInBackground { // If app is in background then we were called during a app refresh so we need to disconnect again
+//                        ConnectionPool.shared.disconnectAll()
+                    }
+                }
+                
+                
                 if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {
                     self.unreadMentions_ = 0
                 }
                 else {
-                    self.unreadMentions_ = min(unreadMentions,9999)
+                    self.unreadMentions_ = min(unreadMentionsCount,9999)
                 }
             }
         }
