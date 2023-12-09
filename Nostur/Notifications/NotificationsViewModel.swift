@@ -267,7 +267,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     private func checkForEverything() {
-        guard !NRState.shared.appIsSuspended else { L.lvm.debug("NotificationViewModel.checkForEverything(): skipping, app suspended."); return }
+        guard !NRState.shared.appIsInBackground else { L.lvm.debug("NotificationViewModel.checkForEverything(): skipping, app in background."); return }
         shouldBeBg()
         
         OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
