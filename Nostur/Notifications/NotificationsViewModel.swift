@@ -368,6 +368,49 @@ class NotificationsViewModel: ObservableObject {
         }
     }    
     
+    // async for background fetch, copy paste of checkForUnreadMentions() with withCheckedContinuation added
+    public func checkForUnreadMentionsBackground() async {
+        await withCheckedContinuation { continuation in
+            bg().perform {
+                guard let account = account() else { continuation.resume(); return }
+                guard let fetchRequest = self.q.unreadMentionsQuery(resultType: .managedObjectResultType) else { continuation.resume(); return }
+                 
+                let unreadMentions = ((try? bg().fetch(fetchRequest)) ?? [])
+                    .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notificatios now.
+                    
+                let unreadMentionsCount = unreadMentions.count
+                
+                // For notifications we don't need to total unread, we need total new since last notification, because we don't want to repeat the same notification
+                // Most accurate would be to track per mention if we already had a local notification for it. (TODO)
+                // For now we just track the timestamp since last notification. (potential problems: inaccurate timestamps? time zones? not account-based?)
+                let mentionsForNotification = unreadMentions
+                    .filter { ($0.created_at > self.lastLocalNotifcationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || account.followingPubkeys.contains($0.pubkey)) }
+                    .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
+                
+                DispatchQueue.main.async {
+                    if unreadMentionsCount != self.unreadMentions_ {
+                        if SettingsStore.shared.receiveLocalNotifications {
+                            
+                            // Show notification on Mac: ALWAYS
+                            // On iOS: Only if app is in background
+                            if (IS_CATALYST || NRState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
+                                scheduleMentionNotification(mentionsForNotification)
+                            }
+                        }
+                        
+                        if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {
+                            self.unreadMentions_ = 0
+                        }
+                        else {
+                            self.unreadMentions_ = min(unreadMentionsCount,9999)
+                        }
+                    }
+                    continuation.resume()
+                }
+            }
+        }
+    }
+    
     private func checkForUnreadNewPosts() {
         shouldBeBg()
         
