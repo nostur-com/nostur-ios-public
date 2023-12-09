@@ -16,6 +16,49 @@ func scheduleAppRefresh() {
     try? BGTaskScheduler.shared.submit(request)
 }
 
+
+// Schedule a local notification for 1 or more mentions
+func scheduleMentionNotification(_ mentions:[Mention]) {
+    L.og.debug("scheduleMentionNotification()")
+    
+    // Remember timestamp so we only show newer notifications next time
+    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_local_notification_timestamp")
+    
+    // Create the notificatgion
+    let content = UNMutableNotificationContent()
+    content.title = Set(mentions.map { $0.name }).formatted(.list(type: .and)) // "John and Jim"
+    content.subtitle = mentions.count == 1 ? (mentions.first?.message ?? "Message") : "\(mentions.count) messages" // "What's up" or "2 messages"
+    content.sound = .default
+    content.userInfo = ["tapDestination": "Mentions"] // For navigating to the Notifications->Mentions tab
+    
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+    let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+    UNUserNotificationCenter.current().add(request)
+}
+
+struct Mention {
+    let name: String
+    let message: String
+}
+
+// Schedule a local notification for 1 direct message
+func scheduleDMNotification(name: String) {
+    L.og.debug("scheduleDMNotification()")
+    
+    // Remember timestamp so we only show newer notifications next time
+    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_dm_local_notification_timestamp")
+    
+    let content = UNMutableNotificationContent()
+    content.title = name // "John"
+    content.subtitle = "Direct Message"
+    content.sound = .default
+    content.userInfo = ["tapDestination": "Messages"] // For navigating to the DM tab
+    
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+    let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+    UNUserNotificationCenter.current().add(request)
+}
+
 // The background fetch task will run this to check for new notifications
 func checkForNotifications() {
     bg().perform {
