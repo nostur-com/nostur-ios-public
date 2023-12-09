@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct NosturApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.openWindow) private var openWindow
     private let dataProvider = DataProvider.shared()
     private let ceb:NRContentElementBuilder = .shared
