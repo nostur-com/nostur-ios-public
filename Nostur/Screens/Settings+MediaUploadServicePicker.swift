@@ -33,6 +33,10 @@ struct MediaUploadServicePicker: View {
             if newValue.name == "Custom File Storage (NIP-96)" {
                 nip96configuratorShown = true
             }
+            else if newValue.name == "nostr.build" {
+                nip96apiUrl = "https://nostr.build/api/v2/nip96/upload"
+                UserDefaults.standard.set("https://nostr.build/api/v2/nip96/upload", forKey: "nip96_api_url")
+            }
             else {
                 nip96apiUrl = ""
                 UserDefaults.standard.set("", forKey: "nip96_api_url")
