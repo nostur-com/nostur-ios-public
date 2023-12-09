@@ -68,21 +68,6 @@ struct NosturApp: App {
                 break
             }
         }
-//        .backgroundTask(.appRefresh("nostur-app-refresh")) {
-//            let request = URLRequest(url: URL(string: "your_backend")!)
-//            guard let data = try? await URLSession.shared.data(for: request).0 else {
-//                return
-//            }
-//            
-//            let decoder = JSONDecoder()
-////            guard let products = try? decoder.decode([Product].self, from: data) else {
-////                return
-////            }
-//            
-////            if !products.isEmpty && !Task.isCancelled {
-////                await notifyUser(for: products)
-////            }
-//        }
         .backgroundTask(.appRefresh("com.nostur.app-refresh")) {
             guard ss.receiveLocalNotifications else { 
                 L.og.debug(".appRefresh() - receiveLocalNotifications: false - skipping")
