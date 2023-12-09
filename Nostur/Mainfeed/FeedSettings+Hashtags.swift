@@ -12,19 +12,24 @@ struct FeedSettings_Hashtags: View {
     @State public var hashtags:[String]
     public var onChange:(([String]) -> ())?
     var body: some View {
-        List {
-            ForEach(hashtags, id:\.self) { tag in
-                Text(String(format:"#%@", tag))
-                    .listRowBackground(themes.theme.background)
+        LazyVStack(alignment: .leading) {
+            ForEach(hashtags.indices, id:\.self) { index in
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text(String(format:"#%@", hashtags[index]))
+                        Spacer()
+                        Image(systemName: "trash.fill")
+                            .foregroundColor(.red)
+                            .onTapGesture {
+                                hashtags.remove(at: index)
+                            }
+                    }
+                    if hashtags[index] != hashtags.last {
+                        Divider()
+                    }
+                }
             }
-            .onDelete { index in
-                hashtags.remove(atOffsets: index)
-            }
-            .listRowBackground(themes.theme.background)
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .background(themes.theme.listBackground)
         .onChange(of: hashtags) { newHashtags in
             onChange?(newHashtags)
         }
@@ -33,7 +38,9 @@ struct FeedSettings_Hashtags: View {
 
 struct FeedSettings_Hashtags_Previews: PreviewProvider {
     static var previews: some View {
-        FeedSettings_Hashtags(hashtags:["apple", "banana", "cherry"])
+        Form {
+            FeedSettings_Hashtags(hashtags:["apple", "banana", "cherry"])
+        }
             .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

@@ -191,28 +191,28 @@ struct FollowingAndExplore: View {
             }
             
         }
-        .overlay(alignment: .top) {
-            if showFeedSettings {
+        .sheet(isPresented: $showFeedSettings, content: {
+            NavigationStack {
                 switch selectedSubTab {
                 case "Following":
-                    FeedSettings(lvm: LVMManager.shared.followingLVM(forAccount: account), showFeedSettings: $showFeedSettings)
+                    FeedSettings(lvm: LVMManager.shared.followingLVM(forAccount: account))
                 case "List":
                     if let list = selectedList {
-                        FeedSettings(lvm: LVMManager.shared.listLVM(forList: list), showFeedSettings: $showFeedSettings, list:list)
+                        FeedSettings(lvm: LVMManager.shared.listLVM(forList: list), list:list)
                     }
                 case "Explore":
-                    FeedSettings(lvm: exploreVM, showFeedSettings: $showFeedSettings)
+                    FeedSettings(lvm: exploreVM)
                 case "Hot":
-                    HotFeedSettings(hotVM: hotVM, showFeedSettings: $showFeedSettings)
+                    HotFeedSettings(hotVM: hotVM)
                 case "Articles":
-                    ArticleFeedSettings(vm: articlesVM, showFeedSettings: $showFeedSettings)
+                    ArticleFeedSettings(vm: articlesVM)
                 case "Gallery":
-                    GalleryFeedSettings(vm: galleryVM, showFeedSettings: $showFeedSettings)
+                    GalleryFeedSettings(vm: galleryVM)
                 default:
                     EmptyView()
                 }
             }
-        }
+        })
         .onAppear {
             if selectedSubTab == "List" {
                 if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
