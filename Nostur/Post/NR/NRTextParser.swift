@@ -55,7 +55,7 @@ class NRTextParser { // TEXT things
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
             
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), previewOutput: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             
             return a
         }
@@ -74,7 +74,7 @@ class NRTextParser { // TEXT things
             )
             
             L.og.error("NRTextParser: \(error)")
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), previewOutput: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             return a
         }
     }
