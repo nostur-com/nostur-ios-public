@@ -54,9 +54,16 @@ struct NosturApp: App {
             case .active:
                 npn.reload()
             case .background:
-                break
-//                scheduleAppRefresh()
-            default: 
+                if SettingsStore.shared.receiveLocalNotifications {
+                    guard let account = account() else { return }
+                    if account.lastSeenPostCreatedAt == 0 {
+                        account.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                    }
+                    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_dm_local_notification_timestamp")
+                    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_local_notification_timestamp")
+                    scheduleAppRefresh()
+                }
+            default:
                 break
             }
         }
@@ -86,10 +93,4 @@ struct NosturApp: App {
     }
 }
 
-//import BackgroundTasks
-//
-//func scheduleAppRefresh() {
-//    let request = BGAppRefreshTaskRequest(identifier: "nostur-app-refresh")
-//    request.earliestBeginDate = .now.addingTimeInterval(60 * 10)
-//    try? BGTaskScheduler.shared.submit(request)
-//}
+
