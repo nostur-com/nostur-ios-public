@@ -82,6 +82,18 @@ struct NosturApp: App {
 ////                await notifyUser(for: products)
 ////            }
 //        }
+        .backgroundTask(.appRefresh("com.nostur.app-refresh")) {
+            guard ss.receiveLocalNotifications else { 
+                L.og.debug(".appRefresh() - receiveLocalNotifications: false - skipping")
+                return
+            }
+            L.og.debug(".appRefresh()")
+            
+            // Check for any new notifications (relays), if there are unread mentions it will trigger a (iOS) notification
+            checkForNotifications()
+             
+            scheduleAppRefresh()
+        }
         
 //        #if DEBUG
 //        WindowGroup("Debug window", id: "debug-window") {
