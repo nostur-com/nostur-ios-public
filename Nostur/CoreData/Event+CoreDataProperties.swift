@@ -1203,6 +1203,7 @@ extension Event {
                     }
                     // Let DirectMessageViewModel handle view updates
                     DirectMessageViewModel.default.newMessage(dmState)
+                    DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                 }
                 // Same but account / contact switched, because we support multiple accounts so we need to be able to track both ways
                 else if let dmState = CloudDMState.fetchExisting(contactPubkey, contactPubkey: event.publicKey, context: context) {
@@ -1213,6 +1214,7 @@ extension Event {
                     }
                     // Let DirectMessageViewModel handle view updates
                     DirectMessageViewModel.default.newMessage(dmState)
+                    DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                 }
                 else {
                     
@@ -1225,6 +1227,7 @@ extension Event {
                         dmState.markedReadAt_ = savedEvent.date
                         // Let DirectMessageViewModel handle view updates
                         DirectMessageViewModel.default.newMessage(dmState)
+                        DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                     }
                     
                     // if we are receiver
@@ -1235,6 +1238,7 @@ extension Event {
                         dmState.accepted = false
                         // Let DirectMessageViewModel handle view updates
                         DirectMessageViewModel.default.newMessage(dmState)
+                        DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                     }
                 }
             }

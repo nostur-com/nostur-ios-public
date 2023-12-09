@@ -11,6 +11,8 @@ import Combine
 
 class DirectMessageViewModel: ObservableObject {
     
+    @AppStorage("last_dm_local_notification_timestamp") private var lastDMLocalNotifcationAt: Int = 0
+    
     static public let `default` = DirectMessageViewModel()
     
     public var dmStates:[CloudDMState] = [] {
@@ -418,7 +420,22 @@ class DirectMessageViewModel: ObservableObject {
         reloadAccepted()
         reloadMessageRequests()
         reloadMessageRequestsNotWot()
+    }
+    
+    public func checkNeedsNotification(_ event: Event) {
+        guard let account = account() else { return }
+        guard let firstP = event.firstP() else { return }
+        guard firstP == NRState.shared.activeAccountPublicKey else { return }
+        guard event.created_at > lastDMLocalNotifcationAt else { return }
         
+        guard !SettingsStore.shared.receiveLocalNotificationsLimitToFollows || account.followingPubkeys.contains(event.pubkey) else { return }
+                
+        // Show notification on Mac: ALWAYS
+        // On iOS: Only if app is in background
+        if (IS_CATALYST || NRState.shared.appIsInBackground)  {
+            let name = contactUsername(fromPubkey: event.pubkey, event: event)
+            scheduleDMNotification(name: name)
+        }
     }
     
     private func monthsAgoRange(_ months:Int) -> (since: Int, until: Int) {
