@@ -127,6 +127,11 @@ struct NosturTabsView: View {
                 showTabBar = false
             }
         }
+        .task {
+            if ss.receiveLocalNotifications {
+                requestNotificationPermission()
+            }
+        }
 //        .overlay(alignment: .topLeading) {
 //            VStack {
 //                Text("h: \(horizontalSizeClass.debugDescription)")

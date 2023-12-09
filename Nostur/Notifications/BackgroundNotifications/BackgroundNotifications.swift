@@ -16,6 +16,25 @@ func scheduleAppRefresh() {
     try? BGTaskScheduler.shared.submit(request)
 }
 
+// Request permissions to send local notifications
+func requestNotificationPermission(redirectToSettings:Bool = false) {
+    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+        if success {
+            L.og.debug("requestNotificationPermission: success")
+        }
+        else {
+            L.og.error("\(error?.localizedDescription ?? "Error with UNUserNotificationCenter.current().requestAuthorization")")
+            DispatchQueue.main.async {
+                SettingsStore.shared.receiveLocalNotifications = false
+                if redirectToSettings {
+                    if let appSettings = URL(string: UIApplication.openSettingsURLString), UIApplication.shared.canOpenURL(appSettings) {
+                        UIApplication.shared.open(appSettings)
+                    }
+                }
+            }
+        }
+    }
+}
 
 // Schedule a local notification for 1 or more mentions
 func scheduleMentionNotification(_ mentions:[Mention]) {

@@ -53,7 +53,7 @@ struct NotificationSettings: View {
                 }
                 .onChange(of: ss.receiveLocalNotifications) { receiveLocalNotifications in
                     if receiveLocalNotifications {
-                        requestNotificationPermission()
+                        requestNotificationPermission(redirectToSettings: true)
                     }
                     else {
                         BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: "com.nostur.app-refresh")
