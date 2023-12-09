@@ -26,7 +26,7 @@ struct FollowedBy: View {
     var body: some View {
         VStack(alignment: alignment) {
             if !commonFollowerPFPs.isEmpty {
-                Text("Followed by").font(.caption)
+                Text("Followers you know").font(.caption)
                 HStack(spacing: 2) {
                     ForEach(firstRow.indices, id:\.self) { index in
                         MiniPFP(pictureUrl: commonFollowerPFPs[index].1)

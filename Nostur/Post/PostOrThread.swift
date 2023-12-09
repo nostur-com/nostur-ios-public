@@ -26,7 +26,7 @@ struct PostOrThread: View {
 //        #if DEBUG
 //        let _ = Self._printChanges()
 //        #endif
-        if nrPost.parentPosts.isEmpty { // Single Post
+        if postOrThreadAttributes.parentPosts.isEmpty { // Single Post
             Box(nrPost: nrPost, theme: themes.theme) {
                 PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped, theme: themes.theme)
 //                    .transaction { t in
@@ -66,8 +66,8 @@ struct PostOrThread: View {
                 ForEach(postOrThreadAttributes.parentPosts) { nrParent in
                     Box(nrPost: nrParent, theme: themes.theme) {
                         PostRowDeletable(nrPost: nrParent,
-                                         missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
-                                         connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped, theme: themes.theme)
+                                         missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
+                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped, theme: themes.theme)
     //                    .transaction { t in
     //                        t.animation = nil
     //                    }
