@@ -48,6 +48,9 @@ final class SettingsStore: ObservableObject {
         static let displayUserAgentEnabled:String = "display_user_agent_enabled"
         static let excludedUserAgentPubkeys:String = "excluded_user_agent_pubkeys"
         
+        static let receiveLocalNotifications:String = "receive_local_notifications"
+        static let receiveLocalNotificationsLimitToFollows:String = "receive_local_notifications_limit_to_follows"
+        
         static let proMode:String = "nostur_pro_mode"
     }
 
@@ -143,6 +146,8 @@ final class SettingsStore: ObservableObject {
             Keys.postUserAgentEnabled: true,
             Keys.displayUserAgentEnabled: true,
             Keys.excludedUserAgentPubkeys: "",
+            Keys.receiveLocalNotifications: true,
+            Keys.receiveLocalNotificationsLimitToFollows: false,
             Keys.proMode: false
         ])
 
@@ -296,6 +301,19 @@ final class SettingsStore: ObservableObject {
             defaults.set(newValue.id, forKey: Keys.defaultLightningWallet);
             updateNWCreadyCache()
         }
+    }
+    
+    var receiveLocalNotifications: Bool {
+        set { defaults.set(newValue, forKey: Keys.receiveLocalNotifications); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.receiveLocalNotifications) }
+    }    
+    
+    var receiveLocalNotificationsLimitToFollows: Bool {
+        set {
+            objectWillChange.send()
+            defaults.set(newValue, forKey: Keys.receiveLocalNotificationsLimitToFollows);
+        }
+        get { defaults.bool(forKey: Keys.receiveLocalNotificationsLimitToFollows) }
     }
     
     
