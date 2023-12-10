@@ -49,7 +49,7 @@ struct Search: View {
     @State private var searchText = ""
     @State var searchTask:Task<Void, Never>? = nil
     @State var backlog = Backlog()
-    @ObservedObject private var settings:SettingsStore = .shared
+    @ObservedObject var settings:SettingsStore = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
@@ -59,7 +59,9 @@ struct Search: View {
     }
 
     var body: some View {
-//        let _ = Self._printChanges()
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         NavigationStack(path: $navPath) {
             ScrollView {
                 if isSearchingHashtag {
