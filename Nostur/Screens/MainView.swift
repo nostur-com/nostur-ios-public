@@ -11,8 +11,16 @@ struct MainView: View {
     @EnvironmentObject private var themes:Themes
     @State private var fg:FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @State private var fn:FollowerNotifier = .shared
-    @AppStorage("selected_tab") private var selectedTab = "Main"
-    @AppStorage("selected_subtab") private var selectedSubTab = "Following"
+    
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedSubTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_subtab") ?? "Following" }
+    }
+    
     @State private var navPath = NavigationPath()
     @State private var account:CloudAccount? = nil
     @State private var showingNewNote = false
@@ -136,7 +144,7 @@ struct MainView: View {
             guard self.account != account else { return }
             self.account = account
             if selectedSubTab != "Following" {
-                selectedSubTab = "Following"
+                UserDefaults.standard.setValue("Following", forKey: "selected_subtab")
             }
         }
         .onAppear {

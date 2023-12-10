@@ -15,8 +15,15 @@ struct NewPostsBy: View {
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var vm:NewPostsVM
     
-    @AppStorage("selected_tab") var selectedTab = "Notifications"
-    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "New Posts"
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedNotificationsTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "New Posts" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+    }
     
     @Namespace private var top
     

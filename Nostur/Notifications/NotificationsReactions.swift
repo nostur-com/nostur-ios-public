@@ -16,8 +16,17 @@ struct NotificationsReactions: View {
     @State private var didLoad = false
     @State private var backlog = Backlog()
     @ObservedObject private var settings:SettingsStore = .shared
-    @AppStorage("selected_tab") private var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Reactions"
+    
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedNotificationsTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Reactions" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+    }
+    
     @Namespace private var top
     
     private func myNotesReactedTo(_ events:[Event]) -> [Event] {

@@ -13,7 +13,11 @@ struct PrivateNotesView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var ns:NRState
-    @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Private Notes"
+    
+    private var selectedSubTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_bookmarkssubtab") ?? "Private Notes" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_bookmarkssubtab") }
+    }
     
     @Binding var navPath:NavigationPath
     @ObservedObject private var settings:SettingsStore = .shared
