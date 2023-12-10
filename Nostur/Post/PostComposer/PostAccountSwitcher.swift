@@ -19,9 +19,13 @@ struct PostAccountSwitcher: View, Equatable {
     @State private var accounts:[CloudAccount] = []
     
     private var accountsSorted:[CloudAccount] {
-        accounts.sorted(by: {
-            $0 == activeAccount && $1 != activeAccount
-        })
+        accounts
+            .sorted(by: {
+                $0.lastLoginAt > $1.lastLoginAt
+            })
+            .sorted(by: {
+                $0 == activeAccount && $1 != activeAccount
+            })
     }
     
     var body: some View {

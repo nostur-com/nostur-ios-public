@@ -42,7 +42,7 @@ extension CloudAccount {
     @NSManaged public var nip05_: String?
     @NSManaged public var picture_: String?
     @NSManaged public var publicKey_: String?
-    @NSManaged public var lastLoginAt_: Date?
+    @NSManaged public var lastLoginAt_: Date? // Or "last use" via in-post switcher
     
     // -- MARK: Non-optional getters/setters
     
