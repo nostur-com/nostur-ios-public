@@ -10,7 +10,7 @@ import NukeUI
 
 struct Gallery: View {
     @EnvironmentObject private var themes:Themes
-    @ObservedObject var vm:GalleryViewModel
+    @EnvironmentObject var vm:GalleryViewModel
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -116,7 +116,8 @@ struct Gallery: View {
 
 struct Gallery_Previews: PreviewProvider {
     static var previews: some View {
-        Gallery(vm: GalleryViewModel())
+        Gallery()
+            .environmentObject(GalleryViewModel())
             .environmentObject(Themes.default)
     }
 }

@@ -176,14 +176,19 @@ struct FollowingAndExplore: View {
                 
                 // HOT/ARTICLES/GALLERY
                 if account.followingPubkeys.count > 10 {
-                    Hot(hotVM: hotVM)
-                        .opacity(selectedSubTab == "Hot" ? 1 : 0)
-                    
-                    ArticlesFeed(vm: articlesVM)
-                        .opacity(selectedSubTab == "Articles" ? 1 : 0)
-                    
-                    Gallery(vm: galleryVM)
-                        .opacity(selectedSubTab == "Gallery" ? 1 : 0)
+                    switch selectedSubTab {
+                    case "Hot":
+                        Hot()
+                            .environmentObject(hotVM)
+                    case "Articles":
+                        ArticlesFeed()
+                            .environmentObject(articlesVM)
+                    case "Gallery":
+                        Gallery()
+                            .environmentObject(galleryVM)
+                    default:
+                        EmptyView()
+                    }                        
                 }
                 
                 

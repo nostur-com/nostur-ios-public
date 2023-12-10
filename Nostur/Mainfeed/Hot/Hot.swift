@@ -10,7 +10,7 @@ import SwiftUI
 struct Hot: View {
     @EnvironmentObject private var themes:Themes
     @ObservedObject var settings:SettingsStore = .shared
-    @ObservedObject var hotVM:HotViewModel
+    @EnvironmentObject var hotVM:HotViewModel
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -121,7 +121,8 @@ struct Hot: View {
 
 struct Hot_Previews: PreviewProvider {
     static var previews: some View {
-        Hot(hotVM: HotViewModel())
+        Hot()
+            .environmentObject(HotViewModel())
             .environmentObject(Themes.default)
     }
 }
