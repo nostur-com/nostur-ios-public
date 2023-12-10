@@ -18,8 +18,15 @@ struct NotificationsReposts: View {
     @State private var didLoad = false
     @Namespace private var top
     
-    @AppStorage("selected_tab") private var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Reposts"
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedNotificationsTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Reposts" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+    }
         
     var body: some View {
         #if DEBUG

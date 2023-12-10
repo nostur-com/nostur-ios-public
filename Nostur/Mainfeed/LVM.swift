@@ -186,8 +186,15 @@ class LVM: NSObject, ObservableObject {
         return selectedSubTab == id
     }
     
-    @AppStorage("selected_tab") var sTab = "Main"
-    @AppStorage("selected_subtab") var ssTab = "Following"
+    public var sTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    public var ssTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_subtab") ?? "Following" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_subtab") }
+    }
     
     // @AppStorage things
     var selectedSubTab = "" {

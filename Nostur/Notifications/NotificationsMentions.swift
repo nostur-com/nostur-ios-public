@@ -16,8 +16,15 @@ struct NotificationsMentions: View {
     @State private var backlog = Backlog()
     @State private var didLoad = false
     
-    @AppStorage("selected_tab") private var selectedTab = "Notifications"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Mentions"
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedNotificationsTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+    }
     
     @Namespace private var top
         

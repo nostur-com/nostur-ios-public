@@ -11,8 +11,15 @@ struct BookmarksAndPrivateNotes: View {
     @EnvironmentObject private var fa:LoggedInAccount
     @EnvironmentObject private var themes:Themes
     @State private var navPath = NavigationPath()
-    @AppStorage("selected_tab") private var selectedTab = "Bookmarks"
+
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Bookmarks" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
     @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Bookmarks"
+    
+
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var bookmarksCount:String?

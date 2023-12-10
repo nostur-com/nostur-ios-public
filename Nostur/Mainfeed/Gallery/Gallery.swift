@@ -12,8 +12,15 @@ struct Gallery: View {
     @EnvironmentObject private var themes:Themes
     @ObservedObject var vm:GalleryViewModel
     
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_subtab") var selectedSubTab = "Gallery"
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedSubTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_subtab") ?? "Gallery" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_subtab") }
+    }
     
     @Namespace var top
     

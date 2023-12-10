@@ -13,7 +13,10 @@ struct NosturRootMenu: View {
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var loggedInAccount:LoggedInAccount
     @State private var sm:SideBarModel = .shared
-    @AppStorage("selected_tab") var selectedTab = "Main"
+    
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+    }
     
     var body: some View {
         #if DEBUG
@@ -84,7 +87,7 @@ struct NosturRootMenu: View {
         let nostrSharable = url.absoluteString.matchingStrings(regex: "^(nostr:|nostur:nostr:)(nevent1|nprofile1)([023456789acdefghjklmnpqrstuvwxyz]+\\b)$")
         if nostrSharable.count == 1 && nostrSharable[0].count == 4 {
             L.og.info("nostr: nevent1/nprofile1: \(nostrSharable[0][2])\(nostrSharable[0][3])")
-            selectedTab = "Search"
+            UserDefaults.standard.setValue("Search", forKey: "selected_tab")
             if nostrSharable[0][2] == "nevent1" {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     // TODO: Make proper loading into Search tab, instead of hoping the tab has loaded in time for .onReceive(receiveNotification(.navigateTo))
@@ -133,7 +136,7 @@ struct NosturRootMenu: View {
         let nosturHashtag = url.absoluteString.matchingStrings(regex: "^(nostur:t:)(\\S+)$")
         if nosturHashtag.count == 1 && nosturHashtag[0].count == 3 {
             L.og.info("nostur: hashtag: \(nosturHashtag[0][2])")
-            selectedTab = "Search"
+            UserDefaults.standard.setValue("Search", forKey: "selected_tab")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
             }

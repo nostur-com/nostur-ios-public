@@ -28,7 +28,11 @@ class Themes: ObservableObject {
     @Published var theme:Theme = Theme()
     
     static let `default` = Themes()
-    @AppStorage("app_theme") var selectedTheme = "default"
+    
+    public var selectedTheme: String {
+        get { UserDefaults.standard.string(forKey: "app_theme") ?? "default" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "app_theme") }
+    }
         
     private init() {
         switch selectedTheme {

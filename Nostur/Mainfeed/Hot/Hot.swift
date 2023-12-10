@@ -12,8 +12,15 @@ struct Hot: View {
     @ObservedObject var settings:SettingsStore = .shared
     @ObservedObject var hotVM:HotViewModel
     
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_subtab") var selectedSubTab = "Hot"
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedSubTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_subtab") ?? "Hot" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_subtab") }
+    }
     
     @Namespace private var top
     

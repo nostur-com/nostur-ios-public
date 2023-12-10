@@ -14,7 +14,6 @@ struct Settings: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject private var settings: SettingsStore = .shared
     @AppStorage("devToggle") private var devToggle: Bool = false
-    @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
     @AppStorage("nip96_api_url") private var nip96ApiUrl = ""
     @Environment(\.managedObjectContext) var viewContext

@@ -14,7 +14,10 @@ struct NosturTabsView: View {
 
     @StateObject private var dim = DIMENSIONS()
     @AppStorage("selected_tab") private var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Mentions"
+    
+    private var selectedNotificationsTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions" }
+    }
 
     @State private var showTabBar = true
     @ObservedObject private var ss:SettingsStore = .shared
@@ -91,22 +94,22 @@ struct NosturTabsView: View {
                 // If there is only one tab with unread notifications, go to that tab
                 if NotificationsViewModel.shared.unread > 0 {
                     if NotificationsViewModel.shared.unreadMentions > 0 {
-                        selectedNotificationsTab = "Mentions"
+                        UserDefaults.standard.setValue("Mentions", forKey: "selected_notifications_tab")
                     }
                     else if NotificationsViewModel.shared.unreadNewPosts > 0 {
-                        selectedNotificationsTab = "New Posts"
+                        UserDefaults.standard.setValue("New Posts", forKey: "selected_notifications_tab")
                     }
                     else if NotificationsViewModel.shared.unreadReactions > 0 {
-                        selectedNotificationsTab = "Reactions"
+                        UserDefaults.standard.setValue("Reactions", forKey: "selected_notifications_tab")
                     }
                     else if NotificationsViewModel.shared.unreadZaps > 0 {
-                        selectedNotificationsTab = "Zaps"
+                        UserDefaults.standard.setValue("Zaps", forKey: "selected_notifications_tab")
                     }
                     else if NotificationsViewModel.shared.unreadReposts > 0 {
-                        selectedNotificationsTab = "Reposts"
+                        UserDefaults.standard.setValue("Reposts", forKey: "selected_notifications_tab")
                     }
                     else if NotificationsViewModel.shared.unreadNewFollowers > 0 {
-                        selectedNotificationsTab = "Followers"
+                        UserDefaults.standard.setValue("Followers", forKey: "selected_notifications_tab")
                     }
                 }
                 

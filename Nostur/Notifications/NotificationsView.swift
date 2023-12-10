@@ -11,8 +11,13 @@ import CoreData
 struct NotificationsContainer: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject var la:LoggedInAccount
-    @AppStorage("selected_tab") private var selectedTab = "Notifications"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Mentions"
+
+    // Not observed so manual UserDefaults
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
     @State private var navPath = NavigationPath()
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -21,7 +26,7 @@ struct NotificationsContainer: View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             VStack {
-                NotificationsView(account: la.account, tab: $selectedNotificationsTab, navPath: $navPath)
+                NotificationsView(account: la.account, navPath: $navPath)
             }
             .background(themes.theme.listBackground)
             .withNavigationDestinations()
@@ -40,7 +45,9 @@ struct NotificationsContainer: View {
 
 struct NotificationsView: View {
     @ObservedObject public var account:CloudAccount
-    @Binding public var tab:String
+    
+    @AppStorage("selected_notifications_tab") private var tab = "Mentions"
+
     @Binding public var navPath:NavigationPath
     
     @EnvironmentObject private var themes:Themes

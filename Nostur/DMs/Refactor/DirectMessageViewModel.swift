@@ -11,7 +11,10 @@ import Combine
 
 class DirectMessageViewModel: ObservableObject {
     
-    @AppStorage("last_dm_local_notification_timestamp") private var lastDMLocalNotifcationAt: Int = 0
+    private var lastDMLocalNotifcationAt: Int {
+        get { UserDefaults.standard.integer(forKey: "last_dm_local_notification_timestamp") }
+        set { UserDefaults.standard.setValue(newValue, forKey: "last_dm_local_notification_timestamp") }
+    }
     
     static public let `default` = DirectMessageViewModel()
     

@@ -12,7 +12,11 @@ import CoreData
 struct BookmarksView: View {
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var ns:NRState
-    @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Bookmarks"
+    
+    private var selectedSubTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_bookmarkssubtab") ?? "Bookmarks" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_bookmarkssubtab") }
+    }
     
     @Binding var navPath:NavigationPath
     @ObservedObject private var settings:SettingsStore = .shared

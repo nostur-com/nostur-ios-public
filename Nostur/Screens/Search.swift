@@ -38,7 +38,12 @@ struct Search: View {
     }
 
     @State var searching = false
-    @AppStorage("selected_tab") private var selectedTab = "Search"
+    
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Search" }
+    }
+    
+    
     @State private var navPath = NavigationPath()
 
     @State private var searchText = ""

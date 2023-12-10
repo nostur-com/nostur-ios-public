@@ -12,7 +12,12 @@ struct DMs: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes:Themes
     @State private var navPath = NavigationPath()
-    @AppStorage("selected_tab") private var selectedTab = "Messages"
+    
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Messages" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
     @State private var tab = "Accepted"
     
     public let pubkey:String

@@ -18,8 +18,16 @@ struct NotificationsFollowers: View {
     @State private var didLoad = false
     @Binding private var navPath:NavigationPath
     
-    @AppStorage("selected_tab") private var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Followers"
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedNotificationsTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Followers" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+    }
+    
     @Namespace private var top
     
     @FetchRequest

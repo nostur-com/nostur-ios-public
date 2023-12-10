@@ -24,8 +24,15 @@ struct NotificationsZaps: View {
     @State private var backlog = Backlog()
     @Binding private var navPath:NavigationPath
     
-    @AppStorage("selected_tab") private var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "Zaps"
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedNotificationsTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Zaps" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+    }
     
     @State private var zapsForMeDeduplicated = [ZapInfo]()
     @Namespace private var top

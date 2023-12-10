@@ -17,7 +17,11 @@ struct SideBar: View {
     @EnvironmentObject private var themes:Themes
     @ObservedObject private var sm:SideBarModel = .shared
     @ObservedObject public var account:CloudAccount
-    @AppStorage("selected_tab") private var selectedTab = "Main"
+    
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+    }
+    
     @State private var accountsSheetIsShown = false
     @State private var logoutAccount:CloudAccount? = nil
     @State private var showAnySigner = false
@@ -112,7 +116,9 @@ struct SideBar: View {
                         }
                     }
                     Button {
-                        if selectedTab != "Main" { selectedTab = "Main" }
+                        if selectedTab != "Main" { 
+                            UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                        }
                         navigateToOnMain(ViewPath.Lists)
                         sm.showSidebar = false
                     } label: {
@@ -132,7 +138,7 @@ struct SideBar: View {
                         }
                     }
                     Button {
-                        selectedTab = "Bookmarks"
+                        UserDefaults.standard.setValue("Bookmarks", forKey: "selected_tab")
                         sm.showSidebar = false
                     } label: {
                         Label(
@@ -152,7 +158,9 @@ struct SideBar: View {
                     }
                     if !account.isNC {
                         Button {
-                            if selectedTab != "Main" { selectedTab = "Main" }
+                            if selectedTab != "Main" {
+                                UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                            }
                             navigateToOnMain(ViewPath.Badges)
                             sm.showSidebar = false
                         } label: {
@@ -173,7 +181,9 @@ struct SideBar: View {
                         }
                     }
                     Button {
-                        if selectedTab != "Main" { selectedTab = "Main" }
+                        if selectedTab != "Main" {
+                            UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                        }
                         navigateToOnMain(ViewPath.Settings)
                         sm.showSidebar = false
                     } label: {
@@ -193,7 +203,9 @@ struct SideBar: View {
                         }
                     }
                     Button {
-                        if selectedTab != "Main" { selectedTab = "Main" }
+                        if selectedTab != "Main" {
+                            UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                        }
                         navigateToOnMain(ViewPath.Blocklist)
                         sm.showSidebar = false
                     } label: {

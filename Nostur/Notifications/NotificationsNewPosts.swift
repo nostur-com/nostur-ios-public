@@ -23,8 +23,16 @@ struct NotificationsNewPosts: View {
     @State private var didLoad = false
     @Binding private var navPath:NavigationPath
     
-    @AppStorage("selected_tab") private var selectedTab = "Notifications"
-    @AppStorage("selected_notifications_tab") private var selectedNotificationsTab = "New Posts"
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
+    
+    private var selectedNotificationsTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "New Posts" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+    }
+    
     @Namespace private var top
     
     @FetchRequest

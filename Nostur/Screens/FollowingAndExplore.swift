@@ -14,7 +14,6 @@ struct FollowingAndExplore: View {
     @ObservedObject var account:CloudAccount
     @Binding var showingOtherContact:NRContact?
     @ObservedObject private var ss:SettingsStore = .shared
-    @AppStorage("selected_tab") private var selectedTab = "Main"
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @AppStorage("selected_listId") private var selectedListId = ""
     

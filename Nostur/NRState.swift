@@ -11,8 +11,14 @@ class NRState: ObservableObject {
     
     public var appIsInBackground = false
     
-    @AppStorage("simple_draft") public var draft = ""
-    @AppStorage("undo_send_restore_draft") public var restoreDraft = ""
+    public var draft: String {
+        get { UserDefaults.standard.string(forKey: "simple_draft") ?? "" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "simple_draft") }
+    }
+    public var restoreDraft: String {
+        get { UserDefaults.standard.string(forKey: "undo_send_restore_draft") ?? "" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "undo_send_restore_draft") }
+    }
     
     @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
     @MainActor public static let shared = NRState()

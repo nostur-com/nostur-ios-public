@@ -11,7 +11,10 @@ import CoreData
 
 class NotificationsViewModel: ObservableObject {
     
-    @AppStorage("last_local_notification_timestamp") private var lastLocalNotifcationAt: Int = 0
+    private var lastLocalNotificationAt: Int {
+        get { UserDefaults.standard.integer(forKey: "last_local_notification_timestamp") }
+        set { UserDefaults.standard.setValue(newValue, forKey: "last_local_notification_timestamp") }
+    }
     
     static let UNREAD_KINDS:Set<Int> = Set([1,4,6,7,9735,9802,30023]) // posts, dms, reposts, reactions, zaps, highlights, articles
     
@@ -133,14 +136,40 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadFailedZaps_:Int = 0  // custom
     
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Mentions"
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
     
-    @AppStorage("notifications_mute_follows") var muteFollows:Bool = false
-    @AppStorage("notifications_mute_reactions") var muteReactions:Bool = false
-    @AppStorage("notifications_mute_reposts") var muteReposts:Bool = false
-    @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false
-    @AppStorage("notifications_mute_new_posts") var muteNewPosts:Bool = false
+    private var selectedNotificationsTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+    }
+    
+    public var muteFollows: Bool {
+        get { UserDefaults.standard.bool(forKey: "notifications_mute_follows") }
+        set { UserDefaults.standard.setValue(newValue, forKey: "notifications_mute_follows") }
+    }
+    
+    public var muteReactions: Bool {
+        get { UserDefaults.standard.bool(forKey: "notifications_mute_reactions") }
+        set { UserDefaults.standard.setValue(newValue, forKey: "notifications_mute_reactions") }
+    }
+    
+    public var muteReposts: Bool {
+        get { UserDefaults.standard.bool(forKey: "notifications_mute_reposts") }
+        set { UserDefaults.standard.setValue(newValue, forKey: "notifications_mute_reposts") }
+    }
+    
+    public var muteZaps: Bool {
+        get { UserDefaults.standard.bool(forKey: "notifications_mute_zaps") }
+        set { UserDefaults.standard.setValue(newValue, forKey: "notifications_mute_zaps") }
+    }
+    
+    public var muteNewPosts: Bool {
+        get { UserDefaults.standard.bool(forKey: "notifications_mute_new_posts") }
+        set { UserDefaults.standard.setValue(newValue, forKey: "notifications_mute_new_posts") }
+    }
     
     private var restoreSubscriptionsSubject = PassthroughSubject<Void, Never>()
     private var subscriptions = Set<AnyCancellable>()
