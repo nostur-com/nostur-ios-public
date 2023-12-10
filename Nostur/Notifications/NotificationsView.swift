@@ -23,7 +23,9 @@ struct NotificationsContainer: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     var body: some View {
-//        let _ = Self._printChanges()
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         NavigationStack(path: $navPath) {
             VStack {
                 NotificationsView(account: la.account, navPath: $navPath)

@@ -187,6 +187,7 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func disconnectAll() {
+        L.og.debug("ConnectionPool.disconnectAll")
         stayConnectedTimer?.invalidate()
         stayConnectedTimer = nil
         
@@ -293,12 +294,12 @@ public class ConnectionPool: ObservableObject {
                     if message.type == .REQ {
                         if (!connection.isSocketConnected) {
                             if (!connection.isSocketConnecting) {
-                                L.og.info("⚡️ sendMessage \(subscriptionId): not connected yet, connecting to N(W)C relay \(connection.url)")
+                                L.og.info("⚡️ sendMessage \(subscriptionId ?? ""): not connected yet, connecting to N(W)C relay \(connection.url)")
                                 connection.connect()
                             }
                         }
                         // For NWC we just replace active subscriptions, else doesn't work
-                        L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId): \(message.message)")
+                        L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId ?? ""): \(message.message)")
                         if afterPing {
                             connection.sendMessageAfterPing(message.message)
                         }
@@ -364,7 +365,7 @@ public class ConnectionPool: ObservableObject {
                             }
                             L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(connection.url): \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
                         }
-                        L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId): \(message.message)")
+                        L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId ?? ""): \(message.message)")
                         if afterPing {
                             connection.sendMessageAfterPing(message.message)
                         }

@@ -312,15 +312,10 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                     receiveCompletion: { [weak self] completion in
                         switch completion {
                         case .failure(let error):
-                            // Handle the failure case
-                            let _url = self?.url ?? ""
-                            let _error = error
-                            L.sockets.info("\(_url) Ping Failure: \(_error), trying to reconnect")
+                            L.sockets.info("\(self?.url ?? "") Ping Failure: \(error), trying to reconnect")
                             self?.connect()
                         case .finished:
-                            // The ping completed successfully
-                            let _url = self?.url ?? ""
-                            L.sockets.info("\(_url) Ping succeeded")
+                            L.sockets.info("\(self?.url ?? "") Ping succeeded")
                             self?.didReceivePong()
                         }
                     },

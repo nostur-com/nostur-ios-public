@@ -31,7 +31,7 @@ struct FollowingAndExplore: View {
     @State var tabsOffsetY:CGFloat = 0.0
     @State var didSend = false
     
-    var navigationTitle:String {
+    private var navigationTitle:String {
         if selectedSubTab == "List" {
             return (selectedList?.name_ ?? String(localized:"List"))
         }

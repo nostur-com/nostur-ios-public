@@ -26,6 +26,9 @@ struct BookmarksAndPrivateNotes: View {
     @State private var privateNotesCount:String?
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         NavigationStack(path: $navPath) {
             VStack(spacing: 0) {
                 HStack {

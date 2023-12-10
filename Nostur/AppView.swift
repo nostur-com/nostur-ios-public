@@ -162,7 +162,6 @@ struct AppView: View {
                                 L.og.notice("scenePhase background")
                                 if !IS_CATALYST {
                                     NRState.shared.appIsInBackground = true
-//                                    ConnectionPool.shared.disconnectAll()
                                     lvmManager.stopSubscriptions()
                                 }
                                 sendNotification(.scenePhaseBackground)

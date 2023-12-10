@@ -17,10 +17,6 @@ struct NewPostsForPubkeys: Hashable {
 // Copy pasta from old NotificationsFollowers
 struct NotificationsNewPosts: View {
     @EnvironmentObject private var themes:Themes
-    @ObservedObject private var settings:SettingsStore = .shared
-    @StateObject private var fl = FastLoader()
-    @State private var backlog = Backlog()
-    @State private var didLoad = false
     @Binding private var navPath:NavigationPath
     
     private var selectedTab: String {
