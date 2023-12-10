@@ -10,7 +10,7 @@ import SwiftUI
 struct ArticlesFeed: View {
     @EnvironmentObject private var themes:Themes
     @ObservedObject var settings:SettingsStore = .shared
-    @ObservedObject var vm:ArticlesFeedViewModel
+    @EnvironmentObject var vm:ArticlesFeedViewModel
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -99,7 +99,8 @@ struct ArticlesFeed: View {
 
 struct ArticlesFeed_Previews: PreviewProvider {
     static var previews: some View {
-        ArticlesFeed(vm: ArticlesFeedViewModel())
+        ArticlesFeed()
+            .environmentObject(ArticlesFeedViewModel())
             .environmentObject(Themes.default)
     }
 }
