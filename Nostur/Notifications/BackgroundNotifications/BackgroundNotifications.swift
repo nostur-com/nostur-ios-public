@@ -42,10 +42,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 }
 
 // Schedule a background fetch task
-func scheduleAppRefresh() {
+func scheduleAppRefresh(seconds: TimeInterval = 60.0) {
     L.og.debug("scheduleAppRefresh()")
     let request = BGAppRefreshTaskRequest(identifier: "com.nostur.app-refresh")
-    request.earliestBeginDate = .now.addingTimeInterval(60) // 60 seconds. Should maybe be longer for battery life, 5-30 minutes? Need to test
+    request.earliestBeginDate = .now.addingTimeInterval(seconds) // 60 seconds. Should maybe be longer for battery life, 5-30 minutes? Need to test
     try? BGTaskScheduler.shared.submit(request)
 }
 
@@ -114,49 +114,74 @@ func scheduleDMNotification(name: String) {
 // The background fetch task will run this to check for new notifications
 func checkForNotifications() async {
     await withCheckedContinuation { continuation in
-        bg().perform {
-            guard let account = account() else { continuation.resume(); return }
-            let lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
-            let accountPubkey = account.publicKey
-
-            ConnectionPool.shared.connectAll()
+        Task { @MainActor in
+            guard !NRState.shared.activeAccountPublicKey.isEmpty else { continuation.resume(); return }
+            if Importer.shared.existingIds.isEmpty {
+                Importer.shared.preloadExistingIdsCache()
+            }
+            guard let account = try? CloudAccount.fetchAccount(publicKey: NRState.shared.activeAccountPublicKey, context: context())
+            else {
+                continuation.resume(); return
+            }
+            let accountData = account.toStruct()
+            if !WebOfTrust.shared.didWoT {
+                WebOfTrust.shared.loadWoT()
+            }
             
-            let reqTask = ReqTask(
-                debounceTime: 0.05,
-                timeout: 5.0,
-                subscriptionId: "BG",
-                reqCommand: { taskId in
-                    L.og.debug("checkForNotifications.reqCommand")
-                    let since = NTimestamp(timestamp: Int(lastSeenPostCreatedAt))
-                    bg().perform {
-                        NotificationsViewModel.shared.needsUpdate = true
-                        
-                        DispatchQueue.main.async {
-                            // Mentions kinds (1,9802,30023) and DM (4)
-                            req(RM.getMentions(pubkeys: [accountPubkey], kinds:[1,4,9802,30023], subscriptionId: taskId, since: since))
+            // Setup connections
+            let relays:[RelayData] = CloudRelay.fetchAll(context: DataProvider.shared().viewContext).map { $0.toStruct() }
+            for relay in relays {
+                _ = ConnectionPool.shared.addConnection(relay)
+            }
+            ConnectionPool.shared.connectAll()
+            bg().perform {
+                let reqTask = ReqTask(
+                    debounceTime: 0.05,
+                    timeout: 10.0,
+                    subscriptionId: "BG",
+                    reqCommand: { taskId in
+                        L.og.debug("checkForNotifications.reqCommand")
+                        let since = NTimestamp(timestamp: Int(accountData.lastSeenPostCreatedAt))
+                        bg().perform {
+                            NotificationsViewModel.shared.needsUpdate = true
+                            
+                            DispatchQueue.main.async {
+                                // Mentions kinds (1,9802,30023) and DM (4)
+                                req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[1,4,9802,30023], subscriptionId: taskId, since: since))
+                            }
                         }
-                    }
-                },
-                processResponseCommand: { taskId, relayMessage, event in
-                    L.og.debug("checkForNotifications.processResponseCommand")
-                    Task {
-                        await NotificationsViewModel.shared.checkForUnreadMentionsBackground()
-                        if let thisTask = Backlog.shared.task(with: taskId) {
-                            Backlog.shared.remove(thisTask)
+                    },
+                    processResponseCommand: { taskId, relayMessage, event in
+                        L.og.debug("checkForNotifications.processResponseCommand")
+                        bg().perform {
+                            if let thisTask = Backlog.shared.task(with: taskId) {
+                                Backlog.shared.remove(thisTask)
+                            }
+                        }
+                        Task {
+                            await NotificationsViewModel.shared.checkForUnreadMentionsBackground(accountData: accountData)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                                ConnectionPool.shared.disconnectAll()
+                            }
+                            continuation.resume()
+                        }
+                    },
+                    timeoutCommand: { taskId in
+                        L.og.debug("checkForNotifications.timeoutCommand")
+                        bg().perform {
+                            if let thisTask = Backlog.shared.task(with: taskId) {
+                                Backlog.shared.remove(thisTask)
+                            }
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                            ConnectionPool.shared.disconnectAll()
                         }
                         continuation.resume()
                     }
-                },
-                timeoutCommand: { taskId in
-                    L.og.debug("checkForNotifications.timeoutCommand")
-                    if let thisTask = Backlog.shared.task(with: taskId) {
-                        Backlog.shared.remove(thisTask)
-                    }
-                    continuation.resume()
-                }
-            )
-            Backlog.shared.add(reqTask)
-            reqTask.fetch()
+                )
+                Backlog.shared.add(reqTask)
+                reqTask.fetch()
+            }
         }
     }
 }

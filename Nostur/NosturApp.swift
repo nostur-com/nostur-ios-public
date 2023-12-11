@@ -69,13 +69,16 @@ struct NosturApp: App {
             }
         }
         .backgroundTask(.appRefresh("com.nostur.app-refresh")) {
-            guard ss.receiveLocalNotifications else { 
+            if !IS_CATALYST {
+                NRState.shared.appIsInBackground = true
+            }
+            guard ss.receiveLocalNotifications else {
                 L.og.debug(".appRefresh() - receiveLocalNotifications: false - skipping")
                 return
             }
             L.og.debug(".appRefresh()")
             // Always schedule the next refresh
-            scheduleAppRefresh()
+            scheduleAppRefresh(seconds: 180.0)
             
             // Check for any new notifications (relays), if there are unread mentions it will trigger a (iOS) notification
             await checkForNotifications() // <-- Must await, "The system considers the task completed when the action closure that you provide returns. If the action closure has not returned when the task runs out of time to complete, the system cancels the task. Use withTaskCancellationHandler(operation:onCancel:) to observe whether the task is low on runtime."

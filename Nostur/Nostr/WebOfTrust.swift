@@ -135,7 +135,7 @@ class WebOfTrust: ObservableObject {
     public func loadWoT(force:Bool = false) {
         guard mainAccountWoTpubkey != "" else { return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
-        guard let account = NRState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) else { return }
+        guard let account = NRState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) ?? (try? CloudAccount.fetchAccount(publicKey: mainAccountWoTpubkey, context: context())) else { return }
         L.og.info("🕸️🕸️ WebOfTrust: Main account: \(account.anyName)")
         
         let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.privateFollowingPubkeys) // We don't include silent follows in WoT
