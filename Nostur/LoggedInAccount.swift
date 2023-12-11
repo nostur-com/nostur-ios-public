@@ -39,7 +39,7 @@ class LoggedInAccount: ObservableObject {
                 account.followingPubkeys.insert(pubkey)
             }
             self.followingPublicKeys = self.viewFollowingPublicKeys
-            self.followingPFPs = self.account.getFollowingPFPs()
+            self.followingPFPs = account.getFollowingPFPs()
             
             account.publishNewContactList()
             DispatchQueue.main.async {
