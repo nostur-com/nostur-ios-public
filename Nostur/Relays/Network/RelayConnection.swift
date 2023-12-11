@@ -31,6 +31,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     }
     
     // other (should use queue: "connection-pool"
+    public var firstConnection:Bool = true // flag to know if it is connect or reconnect - reconnect will restore some things not needed at first connect in background fetch
     public var url:String { relayData.id }
     public var nreqSubscriptions:Set<String> = []
     public var isNWC:Bool
@@ -290,6 +291,9 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     
     public func disconnect() {
         queue.async(flags: .barrier) {
+            self.exponentialReconnectBackOff = 0
+            self.skipped = 0
+            self.firstConnection = true
             self.nreqSubscriptions = []
             self.lastMessageReceivedAt = nil
             self.isSocketConnected = false
@@ -402,11 +406,22 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self.skipped = 0
             self.lastMessageReceivedAt = .now
             self.isSocketConnected = true
-            DispatchQueue.main.async {
-                LVMManager.shared.restoreSubscriptions()
-                NotificationsViewModel.shared.restoreSubscriptions()
-                sendNotification(.socketConnected, "Connected: \(self.url)")
+            if self.firstConnection {
+                DispatchQueue.main.async {
+                    sendNotification(.socketConnected, "Connected: \(self.url)")
+                }
             }
+            else { // restore subscriptions
+                DispatchQueue.main.async {
+                    if IS_CATALYST || !NRState.shared.appIsInBackground {
+                        LVMManager.shared.restoreSubscriptions()
+                        NotificationsViewModel.shared.restoreSubscriptions()
+                    }
+                    sendNotification(.socketConnected, "Connected: \(self.url)")
+                }
+            }
+            self.firstConnection = false
+           
             
             guard !self.outQueue.isEmpty else { return }
             for out in self.outQueue {

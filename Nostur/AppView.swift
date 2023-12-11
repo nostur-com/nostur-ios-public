@@ -147,6 +147,7 @@ struct AppView: View {
                                         ConnectionPool.shared.connectAll()
                                         sendNotification(.scenePhaseActive)
                                         lvmManager.restoreSubscriptions()
+                                        nvm.restoreSubscriptions()
                                         ns.startTaskTimers()
                                     }
                                     NRState.shared.appIsInBackground = false
@@ -155,6 +156,7 @@ struct AppView: View {
                                     ConnectionPool.shared.connectAll()
                                     sendNotification(.scenePhaseActive)
                                     lvmManager.restoreSubscriptions()
+                                    nvm.restoreSubscriptions()
                                     ns.startTaskTimers()
                                 }
                                 

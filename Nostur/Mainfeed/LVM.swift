@@ -1155,6 +1155,7 @@ extension LVM {
             .receive(on: RunLoop.main) // Main because .performLocalFetch() needs some Main things
             .sink { [weak self] _ in
                 guard let self = self else { return }
+                guard !NRState.shared.appIsInBackground else { return }
                 guard instantFinished else { return }
                 L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetchAfterImport \(self.uuid)")
                 self.performLocalFetch.send(false)
