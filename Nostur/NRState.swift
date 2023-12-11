@@ -281,11 +281,23 @@ func followingPFP(_ pubkey: String) -> URL? {
 
 func account() -> CloudAccount? {
     if Thread.isMainThread {
-        NRState.shared.loggedInAccount?.account
+        NRState.shared.loggedInAccount?.account ?? (try? CloudAccount.fetchAccount(publicKey: NRState.shared.activeAccountPublicKey, context: context()))
     }
     else {
-        NRState.shared.loggedInAccount?.bgAccount
+        NRState.shared.loggedInAccount?.bgAccount ?? (try? CloudAccount.fetchAccount(publicKey: NRState.shared.activeAccountPublicKey, context: context()))
     }
+}
+
+struct AccountData {
+    let publicKey: String
+    let lastSeenPostCreatedAt:Int64
+    let followingPubkeys:Set<String>
+}
+
+func accountData() -> AccountData? {
+    guard let account = Thread.isMainThread ? NRState.shared.loggedInAccount?.account : NRState.shared.loggedInAccount?.bgAccount 
+    else { return nil }
+    return AccountData(publicKey: account.publicKey, lastSeenPostCreatedAt: account.lastSeenPostCreatedAt, followingPubkeys: account.followingPubkeys)
 }
 
 func follows() -> Set<String> {

@@ -358,7 +358,8 @@ class NotificationsViewModel: ObservableObject {
         //TODO: Should check if there is actual mention in .content
         shouldBeBg()
         guard let account = account() else { return }
-        guard let fetchRequest = q.unreadMentionsQuery(resultType: .managedObjectResultType) else { return }
+        let accountData = account.toStruct()
+        guard let fetchRequest = q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData) else { return }
          
         let unreadMentions = ((try? bg().fetch(fetchRequest)) ?? [])
             .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notificatios now.
@@ -369,7 +370,7 @@ class NotificationsViewModel: ObservableObject {
         // Most accurate would be to track per mention if we already had a local notification for it. (TODO)
         // For now we just track the timestamp since last notification. (potential problems: inaccurate timestamps? time zones? not account-based?)
         let mentionsForNotification = unreadMentions
-            .filter { ($0.created_at > lastLocalNotifcationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || account.followingPubkeys.contains($0.pubkey)) }
+            .filter { ($0.created_at > lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || account.followingPubkeys.contains($0.pubkey)) }
             .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
         
         DispatchQueue.main.async {
@@ -398,23 +399,28 @@ class NotificationsViewModel: ObservableObject {
     }    
     
     // async for background fetch, copy paste of checkForUnreadMentions() with withCheckedContinuation added
-    public func checkForUnreadMentionsBackground() async {
+    public func checkForUnreadMentionsBackground(accountData: AccountData) async {
+        L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground()")
         await withCheckedContinuation { continuation in
             bg().perform {
-                guard let account = account() else { continuation.resume(); return }
-                guard let fetchRequest = self.q.unreadMentionsQuery(resultType: .managedObjectResultType) else { continuation.resume(); return }
+                guard let fetchRequest = self.q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData) else { continuation.resume(); return }
                  
-                let unreadMentions = ((try? bg().fetch(fetchRequest)) ?? [])
+                let unreadMentionsWithSpam = ((try? bg().fetch(fetchRequest)) ?? [])
+                let unreadMentions = unreadMentionsWithSpam
                     .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notificatios now.
                     
                 let unreadMentionsCount = unreadMentions.count
+                
+                L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground(): unreadMentionsCount \(unreadMentionsCount), with spam: \(unreadMentionsWithSpam.count)")
                 
                 // For notifications we don't need to total unread, we need total new since last notification, because we don't want to repeat the same notification
                 // Most accurate would be to track per mention if we already had a local notification for it. (TODO)
                 // For now we just track the timestamp since last notification. (potential problems: inaccurate timestamps? time zones? not account-based?)
                 let mentionsForNotification = unreadMentions
-                    .filter { ($0.created_at > self.lastLocalNotifcationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || account.followingPubkeys.contains($0.pubkey)) }
+                    .filter { ($0.created_at > self.lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || accountData.followingPubkeys.contains($0.pubkey)) }
                     .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
+                
+                L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground(): mentions for notifications: \(mentionsForNotification.count)")
                 
                 DispatchQueue.main.async {
                     if unreadMentionsCount != self.unreadMentions_ {
@@ -569,7 +575,7 @@ class NotificationsViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self = self else { return }
             guard let account = Nostur.account() else { return }
-            guard let r = q.unreadMentionsQuery(resultType: .managedObjectResultType) 
+            guard let r = q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: account.toStruct())
             else {
                 account.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
                 return
@@ -755,12 +761,9 @@ fileprivate class NotificationFetchRequests {
     
     static let FETCH_LIMIT = 999
     
-    func unreadMentionsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
-        guard let account = account() else { return nil }
+    func unreadMentionsQuery(resultType:NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event>? {
         let mutedRootIds = NRState.shared.mutedRootIds
-        let pubkey = account.publicKey
         let blockedPubkeys = NRState.shared.blockedPubkeys
-        let lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
 
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
@@ -768,13 +771,13 @@ fileprivate class NotificationFetchRequests {
                                     "AND NOT pubkey IN %@ " +
                                     "AND kind IN {1,9802,30023} " +
                                     "AND tagsSerialized CONTAINS %@ " +
-                                    "AND NOT id IN %@ " +
+                                    "AND NOT id IN %@ " + // mutedRootIds
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
                                     "AND (replyToId == nil OR NOT replyToId IN %@) " + // mutedRootIds
-                                    "AND flags != \"is_update\" ", // mutedRootIds
-                                    lastSeenPostCreatedAt,
-                                    blockedPubkeys + [pubkey],
-                                    serializedP(pubkey),
+                                    "AND flags != \"is_update\" ",
+                                    accountData.lastSeenPostCreatedAt,
+                                    blockedPubkeys + [accountData.publicKey],
+                                    serializedP(accountData.publicKey),
                                     mutedRootIds,
                                     mutedRootIds,
                                     mutedRootIds)
