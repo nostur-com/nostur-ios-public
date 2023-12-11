@@ -100,7 +100,9 @@ class NRState: ObservableObject {
             return
         }
         
-        self.nsecBunker.setAccount(account)
+        if account.isNC {
+            self.nsecBunker.setAccount(account)
+        }
         let pubkey = account.publicKey
         self.loggedInAccount = LoggedInAccount(account)
         
@@ -148,7 +150,9 @@ class NRState: ObservableObject {
             return
         }
         self.activeAccountPublicKey = account.publicKey
-        self.nsecBunker.setAccount(account)
+        if account.isNC {
+            self.nsecBunker.setAccount(account)
+        }
         self.loggedInAccount = LoggedInAccount(account)
     }
     
