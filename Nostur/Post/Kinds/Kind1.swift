@@ -102,19 +102,19 @@ struct Kind1: View {
                     Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, fullWidth: true, forceAutoload: forceAutoload, theme: theme)
                 }
                 else {
-                    if (nrPost.kind != 1) && (nrPost.kind != 6) {
-                        Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a 'kind X' post is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                            .hCentered()
-                            .frame(maxWidth: .infinity)
-                            .background(theme.lineColor.opacity(0.2))
-                    }
                     if let subject = nrPost.subject {
                         Text(subject)
                             .fontWeight(.bold)
                             .lineLimit(3)
                         
                     }
-                    if (isDetail) {
+                    if (nrPost.kind != 1) && (nrPost.kind != 6) {
+                        AnyKind(nrPost, theme: theme)
+                    }
+                    if imageWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+                        Image(systemName: "exclamationmark.triangle.fill")
+                    }
+                    else if (isDetail) {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
                     }
                     else {
