@@ -133,16 +133,6 @@ struct Kind1Default: View {
 //                        }
                 }
                 else {
-                    if (nrPost.kind != 1) && (nrPost.kind != 6) {
-                        Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a 'kind X' post is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                            .hCentered()
-                            .frame(maxWidth: .infinity)
-                            .background(theme.lineColor.opacity(0.2))
-//                            .withoutAnimation()
-//                            .transaction { t in
-//                                t.animation = nil
-//                            }
-                    }
                     if let subject = nrPost.subject {
                         Text(subject)
                             .fontWeight(.bold)
@@ -151,6 +141,9 @@ struct Kind1Default: View {
 //                            .transaction { t in
 //                                t.animation = nil
 //                            }
+                    }
+                    if (nrPost.kind != 1) && (nrPost.kind != 6) {
+                        AnyKind(nrPost, theme: theme)
                     }
                     if imageWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                         Image(systemName: "exclamationmark.triangle.fill")
