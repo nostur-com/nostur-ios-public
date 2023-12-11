@@ -43,12 +43,13 @@ struct NotificationSettings: View {
                 
                 Toggle(isOn: $muteNewPosts.not) {
                     Text("New posts")
+                    Text("Only for people where you have activated the notification bell")
                 }
             }
            
             Section {
                 Toggle(isOn: $ss.receiveLocalNotifications) {
-                    Text("Mentions or replies")
+                    Text("Mentions, replies, or DMs")
                     Text("Receive notifications when Nostur is in background")
                 }
                 .onChange(of: ss.receiveLocalNotifications) { receiveLocalNotifications in
