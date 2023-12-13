@@ -12,8 +12,9 @@ struct NRContentTextRenderer: View {
     public let attributedStringWithPs:AttributedStringWithPs
     public var isDetail = false
     public var isPreview = false
-    @State var text: NSAttributedString? = nil
-    @State var previewText: AttributedString? = nil
+    @State private var height: CGFloat? = nil
+    @State private var text: NSAttributedString? = nil
+    @State private var previewText: AttributedString? = nil
     
     var body: some View {
         Group {
@@ -25,7 +26,7 @@ struct NRContentTextRenderer: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             else {
-                NRText(text ?? attributedStringWithPs.output)
+                NRTextFixed(text ?? attributedStringWithPs.output, height: height ?? attributedStringWithPs.height)
                     .id(text ?? attributedStringWithPs.output)
             }
         }
@@ -55,13 +56,15 @@ struct NRContentTextRenderer: View {
                         L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                         DispatchQueue.main.async {
                             self.text = reparsed.output
+                            self.height = reparsed.height
                         }
                     }
                 }
             }
         }
-        .transaction { t in
-            t.animation = nil
-        }
+        .animation(.none)
+//        .transaction { t in
+//            t.animation = nil
+//        }
     }
 }

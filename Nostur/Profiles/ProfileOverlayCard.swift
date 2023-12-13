@@ -248,7 +248,7 @@ struct ProfileOverlayCard: View {
                 }
                 .padding(.bottom, 10)
                 
-                NRText("\(String(contact.about ?? ""))\n")
+                NRTextDynamic("\(String(contact.about ?? ""))\n")
                 
                 FollowedBy(pubkey: contact.pubkey)
                 

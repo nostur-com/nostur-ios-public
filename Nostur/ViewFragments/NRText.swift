@@ -8,12 +8,12 @@
 import SwiftUI
 import RepresentableKit
 
-struct NRText: View {
-    @EnvironmentObject private var themes:Themes
+struct NRTextDynamic: View {
+    @EnvironmentObject private var themes: Themes
     
     private let attributedString: NSAttributedString
     private let plain: Bool
-
+    
     init(_ attributedString: NSAttributedString, plain: Bool = false) {
         self.attributedString = attributedString
         self.plain = plain
@@ -81,19 +81,19 @@ struct NRText: View {
     }
 }
 
-#Preview {
+#Preview("NRTextDynamic") {
     VStack {
-        NRText("Some text with a tag [#bitcoin](nostur:t:bitcoin)")
+        NRTextDynamic("Some text with a tag [#bitcoin](nostur:t:bitcoin)")
             .background(Color.red)
         
-        NRText("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long")
+        NRTextDynamic("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long")
             .background(Color.blue)
         
         Text("What")
             .background(Color.green)
     }
-        .environmentObject(Themes.default)
-        .environmentObject(DIMENSIONS())
+    .environmentObject(Themes.default)
+    .environmentObject(DIMENSIONS())
 }
 
 
@@ -122,5 +122,107 @@ struct NRText: View {
                 PostOrThread(nrPost: p)
             }
         }
+    }
+}
+
+
+#Preview("NRTextFixed") {
+    VStack {
+        NRTextFixed("Some text with a tag [#bitcoin](nostur:t:bitcoin)", height: 128, themes: Themes.default)
+            .background(Color.red)
+        
+        NRTextFixed("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long", height: 128, themes: Themes.default)
+            .background(Color.blue)
+        
+        Text("What")
+            .background(Color.green)
+    }
+    .environmentObject(Themes.default)
+    .environmentObject(DIMENSIONS())
+}
+
+struct NRTextFixed: UIViewRepresentable {
+    typealias UIViewType = UITextView
+    
+    private let attributedString: NSAttributedString
+    private let plain: Bool
+    private let themes: Themes
+    private let height: CGFloat
+    
+    // Height calculation is expensive, so calculate before in background, then pass as prop.
+    // see AttributedStringWithPs.
+    // For other situations maybe use GeometryReader
+    init(_ attributedString: NSAttributedString, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default) {
+        self.attributedString = attributedString
+        self.plain = plain
+        self.themes = themes
+        self.height = height
+    }
+    
+    init(_ text: String, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default) {
+        self.themes = themes
+        self.height = height
+        do {
+            let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+            
+            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let attributes:[NSAttributedString.Key: NSObject] = [
+                .font: UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor: UIColor(themes.theme.primary)
+            ]
+            
+            mutableAttributedString.addAttributes(
+                attributes,
+                range: NSRange(location: 0, length: mutableAttributedString.length)
+            )
+            
+            self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
+        }
+        catch {
+            let finalText = AttributedString(text)
+            
+            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let attributes:[NSAttributedString.Key: NSObject] = [
+                .font: UIFont.preferredFont(forTextStyle: .body),
+                .foregroundColor: UIColor(themes.theme.primary)
+            ]
+            
+            mutableAttributedString.addAttributes(
+                attributes,
+                range: NSRange(location: 0, length: mutableAttributedString.length)
+            )
+            
+            L.og.error("NRTextParser: \(error)")
+            self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
+        }
+        self.plain = plain
+    }
+    
+    func makeUIView(context: Context) -> UITextView {
+        let view = UITextView()
+        view.isScrollEnabled = false
+        view.tintColor = UIColor(themes.theme.accent)
+        view.isSelectable = true
+        view.isEditable = false
+        view.dataDetectorTypes = plain ? [] : [.link]
+        view.backgroundColor = .clear
+        view.textContainer.lineFragmentPadding = 0
+        view.textContainerInset = .zero
+        view.attributedText = self.attributedString
+        
+        view.translatesAutoresizingMaskIntoConstraints = false
+        //        view.widthAnchor.constraint(equalToConstant: width).isActive = true
+        return view
+    }
+    
+    func updateUIView(_ uiView: UITextView, context: Context) {
+    }
+    
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
+        let dimensions = proposal.replacingUnspecifiedDimensions(
+            by: CGSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
+        )
+        
+        return CGSize(width: dimensions.width, height: height)
     }
 }

@@ -19,7 +19,7 @@ class NRTextParser { // TEXT things
     
     private var tags:[(String, String, String?, String?)] = [] // Faster tags, and only decode once at init
 
-    func parseText(_ event:Event, text: String) -> AttributedStringWithPs {
+    func parseText(_ event:Event, text: String, availableWidth: CGFloat = DIMENSIONS.shared.availableNoteRowImageWidth()) -> AttributedStringWithPs {
         self.tags = event.fastTags
 
         // Remove image links
@@ -55,7 +55,13 @@ class NRTextParser { // TEXT things
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
             
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), previewOutput: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            let height = mutableAttributedString.boundingRect(
+                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                context: nil
+            ).height
+            
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), previewOutput: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event, height: height)
             
             return a
         }
@@ -73,8 +79,14 @@ class NRTextParser { // TEXT things
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
             
+            let height = mutableAttributedString.boundingRect(
+                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                context: nil
+            ).height
+            
             L.og.error("NRTextParser: \(error)")
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), previewOutput: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), previewOutput: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event, height: height)
             return a
         }
     }

@@ -67,7 +67,7 @@ struct ProfileRelays: View {
                     Section {
                         ForEach(writeRelays.indices, id:\.self) { index in
                             HStack {
-                                NRText(writeRelays[index], plain: true)
+                                NRTextDynamic(writeRelays[index], plain: true)
                                 Spacer()
                                 RelayConnectButton(url: writeRelays[index])
                             }
@@ -88,7 +88,7 @@ struct ProfileRelays: View {
                     Section {
                         ForEach(readRelays.indices, id:\.self) { index in
                             HStack {
-                                NRText(readRelays[index], plain: true)
+                                NRTextDynamic(readRelays[index], plain: true)
                                 Spacer()
                                 RelayConnectButton(url: readRelays[index])
                             }

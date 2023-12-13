@@ -319,7 +319,7 @@ struct ProfileView: View {
                                 }
                             }
                             
-                            NRText("\(String(nrContact.about ?? ""))\n")
+                            NRTextDynamic("\(String(nrContact.about ?? ""))\n")
                             
                             HStack(alignment: .center, spacing: 10) {
                                 ProfileFollowingCount(pubkey: pubkey)

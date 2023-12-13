@@ -296,6 +296,7 @@ struct AttributedStringWithPs: Hashable {
     var previewOutput:AttributedString? // Preview cannot render UIViewRepresentable, so need Text, so AttributedString still needed.
     var pTags:[Ptag]
     var event:Event
+    var height: CGFloat // precalculated height
 }
 
 // For long form articles
