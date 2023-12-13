@@ -100,206 +100,8 @@ struct Maintenance {
         SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
         L.maintenance.info("Starting time based maintenance")
         
-        context.perform {
-            let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
-            let fiveDaysAgo = Date.now.addingTimeInterval(-5 * 86400) 
-            pfr.predicate = NSPredicate(format: "createdAt < %@ AND NOT readAt = nil", fiveDaysAgo as NSDate)
-            
-            let pfrBatchDelete = NSBatchDeleteRequest(fetchRequest: pfr)
-            pfrBatchDelete.resultType = .resultTypeCount
-            
-            do {
-                let result = try context.execute(pfrBatchDelete) as! NSBatchDeleteResult
-                if let count = result.result as? Int, count > 0 {
-                    L.maintenance.info("🧹🧹 Deleted \(count) old notifications")
-                }
-            } catch {
-                L.maintenance.info("🔴🔴 Failed to delete old notifications")
-            }
-            
-            let frA = CloudAccount.fetchRequest()
-            let allAccounts = Array(try! context.fetch(frA))
-            let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
-                var newResult = Array(partialResult)
-                if (account.privateKey != nil) { // only if it is really our account
-                    newResult.append(account.publicKey)
-                }
-                return newResult
-            }
-            
-            let regex = ".*(" + ownAccountPubkeys.map {
-                NSRegularExpression.escapedPattern(for: serializedP($0))
-            }.joined(separator: "|") + ").*"
-            
-            let ownAccountBookmarkIds:Set<String> = Set(Bookmark.fetchAll(context: context).compactMap { $0.eventId })
-            
-            let ownAccountPrivateNoteEventIds:Set<String> = Set(CloudPrivateNote.fetchAll(context: context).compactMap({ pn in
-                guard let type = pn.type,
-                      type == CloudPrivateNote.PrivateNoteType.post.rawValue,
-                      let eventId = pn.eventId
-                else { return nil }
-                return eventId
-            }))
-            
-            let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
-            
-            
-            
-            // CLEAN UP EVENTS WITHOUT SIG (BUG FROM PostPreview)
-            let frNoSig = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            frNoSig.predicate = NSPredicate(format: "sig == nil AND flags != \"nsecbunker_unsigned\"")
-            
-            let frNoSigbatchDelete = NSBatchDeleteRequest(fetchRequest: frNoSig)
-            frNoSigbatchDelete.resultType = .resultTypeCount
-            
-            do {
-                let result = try context.execute(frNoSigbatchDelete) as! NSBatchDeleteResult
-                if let count = result.result as? Int, count > 0 {
-                    L.maintenance.info("🧹🧹 Deleted \(count) events without signature")
-                }
-            } catch {
-                L.maintenance.info("🔴🔴 Failed to delete events without signature")
-            }
-            
-            
-            
-            
-            // KIND 1,4,5,6,9802,30023
-            // OLDER THAN X DAYS
-            // IS NOT BOOKMARKED
-            // IS NOT OWN EVENT
-            // DOES NOT HAVE OUR PUBKEY IN P (Notifications)
-            // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
-            // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
-            
-            // Ids to keep: own bookmarks, privatenotes
-            let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds))
-            
-            let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,5,6,9802,30023} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
-            
-            let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
-            fr16batchDelete.resultType = .resultTypeCount
-            
-            do {
-                let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
-                if let count = result.result as? Int, count > 0 {
-                    L.maintenance.info("🧹🧹 Deleted \(count) kind {1,4,5,6,9802,30023} events")
-                }
-            } catch {
-                L.maintenance.info("🔴🔴 Failed to delete {1,4,5,6,9802,30023} data")
-            }
-            
-            
-            // KIND 7,8
-            // OLDER THAN X DAYS
-            // PUBKEY NOT IN OWN ACCOUNTS
-            // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
-            //            context.perform {
-            let fr78 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            
-            fr78.predicate = NSPredicate(format: "created_at < %i AND kind IN {8,7} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
-            
-            let fr78batchDelete = NSBatchDeleteRequest(fetchRequest: fr78)
-            fr78batchDelete.resultType = .resultTypeCount
-            
-            do {
-                let result = try context.execute(fr78batchDelete) as! NSBatchDeleteResult
-                if let count = result.result as? Int, count > 0 {
-                    L.maintenance.info("🧹🧹 Deleted \(count) kind {8,7} events")
-                }
-            } catch {
-                L.maintenance.info("🔴🔴 Failed to delete 8,7 data")
-            }
-            
-            // KIND 9735
-            // OLDER THAN X DAYS
-            // otherPubkey NOT IN OWN ACCOUNTS
-            //            context.perform {
-            let fr9735 = Event.fetchRequest()
-            fr9735.predicate = NSPredicate(format: "created_at < %i AND kind == 9735 AND (otherPubkey == nil OR NOT otherPubkey IN %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
-            
-            var deleted9735 = 0
-            var deleted9734 = 0
-            if let zaps = try? context.fetch(fr9735) {
-                for zap in zaps {
-                    // Also delete zap request (not sure if cascades from 9735 so just delete here anyway)
-                    if let zapReq = zap.zapFromRequest {
-                        context.delete(zapReq)
-                        deleted9734 += 1
-                    }
-                    context.delete(zap)
-                    deleted9735 += 1
-                }
-            }
-            L.maintenance.info("🧹🧹 Deleted \(deleted9735) zaps and \(deleted9734) zap requests")
-            
-            // KIND 0
-            // REMOVE ALL BECAUSE EVERY KIND 0 HAS A CONTACT
-            // DONT REMOVE OWN KIND 0
-            //            context.perform {
-            let fr0 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr0.predicate = NSPredicate(format: "(kind == 0) AND NOT pubkey IN %@", ownAccountPubkeys)
-            
-            let fr0batchDelete = NSBatchDeleteRequest(fetchRequest: fr0)
-            fr0batchDelete.resultType = .resultTypeCount
-            
-            do {
-                let result = try context.execute(fr0batchDelete) as! NSBatchDeleteResult
-                if let count = result.result as? Int, count > 0 {
-                    L.maintenance.info("🧹🧹 Deleted \(count) kind=0 events")
-                }
-            } catch {
-                L.maintenance.info("🔴🔴 Failed to delete kind=0 data")
-            }
-
-            
-            // DELETE OLDER KIND 3 + 10002 EVENTS
-            // BUT NOT OUR OWN OR THOSE WE ARE FOLLOWING (FOR WoT follows-follows)
-            // AND NOT OUR PUBKEY IN Ps (is following us, for following notifications)
-            
-            var followingPubkeys = Set(ownAccountPubkeys)
-            for account in allAccounts {
-                if account.privateKey != nil {
-                    followingPubkeys = followingPubkeys.union(account.followingPubkeys)
-                }
-            }
-            
-            let r = NSFetchRequest<Event>(entityName: "Event")
-            r.predicate = NSPredicate(format: "kind IN {3,10002} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", followingPubkeys, regex)
-            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            let kind3or10002 = try! context.fetch(r)
-            
-            var noDuplicates:Dictionary<String, Event> = [:]
-            var forDeletion:[Event] = []
-            
-            for event in kind3or10002 {
-                if noDuplicates[event.pubkey + String(event.kind)] != nil {
-                    forDeletion.append(event)
-                }
-                else {
-                    noDuplicates[event.pubkey + String(event.kind)] = event
-                }
-            }
-            for toDelete in forDeletion {
-                context.delete(toDelete)
-            }
-            
-            var olderKind3DeletedCount = 0
-            for remaining in noDuplicates.values {
-                if remaining.created_at < Int64(xDaysAgo.timeIntervalSince1970) {
-                    context.delete(remaining)
-                    olderKind3DeletedCount = olderKind3DeletedCount + 1
-                }
-            }
-            
-            if !forDeletion.isEmpty {
-                L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) duplicate kind 3,10002 events")
-            }
-            if olderKind3DeletedCount > 0 {
-                L.maintenance.info("🧹🧹 Deleted \(olderKind3DeletedCount) older kind 3,10002 events")
-            }
-            
+        context.performAndWait {
+            Self.databaseCleanUp(context)
             completion(true)
         }
     }
@@ -363,6 +165,207 @@ struct Maintenance {
         //                L.maintenance.info("😢😢😢 XX \(error)")
         //            }
         //        }
+    }
+    
+    static func databaseCleanUp(_ context: NSManagedObjectContext) {
+        let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
+        let fiveDaysAgo = Date.now.addingTimeInterval(-5 * 86400)
+        pfr.predicate = NSPredicate(format: "createdAt < %@ AND NOT readAt = nil", fiveDaysAgo as NSDate)
+        
+        let pfrBatchDelete = NSBatchDeleteRequest(fetchRequest: pfr)
+        pfrBatchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(pfrBatchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) old notifications")
+            }
+        } catch {
+            L.maintenance.info("🔴🔴 Failed to delete old notifications")
+        }
+        
+        let frA = CloudAccount.fetchRequest()
+        let allAccounts = Array(try! context.fetch(frA))
+        let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
+            var newResult = Array(partialResult)
+            if (account.privateKey != nil) { // only if it is really our account
+                newResult.append(account.publicKey)
+            }
+            return newResult
+        }
+        
+        let regex = ".*(" + ownAccountPubkeys.map {
+            NSRegularExpression.escapedPattern(for: serializedP($0))
+        }.joined(separator: "|") + ").*"
+        
+        let ownAccountBookmarkIds:Set<String> = Set(Bookmark.fetchAll(context: context).compactMap { $0.eventId })
+        
+        let ownAccountPrivateNoteEventIds:Set<String> = Set(CloudPrivateNote.fetchAll(context: context).compactMap({ pn in
+            guard let type = pn.type,
+                  type == CloudPrivateNote.PrivateNoteType.post.rawValue,
+                  let eventId = pn.eventId
+            else { return nil }
+            return eventId
+        }))
+        
+        let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
+        
+        
+        
+        // CLEAN UP EVENTS WITHOUT SIG (BUG FROM PostPreview)
+        let frNoSig = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+        frNoSig.predicate = NSPredicate(format: "sig == nil AND flags != \"nsecbunker_unsigned\"")
+        
+        let frNoSigbatchDelete = NSBatchDeleteRequest(fetchRequest: frNoSig)
+        frNoSigbatchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(frNoSigbatchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) events without signature")
+            }
+        } catch {
+            L.maintenance.info("🔴🔴 Failed to delete events without signature")
+        }
+        
+        
+        
+        
+        // KIND 1,4,5,6,9802,30023
+        // OLDER THAN X DAYS
+        // IS NOT BOOKMARKED
+        // IS NOT OWN EVENT
+        // DOES NOT HAVE OUR PUBKEY IN P (Notifications)
+        // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
+        // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
+        
+        // Ids to keep: own bookmarks, privatenotes
+        let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds))
+        
+        let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+        fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,5,6,9802,30023} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
+        
+        let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
+        fr16batchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) kind {1,4,5,6,9802,30023} events")
+            }
+        } catch {
+            L.maintenance.info("🔴🔴 Failed to delete {1,4,5,6,9802,30023} data")
+        }
+        
+        
+        // KIND 7,8
+        // OLDER THAN X DAYS
+        // PUBKEY NOT IN OWN ACCOUNTS
+        // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
+        //            context.perform {
+        let fr78 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+        
+        fr78.predicate = NSPredicate(format: "created_at < %i AND kind IN {8,7} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+        
+        let fr78batchDelete = NSBatchDeleteRequest(fetchRequest: fr78)
+        fr78batchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(fr78batchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) kind {8,7} events")
+            }
+        } catch {
+            L.maintenance.info("🔴🔴 Failed to delete 8,7 data")
+        }
+        
+        // KIND 9735
+        // OLDER THAN X DAYS
+        // otherPubkey NOT IN OWN ACCOUNTS
+        //            context.perform {
+        let fr9735 = Event.fetchRequest()
+        fr9735.predicate = NSPredicate(format: "created_at < %i AND kind == 9735 AND (otherPubkey == nil OR NOT otherPubkey IN %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
+        
+        var deleted9735 = 0
+        var deleted9734 = 0
+        if let zaps = try? context.fetch(fr9735) {
+            for zap in zaps {
+                // Also delete zap request (not sure if cascades from 9735 so just delete here anyway)
+                if let zapReq = zap.zapFromRequest {
+                    context.delete(zapReq)
+                    deleted9734 += 1
+                }
+                context.delete(zap)
+                deleted9735 += 1
+            }
+        }
+        L.maintenance.info("🧹🧹 Deleted \(deleted9735) zaps and \(deleted9734) zap requests")
+        
+        // KIND 0
+        // REMOVE ALL BECAUSE EVERY KIND 0 HAS A CONTACT
+        // DONT REMOVE OWN KIND 0
+        //            context.perform {
+        let fr0 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+        fr0.predicate = NSPredicate(format: "(kind == 0) AND NOT pubkey IN %@", ownAccountPubkeys)
+        
+        let fr0batchDelete = NSBatchDeleteRequest(fetchRequest: fr0)
+        fr0batchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(fr0batchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) kind=0 events")
+            }
+        } catch {
+            L.maintenance.info("🔴🔴 Failed to delete kind=0 data")
+        }
+
+        
+        // DELETE OLDER KIND 3 + 10002 EVENTS
+        // BUT NOT OUR OWN OR THOSE WE ARE FOLLOWING (FOR WoT follows-follows)
+        // AND NOT OUR PUBKEY IN Ps (is following us, for following notifications)
+        
+        var followingPubkeys = Set(ownAccountPubkeys)
+        for account in allAccounts {
+            if account.privateKey != nil {
+                followingPubkeys = followingPubkeys.union(account.followingPubkeys)
+            }
+        }
+        
+        let r = NSFetchRequest<Event>(entityName: "Event")
+        r.predicate = NSPredicate(format: "kind IN {3,10002} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", followingPubkeys, regex)
+        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        let kind3or10002 = try! context.fetch(r)
+        
+        var noDuplicates:Dictionary<String, Event> = [:]
+        var forDeletion:[Event] = []
+        
+        for event in kind3or10002 {
+            if noDuplicates[event.pubkey + String(event.kind)] != nil {
+                forDeletion.append(event)
+            }
+            else {
+                noDuplicates[event.pubkey + String(event.kind)] = event
+            }
+        }
+        for toDelete in forDeletion {
+            context.delete(toDelete)
+        }
+        
+        var olderKind3DeletedCount = 0
+        for remaining in noDuplicates.values {
+            if remaining.created_at < Int64(xDaysAgo.timeIntervalSince1970) {
+                context.delete(remaining)
+                olderKind3DeletedCount = olderKind3DeletedCount + 1
+            }
+        }
+        
+        if !forDeletion.isEmpty {
+            L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) duplicate kind 3,10002 events")
+        }
+        if olderKind3DeletedCount > 0 {
+            L.maintenance.info("🧹🧹 Deleted \(olderKind3DeletedCount) older kind 3,10002 events")
+        }
     }
     
     
