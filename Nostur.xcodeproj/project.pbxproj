@@ -283,6 +283,7 @@
 		1FA0599F2A74D9690039643C /* LVM+pubkeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0599E2A74D9680039643C /* LVM+pubkeys.swift */; };
 		1FA059A12A74F87B0039643C /* LVM+relays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A02A74F87B0039643C /* LVM+relays.swift */; };
 		1FA059A32A7554DC0039643C /* EditRelaysNosturList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */; };
+		1FA14D9E2B287FC60040B8E0 /* BackgroundProcessing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA14D9D2B287FC60040B8E0 /* BackgroundProcessing.swift */; };
 		1FA1CA3A2AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */; };
 		1FA1CA3B2AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */; };
 		1FA1CA3D2AF6D7B6000E529B /* PrivateNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA1CA3C2AF6D7B6000E529B /* PrivateNotesView.swift */; };
@@ -767,6 +768,7 @@
 		1FA0599E2A74D9680039643C /* LVM+pubkeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LVM+pubkeys.swift"; sourceTree = "<group>"; };
 		1FA059A02A74F87B0039643C /* LVM+relays.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "LVM+relays.swift"; sourceTree = "<group>"; };
 		1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditRelaysNosturList.swift; sourceTree = "<group>"; };
+		1FA14D9D2B287FC60040B8E0 /* BackgroundProcessing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundProcessing.swift; sourceTree = "<group>"; };
 		1FA1CA382AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudPrivateNote+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA1CA392AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudPrivateNote+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FA1CA3C2AF6D7B6000E529B /* PrivateNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNotesView.swift; sourceTree = "<group>"; };
@@ -1930,6 +1932,7 @@
 			isa = PBXGroup;
 			children = (
 				1FE8158D2B23B09F00ED3958 /* BackgroundNotifications.swift */,
+				1FA14D9D2B287FC60040B8E0 /* BackgroundProcessing.swift */,
 			);
 			path = BackgroundNotifications;
 			sourceTree = "<group>";
@@ -2387,6 +2390,7 @@
 				1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */,
 				1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */,
 				1F7265C229B2148200E4F9D4 /* Exporter.swift in Sources */,
+				1FA14D9E2B287FC60040B8E0 /* BackgroundProcessing.swift in Sources */,
 				1F15F0A32AAF9CAB0004E706 /* Gallery.swift in Sources */,
 				1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */,
 				1FCFDDBA2A284A7B0096CD84 /* FollowerNotifier.swift in Sources */,

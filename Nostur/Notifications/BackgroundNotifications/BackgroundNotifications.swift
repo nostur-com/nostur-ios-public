@@ -15,6 +15,13 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         // Wire notification delegate
         UNUserNotificationCenter.current().delegate = self
+        
+        // Register background processing task here (SwiftUI doesn't support PROCESSING tasks yet, only REFRESH tasks)
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.nostur.db-cleanup", using: nil) { task in
+            // Downcast the parameter to a processing task as this identifier is used for a processing request.
+            self.handleDatabaseCleaning(task: task as! BGProcessingTask)
+        }
+        
         return true
     }
 
@@ -38,6 +45,33 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             }
         }
         completionHandler()
+    }
+    
+    // Delete feed entries older than one day.
+    func handleDatabaseCleaning(task: BGProcessingTask) {
+        L.maintenance.debug("handleDatabaseCleaning()")
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+
+        let context = DataProvider.shared().newTaskContext()
+        let cleanDatabaseOperation = DatabaseCleanUpOperation(context: context)
+        
+        task.expirationHandler = {
+            // After all operations are cancelled, the completion block below is called to set the task to complete.
+            queue.cancelAllOperations()
+        }
+
+        cleanDatabaseOperation.completionBlock = {
+            let success = !cleanDatabaseOperation.isCancelled
+            if success {
+                // Update the last clean date to the current time.
+                SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
+            }
+            L.maintenance.debug("cleanDatabaseOperation.completionBlock: success: \(success)")
+            task.setTaskCompleted(success: success)
+        }
+        
+        queue.addOperation(cleanDatabaseOperation)
     }
 }
 

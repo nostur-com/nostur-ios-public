@@ -55,6 +55,9 @@ struct NosturApp: App {
             case .active:
                 npn.reload()
             case .background:
+                if !IS_CATALYST {
+                    scheduleDatabaseCleaningIfNeeded()
+                }
                 if SettingsStore.shared.receiveLocalNotifications {
                     guard let account = account() else { return }
                     if account.lastSeenPostCreatedAt == 0 {

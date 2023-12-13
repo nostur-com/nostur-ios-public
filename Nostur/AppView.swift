@@ -167,22 +167,22 @@ struct AppView: View {
                                     lvmManager.stopSubscriptions()
                                 }
                                 sendNotification(.scenePhaseBackground)
-                                // 1. Clean up
-                                Maintenance.dailyMaintenance(context: DataProvider.shared().viewContext) { didRun in
-                                    // 2. Save
-                                    DataProvider.shared().save() {
-                                        // 3. If Clean up "didRun", need to preload cache again
-                                        if didRun {
-                                            Importer.shared.preloadExistingIdsCache()
+                                
+                                if IS_CATALYST { // macOS doesn't do background processing tasks, so we do it here instead of .scheduleDatabaseCleaningIfNeeded()
+                                    // 1. Clean up
+                                    Maintenance.dailyMaintenance(context: DataProvider.shared().viewContext) { didRun in
+                                        // 2. Save
+                                        DataProvider.shared().save() {
+                                            // 3. If Clean up "didRun", need to preload cache again
+                                            if didRun {
+                                                Importer.shared.preloadExistingIdsCache()
+                                            }
                                         }
                                     }
                                 }
                             case .inactive:
                                 L.og.notice("scenePhase inactive")
-//                                if IS_CATALYST {
-//                                    DataProvider.shared().save()
-//                                }
-
+                                
                             default:
                                 break
                             }

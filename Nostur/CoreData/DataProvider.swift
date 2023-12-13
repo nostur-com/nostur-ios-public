@@ -119,6 +119,7 @@ class DataProvider: ObservableObject {
         // Create a private queue context.
         /// - Tag: newBackgroundContext
         let taskContext = container.newBackgroundContext()
+        taskContext.automaticallyMergesChangesFromParent = true
         taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         // Set unused undoManager to nil for macOS (it is nil by default on iOS)
         // to reduce resource requirements.
