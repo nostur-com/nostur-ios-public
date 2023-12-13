@@ -21,7 +21,7 @@ struct NRBalloonView: View {
             }
             
             if event.noteText == "(Encrypted content)" {
-                NRText(convertToHieroglyphs(text: event.noteText))
+                NRTextDynamic(convertToHieroglyphs(text: event.noteText))
             }
             else if !contentElements.isEmpty {
                 DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: DIMENSIONS.shared.listWidth, theme: themes.theme)

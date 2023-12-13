@@ -185,7 +185,7 @@ struct MutedConversations: View {
                             else {
                                 HStack(spacing: 10) {
                                     PFP(pubkey: mutedRootId.eventId, size: 25)
-                                    NRText("Can't find event id: \(note1(mutedRootId.eventId) ?? "?")")
+                                    NRTextDynamic("Can't find event id: \(note1(mutedRootId.eventId) ?? "?")")
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .contentShape(Rectangle())
                                         .onTapGesture { navigateTo(NotePath(id: mutedRootId.eventId)) }
