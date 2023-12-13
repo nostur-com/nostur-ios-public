@@ -223,7 +223,7 @@ class NRContentElementBuilder {
     }
     
     
-    static let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp)(\?\S+){0,1}\b"###
+    static let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png#?|jpe?g#?|gif#?|webp#?)(\??\S+){0,1}\b"###
     static let previewImagePlaceholder = ###"--@!\^@(\d+)@\^!@--"###
     static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4|mov|m3u8|m4a)(\?\S+){0,1}\b"###
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
@@ -313,6 +313,10 @@ struct MarkdownContentWithPs: Hashable {
 
 
 func findImetaDimensions(_ event:Event, url:String) -> CGSize? {
+    // NIP-54
+    if let dim = findImetaFromUrl(url) { return dim }
+    
+    // DIP-01
     // Find any tag that is 'imeta' and has matching 'url', spec is unclear about order, so check every imeta value:
     // fastTags only supports tags with 3 values, so too bad if there are more.
     let imetaTag:FastTag? = event.fastTags.first(where: { tag in
@@ -383,4 +387,31 @@ func findImetaDimensions(_ event:Event, url:String) -> CGSize? {
     }
 
     return nil
+}
+
+
+// NIP-54
+func findImetaFromUrl(_ url:String) -> CGSize? {
+    let splits = url.split(separator: "#", maxSplits: 1)
+    guard let metaParams = splits.last else { return nil }
+    let metaSplits = metaParams.split(separator: "&")
+//    var dim:CGSize?
+//    var m:String? // Disabled for now
+//    var x:String? // Disabled for now
+    for meta in metaSplits {
+        if String(meta).prefix(4) == "dim=" {
+            let dims = String(String(meta).dropFirst(4)).split(separator: "x").compactMap { Double($0) }
+            guard dims.count == 2 else { continue }
+            return CGSize(width: dims[0], height: dims[1])
+        }
+        // Disabled for now:
+//        else if String(meta).prefix(2) == "x=" {
+//            x = String(String(meta).dropFirst(2))
+//        }
+//        else if String(meta).prefix(2) == "m=" {
+//            m = String(meta).dropFirst(2).removingPercentEncoding
+//        }
+    }
+    return nil
+//    return ...
 }
