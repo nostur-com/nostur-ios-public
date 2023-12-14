@@ -35,7 +35,7 @@ struct LinkPreviewView: View {
                         .pipeline(ImageProcessing.shared.content)
                         .frame(width: (DIMENSIONS.PREVIEW_HEIGHT * Self.aspect))
                         .background(Color.gray)
-//                        .clipped()
+                        .clipped()
                     }
                     else {
                         Image(systemName: "link")
