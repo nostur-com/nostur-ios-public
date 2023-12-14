@@ -26,6 +26,11 @@ struct MinimalQuotedNoteFragment: View {
                         Text(" · \(nrPost.ago)") //
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
+                        if let via = nrPost.via {
+                            Text(" · via \(via)") //
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
                 Spacer()

@@ -73,6 +73,11 @@ struct QuotedNoteFragmentView: View {
                                 Text(verbatim: " ·") //
                                 Ago(nrPost.createdAt)
                                     .equatable()
+                                if let via = nrPost.via {
+                                    Text(" · via \(via)") //
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.secondary)
+                                }
                             }
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
