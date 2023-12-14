@@ -113,7 +113,7 @@ func scheduleMentionNotification(_ mentions:[Mention]) {
     // Create the notificatgion
     let content = UNMutableNotificationContent()
     content.title = Set(mentions.map { $0.name }).formatted(.list(type: .and)) // "John and Jim"
-    content.subtitle = mentions.count == 1 ? (mentions.first?.message ?? "Message") : "\(mentions.count) messages" // "What's up" or "2 messages"
+    content.body = mentions.count == 1 ? (mentions.first?.message ?? "Message") : "\(mentions.count) messages" // "What's up" or "2 messages"
     content.sound = .default
     content.userInfo = ["tapDestination": "Mentions"] // For navigating to the Notifications->Mentions tab
     
@@ -136,7 +136,7 @@ func scheduleDMNotification(name: String) {
     
     let content = UNMutableNotificationContent()
     content.title = name // "John"
-    content.subtitle = "Direct Message"
+    content.body = "Direct Message"
     content.sound = .default
     content.userInfo = ["tapDestination": "Messages"] // For navigating to the DM tab
     
