@@ -75,13 +75,14 @@ public class PersistentNotification: NSManagedObject {
     }
     
     // pubkey is for the account the notification is for (not always relevant, but its not the pubkey of a contact in the notification)
-    static func createNewPostsNotification(pubkey: String, context: NSManagedObjectContext = context(), contacts:[ContactInfo]) -> PersistentNotification {
+    static func createNewPostsNotification(pubkey: String, context: NSManagedObjectContext = context(), contacts:[ContactInfo], since: Int64) -> PersistentNotification {
   
         let newPostNotification = PersistentNotification(context: context)
         newPostNotification.id = UUID()
         newPostNotification.createdAt = .now
         newPostNotification.pubkey = pubkey
         newPostNotification.type = .newPosts
+        newPostNotification.since = since
         if let contactsData = try? JSONEncoder().encode(contacts), let contactsJson = String(data: contactsData, encoding: .utf8) {
             newPostNotification.content = contactsJson
         }

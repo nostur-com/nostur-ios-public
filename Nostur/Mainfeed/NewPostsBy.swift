@@ -27,8 +27,8 @@ struct NewPostsBy: View {
     
     @Namespace private var top
     
-    init(pubkeys: Set<String>) {
-        _vm = StateObject(wrappedValue: NewPostsVM(pubkeys: pubkeys))
+    init(pubkeys: Set<String>, since: Int64) {
+        _vm = StateObject(wrappedValue: NewPostsVM(pubkeys: pubkeys, since: since))
     }
     
     var body: some View {
@@ -113,6 +113,6 @@ struct NewPostsBy: View {
 }
 
 #Preview("NewPostsBy") {
-    NewPostsBy(pubkeys: [])
+    NewPostsBy(pubkeys: [], since: 0)
         .environmentObject(Themes.default)
 }

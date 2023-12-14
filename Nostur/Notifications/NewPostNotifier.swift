@@ -12,7 +12,7 @@ import NostrEssentials
 // Reads which pubkeys we want new post notifications for from iCloud table
 // Checks for any new post AFTER .lastCheckDate
 // Creates notification if there are new posts
-// Store notification .createdAt as.lastCheckDate
+// Store notification .createdAt as .lastCheckDate
 // Repeat
 
 // Tapping notification should go to special pubkeys feed, just showing all posts. Maybe single pubkey LVM. Or ProfilePostsView
@@ -59,7 +59,8 @@ class NewPostNotifier: ObservableObject {
         let tasks = CloudTask.fetchAll(byType: .notifyOnPosts, andAccountPubkey: accountPubkey)
         enabledPubkeys = Set(tasks.compactMap { $0.value_ })
         
-        let since = (PersistentNotification.fetchPersistentNotification(byPubkey: accountPubkey, type: .newPosts)?.createdAt.timeIntervalSince1970 ?? tasks.first?.createdAt.timeIntervalSince1970) ?? (Date.now.timeIntervalSince1970 - (3600 * 8))
+        // since = "lastCheck" ?? "most recent notification" ?? "most recent task" ?? "8 hours ago"
+        let since = (self.lastCheck?.timeIntervalSince1970 ?? (PersistentNotification.fetchPersistentNotification(byPubkey: accountPubkey, type: .newPosts)?.createdAt.timeIntervalSince1970 ?? tasks.first?.createdAt.timeIntervalSince1970)) ?? (Date.now.timeIntervalSince1970 - (3600 * 8))
         
         let task = ReqTask(
             debounceTime: 0.5,
@@ -73,7 +74,7 @@ class NewPostNotifier: ObservableObject {
                                         authors: self.enabledPubkeys,
                                         kinds: PROFILE_KINDS,
                                         since: Int(since),
-                                        limit: 50
+                                        limit: 250
                                     )
                                    ]
                     ).json() {
@@ -88,7 +89,8 @@ class NewPostNotifier: ObservableObject {
                 self.backlog.clear()
                 bg().perform {
                     let fr = Event.fetchRequest()
-                    fr.predicate = NSPredicate(format: "created_at > %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS)
+                    fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS)
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
                         self.createNewPostsNotification(newPosts, accountPubkey: accountPubkey)
                     }
@@ -99,7 +101,7 @@ class NewPostNotifier: ObservableObject {
                 L.og.debug("NewPostNotifier.runCheck(): timeout")
                 bg().perform {
                     let fr = Event.fetchRequest()
-                    fr.predicate = NSPredicate(format: "created_at > %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS)
+                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS)
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
                         self.createNewPostsNotification(newPosts, accountPubkey: accountPubkey)
                     }
@@ -149,21 +151,24 @@ class NewPostNotifier: ObservableObject {
         let allContacts:[ContactInfo] = existing.reduce(contacts) { partialResult, notification in
             return (partialResult + notification.contactsInfo)
         }
+        let existingSince = existing.last?.since ?? Int64(existing.last?.createdAt.timeIntervalSince1970 ?? 0)
+        let newPostsSince = newPosts.sorted(by: { $0.created_at > $1.created_at }).last?.created_at ?? 0
+        let since = existingSince < newPostsSince && existingSince != 0 ? existingSince : newPostsSince
         for notification in existing {
             context().delete(notification)
         }
-        let newPostNotification = PersistentNotification.createNewPostsNotification(pubkey: accountPubkey, contacts: Array(Set(allContacts)))
+        let newPostNotification = PersistentNotification.createNewPostsNotification(pubkey: accountPubkey, contacts: Array(Set(allContacts)), since: since)
         NotificationsViewModel.shared.checkNeedsUpdate(newPostNotification)
     }
 }
-
-struct NewPostsNotificationData: Codable {
-    let contacts:[ContactInfo]
-    
-    public var pubkeys:[String] {
-        contacts.map { $0.pubkey }
-    }
-}
+//
+//struct NewPostsNotificationData: Codable {
+//    let contacts:[ContactInfo]
+//    
+//    public var pubkeys:[String] {
+//        contacts.map { $0.pubkey }
+//    }
+//}
 
 struct ContactInfo: Codable, Identifiable, Hashable, Equatable {
     var id:String { pubkey }

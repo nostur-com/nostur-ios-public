@@ -12,6 +12,7 @@ import Combine
 struct NewPostsForPubkeys: Hashable {
     let id = UUID()
     let pubkeys:Set<String>
+    let since: Int64 // for use in REQ
 }
 
 // Copy pasta from old NotificationsFollowers
@@ -55,7 +56,7 @@ struct NotificationsNewPosts: View {
                     Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: 10) {
                         ForEach(notifications) { notification in
-                            NavigationLink(value: NewPostsForPubkeys(pubkeys: Set(notification.contactsInfo.map { $0.pubkey })), label: {
+                            NavigationLink(value: NewPostsForPubkeys(pubkeys: Set(notification.contactsInfo.map { $0.pubkey }), since: notification.since), label: {
                                 Text("New posts by \(notification.contactsInfo.map { $0.name }.formatted(.list(type: .and)))")
                                     .foregroundColor(.primary)
                                     .frame(maxWidth:.infinity, alignment:.leading)
@@ -130,7 +131,7 @@ struct NotificationsNewPosts: View {
                    }
                }))
         .navigationDestination(for: NewPostsForPubkeys.self, destination: { newPostsForPubkeys in
-            NewPostsBy(pubkeys: newPostsForPubkeys.pubkeys)
+            NewPostsBy(pubkeys: newPostsForPubkeys.pubkeys, since: newPostsForPubkeys.since)
         })
     }
 }
