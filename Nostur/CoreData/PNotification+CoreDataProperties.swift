@@ -23,6 +23,7 @@ extension PersistentNotification {
     @NSManaged public var pubkey: String
     @NSManaged public var readAt: Date?
     @NSManaged public var type_: String
+    @NSManaged public var since: Int64 // New Post notifications "since"
     
     var type:PersistentNotificationType {
         get { PersistentNotificationType(rawValue: type_) ?? PersistentNotificationType.none }

@@ -16,7 +16,7 @@ class NewPostsVM: ObservableObject {
     
     private var backlog:Backlog
     private var pubkeys:Set<Pubkey>
-    private var since:Date?
+    private var since:Int64
     private var didLoad = false
     private static let POSTS_LIMIT = 75
     private var prefetchedIds = Set<String>()
@@ -28,8 +28,9 @@ class NewPostsVM: ObservableObject {
         didLoad = false
     }
     
-    public init(pubkeys: Set<String>? = nil, since:Date? = nil) {
+    public init(pubkeys: Set<String>? = nil, since:Int64 = 0) {
         self.state = .initializing
+        self.since = since > 0 ? since : Int64(Date.now.timeIntervalSince1970 - (24 * 3600 * 14)) // 2 weeks ago should be enough
         self.backlog = Backlog(timeout: 1.5, auto: true)
         self.pubkeys = pubkeys ?? NewPostNotifier.shared.enabledPubkeys
     }
@@ -47,7 +48,7 @@ class NewPostsVM: ObservableObject {
                                         Filters(
                                             authors: self.pubkeys,
                                             kinds: PROFILE_KINDS,
-                                            since: self.since != nil ? Int(self.since!.timeIntervalSince1970) : nil,
+                                            since: self.since != 0 ? Int(self.since) : nil,
                                             limit: 150
                                         )
                                        ]
@@ -78,24 +79,13 @@ class NewPostsVM: ObservableObject {
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         bg().perform {
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.since, self.pubkeys, PROFILE_KINDS)
             fr.fetchLimit = 75
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            
-            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
-            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
-            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
-            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
-            print(String(format: "pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.pubkeys, PROFILE_KINDS))
-            
             guard let events = try? bg().fetch(fr) else { return }
-            
-            print("events.count: \(events.count)")
             
             let nrPosts = events
                 .map { NRPost(event: $0, withReplyTo: true, withParents: false, withReplies: true) }
-            
-            print("nrPosts.count: \(nrPosts.count)")
             
             DispatchQueue.main.async {
                 onComplete?()
@@ -134,8 +124,8 @@ class NewPostsVM: ObservableObject {
         guard !didLoad else { return }
         self.state = .loading
         self.posts = []
-        self.fetchPostsFromRelays()
-        //        self.fetchPostsFromDB()
+//        self.fetchPostsFromRelays()
+        self.fetchPostsFromDB()
     }
     
     public enum FeedState {

@@ -248,6 +248,7 @@
         <attribute name="id" attributeType="UUID" defaultValueString="11111111-1111-1111-1111-111111111111" usesScalarValueType="NO"/>
         <attribute name="pubkey" attributeType="String"/>
         <attribute name="readAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="since" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="type_" attributeType="String"/>
     </entity>
     <entity name="PrivateNote" representedClassName="PrivateNote" syncable="YES">
