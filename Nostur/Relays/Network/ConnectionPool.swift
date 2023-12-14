@@ -94,7 +94,9 @@ public class ConnectionPool: ObservableObject {
         stayConnectedTimer?.invalidate()
         stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { _ in
             if NetworkMonitor.shared.isConnected {
-                self.stayConnectedPing()
+                if IS_CATALYST || !NRState.shared.appIsInBackground {
+                    self.stayConnectedPing()
+                }
             }
         })
     }
