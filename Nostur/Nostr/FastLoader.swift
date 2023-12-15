@@ -450,7 +450,9 @@ class ReqTask: Identifiable, Hashable {
     }
     
     public func onTimeout() {
-        L.og.debug("🟠🟠 removing task \(self.subscriptionId) after timeout")
+        guard !didProcess else {
+            L.og.debug("🟠🟠 didProcess, timeout not needed"); return
+        }
         self.timeoutCommand?(subscriptionId)
     }
 }
