@@ -403,6 +403,7 @@ class ReqTask: Identifiable, Hashable {
     public let processResponseCommand:(_: String, _:RelayMessage?, _:Event?) -> Void
     private let timeoutCommand:((_ taskId:String) -> Void)?
     private var didProcess = false
+    private var skipTimeout = false
     
     // Only use for fetching specific ids. different relays can return different events
     // prio will return the first received, this is wrong if we need for example the most recent event .
@@ -446,12 +447,13 @@ class ReqTask: Identifiable, Hashable {
     private var processSubject = PassthroughSubject<RelayMessage?, Never>()
     
     public func process(_ message:RelayMessage? = nil) {
+        self.skipTimeout = true
         self.processSubject.send(message)
     }
     
     public func onTimeout() {
-        guard !didProcess else {
-            L.og.debug("🟠🟠 didProcess, timeout not needed"); return
+        guard !didProcess && !skipTimeout else { // need 2 flags to cover the debounce time where onTimeout could get called before didProcess is set
+            L.og.debug("🟠🟠 didProcess or skipTimeout, timeout not needed"); return
         }
         self.timeoutCommand?(subscriptionId)
     }
