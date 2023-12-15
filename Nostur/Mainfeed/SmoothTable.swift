@@ -474,6 +474,7 @@ final class PostOrThreadCell: UITableViewCell {
     func configure(with nrPost: NRPost) {
         self.contentConfiguration = UIHostingConfiguration {
             PostOrThread(nrPost: nrPost)
+                .environmentObject(Themes.default) // Shouldn't need this, but otherwise sometimes crash?
         }
         .margins(.all, 0)
     }
