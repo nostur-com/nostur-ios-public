@@ -18,6 +18,8 @@ struct NewPostsForPubkeys: Hashable {
 // Copy pasta from old NotificationsFollowers
 struct NotificationsNewPosts: View {
     @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var dim:DIMENSIONS
+    
     @Binding private var navPath:NavigationPath
     
     private var selectedTab: String {
@@ -132,6 +134,8 @@ struct NotificationsNewPosts: View {
                }))
         .navigationDestination(for: NewPostsForPubkeys.self, destination: { newPostsForPubkeys in
             NewPostsBy(pubkeys: newPostsForPubkeys.pubkeys, since: newPostsForPubkeys.since)
+                .environmentObject(themes)
+                .environmentObject(dim)
         })
     }
 }
