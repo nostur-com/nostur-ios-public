@@ -205,7 +205,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     public final class Coordinator: NSObject, UITextViewDelegate, PastedImagesDelegate {
         
         func didPasteImage(_ image: UIImage) {
-            self.parent.pastedImages.append(PostedImageMeta(imageData: image, type: .jpeg))
+            self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, imageData: image, type: .jpeg))
         }
         
         func photoPickerTapped() {

@@ -143,12 +143,12 @@ public final class NewPostModel: ObservableObject {
                         }
                         
                         if let imageData = scaledImage.jpegData(compressionQuality: 0.85) {
-                            return (imageData, PostedImageMeta.ImageType.jpeg)
+                            return (imageData, PostedImageMeta.ImageType.jpeg, imageMeta.index)
                         }
                         return nil
                     }
-                    .map { (resizedImage, type) in
-                        MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage)
+                    .map { (resizedImage, type, index) in
+                        MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage, index: index)
                     }
                 
                 uploader.uploadingPublishers(for: mediaRequestBags, keys: keys)
