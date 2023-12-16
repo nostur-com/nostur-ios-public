@@ -91,7 +91,7 @@ struct Entry: View {
             .sheet(isPresented: $cameraSheetShown) {
                 NavigationStack {
                     CameraView(onUse: { uiImage in
-                        typingTextModel.pastedImages.append(PostedImageMeta(imageData: uiImage, type: .jpeg)) 
+                        typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, imageData: uiImage, type: .jpeg)) 
                     })
                 }
                 .presentationBackground(themes.theme.background)

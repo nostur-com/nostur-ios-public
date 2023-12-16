@@ -13,7 +13,8 @@ public struct PostedImageMeta: Hashable, Identifiable, Equatable {
     static public func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
-    public let id = UUID()
+    public var id: Int { index }
+    public let index: Int // To keep the correct order in pasted images
     public let imageData:UIImage
     public let type:ImageType
     

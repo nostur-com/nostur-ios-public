@@ -41,8 +41,8 @@ struct ImagePreviews: View {
 
 struct ImagePreviews_Previews: PreviewProvider {
     @State static var images:[PostedImageMeta] = [
-        PostedImageMeta(imageData: UIImage(named:"NosturLogo")!, type: .jpeg),
-        PostedImageMeta(imageData: UIImage(named:"NosturLogoFull")!, type: .jpeg)
+        PostedImageMeta(index: 0, imageData: UIImage(named:"NosturLogo")!, type: .jpeg),
+        PostedImageMeta(index: 1, imageData: UIImage(named:"NosturLogoFull")!, type: .jpeg)
     ]
     static var previews: some View {
         VStack {
