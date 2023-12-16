@@ -80,6 +80,10 @@ struct PaymentAmountSelector: View {
                                 }
                             }
                         }
+                        else {
+                            L.og.error("🔴🔴 response.pr: Could not fetch invoice from: \(paymentInfo.callback)")
+                            sendNotification(.anyStatus, ("Could not fetch invoice from: \(paymentInfo.callback)", "APP_NOTICE"))
+                        }
                     }
                 }
             }
