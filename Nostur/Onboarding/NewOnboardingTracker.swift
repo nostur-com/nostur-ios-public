@@ -280,11 +280,11 @@ class NewOnboardingTracker {
                     let fr = CloudRelay.fetchRequest()
                     if relay.url.suffix(1) == "/" {
                         let relayWithoutSlash = String(relay.url.dropLast(1))
-                        fr.predicate = NSPredicate(format: "url == %@ OR url == %@", relay.url.lowercased(), relayWithoutSlash.lowercased())
+                        fr.predicate = NSPredicate(format: "url_ == %@ OR url_ == %@", relay.url.lowercased(), relayWithoutSlash.lowercased())
                     }
                     else {
                         let relayWithSlash = relay.url + "/"
-                        fr.predicate = NSPredicate(format: "url == %@ OR url == %@", relay.url.lowercased(), relayWithSlash.lowercased())
+                        fr.predicate = NSPredicate(format: "url_ == %@ OR url_ == %@", relay.url.lowercased(), relayWithSlash.lowercased())
                     }
                     L.onboarding.info("✈️✈️✈️ adding \(relay.url) ")
                     if let existingRelay = try? self.bg.fetch(fr).first {
