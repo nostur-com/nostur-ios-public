@@ -119,7 +119,7 @@ struct Kind1: View {
                     }
                     else {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
-                        .frame(maxHeight: 700, alignment: .top)
+                        .frame(maxHeight: 500, alignment: .top)
                         .clipped()
                         if (nrPost.previewWeights?.moreItems ?? false) {
                             ReadMoreButton(nrPost: nrPost)
