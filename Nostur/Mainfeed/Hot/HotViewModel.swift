@@ -26,6 +26,7 @@ class HotViewModel: ObservableObject {
     private var didLoad = false
     private static let POSTS_LIMIT = 75
     private static let REQ_IDS_LIMIT = 500 // (strfry default)
+    private static let HOT_KINDS:Set<Int64> = Set([1,9802,30032])
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
     
@@ -261,6 +262,7 @@ class HotViewModel: ObservableObject {
                     L.og.debug("🔝🔝 id:\(postId): \(likesAndReposts.count)")
                 }
                 if let event = try? Event.fetchEvent(id: postId, context: bg()) {
+                    guard Self.HOT_KINDS.contains(event.kind) else { continue } // not DMs or other weird stuff
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns
                     guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
                     guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
