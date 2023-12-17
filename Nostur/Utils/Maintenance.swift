@@ -35,9 +35,6 @@ struct Maintenance {
                         }
                         relays.append(bootstrapRelay.toStruct())
                     }
-                    for relay in relays {
-                        _ = ConnectionPool.shared.addConnection(relay)
-                    }
                 }
             }
             
@@ -1071,15 +1068,6 @@ struct Maintenance {
     // Migrate Relays to iCloud-ready table
     static func runMigrateRelays(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.migrateRelays, context: context) else { return }
-        
-        // Oops code. Uncomment during testing if we need to run this again.
-        let fr0 = CloudRelay.fetchRequest()
-        fr0.predicate = NSPredicate(value: true)
-        if let cfs = try? context.fetch(fr0) {
-            for cf in cfs {
-                context.delete(cf)
-            }
-        }
         
         let fr = Relay.fetchRequest()
         fr.predicate = NSPredicate(value: true)
