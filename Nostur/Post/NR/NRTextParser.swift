@@ -16,11 +16,8 @@ import UIKit
 class NRTextParser { // TEXT things
     static let shared = NRTextParser()
     private let context = bg()
-    
-    private var tags:[(String, String, String?, String?)] = [] // Faster tags, and only decode once at init
 
     func parseText(_ event:Event, text: String, availableWidth: CGFloat = DIMENSIONS.shared.availableNoteRowImageWidth()) -> AttributedStringWithPs {
-        self.tags = event.fastTags
 
         // Remove image links
         // because they get rendered as embeds in PostDetail.
@@ -92,8 +89,6 @@ class NRTextParser { // TEXT things
     }
     
     func parseMD(_ event:Event, text: String) -> MarkdownContentWithPs {
-        self.tags = event.fastTags
-        
 //        L.og.debug(text)
 
         // Remove image links
@@ -122,7 +117,6 @@ class NRTextParser { // TEXT things
     }
 
     func copyPasteText(_ event:Event, text: String) -> TextWithPs {
-        self.tags = event.fastTags
         // NIP-08, handle #[0] #[1] etc
         let textWithPs = parseTagIndexedMentions(event: event, text: text, plainText: true)
 
@@ -134,15 +128,15 @@ class NRTextParser { // TEXT things
 
     // NIP-08 (deprecated in favor of NIP-27)
     private func parseTagIndexedMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
-        guard !tags.isEmpty else { return TextWithPs(text: text, pTags: []) }
+        guard !event.fastTags.isEmpty else { return TextWithPs(text: text, pTags: []) }
 
         var pTags = [Ptag]()
         var newText = text
         let matches = text.matches(of: /#\[(\d+)\]/)
         for match in matches.prefix(100) { // 100 limit for sanity
             guard let tagIndex = Int(match.output.1) else { continue }
-            guard tagIndex < tags.count else { continue }
-            let tag = tags[tagIndex]
+            guard tagIndex < event.fastTags.count else { continue }
+            let tag = event.fastTags[tagIndex]
 
             if (tag.0 == "p") {
                 pTags.append(tag.1)
