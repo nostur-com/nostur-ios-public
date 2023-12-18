@@ -62,7 +62,7 @@ struct ComposePost: View {
                                     }).equatable()
                                     
                                     Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
-                                        .frame(height: replyTo == nil && quotingEvent == nil ? (geo.size.height - 20) : ((geo.size.height - 20) * 0.5 ) )
+                                        .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
                                         .id(textfield)
                                 }
                                 .padding(.top, 10)
