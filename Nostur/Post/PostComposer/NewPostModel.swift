@@ -151,6 +151,15 @@ public final class NewPostModel: ObservableObject {
                         MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage, index: index)
                     }
                 
+                uploader.queued = mediaRequestBags
+                uploader.onFinish = {
+                    let imetas:[Nostur.Imeta] = mediaRequestBags
+                        .compactMap {
+                            guard let url = $0.downloadUrl else { return nil }
+                            return Imeta(url: url, dim: $0.dim, hash: $0.sha256hex)
+                        }
+                    self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+                }
                 uploader.uploadingPublishers(for: mediaRequestBags, keys: keys)
                     .receive(on: RunLoop.main)
                     .sink(receiveCompletion: { result in
@@ -170,13 +179,13 @@ public final class NewPostModel: ObservableObject {
                         for mediaRequestBag in mediaRequestBags {
                             self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
                         }
-                        if (self.uploader.finished) {
-                            let imetas:[Imeta] = mediaRequestBags.compactMap {
-                                guard let url = $0.downloadUrl else { return nil }
-                                return Imeta(url: url, dim: $0.dim, hash: $0.hash)
-                            }
-                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
-                        }
+//                        if (self.uploader.finished) {
+//                            let imetas:[Imeta] = mediaRequestBags.compactMap {
+//                                guard let url = $0.downloadUrl else { return nil }
+//                                return Imeta(url: url, dim: $0.dim, hash: $0.sha256hex)
+//                            }
+//                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+//                        }
                     })
                     .store(in: &subscriptions)
             }
