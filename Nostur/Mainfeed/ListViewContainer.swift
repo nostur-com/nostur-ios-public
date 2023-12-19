@@ -33,6 +33,9 @@ struct IsolatedLVMLoadingView: View {
     @ObservedObject var vm:LVM
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         if vm.posts.value.isEmpty {
             CenteredProgressView()
         }
