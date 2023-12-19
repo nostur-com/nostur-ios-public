@@ -33,7 +33,7 @@ struct IsolatedLVMLoadingView: View {
     @ObservedObject var vm:LVM
     
     var body: some View {
-        if vm.state == .INIT || vm.posts.isEmpty {
+        if vm.posts.value.isEmpty {
             CenteredProgressView()
         }
     }

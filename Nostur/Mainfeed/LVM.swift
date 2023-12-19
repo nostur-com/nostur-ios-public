@@ -32,7 +32,7 @@ class LVM: NSObject, ObservableObject {
         
     var feed:NosturList?
     
-    @Published var state:LVM.LIST_STATE = .INIT
+//    @Published var state:LVM.LIST_STATE = .INIT
     
     // BG?
     var nrPostLeafs:[NRPost] = [] {
@@ -64,6 +64,7 @@ class LVM: NSObject, ObservableObject {
                 if self.id == "Following" {
                     signpost(NRState.shared, "LAUNCH", .event, "setting .posts")
                 }
+                self.objectWillChange.send()
                 self.posts.send(posts)
             }
         }
@@ -1633,22 +1634,22 @@ extension LVM {
                 return !onScreenSeen.contains($0.id)
             }
         
-        switch (self.state) {
-            case .INIT: // Show last X (FORCED CUTOFF)
-                newUnrenderedEvents = filteredEvents.filter(onlyRootOrReplyingToFollower)
-                    .prefix(LVM_MAX_VISIBLE)
-                    .map {
-                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0, fixRelations: true)
-                        _ = $0.replyTo__
-                        return $0
-                    }
-                let newEventIds = getAllEventIds(newUnrenderedEvents)
-                let newCount = newEventIds.subtracting(idsOnScreen).count
-                if newCount > 0 {
-                    self.startRenderingSubject.send(newUnrenderedEvents)
-                }
-                
-            default:
+//        switch (self.state) {
+//            case .INIT: // Show last X (FORCED CUTOFF)
+//                newUnrenderedEvents = filteredEvents.filter(onlyRootOrReplyingToFollower)
+//                    .prefix(LVM_MAX_VISIBLE)
+//                    .map {
+//                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0, fixRelations: true)
+//                        _ = $0.replyTo__
+//                        return $0
+//                    }
+//                let newEventIds = getAllEventIds(newUnrenderedEvents)
+//                let newCount = newEventIds.subtracting(idsOnScreen).count
+//                if newCount > 0 {
+//                    self.startRenderingSubject.send(newUnrenderedEvents)
+//                }
+//                
+//            default:
                 newUnrenderedEvents = filteredEvents
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
@@ -1664,8 +1665,8 @@ extension LVM {
                     self.startRenderingSubject.send(newUnrenderedEvents)
                 }
                 
-                return
-        }
+//                return
+//        }
     }
     
     
