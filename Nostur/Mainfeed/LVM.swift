@@ -65,11 +65,13 @@ class LVM: NSObject, ObservableObject {
                     signpost(NRState.shared, "LAUNCH", .event, "setting .posts")
                 }
                 self.objectWillChange.send()
+                self.isInserting = true
                 self.posts.send(posts)
             }
         }
     }
     
+    var isInserting = false
     
     // Ordered Dictionary so SmoothList can work with O(1)
     var posts = CurrentValueSubject<Posts, Never>([:])
