@@ -223,6 +223,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                     if shouldCommit {
                         CATransaction.commit()
                     }
+                    coordinator.lvm.isInserting = false
                 }
             }
             .store(in: &coordinator.subscriptions)
@@ -399,6 +400,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         }
         
         func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+            guard !lvm.isInserting else { return }
             if let lastAppearedId = lvm.posts.value.elements[safe: indexPath.row]?.value.id {
                 lvm.lastAppearedIdSubject.send(lastAppearedId)
             }
