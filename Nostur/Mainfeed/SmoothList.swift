@@ -55,7 +55,7 @@ struct SmoothList: UIViewControllerRepresentable {
         
         // configure lvm
         context.coordinator.lvm = lvm
-        context.coordinator.data = lvm.posts
+//        context.coordinator.data = lvm.posts
         
         // load posts
         refresh(cvh, coordinator: context.coordinator)
@@ -66,7 +66,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 guard context.coordinator.lvm.viewIsVisible else { return }
                 guard context.coordinator.lvm.lvmCounter.count > 0 else {
                     // if no unread, scroll to top
-                    if !context.coordinator.lvm.posts.isEmpty {
+                    if !context.coordinator.lvm.posts.value.isEmpty {
                         cvh.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
                     }
                     return
@@ -80,8 +80,8 @@ struct SmoothList: UIViewControllerRepresentable {
                     L.og.error("🔴🔴 not scrolling: index+1: \(index+1) is > than cvh.dataSource?.snapshot().numberOfItems(inSection: .main)")
                     return
                 }
-                if index >= 0 && index < context.coordinator.lvm.posts.elements.count {
-                    context.coordinator.lvm.lastReadId = context.coordinator.lvm.posts.elements[index].value.id
+                if index >= 0 && index < context.coordinator.lvm.posts.value.elements.count {
+                    context.coordinator.lvm.lastReadId = context.coordinator.lvm.posts.value.elements[index].value.id
                 }
                 cvh.collectionView.scrollToItem(at: IndexPath(item: max(0,index), section: 0), at: .top, animated: true)
             }
@@ -90,7 +90,7 @@ struct SmoothList: UIViewControllerRepresentable {
         receiveNotification(.shouldScrollToTop)
             .sink { _ in
                 guard context.coordinator.lvm.viewIsVisible else { return }
-                if !context.coordinator.lvm.posts.isEmpty {
+                if !context.coordinator.lvm.posts.value.isEmpty {
                     cvh.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
                 }
             }
@@ -142,11 +142,11 @@ struct SmoothList: UIViewControllerRepresentable {
         snapshot.appendItems(coordinator.data.keys.elements, toSection: .main)
         collectionViewHolder.dataSource?.apply(snapshot, animatingDifferences: false)
 
-        coordinator.lvm.$posts
+        coordinator.lvm.posts
 //            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
 //            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
             .sink { data in
-                coordinator.data = data
+//                coordinator.data = data
                 guard let dataSource = collectionViewHolder.dataSource else { return }
                 let currentNumberOfItems = dataSource.snapshot().numberOfItems(inSection: .main)
                 let isInitialApply = coordinator.initialApply

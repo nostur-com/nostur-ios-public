@@ -19,7 +19,7 @@ extension LVM {
         hashtags = []
         lvmCounter.count = 0
         L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.loadSomeonesFeed()")
-        posts = [:]
+        posts.send([:])
         instantFinished = false
         bg().perform {
             self.pubkeys = []
@@ -154,7 +154,7 @@ extension LVM {
         lvmCounter.count = 0
         L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.revertBackToOwnFeed()")
         instantFinished = false
-        posts = [:]
+        posts.send([:])
         bg().perform {
             self.pubkeys = pubkeys
             self.nrPostLeafs = []

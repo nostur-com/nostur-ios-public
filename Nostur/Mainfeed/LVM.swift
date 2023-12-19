@@ -64,17 +64,14 @@ class LVM: NSObject, ObservableObject {
                 if self.id == "Following" {
                     signpost(NRState.shared, "LAUNCH", .event, "setting .posts")
                 }
-                self.posts = posts
+                self.posts.send(posts)
             }
         }
     }
     
+    
     // Ordered Dictionary so SmoothList can work with O(1)
-    @Published var posts:Posts = [:] {
-        didSet {
-            if state != .READY { state = .READY }
-        }
-    }
+    var posts = CurrentValueSubject<Posts, Never>([:])
     
     var performingLocalOlderFetch = false
     var leafsAndParentIdsOnScreen:Set<String> = [] // Should always be in sync with nrPostLeafs
@@ -130,7 +127,7 @@ class LVM: NSObject, ObservableObject {
             lvmCounter.count = 0
             L.og.debug("COUNTER: \(self.lvmCounter.count) - wotEnabled change")
             instantFinished = false
-            posts = [:]
+            posts.send([:])
             bg().perform {
                 self.nrPostLeafs = []
                 if !SettingsStore.shared.appWideSeenTracker {
@@ -149,7 +146,7 @@ class LVM: NSObject, ObservableObject {
         lvmCounter.count = 0
         L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.reload()")
         instantFinished = false
-        posts = [:]
+        posts.send([:])
         bg().perform {
             self.nrPostLeafs = []
             if !SettingsStore.shared.appWideSeenTracker {
@@ -164,7 +161,7 @@ class LVM: NSObject, ObservableObject {
     @Published var hideReplies = false {
         didSet {
             guard oldValue != hideReplies else { return }
-            posts = [:]
+            posts.send([:])
             bg().perform {
                 self.nrPostLeafs = []
                 if !SettingsStore.shared.appWideSeenTracker {
@@ -288,11 +285,11 @@ class LVM: NSObject, ObservableObject {
     var lastAppearedIdSubject = CurrentValueSubject<String?, Never>(nil) // Need it for debounce etc
     var lastAppearedIndex:Int? {
         lastAppearedIdSubject.value != nil
-        ? posts.index(forKey: self.lastAppearedIdSubject.value!)
+        ? posts.value.index(forKey: self.lastAppearedIdSubject.value!)
         : nil
     }
     var lastReadId:String? // so we dont have to fetch from different context by objectId if we want to save ListState in background
-    var lastReadIdIndex:Int? { lastReadId != nil ? posts.index(forKey: self.lastReadId!) : nil }
+    var lastReadIdIndex:Int? { lastReadId != nil ? posts.value.index(forKey: self.lastReadId!) : nil }
     
     private var subscriptions = Set<AnyCancellable>()
     public func cleanUp() {
@@ -1033,7 +1030,7 @@ extension LVM {
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
         // Continue from first (newest) on screen?
-        let since = (self.posts.elements.first?.value.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
+        let since = (self.posts.value.elements.first?.value.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
 
         if (!self.didCatchup) {
             // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
@@ -1213,7 +1210,7 @@ extension LVM {
                 lvmCounter.count = 0
                 L.og.debug("COUNTER: 0 - listPubkeysChanged")
                 instantFinished = false
-                posts = [:]
+                posts.send([:])
                 bg().perform {
                     self.nrPostLeafs = []
                     if !SettingsStore.shared.appWideSeenTracker {
@@ -1246,7 +1243,7 @@ extension LVM {
                     lvmCounter.count = 0
                     L.og.debug("COUNTER: 0 - listRelaysChanged")
                     instantFinished = false
-                    posts = [:]
+                    posts.send([:])
                     bg().perform {
                         self.nrPostLeafs = []
                         if !SettingsStore.shared.appWideSeenTracker {
@@ -1360,7 +1357,7 @@ extension LVM {
             .sink { [weak self] eventId in
                 guard let self = self else { return }
                 guard self.lastAppearedIndex != nil else { return }
-                guard !self.posts.isEmpty else { return }
+                guard !self.posts.value.isEmpty else { return }
                 
 //                print("COUNTER . new lastAppearedId. Index is: \(self.lastAppearedIndex) ")
 
@@ -1401,9 +1398,9 @@ extension LVM {
             .sink { [weak self] eventId in
                 guard let self = self else { return }
                 guard let lastAppeareadIndex = self.lastAppearedIndex else { return }
-                guard !self.posts.isEmpty else { return }
+                guard !self.posts.value.isEmpty else { return }
                 
-                if lastAppeareadIndex > (self.posts.count-15) {
+                if lastAppeareadIndex > (self.posts.value.count-15) {
                     L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
                     self.performLocalOlderFetch()
                 }
@@ -1424,7 +1421,7 @@ extension LVM {
         guard let lastAppearedIndex = self.lastAppearedIndex else {
             return 0
         }
-        let postsAfterLastAppeared = self.posts.elements.prefix(lastAppearedIndex).values
+        let postsAfterLastAppeared = self.posts.value.elements.prefix(lastAppearedIndex).values
         let count = threadCount(Array(postsAfterLastAppeared))
         return max(0,count) // cant go negative
     }
@@ -1433,7 +1430,7 @@ extension LVM {
         guard let lastReadIndex = self.lastReadIdIndex else {
             return 0
         }
-        let postsAfterLastRead = self.posts.elements.prefix(lastReadIndex).values
+        let postsAfterLastRead = self.posts.value.elements.prefix(lastReadIndex).values
         let count = threadCount(Array(postsAfterLastRead))
         return max(0,count) // cant go negative
     }
