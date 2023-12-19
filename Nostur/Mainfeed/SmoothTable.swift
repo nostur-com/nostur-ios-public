@@ -52,7 +52,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         
         // configure lvm
         context.coordinator.lvm = lvm
-        context.coordinator.data = lvm.posts
+//        context.coordinator.data = lvm.posts
         
         // load posts
         refresh(cvh, coordinator: context.coordinator)
@@ -63,7 +63,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                 guard context.coordinator.lvm.viewIsVisible else { return }
                 guard context.coordinator.lvm.lvmCounter.count > 0 else {
                     // if no unread, scroll to top
-                    if !context.coordinator.lvm.posts.isEmpty {
+                    if !context.coordinator.lvm.posts.value.isEmpty {
 //                        cvh.tableView.layoutIfNeeded()
                         cvh.tableView.scrollToRow(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
 //                        cvh.tableView.setNeedsLayout()
@@ -75,12 +75,12 @@ struct SmoothTable: UIViewControllerRepresentable {
                 // last read index, or if nil, first index that is visible, minus 1
                 let row = context.coordinator.lvm.lastReadIdIndex ?? ((cvh.tableView.indexPathsForVisibleRows?.first?.row ?? 0) - 1)
                 let index = row-1
-                guard (cvh.dataSource?.snapshot().numberOfItems(inSection: .main) ?? 0) > index+1 else {
-                    L.og.error("🔴🔴 not scrolling: index+1: \(index+1) is > than cvh.dataSource?.snapshot().numberOfItems(inSection: .main)")
-                    return
-                }
-                if index >= 0 && index < context.coordinator.lvm.posts.elements.count {
-                    context.coordinator.lvm.lastReadId = context.coordinator.lvm.posts.elements[index].value.id
+//                guard (cvh.dataSource?.snapshot().numberOfItems(inSection: .main) ?? 0) > index+1 else {
+//                    L.og.error("🔴🔴 not scrolling: index+1: \(index+1) is > than cvh.dataSource?.snapshot().numberOfItems(inSection: .main)")
+//                    return
+//                }
+                if index >= 0 && index < context.coordinator.lvm.posts.value.elements.count {
+                    context.coordinator.lvm.lastReadId = context.coordinator.lvm.posts.value.elements[index].value.id
                 }
 //                cvh.tableView.layoutIfNeeded()
                 cvh.tableView.scrollToRow(at: IndexPath(item: max(0,index), section: 0), at: .top, animated: true)
@@ -91,7 +91,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         receiveNotification(.shouldScrollToTop)
             .sink { _ in
                 guard context.coordinator.lvm.viewIsVisible else { return }
-                if !context.coordinator.lvm.posts.isEmpty {
+                if !context.coordinator.lvm.posts.value.isEmpty {
 //                    cvh.tableView.layoutIfNeeded()
                     cvh.tableView.scrollToRow(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
 //                    cvh.tableView.setNeedsLayout()
@@ -144,15 +144,15 @@ struct SmoothTable: UIViewControllerRepresentable {
         viewHolder.dataSource = viewHolder.createDataSource(coordinator: coordinator)
         var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
         snapshot.appendSections([SingleSection.main])
-        snapshot.appendItems(coordinator.data.keys.elements, toSection: .main)
+        snapshot.appendItems(coordinator.lvm.posts.value.keys.elements, toSection: .main)
         viewHolder.dataSource?.apply(snapshot, animatingDifferences: false)
         
         
-        coordinator.lvm.$posts
-        //            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
-        //            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
+        coordinator.lvm.posts
+            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
+            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
             .sink { data in
-                coordinator.data = data
+//                coordinator.data = data
                 guard let dataSource = viewHolder.dataSource else { return }
                 let currentNumberOfItems = dataSource.snapshot().numberOfItems(inSection: .main)
                 let isInitialApply = coordinator.initialApply
@@ -232,7 +232,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         public var subscriptions = Set<AnyCancellable>()
         public let parent: SmoothTable
         public var lvm: LVM
-        public var data:Posts = [:]
+//        public var data:Posts = [:]
         public var viewHolder: ViewHolderType?
         private var scrollTimer: Timer?
         private var prefetcher:ImagePrefetcher
@@ -255,7 +255,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         }
         
         func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
-            let items = indexPaths.compactMap { data.elements[safe: $0.row] }
+            let items = indexPaths.compactMap { lvm.posts.value.elements[safe: $0.row] }
             
             bg().perform { [weak self] in
                 guard let self else { return }
@@ -332,7 +332,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         }
         
         func tableView(_ tableView: UITableView, cancelPrefetchingForRowsAt indexPaths: [IndexPath]) {
-            let items = indexPaths.compactMap { data.elements[safe: $0.row] }
+            let items = indexPaths.compactMap { lvm.posts.value.elements[safe: $0.row] }
             
             bg().perform { [weak self] in
                 guard let self else { return }
@@ -399,7 +399,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         }
         
         func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-            if let lastAppearedId = data.elements[safe: indexPath.row]?.value.id {
+            if let lastAppearedId = lvm.posts.value.elements[safe: indexPath.row]?.value.id {
                 lvm.lastAppearedIdSubject.send(lastAppearedId)
             }
         }
@@ -442,13 +442,13 @@ struct SmoothTable: UIViewControllerRepresentable {
                         L.og.debug("COUNTER: 0 - processScrollViewDidScroll")
                     }
                     
-                    if let lastAppearedId = data.elements[safe: firstIndex.row]?.value.id {
+                    if let lastAppearedId = lvm.posts.value.elements[safe: firstIndex.row]?.value.id {
                         lvm.lastAppearedIdSubject.send(lastAppearedId)
                     }
                 }
             }
             
-            lvm.postsAppearedSubject.send(indexPaths.compactMap { data.elements[safe: $0.row]?.value.id })
+            lvm.postsAppearedSubject.send(indexPaths.compactMap { lvm.posts.value.elements[safe: $0.row]?.value.id })
         }
         
         private var scrollDirectionDetermined = false
@@ -518,7 +518,7 @@ final class TViewHolder {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: PostOrThreadCell.description(), for: indexPath) as? PostOrThreadCell else {
                     return UITableViewCell()
                 }
-                cell.configure(with: coordinator.data.elements[indexPath.row].value)
+                cell.configure(with: coordinator.lvm.posts.value.elements[indexPath.row].value)
                 return cell
             }
         )
