@@ -531,10 +531,8 @@ class LVM: NSObject, ObservableObject {
             return partialResult + nrPost.threadPostsCount
         })
         
-//        DispatchQueue.main.async {
-            let inserted = self.safeInsert(newLeafThreads, older: older)
-            self.fetchAllMissingPs(inserted)
-//        }
+        let inserted = self.safeInsert(newLeafThreads, older: older)
+        self.fetchAllMissingPs(inserted)
         
         guard !older else { return }
         DispatchQueue.main.async {

@@ -324,7 +324,7 @@ struct AppView: View {
         }
         Importer.shared.preloadExistingIdsCache()
         
-        // Create bootstrap relays (only if existing relays is 0)
+        
         Maintenance.ensureBootstrapRelaysExist(context: viewContext)
         
         DispatchQueue.main.async {

@@ -27,9 +27,9 @@ struct ListUnreadCounter: View {
     }
     
     var body: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         // TODO: Add mini profile icons
         RoundedRectangle(cornerRadius: 20)
             .foregroundColor(theme.accent)

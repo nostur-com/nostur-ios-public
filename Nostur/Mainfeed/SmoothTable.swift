@@ -439,8 +439,8 @@ struct SmoothTable: UIViewControllerRepresentable {
                 lvm.isAtTop = true
                 
                 if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
-                    if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
-                        lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
+                    if firstIndex.row < 1 {
+                        lvm.lvmCounter.count = 0
                         L.og.debug("COUNTER: 0 - processScrollViewDidScroll")
                     }
                     
