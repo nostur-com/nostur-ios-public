@@ -22,12 +22,12 @@ struct SmoothTable: UIViewControllerRepresentable {
     
     var dim: DIMENSIONS
     var lvm: LVM
-    var theme: Theme
+    var themes: Themes
     
-    init(lvm:LVM, dim:DIMENSIONS, theme:Theme) {
+    init(lvm: LVM, dim: DIMENSIONS, themes: Themes) {
         self.lvm = lvm
         self.dim = dim
-        self.theme = theme
+        self.themes = themes
     }
     
     func makeCoordinator() -> Coordinator {
@@ -106,7 +106,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         let viewHolder = TViewHolder(coordinator: coordinator) { uiView in
             //            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
             uiView.translatesAutoresizingMaskIntoConstraints = false
-            uiView.backgroundColor = UIColor(theme.listBackground) // UIColor(named: "ListBackground")
+            uiView.backgroundColor = UIColor(themes.theme.listBackground) // UIColor(named: "ListBackground")
             viewController.view.addSubview(uiView)
             
             NSLayoutConstraint.activate([
@@ -244,9 +244,14 @@ struct SmoothTable: UIViewControllerRepresentable {
         
         public var initialApply = true
         
+        public var dim: DIMENSIONS
+        public var themes: Themes
+        
         init(parent: SmoothTable) {
             self.parent = parent
             self.lvm = parent.lvm
+            self.dim = parent.dim
+            self.themes = parent.themes
             
             self.prefetcher = ImagePrefetcher(pipeline: ImageProcessing.shared.content)
             self.prefetcher.priority = .normal
@@ -473,10 +478,11 @@ final class PostOrThreadCell: UITableViewCell {
         contentConfiguration = nil
     }
 
-    func configure(with nrPost: NRPost) {
+    func configure(with nrPost: NRPost, dim: DIMENSIONS, themes: Themes) {
         self.contentConfiguration = UIHostingConfiguration {
             PostOrThread(nrPost: nrPost)
-                .environmentObject(Themes.default) // Shouldn't need this, but otherwise sometimes crash?
+                .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
+                .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
         }
         .margins(.all, 0)
     }
@@ -520,7 +526,7 @@ final class TViewHolder {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: PostOrThreadCell.description(), for: indexPath) as? PostOrThreadCell else {
                     return UITableViewCell()
                 }
-                cell.configure(with: coordinator.lvm.posts.value.elements[indexPath.row].value)
+                cell.configure(with: coordinator.lvm.posts.value.elements[indexPath.row].value, dim: coordinator.dim, themes: coordinator.themes)
                 return cell
             }
         )
