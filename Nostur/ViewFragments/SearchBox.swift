@@ -12,11 +12,18 @@ struct SearchBox: View {
     @StateObject var debounceObject = DebounceObject()
     var prompt:String
     @Binding var text:String
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         TextField(text: $debounceObject.text, prompt: Text(prompt).foregroundColor(Color.secondary), label: {
             Text(prompt)
         })
+        .focused($isFocused) 
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                isFocused = true
+            }
+        }
         .padding(5)
         .padding(.leading, 25)
         .padding(.trailing, 25)

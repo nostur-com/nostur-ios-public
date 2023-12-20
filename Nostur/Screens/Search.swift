@@ -63,45 +63,50 @@ struct Search: View {
         let _ = Self._printChanges()
         #endif
         NavigationStack(path: $navPath) {
-            ScrollView {
-                if isSearchingHashtag {
-                    FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:la.account)
-                        .padding([.top, .horizontal], 10)
+            VStack {
+                Box { // @FocusState doesn't work when TextField is in ToolBarItem sigh...
+                    SearchBox(prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"), text: $searchText)
+                        .padding(10)
                 }
-                if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
-                    CenteredProgressView()
-                }
-                LazyVStack(spacing: 10) {
-                    ForEach(filteredContactSearchResults.prefix(75)) { contact in
-                        ProfileRow(contact: contact)
-                            .background(themes.theme.background)
+                ScrollView {
+                    if isSearchingHashtag {
+                        FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:la.account)
+                            .padding([.top, .horizontal], 10)
                     }
-                    ForEach(nrPosts.prefix(75)) { nrPost in
-                        Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                        }
-                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                    if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
+                        CenteredProgressView()
                     }
-                }
-                .padding(.top, 10)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button {
-                            sendNotification(.showSideBar)
-                        } label: {
-                            PFP(pubkey: la.account.publicKey, account: la.account, size:30)
+                    LazyVStack(spacing: 10) {
+                        ForEach(filteredContactSearchResults.prefix(75)) { contact in
+                            ProfileRow(contact: contact)
+                                .background(themes.theme.background)
                         }
-                        .accessibilityLabel("Account menu")
+                        ForEach(nrPosts.prefix(75)) { nrPost in
+                            Box(nrPost: nrPost) {
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                            }
+                            .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                        }
+                    }
+                    .padding(.top, 10)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button {
+                                sendNotification(.showSideBar)
+                            } label: {
+                                PFP(pubkey: la.account.publicKey, account: la.account, size:30)
+                            }
+                            .accessibilityLabel("Account menu")
 
+                        }
+    //                    ToolbarItem(placement: .principal) {
+    //
+    //                    }
                     }
-                    ToolbarItem(placement: .principal) {
-                        SearchBox(prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"), text: $searchText)
-                            .padding(10)
-                    }
+                    .toolbarBackground(Visibility.visible, for: .navigationBar)
                 }
-                .toolbarBackground(Visibility.visible, for: .navigationBar)
+                .scrollDismissesKeyboard(.immediately)
             }
-            .scrollDismissesKeyboard(.immediately)
             .overlay(alignment: .bottom) {
                 if settings.statusBubble {
                     ProcessingStatus()
