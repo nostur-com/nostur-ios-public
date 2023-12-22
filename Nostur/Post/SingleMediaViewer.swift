@@ -30,7 +30,8 @@ struct SingleMediaViewer: View {
     @State private var isPlaying = false
     @State private var cancelled = false
     @State private var retryId = UUID()
-
+    @State private var theDimensions: CGSize?
+    
     var body: some View {
 //        #if DEBUG
 //        let _ = Self._printChanges()
@@ -74,53 +75,63 @@ struct SingleMediaViewer: View {
                     }
                 }
                 else if !dim.isScreenshot, let container = state.imageContainer, container.type == .gif, let data = container.data {
-                    if fullWidth {
-                        GIFImage(data: data, isPlaying: $isPlaying)
-//                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
-//                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .onTapGesture {
-                                sendNotification(.fullScreenView, FullScreenItem(url: url))
-                            }
-                            .padding(.horizontal, -contentPadding)
-//                            .transaction { t in t.animation = nil }
-//                            .withoutAnimation()
-                            .task(id: url.absoluteString) {
-                                try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
-                                isPlaying = true
-                            }
-                            .onDisappear {
-                                isPlaying = false
-                            }
-//                            .withoutAnimation()
-#if DEBUG
-//                            .opacity(0.25)
-//                            .debugDimensions("GIFImage.fullWidth")
-#endif
+                    if let dimensions = theDimensions {
+                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: 1, maxWidth: imageWidth, maxHeight: theHeight)
+                        if fullWidth {
+                            GIFImage(data: data, isPlaying: $isPlaying)
+                            //                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
+                            //                            .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(height: scaledDimensions.height)
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
+                                .padding(.horizontal, -contentPadding)
+                            //                            .transaction { t in t.animation = nil }
+                            //                            .withoutAnimation()
+                                .task(id: url.absoluteString) {
+                                    try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
+                                    isPlaying = true
+                                }
+                                .onDisappear {
+                                    isPlaying = false
+                                }
+                            //                            .withoutAnimation()
+    #if DEBUG
+                            //                            .opacity(0.25)
+                            //                            .debugDimensions("GIFImage.fullWidth")
+    #endif
+                        }
+                        else {
+                            GIFImage(data: data, isPlaying: $isPlaying)
+                                .aspectRatio(contentMode: .fit)
+                            //                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
+                            //                            .frame(height: theHeight)
+                            //                            .transaction { t in t.animation = nil }
+                            //                            .background(Color.green)
+                            //                            .withoutAnimation()
+                                .frame(height: scaledDimensions.height)
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
+                                .task(id: url.absoluteString) {
+                                    try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
+                                    isPlaying = true
+                                }
+                                .onDisappear {
+                                    isPlaying = false
+                                }
+    #if DEBUG
+//                                                        .opacity(0.25)
+//                                                        .debugDimensions("GIFImage")
+    #endif
+                        }
                     }
                     else {
-                        GIFImage(data: data, isPlaying: $isPlaying)
-                            .aspectRatio(contentMode: .fit)
-//                            .frame(minHeight: DIMENSIONS.MIN_MEDIA_ROW_HEIGHT)
-//                            .frame(height: theHeight)
-//                            .transaction { t in t.animation = nil }
-//                            .background(Color.green)
-//                            .withoutAnimation()
-                            .onTapGesture {
-                                sendNotification(.fullScreenView, FullScreenItem(url: url))
+                        ProgressView()
+                            .onAppear {
+                                theDimensions = getGifDimensions(data: data)
                             }
-                            .task(id: url.absoluteString) {
-                                try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
-                                isPlaying = true
-                            }
-                            .onDisappear {
-                                isPlaying = false
-                            }
-                            
-#if DEBUG
-//                            .opacity(0.25)
-//                            .debugDimensions("GIFImage")
-#endif
                     }
                 }
                 else if let image = state.image {
