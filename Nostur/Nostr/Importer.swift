@@ -40,6 +40,7 @@ class Importer {
     public var listStatus = PassthroughSubject<String, Never>()
     
     var existingIds:[String: EventState] = [:]
+    var didPreload = false // Main context
     
     static let shared = Importer()
     
@@ -94,6 +95,7 @@ class Importer {
     // and load recent 5000
     // Might as well just load all??? Its fast anyway
     func preloadExistingIdsCache() {
+        didPreload = true
         let fr = Event.fetchRequest()
         fr.fetchLimit = 1_000_000
         fr.propertiesToFetch = ["id", "relays"]
