@@ -132,7 +132,7 @@ struct AppView: View {
                         }
                         .background(themes.theme.listBackground)
                         .environmentObject(themes)
-                        .buttonStyle(NRButtonStyle(theme: themes.theme))
+//                        .buttonStyle(NRButtonStyle(theme: themes.theme)) // This breaks .swipeActions in Lists - WTF?
                         .tint(themes.theme.accent)
                         .onAppear {
                             ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
