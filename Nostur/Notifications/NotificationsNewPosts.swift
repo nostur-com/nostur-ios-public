@@ -61,7 +61,8 @@ struct NotificationsNewPosts: View {
                             NavigationLink(value: NewPostsForPubkeys(pubkeys: Set(notification.contactsInfo.map { $0.pubkey }), since: notification.since), label: {
                                 Text("New posts by \(notification.contactsInfo.map { $0.name }.formatted(.list(type: .and)))")
                                     .foregroundColor(.primary)
-                                    .frame(maxWidth:.infinity, alignment:.leading)
+                                    .multilineTextAlignment(.leading)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(10)
                                     .overlay(alignment: .topTrailing) {
                                         Ago(notification.createdAt).layoutPriority(2)
