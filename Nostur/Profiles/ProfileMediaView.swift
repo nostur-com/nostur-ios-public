@@ -42,13 +42,31 @@ struct ProfileMediaView: View {
                     }
             case .ready:
                 if !vm.items.isEmpty {
-                    LazyVGrid(columns: gridColumns) {
-                        ForEach(vm.items) { item in
-                            GeometryReader { geo in
-                                GridItemView(size: geo.size.width, item: item)
+                    if #available(iOS 17, *) {
+                        LazyVGrid(columns: gridColumns) {
+                            ForEach(vm.items.indices, id:\.self) { index in
+                                GeometryReader { geo in
+                                    GridItemView17(size: geo.size.width, item: vm.items[index])
+                                }
+                                .clipped()
+                                .aspectRatio(1, contentMode: .fit)
+                                .id(index)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
+                                }
                             }
-                            .clipped()
-                            .aspectRatio(1, contentMode: .fit)
+                        }
+                    }
+                    else {
+                        LazyVGrid(columns: gridColumns) {
+                            ForEach(vm.items) { item in
+                                GeometryReader { geo in
+                                    GridItemView(size: geo.size.width, item: item)
+                                }
+                                .clipped()
+                                .aspectRatio(1, contentMode: .fit)
+                            }
                         }
                     }
                 }

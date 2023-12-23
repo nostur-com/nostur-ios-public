@@ -27,7 +27,7 @@ struct FullImageViewer: View {
     @State private var post:NRPost? = nil
     @State private var showMiniProfile = false
     @State private var miniProfileAnimateIn = true
-    @State private var mediaPostPreview = true
+    @Binding public var mediaPostPreview: Bool
     
     var body: some View {
         
@@ -40,15 +40,15 @@ struct FullImageViewer: View {
             .onEnded { value in
                 self.lastScale = 1.0
             }
-            .simultaneously(with: DragGesture()
-                .onChanged { value in
-                    self.position.width = self.newPosition.width + value.translation.width
-                    self.position.height = self.newPosition.height + value.translation.height
-                }
-                .onEnded { value in
-                    self.newPosition = self.position
-                }
-            )
+//            .simultaneously(with: DragGesture()
+//                .onChanged { value in
+//                    self.position.width = self.newPosition.width + value.translation.width
+//                    self.position.height = self.newPosition.height + value.translation.height
+//                }
+//                .onEnded { value in
+//                    self.newPosition = self.position
+//                }
+//            )
             .simultaneously(with: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
                 .onChanged { value in
                     if gestureStartTime == nil {
@@ -303,6 +303,13 @@ struct FullScreenItem : Identifiable {
     var galleryItem:GalleryItem?
 }
 
+struct FullScreenItem17 : Identifiable {
+    var id: Int { index }
+    
+    var items: [GalleryItem]
+    var index: Int
+}
+
 struct ShareMediaButton: View {
     
     var sharableImage:UIImage
@@ -371,7 +378,7 @@ struct FullImageViewer_Previews: PreviewProvider {
                 let images = getImgUrlsFromContent(content)
                 if let first = images.first {
                     let galleryItem = GalleryItem(url: first, event: p)
-                    FullImageViewer(fullImageURL: first, galleryItem: galleryItem)
+                    FullImageViewer(fullImageURL: first, galleryItem: galleryItem, mediaPostPreview: .constant(true))
                 }
                 else {
                     Text("no image")

@@ -76,6 +76,10 @@ extension Notification.Name {
     
     static var fullScreenView: Notification.Name {
         return Notification.Name("fullScreenView")
+    }    
+    
+    static var fullScreenView17: Notification.Name {
+        return Notification.Name("fullScreenView17")
     }
     
     static var newFollowingListFromRelay: Notification.Name {

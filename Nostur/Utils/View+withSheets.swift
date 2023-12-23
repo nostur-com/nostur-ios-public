@@ -29,6 +29,7 @@ private struct WithSheets: ViewModifier {
     @State private var post:Event? = nil
     @State private var contact:Contact? = nil
     @State private var fullImage:FullScreenItem? = nil
+    @State private var fullImage17:FullScreenItem17? = nil
     @State private var reportPost:ReportPost? = nil
     @State private var reportContact:ReportContact? = nil
     @State private var addRemoveContactFromList:Contact? = nil
@@ -62,6 +63,7 @@ private struct WithSheets: ViewModifier {
     
     @State private var miniProfileSheetInfo:MiniProfileSheetInfo? = nil
     @State private var miniProfileAnimateIn = false
+    @State private var mediaPostPreview = true
     
     func body(content: Content) -> some View {
         content
@@ -70,7 +72,17 @@ private struct WithSheets: ViewModifier {
                 fullImage = item
             }
             .fullScreenCover(item: $fullImage) { f in
-                FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem)
+                FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem, mediaPostPreview: $mediaPostPreview)
+                    .environmentObject(themes)
+                    .environmentObject(dim)
+                    .presentationBackground(themes.theme.background)
+            }
+            .onReceive(receiveNotification(.fullScreenView17)) { notification in
+                let item = notification.object as! FullScreenItem17
+                fullImage17 = item
+            }
+            .fullScreenCover(item: $fullImage17) { f in
+                GalleryFullScreenSwiper(initialIndex: f.index, items: f.items)
                     .environmentObject(themes)
                     .environmentObject(dim)
                     .presentationBackground(themes.theme.background)
