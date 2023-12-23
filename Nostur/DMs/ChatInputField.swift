@@ -25,7 +25,7 @@ struct ChatInputField: View {
                 .lineLimit(...8)
                 .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 0))
                 .background(Color.clear)
-                .focused($focusedField, equals: .message)
+//                .focused($focusedField, equals: .message)
             
             Button(action: {
                 if let onSubmit {
