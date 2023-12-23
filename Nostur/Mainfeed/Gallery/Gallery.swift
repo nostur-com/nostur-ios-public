@@ -55,7 +55,7 @@ struct Gallery: View {
                             LazyVGrid(columns: Self.gridColumns) {
                                 ForEach(vm.items.indices, id:\.self) { index in
                                     GeometryReader { geo in
-                                        GridItemView17(size: geo.size.width, item: vm.items[index])
+                                        GridItemView17(size: geo.size.width, item: vm.items[index], withPFP: true)
                                     }
                                     .clipped()
                                     .aspectRatio(1, contentMode: .fit)
