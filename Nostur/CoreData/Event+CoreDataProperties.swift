@@ -1280,12 +1280,23 @@ extension Event {
             savedEvent.firstQuoteId = kind6firstQuote?.id ?? event.firstE()
             savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
             
-            if savedEvent.firstQuote == nil { // or we fetch it if we dont have it yet
-                // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
-                if let firstE = event.firstE(), let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                    savedEvent.firstQuote = repostedEvent
-                    repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-                    repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+            if let repostedEvent = savedEvent.firstQuote { // we already got firstQuote passed in as param
+                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+            }
+            else {
+                // We need to get firstQuote from db or cache
+                if let firstE = event.firstE() {
+                    if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+                        savedEvent.firstQuote = repostedEvent
+                        repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                    }
+                    else if let repostedEvent = try? Event.fetchEvent(id: firstE, context: context) {
+                        savedEvent.firstQuote = repostedEvent
+                        repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                    }
                 }
             }
             
