@@ -1075,8 +1075,8 @@ extension LVM {
         fetchCountsForVisibleIndexPaths()
         
         performLocalFetch
-            .throttle(for: .seconds(2.5), scheduler: DispatchQueue.global(), latest: true)
-//            .print("⏱ Delays:: performLocalFetch throttle +2.5 + latest")
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
+            .throttle(for: .seconds(5.0), scheduler: DispatchQueue.global(), latest: true)
             .sink { refreshInBackground in
                 DispatchQueue.main.async {
                     let isVisible = self.viewIsVisible
@@ -1152,12 +1152,20 @@ extension LVM {
     func performLocalFetchAfterImport() {
         Importer.shared.newEventsInDatabase
             .subscribe(on: DispatchQueue.global())
-            .throttle(for: .seconds(2.5), scheduler: DispatchQueue.global(), latest: true)
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
+            .throttle(for: .seconds(5.0), scheduler: DispatchQueue.global(), latest: true)
             .receive(on: RunLoop.main) // Main because .performLocalFetch() needs some Main things
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 guard !NRState.shared.appIsInBackground else { return }
                 guard instantFinished else { return }
+                guard self.viewIsVisible else {
+                    Task { @MainActor in
+                        self.closeSubAndTimer()
+                    }
+                    return
+                }
+                
                 L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetchAfterImport \(self.uuid)")
                 self.performLocalFetch.send(false)
             }
@@ -1356,7 +1364,7 @@ extension LVM {
         
     func trackLastAppeared() {
         lastAppearedIdSubject
-            .throttle(for: 0.05, scheduler: RunLoop.main, latest: true)
+            .throttle(for: 2.5, scheduler: RunLoop.main, latest: true)
             .compactMap { $0 }
             .sink { [weak self] eventId in
                 guard let self = self else { return }
