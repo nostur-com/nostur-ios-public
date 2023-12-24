@@ -7,7 +7,28 @@
 
 import SwiftUI
 
-struct ReactionButton: View {
+struct ReactionButton: View, Equatable {
+    static func == (lhs: ReactionButton, rhs: ReactionButton) -> Bool {
+        true
+    }
+    private let nrPost:NRPost
+    private let reactionContent:String
+    private var isFirst:Bool
+    private var isLast:Bool
+    
+    init(nrPost: NRPost, reactionContent:String = "+", isFirst: Bool = false, isLast: Bool = false) {
+        self.nrPost = nrPost
+        self.reactionContent = reactionContent
+        self.isFirst = isFirst
+        self.isLast = isLast
+    }
+    
+    var body: some View {
+        ReactionButtonInner(nrPost: nrPost, reactionContent: reactionContent, isFirst: isFirst, isLast: isLast)
+    }
+}
+
+struct ReactionButtonInner: View {
     private let nrPost:NRPost
     private let reactionContent:String
     @ObservedObject private var footerAttributes:FooterAttributes

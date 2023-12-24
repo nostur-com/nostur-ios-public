@@ -117,6 +117,7 @@ struct ContentRenderer: View { // VIEW things
                         .id(index)
                 case .text(let attributedStringWithPs): // For text notes
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isPreview: nrPost.isPreview)
+                        .equatable()
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)

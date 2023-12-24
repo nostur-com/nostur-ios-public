@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Box<Content: View>: View {    
-    private let content: () -> Content
+    private let content: Content
     private let kind: Int64
     private let navMode: NavigationMode
     private var nrPost: NRPost? = nil
@@ -26,11 +26,11 @@ struct Box<Content: View>: View {
         case noNavigation // no navigation
     }
     
-    init(nrPost:NRPost? = nil, navMode:NavigationMode? = .background, theme:Theme = Themes.default.theme, @ViewBuilder content: @escaping () -> Content) {
+    init(nrPost:NRPost? = nil, navMode:NavigationMode? = .background, theme:Theme = Themes.default.theme, @ViewBuilder content: () -> Content) {
         self.kind = nrPost?.kind ?? 1
         self.navMode = navMode ?? .background
         self.nrPost = nrPost
-        self.content = content
+        self.content = content()
         self.theme = theme
     }
     
@@ -39,7 +39,7 @@ struct Box<Content: View>: View {
         //            content
         //        }
         if navMode == .view {
-            content()
+            content
                 .padding(kind == 30023 ? 20 : 10)
                 .background(kind == 30023 ? theme.secondaryBackground : theme.background)
                 .contentShape(Rectangle())
@@ -52,7 +52,7 @@ struct Box<Content: View>: View {
 //                }
         }
         else if navMode == .noNavigation {
-            content()
+            content
                 .padding(kind == 30023 ? 20 : 10)
                 .background(kind == 30023 ? theme.secondaryBackground : theme.background)
                 .contentShape(Rectangle())
@@ -65,7 +65,7 @@ struct Box<Content: View>: View {
 //                }
         }
         else {
-            content()
+            content
                 .padding(kind == 30023 ? 20 : 10)
                 .background {
                     if kind == 30023 || ((nrPost?.kind ?? 0) == 6) && (nrPost?.firstQuote?.kind ?? 0) == 30023 {

@@ -8,10 +8,26 @@
 import SwiftUI
 import UIKit
 
-struct NRContentTextRenderer: View {
+// Trying out ..Inner and Equatable for performance maybe?
+struct NRContentTextRenderer: View, Equatable {
+    static func == (lhs: NRContentTextRenderer, rhs: NRContentTextRenderer) -> Bool {
+        lhs.attributedStringWithPs.id == rhs.attributedStringWithPs.id
+    }
+    
+    public let attributedStringWithPs: AttributedStringWithPs
+    public var isDetail = false
+    public var isPreview = false
+    
+    var body: some View {
+        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isPreview: isPreview)
+    }
+}
+
+struct NRContentTextRendererInner: View {
     public let attributedStringWithPs:AttributedStringWithPs
     public var isDetail = false
     public var isPreview = false
+    
     @State private var height: CGFloat? = nil
     @State private var text: NSAttributedString? = nil
     @State private var previewText: AttributedString? = nil

@@ -53,6 +53,7 @@ struct CustomizableFooterFragmentView: View {
                             BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                         default:
                             ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
+                                .equatable()
                         }
                         if !button.isLast {
                             Spacer()

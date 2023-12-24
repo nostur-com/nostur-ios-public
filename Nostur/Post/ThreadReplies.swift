@@ -15,7 +15,7 @@ struct ThreadReplies: View {
     
     var body: some View {
         LazyVStack(spacing: 10) {
-            ForEach(nrPost.groupedRepliesSorted.prefix(50)) { reply in
+            ForEach(nrPost.groupedRepliesSorted) { reply in
                 PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
                     .id(reply.id)
                     .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
@@ -28,7 +28,7 @@ struct ThreadReplies: View {
                     }
                 }
                 if showNotWoT {
-                    ForEach(nrPost.groupedRepliesNotWoT.prefix(50)) { reply in
+                    ForEach(nrPost.groupedRepliesNotWoT) { reply in
                         PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
                             .id(reply.id)
                     }

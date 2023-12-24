@@ -13,6 +13,9 @@ public typealias NRPostID = String
 // NRPost SHOULD BE CREATED IN BACKGROUND THREAD
 class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
+    @Published var groupedRepliesSorted: [NRPost] = []
+    @Published var groupedRepliesNotWoT: [NRPost] = []
+    
     // Has some subclass-ObservableObjects to isolate rerendering to specific view attributes:
     // PostOrThreadAttributes, PostRowDeletableAttributes, NoteRowAttributes, PFPAttributes
     
@@ -1012,9 +1015,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
 extension NRPost { // Helpers for grouped replies
     
     // To make repliesSorted work we need repliesToRoot first (.loadRepliesToRoot())
-    var groupedRepliesSorted:[NRPost] { // Read from bottom to top.
+    func sortGroupedReplies(_ nrPosts: [NRPost]) -> [NRPost] { // Read from bottom to top.
         if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
-            return groupedReplies
+            return nrPosts
                 // 4. Everything else last, newest at bottom
                 .sorted(by: { $0.created_at < $1.created_at })
                 // 3. People you follow third
@@ -1032,7 +1035,7 @@ extension NRPost { // Helpers for grouped replies
         }
         
         // With WoT enabeled with add filter nr 5.
-        return groupedReplies
+        return nrPosts
             // 5. People outside WoT last
             .filter { $0.inWoT || NRState.shared.accountPubkeys.contains($0.pubkey) }
         
@@ -1052,8 +1055,8 @@ extension NRPost { // Helpers for grouped replies
             })
     }
     
-    var groupedRepliesNotWoT:[NRPost] { // Read from bottom to top.
-        return groupedReplies
+    func sortGroupedRepliesNotWoT(_ nrPosts:[NRPost]) -> [NRPost] { // Read from bottom to top.
+        return nrPosts
             .filter { !$0.inWoT && !NRState.shared.accountPubkeys.contains($0.pubkey)}
             .sorted(by: { $0.created_at < $1.created_at })
     }
@@ -1214,12 +1217,15 @@ extension NRPost { // Helpers for grouped replies
 
             // Retrieve the unique items with highest values
             let groupedReplies = Array(uniqueThreads.values)
+            let groupedRepliesSorted = Array(self.sortGroupedReplies(groupedReplies).prefix(50))
+            let groupedRepliesNotWoT = Array(self.sortGroupedRepliesNotWoT(groupedReplies).prefix(50))
             
             self.event.repliesCount = Int64(replies.count) // Fix wrong count in db
             DispatchQueue.main.async {
                 self.objectWillChange.send()
                 self.replies = replies
-                self.groupedReplies = groupedReplies
+                self.groupedRepliesSorted = groupedRepliesSorted
+                self.groupedRepliesNotWoT = groupedRepliesNotWoT
                 self.footerAttributes.objectWillChange.send()
                 self.footerAttributes.repliesCount = Int64(replies.count)
             }
