@@ -30,7 +30,6 @@ struct ReactionButton: View {
     var body: some View {
         Text(reactionContent)
             .frame(width: 20)
-//            .grayscale(isActivated ? 0.0 : 1.0) // performance?
             .opacity(isActivated ? 1.0 : 0.7)
             .padding(.vertical, 5)
             .contentShape(Rectangle())

@@ -14,7 +14,7 @@ struct CustomizableFooterFragmentView: View {
     @ObservedObject private var vmc:ViewModelCache = .shared
     private var theme:Theme
     
-    static let gridColumns = Array(repeating: GridItem(.flexible()), count: ViewModelCache.BUTTONS_PER_ROW)
+//    static let gridColumns = Array(repeating: GridItem(.flexible()), count: ViewModelCache.BUTTONS_PER_ROW)
 
     private let nrPost:NRPost
     private var isDetail = false
