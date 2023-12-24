@@ -30,7 +30,7 @@ struct NosturVideoViewur: View {
     @State private var loadNonHttpsAnyway = false
     @State private var isPlaying = false
     @State private var isMuted = false
-    @State private var didStart = false
+    @Binding var didStart:Bool
     @State private var isStream = false
     
     static let aspect:CGFloat = 16/9
@@ -276,7 +276,7 @@ struct NosturVideoViewur_Previews: PreviewProvider {
         
         let urlsFromContent = getImgUrlsFromContent(content1)
         
-        NosturVideoViewur(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, autoload: true, theme: Themes.default.theme)
+        NosturVideoViewur(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, autoload: true, theme: Themes.default.theme, didStart: .constant(false))
             .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
 }

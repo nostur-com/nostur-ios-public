@@ -22,7 +22,7 @@ struct Kind1Default: View {
     private let isDetail:Bool
     private let grouped:Bool
     private let forceAutoload:Bool
-    
+    @State private var didStart = false
     
     init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, forceAutoload:Bool = false, theme:Theme) {
         self.nrPost = nrPost
@@ -126,7 +126,7 @@ struct Kind1Default: View {
 //                        }
                 }
                 if let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, theme: theme)
+                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, theme: theme, didStart: $didStart)
 //                        .withoutAnimation()
 //                        .transaction { transaction in
 //                            transaction.animation = nil
@@ -149,13 +149,13 @@ struct Kind1Default: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                     else if (isDetail) {
-                        ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
+                        ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                             .frame(maxWidth: .infinity, alignment:.leading)
                     }
                     else {
-                        ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
+                        ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                             .frame(maxWidth: .infinity, alignment:.leading)
-                        .frame(maxHeight: 450, alignment: .top)
+                            .frame(maxHeight: didStart ? 750 : 450, alignment: .top)
                         .clipped()
                         if (nrPost.previewWeights?.moreItems ?? false) {
                             ReadMoreButton(nrPost: nrPost)

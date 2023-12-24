@@ -24,6 +24,7 @@ struct Kind1: View {
     private let grouped:Bool
     private let forceAutoload:Bool
     private var theme:Theme
+    @State private var didStart = false
     
     init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -99,7 +100,7 @@ struct Kind1: View {
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                 }
                 if let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, fullWidth: true, forceAutoload: forceAutoload, theme: theme)
+                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, fullWidth: true, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                 }
                 else {
                     if let subject = nrPost.subject {
@@ -115,12 +116,12 @@ struct Kind1: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                     else if (isDetail) {
-                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
+                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                     }
                     else {
-                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme)
-                        .frame(maxHeight: 500, alignment: .top)
-                        .clipped()
+                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
+                            .frame(maxHeight: didStart ? 800 : 500, alignment: .top)
+                            .clipped()
                         if (nrPost.previewWeights?.moreItems ?? false) {
                             ReadMoreButton(nrPost: nrPost)
                                 .hCentered()

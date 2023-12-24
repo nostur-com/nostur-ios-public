@@ -27,6 +27,7 @@ struct ZapReceipt: View {
     @State private var nrZapFrom:NRPost?
     
     @State var showMiniProfile = false
+    @State private var didStart = false
     
     var body: some View { // Copy pasta from Kind1Default, remove all non 9735 stuff, removed footer, removed thread connecting lines
         HStack(alignment: .top) {
@@ -85,7 +86,7 @@ struct ZapReceipt: View {
 //                .frame(height: 40.0, alignment: .leading)
                 
                 if let nrZapFrom = nrZapFrom {
-                    ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth(), theme: themes.theme)
+                    ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth(), theme: themes.theme, didStart: $didStart)
                         .frame(maxWidth: .infinity, minHeight: 40, alignment:.leading)
                 }
                 else {

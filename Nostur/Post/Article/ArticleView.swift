@@ -39,6 +39,7 @@ struct ArticleView: View {
     
     @State private var showMiniProfile = false
     @State private var didLoad = false
+    @State private var didStart = false
     
     private var shouldAutoload:Bool { // Only for non-detail view. On detail we force show images.
         forceAutoload || SettingsStore.shouldAutodownload(article)
@@ -160,7 +161,7 @@ struct ArticleView: View {
                         //                            .padding(.horizontal, -20)
                     }
                     
-                    ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme)
+                    ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme, didStart: $didStart)
                         .padding(.vertical, 10)
                     
                     if !hideFooter {

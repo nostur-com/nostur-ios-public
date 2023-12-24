@@ -16,14 +16,16 @@ struct Kind1063: View {
     private var height:CGFloat? = nil
     private let forceAutoload:Bool
     private var theme:Theme
+    @Binding var didStart: Bool
     
-    init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero, fullWidth:Bool = false, forceAutoload: Bool = false, theme: Theme) {
+    init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero, fullWidth:Bool = false, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false)) {
         self.theme = theme
         self.nrPost = nrPost
         self.url = fileMetadata.url
         self.availableWidth = availableWidth
         self.fullWidth = fullWidth
         self.forceAutoload = forceAutoload
+        _didStart = didStart
         if let dim = fileMetadata.dim {
             let dims = dim.split(separator: "x", maxSplits: 2)
             if dims.count == 2 {
@@ -66,7 +68,7 @@ struct Kind1063: View {
                     
             }
             if is1063Video(nrPost) {
-                NosturVideoViewur(url: URL(string: url)!, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, contentPadding: 0, theme: theme)
+                NosturVideoViewur(url: URL(string: url)!, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, contentPadding: 0, theme: theme, didStart: $didStart)
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)
