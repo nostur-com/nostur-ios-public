@@ -41,12 +41,6 @@ class LVM: NSObject, ObservableObject {
             for nrPost in nrPostLeafs {
                 posts[nrPost.id] = nrPost
             }
-
-            if let index = lastAppearedIndex, (index + LVM_MAX_VISIBLE) < posts.count {
-                L.sl.debug("⭐️⭐️ \(posts.count) -> \(posts.count - LVM_MAX_VISIBLE/2)")
-                posts.removeLast(LVM_MAX_VISIBLE/2)
-            }
-            
             leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs)
             leafIdsOnScreen = posts.keys
             
@@ -396,7 +390,6 @@ class LVM: NSObject, ObservableObject {
         // onScreenIds includes leafs and parents, so all posts.
         let leafsAndParentIdsOnScreen = leafsAndParentIdsOnScreen // Data race in Nostur.LVM.leafsAndParentIdsOnScreen.setter : Swift.Set<Swift.String> at 0x10e60b600 - THREAD 142
         let leafIdsOnScreen = leafIdsOnScreen
-        let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
         
         context.perform { [weak self] in
             guard let self = self else { return }
@@ -407,7 +400,7 @@ class LVM: NSObject, ObservableObject {
                 guard !danglingIds.contains(event.id) else { continue }
                 // Skip if the post is already on screen
                 guard !leafsAndParentIdsOnScreen.contains(event.id) else {
-                    if let existingNRPost = currentNRPostLeafs.first(where: { $0.id == event.id }) {
+                    if let existingNRPost = self.nrPostLeafs.first(where: { $0.id == event.id }) {
                         newNRPostLeafs.append(existingNRPost)
                     }
                     continue
@@ -433,7 +426,7 @@ class LVM: NSObject, ObservableObject {
             }
             L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedIds.count) posts - \(taskId)")
 
-            if currentNRPostLeafs.isEmpty {
+            if self.nrPostLeafs.isEmpty {
                 let leafThreads = self.renderLeafs(added, onScreenSeen:self.onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(leafThreads)
@@ -453,7 +446,7 @@ class LVM: NSObject, ObservableObject {
                 self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
             }
             else {
-                let newLeafThreadsIncludingMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs, onScreenSeen: self.onScreenSeen)
+                let newLeafThreadsIncludingMissingParents = self.renderNewLeafs(added, onScreen:self.nrPostLeafs, onScreenSeen: self.onScreenSeen)
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsIncludingMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
@@ -463,7 +456,7 @@ class LVM: NSObject, ObservableObject {
                     danglingIds = danglingIds.union(newDanglers.map { $0.id })
                     fetchParents(newDanglers, older:older)
                 }
-                putNewThreadsOnScreen(newLeafThreads, leafIdsOnScreen:leafIdsOnScreen, currentNRPostLeafs: currentNRPostLeafs, older:older)
+                putNewThreadsOnScreen(newLeafThreads, leafIdsOnScreen:leafIdsOnScreen, currentNRPostLeafs: self.nrPostLeafs, older:older)
             }
         }
     }
@@ -493,7 +486,17 @@ class LVM: NSObject, ObservableObject {
             // IF AT TOP, TRUNCATE:
             
             let dropCount = max(0, nrPostLeafsWithNew.count - LVM_MAX_VISIBLE) // Drop any above LVM_MAX_VISIBLE
-            if self.isAtTop && dropCount > 5 { // No need to drop all the time, do in batches of 5, or 10?
+            // But never drop the current first 10 so we can
+            // - add new at top, but keep scroll position by staying on current first (can't do that if its removed, we end up  scrolled to top bug)
+            // - also still make possible to scroll down a bit
+            
+            // so we need to keep: onlyNew+10, make sure when we .dropLast() it does not become less than that
+            let notDroppingTooMuch = (nrPostLeafsWithNew.count - dropCount) > (onlyNew.count + 10)
+            
+            // also don't drop too little for performance
+            let notDroppingTooLittle = dropCount > 5
+            
+            if self.isAtTop && notDroppingTooLittle && notDroppingTooMuch {
                 let nrPostLeafsWithNewTruncated = nrPostLeafsWithNew.dropLast(dropCount)
                 self.nrPostLeafs = Array(nrPostLeafsWithNewTruncated)
                 self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
