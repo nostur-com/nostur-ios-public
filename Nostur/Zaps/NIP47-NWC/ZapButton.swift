@@ -8,7 +8,29 @@
 import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton
-struct ZapButton: View {
+struct ZapButton: View, Equatable {
+    static func == (lhs: ZapButton, rhs: ZapButton) -> Bool {
+        true
+    }
+    
+    private let nrPost:NRPost
+    private var isFirst:Bool
+    private var isLast:Bool
+    private var theme:Theme
+    
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
+        self.nrPost = nrPost
+        self.isFirst = isFirst
+        self.isLast = isLast
+        self.theme = theme
+    }
+
+    var body: some View {
+        ZapButtonInner(nrPost: nrPost, isFirst: isFirst, isLast: isLast, theme: theme)
+    }
+}
+
+struct ZapButtonInner: View {
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     @ObservedObject private var ss:SettingsStore = .shared

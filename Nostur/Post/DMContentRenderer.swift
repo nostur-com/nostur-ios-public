@@ -82,6 +82,7 @@ struct DMContentRenderer: View { // VIEW things
                     
                 case .text(let attributedStringWithPs): // For text notes
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: true, isPreview: false)
+                        .equatable()
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .md(let markdownContentWithPs): // For long form articles
