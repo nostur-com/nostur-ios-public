@@ -300,6 +300,7 @@ struct ParentPost: View {
     private let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     private var connect:ThreadConnectDirection? = nil
     @State private var showMiniProfile = false
+    @State private var didStart = false
     
     init(nrPost: NRPost, connect: ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
@@ -394,7 +395,7 @@ struct ParentPost: View {
                                         .padding(.vertical, 10)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 case 1,6,9734: // text, repost, zap request
-                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20, theme: themes.theme)
+                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20, theme: themes.theme, didStart: $didStart)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 case 1063: // File Metadata
                                     NoteTextRenderView(nrPost: nrPost, theme: themes.theme)
@@ -403,7 +404,7 @@ struct ParentPost: View {
                                         .centered()
                                         .frame(maxWidth: .infinity)
                                         .background(themes.theme.lineColor.opacity(0.2))
-                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 , theme: themes.theme)
+                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 , theme: themes.theme, didStart: $didStart)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 }
                             }
@@ -445,6 +446,7 @@ struct DetailPost: View {
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var settings:SettingsStore = .shared
     @State private var showMiniProfile = false
+    @State private var didStart = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -535,7 +537,7 @@ struct DetailPost: View {
                     NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
                 }
                 else {
-                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (20)), theme: themes.theme)
+                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (20)), theme: themes.theme, didStart: $didStart)
                         .padding(.vertical, 10)
                 }
             case 1063:
@@ -548,7 +550,7 @@ struct DetailPost: View {
                     .centered()
                     .frame(maxWidth: .infinity)
                     .background(themes.theme.lineColor.opacity(0.2))
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth(), theme: themes.theme)
+                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth(), theme: themes.theme, didStart: $didStart)
                     .padding(.top, 3)
                     .padding(.bottom, 10)
                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)

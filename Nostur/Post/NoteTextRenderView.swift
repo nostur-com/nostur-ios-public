@@ -12,6 +12,7 @@ struct NoteTextRenderView: View {
     public let nrPost:NRPost
     public var forceAutoload = false
     public var theme:Theme
+    @State private var didStart = false
     
     private var shouldAutoload:Bool {
         forceAutoload || SettingsStore.shouldAutodownload(nrPost)
@@ -43,7 +44,7 @@ struct NoteTextRenderView: View {
             }
         }
         else {
-            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme)
+            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
         }
     }
 }

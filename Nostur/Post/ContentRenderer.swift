@@ -19,8 +19,9 @@ struct ContentRenderer: View { // VIEW things
     private let availableWidth:CGFloat
     private let contentElements:[ContentElement]
     private let forceAutoload:Bool
+    @Binding var didStart:Bool
     
-    init(nrPost: NRPost, isDetail:Bool = false, fullWidth:Bool = false, availableWidth:CGFloat, forceAutoload: Bool = false, theme:Theme) {
+    init(nrPost: NRPost, isDetail:Bool = false, fullWidth:Bool = false, availableWidth:CGFloat, forceAutoload: Bool = false, theme:Theme, didStart: Binding<Bool> = .constant(false)) {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
@@ -28,6 +29,7 @@ struct ContentRenderer: View { // VIEW things
         self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
         self.forceAutoload = forceAutoload
         self.theme = theme
+        _didStart = didStart
     }
     
     private var shouldAutoload:Bool {
@@ -148,7 +150,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .debugDimensions("sd.video")
@@ -174,7 +176,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart)
 //                            .debugDimensions("video")
                         //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .padding(.horizontal, fullWidth ? -10 : 0)
