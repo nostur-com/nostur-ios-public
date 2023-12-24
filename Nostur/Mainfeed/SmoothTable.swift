@@ -160,8 +160,9 @@ struct SmoothTable: UIViewControllerRepresentable {
                 snapshot.appendSections([SingleSection.main])
                 snapshot.appendItems(data.keys.elements, toSection: .main)
                 
-                let restoreToId:String? = viewHolder.tableView.contentOffset.y == 0 ?
-                dataSource.snapshot().itemIdentifiers.first : nil
+                let restoreToId:String? = viewHolder.tableView.contentOffset.y == 0 
+                    ? dataSource.snapshot().itemIdentifiers.first
+                    : nil
                 
                 var shouldCommit = false
                 if !SettingsStore.shared.autoScroll && restoreToId != nil {
@@ -186,33 +187,28 @@ struct SmoothTable: UIViewControllerRepresentable {
                     if (isInitialApply) {
                         coordinator.initialApply = false
                         // Scroll to initial position
-                        //                        // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
-                        //                        if data.count > 0 {
-                        //                            signpost(NRState.shared, "LAUNCH", .end, "SmoothTable: snapshot applied")
-                        //                        }
-                        //                        if (coordinator.lvm.initialIndex > 4) {
-                        //                            L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
-                        //                            coordinator.lvm.isAtTop = false
-                        //                            viewHolder.tableView.scrollToItem(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
-                        //                        }
-                        //                        else if (viewHolder.tableView.contentOffset.y == 0) {
-                        //                            // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
-                        ////                            L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
-                        ////                            coordinator.lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
-                        //                            coordinator.lvm.lastReadId = coordinator.lvm.posts.keys.elements.first
-                        //
-                        //                            DispatchQueue.main.async {
-                        //                                // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
-                        //                                L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
-                        //                                coordinator.lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
-                        //                                coordinator.lvm.lastReadId = coordinator.lvm.posts.keys.elements.first
-                        //                            }
-                        //                        }
+                        // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
+                        if data.count > 0 {
+                            signpost(NRState.shared, "LAUNCH", .end, "SmoothTable: snapshot applied")
+                        }
+                        if (coordinator.lvm.initialIndex > 4) {
+                            L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
+                            coordinator.lvm.isAtTop = false
+                            viewHolder.tableView.scrollToRow(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
+                        }
+                        else if (viewHolder.tableView.contentOffset.y == 0) {
+                            DispatchQueue.main.async {
+                                // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
+                                L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
+                                coordinator.lvm.lvmCounter.count = 0
+                                coordinator.lvm.lastReadId = data.keys.elements.first
+                            }
+                        }
                     }
                     else {
                         // KEEP POSITION AFTER INSERT, IF AUTOSCROLL IS DISABLED
                         if !SettingsStore.shared.autoScroll {
-                            if let restoreToId, let restoreIndex = snapshot.itemIdentifiers(inSection: .main).firstIndex(of: restoreToId) { // data.index(forKey: restoreToId) is wrong?
+                            if let restoreToId, let restoreIndex = data.index(forKey: restoreToId) {
                                 L.sl.info("⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(data.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
 //                                viewHolder.tableView.layoutIfNeeded()
                                 viewHolder.tableView.scrollToRow(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
