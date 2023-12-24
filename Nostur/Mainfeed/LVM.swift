@@ -1339,14 +1339,14 @@ extension LVM {
     
     func processNewEventsInBg() {
         startRenderingSubject
-           .removeDuplicates()
+//           .removeDuplicates()
            .sink { [weak self] posts in
                self?.processPostsInBackground(posts)
            }
            .store(in: &subscriptions)
         
         startRenderingOlderSubject
-           .removeDuplicates()
+//           .removeDuplicates()
            .receive(on: RunLoop.main)
            .sink { [weak self] posts in
                self?.processPostsInBackground(posts, older: true)
