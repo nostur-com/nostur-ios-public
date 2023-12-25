@@ -61,6 +61,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         receiveNotification(.shouldScrollToFirstUnread)
             .sink { _ in
                 guard context.coordinator.lvm.viewIsVisible else { return }
+                guard cvh.tableView.numberOfRows(inSection: 0) > 0 else { return }
                 guard context.coordinator.lvm.lvmCounter.count > 0 else {
                     // if no unread, scroll to top
                     if !context.coordinator.lvm.posts.value.isEmpty {
@@ -91,6 +92,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         receiveNotification(.shouldScrollToTop)
             .sink { _ in
                 guard context.coordinator.lvm.viewIsVisible else { return }
+                guard cvh.tableView.numberOfRows(inSection: 0) > 0 else { return }
                 if !context.coordinator.lvm.posts.value.isEmpty {
 //                    cvh.tableView.layoutIfNeeded()
                     cvh.tableView.scrollToRow(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
@@ -190,7 +192,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                         if data.count > 0 {
                             signpost(NRState.shared, "LAUNCH", .end, "SmoothTable: snapshot applied")
                         }
-                        if (coordinator.lvm.initialIndex > 4) {
+                        if (coordinator.lvm.initialIndex > 4) && coordinator.lvm.initialIndex < data.count {
                             L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
                             coordinator.lvm.isAtTop = false
                             viewHolder.tableView.scrollToRow(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
