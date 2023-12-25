@@ -1364,8 +1364,10 @@ extension LVM {
         
     func trackLastAppeared() {
         lastAppearedIdSubject
-            .throttle(for: 2.5, scheduler: RunLoop.main, latest: true)
+            .receive(on: DispatchQueue.main) // Not RunLoop.main because won't receive while scrolling
             .compactMap { $0 }
+            .debounce(for: 0.075, scheduler: DispatchQueue.main)
+            .throttle(for: 0.5, scheduler: DispatchQueue.main, latest: true)
             .sink { [weak self] eventId in
                 guard let self = self else { return }
                 guard self.lastAppearedIndex != nil else { return }
@@ -1405,7 +1407,7 @@ extension LVM {
 //        LVM    📖 Appeared: 10/21 - loading more from local
 //        LVM    📖 Appeared: 11/21 - loading more from local
 //        2023-10-14 09:22:34.748451+0700
-            .debounce(for: 0.2, scheduler: RunLoop.main)
+            .debounce(for: 0.2, scheduler: DispatchQueue.main)
             .compactMap { $0 }
             .sink { [weak self] eventId in
                 guard let self = self else { return }

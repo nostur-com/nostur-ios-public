@@ -138,7 +138,6 @@ struct SmoothTable: UIViewControllerRepresentable {
     
     func refresh(_ viewHolder:TViewHolder, coordinator:Coordinator) {
         L.sl.info("⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): refresh")
-        coordinator.subscriptions.removeAll()
         viewHolder.tableView.register(PostOrThreadCell.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell")
         viewHolder.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "UITableViewCell")
         viewHolder.dataSource = viewHolder.createDataSource(coordinator: coordinator)
@@ -243,6 +242,8 @@ struct SmoothTable: UIViewControllerRepresentable {
         public var dim: DIMENSIONS
         public var themes: Themes
         
+        private let didScroll = PassthroughSubject<(Double, CGPoint), Never>() // contentOffset.y + .panGestureRecognizer.translation(in: scrollView)
+        
         init(parent: SmoothTable) {
             self.parent = parent
             self.lvm = parent.lvm
@@ -254,6 +255,9 @@ struct SmoothTable: UIViewControllerRepresentable {
             
             self.prefetcherPFP = ImagePrefetcher(pipeline: ImageProcessing.shared.pfp)
             self.prefetcherPFP.priority = .high
+            
+            super.init()
+            handleScrolling()
         }
         
         func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
@@ -407,51 +411,65 @@ struct SmoothTable: UIViewControllerRepresentable {
             }
         }
         
-        func scrollViewDidScroll(_ scrollView: UIScrollView) {
-            scrollTimer?.invalidate()
-            scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
-                self?.processScrollViewDidScroll(scrollView)
+        public func handleScrolling() {
+            // determine scroll direction
+            if !IS_CATALYST {
+                didScroll
+                    .receive(on: DispatchQueue.main) // Not RunLoop.main because won't receive while scrolling
+                    .debounce(for: .seconds(0.1), scheduler: DispatchQueue.main)
+                    .sink { [weak self] (_, translation) in
+                        guard let self = self else { return }
+                        if !self.scrollDirectionDetermined {
+                            if translation.y > 0 {
+                                sendNotification(.scrollingUp)
+                                self.scrollDirectionDetermined = true
+                            }
+                            else if translation.y < 0 {
+                                sendNotification(.scrollingDown)
+                                self.scrollDirectionDetermined = true
+                            }
+                        }
+                    }
+                    .store(in: &subscriptions)
             }
             
-            guard !IS_CATALYST else { return }
-            if !scrollDirectionDetermined {
-                let translation = scrollView.panGestureRecognizer.translation(in: scrollView)
-                if translation.y > 0 {
-                    sendNotification(.scrollingUp)
-                    scrollDirectionDetermined = true
-                }
-                else if translation.y < 0 {
-                    sendNotification(.scrollingDown)
-                    scrollDirectionDetermined = true
-                }
-            }
-        }
-        
-        func processScrollViewDidScroll(_ scrollView: UIScrollView) {
-            guard let indexPaths = viewHolder?.tableView.indexPathsForVisibleRows else {
-                return
-            }
-            if scrollView.contentOffset.y > 150 {
-                if lvm.isAtTop {
-                    lvm.isAtTop = false
-                }
-            }
-            else {
-                lvm.isAtTop = true
-                
-                if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
-                    if firstIndex.row < 1 {
-                        lvm.lvmCounter.count = 0
-                        L.og.debug("COUNTER: 0 - processScrollViewDidScroll")
+            // handle last appeared
+            didScroll
+                .receive(on: DispatchQueue.main) // Not RunLoop.main because won't receive while scrolling
+                .sink { [weak self] (contentOffsetY, _) in
+                    guard let self = self else { return }
+                    guard let indexPaths = self.viewHolder?.tableView.indexPathsForVisibleRows else {
+                        return
+                    }
+                    let firstIndex = indexPaths.min(by: { $0.row < $1.row })
+                    if contentOffsetY > 150 {
+                        if self.lvm.isAtTop {
+                            self.lvm.isAtTop = false
+                        }
+                    }
+                    else {
+                        self.lvm.isAtTop = true
+                        
+                        if let firstIndex, firstIndex.row < 1 {
+                            self.lvm.lvmCounter.count = 0
+                            L.og.debug("COUNTER: 0 - processScrollViewDidScroll")
+                        }
                     }
                     
-                    if let lastAppearedId = lvm.posts.value.elements[safe: firstIndex.row]?.value.id {
-                        lvm.lastAppearedIdSubject.send(lastAppearedId)
+                    if let firstIndex, 
+                       let lastAppearedId = self.lvm.posts.value.elements[safe: firstIndex.row]?.value.id,
+                       !self.lvm.isInserting {
+                            self.lvm.lastAppearedIdSubject.send(lastAppearedId)
                     }
+                    self.lvm.postsAppearedSubject.send(indexPaths.compactMap { self.lvm.posts.value.elements[safe: $0.row]?.value.id })
                 }
-            }
-            
-            lvm.postsAppearedSubject.send(indexPaths.compactMap { lvm.posts.value.elements[safe: $0.row]?.value.id })
+                .store(in: &subscriptions)
+        }
+        
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            didScroll.send(
+                (scrollView.contentOffset.y, scrollView.panGestureRecognizer.translation(in: scrollView))
+            )
         }
         
         private var scrollDirectionDetermined = false
