@@ -9,6 +9,11 @@ import Foundation
 import Nuke
 
 class ImageProcessing {
+    // Disk cache size
+    static let PFP_SIZE_MB = IS_CATALYST ? 3000 : 1500
+    static let CONTENT_SIZE_MB = IS_CATALYST ? 1000 : 500
+    static let BANNER_SIZE_MB = IS_CATALYST ? 500 : 250
+    
     static public var shared = ImageProcessing()
     
     var pfp:ImagePipeline
@@ -32,7 +37,7 @@ class ImageProcessing {
             }())
 
             let dataCache = try! DataCache(name: "com.nostur.image.pfp")
-            dataCache.sizeLimit = 1024 * 1024 * 1500
+            dataCache.sizeLimit = 1024 * 1024 * Self.PFP_SIZE_MB
 
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100)
             $0.dataCache = dataCache
@@ -50,9 +55,9 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.banner")
-            dataCache.sizeLimit = 1024 * 1024 * 250
+            dataCache.sizeLimit = 1024 * 1024 * Self.BANNER_SIZE_MB
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 25)  // 50 MB
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)  // 50 MB
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeEncodedImages
         }
@@ -68,7 +73,7 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.content")
-            dataCache.sizeLimit = 1024 * 1024 * 500
+            dataCache.sizeLimit = 1024 * 1024 * Self.CONTENT_SIZE_MB
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 1000)
             $0.dataCache = dataCache
