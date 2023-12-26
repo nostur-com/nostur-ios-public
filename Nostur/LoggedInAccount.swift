@@ -176,6 +176,7 @@ class LoggedInAccount: ObservableObject {
             
             self.followingPublicKeys = follows
             self.followingPFPs = bgAccount.getFollowingPFPs()
+            self.reprocessContactListIfNeeded(bgAccount)
             
             DispatchQueue.main.async {
                 sendNotification(.activeAccountChanged, account)
@@ -190,6 +191,23 @@ class LoggedInAccount: ObservableObject {
                     DirectMessageViewModel.default.loadAfterWoT()
                     WebOfTrust.shared.loadWoT()
                 }
+            }
+        }
+    }
+    
+    // If CloudAccount is following has 12 pubkeys, but kind 3 in db has 21 pubkeys and is newest, it will not update at login
+    // So we need to handle the existing kind 3 as if .newFollowingListFromRelay
+    // Above situaten can happen if we login on other account, then somehow fetch our kind 3, because we are
+    // not logged in we're not updating properly as its not our logged in account. So as work around on account change
+    // is to check the kind 3 and handle again if needed
+    public func reprocessContactListIfNeeded(_ account: CloudAccount) {
+        guard let kind3 = Event.fetchMostRecentEventBy(pubkey: account.publicKey, andKind: 3, context: context()) else {
+            return
+        }
+        if account.followingPubkeys.count < kind3.fastPs.count {
+            L.og.debug("refetchContactListIfNeeded: Deleting because we need to refetch and parse")
+            DispatchQueue.main.async {
+                sendNotification(.newFollowingListFromRelay, kind3.toNEvent())
             }
         }
     }
