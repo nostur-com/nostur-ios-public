@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import KeychainAccess
 
 struct Maintenance {
 
@@ -64,6 +65,7 @@ struct Maintenance {
             Self.runMigrateAccounts(context: context)
             Self.runMigrateDMsToCloud(context: context)
             Self.runMigrateRelays(context: context)
+            Self.runUpdateKeychainInfo(context: context)
             
             do {
                 if context.hasChanges {
@@ -1092,6 +1094,39 @@ struct Maintenance {
         migration.migrationCode = migrationCode.migrateRelays.rawValue
     }
     
+    // Update Keychain info. Change from .whenUnlocked to .afterFirstUnlock and store name
+    static func runUpdateKeychainInfo(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.updateKeychainInfo, context: context) else { return }
+        
+        // change to .afterFirstUnlock
+        
+        // store .anyName so recovery on other device is user friendly (show list of accounts found to recover)
+        
+        let accounts = CloudAccount.fetchAccounts(context: context)
+        
+        let keychain = Keychain(service: "nostur.com.Nostur")
+            .synchronizable(true)
+        let items = keychain.allItems()
+        for item in items {
+            let pubkey = item["key"] as! String
+            let nameOrNpub = accounts.first(where: { $0.publicKey == pubkey })?.anyName ?? npub(pubkey)
+            guard let pk = try? keychain.get(pubkey) else { continue }
+            do {
+                try keychain
+                    .label(nameOrNpub)
+                    .accessibility(.afterFirstUnlock)
+                    .set(pk, key: pubkey)
+                
+                L.maintenance.info("updateKeychainInfo: updated \(nameOrNpub)")
+            } catch {
+                L.og.error("🔴🔴🔴 Could not update keychain")
+            }
+        }
+        
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.updateKeychainInfo.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -1147,6 +1182,9 @@ struct Maintenance {
         case fixPrivateFollows = "fixPrivateFollows"
         
         // Migrate relays state to iCloud
-        case migrateRelays = "migrateRelays"
+        case migrateRelays = "migrateRelays"        
+        
+        // Update keychain info
+        case updateKeychainInfo = "updateKeychainInfo"
     }
 }

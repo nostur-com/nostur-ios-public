@@ -65,7 +65,7 @@ class AccountManager {
             .synchronizable(true)
         do {
             try keychain
-                .accessibility(.whenUnlocked)
+                .accessibility(.afterFirstUnlock)
                 .set(keys.privateKeyHex(), key: keys.publicKeyHex())
         } catch {
             L.og.error("🔴🔴🔴 could not store key in keychain")
@@ -77,7 +77,7 @@ class AccountManager {
             .synchronizable(true)
         do {
             try keychain
-                .accessibility(.whenUnlocked)
+                .accessibility(.afterFirstUnlock)
                 .set(privateKeyHex, key: forPublicKeyHex)
         } catch {
             L.og.error("🔴🔴🔴 could not store key in keychain")
