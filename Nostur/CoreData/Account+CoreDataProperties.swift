@@ -355,7 +355,7 @@ extension NIP46SecretManager {
             .synchronizable(true)
         do {
             try keychain
-                .accessibility(.whenUnlocked)
+                .accessibility(.afterFirstUnlock)
                 .label("nostr connect")
                 .set(keys.privateKeyHex(), key: account.publicKey)
         } catch {

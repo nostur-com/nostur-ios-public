@@ -54,7 +54,7 @@ class NIP47SecretManager {
             .synchronizable(true)
         do {
             try keychain
-                .accessibility(.whenUnlocked)
+                .accessibility(.afterFirstUnlock)
                 .label("nostr wallet connect")
                 .set(keys.privateKeyHex(), key: connectionId)
         } catch {
