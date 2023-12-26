@@ -80,7 +80,7 @@ class GalleryViewModel: ObservableObject {
             .sink { [weak self] notification in
                 guard let self else { return }
                 let blockedPubkeys = notification.object as! Set<String>
-                self.items = self.items.filter { !blockedPubkeys.contains($0.pubkey)  }
+                self.items = self.items.filter { $0.pubkey == nil || !blockedPubkeys.contains($0.pubkey!)  }
             }
             .store(in: &self.subscriptions)
     }
@@ -334,19 +334,21 @@ class GalleryViewModel: ObservableObject {
 struct GalleryItem: Identifiable, Equatable {
 
     let id:UUID
-    let pubkey:String // for blocklist filtering
+    let pubkey:String? // for blocklist filtering
     let url:URL
-    let event:Event // bg
-    let eventId:String // need the id in main context
+    let event:Event? // bg
+    let eventId:String? // need the id in main context
     var pfpPictureURL:URL?
         
-    init(url:URL, event:Event) {
+    init(url:URL, event:Event? = nil) {
         self.url = url
         self.event = event
-        self.eventId = event.id
+        self.eventId = event?.id
         self.id = UUID()
-        self.pubkey = event.pubkey
-        self.pfpPictureURL = NRState.shared.loggedInAccount?.followingPFPs[event.pubkey]
+        self.pubkey = event?.pubkey
+        if let event {
+            self.pfpPictureURL = NRState.shared.loggedInAccount?.followingPFPs[event.pubkey]
+        }
     }
 
     static func == (lhs: GalleryItem, rhs: GalleryItem) -> Bool {

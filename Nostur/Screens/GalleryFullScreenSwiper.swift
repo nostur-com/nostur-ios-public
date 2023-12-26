@@ -34,7 +34,7 @@ struct GalleryFullScreenSwiper: View {
                 .overlay(alignment: .leading) {
                     if IS_CATALYST {
                         Button("", systemImage: "chevron.compact.backward") {
-                            guard let activeIndex, activeIndex > 1 else { return }
+                            guard let activeIndex, activeIndex > 0 else { return }
                             withAnimation {
                                 self.activeIndex = activeIndex - 1
                             }

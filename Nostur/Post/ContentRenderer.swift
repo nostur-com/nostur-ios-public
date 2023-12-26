@@ -200,7 +200,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrPost.imageUrls)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: max(25,scaledDimensions.width + 10), height: max(25,scaledDimensions.height))
 //                            .debugDimensions("sd.image \(scaledDimensions.width)x\(scaledDimensions.height)")
@@ -226,7 +226,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, imageUrls: nrPost.imageUrls)
 //                            .debugDimensions("image")
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)

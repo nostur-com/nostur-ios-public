@@ -156,8 +156,8 @@ struct FullImageViewer: View {
         }
         .onAppear {
             bg().perform {
-                guard let galleryItem = galleryItem else { return }
-                let nrPost = NRPost(event: galleryItem.event)
+                guard let galleryItem = galleryItem, let event = galleryItem.event else { return }
+                let nrPost = NRPost(event: event)
                 DispatchQueue.main.async {
                     self.post = nrPost
                 }
