@@ -235,6 +235,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
 
     
     var linkPreviewURLs:[URL] = []
+    var imageUrls:[URL] = []
     var previewWeights:PreviewWeights?
     var plainTextOnly = false
     var flags:String {
@@ -387,8 +388,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
         
         if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
-            let (contentElementsDetail, linkPreviewURLs) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(event)
+            let (contentElementsDetail, linkPreviewURLs, imageUrls) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(event)
             self.linkPreviewURLs = linkPreviewURLs
+            self.imageUrls = imageUrls
             
             self.contentElementsDetail = contentElementsDetail
             let (contentElements, previewWeights) = filteredForPreview(contentElementsDetail)
@@ -738,7 +740,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         bg().perform { [weak self] in
             guard let self = self else { return }
             
-            let (contentElementsDetail, _) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(event)
+            let (contentElementsDetail, _, _) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(event)
             let (contentElements, _) = filteredForPreview(contentElementsDetail)
             
             DispatchQueue.main.async {

@@ -23,6 +23,7 @@ struct SingleMediaViewer: View {
     public var upscale = false
     public var theme = Themes.default.theme
     public var scaledDimensions: CGSize? = nil
+    public var imageUrls: [URL]? = nil
     
     @State private var imagesShown = false
     @State private var loadNonHttpsAnyway = false
@@ -84,7 +85,14 @@ struct SingleMediaViewer: View {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(height: scaledDimensions.height)
                                 .onTapGesture {
-                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
+                                        let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
+                                        let index: Int = imageUrls.firstIndex(of: url) ?? 0
+                                        sendNotification(.fullScreenView17, FullScreenItem17(items: items, index: index))
+                                    }
+                                    else {
+                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    }
                                 }
                                 .padding(.horizontal, -contentPadding)
                             //                            .transaction { t in t.animation = nil }
@@ -112,7 +120,14 @@ struct SingleMediaViewer: View {
                             //                            .withoutAnimation()
                                 .frame(height: scaledDimensions.height)
                                 .onTapGesture {
-                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
+                                        let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
+                                        let index: Int = imageUrls.firstIndex(of: url) ?? 0
+                                        sendNotification(.fullScreenView17, FullScreenItem17(items: items, index: index))
+                                    }
+                                    else {
+                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    }
                                 }
                                 .task(id: url.absoluteString) {
                                     try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
@@ -144,7 +159,14 @@ struct SingleMediaViewer: View {
                             .fixedSize()
                             .padding(.horizontal, -contentPadding)
                             .onTapGesture {
-                                sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
+                                    let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
+                                    let index: Int = imageUrls.firstIndex(of: url) ?? 0
+                                    sendNotification(.fullScreenView17, FullScreenItem17(items: items, index: index))
+                                }
+                                else {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
                             }
 //                            .transaction { t in t.animation = nil }
 //                            .withoutAnimation()
@@ -165,7 +187,14 @@ struct SingleMediaViewer: View {
                             .scaledToFit()
                             .frame(minHeight: 100, maxHeight: theHeight)
                             .onTapGesture {
-                                sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
+                                    let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
+                                    let index: Int = imageUrls.firstIndex(of: url) ?? 0
+                                    sendNotification(.fullScreenView17, FullScreenItem17(items: items, index: index))
+                                }
+                                else {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
                             }
 //                            .transaction { t in t.animation = nil }
 //                            .withoutAnimation()
@@ -253,7 +282,7 @@ struct SingleMediaViewer_Previews: PreviewProvider {
             
             let urlsFromContent = getImgUrlsFromContent(content1)
             
-            SingleMediaViewer(url:urlsFromContent[0],  pubkey: "dunno", imageWidth: UIScreen.main.bounds.width, fullWidth: false, autoload: true)
+            SingleMediaViewer(url:urlsFromContent[0],  pubkey: "dunno", imageWidth: UIScreen.main.bounds.width, fullWidth: false, autoload: true, imageUrls: [])
             
             Button("Clear cache") {
                 ImageProcessing.shared.content.cache.removeAll()

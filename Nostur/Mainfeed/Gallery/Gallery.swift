@@ -155,7 +155,8 @@ struct GridItemView: View {
                         .foregroundColor(themes.theme.accent)
                         .truncationMode(.middle)
                         .onTapGesture {
-                            navigateTo(NotePath(id: item.eventId))
+                            guard let eventId = item.eventId else { return }
+                            navigateTo(NotePath(id: eventId))
                         }
                 }
                 else {
@@ -165,7 +166,8 @@ struct GridItemView: View {
                             L.og.error("Failed to load image: \(url.absoluteString) - \(state.error?.localizedDescription ?? "")")
                         }
                         .onTapGesture {
-                            navigateTo(NotePath(id: item.eventId))
+                            guard let eventId = item.eventId else { return }
+                            navigateTo(NotePath(id: eventId))
                         }
                 }
             }
@@ -221,7 +223,8 @@ struct GridItemView17: View {
                         .foregroundColor(themes.theme.accent)
                         .truncationMode(.middle)
                         .onTapGesture {
-                            navigateTo(NotePath(id: item.eventId))
+                            guard let eventId = item.eventId else { return }
+                            navigateTo(NotePath(id: eventId))
                         }
                 }
                 else {
@@ -231,7 +234,8 @@ struct GridItemView17: View {
                             L.og.error("Failed to load image: \(url.absoluteString) - \(state.error?.localizedDescription ?? "")")
                         }
                         .onTapGesture {
-                            navigateTo(NotePath(id: item.eventId))
+                            guard let eventId = item.eventId else { return }
+                            navigateTo(NotePath(id: eventId))
                         }
                 }
             }

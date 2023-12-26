@@ -16,7 +16,7 @@ class NRContentElementBuilder {
     static let shared = NRContentElementBuilder()
     let context = bg()
     
-    func buildElements(_ event:Event, dm:Bool = false) -> ([ContentElement], [URL]) {
+    func buildElements(_ event:Event, dm:Bool = false) -> ([ContentElement], [URL], [URL]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
         }
@@ -27,6 +27,7 @@ class NRContentElementBuilder {
         
         var result: [ContentElement] = []
         var linkPreviewUrls: [URL] = []
+        var imageUrls: [URL] = []
         var lastMatchEnd = 0
         
         Self.regex.enumerateMatches(in: input, options: [], range: range) { match, _, _ in
@@ -44,6 +45,7 @@ class NRContentElementBuilder {
                     if let url = URL(string: matchString) {
                         let dimensions:CGSize? = findImetaDimensions(event, url: matchString)
                         result.append(ContentElement.image(MediaContent(url: url, dimensions: dimensions)))
+                        imageUrls.append(url)
                     }
                     else {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
@@ -136,12 +138,12 @@ class NRContentElementBuilder {
         if !nonMatch.isEmpty {
             result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch)))
         }
-        return (result, linkPreviewUrls)
+        return (result, linkPreviewUrls, imageUrls)
     }
     
     // Same as buildElements(), but with a image/video/other url matching removed
     // and uses .parseMD instead of .parseText
-    func buildArticleElements(_ event:Event) -> ([ContentElement], [URL]) {
+    func buildArticleElements(_ event:Event) -> ([ContentElement], [URL], [URL]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             L.og.info("☠️☠️☠️☠️ buildArticleElements on MAIN thread....")
         }
@@ -219,7 +221,7 @@ class NRContentElementBuilder {
         let nonMatch = (input as NSString).substring(with: nonMatchRange)
         
         result.append(ContentElement.md(NRTextParser.shared.parseMD(event, text:nonMatch)))
-        return (result, [])
+        return (result, [], [])
     }
     
     

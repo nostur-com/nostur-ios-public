@@ -55,7 +55,7 @@ struct NRBalloonView: View {
             }
         }
         .onAppear {
-            let (elements, _) = NRContentElementBuilder.shared.buildElements(event, dm: true)
+            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(event, dm: true)
             self.contentElements = elements
         }
     }
