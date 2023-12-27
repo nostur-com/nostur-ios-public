@@ -124,7 +124,7 @@ struct ContentRenderer: View { // VIEW things
                         }
                         .id(index)
                 case .md(let markdownContentWithPs): // For long form articles
-                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme)
+                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)

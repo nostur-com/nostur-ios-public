@@ -86,7 +86,7 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .md(let markdownContentWithPs): // For long form articles
-                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme)
+                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .lnbc(let text):

@@ -14,11 +14,16 @@ struct NRContentMarkdownRenderer: View {
     public let markdownContentWithPs:MarkdownContentWithPs
     public let fullWidth = false
     public var theme:Theme
+    public var maxWidth: CGFloat
     @State var text:MarkdownContent? = nil
     
     var body: some View {
         Markdown(text ?? markdownContentWithPs.output)
             .textSelection(.enabled)
+            .markdownBlockStyle(\.table) { configuration in
+              configuration.label
+                .hScroll(maxWidth: maxWidth)
+            }
             .markdownTextStyle() {
                 FontFamily(.custom("Charter"))
                 ForegroundColor(Color.primary)
