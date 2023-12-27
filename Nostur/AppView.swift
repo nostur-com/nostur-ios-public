@@ -18,7 +18,6 @@ struct AppView: View {
     @EnvironmentObject private var ns:NRState
     @EnvironmentObject private var networkMonitor:NetworkMonitor
     @EnvironmentObject private var dm:DirectMessageViewModel
-    @EnvironmentObject private var nvm:NotificationsViewModel
     
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openWindow) private var openWindow
@@ -117,7 +116,7 @@ struct AppView: View {
                         .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                         .environmentObject(ns)
                         .environmentObject(dm)
-                        .environmentObject(nvm)
+                        .environmentObject(NotificationsViewModel.shared)
                         .environmentObject(networkMonitor)
                         .environmentObject(loggedInAccount)
                         .onReceive(priceLoop) { time in
@@ -147,7 +146,7 @@ struct AppView: View {
                                         ConnectionPool.shared.connectAll()
                                         sendNotification(.scenePhaseActive)
                                         lvmManager.restoreSubscriptions()
-                                        nvm.restoreSubscriptions()
+                                        NotificationsViewModel.shared.restoreSubscriptions()
                                         ns.startTaskTimers()
                                     }
                                     NRState.shared.appIsInBackground = false
@@ -156,7 +155,7 @@ struct AppView: View {
                                     ConnectionPool.shared.connectAll()
                                     sendNotification(.scenePhaseActive)
                                     lvmManager.restoreSubscriptions()
-                                    nvm.restoreSubscriptions()
+                                    NotificationsViewModel.shared.restoreSubscriptions()
                                     ns.startTaskTimers()
                                 }
                                 
