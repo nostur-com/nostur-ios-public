@@ -108,6 +108,17 @@ struct SizeModifier: ViewModifier {
     }
 }
 
+struct HorizontallyScrollingView: ViewModifier {
+    var maxWidth: CGFloat
+    
+    func body(content: Content) -> some View {
+        ScrollView(.horizontal) {
+            content
+        }
+        .frame(maxWidth: maxWidth)
+    }
+}
+
 extension View {
     func centered() -> some View {
         modifier(CenteredView())
@@ -120,5 +131,9 @@ extension View {
     }
     func debugDimensions(_ label:String? = nil, alignment:Alignment = .bottomTrailing) -> some View {
         modifier(DebugDimensions(label: label, alignment: alignment))
+    }
+    
+    func hScroll(maxWidth: CGFloat) -> some View {
+        modifier(HorizontallyScrollingView(maxWidth: maxWidth))
     }
 }
