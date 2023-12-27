@@ -10,7 +10,6 @@ import SwiftUI
 struct NosturTabsView: View {
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dm:DirectMessageViewModel
-    @EnvironmentObject private var nvm:NotificationsViewModel
 
     @StateObject private var dim = DIMENSIONS()
     @AppStorage("selected_tab") private var selectedTab = "Main"
@@ -19,6 +18,7 @@ struct NosturTabsView: View {
         get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions" }
     }
 
+    @State private var unread: Int = 0
     @State private var showTabBar = true
     @ObservedObject private var ss:SettingsStore = .shared
     
@@ -52,7 +52,7 @@ struct NosturTabsView: View {
                         NotificationsContainer()
                             .tabItem { Image(systemName: "bell.fill") }
                             .tag("Notifications")
-                            .badge(nvm.unread)
+                            .badge(unread)
                         
                         Search()
                             .tabItem { Image(systemName: "magnifyingglass") }
@@ -133,6 +133,11 @@ struct NosturTabsView: View {
         .task {
             if ss.receiveLocalNotifications {
                 requestNotificationPermission()
+            }
+        }
+        .onReceive(NotificationsViewModel.shared.unreadPublisher) { unread in
+            if unread != self.unread {
+                self.unread = unread
             }
         }
 //        .overlay(alignment: .topLeading) {

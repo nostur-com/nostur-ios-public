@@ -61,6 +61,8 @@ class NotificationsViewModel: ObservableObject {
         unreadMentions + (muteNewPosts ? 0 : unreadNewPosts) + (muteReactions ? 0 : unreadReactions) + (muteZaps ? 0 : (unreadZaps + unreadFailedZaps)) + (muteFollows ? 0 : unreadNewFollowers) + (muteReposts ? 0 : unreadReposts)
     }
     
+    public var unreadPublisher = PassthroughSubject<Int, Never>()
+    
     public var unreadMentions:Int { unreadMentions_ }
     
     public var unreadNewPosts:Int {
@@ -97,6 +99,7 @@ class NotificationsViewModel: ObservableObject {
             if unreadMentions_ > oldValue {
                 sendNotification(.newMentions)
             }
+            unreadPublisher.send(unread)
         }
     }
     @Published var unreadNewPosts_:Int = 0 {      // 1,9802,30023
@@ -104,6 +107,7 @@ class NotificationsViewModel: ObservableObject {
             if unreadNewPosts_ > oldValue {
                 sendNotification(.unreadNewPosts)
             }
+            unreadPublisher.send(unread)
         }
     }
     @Published var unreadNewFollowers_:Int = 0 {  // custom
@@ -111,6 +115,7 @@ class NotificationsViewModel: ObservableObject {
             if unreadNewFollowers_ > oldValue {
                 sendNotification(.newFollowers)
             }
+            unreadPublisher.send(unread)
         }
     }
     @Published var unreadReposts_:Int = 0 {     // 6
@@ -118,6 +123,7 @@ class NotificationsViewModel: ObservableObject {
             if unreadReposts_ > oldValue {
                 sendNotification(.newReposts)
             }
+            unreadPublisher.send(unread)
         }
     }
     @Published var unreadReactions_:Int = 0 {  // 7
@@ -125,6 +131,7 @@ class NotificationsViewModel: ObservableObject {
             if unreadReactions_ > oldValue {
                 sendNotification(.newReactions)
             }
+            unreadPublisher.send(unread)
         }
     }
     @Published var unreadZaps_:Int = 0 {       // 9735
@@ -132,9 +139,14 @@ class NotificationsViewModel: ObservableObject {
             if unreadZaps_ > oldValue {
                 sendNotification(.newZaps)
             }
+            unreadPublisher.send(unread)
         }
     }
-    @Published var unreadFailedZaps_:Int = 0  // custom
+    @Published var unreadFailedZaps_:Int = 0 {  // custom
+        didSet {
+            unreadPublisher.send(unread)
+        }
+    }
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
