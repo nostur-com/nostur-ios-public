@@ -1217,6 +1217,7 @@ extension LVM {
                 let newPubkeyInfo = notification.object as! NewPubkeysForList
                 guard newPubkeyInfo.subscriptionId == self.id else { return }
                 L.lvm.info("LVM .listPubkeysChanged \(self.pubkeys.count) -> \(newPubkeyInfo.pubkeys.count)")
+                guard self.pubkeys.symmetricDifference(newPubkeyInfo.pubkeys).count > 0 else { return }
                 self.pubkeys = newPubkeyInfo.pubkeys
                 lastAppearedIdSubject.send(nil)
                 lvmCounter.count = 0
