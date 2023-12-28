@@ -64,5 +64,6 @@ struct ChatInputField_ContentView: View {
 struct ChatInputField_Previews: PreviewProvider {
     static var previews: some View {
         ChatInputField_ContentView()
+            .environmentObject(Themes.default)
     }
 }

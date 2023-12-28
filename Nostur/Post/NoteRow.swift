@@ -39,19 +39,8 @@ struct NoteRow: View {
         }
         else { // IS NOT A REPOST
             KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped, theme: theme)
-                .onAppear {
-                    if !nrPost.missingPs.isEmpty {
-                        bg().perform {
-                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
-                            QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                        }
-                    }
-                }
-                .onDisappear {
-                    if !nrPost.missingPs.isEmpty {
-                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
-                    }
-                }
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
@@ -59,6 +48,21 @@ struct NoteRow: View {
 //        .transaction { t in
 //            t.animation = nil
 //        }
+    }
+    
+    private func enqueue() {
+        if !nrPost.missingPs.isEmpty {
+            bg().perform {
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
+                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+            }
+        }
+    }
+    
+    private func dequeue() {
+        if !nrPost.missingPs.isEmpty {
+            QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+        }
     }
 }
 
