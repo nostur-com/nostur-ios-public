@@ -107,6 +107,7 @@ struct NewListSheet: View {
                     newList?.id = UUID()
                     newList?.name = title
                     newList?.showAsTab = true
+                    newList?.createdAt = .now
                     
                     if feedType == .relays, let newList = newList {
                         newList.relays_ = selectedRelays
