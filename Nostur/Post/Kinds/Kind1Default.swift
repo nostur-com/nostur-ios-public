@@ -55,9 +55,9 @@ struct Kind1Default: View {
     @State var showMiniProfile = false
     
     var body: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         HStack(alignment: .top, spacing: 10) {
             ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isPreview)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
@@ -156,7 +156,8 @@ struct Kind1Default: View {
                         ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                             .frame(maxWidth: .infinity, alignment:.leading)
                             .frame(maxHeight: didStart ? 750 : 450, alignment: .top)
-                        .clipped()
+                            .clipped()
+                        
                         if (nrPost.previewWeights?.moreItems ?? false) {
                             ReadMoreButton(nrPost: nrPost)
                                 .padding(.vertical, 5)
