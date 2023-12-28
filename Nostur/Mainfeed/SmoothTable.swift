@@ -440,6 +440,7 @@ struct SmoothTable: UIViewControllerRepresentable {
             // handle last appeared
             didScroll
                 .receive(on: DispatchQueue.main) // Not RunLoop.main because won't receive while scrolling
+                .throttle(for: .seconds(0.25), scheduler: DispatchQueue.main, latest: true)
                 .sink { [weak self] (contentOffsetY, _) in
                     guard let self = self else { return }
                     guard let indexPaths = self.viewHolder?.tableView.indexPathsForVisibleRows else {

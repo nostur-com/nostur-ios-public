@@ -1455,7 +1455,7 @@ extension LVM {
         lastAppearedIdSubject
             .dropFirst()
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
-            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: false)
+            .throttle(for: .seconds(10), scheduler: RunLoop.main, latest: true)
         //            .debounce(for: .seconds(1), scheduler: DispatchQueue.global())
         //            .throttle(for: .seconds(5), scheduler: DispatchQueue.global(), latest: false)
 //            .receive(on: DispatchQueue.global(qos: .background))
