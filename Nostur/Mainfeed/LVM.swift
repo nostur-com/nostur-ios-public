@@ -1379,10 +1379,11 @@ extension LVM {
                 
                 // unread should only go down, not up
                 // only way to go up is when new posts are added.
-                if self.itemsAfterLastAppeared < self.lvmCounter.count {
+                let itemsAfterLastAppeared = self.itemsAfterLastAppeared
+                if itemsAfterLastAppeared < self.lvmCounter.count {
 //                if self.itemsAfterLastAppeared != 0 && self.itemsAfterLastAppeared < self.lvmCounter.count {
                     let before = self.lvmCounter.count
-                    self.lvmCounter.count = self.itemsAfterLastAppeared
+                    self.lvmCounter.count = itemsAfterLastAppeared
                     L.og.debug("COUNTER: \(before) -> \(self.lvmCounter.count) - lastAppearedIdSubject.sink")
                     self.lastReadId = eventId
                 }
