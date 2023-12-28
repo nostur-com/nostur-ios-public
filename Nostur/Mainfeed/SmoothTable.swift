@@ -496,9 +496,18 @@ final class PostOrThreadCell: UITableViewCell {
         contentConfiguration = nil
     }
 
-    func configure(with nrPost: NRPost, dim: DIMENSIONS, themes: Themes) {
-        self.contentConfiguration = UIHostingConfiguration {
-            PostOrThread(nrPost: nrPost)
+    func configure(with nrPost: NRPost? = nil, dim: DIMENSIONS, themes: Themes) {
+        if let nrPost {
+            return self.contentConfiguration = UIHostingConfiguration {
+                PostOrThread(nrPost: nrPost)
+                    .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
+                    .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
+            }
+            .margins(.all, 0)
+        }
+        
+        return self.contentConfiguration = UIHostingConfiguration {
+            Text("⚠️")
                 .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
                 .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
         }
@@ -544,7 +553,7 @@ final class TViewHolder {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: PostOrThreadCell.description(), for: indexPath) as? PostOrThreadCell else {
                     return UITableViewCell()
                 }
-                cell.configure(with: coordinator.lvm.posts.value.elements[indexPath.row].value, dim: coordinator.dim, themes: coordinator.themes)
+                cell.configure(with: coordinator.lvm.posts.value.elements[safe: indexPath.row]?.value, dim: coordinator.dim, themes: coordinator.themes)
                 return cell
             }
         )
