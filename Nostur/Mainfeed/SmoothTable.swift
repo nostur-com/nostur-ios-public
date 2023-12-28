@@ -201,7 +201,9 @@ struct SmoothTable: UIViewControllerRepresentable {
                             DispatchQueue.main.async {
                                 // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
                                 L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
-                                coordinator.lvm.lvmCounter.count = 0
+                                if coordinator.lvm.lvmCounter.count != 0 {
+                                    coordinator.lvm.lvmCounter.count = 0
+                                }
                                 coordinator.lvm.lastReadId = data.keys.elements.first
                             }
                         }
@@ -452,7 +454,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                     else {
                         self.lvm.isAtTop = true
                         
-                        if let firstIndex, firstIndex.row < 1 {
+                        if let firstIndex, firstIndex.row < 1, self.lvm.lvmCounter.count != 0 {
                             self.lvm.lvmCounter.count = 0
                             L.og.debug("COUNTER: 0 - processScrollViewDidScroll")
                         }
