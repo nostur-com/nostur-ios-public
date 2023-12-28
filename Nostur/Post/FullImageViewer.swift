@@ -42,12 +42,12 @@ struct FullImageViewer: View {
             }
             .simultaneously(with: DragGesture()
                 .onChanged { value in
-                    guard self.scale != 1.0 else { return }
+                    guard self.scale != 1.0 || self.position != .zero else { return }
                     self.position.width = self.newPosition.width + value.translation.width
                     self.position.height = self.newPosition.height + value.translation.height
                 }
                 .onEnded { value in
-                    guard self.scale != 1.0 else { return }
+                    guard self.scale != 1.0 || self.position != .zero else { return }
                     self.newPosition = self.position
                 }
             )
@@ -80,6 +80,12 @@ struct FullImageViewer: View {
                     }
                 }
             )
+            .simultaneously(with: TapGesture(count: 2).onEnded({ _ in
+                withAnimation {
+                    self.scale = 1.0
+                    self.position = .zero
+                }
+            }))
         
         GeometryReader { geo in
             ZStack {
