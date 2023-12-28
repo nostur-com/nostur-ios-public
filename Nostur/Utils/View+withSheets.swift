@@ -305,7 +305,7 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $contextMenuNrPost) { nrPost in
                 LazyNoteMenuSheet(nrPost: nrPost)
-                    .environmentObject((NRState.shared))
+                    .environmentObject(NRState.shared)
                     .presentationDetents([.medium])
                     .environmentObject(themes)
                     .presentationBackground(themes.theme.background)

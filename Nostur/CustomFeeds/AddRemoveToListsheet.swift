@@ -13,35 +13,32 @@ struct AddRemoveToListsheet: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var contact:Contact
     
+    // only contact lists, not relay lists
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CloudFeed.createdAt, ascending: false)],
-        predicate: NSPredicate(value: true),
+        predicate: NSPredicate(format: "type != %@ OR type == nil", LVM.ListType.relays.rawValue),
         animation: .none)
     var lists:FetchedResults<CloudFeed>
-    
-    @State var selectedLists:Set<CloudFeed> = []
-    @State var noSelectedLists = false
     
     var body: some View {
         NavigationStack {
             ScrollView {
-                if !lists.isEmpty && (!selectedLists.isEmpty || noSelectedLists) {
+                if !lists.isEmpty {
                     LazyVStack {
-                        ForEach(lists.filter { $0.type != LVM.ListType.relays.rawValue }) { list in
+                        ForEach(lists) { list in
                             HStack(spacing: 10) {
-                                Button {
-                                    if selectedLists.contains(list) {
-                                        selectedLists.remove(list)
-                                    }
-                                    else {
-                                        selectedLists.insert(list)
-                                    }
-                                } label: {
-                                    if selectedLists.contains(list) {
+                                if list.contactPubkeys.contains(contact.pubkey) {
+                                    Button {
+                                        list.contactPubkeys.remove(contact.pubkey)
+                                    } label: {
                                         Image(systemName:  "checkmark.circle.fill")
                                             .padding(.vertical, 10)
                                     }
-                                    else {
+                                }
+                                else {
+                                    Button {
+                                        list.contactPubkeys.insert(contact.pubkey)
+                                    } label: {
                                         Image(systemName:  "circle")
                                             .foregroundColor(Color.secondary)
                                             .padding(.vertical, 10)
@@ -51,11 +48,11 @@ struct AddRemoveToListsheet: View {
                                     .padding(.vertical, 10)
                                     .contentShape(Rectangle())
                                     .onTapGesture {
-                                        if selectedLists.contains(list) {
-                                            selectedLists.remove(list)
+                                        if list.contactPubkeys.contains(contact.pubkey) {
+                                            list.contactPubkeys.remove(contact.pubkey)
                                         }
                                         else {
-                                            selectedLists.insert(list)
+                                            list.contactPubkeys.insert(contact.pubkey)
                                         }
                                     }
                             }
@@ -65,12 +62,6 @@ struct AddRemoveToListsheet: View {
                 }
             }
             .padding(10)
-            .onAppear {
-                selectedLists = Set(contact.lists_)
-                if selectedLists.count == 0 {
-                    noSelectedLists = true
-                }
-            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -78,7 +69,6 @@ struct AddRemoveToListsheet: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
                         dismiss()
-                        contact.lists_ = Array(self.selectedLists)
                         DataProvider.shared().save()
                         for list in lists {
                             sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
