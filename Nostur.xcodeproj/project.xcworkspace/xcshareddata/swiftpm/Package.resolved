@@ -54,7 +54,7 @@
     {
       "identity" : "representablekit",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/yumemi-inc/RepresentableKit",
+      "location" : "https://github.com/fabianfabian/RepresentableKit",
       "state" : {
         "branch" : "main",
         "revision" : "77b5ea15838c7f28464d4b01540b7dac8f74ec9c"
