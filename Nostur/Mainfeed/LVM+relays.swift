@@ -56,10 +56,10 @@ extension Event {
         // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
         fr.fetchLimit = 50 // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
         }
         return fr
     }
@@ -79,10 +79,10 @@ extension Event {
         fr.fetchLimit = 50 // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
         }
         return fr
     }
@@ -106,10 +106,10 @@ extension Event {
         frBefore.fetchLimit = 50 // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         
         if hideReplies {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, regex)
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, regex)
         }
         else {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN {1,6,9802,30023} AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, blockedPubkeys, regex)
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, regex)
         }
         
         let ctx = bg()
@@ -126,10 +126,10 @@ extension Event {
         fr.fetchLimit = 50 // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, regex)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6,9802,30023} AND relays MATCHES %@ AND flags != \"is_update\"", newCutOffPoint, regex)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
         }
         return fr
     }

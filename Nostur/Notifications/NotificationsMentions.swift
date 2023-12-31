@@ -80,7 +80,7 @@ struct NotificationsMentions: View {
             }
             fl.predicate = NSPredicate(
                 format:
-                    "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+                    "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                     currentNewestCreatedAt,
                 NRState.shared.blockedPubkeys + [account.publicKey],
                 serializedP(account.publicKey),
@@ -130,7 +130,7 @@ struct NotificationsMentions: View {
         guard let account = account() else { return }
         didLoad = true
         fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+            format: "NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
             (NRState.shared.blockedPubkeys + [account.publicKey]),
             serializedP(account.publicKey),
             NRState.shared.mutedRootIds,
@@ -155,7 +155,7 @@ struct NotificationsMentions: View {
             reqCommand: { (taskId) in
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
-                    kinds: [1,9802,30023],
+                    kinds: [1,9802,30023,34235],
                     limit: 500,
                     subscriptionId: taskId,
                     since: NTimestamp(timestamp: Int(fl.nrPosts.first?.created_at ?? 0))
@@ -165,7 +165,7 @@ struct NotificationsMentions: View {
                 let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
-                        "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+                        "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                         currentNewestCreatedAt,
                     (NRState.shared.blockedPubkeys + [account.publicKey]),
                     serializedP(account.publicKey),
@@ -201,7 +201,7 @@ struct NotificationsMentions: View {
     private func loadMore() {
         guard let account = account() else { return }
         fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"",
+            format: "NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"",
             (NRState.shared.blockedPubkeys + [account.publicKey]),
             serializedP(account.publicKey),
             NRState.shared.mutedRootIds,
@@ -212,7 +212,7 @@ struct NotificationsMentions: View {
             reqCommand: { (taskId) in
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
-                    kinds: [1,9802,30023],
+                    kinds: [1,9802,30023,34235],
                     limit: 50,
                     subscriptionId: taskId,
                     until: NTimestamp(timestamp: Int(fl.nrPosts.last?.created_at ?? Int64(Date.now.timeIntervalSince1970)))
@@ -220,7 +220,7 @@ struct NotificationsMentions: View {
             },
             processResponseCommand: { (taskId, _, _) in
                 fl.predicate = NSPredicate(
-                    format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"",
+                    format: "NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"",
                     (NRState.shared.blockedPubkeys + [account.publicKey]),
                     serializedP(account.publicKey),
                     NRState.shared.mutedRootIds,
