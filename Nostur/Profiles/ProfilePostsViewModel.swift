@@ -10,7 +10,7 @@ import NostrEssentials
 import CoreData
 import Combine
 
-let PROFILE_KINDS = Set([1,6,9802,30023])
+let PROFILE_KINDS = Set([1,6,9802,30023,34235])
 
 // For profile view, try to load first 10 posts as fast as possible
 // Then reload remaining later

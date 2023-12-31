@@ -109,12 +109,12 @@ struct Kind1: View {
                             .lineLimit(3)
                         
                     }
-                    if (nrPost.kind != 1) && (nrPost.kind != 6) {
-                        AnyKind(nrPost, theme: theme)
-                    }
                     if imageWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
+                    else if (nrPost.kind != 1) && (nrPost.kind != 6) {
+                        AnyKind(nrPost, theme: theme)
+                    }                    
                     else if (isDetail) {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                     }

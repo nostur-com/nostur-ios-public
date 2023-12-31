@@ -15,10 +15,10 @@ struct KindFileMetadata {
     var blurhash:String?
 }
 
-let SUPPORTED_VIEW_KINDS:Set<Int64> = [1,6,9802,30023]
+let SUPPORTED_VIEW_KINDS:Set<Int64> = [1,6,9802,30023,34235]
 
 struct AnyKind: View {
-    @ObservedObject private var nrPost: NRPost
+    private var nrPost: NRPost
     private var theme:Theme
     
     init(_ nrPost: NRPost, theme: Theme) {
@@ -29,6 +29,15 @@ struct AnyKind: View {
     var body: some View {
         if SUPPORTED_VIEW_KINDS.contains(nrPost.kind) {
             switch nrPost.kind {
+                case 34235:
+                    let title = nrPost.eventTitle ?? "Untitled"
+                    if let eventUrl = nrPost.eventUrl {
+                        VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true, theme: theme)
+                            .padding(.vertical, 10)
+                    }
+                    else {
+                        EmptyView()
+                }
 //                case 9735: TODO: ....
 //                    ZapReceipt(sats: <#T##Double#>, receiptPubkey: <#T##String#>, fromPubkey: <#T##String#>, from: <#T##Event#>)
                 default:
