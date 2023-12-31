@@ -19,7 +19,7 @@ struct NoteHeaderViewEvent: View {
                     .frame(maxWidth: .infinity, alignment:.leading)
             }
             else {
-                PlaceholderPostHeaderEvent(event: event, singleLine: singleLine)
+                MissingContactPostHeaderEvent(event: event, singleLine: singleLine)
                     .frame(maxWidth: .infinity, alignment:.leading)
                     .onAppear {
                         EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NoteHeaderViewEvent.001")
@@ -33,7 +33,7 @@ struct NoteHeaderViewEvent: View {
     }
 }
 
-struct PlaceholderPostHeaderEvent: View {
+struct MissingContactPostHeaderEvent: View {
     @ObservedObject private var settings:SettingsStore = .shared
     let event:Event
     let singleLine:Bool
@@ -55,11 +55,12 @@ struct PlaceholderPostHeaderEvent: View {
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                     
-                    if settings.postUserAgentEnabled && !settings.excludedUserAgentPubkeys.contains(event.pubkey) {
-                        Text(String(format: "via %@", "Nostur"))
-                            .foregroundColor(.secondary)
+                    if settings.displayUserAgentEnabled, let via = event.via {
+                        Text(String(format: "via %@", via))
                             .font(.subheadline)
+                            .lineLimit(1)
                             .layoutPriority(3)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -72,12 +73,13 @@ struct PlaceholderPostHeaderEvent: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                 
-                if settings.postUserAgentEnabled && !settings.excludedUserAgentPubkeys.contains(event.pubkey) {
-                    Text(String(format: "via %@", "Nostur"))
-                        .foregroundColor(.secondary)
+                if settings.displayUserAgentEnabled, let via = event.via {
+                    Text(String(format: "via %@", via))
                         .font(.subheadline)
+                        .lineLimit(1)
                         .layoutPriority(3)
-                }
+                        .foregroundColor(.secondary)
+                }  
             }
         }
     }
