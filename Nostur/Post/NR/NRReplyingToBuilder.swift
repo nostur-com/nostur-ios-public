@@ -15,7 +15,7 @@ class NRReplyingToBuilder {
         guard event.replyToId != nil || event.replyTo != nil else { return nil }
         
         if let replyTo = event.replyTo, replyTo.kind == 30023 {
-            guard let articleTitle = replyTo.articleTitle else {
+            guard let articleTitle = replyTo.eventTitle else {
                 return "Replying to article"
             }
             return String(localized:"Replying to: \(articleTitle)", comment: "Shown when replying to an article (Replying to: (article title)")

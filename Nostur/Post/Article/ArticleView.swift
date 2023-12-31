@@ -50,7 +50,7 @@ struct ArticleView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
-                        Text(article.articleTitle ?? "")
+                        Text(article.eventTitle ?? "")
                             .font(.custom("Charter-Black", size: 28))
                         Spacer()
                         LazyNoteMenuButton(nrPost: article)
@@ -59,7 +59,7 @@ struct ArticleView: View {
                     
                     if let mostRecentId = article.mostRecentId {
                         OpenLatestUpdateMessage {
-                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: article.articleTitle ?? "Article"))
+                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: article.eventTitle ?? "Article"))
                         }
                         .padding(.vertical, 10)
                     }
@@ -145,7 +145,7 @@ struct ArticleView: View {
                                     Text("\(minutesToRead) min read")
                                     Text("·")
                                 }
-                                Text((article.articlePublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
+                                Text((article.eventPublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
                             }
                             .lineLimit(1)
                             .foregroundColor(Color.secondary)
@@ -154,9 +154,9 @@ struct ArticleView: View {
                     .font(Font.custom("Charter", size: 22))
                     .padding(.vertical, 10)
                     
-                    if let image = article.articleImageURL {
+                    if let eventImageUrl = article.eventImageUrl {
                         //                        Text("imageWidth: \(dim.listWidth.description)")
-                        SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: true, contentPadding: 20, contentMode: .aspectFill, upscale: true)
+                        SingleMediaViewer(url: eventImageUrl, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: true, contentPadding: 20, contentMode: .aspectFill, upscale: true)
                             .padding(.vertical, 10)
                         //                            .padding(.horizontal, -20)
                     }
@@ -176,7 +176,7 @@ struct ArticleView: View {
                 }
             }
             .background(Color(.secondarySystemBackground))
-            .preference(key: TabTitlePreferenceKey.self, value: article.articleTitle ?? "")
+            .preference(key: TabTitlePreferenceKey.self, value: article.eventTitle ?? "")
             .onAppear {  // Similar to PostDetail/PostAndParent
                 guard !didLoad else { return }
                 didLoad = true
@@ -227,7 +227,7 @@ struct ArticleView: View {
         else {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment:.top, spacing: 0) {
-                    Text(article.articleTitle ?? "")
+                    Text(article.eventTitle ?? "")
                         .font(.custom("Charter-Black", size: 24))
                         .lineLimit(5)
                     Spacer()
@@ -235,7 +235,7 @@ struct ArticleView: View {
                 }
                 .padding(.bottom, 10)
                 
-                if let image = article.articleImageURL {
+                if let image = article.eventImageUrl {
                     SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: shouldAutoload, contentMode: .aspectFill, upscale: true)
 //                        .frame(width: dim.listWidth)
 //                        .frame(minHeight: 100)
@@ -243,7 +243,7 @@ struct ArticleView: View {
                         .padding(.vertical, 10)
                 }
                 
-                if let summary = article.articleSummary, !summary.isEmpty {
+                if let summary = article.eventSummary, !summary.isEmpty {
                     Markdown(String(summary.prefix(600)))
                         .lineLimit(15)
                         .markdownTextStyle() {
@@ -353,7 +353,7 @@ struct ArticleView: View {
                             Text("\(minutesToRead) min read")
                             Text("·")
                         }
-                        Text((article.articlePublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
+                        Text((article.eventPublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
                     }
                     .font(.custom("Charter", size: 18))
                     .padding(.vertical, 10)
@@ -398,7 +398,7 @@ struct ArticleView: View {
                                 Text("\(minutesToRead) min read")
                                 Text("·")
                             }
-                            Text((article.articlePublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
+                            Text((article.eventPublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
                         }
                     }
                     .font(.custom("Charter", size: 18))
@@ -498,19 +498,19 @@ struct Articles_Previews: PreviewProvider {
 // - MARK: ARTICLE STUFF
 extension Event {
     
-    var articleId:String? {
+    var eventId:String? {
         fastTags.first(where: { $0.0 == "d" })?.1
     }
     
-    var articleTitle:String? {
+    var eventTitle:String? {
         fastTags.first(where: { $0.0 == "title" })?.1
     }
     
-    var articleSummary:String? {
+    var eventSummary:String? {
         fastTags.first(where: { $0.0 == "summary" })?.1
     }
     
-    var articlePublishedAt:Date? {
+    var eventPublishedAt:Date? {
         if let p = fastTags.first(where: { $0.0 == "published_at" })?.1, let timestamp = TimeInterval(p) {
             if timestamp > 1000000000000 { // fix for buggy clients using microseconds for published_at
                 return Date(timeIntervalSince1970: timestamp / 1000)
@@ -520,8 +520,16 @@ extension Event {
         return nil
     }
     
-    var articleImage:String? {
+    var eventImage:String? {
         fastTags.first(where: { $0.0 == "image" })?.1
+    }
+    
+    var eventThumb:String? {
+        fastTags.first(where: { $0.0 == "thumb" })?.1
+    }
+    
+    var eventUrl:String? {
+        fastTags.first(where: { $0.0 == "url" })?.1
     }
 }
 
