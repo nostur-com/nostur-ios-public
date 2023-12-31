@@ -89,7 +89,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var postRowDeletableAttributes: PostRowDeletableAttributes
     var noteRowAttributes: NoteRowAttributes
     var pfpAttributes: PFPAttributes
-    var highlightAttributes: HighlightAttributes
+    var highlightAttributes: HighlightAttributes = HighlightAttributes()
     var replyingToAttributes: ReplyingToAttributes
     var footerAttributes: FooterAttributes
     var ownPostAttributes: OwnPostAttributes
@@ -275,6 +275,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var eventPublishedAt: Date?
     var eventImageUrl: URL?
     var eventUrl: URL?
+    var mostRecentId: String?
     
     init(event: Event, withFooter:Bool = true, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isPreview:Bool = false, cancellationId:UUID? = nil) {
         var isAwaiting = false
@@ -375,16 +376,76 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
         }
         
-        // article?
-        if kind == 30023 {
-            articleId = event.articleId
-            articleTitle = event.articleTitle
-            articleSummary = event.articleSummary
-            articlePublishedAt = event.articlePublishedAt
-            if let articleImage = event.articleImage, let url = URL(string: articleImage) {
-                articleImageURL = url
+        let nrContacts = event.contacts_.map { NRContact(contact: $0) }
+        self.referencedContacts = nrContacts
+        
+        if let contact = event.contact_ {
+            self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following))
+        }
+        else {
+            self.pfpAttributes = PFPAttributes()
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.001"); isAwaiting = true
+        }
+        
+        var missingPs = Set<String>()
+        if self.pfpAttributes.contact == nil {
+            missingPs.insert(event.pubkey)
+        }
+        else if let c = self.pfpAttributes.contact, c.metadata_created_at == 0 {
+            missingPs.insert(event.pubkey)
+        }
+        let eventContactPs = (nrContacts.compactMap({ contact in
+            if contact.metadata_created_at != 0 {
+                return contact.pubkey
+            }
+            return nil
+        }) + [event.pubkey])
+        
+        // Some clients put P in kind 6. Ignore that because the contacts are in the reposted post, not in the kind 6.
+        // TODO: Should only fetch if the Ps are going to be on screen. Could be just for notifications.
+        if kind != 6 {
+            event.fastPs.prefix(SPAM_LIMIT_P).forEach { (tag, pubkey, hint, _) in
+                if !eventContactPs.contains(pubkey) {
+                    missingPs.insert(pubkey)
+                }
+            }
+        }
+
+        // Start doing kind specific stuff here (TODO)
+        switch kind {
+        case 1063:
+            self.fileMetadata = getKindFileMetadata(event: event)
+            
+        case 9802:
+            let highlightUrl = event.fastTags.first(where: { $0.0 == "r" } )?.1
+            let highlightAuthorPubkey:String? = event.fastTags.first(where: { $0.0 == "p" } )?.1
+            
+            let highlightContact:NRContact? = if let contact = event.contacts?.first(where: { $0.pubkey == highlightAuthorPubkey } ) {
+                NRContact(contact: contact, following: isFollowing(contact.pubkey))
+            }
+            else {
+                nil
+            }
+            
+            if let highlightAuthorPubkey = highlightAuthorPubkey, highlightContact == nil || (highlightContact?.metadata_created_at ?? 0) == 0 {
+                missingPs.insert(highlightAuthorPubkey)
+            }
+            self.highlightAttributes = HighlightAttributes(contact: highlightContact, authorPubkey: highlightAuthorPubkey, url: highlightUrl)
+            
+        case 30023, 34235:
+            eventId = event.eventId
+            eventTitle = event.eventTitle
+            eventSummary = event.eventSummary
+            eventPublishedAt = event.eventPublishedAt
+            if let eventImageUrlString = (event.eventImage ?? event.eventThumb), let eventImageUrl = URL(string: eventImageUrlString.replacingOccurrences(of: "http://", with: "https://")) {
+                self.eventImageUrl = eventImageUrl
+            }
+            if let eventUrlString = event.eventUrl, let eventUrl = URL(string: eventUrlString) {
+                self.eventUrl = eventUrl
             }
             mostRecentId = event.mostRecentId
+        default:
+            break
         }
         
         if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
@@ -419,62 +480,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         self.following = isFollowing(event.pubkey)
         
-        
-        if let contact = event.contact_ {
-            self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following))
-        }
-        else {
-            self.pfpAttributes = PFPAttributes()
-            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.001"); isAwaiting = true
-        }
-        
-        let nrContacts = event.contacts_.map { NRContact(contact: $0) }
-        self.referencedContacts = nrContacts
-        
-        var missingPs = Set<String>()
-        if self.pfpAttributes.contact == nil {
-            missingPs.insert(event.pubkey)
-        }
-        else if let c = self.pfpAttributes.contact, c.metadata_created_at == 0 {
-            missingPs.insert(event.pubkey)
-        }
-        let eventContactPs = (nrContacts.compactMap({ contact in
-            if contact.metadata_created_at != 0 {
-                return contact.pubkey
-            }
-            return nil
-        }) + [event.pubkey])
-        
-        // Some clients put P in kind 6. Ignore that because the contacts are in the reposted post, not in the kind 6.
-        // TODO: Should only fetch if the Ps are going to be on screen. Could be just for notifications.
-        if kind != 6 {
-            event.fastPs.prefix(SPAM_LIMIT_P).forEach { (tag, pubkey, hint, _) in
-                if !eventContactPs.contains(pubkey) {
-                    missingPs.insert(pubkey)
-                }
-            }
-        }
-        
-        if kind == 9802 {
-            let highlightUrl = event.fastTags.first(where: { $0.0 == "r" } )?.1
-            let highlightAuthorPubkey:String? = event.fastTags.first(where: { $0.0 == "p" } )?.1
-            
-            let highlightContact:NRContact? = if let contact = event.contacts?.first(where: { $0.pubkey == highlightAuthorPubkey } ) {
-                NRContact(contact: contact, following: isFollowing(contact.pubkey))
-            }
-            else {
-                nil
-            }
-            
-            if let highlightAuthorPubkey = highlightAuthorPubkey, highlightContact == nil || (highlightContact?.metadata_created_at ?? 0) == 0 {
-                missingPs.insert(highlightAuthorPubkey)
-            }
-            self.highlightAttributes = HighlightAttributes(contact: highlightContact, authorPubkey: highlightAuthorPubkey, url: highlightUrl)
-        }
-        else {
-            self.highlightAttributes = HighlightAttributes()
-        }
-        
         self.missingPs = missingPs
         if !isAwaiting && !self.missingPs.isEmpty {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.002 - missingPs: \(missingPs.count)"); isAwaiting = true
@@ -496,10 +501,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.004"); isAwaiting = true
         }
         
-        if event.kind == 1063 {
-            self.fileMetadata = getKindFileMetadata(event: event)
-        }
-        
         if let content = event.content {
             self.content = content
         }        
@@ -516,16 +517,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private static func isBlocked(pubkey:String) -> Bool {
         return Nostur.blocks().contains(pubkey)
-    }
-    
-    private func getKindFileMetadata(event: Event) -> KindFileMetadata {
-        return KindFileMetadata(
-            url: event.fastTags.first(where: { $0.0 == "url" })?.1 ?? "",
-            m: event.fastTags.first(where: { $0.0 == "m" })?.1,
-            hash: event.fastTags.first(where: { $0.0 == "hash" })?.1,
-            dim: event.fastTags.first(where: { $0.0 == "dim" })?.1,
-            blurhash: event.fastTags.first(where: { $0.0 == "blurhash" })?.1
-        )
     }
     
     private var subscriptions = Set<AnyCancellable>()
@@ -1237,3 +1228,12 @@ extension NRPost { // Helpers for grouped replies
 
 
 
+func getKindFileMetadata(event: Event) -> KindFileMetadata {
+    return KindFileMetadata(
+        url: event.fastTags.first(where: { $0.0 == "url" })?.1 ?? "",
+        m: event.fastTags.first(where: { $0.0 == "m" })?.1,
+        hash: event.fastTags.first(where: { $0.0 == "hash" })?.1,
+        dim: event.fastTags.first(where: { $0.0 == "dim" })?.1,
+        blurhash: event.fastTags.first(where: { $0.0 == "blurhash" })?.1
+    )
+}
