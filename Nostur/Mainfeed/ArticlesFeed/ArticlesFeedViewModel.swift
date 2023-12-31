@@ -100,14 +100,14 @@ class ArticlesFeedViewModel: ObservableObject {
             
             for article in articles.prefix(Self.POSTS_LIMIT) {
                 guard article.mostRecentId == nil else { continue }
-                guard (article.articlePublishedAt?.timeIntervalSince1970 ?? TimeInterval(article.created_at)) > TimeInterval(self.agoTimestamp) else { continue } // published_At should be within timeframe also
+                guard (article.eventPublishedAt?.timeIntervalSince1970 ?? TimeInterval(article.created_at)) > TimeInterval(self.agoTimestamp) else { continue } // published_At should be within timeframe also
                 
                 // withReplies for miniPFPs
                 nrPosts.append(NRPost(event: article, withParents: true, withReplies: true))
             }
             
             let sortedByPublishedAt = nrPosts.sorted(by: {
-                ($0.articlePublishedAt ?? $0.createdAt) > ($1.articlePublishedAt ?? $1.createdAt)
+                ($0.eventPublishedAt ?? $0.createdAt) > ($1.eventPublishedAt ?? $1.createdAt)
             })
             
             DispatchQueue.main.async {

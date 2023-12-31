@@ -148,7 +148,7 @@ func navigateTo(_ path:any Hashable) {
     if (type(of: path) == NRPost.self) {
         let nrPost = path as! NRPost
         if nrPost.kind == 30023 {
-            sendNotification(.navigateTo, NavigationDestination(destination: ArticlePath(id: nrPost.id, navigationTitle: nrPost.articleTitle ?? "Article")))
+            sendNotification(.navigateTo, NavigationDestination(destination: ArticlePath(id: nrPost.id, navigationTitle: nrPost.eventTitle ?? "Article")))
         }
         else {
             sendNotification(.navigateTo, NavigationDestination(destination: path))

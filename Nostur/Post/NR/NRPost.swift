@@ -269,12 +269,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     let isSpam:Bool // Should use this in all views to hide or not
     
     // article stuff
-    var articleId:String?
-    var articleTitle:String?
-    var articleSummary:String?
-    var articlePublishedAt:Date?
-    var articleImageURL:URL?
-    var mostRecentId:String?
+    var eventId: String? // d tag
+    var eventTitle: String?
+    var eventSummary: String?
+    var eventPublishedAt: Date?
+    var eventImageUrl: URL?
+    var eventUrl: URL?
     
     init(event: Event, withFooter:Bool = true, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isPreview:Bool = false, cancellationId:UUID? = nil) {
         var isAwaiting = false
