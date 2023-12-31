@@ -12,7 +12,7 @@ import Nuke
 struct SingleMediaViewer: View {
     @EnvironmentObject private var dim:DIMENSIONS
     @Environment(\.openURL) private var openURL
-    public let url:URL
+    public let url: URL
     public let pubkey:String
     public var height:CGFloat?
     public let imageWidth:CGFloat
@@ -24,6 +24,7 @@ struct SingleMediaViewer: View {
     public var theme = Themes.default.theme
     public var scaledDimensions: CGSize? = nil
     public var imageUrls: [URL]? = nil
+    public var tapUrl: URL?
     
     @State private var imagesShown = false
     @State private var loadNonHttpsAnyway = false
@@ -54,10 +55,14 @@ struct SingleMediaViewer: View {
             LazyImage(request: makeImageRequest(url, width: imageWidth, height: height, contentMode: contentMode, upscale: upscale, label: "SingleMediaViewer")) { state in
                 if state.error != nil {
                     if SettingsStore.shared.lowDataMode {
-                        Text(url.absoluteString)
+                        Text(tapUrl?.absoluteString ?? url.absoluteString)
                             .foregroundColor(theme.accent)
                             .truncationMode(.middle)
                             .onTapGesture {
+                                if let tapUrl {
+                                    openURL(tapUrl)
+                                    return
+                                }
                                 openURL(url)
                             }
                             .padding(.horizontal, fullWidth ? 10 : 0)
@@ -85,6 +90,10 @@ struct SingleMediaViewer: View {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(height: scaledDimensions.height)
                                 .onTapGesture {
+                                    if let tapUrl {
+                                        openURL(tapUrl)
+                                        return
+                                    }
                                     if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
                                         let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
                                         let index: Int = imageUrls.firstIndex(of: url) ?? 0
@@ -120,6 +129,10 @@ struct SingleMediaViewer: View {
                             //                            .withoutAnimation()
                                 .frame(height: scaledDimensions.height)
                                 .onTapGesture {
+                                    if let tapUrl {
+                                        openURL(tapUrl)
+                                        return
+                                    }
                                     if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
                                         let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
                                         let index: Int = imageUrls.firstIndex(of: url) ?? 0
@@ -159,6 +172,10 @@ struct SingleMediaViewer: View {
                             .fixedSize()
                             .padding(.horizontal, -contentPadding)
                             .onTapGesture {
+                                if let tapUrl {
+                                    openURL(tapUrl)
+                                    return
+                                }
                                 if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
                                     let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
                                     let index: Int = imageUrls.firstIndex(of: url) ?? 0
@@ -187,6 +204,10 @@ struct SingleMediaViewer: View {
                             .scaledToFit()
                             .frame(minHeight: 100, maxHeight: theHeight)
                             .onTapGesture {
+                                if let tapUrl {
+                                    openURL(tapUrl)
+                                    return
+                                }
                                 if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
                                     let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
                                     let index: Int = imageUrls.firstIndex(of: url) ?? 0
@@ -289,6 +310,8 @@ struct SingleMediaViewer_Previews: PreviewProvider {
             }
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+        .environmentObject(Themes.default)
+        .environmentObject(DIMENSIONS.shared)
     }
 }
 
