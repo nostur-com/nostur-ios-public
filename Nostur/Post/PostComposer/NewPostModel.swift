@@ -156,7 +156,7 @@ public final class NewPostModel: ObservableObject {
                     let imetas:[Nostur.Imeta] = mediaRequestBags
                         .compactMap {
                             guard let url = $0.downloadUrl else { return nil }
-                            return Imeta(url: url, dim: $0.dim, hash: $0.sha256hex)
+                            return Imeta(url: url, dim: $0.dim, hash: $0.sha256)
                         }
                     self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
                 }
