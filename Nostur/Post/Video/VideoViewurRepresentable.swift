@@ -61,6 +61,10 @@ struct VideoViewurRepresentable: UIViewRepresentable {
     
     class Coordinator: NSObject, AVPlayerViewControllerDelegate {
         var avpc:AVPlayerViewController?
+        
+        deinit {
+            avpc?.player?.replaceCurrentItem(with: nil)
+        }
     }
     
     func makeCoordinator() -> Coordinator {
