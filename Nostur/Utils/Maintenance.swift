@@ -66,6 +66,7 @@ struct Maintenance {
             Self.runMigrateDMsToCloud(context: context)
             Self.runMigrateRelays(context: context)
             Self.runUpdateKeychainInfo(context: context)
+            Self.runSaveFullAccountFlag(context: context)
             
             do {
                 if context.hasChanges {
@@ -187,7 +188,7 @@ struct Maintenance {
         let allAccounts = Array(try! context.fetch(frA))
         let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
             var newResult = Array(partialResult)
-            if (account.privateKey != nil) { // only if it is really our account
+            if (account.isFullAccount) || (account.privateKey != nil) { // only if it is really our account. .privateKey could return nil if device is restarted, not unlocked yet, so keychain access not available. so we also track full account by "full_account" flag in db.
                 newResult.append(account.publicKey)
             }
             return newResult
@@ -1094,6 +1095,22 @@ struct Maintenance {
         migration.migrationCode = migrationCode.migrateRelays.rawValue
     }
     
+    // Add "full_account" flag to accounts for which we have private key
+    static func runSaveFullAccountFlag(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.saveFullAccountFlag, context: context) else { return }
+        
+        let accounts = CloudAccount.fetchAccounts(context: context)
+        
+        for account in accounts {
+            if account.privateKey != nil {
+                account.flagsSet.insert("full_account")
+            }
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migrateRelays.rawValue
+    }
+    
     // Update Keychain info. Change from .whenUnlocked to .afterFirstUnlock and store name
     static func runUpdateKeychainInfo(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.updateKeychainInfo, context: context) else { return }
@@ -1124,7 +1141,7 @@ struct Maintenance {
         }
         
         let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.updateKeychainInfo.rawValue
+        migration.migrationCode = migrationCode.saveFullAccountFlag.rawValue
     }
     
     // All available migrations
@@ -1186,5 +1203,8 @@ struct Maintenance {
         
         // Update keychain info
         case updateKeychainInfo = "updateKeychainInfo"
+        
+        // Add "full_account" flag
+        case saveFullAccountFlag = "saveFullAccountFlag"
     }
 }
