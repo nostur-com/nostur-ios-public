@@ -409,12 +409,7 @@ struct ParentPost: View {
                                         EmptyView()
                                 }
                                 default:
-                                    Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                                        .centered()
-                                        .frame(maxWidth: .infinity)
-                                        .background(themes.theme.lineColor.opacity(0.2))
-                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20 , theme: themes.theme, didStart: $didStart)
-                                    //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                    UnknownKindView(nrPost: nrPost, theme: themes.theme)
                                 }
                             }
                         }
@@ -564,14 +559,7 @@ struct DetailPost: View {
                     EmptyView()
             }
             default:
-                Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                    .centered()
-                    .frame(maxWidth: .infinity)
-                    .background(themes.theme.lineColor.opacity(0.2))
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth(), theme: themes.theme, didStart: $didStart)
-                    .padding(.top, 3)
-                    .padding(.bottom, 10)
-                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                UnknownKindView(nrPost: nrPost, theme: themes.theme)
             }
             
             DetailFooterFragment(nrPost: nrPost)
