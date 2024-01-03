@@ -419,7 +419,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             dTag = event.dTag
         }
         
-        if ![1,6,1063,9802,30023,34231].contains(event.kind) {
+        if ![1,6,1063,9802,30023,99999].contains(event.kind) {
             // Try to get a title by checking "alt" or "title" tag, else take content if its not json
             let alt = event.fastTags.first(where: { $0.0 == "alt" || $0.0 == "title" })?.1
             if alt == nil, let content = event.content, content.prefix(1) != "{" {
