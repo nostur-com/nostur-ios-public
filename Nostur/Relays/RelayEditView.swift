@@ -22,7 +22,7 @@ struct RelayEditView: View {
     private var accounts:[CloudAccount] {
         NRState.shared.accounts
             .sorted(by: { $0.publicKey < $1.publicKey })
-            .filter { $0.privateKey != nil }
+            .filter { $0.isFullAccount }
     }
     
     private var isConnected:Bool {

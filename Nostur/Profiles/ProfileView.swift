@@ -175,7 +175,7 @@ struct ProfileView: View {
                                 }
                                 
                                 
-                                if account()?.privateKey != nil {
+                                if account()?.isFullAccount ?? false {
                                     Button {
                                         UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {

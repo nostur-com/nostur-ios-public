@@ -16,7 +16,7 @@ struct MultiFollowSheet: View {
     @EnvironmentObject private var themes:Themes
     
     private var accounts:[CloudAccount] { // Only accounts with private key
-        NRState.shared.accounts.filter { $0.privateKey != nil }
+        NRState.shared.accounts.filter { $0.isFullAccount }
     }
     
     private var firstRow:ArraySlice<CloudAccount> {

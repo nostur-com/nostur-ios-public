@@ -166,7 +166,7 @@ struct ProfileOverlayCard: View {
                                     .padding(.trailing, 10)
                             }
                             
-                            if account()?.privateKey != nil {
+                            if account()?.isFullAccount ?? false {
                                 Button {
                                     UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
                                     sendNotification(.dismissMiniProfile)

@@ -53,7 +53,7 @@ class FollowingGuardian: ObservableObject {
             .debounce(for: .seconds(15), scheduler: RunLoop.main)
             .sink { notification in
                 let account = notification.object as! CloudAccount
-                guard account.privateKey != nil else { return }
+                guard account.isFullAccount else { return }
                 reqP(RM.getAuthorContactsList(pubkey: account.publicKey, subscriptionId: "RM.getAuthorContactsList"))
                 reqP(RM.getUserMetadata(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
             }
@@ -81,7 +81,7 @@ class FollowingGuardian: ObservableObject {
                 let tagsRelay = nEvent.tTags()
                 self.followTags(tagsRelay, account: account)
                 
-                guard account.privateKey != nil else { return }
+                guard account.isFullAccount else { return }
                 
                 if !removed.isEmpty {
                     if removed.count < 10 {

@@ -89,7 +89,7 @@ class LoggedInAccount: ObservableObject {
     }
     
     @MainActor public func report(_ event:Event, reportType:ReportType, note:String = "", includeProfile:Bool = false) -> NEvent? {
-        guard account.privateKey != nil else { NRState.shared.readOnlyAccountSheetShown = true; return nil }
+        guard account.isFullAccount else { NRState.shared.readOnlyAccountSheetShown = true; return nil }
         
         let report = EventMessageBuilder.makeReportEvent(pubkey: event.pubkey, eventId: event.id, type: reportType, note: note, includeProfile: includeProfile)
 
@@ -101,7 +101,7 @@ class LoggedInAccount: ObservableObject {
     }
     
     @MainActor public func reportContact(pubkey:String, reportType:ReportType, note:String = "") -> NEvent? {
-        guard account.privateKey != nil else { NRState.shared.readOnlyAccountSheetShown = true; return nil }
+        guard account.isFullAccount else { NRState.shared.readOnlyAccountSheetShown = true; return nil }
         
         let report = EventMessageBuilder.makeReportContact(pubkey: pubkey, type: reportType, note: note)
 
@@ -113,7 +113,7 @@ class LoggedInAccount: ObservableObject {
     }
     
     @MainActor public func deletePost(_ eventId:String) -> NEvent? {
-        guard account.privateKey != nil else { NRState.shared.readOnlyAccountSheetShown = true; return nil }
+        guard account.isFullAccount else { NRState.shared.readOnlyAccountSheetShown = true; return nil }
         
         let deletion = EventMessageBuilder.makeDeleteEvent(eventId: eventId)
 

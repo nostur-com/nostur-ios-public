@@ -60,7 +60,7 @@ struct RelayMastery: View {
         .navigationTitle("Relay Mastery")
         .task {
             accounts = NRState.shared.accounts
-                .filter { $0.privateKey != nil }
+                .filter { $0.isFullAccount }
                 .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
         }
     }

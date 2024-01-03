@@ -52,7 +52,7 @@ struct PostAccountSwitcher: View, Equatable {
             }
             .task {
                 accounts = NRState.shared.accounts
-                    .filter { $0.privateKey != nil }
+                    .filter { $0.isFullAccount }
 //                    .sorted(by: {
 //                        $0 == activeAccount && $1 != activeAccount
 //                    })
