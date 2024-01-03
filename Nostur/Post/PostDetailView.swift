@@ -399,7 +399,7 @@ struct ParentPost: View {
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 case 1063: // File Metadata
                                     NoteTextRenderView(nrPost: nrPost, theme: themes.theme)
-                                case 34235:
+                                case 99999:
                                     let title = nrPost.eventTitle ?? "Untitled"
                                     if let eventUrl = nrPost.eventUrl {
                                         VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true, theme: themes.theme, availableWidth: dim.availablePostDetailImageWidth() - 20)
@@ -549,7 +549,7 @@ struct DetailPost: View {
                     Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth(), theme: themes.theme)
                         .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                 }
-            case 34235:
+            case 99999:
                 let title = nrPost.eventTitle ?? "Untitled"
                 if let eventUrl = nrPost.eventUrl {
                     VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true, theme: themes.theme, availableWidth: dim.availablePostDetailImageWidth() - 20)

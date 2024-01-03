@@ -25,7 +25,7 @@ struct NoteTextRenderView: View {
         else if nrPost.kind == 9802 {
             HighlightRenderer(nrPost: nrPost, theme: theme)
         }
-        else if ![1,6,30023,34235].contains(nrPost.kind) {
+        else if ![1,6,30023,99999].contains(nrPost.kind) {
             Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
                 .hCentered()
                 .frame(maxWidth: .infinity)

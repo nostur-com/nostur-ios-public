@@ -15,7 +15,7 @@ struct KindFileMetadata {
     var blurhash:String?
 }
 
-let SUPPORTED_VIEW_KINDS:Set<Int64> = [1,6,9802,30023,34235]
+let SUPPORTED_VIEW_KINDS:Set<Int64> = [1,6,9802,30023,99999]
 
 struct AnyKind: View {
     private var nrPost: NRPost
@@ -29,7 +29,7 @@ struct AnyKind: View {
     var body: some View {
         if SUPPORTED_VIEW_KINDS.contains(nrPost.kind) {
             switch nrPost.kind {
-                case 34235:
+                case 99999:
                     let title = nrPost.eventTitle ?? "Untitled"
                     if let eventUrl = nrPost.eventUrl {
                         VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true, theme: theme)
