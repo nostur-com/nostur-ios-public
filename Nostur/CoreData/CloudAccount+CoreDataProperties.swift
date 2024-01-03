@@ -66,6 +66,16 @@ extension CloudAccount {
         return URL(string: picture)
     }
     
+    var flagsSet:Set<String> {
+        get {
+            guard let flags else { return [] }
+            return Set(flags.split(separator: " ").map { String($0) })
+        }
+        set {
+            flags = newValue.joined(separator: " ")
+        }
+    }
+    
     var followingHashtags:Set<String> {
         get {
             guard let followingHashtags_ else { return [] }
@@ -187,6 +197,10 @@ extension CloudAccount : Identifiable {
     }
     
     var npub:String { try! NIP19(prefix: "npub", hexString: publicKey).displayString }
+    
+    var isFullAccount: Bool {
+        return self.flagsSet.contains("full_account")
+    }
     
     var privateKey:String? {
         get {
