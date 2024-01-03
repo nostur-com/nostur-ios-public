@@ -28,13 +28,6 @@
 //    
 //    var body: some View {
 //        VStack {
-//            //            Text("Hello {world}".replacingOccurrences(of: "{world}", with: "\(Image(systemName: "globe"))"))
-//            //
-//            //
-//            //            Text("A random text like this".replacingOccurrences(of: "this", with: "\(Image("BitcoinSymbol"))"))
-//            
-//            //            Text("omgdfj \(Text("\(Image("BitcoinSymbol"))").foregroundColor(.orange)) sdlfjlksd \(Image("HashtagBitcoin").resizable()) jfsd wtf huhhh \(Image(systemName: "globe")) \(name) boosted This is a test blabla ddiedo jasda d")
-//            
 //            Button("fetchRelays") {
 //                guard let rcr = rcr else { return }
 //                rcr.fetchRelays()
@@ -42,11 +35,11 @@
 //            
 //            Button("pubkeysByWriteRelays") {
 //                guard let rcr = rcr else { return }
-//                //                print("keys: \(rcr?.followingPubkeys.count ?? 0)")
-//                //                print(rcr?.pubkeysByWriteRelays.description ?? "")
-//                //                for (key, value) in rcr.pubkeysByWriteRelays {
-//                //                    print("\(key): \(value.count)")
-//                //                }
+//                print("keys: \(rcr.followingPubkeys.count)")
+//                print(rcr.pubkeysByWriteRelays.description)
+//                for (key, value) in rcr.pubkeysByWriteRelays {
+//                    print("\(key): \(value.count)")
+//                }
 //                rcr.getKind3or10002s()
 //                
 //                let sortedDict = rcr.pubkeysByWriteRelaysMinusOurRelaySet.sorted { $0.value.count > $1.value.count }
@@ -57,13 +50,14 @@
 //            }
 //        }
 //        .onAppear {
-////            var pubkeys = NosturState.shared.followingPublicKeys
-////            pubkeys.remove(NosturState.shared.activeAccountPublicKey)
-//
+//            var pubkeys = NRState.shared.loggedInAccount?.followingPublicKeys ?? Set<String>()
+//            pubkeys.remove(NRState.shared.activeAccountPublicKey)
+//            
 //            rcr = RelayCensorshipResistor(followingPubkeys: pubkeys)
 //        }
 //    }
 //}
+//
 //
 //typealias RelayAddress = String
 //
@@ -73,10 +67,10 @@
 //
 //class RelayCensorshipResistor {
 //    private var backlog = Backlog(timeout: 60, auto: true)
-//    private var followingPubkeys:Set<ContactPubkey>
+//    public var followingPubkeys:Set<ContactPubkey>
 //    private var ourRelaySet:[RelayAddress] {
-//        let sockets = SocketPool.shared.sockets.values
-//        let notNWC = sockets.filter { !$0.isNWC }
+//        let sockets = ConnectionPool.shared.connections.values
+//        let notNWC = sockets.filter { !$0.isNWC && !$0.isNC }
 //        let relayUrlStrings = notNWC.map { $0.url }
 //        let relayUrls = relayUrlStrings.compactMap { URL(string: $0)  }
 //        let ourRelaySet = relayUrls
@@ -95,15 +89,16 @@
 //        self.followingPubkeys = followingPubkeys
 //    }
 //    
+//    @MainActor
 //    public func fetchRelays() {
-////        var pubkeys = NosturState.shared.followingPublicKeys
-////        pubkeys.remove(NosturState.shared.activeAccountPublicKey)
+//        var pubkeys = NRState.shared.loggedInAccount?.followingPublicKeys ?? Set<String>()
+//        pubkeys.remove(NRState.shared.activeAccountPublicKey)
 //        
 //        let reqTask = ReqTask(debounceTime: 5.0,
 //                              prefix: "3-10002",
 //                              reqCommand: { taskId in
-//            req(RM.getRelays(pubkeys: Array(pubkeys), subscriptionId: taskId))
-//        }, processResponseCommand: {  [weak self] taskId, _ in
+//            req(RM.getRelays(pubkeys: Array(pubkeys), subscriptionId: taskId), relayType: .READ)
+//        }, processResponseCommand: {  [weak self] taskId, _, _ in
 //            guard let self = self else { return }
 //            L.og.info("📡 processResponseCommand")
 //            self.getKind3or10002s()
@@ -164,9 +159,9 @@
 //                    case 3:
 //                        guard let content = k.content, let contentData = content.data(using: .utf8) else { continue }
 //                        guard let relays = try? decoder.decode(Kind3Relays.self, from: contentData) else { continue }
-////                        if !relays.relays.isEmpty {
-////                            L.og.info("📡 no relays for \(k.pubkey)")
-////                        }
+//                        //                        if !relays.relays.isEmpty {
+//                        //                            L.og.info("📡 no relays for \(k.pubkey)")
+//                        //                        }
 //                        for relay in relays.relays {
 //                            guard let url = URL(string: relay.url), let scheme = url.scheme,
 //                                  let host = url.host, scheme == "wss" else { continue }
