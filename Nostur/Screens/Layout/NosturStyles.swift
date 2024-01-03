@@ -10,17 +10,18 @@ import SwiftUI
 
 struct NosturButton: ButtonStyle {
     @Environment(\.colorScheme) var colorScheme
+    public var height: CGFloat = 30
 
     func makeBody(configuration: Configuration) -> some View {        
         
         configuration.label
             .lineLimit(1)
-            .frame(height: 30)
-            .padding(.horizontal, 15)
+            .frame(height: height)
+            .padding(.horizontal, 10)
             .font(.caption.weight(.heavy))
             .foregroundColor(Color.white)
             .background(Color.secondary)
-            .cornerRadius(20)
+            .cornerRadius(15)
             .overlay {
                 RoundedRectangle(cornerRadius: 15)
                     .stroke(.gray, lineWidth: 1)
