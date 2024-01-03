@@ -246,6 +246,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
         }
     }
+    var dTag:String?
+    var alt:String?
     var aTag:String = ""
     var isPreview = false // hide 'Sent to 0 relays' in preview footer, disable animated gifs, Text instead of NRText
     
@@ -412,6 +414,22 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
 
         // Start doing kind specific stuff here (TODO)
+        
+        if kind >= 30000 && kind < 40000 {
+            dTag = event.dTag
+        }
+        
+        if ![1,6,1063,9802,30023,34231].contains(event.kind) {
+            // Try to get a title by checking "alt" or "title" tag, else take content if its not json
+            let alt = event.fastTags.first(where: { $0.0 == "alt" || $0.0 == "title" })?.1
+            if alt == nil, let content = event.content, content.prefix(1) != "{" {
+                self.alt = String(content.prefix(255))
+            }
+            else {
+                self.alt = alt
+            }
+        }
+        
         switch kind {
         case 1063:
             self.fileMetadata = getKindFileMetadata(event: event)
