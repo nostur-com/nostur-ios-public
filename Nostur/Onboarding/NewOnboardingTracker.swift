@@ -167,7 +167,7 @@ class NewOnboardingTracker {
         if let kind3 = Event.fetchReplacableEvent(3, pubkey: pubkey, context: self.bg) {
             didFetchKind3.send(kind3)
             let pTags = kind3.fastPs.map { $0.1 }
-            let existingAndCreatedContacts = self.createContactsFromPs(pTags, isOwnAccount: account.privateKey != nil)
+            let existingAndCreatedContacts = self.createContactsFromPs(pTags, isOwnAccount: account.isFullAccount)
             account.followingPubkeys.formUnion(Set(existingAndCreatedContacts.map { $0.pubkey }))
             let followingPublicKeys = account.getFollowingPublicKeys(includeBlocked: true)
             

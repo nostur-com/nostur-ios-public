@@ -27,7 +27,7 @@ class NRState: ObservableObject {
     public var accounts:[CloudAccount] = [] {
         didSet {
             let accountPubkeys = Set(accounts.map { $0.publicKey })
-            let fullAccountPubkeys = Set(accounts.filter { $0.privateKey != nil }.map { $0.publicKey })
+            let fullAccountPubkeys = Set(accounts.filter { $0.isFullAccount }.map { $0.publicKey })
             bg().perform {
                 self.accountPubkeys = accountPubkeys
                 self.fullAccountPubkeys = fullAccountPubkeys
@@ -320,10 +320,10 @@ func blocks() -> Set<String> {
 
 func isFullAccount(_ account: CloudAccount? = nil ) ->Bool {
     if Thread.isMainThread {
-        return (account ?? NRState.shared.loggedInAccount?.account)?.privateKey != nil
+        return (account ?? NRState.shared.loggedInAccount?.account)?.isFullAccount ?? false
     }
     else {
-        return (account ?? NRState.shared.loggedInAccount?.bgAccount)?.privateKey != nil
+        return (account ?? NRState.shared.loggedInAccount?.bgAccount)?.isFullAccount ?? false
     }
 }
 

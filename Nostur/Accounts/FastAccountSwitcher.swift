@@ -23,7 +23,7 @@ struct FastAccountSwitcher: View, Equatable {
         ns.accounts
             .filter { $0.publicKey != activePubkey }
             .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
-            .sorted(by: { $0.privateKey != nil && $1.privateKey == nil })
+            .sorted(by: { $0.isFullAccount && !$1.isFullAccount })
             .prefix(MAX_ACCOUNTS)
     }
     
