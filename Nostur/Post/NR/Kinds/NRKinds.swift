@@ -45,15 +45,7 @@ struct AnyKind: View {
             }
         }
         else {
-            Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a 'kind X' post is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                .hCentered()
-                .frame(maxWidth: .infinity)
-                .background(theme.lineColor.opacity(0.2))
-//                            .withoutAnimation()
-//                            .transaction { t in
-//                                t.animation = nil
-//                            }
-            // TODO: Render ALT
+            UnknownKindView(nrPost: nrPost, theme: theme)
         }
     }
 }
