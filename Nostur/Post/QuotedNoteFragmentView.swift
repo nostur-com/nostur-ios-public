@@ -95,12 +95,15 @@ struct QuotedNoteFragmentView: View {
                 }
             }
             .contentShape(Rectangle())
-            .highPriorityGesture(
-                TapGesture()
-                    .onEnded { _ in
-                        navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
-                    }
-            )
+            .onTapGesture {
+                navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
+            }
+//            .highPriorityGesture(
+//                TapGesture()
+//                    .onEnded { _ in
+//                        navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
+//                    }
+//            )
             .padding(10)
             .background(
                 theme.background
