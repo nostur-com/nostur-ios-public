@@ -225,7 +225,14 @@ class UnknownKindModel: ObservableObject {
             else { return nil }
             return webUrl
         }
-        else if let noteHandler = webHandlers.first { // "note" or handler whatever as note
+        else if let noteHandler = webHandlers.first(where: { $0.2 == "note" }) {
+            guard let note = try? NostrEssentials.ShareableIdentifier("note", id: self.eventId!)
+            else { return nil }
+            guard let webUrl = URL(string: noteHandler.1.replacingOccurrences(of: "<bech32>", with: note.identifier))
+            else { return nil }
+            return webUrl
+        }
+        else if let noteHandler = webHandlers.first { // if nothing just try as note
             guard let note = try? NostrEssentials.ShareableIdentifier("note", id: self.eventId!)
             else { return nil }
             guard let webUrl = URL(string: noteHandler.1.replacingOccurrences(of: "<bech32>", with: note.identifier))
