@@ -83,9 +83,9 @@ struct SmoothTable: UIViewControllerRepresentable {
                 if index >= 0 && index < context.coordinator.lvm.posts.value.elements.count {
                     context.coordinator.lvm.lastReadId = context.coordinator.lvm.posts.value.elements[index].value.id
                 }
-//                cvh.tableView.layoutIfNeeded()
+                guard index >= 0, index < cvh.tableView.numberOfRows(inSection: 0) else { return }
+                
                 cvh.tableView.scrollToRow(at: IndexPath(item: max(0,index), section: 0), at: .top, animated: true)
-//                cvh.tableView.setNeedsLayout()
             }
             .store(in: &context.coordinator.subscriptions)
         
@@ -94,9 +94,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                 guard context.coordinator.lvm.viewIsVisible else { return }
                 guard cvh.tableView.numberOfRows(inSection: 0) > 0 else { return }
                 if !context.coordinator.lvm.posts.value.isEmpty {
-//                    cvh.tableView.layoutIfNeeded()
                     cvh.tableView.scrollToRow(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
-//                    cvh.tableView.setNeedsLayout()
                 }
             }
             .store(in: &context.coordinator.subscriptions)
@@ -192,7 +190,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                         if data.count > 0 {
                             signpost(NRState.shared, "LAUNCH", .end, "SmoothTable: snapshot applied")
                         }
-                        if (coordinator.lvm.initialIndex > 4) && coordinator.lvm.initialIndex < data.count {
+                        if (coordinator.lvm.initialIndex > 4) && coordinator.lvm.initialIndex < viewHolder.tableView.numberOfRows(inSection: 0) {
                             L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
                             coordinator.lvm.isAtTop = false
                             viewHolder.tableView.scrollToRow(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
@@ -211,7 +209,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                     else {
                         // KEEP POSITION AFTER INSERT, IF AUTOSCROLL IS DISABLED
                         if !SettingsStore.shared.autoScroll {
-                            if let restoreToId, let restoreIndex = data.index(forKey: restoreToId) {
+                            if let restoreToId, let restoreIndex = data.index(forKey: restoreToId), restoreIndex < viewHolder.tableView.numberOfRows(inSection: 0)  {
                                 L.sl.info("⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(data.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
 //                                viewHolder.tableView.layoutIfNeeded()
                                 viewHolder.tableView.scrollToRow(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
