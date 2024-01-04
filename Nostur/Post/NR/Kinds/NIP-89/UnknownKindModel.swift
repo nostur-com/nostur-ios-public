@@ -42,7 +42,9 @@ class UnknownKindModel: ObservableObject {
     private var timeoutCount = 0 {
         didSet {
             if timeoutCount >= 2 {
-                state = .timeout
+                DispatchQueue.main.async {
+                    self.state = .timeout
+                }
             }
         }
     }
