@@ -1108,7 +1108,7 @@ struct Maintenance {
         }
                 
         let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migrateRelays.rawValue
+        migration.migrationCode = migrationCode.saveFullAccountFlag.rawValue
     }
     
     // Update Keychain info. Change from .whenUnlocked to .afterFirstUnlock and store name
@@ -1141,7 +1141,7 @@ struct Maintenance {
         }
         
         let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.saveFullAccountFlag.rawValue
+        migration.migrationCode = migrationCode.updateKeychainInfo.rawValue
     }
     
     // All available migrations

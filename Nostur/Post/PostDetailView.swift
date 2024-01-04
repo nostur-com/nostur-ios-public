@@ -410,6 +410,7 @@ struct ParentPost: View {
                                 }
                                 default:
                                     UnknownKindView(nrPost: nrPost, theme: themes.theme)
+                                        .padding(.vertical, 10)
                                 }
                             }
                         }
@@ -560,6 +561,7 @@ struct DetailPost: View {
             }
             default:
                 UnknownKindView(nrPost: nrPost, theme: themes.theme)
+                    .padding(.vertical, 10)
             }
             
             DetailFooterFragment(nrPost: nrPost)

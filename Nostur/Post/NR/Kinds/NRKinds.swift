@@ -46,6 +46,7 @@ struct AnyKind: View {
         }
         else {
             UnknownKindView(nrPost: nrPost, theme: theme)
+                .padding(.vertical, 10)
         }
     }
 }
