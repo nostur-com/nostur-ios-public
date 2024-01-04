@@ -231,6 +231,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? -10 : 0)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+//                            .debugDimensions("image.frame")
                             .id(index)
 //                            .background(Color.yellow)
 //                            .withoutAnimation()
