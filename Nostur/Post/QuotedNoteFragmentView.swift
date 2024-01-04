@@ -41,14 +41,7 @@ struct QuotedNoteFragmentView: View {
                         HStack(spacing:2) {
                             // profile image
                             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20, forceFlat: nrPost.isPreview)
-                                .onTapGesture {
-                                    if let nrContact = nrPost.contact {
-                                        navigateTo(nrContact)
-                                    }
-                                    else {
-                                        navigateTo(ContactPath(key: nrPost.pubkey))
-                                    }
-                                }
+                                .onTapGesture(perform: navigateToContact)
                             
                             if let contact = nrPost.contact {
                                 Text(contact.anyName) // Name
@@ -56,6 +49,7 @@ struct QuotedNoteFragmentView: View {
                                     .foregroundColor(.primary)
                                     .fontWeight(.bold)
                                     .lineLimit(1)
+                                    .onTapGesture(perform: navigateToContact)
                             }
                             else {
                                 Text(verbatim:"Anon")
@@ -63,10 +57,7 @@ struct QuotedNoteFragmentView: View {
                                     .foregroundColor(.primary)
                                     .fontWeight(.bold)
                                     .lineLimit(1).redacted(reason: .placeholder)
-                                Text(verbatim:"@Anon") //
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
-                                    .redacted(reason: .placeholder)
+                                    .onTapGesture(perform: navigateToContact)
                             }
                             
                             Group {
@@ -94,10 +85,10 @@ struct QuotedNoteFragmentView: View {
 //                        .transaction { t in t.animation = nil }
                 }
             }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
-            }
+//            .contentShape(Rectangle())
+//            .onTapGesture {
+//                navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
+//            }
 //            .highPriorityGesture(
 //                TapGesture()
 //                    .onEnded { _ in
@@ -108,6 +99,7 @@ struct QuotedNoteFragmentView: View {
             .background(
                 theme.background
                     .cornerRadius(15)
+                    .onTapGesture(perform: navigateToPost)
 //                    .withoutAnimation()
 //                    .transaction { t in t.animation = nil }
             )
@@ -131,6 +123,18 @@ struct QuotedNoteFragmentView: View {
             }
 //            .transaction { t in t.animation = nil }
         }
+    }
+    
+    private func navigateToContact() {
+        if let nrContact = nrPost.contact {
+            navigateTo(nrContact)
+        }
+        else {
+            navigateTo(ContactPath(key: nrPost.pubkey))
+        }
+    }    
+    private func navigateToPost() {
+        navigateTo(nrPost)
     }
     
 //    struct NameAndNip: View {
