@@ -85,16 +85,6 @@ struct QuotedNoteFragmentView: View {
 //                        .transaction { t in t.animation = nil }
                 }
             }
-//            .contentShape(Rectangle())
-//            .onTapGesture {
-//                navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
-//            }
-//            .highPriorityGesture(
-//                TapGesture()
-//                    .onEnded { _ in
-//                        navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
-//                    }
-//            )
             .padding(10)
             .background(
                 theme.background
@@ -136,23 +126,6 @@ struct QuotedNoteFragmentView: View {
     private func navigateToPost() {
         navigateTo(nrPost)
     }
-    
-//    struct NameAndNip: View {
-////        @EnvironmentObject private var themes:Themes
-//        @ObservedObject var contact:NRContact
-//        var body: some View {
-//            Text(contact.anyName) // Name
-//                .font(.system(size: 14))
-//                .foregroundColor(.primary)
-//                .fontWeight(.bold)
-//                .lineLimit(1)
-////            if (contact.nip05verified) {
-////                Image(systemName: "checkmark.seal.fill")
-////                    .foregroundColor(themes.theme.accent)
-////                    .layoutPriority(3)
-////            }
-//        }
-//    }
 }
 
 struct QuotedNoteFragmentView_Previews: PreviewProvider {
