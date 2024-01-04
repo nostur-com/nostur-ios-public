@@ -24,26 +24,35 @@ class UnknownKindModel: ObservableObject {
     }
     
     private let backlog = Backlog(timeout: 12.0, auto: true)
-    private var didBuildSuggestedApps = false
+    private var didFinishFetchingHandlers = false
+    private var didFinishFetchingRecommendations = false
+    
     private var appRecommendations: [Event] = [] {
         didSet {
-            if !didBuildSuggestedApps && !appRecommendations.isEmpty && !appHandlers.isEmpty {
-                self.buildSuggestedApps(unknownKind: self.unknownKind!, pubkey: self.pubkey!, eventId: self.eventId!)
+            if didFinishFetchingHandlers {
+                if !appHandlers.isEmpty { // appHandlers are required, can be with or without without recommendations
+                    self.buildSuggestedApps(unknownKind: self.unknownKind!, pubkey: self.pubkey!, eventId: self.eventId!)
+                }
+                else {
+                    // Could not find any handlers
+                    DispatchQueue.main.async {
+                        self.state = .timeout
+                    }
+                }
             }
         }
     }
     private var appHandlers: [Event] = [] {
         didSet {
-            if !didBuildSuggestedApps && !appRecommendations.isEmpty && !appHandlers.isEmpty {
-                self.buildSuggestedApps(unknownKind: self.unknownKind!, pubkey: self.pubkey!, eventId: self.eventId!)
-            }
-        }
-    }
-    private var timeoutCount = 0 {
-        didSet {
-            if timeoutCount >= 2 {
-                DispatchQueue.main.async {
-                    self.state = .timeout
+            if didFinishFetchingHandlers {
+                if !appHandlers.isEmpty { // appHandlers are required, can be with or without without recommendations
+                    self.buildSuggestedApps(unknownKind: self.unknownKind!, pubkey: self.pubkey!, eventId: self.eventId!)
+                }
+                else {
+                    // Could not find any handlers
+                    DispatchQueue.main.async {
+                        self.state = .timeout
+                    }
                 }
             }
         }
@@ -64,15 +73,16 @@ class UnknownKindModel: ObservableObject {
             processResponseCommand: { [weak self]  taskId, _, _ in
                 guard let self = self else { return }
                 bg().perform {
+                    self.didFinishFetchingHandlers = true
                     self.appHandlers = self.fetchApps(kind: unknownKind)
                 }
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self = self else { return }
                 bg().perform {
+                    self.didFinishFetchingHandlers = true
                     self.appHandlers = self.fetchApps(kind: unknownKind)
                 }
-                self.timeoutCount += 1
             })
         
         backlog.add(reqTask)
@@ -95,15 +105,16 @@ class UnknownKindModel: ObservableObject {
             processResponseCommand: { [weak self] taskId, _, _ in
                 guard let self = self else { return }
                 bg().perform {
+                    self.didFinishFetchingRecommendations = true
                     self.appRecommendations = self.fetchRecommendations(kind: unknownKind)
                 }
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self = self else { return }
                 bg().perform {
+                    self.didFinishFetchingRecommendations = true
                     self.appRecommendations = self.fetchRecommendations(kind: unknownKind)
                 }
-                self.timeoutCount += 1
             })
         
         backlog.add(reqTask)
@@ -180,7 +191,6 @@ class UnknownKindModel: ObservableObject {
             
             DispatchQueue.main.async {
                 self.state = .ready((suggestedApps, self.alt ?? "Unknown post type (kind: \(self.unknownKind!))"))
-                self.didBuildSuggestedApps = true
             }
         }
     }
