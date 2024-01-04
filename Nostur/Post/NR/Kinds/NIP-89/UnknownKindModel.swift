@@ -23,7 +23,7 @@ class UnknownKindModel: ObservableObject {
         case timeout
     }
     
-    private let backlog = Backlog(auto: true)
+    private let backlog = Backlog(timeout: 12.0, auto: true)
     private var didBuildSuggestedApps = false
     private var appRecommendations: [Event] = [] {
         didSet {
