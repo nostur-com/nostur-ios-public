@@ -203,6 +203,7 @@ struct SingleMediaViewer: View {
                             .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
                             .scaledToFit()
                             .frame(minHeight: 100, maxHeight: theHeight)
+                            .frame(maxWidth: .infinity, alignment: .center)
                             .onTapGesture {
                                 if let tapUrl {
                                     openURL(tapUrl)
