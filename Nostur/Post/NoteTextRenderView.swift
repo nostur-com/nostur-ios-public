@@ -26,22 +26,7 @@ struct NoteTextRenderView: View {
             HighlightRenderer(nrPost: nrPost, theme: theme)
         }
         else if ![1,6,30023,99999].contains(nrPost.kind) {
-            Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
-                .hCentered()
-                .frame(maxWidth: .infinity)
-                .background(theme.lineColor.opacity(0.2))
-            if !(nrPost.content ?? "").isEmpty {
-                Text(nrPost.content ?? "")//.border(.cyan)
-                    .lineLimit(10, reservesSpace: false)
-//                            .textSelection(.enabled)
-                    .multilineTextAlignment(TextAlignment.leading)
-                    .foregroundColor(.primary)
-//                        .accentColor(Color("AccentColor"))
-//                        .tint(Color("AccentColor"))
-                    .lineSpacing(3)
-                    .padding(.vertical, 5)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            UnknownKindView(nrPost: nrPost, theme: theme)
         }
         else {
             ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
