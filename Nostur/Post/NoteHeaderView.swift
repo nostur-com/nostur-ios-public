@@ -19,9 +19,9 @@ struct NoteHeaderView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
+        VStack(alignment: .leading) { // Name + menu "replying to"
             if let contact = pfpAttributes.contact {
-                PostHeader(contact: contact, nrPost:nrPost, singleLine:singleLine)
+                PostHeader(contact: contact, nrPost:nrPost, singleLine: singleLine)
 //                    .background(Color.random)
             }
             else {
@@ -49,7 +49,7 @@ struct PlaceholderPostHeader: View {
     @ObservedObject var settings:SettingsStore = .shared
     
     var body: some View {
-        HStack(spacing:2) {
+        HStack(spacing: 5) {
             Group {
                 Text(String(nrPost.pubkey.suffix(11))) // Name
                     .foregroundColor(.primary)
@@ -70,7 +70,6 @@ struct PlaceholderPostHeader: View {
                 
                 if (singleLine) {
                     Group {
-                        Text(verbatim:"@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
                         Ago(nrPost.createdAt, agoText: nrPost.ago)
                             .equatable()
                             .font(.subheadline)
@@ -91,7 +90,6 @@ struct PlaceholderPostHeader: View {
         }
         if (!singleLine) {
             HStack {
-                Text(verbatim:"@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
                 Ago(nrPost.createdAt, agoText: nrPost.ago)
                     .equatable()
                     .font(.subheadline)
