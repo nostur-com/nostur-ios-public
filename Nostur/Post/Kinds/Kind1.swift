@@ -58,8 +58,8 @@ struct Kind1: View {
     
     var body: some View {
         
-        VStack(spacing: 3) {
-            HStack(alignment: .top, spacing: 10) {
+        VStack(spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
                 ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isPreview)
                     .frame(width: 50, height: 50)
                     .onTapGesture {

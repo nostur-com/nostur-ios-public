@@ -110,7 +110,7 @@ struct Kind1Default: View {
                     Spacer()
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
-                .frame(height: 21.0)
+//                .frame(height: 21.0)
 //                .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
 //                .drawingGroup(opaque: true)
 //                .debugDimensions()

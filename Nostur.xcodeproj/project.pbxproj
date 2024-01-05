@@ -437,6 +437,7 @@
 		1FE6947C2A8B5550004BB949 /* Search+FollowHashtagTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */; };
 		1FE69EB62A2CE95000FE73B4 /* ZapNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */; };
 		1FE8158E2B23B09F00ED3958 /* BackgroundNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE8158D2B23B09F00ED3958 /* BackgroundNotifications.swift */; };
+		1FE882882B47726800A903F0 /* AvailableWidthContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE882872B47726800A903F0 /* AvailableWidthContainer.swift */; };
 		1FE9D2962A0E0F2200256B90 /* NRContentElementBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */; };
 		1FE9D2982A0E104D00256B90 /* NRTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2972A0E104D00256B90 /* NRTextParser.swift */; };
 		1FE9D29A2A0E1D2A00256B90 /* NRContentTextRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2992A0E1D2A00256B90 /* NRContentTextRenderer.swift */; };
@@ -931,6 +932,7 @@
 		1FE6947B2A8B5550004BB949 /* Search+FollowHashtagTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+FollowHashtagTile.swift"; sourceTree = "<group>"; };
 		1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapNotificationsView.swift; sourceTree = "<group>"; };
 		1FE8158D2B23B09F00ED3958 /* BackgroundNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundNotifications.swift; sourceTree = "<group>"; };
+		1FE882872B47726800A903F0 /* AvailableWidthContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailableWidthContainer.swift; sourceTree = "<group>"; };
 		1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContentElementBuilder.swift; sourceTree = "<group>"; };
 		1FE9D2972A0E104D00256B90 /* NRTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTextParser.swift; sourceTree = "<group>"; };
 		1FE9D2992A0E1D2A00256B90 /* NRContentTextRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContentTextRenderer.swift; sourceTree = "<group>"; };
@@ -1345,6 +1347,7 @@
 				1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */,
 				1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */,
 				1F00337029BEF141007CE040 /* View+withSheets.swift */,
+				1FE882872B47726800A903F0 /* AvailableWidthContainer.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -2320,6 +2323,7 @@
 				1F2DD4292A29C1170028A062 /* NIP47.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1F09D2792B03B687000B9B2B /* ConnectionPool.swift in Sources */,
+				1FE882882B47726800A903F0 /* AvailableWidthContainer.swift in Sources */,
 				1FCFDDBE2A2881250096CD84 /* PNotification+CoreDataProperties.swift in Sources */,
 				1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */,
 				1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */,

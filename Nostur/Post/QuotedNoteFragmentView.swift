@@ -38,7 +38,7 @@ struct QuotedNoteFragmentView: View {
             VStack(alignment:.leading) {
                 HStack(alignment: .top) { // name + reply + context menu
                     VStack(alignment: .leading) { // Name + menu "replying to"
-                        HStack(spacing:2) {
+                        HStack(spacing: 5) {
                             // profile image
                             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20, forceFlat: nrPost.isPreview)
                                 .onTapGesture(perform: navigateToContact)

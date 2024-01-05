@@ -10,8 +10,7 @@ import SwiftUI
 struct NosturTabsView: View {
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dm:DirectMessageViewModel
-
-    @StateObject private var dim = DIMENSIONS()
+    
     @AppStorage("selected_tab") private var selectedTab = "Main"
     
     private var selectedNotificationsTab: String {
@@ -29,55 +28,52 @@ struct NosturTabsView: View {
         let _ = Self._printChanges()
         #endif
         HStack {
-            VStack {
-                Color.clear.frame(height: 0)
-                    .modifier(SizeModifier())
-                    .onPreferenceChange(SizePreferenceKey.self) { size in
-                        guard size.width > 0 else { return }
-                        dim.listWidth = size.width
-                    }
-                NoInternetConnectionBanner()
-                TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
-                    tabTapped(newTab, oldTab: oldTab)
-                }) {
-                    Group {
-                        MainView()
-                            .tabItem { Image(systemName: "house") }
-                            .tag("Main")
-                        
-    //                    DiscoverCommunities()
-    //                        .tabItem { Image(systemName: "person.3.fill")}
-    //                        .tag("Communities")
-                        
-                        NotificationsContainer()
-                            .tabItem { Image(systemName: "bell.fill") }
-                            .tag("Notifications")
-                            .badge(unread)
-                        
-                        Search()
-                            .tabItem { Image(systemName: "magnifyingglass") }
-                            .tag("Search")
-                        
-                        BookmarksAndPrivateNotes()
-                            .tabItem { Image(systemName: "bookmark") }
-                            .tag("Bookmarks")
+            AvailableWidthContainer {
+                VStack {
+                    NoInternetConnectionBanner()
+                    TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
+                        tabTapped(newTab, oldTab: oldTab)
+                    }) {
+                        Group {
+                            MainView()
+                                .tabItem { Image(systemName: "house") }
+                                .tag("Main")
                             
-                        
-                        DMContainer()
-                            .tabItem { Image(systemName: "envelope.fill") }
-                            .tag("Messages")
-                            .badge((dm.unread + dm.newRequests))
+        //                    DiscoverCommunities()
+        //                        .tabItem { Image(systemName: "person.3.fill")}
+        //                        .tag("Communities")
+                            
+                            NotificationsContainer()
+                                .tabItem { Image(systemName: "bell.fill") }
+                                .tag("Notifications")
+                                .badge(unread)
+                            
+                            Search()
+                                .tabItem { Image(systemName: "magnifyingglass") }
+                                .tag("Search")
+                            
+                            BookmarksAndPrivateNotes()
+                                .tabItem { Image(systemName: "bookmark") }
+                                .tag("Bookmarks")
+                                
+                            
+                            DMContainer()
+                                .tabItem { Image(systemName: "envelope.fill") }
+                                .tag("Messages")
+                                .badge((dm.unread + dm.newRequests))
+                        }
+                        .toolbarBackground(themes.theme.listBackground, for: .tabBar)
+                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
                     }
-                    .toolbarBackground(themes.theme.listBackground, for: .tabBar)
-                    .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
+                    .withSheets()
+                    .edgesIgnoringSafeArea(.all)
                 }
-                .withSheets()
-                .edgesIgnoringSafeArea(.all)
             }
             .frame(maxWidth: 600)
-            .environmentObject(dim)
             if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
-                DetailPane()
+                AvailableWidthContainer {
+                    DetailPane()
+                }
             }
         }
         .contentShape(Rectangle())
