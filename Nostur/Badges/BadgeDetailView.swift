@@ -8,7 +8,7 @@
 import SwiftUI
 import Nuke
 import NukeUI
-
+import NavigationBackport
 
 struct BadgeDetailView: View {
     @EnvironmentObject private var themes:Themes
@@ -112,7 +112,7 @@ struct BadgeDetailView: View {
             }
         }
         .sheet(isPresented: $awardToPeopleIsShown) {
-            NavigationStack {
+            NBNavigationStack {
                 ContactsSearch(followingPubkeys: follows(), prompt: "Search contacts", onSelectContacts: { selectedContacts in
                     awardToPeopleIsShown = false
                     guard !selectedContacts.isEmpty else { return }
@@ -152,7 +152,7 @@ struct BadgeDetailView_Previews: PreviewProvider {
         let id = "6215b9fee3834ff25da4962dfb0d72e3dd648a454491dc213da5bdf735d7ddd9"
         
         PreviewContainer({ pe in pe.loadBadges() }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let badge = PreviewFetcher.fetchEvent(id) {
                     BadgeDetailView(badge: badge)
                 }

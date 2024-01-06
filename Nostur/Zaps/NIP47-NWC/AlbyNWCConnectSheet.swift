@@ -205,9 +205,11 @@ struct AlbyNWCConnectSheet: View {
     }
 }
 
+import NavigationBackport
+
 struct AlbyNWCConnectSheet_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
+        NBNavigationStack {
             AlbyNWCConnectSheet()
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))

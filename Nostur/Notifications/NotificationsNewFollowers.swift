@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 import Combine
+import NavigationBackport
 
 // Copy pasta from old NotificationsPosts, only using the new follower parts.
 struct NotificationsFollowers: View {
@@ -16,7 +17,7 @@ struct NotificationsFollowers: View {
     @StateObject private var fl = FastLoader()
     @State private var backlog = Backlog()
     @State private var didLoad = false
-    @Binding private var navPath:NavigationPath
+    @Binding private var navPath: NBNavigationPath
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -33,7 +34,7 @@ struct NotificationsFollowers: View {
     @FetchRequest
     private var notifications:FetchedResults<PersistentNotification>
     
-    init(pubkey: String, navPath: Binding<NavigationPath>) {
+    init(pubkey: String, navPath: Binding<NBNavigationPath>) {
         _navPath = navPath
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
@@ -107,7 +108,7 @@ struct NotificationsFollowers: View {
         pe.loadNewFollowersNotification()
     }) {
         VStack {
-            NotificationsFollowers(pubkey: pubkey, navPath: .constant(NavigationPath()))
+            NotificationsFollowers(pubkey: pubkey, navPath: .constant(NBNavigationPath()))
         }
     }
 }

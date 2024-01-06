@@ -215,8 +215,10 @@ struct GifSearcher: View {
     }
 }
 
+import NavigationBackport
+
 #Preview("Tenor") {
-    NavigationStack {
+    NBNavigationStack {
         GifSearcher { gifURL in
             print("Gif selected: \(gifURL)")
         }

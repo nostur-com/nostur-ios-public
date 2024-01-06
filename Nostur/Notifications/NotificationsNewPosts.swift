@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 import Combine
+import NavigationBackport
 
 struct NewPostsForPubkeys: Hashable {
     let id = UUID()
@@ -20,7 +21,7 @@ struct NotificationsNewPosts: View {
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject private var dim:DIMENSIONS
     
-    @Binding private var navPath:NavigationPath
+    @Binding private var navPath: NBNavigationPath
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
@@ -40,7 +41,7 @@ struct NotificationsNewPosts: View {
     @State private var showNewPosts = false
     @State private var newPostsForPubkeys:NewPostsForPubkeys? = nil
     
-    init(pubkey: String, navPath: Binding<NavigationPath>) {
+    init(pubkey: String, navPath: Binding<NBNavigationPath>) {
         _navPath = navPath
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
@@ -58,7 +59,7 @@ struct NotificationsNewPosts: View {
                     Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: 10) {
                         ForEach(notifications) { notification in
-                            NavigationLink(value: NewPostsForPubkeys(pubkeys: Set(notification.contactsInfo.map { $0.pubkey }), since: notification.since), label: {
+                            NBNavigationLink(value: NewPostsForPubkeys(pubkeys: Set(notification.contactsInfo.map { $0.pubkey }), since: notification.since), label: {
                                 Text("New posts by \(notification.contactsInfo.map { $0.name }.formatted(.list(type: .and)))")
                                     .foregroundColor(.primary)
                                     .multilineTextAlignment(.leading)
@@ -133,7 +134,7 @@ struct NotificationsNewPosts: View {
                        sendNotification(.scrollingDown)
                    }
                }))
-        .navigationDestination(for: NewPostsForPubkeys.self, destination: { newPostsForPubkeys in
+        .nbNavigationDestination(for: NewPostsForPubkeys.self, destination: { newPostsForPubkeys in
             NewPostsBy(pubkeys: newPostsForPubkeys.pubkeys, since: newPostsForPubkeys.since)
                 .environmentObject(themes)
                 .environmentObject(dim)
@@ -148,7 +149,7 @@ struct NotificationsNewPosts: View {
         pe.loadNewPostsNotification()
     }) {
         VStack {
-            NotificationsNewPosts(pubkey: pubkey, navPath: .constant(NavigationPath()))
+            NotificationsNewPosts(pubkey: pubkey, navPath: .constant(NBNavigationPath()))
         }
     }
 }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import NavigationBackport
 
 struct RelayRowView: View {
     @EnvironmentObject private var themes:Themes
@@ -107,7 +108,7 @@ struct RelaysView: View {
             }            
         }
         .sheet(item: $editRelay, content: { relay in
-            NavigationStack {
+            NBNavigationStack {
                 RelayEditView(relay: relay)
             }
             .presentationBackground(themes.theme.background)
@@ -120,7 +121,7 @@ struct RelaysView_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadRelays()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 RelaysView()
                     .padding()
             }

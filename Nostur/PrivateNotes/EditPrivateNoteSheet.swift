@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct EditPrivateNoteSheet: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -21,7 +22,7 @@ struct EditPrivateNoteSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             Form {
                 TextField(
                     text: $noteText,

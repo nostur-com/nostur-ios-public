@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import NavigationBackport
 
 struct NotificationsContainer: View {
     @EnvironmentObject private var themes: Themes
@@ -18,7 +19,7 @@ struct NotificationsContainer: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
     }
     
-    @State private var navPath = NavigationPath()
+    @State private var navPath = NBNavigationPath()
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
@@ -26,7 +27,7 @@ struct NotificationsContainer: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        NavigationStack(path: $navPath) {
+        NBNavigationStack(path: $navPath) {
             VStack {
                 NotificationsView(account: la.account, navPath: $navPath)
             }
@@ -50,7 +51,7 @@ struct NotificationsView: View {
     
     @AppStorage("selected_notifications_tab") private var tab = "Mentions"
 
-    @Binding public var navPath:NavigationPath
+    @Binding public var navPath: NBNavigationPath
     
     @EnvironmentObject private var themes:Themes
     @EnvironmentObject var dim:DIMENSIONS
@@ -167,7 +168,7 @@ struct NotificationsView: View {
             }
         }
         .sheet(isPresented: $showNotificationSettings, content: {
-            NavigationStack {
+            NBNavigationStack {
                 NotificationSettings()
             }
         })

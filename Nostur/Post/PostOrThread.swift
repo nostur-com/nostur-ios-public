@@ -129,6 +129,8 @@ func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
     return event.replyToId == nil
 }
 
+import NavigationBackport
+
 struct PostOrThreadSingle_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
@@ -140,7 +142,7 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
             ]
             pe.parseMessages(messages)
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 SmoothListMock {
                     if let p = PreviewFetcher.fetchNRPost("0047225fd5ba958d71725d0744cd21b9b6ace949acab69f1fcbb8db2a7020bed") {
                         PostOrThread(nrPost: p)

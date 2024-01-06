@@ -76,12 +76,14 @@ struct ReportContactSheet: View {
     }
 }
 
+import NavigationBackport
+
 struct ReportContactSheet_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadContacts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let contact = PreviewFetcher.fetchContact() {
                     ReportContactSheet(contact: contact)
                 }

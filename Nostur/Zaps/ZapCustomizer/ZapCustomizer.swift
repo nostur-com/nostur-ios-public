@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct ZapCustomizerSheet: View {
     @EnvironmentObject private var themes:Themes
@@ -24,7 +25,7 @@ struct ZapCustomizerSheet: View {
     @State private var setAmountAsDefault = false
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             VStack(spacing: 10) {
                 if ss.nwcShowBalance && ss.nwcReady {
                     HStack {
@@ -160,7 +161,7 @@ struct ZapCustomizerSheet: View {
                 }
             }
             .sheet(isPresented: $showCustomAmountsheet) {
-                NavigationStack {
+                NBNavigationStack {
                     CustomZapAmountEntry(customAmount: $customAmount)
                 }
                 .presentationBackground(themes.theme.background)

@@ -6,15 +6,16 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct DetailTab: View {
     @EnvironmentObject private var themes:Themes
-    @State private var navPath = NavigationPath()
+    @State private var navPath = NBNavigationPath()
     private let tm:DetailTabsModel = .shared
     @ObservedObject public var tab:TabModel
     
     var body: some View {
-        NavigationStack(path: $navPath) {
+        NBNavigationStack(path: $navPath) {
             if let nrPost = tab.nrPost {
                 ZStack {
                     themes.theme.listBackground

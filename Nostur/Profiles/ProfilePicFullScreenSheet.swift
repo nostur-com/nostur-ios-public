@@ -171,11 +171,13 @@ struct ProfilePicFullScreenSheet: View {
     }
 }
 
+import NavigationBackport
+
 struct ProfilePicFullScreenSheet_Previews: PreviewProvider {
     
     @State static var shown = true
     static var previews: some View {
-        NavigationStack {
+        NBNavigationStack {
             ProfilePicFullScreenSheet(
                 profilePicViewerIsShown: $shown,
                 pictureUrl: URL(string: "https://nostur.com/fabian/profile.jpg")!, isFollowing:true)

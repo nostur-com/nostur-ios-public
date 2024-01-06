@@ -212,9 +212,11 @@ struct CustomNWCConnectSheet: View {
     }
 }
 
+import NavigationBackport
+
 struct CustomNWCConnectSheet_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
+        NBNavigationStack {
             CustomNWCConnectSheet()
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))

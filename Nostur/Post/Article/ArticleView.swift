@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MarkdownUI
+import NavigationBackport
 
 struct ArticleView: View {
     @EnvironmentObject private var dim:DIMENSIONS
@@ -456,7 +457,7 @@ struct ArticleView_Previews: PreviewProvider {
                                                              definition: definition,
                                                              context: DataProvider.shared().viewContext)
             {
-                NavigationStack {
+                NBNavigationStack {
                     ArticleView(NRPost(event: article), isDetail: true, theme: Themes.default.theme)
                 }
             }
@@ -464,7 +465,7 @@ struct ArticleView_Previews: PreviewProvider {
             // Article with images (preview + inline, gifs)
             //            if let p = try? PreviewFetcher.fetchNRPost("b5637dfb45cf71e4f84bed9235cf7c57dd839c75459432b0d2394ed850f4301a")
             //            {
-            //                NavigationStack {
+            //                NBNavigationStack {
             //                    ArticleView(p, isDetail: true)
             //                }
             //            }

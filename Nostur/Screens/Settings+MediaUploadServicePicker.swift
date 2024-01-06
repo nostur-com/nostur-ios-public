@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct MediaUploadServicePicker: View {  
     @EnvironmentObject private var themes:Themes
@@ -43,7 +44,7 @@ struct MediaUploadServicePicker: View {
             }
         }
         .sheet(isPresented: $nip96configuratorShown) {
-            NavigationStack {
+            NBNavigationStack {
                 Nip96Configurator()
             }
         }
@@ -51,7 +52,7 @@ struct MediaUploadServicePicker: View {
 }
 
 #Preview {
-    NavigationStack {
+    NBNavigationStack {
         Form {
             MediaUploadServicePicker()
         }

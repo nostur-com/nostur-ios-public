@@ -11,6 +11,7 @@ import Combine
 import Nuke
 import NukeUI
 import CryptoKit
+import NavigationBackport
 
 struct AccountEditView: View {
     
@@ -331,7 +332,7 @@ extension AccountEditView {
     let fab = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
     
     return PreviewContainer {
-        NavigationStack {
+        NBNavigationStack {
             if let account = PreviewFetcher.fetchAccount(fab, context: DataProvider.shared().container.viewContext) {
                 AccountEditView(account: account)
             }

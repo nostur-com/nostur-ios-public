@@ -8,6 +8,7 @@
 import SwiftUI
 import Nuke
 import NukeUI
+import NavigationBackport
 
 struct BadgesReceivedContainer:View {
     @EnvironmentObject var la:LoggedInAccount
@@ -202,7 +203,7 @@ struct BadgeReceivedRow: View {
 struct BadgesReceivedView_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadBadges() }) {
-            NavigationStack {
+            NBNavigationStack {
                 BadgesReceivedContainer()
             }
         }

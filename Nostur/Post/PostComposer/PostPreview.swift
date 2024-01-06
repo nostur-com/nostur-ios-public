@@ -152,6 +152,8 @@ func createPreviewEvent(_ event:NEvent) -> Event {
     return previewEvent
 }
 
+import NavigationBackport
+
 struct PostPreview_Previews: PreviewProvider {
     @StateObject static var vm = NewPostModel()
     @Environment(\.dismiss) static var dismiss
@@ -160,7 +162,7 @@ struct PostPreview_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadZaps()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost() {
                     PostPreview(nrPost: nrPost, replyTo:nil, quotingEvent: nil, vm: vm, fullDismiss: dismiss)
                 }

@@ -37,10 +37,12 @@ struct GalleryFeedSettings: View {
     }
 }
 
+import NavigationBackport
+
 struct GalleryFeedSettingsTester: View {
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             GalleryFeedSettings(vm: GalleryViewModel())
         }
         .onAppear {

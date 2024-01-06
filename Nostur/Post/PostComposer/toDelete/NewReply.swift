@@ -95,7 +95,7 @@
 ////                                                .offset(x: 5.0, y: 4.0)
 ////                                        }
 ////                                        .sheet(isPresented: $vm.gifSheetShown) {
-////                                            NavigationStack {
+////                                            NBNavigationStack {
 ////                                                GifSearcher { gifUrl in
 ////                                                    vm.text += gifUrl + "\n"
 ////                                                }
@@ -229,7 +229,7 @@
 ////                    }
 //                }
 ////                .sheet(item: $vm.previewNRPost) { nrPost in
-////                    NavigationStack {
+////                    NBNavigationStack {
 ////                        PostPreview(nrPost: nrPost, sendNow: {
 ////                            vm.sendNow(replyTo: replyTo, dismiss:dismiss) }, uploading: $vm.uploading)
 ////                    }
@@ -279,7 +279,7 @@
 //            pe.loadContacts()
 //            pe.loadPosts()
 //        }) {
-//            NavigationStack {
+//            NBNavigationStack {
 //                if let event = PreviewFetcher.fetchEvent() {
 //                    VStack {
 //                        Text("p's: \(event.pTags().count)")

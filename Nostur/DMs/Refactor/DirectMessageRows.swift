@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct DirectMessageRows: View {
     @EnvironmentObject private var themes:Themes
@@ -16,7 +17,7 @@ struct DirectMessageRows: View {
     var body: some View {
         List {
             ForEach(conversationRows) { conv in
-                NavigationLink(value: conv) {
+                NBNavigationLink(value: conv) {
                     ConversationRowView(conv)
                         .swipeActions {
                             Button(role: .destructive) {

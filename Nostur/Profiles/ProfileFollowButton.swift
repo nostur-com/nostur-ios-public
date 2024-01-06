@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct ProfileFollowButton: View {
     @EnvironmentObject private var themes:Themes
@@ -51,7 +52,7 @@ struct ProfileFollowButton: View {
             }
             .buttonStyle(NosturButton())
             .sheet(item: $editingAccount) { account in
-                NavigationStack {
+                NBNavigationStack {
                     AccountEditView(account: account)
                 }
                 .presentationBackground(themes.theme.background)

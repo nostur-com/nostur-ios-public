@@ -153,6 +153,8 @@ class Themes: ObservableObject {
     }
 }
 
+import NavigationBackport
+
 struct Previews_Theme_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
@@ -160,7 +162,7 @@ struct Previews_Theme_Previews: PreviewProvider {
             pe.loadPosts()
             pe.loadReposts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 VStack {
                     Button("Color Blue") {
                         Themes.default.loadBlue()

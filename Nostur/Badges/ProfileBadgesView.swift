@@ -9,6 +9,7 @@ import SwiftUI
 import Nuke
 import NukeUI
 import CoreData
+import NavigationBackport
 
 struct ProfileBadgesContainer: View {
     let pubkey:String
@@ -117,7 +118,7 @@ struct ProfileBadgesView: View {
             Spacer()
         }
         .sheet(isPresented: $badgeInfoIsShown) {
-            NavigationStack {
+            NBNavigationStack {
                 ScrollView {
                     VStack(alignment: .leading) {
                         ForEach(verifiedBadges) { profileBadge in
@@ -208,7 +209,7 @@ struct BadgeIcon: View {
 struct ProfileBadgesView_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadBadges() }) {
-            NavigationStack {
+            NBNavigationStack {
                 let pb = "d7df976260e394f6708d4071ef1baa450e7390967c5dab640d528dd8a7d72894" // kind 30008
                 if let profileBadgesEvent = PreviewFetcher.fetchEvent(pb) {
                     ProfileBadgesView(verifiedBadges: profileBadgesEvent.verifiedBadges)

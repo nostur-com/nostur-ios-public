@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NukeUI
+import NavigationBackport
 
 struct AppRow: View {
     @Environment(\.openURL) private var openURL
@@ -65,7 +66,7 @@ struct AppRow: View {
             showDetailSheet = true
         }
         .sheet(isPresented: $showDetailSheet, content: {
-            NavigationStack {
+            NBNavigationStack {
                 VStack(spacing: 10) {
                     Spacer()
                     AppDetail(app: app, theme: theme)
@@ -82,7 +83,7 @@ struct AppRow: View {
 }
 
 #Preview {
-    NavigationStack {
+    NBNavigationStack {
         AppRow(app: SuggestedApp(id: "1", name: "Nostur", description: "A nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\nA nostr client\n", logoUrl: URL(string: "https://nostur.com/nostur.png")!, openUrl: URL(string: "https://nostur.com")!, recommendedBy: [
             (
                 "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",

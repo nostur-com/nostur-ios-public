@@ -60,7 +60,7 @@
 //            VStack {
 //                Button("New Post") { }
 //                    .sheet(isPresented: .constant(true)) {
-//                        NavigationStack {
+//                        NBNavigationStack {
 ////                            NewPost()
 //                        }
 //                    }

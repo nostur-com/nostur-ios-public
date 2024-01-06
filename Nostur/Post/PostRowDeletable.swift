@@ -65,6 +65,8 @@ struct PostRowDeletable: View {
 }
 
 
+import NavigationBackport
+
 struct PostRowDeletable_Previews: PreviewProvider {
     static var previews: some View {
         
@@ -74,7 +76,7 @@ struct PostRowDeletable_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadPosts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let example = PreviewFetcher.fetchNRPost() {
                     let _ = example.blocked = true
                     SmoothListMock {

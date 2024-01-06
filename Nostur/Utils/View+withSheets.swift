@@ -9,7 +9,8 @@ import SwiftUI
 import CoreData
 import UIKit
 import Combine
-//import Photos
+import NavigationBackport
+
 
 public extension View {
     func withSheets() -> some View {
@@ -123,7 +124,7 @@ private struct WithSheets: ViewModifier {
                 reportPost = ReportPost(nrPost: post)
             })
             .sheet(item: $reportPost, content: { reportPost in
-                NavigationStack {
+                NBNavigationStack {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(dim)
                         .environmentObject(NRState.shared)
@@ -137,7 +138,7 @@ private struct WithSheets: ViewModifier {
                 reportContact = ReportContact(contact: contact)
             })
             .sheet(item: $reportContact, content: { reportContact in
-                NavigationStack {
+                NBNavigationStack {
                     ReportContactSheet(contact: reportContact.contact)
                         .environmentObject(themes)
                 }
@@ -202,7 +203,7 @@ private struct WithSheets: ViewModifier {
             }
         
             .sheet(item: $replyToEvent) { eventNotification in
-                NavigationStack {
+                NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePost(replyTo: eventNotification.event)
@@ -245,7 +246,7 @@ private struct WithSheets: ViewModifier {
             }
         
             .sheet(item: $quotePostEvent) { quotePostEvent in
-                NavigationStack {
+                NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePost(quotingEvent: quotePostEvent)
@@ -290,7 +291,7 @@ private struct WithSheets: ViewModifier {
                 self.newHighlight = newHighlight
             }
             .sheet(item: $newHighlight) { newHighlight in
-                NavigationStack {
+                NBNavigationStack {
                     HighlightComposer(highlight: newHighlight)
                         .environmentObject(NRState.shared)
                         .environmentObject(themes)

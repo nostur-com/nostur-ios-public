@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct MutedWordsView: View {
     @EnvironmentObject private var themes:Themes
@@ -57,7 +58,7 @@ struct MutedWordsView: View {
         }
         
         var body: some View {
-            NavigationStack {
+            NBNavigationStack {
                 Form {
                     Section(header: Text("Specific word or sentence", comment: "Heading for entering a word or sentence to mute"), footer: Text("Posts containing this will be filtered from your feed")) {
                         TextField("Specific word or sentence", text: $text, prompt: Text(verbatim: "nft"))
@@ -94,7 +95,7 @@ struct MutedWordsView_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadBlockedAndMuted()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 MutedWordsView()
             }
         }

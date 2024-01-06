@@ -37,9 +37,11 @@ struct ArticleFeedSettings: View {
     }
 }
 
+import NavigationBackport
+
 struct ArticleFeedSettingsTester: View {
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             ArticleFeedSettings(vm: ArticlesFeedViewModel())
         }
         .onAppear {

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct EditRelaysNosturList: View {
     
@@ -104,7 +105,7 @@ struct EditRelaysList_Previews: PreviewProvider {
             pe.loadRelays()
 //            pe.loadRelayNosturLists()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let list = PreviewFetcher.fetchList() {
                     EditRelaysNosturList(list: list)
                     .withNavigationDestinations()

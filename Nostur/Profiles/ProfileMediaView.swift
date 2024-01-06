@@ -90,6 +90,8 @@ struct ProfileMediaView: View {
     }
 }
 
+import NavigationBackport
+
 struct ProfileMediaView_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "f8e6c64342f1e052480630e27e1016dce35fc3a614e60434fef4aa2503328ca9"
@@ -98,7 +100,7 @@ struct ProfileMediaView_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadMedia()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 ProfileMediaView(pubkey: pubkey)
             }
         }

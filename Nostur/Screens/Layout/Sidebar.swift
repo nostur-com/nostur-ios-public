@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 final class SideBarModel: ObservableObject {
     static let shared = SideBarModel()
@@ -280,7 +281,7 @@ struct SideBar: View {
             sm.showSidebar = true
         })
         .sheet(isPresented: $accountsSheetIsShown) {
-            NavigationStack {
+            NBNavigationStack {
                 AccountsSheet()
                     .presentationDetents([.fraction(0.45), .medium, .large])
             }
@@ -288,7 +289,7 @@ struct SideBar: View {
             .environmentObject(themes)
         }
         .sheet(isPresented: $showAnySigner) {
-            NavigationStack {
+            NBNavigationStack {
                 AnySigner()
             }
             .presentationBackground(themes.theme.background)

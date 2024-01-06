@@ -24,8 +24,10 @@ struct AutodownloadLevelPicker: View {
     }
 }
 
+import NavigationBackport
+
 #Preview {
-    NavigationStack {
+    NBNavigationStack {
         Form {
             AutodownloadLevelPicker()
         }

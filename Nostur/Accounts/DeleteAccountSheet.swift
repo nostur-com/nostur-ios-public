@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import NavigationBackport
 
 struct DeleteAccountSheet: View {
     @EnvironmentObject private var themes:Themes
@@ -101,7 +102,7 @@ struct DeleteAccountSheet: View {
 struct DeleteAccountSheet_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
-            NavigationStack {
+            NBNavigationStack {
                 DeleteAccountSheet()
             }
         }

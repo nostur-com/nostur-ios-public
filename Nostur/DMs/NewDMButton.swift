@@ -38,11 +38,13 @@ struct NewDMButton: View {
     }
 }
 
+import NavigationBackport
+
 struct NewDMButton_Previews: PreviewProvider {
     @State static var showingNewDM = false
     static var previews: some View {
         PreviewContainer {
-            NavigationStack {
+            NBNavigationStack {
                 NewDMButton(showingNewDM: $showingNewDM)
             }
         }

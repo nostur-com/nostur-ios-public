@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import NavigationBackport
 
 struct DetailPane: View {
     @EnvironmentObject private var themes:Themes
@@ -269,7 +270,7 @@ struct DetailPane2_Previews: PreviewProvider {
             pe.loadPosts()
             pe.loadRepliesAndReactions()
         }, previewDevice: PreviewDevice(rawValue: "iPad Air (5th generation)")) {
-            NavigationStack {
+            NBNavigationStack {
                 if let matt = PreviewFetcher.fetchNRPost("e593fc759291a691cd0127643a0b9fac9d92613952845e207eb24332937c59d9") {
                     
                     PostDetailView(nrPost: matt)
@@ -288,7 +289,7 @@ struct DetailPane3_Previews: PreviewProvider {
             pe.loadPosts()
             pe.loadRepliesAndReactions()
         }, previewDevice: PreviewDevice(rawValue: "iPad Air (5th generation)")) {
-            NavigationStack {
+            NBNavigationStack {
                 if let matt = PreviewFetcher.fetchNRPost("b083d13550aa7ec88d6be15eb7a518df14e9f86ffec3e314c30b84ea4156f381") {
                     
                     PostDetailView(nrPost: matt)
@@ -311,7 +312,7 @@ struct DuplicateRepliesTest_Previews: PreviewProvider {
                 ###"["EVENT","REPLY1.1.1",{"pubkey":"efc37e97fa4fad679e464b7a6184009b7cc7605aceb0c5f56b464d2b986a60f0","content":"Hmm.? That’s different from what i remembered. \nLet you know if I see anything later.","id":"0944f3733fbfd83674943a32c6b54edd719f1ce29c8a7f0427be43a6c3c7ff3a","created_at":1692679915,"sig":"1d152ce682929aae4858b3157fe57af6788810cd745ce2e22bed3e87040bac470b936da0663a3ed5f3ccf8ef88f768c30be31465131aa93bc6e3062ecfcb7f79","kind":1,"tags":[["e","79ce4e9090f52bad274d06ff784f49124da422813dc018a551736e793b69268a",""],["e","a976eda2dac1f509cb82e85ccd8947b3f84e68da2e7536e17e04b9d7ced7eb29"],["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"],["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]]}]"###
             ])
         }, previewDevice: PreviewDevice(rawValue: "iPad Air (5th generation)")) {
-            NavigationStack {
+            NBNavigationStack {
                 if let post = PreviewFetcher.fetchNRPost("79ce4e9090f52bad274d06ff784f49124da422813dc018a551736e793b69268a") {
                     
                     PostDetailView(nrPost: post)

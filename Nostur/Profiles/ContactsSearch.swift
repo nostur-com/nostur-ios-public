@@ -167,6 +167,8 @@ struct ContactsSearch: View, Equatable {
     }
 }
 
+import NavigationBackport
+
 struct ContactsSearch_Previews: PreviewProvider {
     
     @State static var selectedContacts:Set<Contact> = []
@@ -174,7 +176,7 @@ struct ContactsSearch_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 ContactsSearch(followingPubkeys: follows(),
                                prompt: "Search")
             }

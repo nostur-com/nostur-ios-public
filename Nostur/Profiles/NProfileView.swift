@@ -54,7 +54,7 @@ struct NProfileView: View {
                             
                             if !identifier.relays.isEmpty {
                                 fetchTask = Task {
-                                    try? await Task.sleep(for: .seconds(3))
+                                    try? await Task.sleep(nanoseconds: UInt64(3 * Double(NSEC_PER_SEC)))
                                     let ctx = bg()
                                     await ctx.perform {
                                         // If we don't have the event after X seconds, fetch from relay hint
@@ -86,12 +86,14 @@ struct NProfileView: View {
     }
 }
 
+import NavigationBackport
+
 struct NProfileView_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadContacts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let identifier = try? ShareableIdentifier("nprofile1qqs80w7ryyy8jpwe372phkw5e3xjs4hacre0pqln4ct8238p5weeaygm0c3wt") {
                     NProfileView(identifier: identifier)
                 }

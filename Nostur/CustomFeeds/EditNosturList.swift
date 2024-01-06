@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct EditNosturList: View {
     @ObservedObject public var list:CloudFeed
@@ -59,13 +60,13 @@ struct EditNosturList: View {
             }
         }
         .sheet(item: $editList, content: { list in
-            NavigationStack {
+            NBNavigationStack {
                 EditListTitleSheet(list: list)
             }
             .presentationBackground(themes.theme.background)
         })
         .sheet(isPresented: $addContactsSheetShown) {
-            NavigationStack {
+            NBNavigationStack {
                 ContactsSearch(followingPubkeys: follows(),
                                prompt: "Search", onSelectContacts: { selectedContacts in
                     list.contactPubkeys.formUnion(Set(selectedContacts.map { $0.pubkey }))
@@ -95,7 +96,7 @@ struct EditList_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadNosturLists()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let list = PreviewFetcher.fetchList() {
                     EditNosturList(list: list)
                     .withNavigationDestinations()

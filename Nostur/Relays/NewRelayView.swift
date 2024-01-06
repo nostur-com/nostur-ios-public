@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct NewRelayView: View {
 //    @EnvironmentObject private var themes:Themes
@@ -16,7 +17,7 @@ struct NewRelayView: View {
     
     var body: some View {
         
-        NavigationStack {
+        NBNavigationStack {
 //            VStack {
                 Form {
                     TextField("wss://relay...", text: $url)

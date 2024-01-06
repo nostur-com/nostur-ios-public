@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct Onboarding: View {
     @AppStorage("did_accept_terms") var didAcceptTerms = false
@@ -17,7 +18,7 @@ struct Onboarding: View {
             TermsAndConditions()
         }
         else {
-            NavigationStack {
+            NBNavigationStack {
                 WelcomeSheet(offerTryOut: true)
                     .interactiveDismissDisabled()
                     .withNavigationDestinations()

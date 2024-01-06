@@ -251,12 +251,14 @@ struct Kind10002ConfigurationWizard: View {
     }
 }
 
+import NavigationBackport
+
 #Preview {
     PreviewContainer({ pe in
         pe.loadRelays()
     }) {
         if let account = PreviewFetcher.fetchAccount() {
-            NavigationStack {
+            NBNavigationStack {
                 Kind10002ConfigurationWizard(account: account, onDismiss: { })
             }
         }

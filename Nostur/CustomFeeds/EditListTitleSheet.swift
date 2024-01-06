@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct EditListTitleSheet: View {
     
@@ -56,7 +57,7 @@ struct EditListTitleSheet_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadNosturLists()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let list = PreviewFetcher.fetchList() {
                     EditListTitleSheet(list: list)
                         .withNavigationDestinations()

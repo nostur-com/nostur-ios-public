@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import NavigationBackport
 
 struct AddRemoveToListsheet: View {
     
@@ -21,7 +22,7 @@ struct AddRemoveToListsheet: View {
     var lists:FetchedResults<CloudFeed>
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             ScrollView {
                 if !lists.isEmpty {
                     LazyVStack {
@@ -88,7 +89,7 @@ struct AddRemoveToListsheet_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadNosturLists()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let contact = PreviewFetcher.fetchContact() {
                     AddRemoveToListsheet(contact: contact)
                 }

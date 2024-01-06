@@ -7,11 +7,12 @@
 
 import SwiftUI
 import Combine
+import NavigationBackport
 
 struct DMs: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes:Themes
-    @State private var navPath = NavigationPath()
+    @State private var navPath = NBNavigationPath()
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Messages" }
@@ -31,7 +32,7 @@ struct DMs: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        NavigationStack(path: $navPath) {
+        NBNavigationStack(path: $navPath) {
             VStack {
                 HStack {
                     Button {
@@ -153,7 +154,7 @@ struct DMs: View {
                     .padding([.top, .leading, .bottom], 10)
                     .padding([.trailing], 25)
             }
-            .navigationDestination(for: Conversation.self) { conv in
+            .nbNavigationDestination(for: Conversation.self) { conv in
                 if let event = conv.mostRecentEvent.toMain() {
                     DMConversationView(recentDM: event, pubkey: self.pubkey, conv: conv)
                         .onAppear {
@@ -165,7 +166,7 @@ struct DMs: View {
                 }
             }
             .sheet(isPresented: $showingNewDM) {
-                NavigationStack {
+                NBNavigationStack {
                     NewDM(showingNewDM: $showingNewDM, tab: $tab)
                         .onAppear {
                             if let preloadNewDMInfo {

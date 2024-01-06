@@ -64,12 +64,14 @@ struct HighlightRenderer: View {
     }
 }
 
+import NavigationBackport
+
 struct HighlightRenderer_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadPosts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost() {
                     HighlightRenderer(nrPost: nrPost, theme: Themes.default.theme)
                 }

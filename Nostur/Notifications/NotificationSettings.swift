@@ -79,9 +79,11 @@ struct NotificationSettings: View {
     }
 }
 
+import NavigationBackport
+
 struct NotificationSettingsTester: View {
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             NotificationSettings()
         }
         .onAppear {

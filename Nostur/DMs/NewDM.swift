@@ -48,12 +48,14 @@ struct NewDM: View {
     }
 }
 
+import NavigationBackport
+
 struct NewDM_Previews: PreviewProvider {
     @State static var showingNewDM = true
     @State static var tab = "Accepted"
     static var previews: some View {
         PreviewContainer({ pe in pe.loadDMs() }) {
-            NavigationStack {
+            NBNavigationStack {
                 NewDM(showingNewDM: $showingNewDM, tab: $tab)
             }
         }

@@ -108,12 +108,14 @@ struct ProfileBanner: View {
     }
 }
 
+import NavigationBackport
+
 struct ProfileBanner_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadContacts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let contact = PreviewFetcher.fetchContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
                     ProfileBanner(banner:contact.banner, width: UIScreen.main.bounds.width)
                 }

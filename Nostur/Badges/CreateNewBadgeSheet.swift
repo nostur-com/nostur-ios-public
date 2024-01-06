@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct CreateNewBadgeSheet: View {
     
@@ -82,7 +83,7 @@ struct CreateNewBadgeSheet: View {
 struct CreateNewBadgeSheet_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadBadges() }) {
-            NavigationStack {
+            NBNavigationStack {
                 CreateNewBadgeSheet()
             }
         }

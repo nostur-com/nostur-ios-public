@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct AccountsSheet: View {
     @EnvironmentObject private var themes:Themes
@@ -29,7 +30,7 @@ struct AccountsSheet: View {
     
     var body: some View {
 //        let _ = Self._printChanges()
-        NavigationStack {
+        NBNavigationStack {
             VStack(spacing: 15) {
                 List {
                     ForEach(accountsSorted) { account in

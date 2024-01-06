@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 import CoreData
 import Nuke
+import NavigationBackport
 
 struct Settings: View {
     @EnvironmentObject private var themes: Themes
@@ -503,7 +504,7 @@ struct Settings: View {
         }
         .navigationTitle("Settings")
         .sheet(isPresented: $deleteAccountIsShown) {
-            NavigationStack {
+            NBNavigationStack {
                 DeleteAccountSheet()
                     .environmentObject(NRState.shared)
             }
@@ -511,7 +512,7 @@ struct Settings: View {
             .presentationBackground(themes.theme.background)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
-            NavigationStack {
+            NBNavigationStack {
                 AlbyNWCConnectSheet()
                     .environmentObject(NRState.shared)
             }
@@ -519,7 +520,7 @@ struct Settings: View {
             .presentationBackground(themes.theme.background)
         }
         .sheet(isPresented: $customNWCsheetShown) {
-            NavigationStack {
+            NBNavigationStack {
                 CustomNWCConnectSheet()
                     .environmentObject(NRState.shared)
             }
@@ -534,7 +535,7 @@ struct Settings_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadAccounts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 Settings()
             }
         }

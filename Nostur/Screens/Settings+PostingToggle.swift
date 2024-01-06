@@ -52,9 +52,11 @@ struct PostingToggle: View {
     }
 }
 
+import NavigationBackport
+
 #Preview {
     PreviewContainer({ pe in pe.loadAccounts() }) {
-        NavigationStack {
+        NBNavigationStack {
             Form {
                 Section("Posting") {
                     PostingToggle()
