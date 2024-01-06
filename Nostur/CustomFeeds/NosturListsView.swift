@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct NosturListsView: View {
     @EnvironmentObject private var themes:Themes
@@ -23,7 +24,7 @@ struct NosturListsView: View {
         VStack {
             if !lists.isEmpty {
                 List(lists) { list in
-                    NavigationLink(value: list) {
+                    NBNavigationLink(value: list) {
                         ListRow(list: list)
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {
@@ -64,7 +65,7 @@ struct NosturListsView: View {
             }
         }
         .sheet(isPresented: $newListSheet) {
-            NavigationStack {
+            NBNavigationStack {
                 NewListSheet()
             }
             .presentationBackground(themes.theme.background)
@@ -128,7 +129,7 @@ struct NosturListsView_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadNosturLists()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 NosturListsView()
                     .withNavigationDestinations()
             }

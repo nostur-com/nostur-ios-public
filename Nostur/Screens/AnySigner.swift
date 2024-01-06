@@ -88,9 +88,11 @@ struct AnySigner: View {
     }
 }
 
+import NavigationBackport
+
 struct AnySigner_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
+        NBNavigationStack {
             AnySigner()
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))

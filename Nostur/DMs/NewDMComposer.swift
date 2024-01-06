@@ -82,6 +82,8 @@ struct NewDMComposer: View {
     }
 }
 
+import NavigationBackport
+
 struct NewDMComposer_Previews: PreviewProvider {
     
     @State static var toPubkey:String? = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
@@ -92,7 +94,7 @@ struct NewDMComposer_Previews: PreviewProvider {
     
     static var previews: some View {
         PreviewContainer {
-            NavigationStack {
+            NBNavigationStack {
                 NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM, tab: $tab)
             }
         }

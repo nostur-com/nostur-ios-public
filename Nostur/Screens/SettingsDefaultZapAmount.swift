@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct SettingsDefaultZapAmount: View {
     @EnvironmentObject private var themes:Themes
@@ -17,7 +18,7 @@ struct SettingsDefaultZapAmount: View {
     @State var showCustomAmountsheet = false
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             VStack {
                 Grid {
                     GridRow {
@@ -107,7 +108,7 @@ struct SettingsDefaultZapAmount: View {
             .navigationTitle(String(localized:"Default zap amount"))
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showCustomAmountsheet) {
-                NavigationStack {
+                NBNavigationStack {
                     CustomZapAmountEntry(customAmount: $customAmount)
                 }
                 .presentationBackground(themes.theme.background)

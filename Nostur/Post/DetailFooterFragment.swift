@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct DetailFooterFragment: View {
     private var nrPost:NRPost
@@ -21,28 +22,28 @@ struct DetailFooterFragment: View {
     var body: some View {
         Divider()
         HStack {
-            NavigationLink(value: ViewPath.NoteReactions(id: nrPost.id)) {
+            NBNavigationLink(value: ViewPath.NoteReactions(id: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.likesCount)
-                        .fontWeight(.bold)
+//                        .fontWeight(.bold)
                     Text("reactions", comment: "Label for reactions count, example: (7) reactions")
                 }
             }
-            NavigationLink(value: ViewPath.NoteReposts(id: nrPost.id)) {
+            NBNavigationLink(value: ViewPath.NoteReposts(id: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.repostsCount)
-                        .fontWeight(.bold)
+//                        .fontWeight(.bold)
                     Text("reposts", comment: "Label for reposts count, example: (7) reposts")
                 }
             }
-            NavigationLink(value: ViewPath.NoteZaps(id: nrPost.id)) {
+            NBNavigationLink(value: ViewPath.NoteZaps(id: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.zapsCount)
-                        .fontWeight(.bold)
+//                        .fontWeight(.bold)
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
                     
                     AnimatedNumberString(number: tallyString)
-                        .fontWeight(.bold)
+//                        .fontWeight(.bold)
                         .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
                 }
             }

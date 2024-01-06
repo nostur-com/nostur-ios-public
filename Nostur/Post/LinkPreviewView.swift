@@ -110,13 +110,15 @@ struct LinkPreviewView: View {
     }
 }
 
+import NavigationBackport
+
 struct LinkPreviewView_Previews: PreviewProvider {
     static var previews: some View {
         //            let url = "https://open.spotify.com/track/5Tbpp3OLLClPJF8t1DmrFD"
         //            let url = "https://youtu.be/qItugh-fFgg"
         let url = URL(string:"https://youtu.be/QU9kRF9tHPU")!
 //        let url = URL(string:"https://nostur.com")!
-        NavigationStack {
+        NBNavigationStack {
             LinkPreviewView(url: url, theme: Themes.default.theme)
                 .padding(.vertical, 5)
         }

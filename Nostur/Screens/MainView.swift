@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct MainView: View {
     @EnvironmentObject private var themes:Themes
@@ -21,7 +22,7 @@ struct MainView: View {
         get { UserDefaults.standard.string(forKey: "selected_subtab") ?? "Following" }
     }
     
-    @State private var navPath = NavigationPath()
+    @State private var navPath = NBNavigationPath()
     @State private var account:CloudAccount? = nil
     @State private var showingNewNote = false
     @ObservedObject private var settings:SettingsStore = .shared
@@ -33,7 +34,7 @@ struct MainView: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        NavigationStack(path: $navPath) {
+        NBNavigationStack(path: $navPath) {
             if let account = account {
                 FollowingAndExplore(account: account, showingOtherContact: $showingOtherContact)
 //                    .transaction { t in t.animation = nil }
@@ -58,7 +59,7 @@ struct MainView: View {
                         }
                     }
                     .sheet(isPresented: $showingNewNote) {
-                        NavigationStack {
+                        NBNavigationStack {
                             if account.isNC {
                                 WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                                     ComposePost()

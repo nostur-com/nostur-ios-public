@@ -91,13 +91,15 @@ struct NEventView: View {
     }
 }
 
+import NavigationBackport
+
 struct NEventView_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let identifier = try? ShareableIdentifier("nevent1qqspg0h7quunckc8a7lxag0uvmpeewv9hx8cs3r9pmwsp77tqsfz3gcens7um") {
                     NEventView(identifier: identifier, theme: Themes.default.theme)
                 }

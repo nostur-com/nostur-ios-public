@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 import NostrEssentials
+import NavigationBackport
 
 @MainActor
 struct Search: View {
@@ -44,7 +45,7 @@ struct Search: View {
     }
     
     
-    @State private var navPath = NavigationPath()
+    @State private var navPath = NBNavigationPath()
 
     @State private var searchText = ""
     @State var searchTask:Task<Void, Never>? = nil
@@ -62,7 +63,7 @@ struct Search: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        NavigationStack(path: $navPath) {
+        NBNavigationStack(path: $navPath) {
             VStack {
                 Box { // @FocusState doesn't work when TextField is in ToolBarItem sigh...
                     SearchBox(prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"), text: $searchText)
@@ -211,13 +212,15 @@ public final class DebounceObject: ObservableObject {
     }
 }
 
+import NavigationBackport
+
 struct Search_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadPosts()
             pe.loadContacts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let lia = NRState.shared.loggedInAccount {
                     Search()
                         .environmentObject(lia)

@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 import CoreData
+import NavigationBackport
 
 struct BookmarksView: View {
     @EnvironmentObject private var themes:Themes
@@ -18,7 +19,7 @@ struct BookmarksView: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_bookmarkssubtab") }
     }
     
-    @Binding var navPath:NavigationPath
+    @Binding var navPath: NBNavigationPath
     @ObservedObject private var settings:SettingsStore = .shared
     @Namespace private var top
     
@@ -135,7 +136,7 @@ struct BookmarksView: View {
         pe.loadBookmarks()
     }) {
         VStack {
-            BookmarksView(navPath: .constant(NavigationPath()))
+            BookmarksView(navPath: .constant(NBNavigationPath()))
         }
     }
 }

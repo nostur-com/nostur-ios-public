@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 // TODO: Should add drafts and auto-save
 // TODO: Need to create better solution for typing @mentions
@@ -149,7 +150,7 @@ struct ComposePost: View {
                             .background(themes.theme.background)
                     }
                     .sheet(item: $vm.previewNRPost) { nrPost in
-                        NavigationStack {
+                        NBNavigationStack {
                             PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, fullDismiss: dismiss)
                         }
                         .presentationBackground(themes.theme.background)
@@ -199,8 +200,8 @@ struct ComposePost: View {
         VStack {
             Button("New Post") { }
                 .sheet(isPresented: .constant(true)) {
-                    NavigationStack {
                         ComposePost()
+                    NBNavigationStack {
                     }
                 }
         }
@@ -216,7 +217,7 @@ struct ComposePost: View {
         VStack {
             Button("New Post") { }
                 .sheet(isPresented: .constant(true)) {
-                    NavigationStack {
+                    NBNavigationStack {
                         if let replyTo = PreviewFetcher.fetchEvent("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
                             ComposePost(replyTo: replyTo)
                         }

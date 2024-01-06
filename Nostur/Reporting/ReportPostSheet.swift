@@ -89,13 +89,15 @@ struct ReportPostSheet: View {
     }
 }
 
+import NavigationBackport
+
 struct ReportPostSheet_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost() {
                     ReportPostSheet(nrPost: nrPost)
                 }

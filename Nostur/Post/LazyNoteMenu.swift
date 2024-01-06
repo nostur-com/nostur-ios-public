@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct LazyNoteMenuButton: View {
     @EnvironmentObject private var themes:Themes
@@ -46,7 +47,7 @@ struct LazyNoteMenuSheet: View {
     @State private var blockOptions = false
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             List {
                 Group {
                     HStack {
@@ -314,10 +315,10 @@ struct LazyNoteMenuSheet: View {
                     
                 }
             }
-            .navigationDestination(isPresented: $followToggles) { 
+            .nbNavigationDestination(isPresented: $followToggles) {
                 MultiFollowSheet(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
             }
-            .navigationDestination(isPresented: $blockOptions) {
+            .nbNavigationDestination(isPresented: $blockOptions) {
                 BlockOptions(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
             }
             .onAppear {
@@ -346,7 +347,7 @@ struct LazyNoteMenuSheet_Previews: PreviewProvider {
     PreviewContainer({ pe in
         pe.loadPosts()
     }) {
-        NavigationStack {
+        NBNavigationStack {
             if let nrPost = PreviewFetcher.fetchNRPost() {
                 LazyNoteMenuButton(nrPost:nrPost)
             }

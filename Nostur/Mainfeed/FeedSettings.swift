@@ -95,11 +95,13 @@ struct FeedSettings: View {
     }
 }
 
+import NavigationBackport
+
 struct FeedSettingsTester: View {
     @EnvironmentObject private var la:LoggedInAccount
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             VStack {
                 FeedSettings(lvm:LVMManager.shared.followingLVM(forAccount: la.account))
                 if let list = PreviewFetcher.fetchList() {

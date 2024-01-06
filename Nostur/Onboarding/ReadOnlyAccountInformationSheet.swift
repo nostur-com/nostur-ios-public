@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct ReadOnlyAccountInformationSheet: View {
     @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             VStack {
                 Text("Read-only mode\n", comment:"Heading for message read-only mode").font(.title)
                 Text("You are using a read-only account.\n\nSwitch to another account or add the private key to fully use this account.", comment: "Message about read-only mode")

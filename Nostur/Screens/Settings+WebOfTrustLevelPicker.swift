@@ -40,8 +40,10 @@ struct WebOfTrustLevelPicker: View {
     }
 }
 
+import NavigationBackport
+
 #Preview {
-    NavigationStack {
+    NBNavigationStack {
         Form {
             WebOfTrustLevelPicker()
         }

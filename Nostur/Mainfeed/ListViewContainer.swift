@@ -42,11 +42,13 @@ struct IsolatedLVMLoadingView: View {
     }
 }
 
+import NavigationBackport
+
 struct ListViewContainerTester: View {
     @EnvironmentObject var la:LoggedInAccount
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: la.account))
         }
     }

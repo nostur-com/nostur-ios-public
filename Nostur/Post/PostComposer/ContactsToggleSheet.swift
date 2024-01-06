@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct ContactsToggleSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -20,7 +21,7 @@ struct ContactsToggleSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             ScrollView {
                 Divider()
                 LazyVStack(alignment: .leading, spacing: 10) {
@@ -132,7 +133,7 @@ struct ContactsToggleSheet: View {
     PreviewContainer({ pe in
         pe.loadContacts()
     }) {
-        NavigationStack {
+        NBNavigationStack {
             ReplyingToEditableTester()
         }
     }

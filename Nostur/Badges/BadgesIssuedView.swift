@@ -7,6 +7,7 @@
 import SwiftUI
 import Nuke
 import NukeUI
+import NavigationBackport
 
 struct Badge: Hashable {
     var badge:Event
@@ -41,7 +42,7 @@ struct BadgesIssuedView: View {
 //        let _ = Self._printChanges()
         VStack {
             List(badges) { badge in
-                NavigationLink(value: Badge(badge)) {
+                NBNavigationLink(value: Badge(badge)) {
                     BadgeIssuedRow(badge: badge)
                 }
                 .listRowBackground(themes.theme.background)
@@ -67,7 +68,7 @@ struct BadgesIssuedView: View {
         }
         .navigationTitle(String(localized:"Badges", comment:"Navigation title of Bagdes screen"))
         .sheet(isPresented: $createNewBadgeSheetShown) {
-            NavigationStack {
+            NBNavigationStack {
                 CreateNewBadgeSheet()
             }
             .presentationBackground(themes.theme.background)
@@ -151,7 +152,7 @@ struct BadgeIssuedRow: View {
 struct BadgesIssuedView_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadBadges() }) {
-            NavigationStack {
+            NBNavigationStack {
                 BadgesIssuedContainer()
             }
         }

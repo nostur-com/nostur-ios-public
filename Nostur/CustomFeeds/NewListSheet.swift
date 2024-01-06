@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct NewListSheet: View {
     
@@ -84,7 +85,7 @@ struct NewListSheet: View {
         .navigationTitle(String(localized:"New feed", comment:"Navigation title for screen to create a new feed"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.navigationStack)
-        .navigationDestination(isPresented: $contactSelectionVisible) {
+        .nbNavigationDestination(isPresented: $contactSelectionVisible) {
             ContactsSearch(followingPubkeys: follows(),
                            prompt: String(localized:"Search contacts", comment:"Placeholder in search contacts input field"), onSelectContacts: { selectedContacts in
                 guard let newList = newList else { return }
@@ -127,6 +128,8 @@ struct NewListSheet: View {
     }
 }
 
+import NavigationBackport
+
 struct NewListSheet_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
@@ -134,7 +137,7 @@ struct NewListSheet_Previews: PreviewProvider {
             pe.loadNosturLists()
             pe.loadRelays()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 NewListSheet()
             }
         }

@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 import CoreData
+import NavigationBackport
 
 struct PrivateNotesView: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -19,7 +20,7 @@ struct PrivateNotesView: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_bookmarkssubtab") }
     }
     
-    @Binding var navPath:NavigationPath
+    @Binding var navPath: NBNavigationPath
     @ObservedObject private var settings:SettingsStore = .shared
     @Namespace private var top
     
@@ -144,13 +145,15 @@ struct PrivateNotesView: View {
     }
 }
 
+import NavigationBackport
+
 #Preview("Private Notes") {
     PreviewContainer({ pe in
         pe.loadPosts()
         pe.loadPrivateNotes()
     }) {
         VStack {
-            BookmarksView(navPath: .constant(NavigationPath()))
+            BookmarksView(navPath: .constant(NBNavigationPath()))
         }
     }
 }

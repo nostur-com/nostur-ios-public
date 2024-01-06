@@ -438,6 +438,7 @@
 		1FE69EB62A2CE95000FE73B4 /* ZapNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */; };
 		1FE8158E2B23B09F00ED3958 /* BackgroundNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE8158D2B23B09F00ED3958 /* BackgroundNotifications.swift */; };
 		1FE882882B47726800A903F0 /* AvailableWidthContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE882872B47726800A903F0 /* AvailableWidthContainer.swift */; };
+		1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */ = {isa = PBXBuildFile; productRef = 1FE8828A2B48E9DC00A903F0 /* NavigationBackport */; };
 		1FE9D2962A0E0F2200256B90 /* NRContentElementBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */; };
 		1FE9D2982A0E104D00256B90 /* NRTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2972A0E104D00256B90 /* NRTextParser.swift */; };
 		1FE9D29A2A0E1D2A00256B90 /* NRContentTextRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2992A0E1D2A00256B90 /* NRContentTextRenderer.swift */; };
@@ -975,6 +976,7 @@
 			files = (
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
+				1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
 				1F77AD0B2A42133000585E12 /* MarkdownUI in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
@@ -2036,6 +2038,7 @@
 				1F77AD0A2A42133000585E12 /* MarkdownUI */,
 				1F7B21902AE3D6C000CE972E /* NostrEssentials */,
 				1F747A0F2B3F1E9D0020F4A5 /* RepresentableKit */,
+				1FE8828A2B48E9DC00A903F0 /* NavigationBackport */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -2098,6 +2101,7 @@
 				1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */,
 				1F747A0E2B3F1E9C0020F4A5 /* XCRemoteSwiftPackageReference "RepresentableKit" */,
+				1FE882892B48E9DC00A903F0 /* XCRemoteSwiftPackageReference "NavigationBackport" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -3034,6 +3038,14 @@
 				revision = ecb18d8ce4d88277cc4fb103973352d91e18c535;
 			};
 		};
+		1FE882892B48E9DC00A903F0 /* XCRemoteSwiftPackageReference "NavigationBackport" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/johnpatrickmorgan/NavigationBackport";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -3106,6 +3118,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */;
 			productName = KeychainAccess;
+		};
+		1FE8828A2B48E9DC00A903F0 /* NavigationBackport */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FE882892B48E9DC00A903F0 /* XCRemoteSwiftPackageReference "NavigationBackport" */;
+			productName = NavigationBackport;
 		};
 /* End XCSwiftPackageProductDependency section */
 

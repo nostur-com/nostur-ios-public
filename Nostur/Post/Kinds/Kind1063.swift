@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct Kind1063: View {
     
@@ -90,7 +91,7 @@ struct Kind1063: View {
 struct Kind1063_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadKind1063() }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") , let fileMetadata = nrPost.fileMetadata {
                     Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }

@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct ProfileRowMissing: View {
     
     var pubkey:String
     
     var body: some View {
-        NavigationLink(value: ContactPath(key: pubkey)) {
+        NBNavigationLink(value: ContactPath(key: pubkey)) {
             HStack(alignment: .top) {
                 PFP(pubkey: pubkey)
                 VStack(alignment: .leading) {

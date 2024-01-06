@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct Entry: View {
     @Environment(\.dismiss) private var dismiss
@@ -81,7 +82,7 @@ struct Entry: View {
                     .offset(x: 5.0, y: 4.0)
             }
             .sheet(isPresented: $gifSheetShown) {
-                NavigationStack {
+                NBNavigationStack {
                     GifSearcher { gifUrl in
                         typingTextModel.text += gifUrl + "\n"
                     }
@@ -89,7 +90,7 @@ struct Entry: View {
                 .presentationBackground(themes.theme.background)
             }
             .sheet(isPresented: $cameraSheetShown) {
-                NavigationStack {
+                NBNavigationStack {
                     CameraView(onUse: { uiImage in
                         typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, imageData: uiImage, type: .jpeg)) 
                     })

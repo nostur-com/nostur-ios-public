@@ -8,9 +8,10 @@
 import SwiftUI
 import CoreData
 import Combine
+import NavigationBackport
 
 struct NotificationsReactions: View {
-    @Binding public var navPath:NavigationPath
+    @Binding public var navPath: NBNavigationPath
     @EnvironmentObject private var themes:Themes
     @StateObject private var fl = FastLoader()
     @State private var didLoad = false
@@ -342,7 +343,7 @@ struct NotificationsV_Previews: PreviewProvider {
             pe.loadRepliesAndReactions()
         }) {
             VStack {
-                NotificationsReactions(navPath: .constant(NavigationPath()))
+                NotificationsReactions(navPath: .constant(NBNavigationPath()))
             }
         }
     }

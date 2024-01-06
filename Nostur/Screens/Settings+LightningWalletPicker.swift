@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct LightningWalletPicker: View {
     @EnvironmentObject private var themes:Themes
@@ -24,8 +25,10 @@ struct LightningWalletPicker: View {
     }
 }
 
+import NavigationBackport
+
 #Preview {
-    NavigationStack {
+    NBNavigationStack {
         Form {
             LightningWalletPicker()
         }

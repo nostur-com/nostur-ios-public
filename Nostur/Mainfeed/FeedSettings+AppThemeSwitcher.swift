@@ -75,9 +75,11 @@ struct AppThemeSwitcher: View {
     }
 }
 
+import NavigationBackport
+
 struct FeedSettings_AppThemeSwitcher_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
+        NBNavigationStack {
             AppThemeSwitcher()
                 .environmentObject(Themes.default)
         }

@@ -8,6 +8,7 @@
 import SwiftUI
 import Nuke
 import NukeUI
+import NavigationBackport
 
 struct ProfileView: View {
     private let pubkey:String
@@ -79,7 +80,7 @@ struct ProfileView: View {
                                         }
                                         .buttonStyle(NosturButton())
                                         .sheet(item: $editingAccount) { account in
-                                            NavigationStack {
+                                            NBNavigationStack {
                                                 AccountEditView(account: account)
                                             }
                                             .presentationBackground(themes.theme.background)
@@ -199,7 +200,7 @@ struct ProfileView: View {
                                     }
                                     .buttonStyle(NosturButton())
                                     .sheet(item: $editingAccount) { account in
-                                        NavigationStack {
+                                        NBNavigationStack {
                                             AccountEditView(account: account)
                                         }
                                         .presentationBackground(themes.theme.background)
@@ -351,7 +352,7 @@ struct ProfileView: View {
                 .padding([.trailing], 25)
         }
         .sheet(isPresented: $showingNewNote) {
-            NavigationStack {
+            NBNavigationStack {
                 if let account = Nostur.account() {
                     if account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
@@ -540,7 +541,7 @@ struct ProfileView: View {
         PreviewContainer({ pe in
             pe.loadContacts()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 if let contact = PreviewFetcher.fetchNRContact() {
                     VStack {
                         ProfileView(nrContact: contact)

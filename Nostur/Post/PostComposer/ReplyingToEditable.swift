@@ -63,12 +63,13 @@ struct ReplyingToEditableTester: View {
     }
 }
 
+import NavigationBackport
 
 #Preview("Replying to selector") {
     PreviewContainer({ pe in
         pe.loadContacts()
     }) {
-        NavigationStack {
+        NBNavigationStack {
             ReplyingToEditableTester()
         }
     }

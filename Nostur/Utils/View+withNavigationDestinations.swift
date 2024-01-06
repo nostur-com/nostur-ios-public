@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import NavigationBackport
 
 struct NotePath: Hashable {
     var id:String
@@ -71,7 +72,7 @@ enum ViewPath: Hashable {
 extension View {
     func withNavigationDestinations() -> some View {
         return self
-            .navigationDestination(for: NRPost.self) { nrPost in
+            .nbNavigationDestination(for: NRPost.self) { nrPost in
                 switch nrPost.kind {
                 case 30023:
                     ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
@@ -79,31 +80,31 @@ extension View {
                     PostDetailView(nrPost: nrPost)
                 }
             }
-            .navigationDestination(for: Naddr1Path.self) { path in
+            .nbNavigationDestination(for: Naddr1Path.self) { path in
                 ArticleByNaddr(naddr1: path.naddr1, navigationTitle:path.navigationTitle)
             }
-            .navigationDestination(for: ArticlePath.self) { path in
+            .nbNavigationDestination(for: ArticlePath.self) { path in
                 ArticleById(id: path.id, navigationTitle:path.navigationTitle)
             }
-            .navigationDestination(for: ArticleCommentsPath.self) { articleCommentsPath in
+            .nbNavigationDestination(for: ArticleCommentsPath.self) { articleCommentsPath in
                 ArticleCommentsView(article: articleCommentsPath.article)
             }
-            .navigationDestination(for: NotePath.self) { path in
+            .nbNavigationDestination(for: NotePath.self) { path in
                 NoteById(id: path.id)
             }
-            .navigationDestination(for: ContactPath.self) { path in
+            .nbNavigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key, tab:path.tab)
             }            
-            .navigationDestination(for: NRContactPath.self) { path in
+            .nbNavigationDestination(for: NRContactPath.self) { path in
                 ProfileView(nrContact: path.nrContact, tab:path.tab)
             }
-            .navigationDestination(for: NRContact.self) { nrContact in
+            .nbNavigationDestination(for: NRContact.self) { nrContact in
                 ProfileView(nrContact: nrContact)
             }
-            .navigationDestination(for: Badge.self) { badge in
+            .nbNavigationDestination(for: Badge.self) { badge in
                 BadgeDetailView(badge: badge.badge)
             }
-            .navigationDestination(for: CloudFeed.self) { list in
+            .nbNavigationDestination(for: CloudFeed.self) { list in
                 if list.type == LVM.ListType.relays.rawValue {
                     EditRelaysNosturList(list: list)
                 }
@@ -111,7 +112,7 @@ extension View {
                     EditNosturList(list: list)
                 }
             }
-            .navigationDestination(for: ViewPath.self) { path in
+            .nbNavigationDestination(for: ViewPath.self) { path in
                 switch (path) {
                     case .Post(let post):
                         PostDetailView(nrPost: post)

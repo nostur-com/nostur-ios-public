@@ -37,10 +37,12 @@ struct HotFeedSettings: View {
     }
 }
 
+import NavigationBackport
+
 struct HotFeedSettingsTester: View {
 
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
             HotFeedSettings(hotVM: HotViewModel())
         }
         .onAppear {

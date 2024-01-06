@@ -9,6 +9,7 @@
 import SwiftUI
 import Combine
 import AVFoundation
+import NavigationBackport
 
 final class CameraModel: ObservableObject {
     private let service = CameraService()
@@ -116,7 +117,7 @@ struct CameraView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        NBNavigationStack {
                 GeometryReader { reader in
                     ZStack {
                         Color.black.edgesIgnoringSafeArea(.all)

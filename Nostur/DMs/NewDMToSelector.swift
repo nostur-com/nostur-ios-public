@@ -64,6 +64,8 @@ struct NewDMToSelector: View {
     }
 }
 
+import NavigationBackport
+
 struct NewDMToSelector_Previews: PreviewProvider {
     @State static var toPubkey:String? = ""
     @State static var toContact:Contact?
@@ -73,7 +75,7 @@ struct NewDMToSelector_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadDMs()
         }) {
-            NavigationStack {
+            NBNavigationStack {
                 NewDMToSelector(toPubkey: $toPubkey, toContact: $toContact)
             }
         }

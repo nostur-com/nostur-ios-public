@@ -7,9 +7,10 @@
 
 import SwiftUI
 import CoreData
+import NavigationBackport
 
 struct NotificationsMentions: View {
-    @Binding public var navPath:NavigationPath
+    @Binding public var navPath: NBNavigationPath
     @EnvironmentObject private var themes:Themes
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
@@ -240,7 +241,7 @@ struct NotificationsMentions: View {
         pe.loadPosts()
     }) {
         VStack {
-            NotificationsMentions(navPath: .constant(NavigationPath()))
+            NotificationsMentions(navPath: .constant(NBNavigationPath()))
         }
     }
 }

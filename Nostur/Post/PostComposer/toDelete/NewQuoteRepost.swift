@@ -68,7 +68,7 @@
 //                                    .offset(x: 5.0, y: 7.0)
 //                            }
 //                            .sheet(isPresented: $vm.gifSheetShown) {
-//                                NavigationStack {
+//                                NBNavigationStack {
 //                                    GifSearcher { gifUrl in
 //                                        vm.text += gifUrl + "\n"
 //                                    }
@@ -152,7 +152,7 @@
 ////                    }
 //                }
 ////                .sheet(item: $vm.previewNRPost) { nrPost in
-////                    NavigationStack {
+////                    NBNavigationStack {
 ////                        PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(quotingEvent: quotingEvent, dismiss:dismiss) }, uploading: $vm.uploading)
 ////                    }
 ////                    .presentationBackground(themes.theme.background)
@@ -197,7 +197,7 @@
 //        PreviewContainer({ pe in
 //            pe.loadPosts()
 //        }) {
-//            NavigationStack {
+//            NBNavigationStack {
 //                if let event = PreviewFetcher.fetchEvent() {
 //                    NewQuoteRepost(quotingEvent: event)
 //                }

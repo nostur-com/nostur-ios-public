@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct HighlightComposer: View {
     @EnvironmentObject private var la:LoggedInAccount
@@ -96,7 +97,7 @@ struct HighlightComposer: View {
                     }
                 }
                 .sheet(isPresented: $isAuthorSelectionShown) {
-                    NavigationStack {
+                    NBNavigationStack {
                         ContactsSearch(followingPubkeys: follows(),
                                        prompt: "Search", onSelectContact: { selectedContact in
                             selectedAuthor = selectedContact
@@ -185,11 +186,13 @@ struct HighlightComposer: View {
     }
 }
 
+import NavigationBackport
+
 #Preview("Highlight composer") {
     let example = NewHighlight(url: "https://nostur.com", selectedText: "This is amazing, this is some text that is being highlighted by Nostur highlightur", title:"Nostur - a nostr client for iOS/macOS")
             
     return PreviewContainer {
-        NavigationStack {
+        NBNavigationStack {
             HighlightComposer(highlight: example)
         }
     }

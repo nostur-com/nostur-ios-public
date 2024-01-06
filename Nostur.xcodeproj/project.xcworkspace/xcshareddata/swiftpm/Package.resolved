@@ -26,6 +26,15 @@
       }
     },
     {
+      "identity" : "navigationbackport",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnpatrickmorgan/NavigationBackport",
+      "state" : {
+        "revision" : "b002991691b54fd7b952e1e780de252620f8ac77",
+        "version" : "0.9.1"
+      }
+    },
+    {
       "identity" : "networkimage",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gonzalezreal/NetworkImage",

@@ -6,11 +6,12 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct BookmarksAndPrivateNotes: View {
     @EnvironmentObject private var fa:LoggedInAccount
     @EnvironmentObject private var themes:Themes
-    @State private var navPath = NavigationPath()
+    @State private var navPath = NBNavigationPath()
 
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Bookmarks" }
@@ -29,7 +30,7 @@ struct BookmarksAndPrivateNotes: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        NavigationStack(path: $navPath) {
+        NBNavigationStack(path: $navPath) {
             VStack(spacing: 0) {
                 HStack {
                     TabButton(action: {

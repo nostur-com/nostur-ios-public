@@ -369,11 +369,13 @@ struct DMConversationView: View {
     }
 }
 
+import NavigationBackport
+
 struct Previews_DMConversationView_Previews: PreviewProvider {
     static var previews: some View {
         
         PreviewContainer({ pe in pe.loadDMs() }) {
-            NavigationStack {
+            NBNavigationStack {
                 let preston = "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204"
                 let recentDM = PreviewFetcher.fetchEvent("96500cec51f30a7bee4bf15984f574550064913ec8d00e164e9efad34a989236")
                 if let recent = recentDM {

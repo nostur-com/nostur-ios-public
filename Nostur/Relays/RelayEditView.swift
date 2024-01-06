@@ -214,6 +214,8 @@ struct RelayEditView: View {
     }
 }
 
+import NavigationBackport
+
 struct RelayEditView_Previews: PreviewProvider {
     
     static var previews: some View {
@@ -223,7 +225,7 @@ struct RelayEditView_Previews: PreviewProvider {
         relay.write = false
         relay.createdAt = Date()
         
-        return NavigationStack {
+        return NBNavigationStack {
             PreviewContainer({ pe in pe.loadAccounts() }) {
                 RelayEditView(relay: relay)
             }

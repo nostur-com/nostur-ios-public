@@ -61,10 +61,12 @@ struct SearchBox: View {
     }
 }
 
+import NavigationBackport
+
 struct SearchBox_Previews: PreviewProvider {
     @State static var text = ""
     static var previews: some View {
-        NavigationStack {
+        NBNavigationStack {
             VStack {
                 SearchBox(prompt: "SearchBox in view..", text: $text)
                     .padding()

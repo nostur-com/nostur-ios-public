@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import NavigationBackport
 
 struct FollowingAndExplore: View {
     @EnvironmentObject private var themes:Themes
@@ -196,7 +197,7 @@ struct FollowingAndExplore: View {
             
         }
         .sheet(isPresented: $showFeedSettings, content: {
-            NavigationStack {
+            NBNavigationStack {
                 switch selectedSubTab {
                 case "Following":
                     FeedSettings(lvm: LVMManager.shared.followingLVM(forAccount: account))
@@ -281,7 +282,7 @@ struct FollowingAndExplore: View {
 struct FollowingAndExplore_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
-            NavigationStack {
+            NBNavigationStack {
                 if let account = account() {
                     FollowingAndExplore(account: account, showingOtherContact: .constant(nil))
                 }

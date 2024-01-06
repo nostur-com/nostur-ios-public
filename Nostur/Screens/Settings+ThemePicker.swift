@@ -103,9 +103,11 @@ struct ThemePicker: View {
 //    }
 //}
 
+import NavigationBackport
+
 struct Settings_ThemePicker_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
+        NBNavigationStack {
             Form {
                 Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                     ThemePicker()

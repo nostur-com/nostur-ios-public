@@ -7,10 +7,11 @@
 
 import SwiftUI
 import CoreData
+import NavigationBackport
 
 // Copy pasta from NotificationsMentions, which was copy pasta from NotificationsPosts
 struct NotificationsReposts: View {
-    @Binding public var navPath:NavigationPath
+    @Binding public var navPath: NBNavigationPath
     @EnvironmentObject private var themes:Themes
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
@@ -248,13 +249,15 @@ struct NotificationsReposts: View {
     }
 }
 
+import NavigationBackport
+
 #Preview("Notifications Reposts") {
     return PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadPosts()
     }) {
         VStack {
-            NotificationsReposts(navPath: .constant(NavigationPath()))
+            NotificationsReposts(navPath: .constant(NBNavigationPath()))
         }
     }
 }

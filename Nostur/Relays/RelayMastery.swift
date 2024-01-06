@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct RelayMastery: View {
     @EnvironmentObject private var dim:DIMENSIONS
@@ -100,7 +101,7 @@ struct SharedRelaySettings: View {
         .listRowInsets(.none)
         .listSectionSeparator(.hidden)
         .sheet(item: $editRelay, content: { relay in
-            NavigationStack {
+            NBNavigationStack {
                 RelayEditView(relay: relay)
             }
             .presentationBackground(themes.theme.background)

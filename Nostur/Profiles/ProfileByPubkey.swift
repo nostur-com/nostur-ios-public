@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct ProfileByPubkey: View {
     @EnvironmentObject private var themes:Themes
@@ -65,7 +66,7 @@ struct ProfileByPubkey: View {
                 }
             }
             .sheet(item: $editingAccount) { account in
-                NavigationStack {
+                NBNavigationStack {
                     AccountEditView(account: account)
                 }
                 .presentationBackground(themes.theme.background)

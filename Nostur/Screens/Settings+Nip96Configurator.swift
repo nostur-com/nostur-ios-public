@@ -168,8 +168,10 @@ struct Nip96Configurator: View {
     }
 }
 
+import NavigationBackport
+
 #Preview {
-    NavigationStack {
+    NBNavigationStack {
         Nip96Configurator()
     }
     .environmentObject(Themes.default)

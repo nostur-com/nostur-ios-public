@@ -41,9 +41,11 @@ struct MainWoTaccountPicker: View {
     }
 }
 
+import NavigationBackport
+
 #Preview {
     PreviewContainer({ pe in pe.loadAccounts() }) {
-        NavigationStack {
+        NBNavigationStack {
             Form {
                 Section(header: Text("Main WoT", comment:"Setting heading on settings screen")) {
                     MainWoTaccountPicker()
