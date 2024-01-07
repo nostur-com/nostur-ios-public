@@ -318,7 +318,7 @@ func blocks() -> Set<String> {
 }
 
 
-func isFullAccount(_ account: CloudAccount? = nil ) ->Bool {
+func isFullAccount(_ account: CloudAccount? = nil ) -> Bool {
     if Thread.isMainThread {
         return (account ?? NRState.shared.loggedInAccount?.account)?.isFullAccount ?? false
     }
