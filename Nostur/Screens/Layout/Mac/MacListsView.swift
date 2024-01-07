@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@available(iOS 16.0, *)
 struct MacListsView: View {
     @EnvironmentObject private var themes:Themes
     let SIDEBAR_WIDTH:CGFloat = 50.0
@@ -263,6 +264,7 @@ struct SideTabs:View {
     }
 }
 
+@available(iOS 16.0, *)
 struct MacListsView_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in

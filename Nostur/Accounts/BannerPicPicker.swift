@@ -11,6 +11,7 @@ import NukeUI
 import PhotosUI
 import CoreTransferable
 
+@available(iOS 16.0, *)
 struct BannerImage: View {
     let imageState: BannerModel.ImageState
     let width:CGFloat
@@ -37,6 +38,7 @@ struct BannerImage: View {
     }
 }
 
+@available(iOS 16.0, *)
 struct BlablaBannerImage: View {
     let imageState: BannerModel.ImageState
     let width:CGFloat
@@ -55,6 +57,7 @@ struct BlablaBannerImage: View {
     }
 }
 
+@available(iOS 16.0, *)
 struct EditableBannerImage: View {
     @ObservedObject var viewModel: BannerModel
     let width:CGFloat
@@ -75,6 +78,7 @@ struct EditableBannerImage: View {
     }
 }
 
+@available(iOS 16.0, *)
 @MainActor
 class BannerModel: ObservableObject {
     
@@ -172,6 +176,7 @@ class BannerModel: ObservableObject {
     }
 }
 
+@available(iOS 16.0, *)
 struct BannerPicPicker: View {
 
     @StateObject var viewModel:BannerModel
@@ -187,6 +192,7 @@ struct BannerPicPicker: View {
     }
 }
 
+@available(iOS 16.0, *)
 struct BannerPicPicker_Previews: PreviewProvider {
 //    @State static var picture = "https://nostur.com/fabian/banner.jpg"
     @State static var picture = "https://profilepics.nostur.com/062daf266de13f0195f611675d4b7309b32f743012f539979c104b803591dc86/banner.jpg"

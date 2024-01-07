@@ -18,6 +18,7 @@ import CoreData
 // foreach, fetch zappedEventId if we dont have it
 
 // Posts on user profile screen
+@available(iOS 16.0, *)
 struct ProfileZaps: View {
     @EnvironmentObject private var themes:Themes
     let er:ExchangeRateModel = .shared
@@ -213,6 +214,7 @@ struct ProfileZaps: View {
     }
 }
 
+@available(iOS 16.0, *)
 struct ProfileZaps_Previews: PreviewProvider {
     static var previews: some View {
         

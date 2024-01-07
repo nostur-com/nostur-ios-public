@@ -52,7 +52,7 @@ final class Exporter {
     }
 }
 
-
+@available(iOS 16.0, *)
 struct EventsJsonl: Transferable {
     var jsonl:Data
     

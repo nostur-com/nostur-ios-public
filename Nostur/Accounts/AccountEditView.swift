@@ -38,12 +38,20 @@ struct AccountEditView: View {
         GeometryReader { geo in
             VStack {
                 ZStack {
-                    BannerPicPicker($account.banner, newPicture:$newBanner, width: geo.size.width)
-                        .frame(height: 150)
-                        .clipped()
+                    if #available(iOS 16.0, *) {
+                        BannerPicPicker($account.banner, newPicture:$newBanner, width: geo.size.width)
+                            .frame(height: 150)
+                            .clipped()
+                    }
                     HStack {
-                        ProfilePicPicker($account.picture, newPicture:$newPicture)
-                            .offset(x: 20, y: 60)
+                        if #available(iOS 16.0, *) {
+                            ProfilePicPicker($account.picture, newPicture:$newPicture)
+                                .offset(x: 20, y: 60)
+                        }
+                        else {
+                            PFP(pubkey: account.publicKey, account: account, size: 75)
+                                .offset(x: 20, y: 60)
+                        }
                         
                         Spacer()
                     }

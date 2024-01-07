@@ -128,13 +128,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         cameraButton.tintColor = UIColor(Themes.default.theme.accent)
         cameraButton.addTarget(self, action: #selector(textView.cameraTapped), for: .touchUpInside)
         let camera = UIBarButtonItem(customView: cameraButton)
-                       
-        let photoButton = UIButton(type: .system)
-        photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
-        photoButton.tintColor = UIColor(Themes.default.theme.accent)
-        photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
-        let photos = UIBarButtonItem(customView: photoButton)
-    
     
         let gifButton = UIButton(type: .system)
         gifButton.setImage(UIImage(named: "GifButton"), for: .normal)
@@ -152,10 +145,18 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         fixedSpace.width = 9
     
     
-        
-        let toolbarItems: [UIBarButtonItem] = [camera, fixedSpace, photos, gifs, flexibleSpace]
-
-        doneToolbar.setItems(toolbarItems, animated: false)
+        if #available(iOS 16, *) {
+            let photoButton = UIButton(type: .system)
+            photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
+            photoButton.tintColor = UIColor(Themes.default.theme.accent)
+            photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
+            let photos = UIBarButtonItem(customView: photoButton)
+            
+            doneToolbar.setItems([camera, fixedSpace, photos, gifs, flexibleSpace], animated: false)
+        }
+        else {
+            doneToolbar.setItems([camera, fixedSpace, gifs, flexibleSpace], animated: false)
+        }
       
 
         textView.inputAccessoryView = doneToolbar

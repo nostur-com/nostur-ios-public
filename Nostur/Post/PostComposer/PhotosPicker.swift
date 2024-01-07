@@ -8,6 +8,7 @@
 import SwiftUI
 import PhotosUI
 
+@available(iOS 16.0, *)
 struct MediaImage: View {
     let imageState: ImagePickerModel.ImageState
 
@@ -27,6 +28,7 @@ struct MediaImage: View {
     }
 }
 
+@available(iOS 16.0, *)
 class ImagePickerModel: ObservableObject {
     
     enum ImageState {
