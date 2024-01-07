@@ -31,11 +31,20 @@ struct AddExistingAccountSheet: View {
     var body: some View {
             ZStack {
                 VStack {
-                    TextField(String(localized:"Public or private key (npub or nsec)", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
-                        .padding()
-                        .background(grayBackground)
-                        .cornerRadius(5.0)
-                        .padding(.bottom, 20)
+                    if (key.lowercased().starts(with: "nsec1")) {
+                        SecureField(String(localized:"Public or private key (npub or nsec)", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
+                            .padding()
+                            .background(grayBackground)
+                            .cornerRadius(5.0)
+                            .padding(.bottom, 20)
+                    }
+                    else {
+                        TextField(String(localized:"Public or private key (npub or nsec)", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
+                            .padding()
+                            .background(grayBackground)
+                            .cornerRadius(5.0)
+                            .padding(.bottom, 20)
+                    }
                     
 //                    Text("Keys are stored on your device in iOS keychain", comment:"Informational message about key storage on Add Existing Account screen").foregroundColor(.gray)
 //                        .font(.caption2)
