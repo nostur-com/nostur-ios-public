@@ -69,7 +69,7 @@ struct MainView: View {
                                 ComposePost()
                             }
                         }
-                        .presentationBackground(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.background)
                     }
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
