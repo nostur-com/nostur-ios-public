@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 import Combine
+import NavigationBackport
 
 struct ZapInfo: Identifiable {
     var id:String { zap.id }
@@ -22,7 +23,7 @@ struct NotificationsZaps: View {
     @StateObject private var fl = FastLoader()
     @State private var didLoad = false
     @State private var backlog = Backlog()
-    @Binding private var navPath:NavigationPath
+    @Binding private var navPath: NBNavigationPath
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -49,7 +50,7 @@ struct NotificationsZaps: View {
         }
     }
     
-    init(pubkey:String, navPath:Binding<NavigationPath>) {
+    init(pubkey:String, navPath:Binding<NBNavigationPath>) {
         _navPath = navPath
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
@@ -466,7 +467,7 @@ struct NotificationsZaps_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
         PreviewContainer {
-            NotificationsZaps(pubkey: pubkey, navPath: .constant(NavigationPath()))
+            NotificationsZaps(pubkey: pubkey, navPath: .constant(NBNavigationPath()))
         }
     }
 }
