@@ -61,26 +61,28 @@ struct LazyNoteMenuSheet: View {
                                 .padding(.trailing, 5)
                         }
                         .buttonStyle(.plain)
-                        Divider()
-                        Button {
-                            dismiss()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                                sendNotification(.sharePostScreenshot, nrPost)
+                        if #available(iOS 16, *) {
+                            Divider()
+                            Button {
+                                dismiss()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                                    sendNotification(.sharePostScreenshot, nrPost)
+                                }
+                            } label: {
+                                Text("screenshot", comment:"Post context menu button")
+                                    .padding(.horizontal, 5)
                             }
-                        } label: {
-                            Text("screenshot", comment:"Post context menu button")
-                                .padding(.horizontal, 5)
-                        }
-                        .buttonStyle(.plain)
-                        .overlay(
-                            Color.white
-                                .opacity(0.01)
-                                .scaleEffect(x: 1.75, y:1.7)
-                        )
-                        .onTapGesture {
-                            dismiss()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                                sendNotification(.sharePostScreenshot, nrPost)
+                            .buttonStyle(.plain)
+                            .overlay(
+                                Color.white
+                                    .opacity(0.01)
+                                    .scaleEffect(x: 1.75, y:1.7)
+                            )
+                            .onTapGesture {
+                                dismiss()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                                    sendNotification(.sharePostScreenshot, nrPost)
+                                }
                             }
                         }
                     }

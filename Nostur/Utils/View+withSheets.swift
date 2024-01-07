@@ -327,70 +327,72 @@ private struct WithSheets: ViewModifier {
         
         // Share post screenshot
             .onReceive(receiveNotification(.sharePostScreenshot)) { notification in
+                if #available(iOS 16.0, *) {
                 
-                // TODO: Disabled for now, for some reason even after requesting permissions
-                // we still don't get the "Save to Photos" option
-                // Request write access to the user's photo library.
-//                PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-//                    L.og.debug("Requested access to write screenshot to photo library")
-//                    // don't care if allowed or denied, will just show 1 less option in share sheet if denied
-//                    // (Save to Photos)
-//                    
-//                }
-                
-                
-                let nrPost = notification.object as! NRPost
-                nrPost.following = true // Force load image for screenshot...
-                nrPost.isPreview = true // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
-                
-                let renderer = ImageRenderer(content:
-                    VStack(spacing:0) {
-                        DetailPost(nrPost: nrPost)
-                        Group {
-                            if SettingsStore.shared.includeSharedFrom {
-                                Text("Shared from **Nostur**")
-                                Text("A nostr client for iOS & macOS - nostur.com")
-                                    .padding(.bottom, 5)
+                    // TODO: Disabled for now, for some reason even after requesting permissions
+                    // we still don't get the "Save to Photos" option
+                    // Request write access to the user's photo library.
+    //                PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+    //                    L.og.debug("Requested access to write screenshot to photo library")
+    //                    // don't care if allowed or denied, will just show 1 less option in share sheet if denied
+    //                    // (Save to Photos)
+    //
+    //                }
+                    
+                    
+                    let nrPost = notification.object as! NRPost
+                    nrPost.following = true // Force load image for screenshot...
+                    nrPost.isPreview = true // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
+                    
+                    let renderer = ImageRenderer(content:
+                        VStack(spacing:0) {
+                            DetailPost(nrPost: nrPost)
+                            Group {
+                                if SettingsStore.shared.includeSharedFrom {
+                                    Text("Shared from **Nostur**")
+                                    Text("A nostr client for iOS & macOS - nostur.com")
+                                        .padding(.bottom, 5)
+                                }
                             }
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+    //                        .padding(.trailing, 10)
+                            .font(.caption)
+                            .multilineTextAlignment(.trailing)
+                            .foregroundColor(Color.secondary)
                         }
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-//                        .padding(.trailing, 10)
-                        .font(.caption)
-                        .multilineTextAlignment(.trailing)
-                        .foregroundColor(Color.secondary)
-                    }
-                    .padding(10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10.0)
-                            .foregroundColor(themes.theme.background)
-                            .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
+                        .padding(10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10.0)
+                                .foregroundColor(themes.theme.background)
+                                .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
+                        )
+                        .frame(width: 600)
+                        .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                        .padding(.vertical, 10)
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: 600, isScreenshot: true))
+                        .environmentObject(NRState.shared)
+                        .environment(\.managedObjectContext, DataProvider.shared().viewContext)
+                        .environment(\.colorScheme, colorScheme)
+                        .environmentObject(themes)
                     )
-                    .frame(width: 600)
-                    .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                    .padding(.vertical, 10)
-                    .environmentObject(DIMENSIONS.embeddedDim(availableWidth: 600, isScreenshot: true))
-                    .environmentObject(NRState.shared)
-                    .environment(\.managedObjectContext, DataProvider.shared().viewContext)
-                    .environment(\.colorScheme, colorScheme)
-                    .environmentObject(themes)
-                )
-                
-                
-                renderer.scale = 2.0
-                
-                // First render:
-                guard renderer.uiImage != nil else { return }
-                
-                // We need another render after any async stuff is loaded (inline quotes, images...)
-                screenshotRenderer = renderer.objectWillChange
-                    .debounce(for: 0.35, scheduler: RunLoop.main)
-                    .sink {
-                        guard let uiImage = renderer.uiImage else { return }
-                        
-                        // Trigger the share sheet
-                        self.sharablePostImage = ShareablePostImage(image: uiImage, title: "Screenshot", subtitle: "Screenshot")
-                        screenshotRenderer = nil
-                    }
+                    
+                    
+                    renderer.scale = 2.0
+                    
+                    // First render:
+                    guard renderer.uiImage != nil else { return }
+                    
+                    // We need another render after any async stuff is loaded (inline quotes, images...)
+                    screenshotRenderer = renderer.objectWillChange
+                        .debounce(for: 0.35, scheduler: RunLoop.main)
+                        .sink {
+                            guard let uiImage = renderer.uiImage else { return }
+                            
+                            // Trigger the share sheet
+                            self.sharablePostImage = ShareablePostImage(image: uiImage, title: "Screenshot", subtitle: "Screenshot")
+                            screenshotRenderer = nil
+                        }
+                }
                 
             }
             .sheet(item: $sharablePostImage) { sharablePostImage in
