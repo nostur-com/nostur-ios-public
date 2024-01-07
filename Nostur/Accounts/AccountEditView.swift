@@ -67,9 +67,16 @@ struct AccountEditView: View {
                             }
                             
                             Section(header: Text("Bio", comment: "Label for entering a bio about yourself on Edit Profile screen") ) {
-                                TextField(String(localized:"Something about yourself", comment:"Placeholder on input field for Bio on Edit Profile screen"), text:$account.about, axis: .vertical)
-                                    .lineLimit(3...5)
-                                    .disabled(shouldDisable)
+                                if #available(iOS 16.0, *) {
+                                    TextField(String(localized:"Something about yourself", comment:"Placeholder on input field for Bio on Edit Profile screen"), text: $account.about, axis: .vertical)
+                                        .lineLimit(3...5)
+                                        .disabled(shouldDisable)
+                                }
+                                else {
+                                    TextField(String(localized:"Something about yourself", comment:"Placeholder on input field for Bio on Edit Profile screen"), text: $account.about)
+                                        .lineLimit(3)
+                                        .disabled(shouldDisable)
+                                }
                             }
                             
                             Section(header: Text("Nostr address (NIP-05)", comment: "Label for entering a NIP-05 username on Edit Profile screen") ) {
@@ -165,8 +172,8 @@ struct AccountEditView: View {
                 }
             }
             
-            if let uploadError {
-                ToolbarItem(placement: .principal) {
+            ToolbarItem(placement: .principal) {
+                if let uploadError {
                     Text(uploadError).foregroundColor(.red)
                 }
             }

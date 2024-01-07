@@ -34,36 +34,37 @@ struct NosturTabsView: View {
                     TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
                         tabTapped(newTab, oldTab: oldTab)
                     }) {
-                        Group {
-                            MainView()
-                                .tabItem { Image(systemName: "house") }
-                                .tag("Main")
-                            
-        //                    DiscoverCommunities()
-        //                        .tabItem { Image(systemName: "person.3.fill")}
-        //                        .tag("Communities")
-                            
-                            NotificationsContainer()
-                                .tabItem { Image(systemName: "bell.fill") }
-                                .tag("Notifications")
-                                .badge(unread)
-                            
-                            Search()
-                                .tabItem { Image(systemName: "magnifyingglass") }
-                                .tag("Search")
-                            
-                            BookmarksAndPrivateNotes()
-                                .tabItem { Image(systemName: "bookmark") }
-                                .tag("Bookmarks")
-                                
-                            
-                            DMContainer()
-                                .tabItem { Image(systemName: "envelope.fill") }
-                                .tag("Messages")
-                                .badge((dm.unread + dm.newRequests))
-                        }
-                        .toolbarBackground(themes.theme.listBackground, for: .tabBar)
-                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
+                        MainView()
+                            .tabItem { Label("", systemImage: "house") }
+                            .tag("Main")
+                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                        
+    //                    DiscoverCommunities()
+    //                        .tabItem { Label("Communities", systemImage: "person.3.fill")}
+    //                        .tag("Communities")
+                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                        
+                        NotificationsContainer()
+                            .tabItem { Label("", systemImage: "bell.fill") }
+                            .tag("Notifications")
+                            .badge(unread)
+                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                        
+                        Search()
+                            .tabItem { Label("", systemImage: "magnifyingglass") }
+                            .tag("Search")
+                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                        
+                        BookmarksAndPrivateNotes()
+                            .tabItem { Label("", systemImage: "bookmark") }
+                            .tag("Bookmarks")
+                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                        
+                        DMContainer()
+                            .tabItem { Label("", systemImage: "envelope.fill") }
+                            .tag("Messages")
+                            .badge((dm.unread + dm.newRequests))
+                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
                     }
                     .withSheets()
                     .edgesIgnoringSafeArea(.all)

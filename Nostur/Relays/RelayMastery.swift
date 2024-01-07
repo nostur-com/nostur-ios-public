@@ -123,114 +123,139 @@ struct AccountRelaySettings: View {
         Form {
             switch vm.state {
             case .initializing, .loading, .altLoading:
-                Section("Published relays for \(account.anyName)") {
-                    Text("\(Image(systemName: "hourglass.circle.fill")) Checking relays...")
-                        .onAppear {
-                            if !account.accountRelays.isEmpty {
-                                vm.ready(Array(account.accountRelays))
-                            }
-                            else {
-                                vm.setFetchParams((
-                                    prio: false,
-                                    req: { _ in
-                                        bg().perform { // 1. FIRST CHECK LOCAL DB
-                                            if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
-                                                
-                                                let relays:[AccountRelayData] = kind10002.tags().compactMap { tag in
-                                                    if (tag.type != "r") { return nil }
-                                                    if (tag.tag.count == 2) {
-                                                        return AccountRelayData(url: tag.value, read: true, write: true)
-                                                    }
-                                                    else if (tag.tag.count >= 3) {
-                                                        if tag.tag[2] == "read" {
-                                                            return AccountRelayData(url: tag.value, read: true, write: false)
-                                                        }
-                                                        else if tag.tag[2] == "write" {
-                                                            return AccountRelayData(url: tag.value, read: false, write: true)
-                                                        }
-                                                    }
-                                                    return nil
-                                                }
-                                                vm.ready(relays)
-                                                DispatchQueue.main.async {
-                                                    account.accountRelays = Set(relays)
-                                                    DataProvider.shared().save()
-                                                }
-                                            }
-                                            else { req(RM.getRelays(pubkeys: [accountPubkey])) }
-                                        }
-                                    },
-                                    onComplete: { relayMessage, _ in
-                                        bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
-                                            if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
-                                                let relays:[AccountRelayData] = kind10002.tags().compactMap { tag in
-                                                    if (tag.type != "r") { return nil }
-                                                    if (tag.tag.count == 2) {
-                                                        return AccountRelayData(url: tag.value, read: true, write: true)
-                                                    }
-                                                    else if (tag.tag.count >= 3) {
-                                                        if tag.tag[2] == "read" {
-                                                            return AccountRelayData(url: tag.value, read: true, write: false)
-                                                        }
-                                                        else if tag.tag[2] == "write" {
-                                                            return AccountRelayData(url: tag.value, read: false, write: true)
-                                                        }
-                                                    }
-                                                    return nil
-                                                }
-                                                vm.ready(relays)
-                                                DispatchQueue.main.async {
-                                                    account.accountRelays = Set(relays)
-                                                    DataProvider.shared().save()
-                                                }
-                                            }
-                                            else { vm.timeout() }
-                                        }
-                                    },
-                                    altReq: nil
-                                ))
-                                vm.fetch()
-                            }
-                        }
-                }
+                self.loadingView
             case .ready(let accountRelays):
-                Section("Published relays for \(account.anyName)") {
-                    ForEach(accountRelays) { relay in
-                        if relay.read && relay.write {
-                            LabeledContent(relay.url, value: "read + write")
-                        }
-                        else if relay.read {
-                            LabeledContent(relay.url, value: "read")
-                        }
-                        else if relay.write {
-                            LabeledContent(relay.url, value: "write")
+                ForEach(accountRelays) { relay in
+                    if (relay.read && relay.write) {
+                        HStack {
+                            Text(relay.url)
+                            Spacer()
+                            Text("read + write")
+                                .foregroundColor(.secondary)
                         }
                     }
-                    
-                    Button("Reconfigure published relays") {
-                        showWizard = true
+                    else if (relay.read) {
+                        HStack {
+                            Text(relay.url)
+                            Spacer()
+                            Text("read")
+                                .foregroundColor(.secondary)
+                        }
                     }
+                    else if (relay.write) {
+                        HStack {
+                            Text(relay.url)
+                            Spacer()
+                            Text("write")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                
+                Button("Reconfigure published relays") {
+                    showWizard = true
                 }
             case .timeout:
-                Section("Published relays for \(account.anyName)") {
-                    Button("Configure published relays") {
-                        showWizard = true
-                    }
-                }
+                self.timeoutView
             case .error(let error):
                 Text(error)
             }
         }
         .sheet(isPresented: $showWizard, content: {
-            NavigationStack {
-                Kind10002ConfigurationWizard(account: account, onDismiss: {
-                    DispatchQueue.main.async {
-                        vm.state = .loading; vm.fetch()
-                    }
-                })
+            NBNavigationStack {
+                Kind10002ConfigurationWizard(account: account, onDismiss: onDismiss)
                     .navigationTitle("Published relays")
                     .navigationBarTitleDisplayMode(.inline)
             }
         })
+    }
+    
+    @ViewBuilder
+    private var loadingView: some View {
+        Section("Published relays for \(account.anyName)") {
+            Text("\(Image(systemName: "hourglass.circle.fill")) Checking relays...")
+                .onAppear {
+                    if !account.accountRelays.isEmpty {
+                        vm.ready(Array(account.accountRelays))
+                    }
+                    else {
+                        vm.setFetchParams((
+                            prio: false,
+                            req: { _ in
+                                bg().perform { // 1. FIRST CHECK LOCAL DB
+                                    if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
+                                        
+                                        let relays:[AccountRelayData] = kind10002.tags().compactMap { tag in
+                                            if (tag.type != "r") { return nil }
+                                            if (tag.tag.count == 2) {
+                                                return AccountRelayData(url: tag.value, read: true, write: true)
+                                            }
+                                            else if (tag.tag.count >= 3) {
+                                                if tag.tag[2] == "read" {
+                                                    return AccountRelayData(url: tag.value, read: true, write: false)
+                                                }
+                                                else if tag.tag[2] == "write" {
+                                                    return AccountRelayData(url: tag.value, read: false, write: true)
+                                                }
+                                            }
+                                            return nil
+                                        }
+                                        vm.ready(relays)
+                                        DispatchQueue.main.async {
+                                            account.accountRelays = Set(relays)
+                                            DataProvider.shared().save()
+                                        }
+                                    }
+                                    else { req(RM.getRelays(pubkeys: [accountPubkey])) }
+                                }
+                            },
+                            onComplete: { relayMessage, _ in
+                                bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
+                                    if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
+                                        let relays:[AccountRelayData] = kind10002.tags().compactMap { tag in
+                                            if (tag.type != "r") { return nil }
+                                            if (tag.tag.count == 2) {
+                                                return AccountRelayData(url: tag.value, read: true, write: true)
+                                            }
+                                            else if (tag.tag.count >= 3) {
+                                                if tag.tag[2] == "read" {
+                                                    return AccountRelayData(url: tag.value, read: true, write: false)
+                                                }
+                                                else if tag.tag[2] == "write" {
+                                                    return AccountRelayData(url: tag.value, read: false, write: true)
+                                                }
+                                            }
+                                            return nil
+                                        }
+                                        vm.ready(relays)
+                                        DispatchQueue.main.async {
+                                            account.accountRelays = Set(relays)
+                                            DataProvider.shared().save()
+                                        }
+                                    }
+                                    else { vm.timeout() }
+                                }
+                            },
+                            altReq: nil
+                        ))
+                        vm.fetch()
+                    }
+                }
+        }
+    }
+    
+    @ViewBuilder
+    private var timeoutView: some View {
+        Section("Published relays for \(account.anyName)") {
+            Button("Configure published relays") {
+                showWizard = true
+            }
+        }
+    }
+    
+    private func onDismiss() {
+        DispatchQueue.main.async {
+            vm.state = .loading; vm.fetch()
+        }
     }
 }

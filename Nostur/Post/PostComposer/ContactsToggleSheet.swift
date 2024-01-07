@@ -101,8 +101,8 @@ struct ContactsToggleSheet: View {
             .navigationTitle("Notify selection (\(selected.count))")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if available.count > 4 {
-                    ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if available.count > 4 {
                         if selected.count == available.count {
                             Image(systemName: "checklist.checked")
                                 .onTapGesture {

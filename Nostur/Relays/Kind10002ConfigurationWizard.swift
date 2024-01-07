@@ -308,13 +308,28 @@ struct PublishedRelaySet: View {
     var body: some View {
         ForEach(allSelectedRelays) { selectedRelay in
             if readRelays.contains(selectedRelay) && writeRelays.contains(selectedRelay) {
-                LabeledContent(selectedRelay.url_ ?? "(no relay url)", value: "read + write")
+                HStack {
+                    Text(selectedRelay.url_ ?? "(no relay url)")
+                    Spacer()
+                    Text("read + write")
+                        .foregroundColor(.secondary)
+                }
             }
             else if readRelays.contains(selectedRelay) {
-                LabeledContent(selectedRelay.url_ ?? "(no relay url)", value: "read")
+                HStack {
+                    Text(selectedRelay.url_ ?? "(no relay url)")
+                    Spacer()
+                    Text("read + write")
+                        .foregroundColor(.secondary)
+                }
             }
             else if writeRelays.contains(selectedRelay) {
-                LabeledContent(selectedRelay.url_ ?? "(no relay url)", value: "write")
+                HStack {
+                    Text(selectedRelay.url_ ?? "(no relay url)")
+                    Spacer()
+                    Text("read + write")
+                        .foregroundColor(.secondary)
+                }
             }
         }
     }
