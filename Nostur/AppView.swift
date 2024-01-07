@@ -94,6 +94,7 @@ struct AppView: View {
             }
             else if !didAcceptTerms || isOnboarding || (accounts.isEmpty && noAccounts) || ns.activeAccountPublicKey.isEmpty {
                 Onboarding()
+                    .nbUseNavigationStack(.never)
                     .environmentObject(ns)
                     .environmentObject(networkMonitor)
                     .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
@@ -106,6 +107,7 @@ struct AppView: View {
             else {
                 if let loggedInAccount = ns.loggedInAccount {
                     NosturRootMenu()
+                        .nbUseNavigationStack(.never)
                         .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
                             ReadOnlyAccountInformationSheet()
                                 .presentationDetentsLarge()

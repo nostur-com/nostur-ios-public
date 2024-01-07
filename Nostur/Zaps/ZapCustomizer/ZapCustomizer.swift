@@ -241,12 +241,14 @@ struct ZapCustomizerSheet: View {
                 NBNavigationStack {
                     CustomZapAmountEntry(customAmount: $customAmount)
                 }
+                .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)
             }
             .onAppear {
                 selectedAmount = SettingsStore.shared.defaultZapAmount
             }
         }
+        .nbUseNavigationStack(.never)
     }
 }
 

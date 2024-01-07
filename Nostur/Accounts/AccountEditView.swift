@@ -352,6 +352,7 @@ extension AccountEditView {
                 AccountEditView(account: account)
             }
         }
+        .nbUseNavigationStack(.never)
     }
 }
 

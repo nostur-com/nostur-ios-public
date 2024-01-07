@@ -83,6 +83,7 @@ struct ProfileView: View {
                                             NBNavigationStack {
                                                 AccountEditView(account: account)
                                             }
+                                            .nbUseNavigationStack(.never)
                                             .presentationBackgroundCompat(themes.theme.background)
                                         }
                                         .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
@@ -203,6 +204,7 @@ struct ProfileView: View {
                                         NBNavigationStack {
                                             AccountEditView(account: account)
                                         }
+                                        .nbUseNavigationStack(.never)
                                         .presentationBackgroundCompat(themes.theme.background)
                                     }
                                 }
@@ -364,6 +366,7 @@ struct ProfileView: View {
                     }
                 }
             }
+            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
         }
         .onAppear {

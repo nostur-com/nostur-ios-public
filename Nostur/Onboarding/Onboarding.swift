@@ -35,6 +35,7 @@ struct Onboarding: View {
                         .padding(10)
                     })
             }
+            .nbUseNavigationStack(.never)
         }
     }
 }

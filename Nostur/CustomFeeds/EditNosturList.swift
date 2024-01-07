@@ -63,6 +63,7 @@ struct EditNosturList: View {
             NBNavigationStack {
                 EditListTitleSheet(list: list)
             }
+            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
         })
         .sheet(isPresented: $addContactsSheetShown) {
@@ -85,6 +86,7 @@ struct EditNosturList: View {
                     }
                 }
             }
+            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
         }
     }

@@ -87,6 +87,7 @@ struct EditPrivateNoteSheet: View {
                     ])
             }
         }
+        .nbUseNavigationStack(.never)
         .onAppear {
             noteText = privateNote.content_
         }

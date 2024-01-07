@@ -112,6 +112,7 @@ struct FeedSettingsTester: View {
                 Spacer()
             }
         }
+        .nbUseNavigationStack(.never)
         .onAppear {
             la.account.followingHashtags = ["bitcoin","nostr"]
             Themes.default.loadPurple()

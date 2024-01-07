@@ -44,6 +44,7 @@ struct NewRelayView: View {
                 }
             }
         }
+        .nbUseNavigationStack(.never)
     }
 }
 
