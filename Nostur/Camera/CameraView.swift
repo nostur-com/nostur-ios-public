@@ -224,6 +224,7 @@ struct CameraView: View {
                     }
                 }
         }
+        .nbUseNavigationStack(.never)
     }
 }
 

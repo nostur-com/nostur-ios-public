@@ -578,6 +578,7 @@ struct Settings: View {
                 DeleteAccountSheet()
                     .environmentObject(NRState.shared)
             }
+            .nbUseNavigationStack(.never)
             .environmentObject(themes)
             .presentationBackgroundCompat(themes.theme.background)
         }
@@ -586,6 +587,7 @@ struct Settings: View {
                 AlbyNWCConnectSheet()
                     .environmentObject(NRState.shared)
             }
+            .nbUseNavigationStack(.never)
             .environmentObject(themes)
             .presentationBackgroundCompat(themes.theme.background)
         }
@@ -594,6 +596,7 @@ struct Settings: View {
                 CustomNWCConnectSheet()
                     .environmentObject(NRState.shared)
             }
+            .nbUseNavigationStack(.never)
             .environmentObject(themes)
             .presentationBackgroundCompat(themes.theme.background)
         }

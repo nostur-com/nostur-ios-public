@@ -47,6 +47,7 @@ struct MediaUploadServicePicker: View {
             NBNavigationStack {
                 Nip96Configurator()
             }
+            .nbUseNavigationStack(.never)
         }
     }
 }

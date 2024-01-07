@@ -71,6 +71,7 @@ struct BadgesIssuedView: View {
             NBNavigationStack {
                 CreateNewBadgeSheet()
             }
+            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
         }
     }

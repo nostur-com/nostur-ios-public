@@ -171,6 +171,7 @@ struct NotificationsView: View {
             NBNavigationStack {
                 NotificationSettings()
             }
+            .nbUseNavigationStack(.never)
         })
     }
     

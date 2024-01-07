@@ -217,6 +217,7 @@ struct FollowingAndExplore: View {
                     EmptyView()
                 }
             }
+            .nbUseNavigationStack(.never)
         })
         .onAppear {
             if selectedSubTab == "List" {

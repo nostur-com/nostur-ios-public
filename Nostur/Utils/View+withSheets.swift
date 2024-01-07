@@ -130,6 +130,7 @@ private struct WithSheets: ViewModifier {
                         .environmentObject(NRState.shared)
                         .environmentObject(themes)
                 }
+                .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)
             })
         
@@ -142,6 +143,7 @@ private struct WithSheets: ViewModifier {
                     ReportContactSheet(contact: reportContact.contact)
                         .environmentObject(themes)
                 }
+                .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)
             })
         
@@ -219,6 +221,7 @@ private struct WithSheets: ViewModifier {
                             .environmentObject(themes)
                     }
                 }
+                .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)
             }
         
@@ -262,6 +265,7 @@ private struct WithSheets: ViewModifier {
                             .environmentObject(themes)
                     }
                 }
+                .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)
             }
         
@@ -296,6 +300,7 @@ private struct WithSheets: ViewModifier {
                         .environmentObject(NRState.shared)
                         .environmentObject(themes)
                 }
+                .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)
             }
         

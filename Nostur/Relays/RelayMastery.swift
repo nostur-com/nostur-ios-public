@@ -104,6 +104,7 @@ struct SharedRelaySettings: View {
             NBNavigationStack {
                 RelayEditView(relay: relay)
             }
+            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
         })
     }
@@ -167,6 +168,7 @@ struct AccountRelaySettings: View {
                     .navigationTitle("Published relays")
                     .navigationBarTitleDisplayMode(.inline)
             }
+            .nbUseNavigationStack(.never)
         })
     }
     

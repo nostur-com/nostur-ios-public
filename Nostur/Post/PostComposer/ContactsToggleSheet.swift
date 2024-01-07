@@ -126,6 +126,7 @@ struct ContactsToggleSheet: View {
             }
             .padding(10)
         }
+        .nbUseNavigationStack(.never)
     }
 }
 

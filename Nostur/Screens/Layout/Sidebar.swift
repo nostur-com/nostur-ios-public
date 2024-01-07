@@ -293,6 +293,7 @@ struct SideBar: View {
                 AccountsSheet()
                     .presentationDetents45ml()
             }
+            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
             .environmentObject(themes)
         }
@@ -300,6 +301,7 @@ struct SideBar: View {
             NBNavigationStack {
                 AnySigner()
             }
+            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
             .environmentObject(themes)
         }

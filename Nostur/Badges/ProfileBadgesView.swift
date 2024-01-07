@@ -140,6 +140,7 @@ struct ProfileBadgesView: View {
                     }
                 }
             }
+            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
         }
     }

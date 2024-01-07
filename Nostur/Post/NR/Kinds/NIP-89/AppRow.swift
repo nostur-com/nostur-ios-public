@@ -73,6 +73,7 @@ struct AppRow: View {
                         .padding()
                 }
             }
+            .nbUseNavigationStack(.never)
             .presentationDetents350l()
         })
     }

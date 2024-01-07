@@ -176,6 +176,7 @@ struct DMs: View {
                             }
                         }
                 }
+                .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)
             }
             .onReceive(receiveNotification(.triggerDM)) { notification in

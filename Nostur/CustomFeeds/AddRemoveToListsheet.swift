@@ -80,6 +80,7 @@ struct AddRemoveToListsheet: View {
             .navigationTitle(String(localized:"Add/Remove from feed", comment: "Navigation title for screen to add or remove contacts to a feed"))
             .navigationBarTitleDisplayMode(.inline)
         }
+        .nbUseNavigationStack(.never)
     }
 }
 struct AddRemoveToListsheet_Previews: PreviewProvider {

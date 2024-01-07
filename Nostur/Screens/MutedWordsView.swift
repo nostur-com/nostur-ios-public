@@ -86,6 +86,7 @@ struct MutedWordsView: View {
                     }
                 }
             }
+            .nbUseNavigationStack(.never)
         }
     }
 }

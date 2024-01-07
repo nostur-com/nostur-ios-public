@@ -100,6 +100,7 @@ struct NewPrivateNoteSheet: View {
                 }
             }
         }
+        .nbUseNavigationStack(.never)
     }
 }
 

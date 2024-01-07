@@ -327,6 +327,7 @@ struct LazyNoteMenuSheet: View {
                 signpost(NRState.shared, "Post Context Menu", .begin, "onAppear")
             }
         }
+        .nbUseNavigationStack(.never)
     }
 }
 

@@ -33,6 +33,7 @@ struct ReadOnlyAccountInformationSheet: View {
             .padding(20)
             .background(themes.theme.background)
         }
+        .nbUseNavigationStack(.never)
     }
 }
 
