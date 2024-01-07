@@ -37,15 +37,9 @@ struct Gallery: View {
                 CenteredProgressView()
                     .task(id: "gallery") {
                         do {
-                            try await Task.sleep(
-                                until: .now + .seconds(vm.timeoutSeconds),
-                                tolerance: .seconds(2),
-                                clock: .continuous
-                            )
+                            try await Task.sleep(nanoseconds: UInt64(vm.timeoutSeconds) * NSEC_PER_SEC)
                             vm.timeout()
-                        } catch {
-                            
-                        }
+                        } catch { }
                     }
             case .ready:
                 ScrollView {

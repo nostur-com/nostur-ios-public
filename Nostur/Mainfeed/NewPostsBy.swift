@@ -41,15 +41,9 @@ struct NewPostsBy: View {
                 CenteredProgressView()
                     .task(id: "new-posts") {
                         do {
-                            try await Task.sleep(
-                                until: .now + .seconds(8.0),
-                                tolerance: .seconds(2),
-                                clock: .continuous
-                            )
+                            try await Task.sleep(nanoseconds: UInt64(8) * NSEC_PER_SEC)
                             vm.timeout()
-                        } catch {
-                            
-                        }
+                        } catch { }
                     }
             case .ready:
                 ScrollView {

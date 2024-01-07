@@ -34,15 +34,9 @@ struct Hot: View {
                 CenteredProgressView()
                     .task(id: "hot") {
                         do {
-                            try await Task.sleep(
-                                until: .now + .seconds(hotVM.timeoutSeconds),
-                                tolerance: .seconds(2),
-                                clock: .continuous
-                            )
+                            try await Task.sleep(nanoseconds: UInt64(hotVM.timeoutSeconds) * NSEC_PER_SEC)
                             hotVM.timeout()
-                        } catch {
-                            
-                        }
+                        } catch { }
                     }
             case .ready:
                 ScrollView {
