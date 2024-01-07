@@ -202,6 +202,7 @@ struct AddExistingAccountSheet: View {
         account.createdAt = Date()        
         account.publicKey = keys.publicKeyHex()
         account.privateKey = keys.privateKeyHex()
+        account.flags = "full_account"
         
         // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
         if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
@@ -290,6 +291,7 @@ struct AddExistingAccountSheet: View {
         }
 
         let account = CloudAccount(context: viewContext)
+        account.flags = "full_account"
         account.createdAt = Date()
         account.publicKey = pubkey
 //        NRState.shared.loadAccounts()

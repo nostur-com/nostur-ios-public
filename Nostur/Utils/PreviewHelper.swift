@@ -92,6 +92,7 @@ extension PreviewEnvironment {
         context.performAndWait {
             print("💄💄LOADING ACCOUNT")
             let account = CloudAccount(context: self.context)
+            account.flags = "full_account"
             account.createdAt = Date()
             account.publicKey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
             account.name = "Fabian"
@@ -109,6 +110,7 @@ extension PreviewEnvironment {
     @MainActor func loadAccounts() {
         context.performAndWait {
             let account = CloudAccount(context: self.context)
+            account.flags = "full_account"
             account.createdAt = Date()
             account.publicKey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
             account.name = "Fabian"
@@ -133,6 +135,7 @@ extension PreviewEnvironment {
             let account4keys = NKeys.newKeys()
             let account4 = CloudAccount(context: self.context)
             account4.createdAt = Date()
+            account4.flags = "full_account"
             account4.publicKey = account4keys.publicKeyHex()
             account4.privateKey = account4keys.privateKeyHex()
             account4.name = "The Poster"
@@ -140,6 +143,7 @@ extension PreviewEnvironment {
             
             let account5keys = NKeys.newKeys()
             let account5 = CloudAccount(context: self.context)
+            account5.flags = "full_account"
             account5.createdAt = Date()
             account5.publicKey = account5keys.publicKeyHex()
             account5.privateKey = account5keys.privateKeyHex()
