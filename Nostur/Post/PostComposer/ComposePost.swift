@@ -11,6 +11,22 @@ import NavigationBackport
 // TODO: Should add drafts and auto-save
 // TODO: Need to create better solution for typing @mentions
 
+struct ComposePostCompat: View {
+    public var replyTo: Event? = nil
+    public var quotingEvent: Event? = nil
+    public var directMention: Contact? = nil // For initiating a post from profile view
+    
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            ComposePost(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
+        }
+        else {
+            ComposePost15(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
+        }
+    }
+}
+
+@available(iOS 16.0, *)
 struct ComposePost: View {
     public var replyTo:Event? = nil
     public var quotingEvent:Event? = nil
@@ -18,7 +34,7 @@ struct ComposePost: View {
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes:Themes
-    @Environment(\.dismiss) public var dismiss
+    @Environment(\.dismiss) public var dismissCompose
     
     @StateObject private var vm = NewPostModel()
     @StateObject private var ipm = ImagePickerModel()
@@ -62,7 +78,7 @@ struct ComposePost: View {
                                         vm.activeAccount = account
                                     }).equatable()
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, dismiss: dismissCompose)
                                         .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
                                         .id(textfield)
                                 }
@@ -79,48 +95,48 @@ struct ComposePost: View {
                                 if let newImage { vm.typingTextModel.pastedImages.append(PostedImageMeta(index: vm.typingTextModel.pastedImages.count, imageData: newImage, type: .jpeg)) }
                             }
                             .padding(10)
-                            .toolbar {
-                                ToolbarItem(placement: .navigationBarLeading) {
-                                    Button { dismiss() } label: { Text("Cancel") }
-                                }
-                                if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
-                                    ToolbarItem(placement: .navigationBarTrailing) {
-                                        Button { cameraSheetShown = true } label: {
-                                            Image(systemName: "camera")
-                                        }
-                                        .buttonStyle(.borderless)
-                                        .disabled(vm.typingTextModel.uploading)
-                
-                                    }
-                                    ToolbarItem(placement: .navigationBarTrailing) {
-                                        Button { photoPickerShown = true } label: {
-                                            Image(systemName: "photo")
-                                        }
-                                        .buttonStyle(.borderless)
-                                        .disabled(vm.typingTextModel.uploading)
-                
-                                    }
-                                    ToolbarItem(placement: .navigationBarTrailing) {
-                                        Button { gifSheetShown = true } label: {
-                                            Image("GifButton")
-                                        }
-                                        .buttonStyle(.borderless)
-                                        .disabled(vm.typingTextModel.uploading)
-                                    }
-                                }
-                                ToolbarItem(placement: .navigationBarTrailing) {
-                                    Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
-                                        vm.showPreview(quotingEvent: quotingEvent)
-                                    }
-                                    .disabled(vm.typingTextModel.uploading)
-                                }
-                                
-                                if let uploadError = vm.uploadError {
-                                    ToolbarItem(placement: .principal) {
-                                        Text(uploadError).foregroundColor(.red)
-                                    }
-                                }
-                            }
+//                            .toolbar {
+//                                ToolbarItem(placement: .navigationBarLeading) {
+//                                    Button { dismissCompose() } label: { Text("Cancel") }
+//                                }
+//                                if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+//                                    ToolbarItem(placement: .navigationBarTrailing) {
+//                                        Button { cameraSheetShown = true } label: {
+//                                            Image(systemName: "camera")
+//                                        }
+//                                        .buttonStyle(.borderless)
+//                                        .disabled(vm.typingTextModel.uploading)
+//                
+//                                    }
+//                                    ToolbarItem(placement: .navigationBarTrailing) {
+//                                        Button { photoPickerShown = true } label: {
+//                                            Image(systemName: "photo")
+//                                        }
+//                                        .buttonStyle(.borderless)
+//                                        .disabled(vm.typingTextModel.uploading)
+//                
+//                                    }
+//                                    ToolbarItem(placement: .navigationBarTrailing) {
+//                                        Button { gifSheetShown = true } label: {
+//                                            Image("GifButton")
+//                                        }
+//                                        .buttonStyle(.borderless)
+//                                        .disabled(vm.typingTextModel.uploading)
+//                                    }
+//                                }
+////                                ToolbarItem(placement: .navigationBarTrailing) {
+////                                    Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
+////                                        vm.showPreview(quotingEvent: quotingEvent)
+////                                    }
+////                                    .disabled(vm.typingTextModel.uploading)
+////                                }
+//                                
+//                                if let uploadError = vm.uploadError {
+//                                    ToolbarItem(placement: .principal) {
+//                                        Text(uploadError).foregroundColor(.red)
+//                                    }
+//                                }
+//                            }
                             .onAppear {
                                 signpost(NRState.shared, "New Post", .end, "New Post view ready")
                                 
@@ -151,9 +167,9 @@ struct ComposePost: View {
                     }
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         NBNavigationStack {
-                            PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, fullDismiss: dismiss)
+                            PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { dismissCompose() })
                         }
-                        .presentationBackground(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.background)
                     }
                 }
                 .overlay {
@@ -200,8 +216,8 @@ struct ComposePost: View {
         VStack {
             Button("New Post") { }
                 .sheet(isPresented: .constant(true)) {
-                        ComposePost()
                     NBNavigationStack {
+                        ComposePostCompat()
                     }
                 }
         }
@@ -219,7 +235,7 @@ struct ComposePost: View {
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
                         if let replyTo = PreviewFetcher.fetchEvent("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
-                            ComposePost(replyTo: replyTo)
+                            ComposePostCompat(replyTo: replyTo)
                         }
                     }
                 }
