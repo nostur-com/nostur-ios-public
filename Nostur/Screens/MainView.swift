@@ -62,25 +62,15 @@ struct MainView: View {
                         NBNavigationStack {
                             if account.isNC {
                                 WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                                    if #available(iOS 16, *) {
-                                        ComposePost()
-                                    }
-                                    else {
-                                        ComposePost15()
-                                    }
-                                }
-                            }   
-                            else {
-                                if #available(iOS 16, *) {
-                                    ComposePost()
-                                }
-                                else {
-                                    ComposePost15()
+                                    ComposePostCompat(onDismiss: { showingNewNote = false })
                                 }
                             }
+                            else {
+                                ComposePostCompat(onDismiss: { showingNewNote = false })
+                            }
                         }
-                        .nbUseNavigationStack(.never)
                         .presentationBackgroundCompat(themes.theme.background)
+                        .nbUseNavigationStack(.never)
                     }
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {

@@ -10,7 +10,6 @@ import NavigationBackport
 
 struct Entry: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    private var dismiss: DismissAction
     @EnvironmentObject private var themes: Themes
     private var vm: NewPostModel
     @ObservedObject var typingTextModel: TypingTextModel
@@ -20,21 +19,21 @@ struct Entry: View {
     private var replyTo: Event?
     private var quotingEvent: Event?
     private var directMention: Contact?
+    private var onDismiss: () -> Void
     static let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
-//    @Namespace private var images
     
     
     private var shouldDisablePostButton: Bool {
         typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty)
     }
 
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, dismiss: DismissAction) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void) {
         self.replyTo = replyTo
         self.quotingEvent = quotingEvent
         self.directMention = directMention
         self.vm = vm
         self.typingTextModel = vm.typingTextModel
-        self.dismiss = dismiss
+        self.onDismiss = onDismiss
         _photoPickerShown = photoPickerShown
         _gifSheetShown = gifSheetShown
         _cameraSheetShown = cameraSheetShown
@@ -121,7 +120,7 @@ struct Entry: View {
 //        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button { dismiss() } label: { Text("Cancel") }
+                Button { onDismiss() } label: { Text("Cancel") }
             }
             
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -156,7 +155,7 @@ struct Entry: View {
                     Button {
                         vm.typingTextModel.sending = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            self.vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: { dismiss() })
+                            self.vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: { onDismiss() })
                         }
                     } label: {
                         if (vm.typingTextModel.uploading || vm.typingTextModel.sending) {

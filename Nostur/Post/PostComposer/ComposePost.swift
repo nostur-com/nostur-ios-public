@@ -15,13 +15,14 @@ struct ComposePostCompat: View {
     public var replyTo: Event? = nil
     public var quotingEvent: Event? = nil
     public var directMention: Contact? = nil // For initiating a post from profile view
+    public var onDismiss: () -> Void
     
     var body: some View {
         if #available(iOS 16.0, *) {
-            ComposePost(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
+            ComposePost(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: onDismiss)
         }
         else {
-            ComposePost15(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
+            ComposePost15(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: onDismiss)
         }
     }
 }
@@ -31,10 +32,9 @@ struct ComposePost: View {
     public var replyTo:Event? = nil
     public var quotingEvent:Event? = nil
     public var directMention:Contact? = nil // For initiating a post from profile view
-    
+    public var onDismiss: () -> Void
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes:Themes
-    @Environment(\.dismiss) public var dismissCompose
     
     @StateObject private var vm = NewPostModel()
     @StateObject private var ipm = ImagePickerModel()
@@ -78,7 +78,7 @@ struct ComposePost: View {
                                         vm.activeAccount = account
                                     }).equatable()
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, dismiss: dismissCompose)
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() })
                                         .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
                                         .id(textfield)
                                 }
@@ -166,11 +166,18 @@ struct ComposePost: View {
                             .background(themes.theme.background)
                     }
                     .sheet(item: $vm.previewNRPost) { nrPost in
-                        NBNavigationStack {
-                            PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { dismissCompose() })
+                        if #available(iOS 16, *) {
+                            NavigationStack {
+                                PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                            }
+                            .presentationBackgroundCompat(themes.theme.background)
                         }
-                        .nbUseNavigationStack(.never)
-                        .presentationBackgroundCompat(themes.theme.background)
+                        else {
+                            NBNavigationStack {
+                                PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                            }
+                            .presentationBackgroundCompat(themes.theme.background)
+                        }
                     }
                 }
                 .overlay {
@@ -218,7 +225,7 @@ struct ComposePost: View {
             Button("New Post") { }
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
-                        ComposePostCompat()
+                        ComposePostCompat(onDismiss: { })
                     }
                     .nbUseNavigationStack(.never)
                 }
@@ -237,7 +244,7 @@ struct ComposePost: View {
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
                         if let replyTo = PreviewFetcher.fetchEvent("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
-                            ComposePostCompat(replyTo: replyTo)
+                            ComposePostCompat(replyTo: replyTo, onDismiss: { })
                         }
                     }
                 }

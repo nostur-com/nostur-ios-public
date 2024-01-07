@@ -358,11 +358,11 @@ struct ProfileView: View {
                 if let account = Nostur.account() {
                     if account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePostCompat(directMention: nrContact.mainContact)
+                            ComposePostCompat(directMention: nrContact.mainContact, onDismiss: { showingNewNote = false })
                         }
                     }
                     else {
-                        ComposePostCompat(directMention: nrContact.mainContact)
+                        ComposePostCompat(directMention: nrContact.mainContact, onDismiss: { showingNewNote = false })
                     }
                 }
             }

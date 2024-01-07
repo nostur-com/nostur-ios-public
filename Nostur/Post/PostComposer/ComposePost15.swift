@@ -12,10 +12,10 @@ struct ComposePost15: View {
     public var replyTo:Event? = nil
     public var quotingEvent:Event? = nil
     public var directMention:Contact? = nil // For initiating a post from profile view
+    public var onDismiss: () -> Void
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes:Themes
-    @Environment(\.dismiss) public var dismissCompose
     
     @StateObject private var vm = NewPostModel()
     @State private var gifSheetShown = false
@@ -59,7 +59,7 @@ struct ComposePost15: View {
                                         vm.activeAccount = account
                                     }).equatable()
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, dismiss: dismissCompose)
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() })
                                         .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
                                         .id(textfield)
                                 }
@@ -106,7 +106,7 @@ struct ComposePost15: View {
                     }
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         NBNavigationStack {
-                            PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { dismissCompose() })
+                            PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
                         }
                         .nbUseNavigationStack(.never)
                         .presentationBackgroundCompat(themes.theme.background)

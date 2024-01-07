@@ -208,14 +208,14 @@ private struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePostCompat(replyTo: eventNotification.event)
+                            ComposePostCompat(replyTo: eventNotification.event, onDismiss: { self.replyToEvent = nil })
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                         }
                         .environmentObject(themes)
                     }
                     else {
-                        ComposePostCompat(replyTo: eventNotification.event)
+                        ComposePostCompat(replyTo: eventNotification.event, onDismiss: { self.replyToEvent = nil })
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
@@ -252,14 +252,14 @@ private struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePostCompat(quotingEvent: quotePostEvent)
+                            ComposePostCompat(quotingEvent: quotePostEvent, onDismiss: { self.quotePostEvent = nil })
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                         }
                         .environmentObject(themes)
                     }
                     else {
-                        ComposePostCompat(quotingEvent: quotePostEvent)
+                        ComposePostCompat(quotingEvent: quotePostEvent, onDismiss: { self.quotePostEvent = nil })
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
