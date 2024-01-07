@@ -107,8 +107,11 @@ struct SingleMediaViewer: View {
                             //                            .transaction { t in t.animation = nil }
                             //                            .withoutAnimation()
                                 .task(id: url.absoluteString) {
-                                    try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
-                                    isPlaying = true
+                                    do {
+                                        try await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                                        isPlaying = true
+                                    }
+                                    catch { }
                                 }
                                 .onDisappear {
                                     isPlaying = false
@@ -143,8 +146,11 @@ struct SingleMediaViewer: View {
                                     }
                                 }
                                 .task(id: url.absoluteString) {
-                                    try? await Task.sleep(for: .seconds(0.75), tolerance: .seconds(0.5))
-                                    isPlaying = true
+                                    do {
+                                        try await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                                        isPlaying = true
+                                    }
+                                    catch { }
                                 }
                                 .onDisappear {
                                     isPlaying = false

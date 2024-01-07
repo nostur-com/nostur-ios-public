@@ -91,15 +91,18 @@ extension Search {
         guard !identifier.relays.isEmpty else { return }
         
         searchTask = Task {
-            try? await Task.sleep(for: .seconds(3))
-            await bg().perform {
-                // If we don't have the event after X seconds, fetch from relay hint
-                if Contact.fetchByPubkey(pubkey, context: bg()) == nil {
-                    if let relay = identifier.relays.first {
-                        ConnectionPool.shared.sendEphemeralMessage(RM.getUserMetadata(pubkey: pubkey), relay: relay)
+            do {
+                try await Task.sleep(nanoseconds: UInt64(3) * NSEC_PER_SEC)
+                await bg().perform {
+                    // If we don't have the event after X seconds, fetch from relay hint
+                    if Contact.fetchByPubkey(pubkey, context: bg()) == nil {
+                        if let relay = identifier.relays.first {
+                            ConnectionPool.shared.sendEphemeralMessage(RM.getUserMetadata(pubkey: pubkey), relay: relay)
+                        }
                     }
                 }
             }
+            catch { }
         }
     }
     
@@ -152,29 +155,32 @@ extension Search {
                     timeoutCommand: { taskId in
                         guard !naddr.relays.isEmpty else { return }
                         searchTask = Task {
-                            try? await Task.sleep(for: .seconds(3))
-                            await bg().perform {
-                                // If we don't have the event after X seconds, fetch from relay hint
-                                guard Event.fetchReplacableEvent(
-                                    kind,
-                                    pubkey: pubkey,
-                                    definition: definition,
-                                    context: bg()) == nil else { return }
-                                
-                                guard let relay = naddr.relays.first else { return }
+                            do {
+                                try await Task.sleep(nanoseconds: UInt64(3) * NSEC_PER_SEC)
+                                await bg().perform {
+                                    // If we don't have the event after X seconds, fetch from relay hint
+                                    guard Event.fetchReplacableEvent(
+                                        kind,
+                                        pubkey: pubkey,
+                                        definition: definition,
+                                        context: bg()) == nil else { return }
                                     
-                                ConnectionPool
-                                    .shared
-                                    .sendEphemeralMessage(
-                                        RM.getArticle(
-                                                pubkey: pubkey,
-                                                kind: Int(kind),
-                                                definition: definition,
-                                                subscriptionId: taskId
-                                        ), 
-                                        relay: relay
-                                    )
+                                    guard let relay = naddr.relays.first else { return }
+                                        
+                                    ConnectionPool
+                                        .shared
+                                        .sendEphemeralMessage(
+                                            RM.getArticle(
+                                                    pubkey: pubkey,
+                                                    kind: Int(kind),
+                                                    definition: definition,
+                                                    subscriptionId: taskId
+                                            ),
+                                            relay: relay
+                                        )
+                                }
                             }
+                            catch { }
                         }
                     })
                 
@@ -227,15 +233,18 @@ extension Search {
         
         guard !identifier.relays.isEmpty else { return }
         searchTask = Task {
-            try? await Task.sleep(for: .seconds(3))
-            await bg().perform {
-                // If we don't have the event after X seconds, fetch from relay hint
-                guard (try? Event.fetchEvent(id: noteHex, context: bg())) == nil
-                else { return }
-                
-                guard let relay = identifier.relays.first else { return }
-                ConnectionPool.shared.sendEphemeralMessage(RM.getEvent(id: noteHex, subscriptionId:searchTask1.subscriptionId), relay: relay)
+            do {
+                try await Task.sleep(nanoseconds: UInt64(3) * NSEC_PER_SEC)
+                await bg().perform {
+                    // If we don't have the event after X seconds, fetch from relay hint
+                    guard (try? Event.fetchEvent(id: noteHex, context: bg())) == nil
+                    else { return }
+                    
+                    guard let relay = identifier.relays.first else { return }
+                    ConnectionPool.shared.sendEphemeralMessage(RM.getEvent(id: noteHex, subscriptionId:searchTask1.subscriptionId), relay: relay)
+                }
             }
+            catch { }
         }
     }
     
@@ -384,10 +393,13 @@ extension Search {
         searchTask1.fetch()
         
         Task {
-            try? await Task.sleep(nanoseconds: 5_500_000_000)
-            Task { @MainActor in
-                searching = false
+            do {
+                try await Task.sleep(nanoseconds: UInt64(5.5) * NSEC_PER_SEC)
+                Task { @MainActor in
+                    searching = false
+                }
             }
+            catch { }
         }
     }
     

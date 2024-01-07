@@ -205,13 +205,16 @@ struct PostAndParent: View {
                         QueuedFetcher.shared.enqueue(id: replyToId)
                         
                         timerTask = Task {
-                            try? await Task.sleep(for: .seconds(4))
-                            if nrPost.replyTo == nil {
-                                // try search relays
-                                req(RM.getEvent(id: replyToId), relayType: .SEARCH)
-                                // try relay hint
-                                fetchEventFromRelayHint(replyToId, fastTags: nrPost.fastTags)
+                            do {
+                                try await Task.sleep(nanoseconds: UInt64(4) * NSEC_PER_SEC)
+                                if nrPost.replyTo == nil {
+                                    // try search relays
+                                    req(RM.getEvent(id: replyToId), relayType: .SEARCH)
+                                    // try relay hint
+                                    fetchEventFromRelayHint(replyToId, fastTags: nrPost.fastTags)
+                                }
                             }
+                            catch { }
                         }
                     }
                     .background(themes.theme.background)

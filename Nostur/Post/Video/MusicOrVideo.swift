@@ -52,16 +52,14 @@ struct MusicOrVideo: View {
                             }
                         }
                         
+
                         do {
-                            try await Task.sleep(
-                                until: .now + .seconds(8.0),
-                                tolerance: .seconds(2),
-                                clock: .continuous
-                            )
+                            try await Task.sleep(nanoseconds: UInt64(8) * NSEC_PER_SEC)
                             if self.state != .video && self.state != .audio {
                                 self.state = .timeout
                             }
                         } catch { }
+
                     }
                 }
         case .video, .unknown:

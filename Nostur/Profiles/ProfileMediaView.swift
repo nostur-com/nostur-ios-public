@@ -30,15 +30,9 @@ struct ProfileMediaView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .task(id: "profilegallery") {
                         do {
-                            try await Task.sleep(
-                                until: .now + .seconds(10),
-                                tolerance: .seconds(2),
-                                clock: .continuous
-                            )
+                            try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
                             vm.state = .timeout
-                        } catch {
-                            
-                        }
+                        } catch { }
                     }
             case .ready:
                 if !vm.items.isEmpty {

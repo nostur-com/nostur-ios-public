@@ -26,15 +26,9 @@ struct ProfileLikesView: View {
                 .onAppear { vm.load() }
                 .task(id: "profilelikes") {
                     do {
-                        try await Task.sleep(
-                            until: .now + .seconds(10),
-                            tolerance: .seconds(2),
-                            clock: .continuous
-                        )
+                        try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
                         vm.state = .timeout
-                    } catch {
-                        
-                    }
+                    } catch { }
                 }
         case .ready:
             LazyVStack(spacing: 10) {
