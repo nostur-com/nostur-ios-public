@@ -25,24 +25,47 @@ struct NewPrivateNoteSheet: View {
     var body: some View {
         NBNavigationStack {
             Form {
-                TextField(
-                    text: $content,
-                    prompt: {
-                        if contact != nil {
-                            if let name = contact?.anyName {
-                                return Text("Enter private note about \(name) for yourself", comment: "Placeholder for entering note about (name)")
+                if #available(iOS 16.0, *) {
+                    TextField(
+                        text: $content,
+                        prompt: {
+                            if contact != nil {
+                                if let name = contact?.anyName {
+                                    return Text("Enter private note about \(name) for yourself", comment: "Placeholder for entering note about (name)")
+                                }
+                                else {
+                                    return Text("Enter private note about this user for yourself", comment: "Placeholder for entering private note")
+                                }
                             }
                             else {
-                                return Text("Enter private note about this user for yourself", comment: "Placeholder for entering private note")
+                                return Text("Enter private note about this post for yourself", comment:"Placeholder for entering private note")
                             }
+                        }(),
+                        axis: .vertical) {
+                            Text("Private note")
                         }
-                        else {
-                            return Text("Enter private note about this post for yourself", comment:"Placeholder for entering private note")
+                        .lineLimit(10, reservesSpace: true)
+                }
+                else {
+                    TextField(
+                        text: $content,
+                        prompt: {
+                            if contact != nil {
+                                if let name = contact?.anyName {
+                                    return Text("Enter private note about \(name) for yourself", comment: "Placeholder for entering note about (name)")
+                                }
+                                else {
+                                    return Text("Enter private note about this user for yourself", comment: "Placeholder for entering private note")
+                                }
+                            }
+                            else {
+                                return Text("Enter private note about this post for yourself", comment:"Placeholder for entering private note")
+                            }
+                        }()) {
+                            Text("Private note")
                         }
-                    }(),
-                    axis: .vertical) {
-                        Text("Private note")
-                    }.lineLimit(10, reservesSpace: true)
+                        .lineLimit(10)
+                }
             }
             .navigationTitle(String(localized: "New private note", comment: "Navigation title for new private note screen"))
             .navigationBarTitleDisplayMode(.inline)

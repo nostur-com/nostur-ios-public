@@ -20,82 +20,165 @@ struct SettingsDefaultZapAmount: View {
     var body: some View {
         NBNavigationStack {
             VStack {
-                Grid {
-                    GridRow {
-                        ZapAmountButton(3, isSelected: selectedAmount == 3).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 3
-                            dismiss()
-                        }
-                        ZapAmountButton(21, isSelected: selectedAmount == 21).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 21
-                            dismiss()
-                        }
-                        ZapAmountButton(100, isSelected: selectedAmount == 100).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 100
-                            dismiss()
-                        }
-                        ZapAmountButton(500, isSelected: selectedAmount == 500).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 500
-                            dismiss()
-                        }
-                    }
-                    GridRow {
-                        ZapAmountButton(1000, isSelected: selectedAmount == 1000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 1000
-                            dismiss()
-                        }
-                        ZapAmountButton(2000, isSelected: selectedAmount == 2000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 2000
-                            dismiss()
-                        }
-                        ZapAmountButton(5000, isSelected: selectedAmount == 5000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 5000
-                            dismiss()
-                        }
-                        ZapAmountButton(10000, isSelected: selectedAmount == 10000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 10000
-                            dismiss()
-                        }
-                    }
-                    GridRow {
-                        ZapAmountButton(25000, isSelected: selectedAmount == 25000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 25000
-                            dismiss()
-                        }
-                        ZapAmountButton(50000, isSelected: selectedAmount == 50000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 50000
-                            dismiss()
-                        }
-                        ZapAmountButton(100000, isSelected: selectedAmount == 100000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 100000
-                            dismiss()
-                        }
-                        ZapAmountButton(200000, isSelected: selectedAmount == 200000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 200000
-                            dismiss()
-                        }
-                    }
-                    GridRow {
-                        ZapAmountButton(500000, isSelected: selectedAmount == 500000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 500000
-                            dismiss()
-                        }
-                        ZapAmountButton(1000000, isSelected: selectedAmount == 1000000).onTapGesture {
-                            SettingsStore.shared.defaultZapAmount = 1000000
-                            dismiss()
-                        }
-                        if lastCustomZapAmount != 0.0 {
-                            ZapAmountButton(lastCustomZapAmount, isSelected: selectedAmount == lastCustomZapAmount).onTapGesture {
-                                SettingsStore.shared.defaultZapAmount = lastCustomZapAmount
+                if #available(iOS 16, *) {
+                    Grid {
+                        GridRow {
+                            ZapAmountButton(3, isSelected: selectedAmount == 3).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 3
+                                dismiss()
+                            }
+                            ZapAmountButton(21, isSelected: selectedAmount == 21).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 21
+                                dismiss()
+                            }
+                            ZapAmountButton(100, isSelected: selectedAmount == 100).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 100
+                                dismiss()
+                            }
+                            ZapAmountButton(500, isSelected: selectedAmount == 500).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 500
                                 dismiss()
                             }
                         }
-                        ZapAmountButton(customAmount, isSelected: selectedAmount == customAmount).onTapGesture {
-                            showCustomAmountsheet = true
+                        GridRow {
+                            ZapAmountButton(1000, isSelected: selectedAmount == 1000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 1000
+                                dismiss()
+                            }
+                            ZapAmountButton(2000, isSelected: selectedAmount == 2000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 2000
+                                dismiss()
+                            }
+                            ZapAmountButton(5000, isSelected: selectedAmount == 5000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 5000
+                                dismiss()
+                            }
+                            ZapAmountButton(10000, isSelected: selectedAmount == 10000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 10000
+                                dismiss()
+                            }
                         }
-                        .onChange(of: customAmount) { newValue in
-                            SettingsStore.shared.defaultZapAmount = newValue
-                            dismiss()
+                        GridRow {
+                            ZapAmountButton(25000, isSelected: selectedAmount == 25000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 25000
+                                dismiss()
+                            }
+                            ZapAmountButton(50000, isSelected: selectedAmount == 50000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 50000
+                                dismiss()
+                            }
+                            ZapAmountButton(100000, isSelected: selectedAmount == 100000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 100000
+                                dismiss()
+                            }
+                            ZapAmountButton(200000, isSelected: selectedAmount == 200000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 200000
+                                dismiss()
+                            }
+                        }
+                        GridRow {
+                            ZapAmountButton(500000, isSelected: selectedAmount == 500000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 500000
+                                dismiss()
+                            }
+                            ZapAmountButton(1000000, isSelected: selectedAmount == 1000000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 1000000
+                                dismiss()
+                            }
+                            if lastCustomZapAmount != 0.0 {
+                                ZapAmountButton(lastCustomZapAmount, isSelected: selectedAmount == lastCustomZapAmount).onTapGesture {
+                                    SettingsStore.shared.defaultZapAmount = lastCustomZapAmount
+                                    dismiss()
+                                }
+                            }
+                            ZapAmountButton(customAmount, isSelected: selectedAmount == customAmount).onTapGesture {
+                                showCustomAmountsheet = true
+                            }
+                            .onChange(of: customAmount) { newValue in
+                                SettingsStore.shared.defaultZapAmount = newValue
+                                dismiss()
+                            }
+                        }
+                    }
+                }
+                else {
+                    VStack {
+                        HStack {
+                            ZapAmountButton(3, isSelected: selectedAmount == 3).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 3
+                                dismiss()
+                            }
+                            ZapAmountButton(21, isSelected: selectedAmount == 21).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 21
+                                dismiss()
+                            }
+                            ZapAmountButton(100, isSelected: selectedAmount == 100).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 100
+                                dismiss()
+                            }
+                            ZapAmountButton(500, isSelected: selectedAmount == 500).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 500
+                                dismiss()
+                            }
+                        }
+                        HStack {
+                            ZapAmountButton(1000, isSelected: selectedAmount == 1000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 1000
+                                dismiss()
+                            }
+                            ZapAmountButton(2000, isSelected: selectedAmount == 2000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 2000
+                                dismiss()
+                            }
+                            ZapAmountButton(5000, isSelected: selectedAmount == 5000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 5000
+                                dismiss()
+                            }
+                            ZapAmountButton(10000, isSelected: selectedAmount == 10000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 10000
+                                dismiss()
+                            }
+                        }
+                        HStack {
+                            ZapAmountButton(25000, isSelected: selectedAmount == 25000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 25000
+                                dismiss()
+                            }
+                            ZapAmountButton(50000, isSelected: selectedAmount == 50000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 50000
+                                dismiss()
+                            }
+                            ZapAmountButton(100000, isSelected: selectedAmount == 100000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 100000
+                                dismiss()
+                            }
+                            ZapAmountButton(200000, isSelected: selectedAmount == 200000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 200000
+                                dismiss()
+                            }
+                        }
+                        HStack {
+                            ZapAmountButton(500000, isSelected: selectedAmount == 500000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 500000
+                                dismiss()
+                            }
+                            ZapAmountButton(1000000, isSelected: selectedAmount == 1000000).onTapGesture {
+                                SettingsStore.shared.defaultZapAmount = 1000000
+                                dismiss()
+                            }
+                            if lastCustomZapAmount != 0.0 {
+                                ZapAmountButton(lastCustomZapAmount, isSelected: selectedAmount == lastCustomZapAmount).onTapGesture {
+                                    SettingsStore.shared.defaultZapAmount = lastCustomZapAmount
+                                    dismiss()
+                                }
+                            }
+                            ZapAmountButton(customAmount, isSelected: selectedAmount == customAmount).onTapGesture {
+                                showCustomAmountsheet = true
+                            }
+                            .onChange(of: customAmount) { newValue in
+                                SettingsStore.shared.defaultZapAmount = newValue
+                                dismiss()
+                            }
                         }
                     }
                 }

@@ -33,67 +33,135 @@ struct ZapCustomizerSheet: View {
                         NWCWalletBalance(noIcon: true)
                     }
                 }
-                Grid {
-                    GridRow {
-                        ZapAmountButton(3, isSelected: selectedAmount == 3).onTapGesture {
-                            selectedAmount = 3
-                        }
-                        ZapAmountButton(21, isSelected: selectedAmount == 21).onTapGesture {
-                            selectedAmount = 21
-                        }
-                        ZapAmountButton(100, isSelected: selectedAmount == 100).onTapGesture {
-                            selectedAmount = 100
-                        }
-                        ZapAmountButton(500, isSelected: selectedAmount == 500).onTapGesture {
-                            selectedAmount = 500
-                        }
-                    }
-                    GridRow {
-                        ZapAmountButton(1000, isSelected: selectedAmount == 1000).onTapGesture {
-                            selectedAmount = 1000
-                        }
-                        ZapAmountButton(2000, isSelected: selectedAmount == 2000).onTapGesture {
-                            selectedAmount = 2000
-                        }
-                        ZapAmountButton(5000, isSelected: selectedAmount == 5000).onTapGesture {
-                            selectedAmount = 5000
-                        }
-                        ZapAmountButton(10000, isSelected: selectedAmount == 10000).onTapGesture {
-                            selectedAmount = 10000
-                        }
-                    }
-                    GridRow {
-                        ZapAmountButton(25000, isSelected: selectedAmount == 25000).onTapGesture {
-                            selectedAmount = 25000
-                        }
-                        ZapAmountButton(50000, isSelected: selectedAmount == 50000).onTapGesture {
-                            selectedAmount = 50000
-                        }
-                        ZapAmountButton(100000, isSelected: selectedAmount == 100000).onTapGesture {
-                            selectedAmount = 100000
-                        }
-                        ZapAmountButton(200000, isSelected: selectedAmount == 200000).onTapGesture {
-                            selectedAmount = 200000
-                        }
-                    }
-                    GridRow {
-                        ZapAmountButton(500000, isSelected: selectedAmount == 500000).onTapGesture {
-                            selectedAmount = 500000
-                        }
-                        ZapAmountButton(1000000, isSelected: selectedAmount == 1000000).onTapGesture {
-                            selectedAmount = 1000000
-                        }
-                        if lastCustomZapAmount != 0.0 {
-                            ZapAmountButton(lastCustomZapAmount, isSelected: selectedAmount == lastCustomZapAmount).onTapGesture {
-                                selectedAmount = lastCustomZapAmount
+                if #available(iOS 16, *) {
+                    Grid {
+                        GridRow {
+                            ZapAmountButton(3, isSelected: selectedAmount == 3).onTapGesture {
+                                selectedAmount = 3
+                            }
+                            ZapAmountButton(21, isSelected: selectedAmount == 21).onTapGesture {
+                                selectedAmount = 21
+                            }
+                            ZapAmountButton(100, isSelected: selectedAmount == 100).onTapGesture {
+                                selectedAmount = 100
+                            }
+                            ZapAmountButton(500, isSelected: selectedAmount == 500).onTapGesture {
+                                selectedAmount = 500
                             }
                         }
-                        ZapAmountButton(customAmount, isSelected: selectedAmount == customAmount).onTapGesture {
-                            showCustomAmountsheet = true
+                        GridRow {
+                            ZapAmountButton(1000, isSelected: selectedAmount == 1000).onTapGesture {
+                                selectedAmount = 1000
+                            }
+                            ZapAmountButton(2000, isSelected: selectedAmount == 2000).onTapGesture {
+                                selectedAmount = 2000
+                            }
+                            ZapAmountButton(5000, isSelected: selectedAmount == 5000).onTapGesture {
+                                selectedAmount = 5000
+                            }
+                            ZapAmountButton(10000, isSelected: selectedAmount == 10000).onTapGesture {
+                                selectedAmount = 10000
+                            }
                         }
-                        .onChange(of: customAmount) { newValue in
-                            selectedAmount = newValue
-                            lastCustomZapAmount = selectedAmount
+                        GridRow {
+                            ZapAmountButton(25000, isSelected: selectedAmount == 25000).onTapGesture {
+                                selectedAmount = 25000
+                            }
+                            ZapAmountButton(50000, isSelected: selectedAmount == 50000).onTapGesture {
+                                selectedAmount = 50000
+                            }
+                            ZapAmountButton(100000, isSelected: selectedAmount == 100000).onTapGesture {
+                                selectedAmount = 100000
+                            }
+                            ZapAmountButton(200000, isSelected: selectedAmount == 200000).onTapGesture {
+                                selectedAmount = 200000
+                            }
+                        }
+                        GridRow {
+                            ZapAmountButton(500000, isSelected: selectedAmount == 500000).onTapGesture {
+                                selectedAmount = 500000
+                            }
+                            ZapAmountButton(1000000, isSelected: selectedAmount == 1000000).onTapGesture {
+                                selectedAmount = 1000000
+                            }
+                            if lastCustomZapAmount != 0.0 {
+                                ZapAmountButton(lastCustomZapAmount, isSelected: selectedAmount == lastCustomZapAmount).onTapGesture {
+                                    selectedAmount = lastCustomZapAmount
+                                }
+                            }
+                            ZapAmountButton(customAmount, isSelected: selectedAmount == customAmount).onTapGesture {
+                                showCustomAmountsheet = true
+                            }
+                            .onChange(of: customAmount) { newValue in
+                                selectedAmount = newValue
+                                lastCustomZapAmount = selectedAmount
+                            }
+                        }
+                    }
+                }
+                else {
+                    VStack {
+                        HStack {
+                            ZapAmountButton(3, isSelected: selectedAmount == 3).onTapGesture {
+                                selectedAmount = 3
+                            }
+                            ZapAmountButton(21, isSelected: selectedAmount == 21).onTapGesture {
+                                selectedAmount = 21
+                            }
+                            ZapAmountButton(100, isSelected: selectedAmount == 100).onTapGesture {
+                                selectedAmount = 100
+                            }
+                            ZapAmountButton(500, isSelected: selectedAmount == 500).onTapGesture {
+                                selectedAmount = 500
+                            }
+                        }
+                        HStack {
+                            ZapAmountButton(1000, isSelected: selectedAmount == 1000).onTapGesture {
+                                selectedAmount = 1000
+                            }
+                            ZapAmountButton(2000, isSelected: selectedAmount == 2000).onTapGesture {
+                                selectedAmount = 2000
+                            }
+                            ZapAmountButton(5000, isSelected: selectedAmount == 5000).onTapGesture {
+                                selectedAmount = 5000
+                            }
+                            ZapAmountButton(10000, isSelected: selectedAmount == 10000).onTapGesture {
+                                selectedAmount = 10000
+                            }
+                        }
+                        HStack {
+                            ZapAmountButton(25000, isSelected: selectedAmount == 25000).onTapGesture {
+                                selectedAmount = 25000
+                            }
+                            ZapAmountButton(50000, isSelected: selectedAmount == 50000).onTapGesture {
+                                selectedAmount = 50000
+                            }
+                            ZapAmountButton(100000, isSelected: selectedAmount == 100000).onTapGesture {
+                                selectedAmount = 100000
+                            }
+                            ZapAmountButton(200000, isSelected: selectedAmount == 200000).onTapGesture {
+                                selectedAmount = 200000
+                            }
+                        }
+                        HStack {
+                            ZapAmountButton(500000, isSelected: selectedAmount == 500000).onTapGesture {
+                                selectedAmount = 500000
+                            }
+                            ZapAmountButton(1000000, isSelected: selectedAmount == 1000000).onTapGesture {
+                                selectedAmount = 1000000
+                            }
+                            if lastCustomZapAmount != 0.0 {
+                                ZapAmountButton(lastCustomZapAmount, isSelected: selectedAmount == lastCustomZapAmount).onTapGesture {
+                                    selectedAmount = lastCustomZapAmount
+                                }
+                            }
+                            ZapAmountButton(customAmount, isSelected: selectedAmount == customAmount).onTapGesture {
+                                showCustomAmountsheet = true
+                            }
+                            .onChange(of: customAmount) { newValue in
+                                selectedAmount = newValue
+                                lastCustomZapAmount = selectedAmount
+                            }
                         }
                     }
                 }
@@ -101,11 +169,20 @@ struct ZapCustomizerSheet: View {
                 if supportsZap, let account = account() {
                     HStack(alignment: .center) {
                         PFP(pubkey: account.publicKey, account: account)
-                        TextField("Add public note (optional)", text: $zapMessage)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(5, reservesSpace: true)
-                            .textFieldStyle(.roundedBorder)
-                            .border(themes.theme.lineColor.opacity(0.5))
+                        if #available(iOS 16, *) {
+                            TextField("Add public note (optional)", text: $zapMessage)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(5, reservesSpace: true)
+                                .textFieldStyle(.roundedBorder)
+                                .border(themes.theme.lineColor.opacity(0.5))
+                        }
+                        else {
+                            TextField("Add public note (optional)", text: $zapMessage)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(5)
+                                .textFieldStyle(.roundedBorder)
+                                .border(themes.theme.lineColor.opacity(0.5))
+                        }
                     }
                     .padding(10)
                 }
@@ -134,7 +211,7 @@ struct ZapCustomizerSheet: View {
                     Text("Send \(selectedAmount.clean) sats to \(name)")
                         .lineLimit(2)
                         .foregroundColor(Color.white)
-                        .fontWeight(.bold)
+                        .fontWeightBold()
                         .padding(10)
                         .background(themes.theme.accent)
                         .clipShape(RoundedRectangle(cornerRadius: 8.0))
@@ -164,7 +241,7 @@ struct ZapCustomizerSheet: View {
                 NBNavigationStack {
                     CustomZapAmountEntry(customAmount: $customAmount)
                 }
-                .presentationBackground(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.background)
             }
             .onAppear {
                 selectedAmount = SettingsStore.shared.defaultZapAmount
@@ -190,7 +267,7 @@ struct CustomZap: Identifiable {
     PreviewContainer({ pe in pe.loadPosts() }) {
         if let nrPost = PreviewFetcher.fetchNRPost() {
             ZapCustomizerSheet(name:nrPost.anyName, customZapId: UUID(), supportsZap: true)
-                .environmentObject(Themes.default)
+                    .environmentObject(Themes.default)
         }
     }
 }
