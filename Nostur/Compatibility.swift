@@ -7,6 +7,20 @@
 
 import SwiftUI
 
+import UIKit
+
+func setAppIconBadgeCount(_ count: Int, center: UNUserNotificationCenter = UNUserNotificationCenter.current()) {
+    if #available(iOS 16, *) {
+        let center = UNUserNotificationCenter.current()
+        Task {
+            try? await center.setBadgeCount(count)
+        }
+    }
+    else {
+        UIApplication.shared.applicationIconBadgeNumber = count
+    }
+}
+
 extension List {
     @ViewBuilder
     func scrollContentBackgroundCompat(_ visibility: Visibility) -> some View {

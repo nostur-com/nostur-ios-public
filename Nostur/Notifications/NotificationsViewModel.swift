@@ -231,16 +231,13 @@ class NotificationsViewModel: ObservableObject {
                 // Provisional authorization granted.
                 self.objectWillChange
                     .sink { _ in
-                        Task {
-                            let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
-                            try? await center.setBadgeCount(self.unread + dmsCount)
-                        }
+                        let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
+                        setAppIconBadgeCount(self.unread + dmsCount, center: center)
                     }
                     .store(in: &self.subscriptions)
-                Task {
-                    let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
-                    try? await center.setBadgeCount(self.unread + dmsCount)
-                }
+                
+                let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
+                setAppIconBadgeCount(self.unread + dmsCount)
             }
         }
     }
