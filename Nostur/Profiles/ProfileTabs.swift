@@ -28,7 +28,12 @@ struct ProfileTabs: View {
                     case "Likes":
                         ProfileLikesView(pubkey: pubkey)
                     case "Zaps":
-                        ProfileZaps(pubkey: pubkey, contact: nrContact.mainContact)
+                        if #available(iOS 16.0, *) {
+                            ProfileZaps(pubkey: pubkey, contact: nrContact.mainContact)
+                        }
+                        else {
+                            EmptyView()
+                        }
                     case "Relays":
                         ProfileRelays(pubkey: pubkey, name: nrContact.anyName)
                     case "Followers":
@@ -67,11 +72,13 @@ struct ProfileTabs: View {
                         title: String(localized:"Likes", comment:"Tab title"),
                         selected: selectedSubTab == "Likes")
                     Spacer()
-                    TabButton(
-                        action: { selectedSubTab = "Zaps" },
-                        title: String(localized:"Zaps", comment:"Tab title"),
-                        selected: selectedSubTab == "Zaps")
-                    Spacer()
+                    if #available(iOS 16.0, *) {
+                        TabButton(
+                            action: { selectedSubTab = "Zaps" },
+                            title: String(localized:"Zaps", comment:"Tab title"),
+                            selected: selectedSubTab == "Zaps")
+                        Spacer()
+                    }
                     TabButton(
                         action: { selectedSubTab = "Relays" },
                         title: "Relays",

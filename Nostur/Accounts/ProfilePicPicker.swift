@@ -11,6 +11,7 @@ import NukeUI
 import PhotosUI
 import CoreTransferable
 
+@available(iOS 16.0, *)
 struct ProfileImage: View {
     let imageState: ProfileModel.ImageState
 
@@ -32,6 +33,7 @@ struct ProfileImage: View {
     }
 }
 
+@available(iOS 16.0, *)
 struct CircularProfileImage: View {
     let imageState: ProfileModel.ImageState
 
@@ -56,25 +58,29 @@ struct CircularProfileImage: View {
     }
 }
 
+@available(iOS 16.0, *)
 struct EditableCircularProfileImage: View {
     @ObservedObject var viewModel: ProfileModel
 
     var body: some View {
         CircularProfileImage(imageState: viewModel.imageState)
             .overlay(alignment: .bottomTrailing) {
-                PhotosPicker(selection: $viewModel.imageSelection,
-                             matching: .images,
-                             photoLibrary: .shared()) {
-                    Image(systemName: "pencil.circle.fill")
-                        .symbolRenderingMode(.multicolor)
-                        .font(.system(size: 30))
-                        .foregroundColor(.accentColor)
+                if #available(iOS 16.0, *) {
+                    PhotosPicker(selection: $viewModel.imageSelection,
+                                 matching: .images,
+                                 photoLibrary: .shared()) {
+                        Image(systemName: "pencil.circle.fill")
+                            .symbolRenderingMode(.multicolor)
+                            .font(.system(size: 30))
+                            .foregroundColor(.accentColor)
+                    }
+                                 .buttonStyle(.borderless)
                 }
-                .buttonStyle(.borderless)
             }
     }
 }
 
+@available(iOS 16.0, *)
 @MainActor
 class ProfileModel: ObservableObject {
     
@@ -170,6 +176,7 @@ class ProfileModel: ObservableObject {
     }
 }
 
+@available(iOS 16.0, *)
 struct ProfilePicPicker: View {
 
     @StateObject var viewModel:ProfileModel
@@ -183,6 +190,7 @@ struct ProfilePicPicker: View {
     }
 }
 
+@available(iOS 16.0, *)
 struct MediaPicker_Previews: PreviewProvider {
     @State static var picture = "https://nostur.com/fabian/profile.jpg"
     @State static var newPicture:UIImage?

@@ -163,7 +163,12 @@ struct NosturMainView: View {
         }
         else {
             if IS_CATALYST && ss.proMode {
-                MacListsView()
+                if #available(iOS 16.0, *) {
+                    MacListsView()
+                } else {
+                    // Fallback on earlier versions
+                    Text("Not yet")
+                }
             }
             else {
                 NosturTabsView()
