@@ -53,8 +53,12 @@ struct Settings: View {
                 Group {
                     #if DEBUG
                     Toggle(isOn: $settings.proMode) {
-                        Text("Nostur Pro", comment:"Setting on settings screen")
-                        Text("Multi-columns and more")
+                        VStack(alignment: .leading) {
+                            Text("Nostur Pro", comment:"Setting on settings screen")
+                            Text("Multi-columns and more")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     #endif
                     
@@ -66,55 +70,97 @@ struct Settings: View {
                     VStack(alignment: .leading) {
                         AutodownloadLevelPicker()
                         
-                        Text("Restrict auto-downloading of media posted by others").font(.caption).foregroundColor(.secondary)
+                        Text("Restrict auto-downloading of media posted by others")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
                     }
                     
                     Toggle(isOn: $settings.animatedPFPenabled) {
-                        Text("Enable animated profile pics", comment:"Setting on settings screen")
-                        Text("Disable to improve scrolling performance", comment:"Setting on settings screen")
+                        VStack(alignment: .leading) {
+                            Text("Enable animated profile pics", comment:"Setting on settings screen")
+                            Text("Disable to improve scrolling performance", comment:"Setting on settings screen")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     Toggle(isOn: $settings.rowFooterEnabled) {
-                        Text("Show post stats on timeline", comment:"Setting on settings screen")
-                        Text("Counters for replies, likes, zaps etc.", comment:"Setting on settings screen")
+                        VStack(alignment: .leading) {
+                            Text("Show post stats on timeline", comment:"Setting on settings screen")
+                            Text("Counters for replies, likes, zaps etc.", comment:"Setting on settings screen")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
                     Toggle(isOn: $settings.displayUserAgentEnabled) {
-                        Text("Show from which app someone posted", comment:"Setting on settings screen")
-                        Text("Will show from which app/client something was posted, if available", comment:"Setting on settings screen")
+                        VStack(alignment: .leading) {
+                            Text("Show from which app someone posted", comment:"Setting on settings screen")
+                            Text("Will show from which app/client something was posted, if available", comment:"Setting on settings screen")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
                     }
                                         
                     FooterConfiguratorLink() // Put NavigationLink in own view or freeze.
                 }
                 Toggle(isOn: $settings.fetchCounts) {
-                    Text("Fetch counts on timeline", comment:"Setting on settings screen")
-                    Text("Fetches like/zaps/replies counts as posts appear", comment:"Setting on settings screen")
+                    VStack(alignment: .leading) {
+                        Text("Fetch counts on timeline", comment:"Setting on settings screen")
+                        Text("Fetches like/zaps/replies counts as posts appear", comment:"Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 Toggle(isOn: $settings.autoScroll) {
-                    Text("Auto scroll to new posts", comment:"Setting on settings screen")
-                    Text("When at top, auto scroll if there are new posts", comment:"Setting on settings screen")
+                    VStack(alignment: .leading) {
+                        Text("Auto scroll to new posts", comment:"Setting on settings screen")
+                        Text("When at top, auto scroll if there are new posts", comment:"Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 Toggle(isOn: $settings.appWideSeenTracker) {
-                    Text("Hide posts you have already seen (beta)", comment:"Setting on settings screen")
-                    Text("Keeps track across all feeds posts you have already seen, don't show them again", comment:"Setting on settings screen")
+                    VStack(alignment: .leading) {
+                        Text("Hide posts you have already seen (beta)", comment:"Setting on settings screen")
+                        Text("Keeps track across all feeds posts you have already seen, don't show them again", comment:"Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 Toggle(isOn: $settings.autoHideBars) {
-                    Text("Hide tab bars when scrolling", comment:"Setting on settings screen")
-                    Text("This gives more screen space when scrolling")
+                    VStack(alignment: .leading) {
+                        Text("Hide tab bars when scrolling", comment:"Setting on settings screen")
+                        Text("This gives more screen space when scrolling")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 Toggle(isOn: $settings.statusBubble) {
-                    Text("Loading indicator", comment:"Setting on settings screen")
-                    Text("Shows when items are being processed", comment:"Setting on settings screen")
+                    VStack(alignment: .leading) {
+                        Text("Loading indicator", comment:"Setting on settings screen")
+                        Text("Shows when items are being processed", comment:"Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 Toggle(isOn: $settings.hideBadges) {
-                    Text("We Don't Need No Stinkin' Badges", comment:"Setting on settings screen")
-                    Text("Hides badges from profiles and feeds", comment: "Setting on settings screen")
+                    VStack(alignment: .leading) {
+                        Text("We Don't Need No Stinkin' Badges", comment:"Setting on settings screen")
+                        Text("Hides badges from profiles and feeds", comment: "Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
 //                Toggle(isOn: $settings.hideEmojisInNames) {
 //                    Text("Hide emojis in names", comment:"Setting on settings screen")
 //                }
                 Toggle(isOn: $settings.includeSharedFrom) {
-                    Text("Include Nostur caption when sharing posts", comment:"Setting on settings screen")
-                    Text("Shows 'Shared from Nostur' caption when sharing post screenshots", comment: "Setting on settings screen")
+                    VStack(alignment: .leading) {
+                        Text("Include Nostur caption when sharing posts", comment:"Setting on settings screen")
+                        Text("Shows 'Shared from Nostur' caption when sharing post screenshots", comment: "Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
             .listRowBackground(themes.theme.background)
@@ -124,7 +170,9 @@ struct Settings: View {
                     VStack(alignment: .leading) {
                         WebOfTrustLevelPicker()
                         
-                        Text("Filter by your follows only (strict), or also your follows follows (normal)").font(.caption).foregroundColor(.secondary)
+                        Text("Filter by your follows only (strict), or also your follows follows (normal)")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
                     }
                     
                     VStack(alignment: .leading) {
@@ -132,14 +180,24 @@ struct Settings: View {
                             .frame(maxHeight: 20)
                             .padding(.top, 5)
                         
-                        Text("To log in with other accounts, but keep filtering using the main Web of Trust account")
-                            .lineLimit(2, reservesSpace: true)
-                            .font(.caption).foregroundColor(.secondary)
-//                            .padding(.bottom, 5)
+                        if #available(iOS 16.0, *) {
+                            Text("To log in with other accounts, but keep filtering using the main Web of Trust account")
+                                .lineLimit(2, reservesSpace: true)
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+                        else {
+                            Text("To log in with other accounts, but keep filtering using the main Web of Trust account")
+                                .lineLimit(2)
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
                     HStack {
                         Text("Last updated: \(wot.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
                             .onAppear {
                                 bg().perform {
                                     wot.loadLastUpdatedDate()
@@ -235,25 +293,27 @@ struct Settings: View {
                 }
                 .listRowBackground(themes.theme.background)
                 
-                Section(header: Text("Data export")) {
-                    Button("Save to file...") {
-                        guard let account = account() else { L.og.error("Cannot export, no account"); return }
-                        exportAccount = account
-                        showExporter.toggle()
-                    }
-                    if let exportAccount = exportAccount, showExporter == true {
-                        Color.clear
-                            .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: exportAccount.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(exportAccount.npub.prefix(11)))") { result in
-                                switch result {
-                                case .success(let url):
-                                    L.og.info("Saved to \(url)")
-                                case .failure(let error):
-                                    L.og.debug("Export: \(error.localizedDescription)")
+                if #available(iOS 16, *) {
+                    Section(header: Text("Data export")) {
+                        Button("Save to file...") {
+                            guard let account = account() else { L.og.error("Cannot export, no account"); return }
+                            exportAccount = account
+                            showExporter.toggle()
+                        }
+                        if let exportAccount = exportAccount, showExporter == true {
+                            Color.clear
+                                .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: exportAccount.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(exportAccount.npub.prefix(11)))") { result in
+                                    switch result {
+                                    case .success(let url):
+                                        L.og.info("Saved to \(url)")
+                                    case .failure(let error):
+                                        L.og.debug("Export: \(error.localizedDescription)")
+                                    }
                                 }
-                            }
+                        }
                     }
+                    .listRowBackground(themes.theme.background)
                 }
-                .listRowBackground(themes.theme.background)
                 
                 Section(header: Text("Relays", comment: "Relay settings heading")) {
                     RelaysView()
@@ -374,8 +434,12 @@ struct Settings: View {
             
             Section(header: Text("Data usage", comment: "Setting heading on settings screen")) {
                 Toggle(isOn: $settings.lowDataMode) {
-                    Text("Low Data mode", comment: "Setting on settings screen")
-                    Text("Will not download media and previews", comment:"Setting on settings screen")
+                    VStack(alignment: .leading) {
+                        Text("Low Data mode", comment: "Setting on settings screen")
+                        Text("Will not download media and previews", comment:"Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 // TODO: add limited/primary relay selection
             }
@@ -383,8 +447,12 @@ struct Settings: View {
             
             Section(header: Text("Message verification", comment: "Setting heading on settings screen")) {
                 Toggle(isOn: $settings.isSignatureVerificationEnabled) {
-                    Text("Verify message signatures", comment: "Setting on settings screen")
-                    Text("Turn off to save battery life and trust the relays for the authenticity of messages", comment:"Setting on settings screen")
+                    VStack(alignment: .leading) {
+                        Text("Verify message signatures", comment: "Setting on settings screen")
+                        Text("Turn off to save battery life and trust the relays for the authenticity of messages", comment:"Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
             .listRowBackground(themes.theme.background)

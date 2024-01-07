@@ -32,21 +32,27 @@ struct PostingToggle: View {
     
     var body: some View {
         Toggle(isOn: $settings.postUserAgentEnabled) {
-            Text("Include Nostur in post metadata", comment:"Setting on settings screen")
-            Text("Lets others know you are posting from Nostur", comment:"Setting on settings screen")
-            if settings.postUserAgentEnabled {
-                ScrollView(.horizontal) {
-                    HStack {
-                        ForEach(accounts) { account in
-                            PFP(pubkey: account.publicKey, account: account, size: 30)
-                                .onTapGesture {
-                                    toggleAccount(account)
-                                }
-                                .opacity(isExcluded(account) ? 0.25 : 1.0)
+            VStack(alignment: .leading) {
+                Text("Include Nostur in post metadata", comment:"Setting on settings screen")
+                Text("Lets others know you are posting from Nostur", comment:"Setting on settings screen")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                if settings.postUserAgentEnabled {
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(accounts) { account in
+                                PFP(pubkey: account.publicKey, account: account, size: 30)
+                                    .onTapGesture {
+                                        toggleAccount(account)
+                                    }
+                                    .opacity(isExcluded(account) ? 0.25 : 1.0)
+                            }
                         }
                     }
+                    Text("Tap account to exclude")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
                 }
-                Text("Tap account to exclude")
             }
         }
     }
