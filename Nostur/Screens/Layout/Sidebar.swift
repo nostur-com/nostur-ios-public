@@ -170,8 +170,16 @@ struct SideBar: View {
                                     Text("Badges", comment: "Side bar navigation button")
                                         .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
                                 },
-                                icon: { Image(systemName: "medal")
-                                    .frame(width: Self.ICON_WIDTH) }
+                                icon: {
+                                    if #available(iOS 16, *) {
+                                        Image(systemName: "medal")
+                                            .frame(width: Self.ICON_WIDTH)
+                                    }
+                                    else {
+                                        Image(systemName: "rosette")
+                                            .frame(width: Self.ICON_WIDTH)
+                                    }
+                                }
                             )
                             .padding(.vertical, Self.BUTTON_VPADDING)
                             .contentShape(Rectangle())

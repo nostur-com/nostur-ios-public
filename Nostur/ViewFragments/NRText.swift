@@ -218,11 +218,21 @@ struct NRTextFixed: UIViewRepresentable {
     func updateUIView(_ uiView: UITextView, context: Context) {
     }
     
+    @available(iOS 16.0, *)
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
         let dimensions = proposal.replacingUnspecifiedDimensions(
             by: CGSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
         )
         
         return CGSize(width: dimensions.width, height: height)
+    }
+    
+    func sizeThatFits(_ proposal: CGSize, uiView: UITextView) -> CGSize {
+        let size = CGSize(width: proposal.width, height: CGFloat.greatestFiniteMagnitude)
+        let fittingSize = uiView.sizeThatFits(size)
+
+        // You can use fittingSize.height if you want the height to be dynamic based on content.
+        // If you have a specific height in mind, replace fittingSize.height with that value.
+        return CGSize(width: proposal.width, height: fittingSize.height)
     }
 }
