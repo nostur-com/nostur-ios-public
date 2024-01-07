@@ -1994,6 +1994,7 @@
 			children = (
 				1F88EE8A2AD12CB0006A83C3 /* toDelete */,
 				1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */,
+				1F871C6D2B4962E800B60329 /* ComposePost15.swift */,
 				1FBCA0902AC84AFF00913E16 /* ContactsToggleSheet.swift */,
 				1F88EE8B2AD12CE1006A83C3 /* Entry.swift */,
 				1F7B218D2AE3B14700CE972E /* MediaUploadProgress.swift */,
@@ -2005,7 +2006,6 @@
 				1F49C80729B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift */,
 				1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */,
 				1F4186112A7CCECE00626DF3 /* WithNSecBunkerConnection.swift */,
-				1F871C6D2B4962E800B60329 /* ComposePost15.swift */,
 			);
 			path = PostComposer;
 			sourceTree = "<group>";

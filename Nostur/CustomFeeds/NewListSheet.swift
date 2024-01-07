@@ -84,7 +84,7 @@ struct NewListSheet: View {
         }
         .navigationTitle(String(localized:"New feed", comment:"Navigation title for screen to create a new feed"))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarRole(.navigationStack)
+//        .toolbarRole(.navigationStack)
         .nbNavigationDestination(isPresented: $contactSelectionVisible) {
             ContactsSearch(followingPubkeys: follows(),
                            prompt: String(localized:"Search contacts", comment:"Placeholder in search contacts input field"), onSelectContacts: { selectedContacts in

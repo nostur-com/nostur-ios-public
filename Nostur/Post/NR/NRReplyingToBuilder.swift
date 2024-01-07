@@ -44,7 +44,6 @@ class NRReplyingToBuilder {
         else {
             return String(localized:"Replying to...", comment:"Shown in a post when replying but the name is missing")
         }
-        return nil
     }
 
 }
