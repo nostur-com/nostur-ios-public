@@ -1206,6 +1206,6 @@ struct Maintenance {
         case updateKeychainInfo = "updateKeychainInfo"
         
         // Add "full_account" flag
-        case saveFullAccountFlag = "saveFullAccountFlag3"
+        case saveFullAccountFlag = "saveFullAccountFlag4"
     }
 }
