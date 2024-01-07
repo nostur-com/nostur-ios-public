@@ -9,16 +9,17 @@ import SwiftUI
 import NavigationBackport
 
 struct Entry: View {
-    @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var themes:Themes
-    private var vm:NewPostModel
-    @ObservedObject var typingTextModel:TypingTextModel
-    @Binding var photoPickerShown:Bool
-    @Binding var gifSheetShown:Bool
-    @Binding var cameraSheetShown:Bool
-    private var replyTo:Event?
-    private var quotingEvent:Event?
-    private var directMention:Contact?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    private var dismiss: DismissAction
+    @EnvironmentObject private var themes: Themes
+    private var vm: NewPostModel
+    @ObservedObject var typingTextModel: TypingTextModel
+    @Binding var photoPickerShown: Bool
+    @Binding var gifSheetShown: Bool
+    @Binding var cameraSheetShown: Bool
+    private var replyTo: Event?
+    private var quotingEvent: Event?
+    private var directMention: Contact?
     static let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
 //    @Namespace private var images
     

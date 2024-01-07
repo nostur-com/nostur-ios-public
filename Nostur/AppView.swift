@@ -20,7 +20,6 @@ struct AppView: View {
     @EnvironmentObject private var dm:DirectMessageViewModel
     
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.openWindow) private var openWindow
     // These singletons always exists during the apps lifetime
     @State private var tm:DetailTabsModel = .shared
     @State private var er:ExchangeRateModel = .shared
@@ -191,11 +190,6 @@ struct AppView: View {
                     ProgressView()
                 }
             }
-        }
-        .onAppear {
-            #if DEBUG
-           // openWindow(id: "debug-window")
-            #endif
         }
 //        .onAppear  { startNosturing(); self.isViewDisplayed = true }
         .onAppear  { startNosturing() }
