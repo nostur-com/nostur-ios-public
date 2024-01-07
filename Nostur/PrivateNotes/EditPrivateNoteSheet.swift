@@ -24,12 +24,23 @@ struct EditPrivateNoteSheet: View {
     var body: some View {
         NBNavigationStack {
             Form {
-                TextField(
-                    text: $noteText,
-                    prompt: Text("Enter private note for yourself", comment: "Placeholder in text field"),
-                    axis: .vertical) {
-                        Text("Private note", comment: "Label for private note edit field")
-                }.lineLimit(10, reservesSpace: true)
+                if #available(iOS 16.0, *) {
+                    TextField(
+                        text: $noteText,
+                        prompt: Text("Enter private note for yourself", comment: "Placeholder in text field"),
+                        axis: .vertical) {
+                            Text("Private note", comment: "Label for private note edit field")
+                    }
+                    .lineLimit(10, reservesSpace: true)
+                }
+                else {
+                    TextField(
+                        text: $noteText,
+                        prompt: Text("Enter private note for yourself", comment: "Placeholder in text field")) {
+                            Text("Private note", comment: "Label for private note edit field")
+                    }
+                    .lineLimit(10)
+                }
             }
             .navigationTitle(String(localized: "Edit private note", comment: "Navigation title for private note edit screen"))
             .navigationBarTitleDisplayMode(.inline)

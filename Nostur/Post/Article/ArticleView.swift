@@ -280,87 +280,136 @@ struct ArticleView: View {
                         .padding(.vertical, 10)
                 }
                 
-                ViewThatFits(in: .horizontal) {
-                    HStack {
-                        Spacer()
-                        ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id, forceFlat: dim.isScreenshot)
-                            .onTapGesture {
-                                if !IS_APPLE_TYRANNY {
-                                    if let nrContact = article.contact {
-                                        navigateTo(nrContact)
+                if #available(iOS 16.0, *) {
+                    ViewThatFits(in: .horizontal) {
+                        HStack {
+                            Spacer()
+                            ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id, forceFlat: dim.isScreenshot)
+                                .onTapGesture {
+                                    if !IS_APPLE_TYRANNY {
+                                        if let nrContact = article.contact {
+                                            navigateTo(nrContact)
+                                        }
+                                        else {
+                                            navigateTo(ContactPath(key: article.pubkey))
+                                        }
                                     }
                                     else {
-                                        navigateTo(ContactPath(key: article.pubkey))
+                                        withAnimation {
+                                            showMiniProfile = true
+                                        }
+                                    }
+                                }
+                                .overlay(alignment: .topLeading) {
+                                    if (showMiniProfile) {
+                                        GeometryReader { geo in
+                                            Color.clear
+                                                .onAppear {
+                                                    sendNotification(.showMiniProfile,
+                                                                     MiniProfileSheetInfo(
+                                                                        pubkey: article.pubkey,
+                                                                        contact: article.contact,
+                                                                        zapEtag: article.id,
+                                                                        location: geo.frame(in: .global).origin
+                                                                     )
+                                                    )
+                                                    showMiniProfile = false
+                                                }
+                                        }
+                                        .frame(width: 10)
+                                        .zIndex(100)
+                                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                                            showMiniProfile = false
+                                        }
+                                    }
+                                }
+                            if let contact = article.contact {
+                                Text(contact.anyName)
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1)
+                                    .layoutPriority(2)
+                                    .onTapGesture {
+                                        navigateTo(contact)
+                                    }
+                                
+                                if contact.nip05verified, let nip05 = contact.nip05 {
+                                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
+                                        .layoutPriority(3)
+                                }
+                            }
+                            else {
+                                Text(article.anyName)
+                                    .onAppear {
+                                        bg().perform {
+                                            EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
+                                            QueuedFetcher.shared.enqueue(pTag: article.pubkey)
+                                        }
+                                    }
+                                    .onDisappear {
+                                        QueuedFetcher.shared.dequeue(pTag: article.pubkey)
+                                    }
+                            }
+                            if minutesToRead > 0 {
+                                Text("\(minutesToRead) min read")
+                                Text("·")
+                            }
+                            Text((article.eventPublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
+                        }
+                        .font(.custom("Charter", size: 18))
+                        .padding(.vertical, 10)
+                        .lineLimit(1)
+                        .foregroundColor(Color.secondary)
+                        
+                        VStack {
+                            HStack {
+                                Spacer()
+                                PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25, forceFlat: dim.isScreenshot)
+                                if let contact = article.contact {
+                                    Text(contact.anyName)
+                                        .foregroundColor(.primary)
+                                        .fontWeight(.bold)
+                                        .lineLimit(1)
+                                        .layoutPriority(2)
+                                        .onTapGesture {
+                                            navigateTo(contact)
+                                        }
+                                    
+                                    if contact.nip05verified, let nip05 = contact.nip05 {
+                                        NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
+                                            .layoutPriority(3)
                                     }
                                 }
                                 else {
-                                    withAnimation {
-                                        showMiniProfile = true
-                                    }
-                                }
-                            }
-                            .overlay(alignment: .topLeading) {
-                                if (showMiniProfile) {
-                                    GeometryReader { geo in
-                                        Color.clear
-                                            .onAppear {
-                                                sendNotification(.showMiniProfile,
-                                                                 MiniProfileSheetInfo(
-                                                                    pubkey: article.pubkey,
-                                                                    contact: article.contact,
-                                                                    zapEtag: article.id,
-                                                                    location: geo.frame(in: .global).origin
-                                                                 )
-                                                )
-                                                showMiniProfile = false
+                                    Text(article.anyName)
+                                        .onAppear {
+                                            bg().perform {
+                                                EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
+                                                QueuedFetcher.shared.enqueue(pTag: article.pubkey)
                                             }
-                                    }
-                                    .frame(width: 10)
-                                    .zIndex(100)
-                                    .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                        showMiniProfile = false
-                                    }
+                                        }
+                                        .onDisappear {
+                                            QueuedFetcher.shared.dequeue(pTag: article.pubkey)
+                                        }
                                 }
                             }
-                        if let contact = article.contact {
-                            Text(contact.anyName)
-                                .foregroundColor(.primary)
-                                .fontWeight(.bold)
-                                .lineLimit(1)
-                                .layoutPriority(2)
-                                .onTapGesture {
-                                    navigateTo(contact)
+                            HStack {
+                                Spacer()
+                                if minutesToRead > 0 {
+                                    Text("\(minutesToRead) min read")
+                                    Text("·")
                                 }
-                            
-                            if contact.nip05verified, let nip05 = contact.nip05 {
-                                NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                                    .layoutPriority(3)
+                                Text((article.eventPublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
                             }
                         }
-                        else {
-                            Text(article.anyName)
-                                .onAppear {
-                                    bg().perform {
-                                        EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
-                                        QueuedFetcher.shared.enqueue(pTag: article.pubkey)
-                                    }
-                                }
-                                .onDisappear {
-                                    QueuedFetcher.shared.dequeue(pTag: article.pubkey)
-                                }
-                        }
-                        if minutesToRead > 0 {
-                            Text("\(minutesToRead) min read")
-                            Text("·")
-                        }
-                        Text((article.eventPublishedAt ?? article.createdAt).formatted(date: .abbreviated, time: .omitted))
+                        .font(.custom("Charter", size: 18))
+                        .padding(.vertical, 10)
+                        .lineLimit(1)
+                        .foregroundColor(Color.secondary)
                     }
-                    .font(.custom("Charter", size: 18))
-                    .padding(.vertical, 10)
-                    .lineLimit(1)
-                    .foregroundColor(Color.secondary)
-                    
+                }
+                else {
                     VStack {
                         HStack {
                             Spacer()

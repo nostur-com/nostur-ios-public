@@ -14,14 +14,24 @@ struct MinimalNoteTextRenderView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text(nrPost.plainText)//.border(.cyan)
-                .lineLimit(lineLimit, reservesSpace: false)
-//                .textSelection(.enabled)
-                .multilineTextAlignment(TextAlignment.leading)
-                .foregroundColor(.primary.opacity(0.5))
-                .lineSpacing(3)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 5)
+            if #available(iOS 16.0, *) {
+                Text(nrPost.plainText)//.border(.cyan)
+                    .lineLimit(lineLimit, reservesSpace: false)
+                    .multilineTextAlignment(TextAlignment.leading)
+                    .foregroundColor(.primary.opacity(0.5))
+                    .lineSpacing(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 5)
+            }
+            else {
+                Text(nrPost.plainText)//.border(.cyan)
+                    .lineLimit(lineLimit)
+                    .multilineTextAlignment(TextAlignment.leading)
+                    .foregroundColor(.primary.opacity(0.5))
+                    .lineSpacing(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 5)
+            }
         }
     }
 }
@@ -33,13 +43,24 @@ struct MinimalNoteTextRenderViewText: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text(plainText)
-                .lineLimit(lineLimit, reservesSpace: false)
-                .multilineTextAlignment(TextAlignment.leading)
-                .foregroundColor(.primary.opacity(0.5))
-                .lineSpacing(3)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 5)
+            if #available(iOS 16.0, *) {
+                Text(plainText)
+                    .lineLimit(lineLimit, reservesSpace: false)
+                    .multilineTextAlignment(TextAlignment.leading)
+                    .foregroundColor(.primary.opacity(0.5))
+                    .lineSpacing(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 5)
+            }
+            else {
+                Text(plainText)
+                    .lineLimit(lineLimit)
+                    .multilineTextAlignment(TextAlignment.leading)
+                    .foregroundColor(.primary.opacity(0.5))
+                    .lineSpacing(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 5)
+            }
         }
     }
 }

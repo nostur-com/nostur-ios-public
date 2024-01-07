@@ -45,11 +45,19 @@ struct VideoEventView: View {
                                 openURL(url)
                             }
                     }
-                    Text(title)
-                        .lineLimit(2)
-                        .layoutPriority(1)
-                        .fontWeight(.bold)
-                        .padding(5)
+                    if #available(iOS 16.0, *) {
+                        Text(title)
+                            .lineLimit(2)
+                            .layoutPriority(1)
+                            .fontWeight(.bold)
+                            .padding(5)
+                    }
+                    else {
+                        Text(title)
+                            .lineLimit(2)
+                            .layoutPriority(1)
+                            .padding(5)
+                    }
                     
                     if let summary, !summary.isEmpty {
                         Text(summary)

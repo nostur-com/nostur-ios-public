@@ -26,8 +26,14 @@ struct AnySigner: View {
 
     var body: some View {
         Form {
-            TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"), axis: .vertical)
-                .lineLimit(16, reservesSpace: true)
+            if #available(iOS 16.0, *) {
+                TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"), axis: .vertical)
+                    .lineLimit(16, reservesSpace: true)
+            }
+            else {
+                TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"))
+                    .lineLimit(16)
+            }
             if let account = NRState.shared.loggedInAccount?.account, account.privateKey != nil {
                 HStack {
                     Text("Signing as")
