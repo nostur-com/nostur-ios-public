@@ -260,12 +260,23 @@ struct AppView: View {
         L.cloud.debug("Deleting: \(duplicates.count) duplicate accounts")
         duplicates.forEach({ duplicateAccount in
             // Before deleting, .union the follows to the existing account
-            let existingAccount = sortedAccounts.first { existingAccount in
+            if let existingAccount = sortedAccounts.first(where: { existingAccount in
                 return existingAccount.publicKey == duplicateAccount.publicKey
+            }) {
+                existingAccount.followingPubkeys.formUnion(duplicateAccount.followingPubkeys)
+                existingAccount.privateFollowingPubkeys.formUnion(duplicateAccount.privateFollowingPubkeys)
+                existingAccount.followingHashtags.formUnion(duplicateAccount.followingHashtags)
+                existingAccount.flagsSet.formUnion(duplicateAccount.flagsSet)
+                
+                existingAccount.lastFollowerCreatedAt = max(existingAccount.lastFollowerCreatedAt, duplicateAccount.lastFollowerCreatedAt)
+                existingAccount.lastSeenPostCreatedAt = max(existingAccount.lastSeenPostCreatedAt, duplicateAccount.lastSeenPostCreatedAt)
+                existingAccount.lastSeenZapCreatedAt = max(existingAccount.lastSeenZapCreatedAt, duplicateAccount.lastSeenZapCreatedAt)
+                existingAccount.lastSeenRepostCreatedAt = max(existingAccount.lastSeenRepostCreatedAt, duplicateAccount.lastSeenRepostCreatedAt)
+                existingAccount.lastSeenReactionCreatedAt = max(existingAccount.lastSeenReactionCreatedAt, duplicateAccount.lastSeenReactionCreatedAt)
+                existingAccount.lastSeenDMRequestCreatedAt = max(existingAccount.lastSeenDMRequestCreatedAt, duplicateAccount.lastSeenDMRequestCreatedAt)
+                existingAccount.lastProfileReceivedAt = max(existingAccount.lastProfileReceivedAt ?? .distantPast, duplicateAccount.lastProfileReceivedAt ?? .distantPast)
+                existingAccount.lastLoginAt = max(existingAccount.lastLoginAt, duplicateAccount.lastLoginAt)
             }
-            existingAccount?.followingPubkeys.formUnion(duplicateAccount.followingPubkeys)
-            existingAccount?.privateFollowingPubkeys.formUnion(duplicateAccount.privateFollowingPubkeys)
-            existingAccount?.followingHashtags.formUnion(duplicateAccount.followingHashtags)
             DataProvider.shared().viewContext.delete(duplicateAccount)
         })
         if !duplicates.isEmpty {
