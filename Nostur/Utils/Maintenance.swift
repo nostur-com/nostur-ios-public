@@ -994,6 +994,7 @@ struct Maintenance {
                 
                 if let pk = account.privateKey { // This should sync for accounts that may not have .synchronizable(true) when initially created
                     AccountManager.shared.storePrivateKey(privateKeyHex: pk, forPublicKeyHex: account.publicKey)
+                    migrated.flagsSet.insert("full_account")
                 }
                 
                 migratedAccounts += 1
@@ -1205,6 +1206,6 @@ struct Maintenance {
         case updateKeychainInfo = "updateKeychainInfo"
         
         // Add "full_account" flag
-        case saveFullAccountFlag = "saveFullAccountFlag"
+        case saveFullAccountFlag = "saveFullAccountFlag3"
     }
 }
