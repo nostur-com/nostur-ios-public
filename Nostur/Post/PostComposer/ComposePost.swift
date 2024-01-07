@@ -95,48 +95,6 @@ struct ComposePost: View {
                                 if let newImage { vm.typingTextModel.pastedImages.append(PostedImageMeta(index: vm.typingTextModel.pastedImages.count, imageData: newImage, type: .jpeg)) }
                             }
                             .padding(10)
-//                            .toolbar {
-//                                ToolbarItem(placement: .navigationBarLeading) {
-//                                    Button { dismissCompose() } label: { Text("Cancel") }
-//                                }
-//                                if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
-//                                    ToolbarItem(placement: .navigationBarTrailing) {
-//                                        Button { cameraSheetShown = true } label: {
-//                                            Image(systemName: "camera")
-//                                        }
-//                                        .buttonStyle(.borderless)
-//                                        .disabled(vm.typingTextModel.uploading)
-//                
-//                                    }
-//                                    ToolbarItem(placement: .navigationBarTrailing) {
-//                                        Button { photoPickerShown = true } label: {
-//                                            Image(systemName: "photo")
-//                                        }
-//                                        .buttonStyle(.borderless)
-//                                        .disabled(vm.typingTextModel.uploading)
-//                
-//                                    }
-//                                    ToolbarItem(placement: .navigationBarTrailing) {
-//                                        Button { gifSheetShown = true } label: {
-//                                            Image("GifButton")
-//                                        }
-//                                        .buttonStyle(.borderless)
-//                                        .disabled(vm.typingTextModel.uploading)
-//                                    }
-//                                }
-////                                ToolbarItem(placement: .navigationBarTrailing) {
-////                                    Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
-////                                        vm.showPreview(quotingEvent: quotingEvent)
-////                                    }
-////                                    .disabled(vm.typingTextModel.uploading)
-////                                }
-//                                
-//                                if let uploadError = vm.uploadError {
-//                                    ToolbarItem(placement: .principal) {
-//                                        Text(uploadError).foregroundColor(.red)
-//                                    }
-//                                }
-//                            }
                             .onAppear {
                                 signpost(NRState.shared, "New Post", .end, "New Post view ready")
                                 

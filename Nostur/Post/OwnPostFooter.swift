@@ -51,10 +51,10 @@ struct OwnPostFooter: View {
             if (own.isGoingToSend) {
                 HStack {
                     if own.flags == "nsecbunker_unsigned" {
-                        Text("**Signing post...****")
+                        Text("**Signing post...**")
                     }
                     else {
-                        Text("****Sending post...****")
+                        Text("**Sending post...**")
                     }
                     Spacer()
                     if own.flags != "nsecbunker_unsigned" {
