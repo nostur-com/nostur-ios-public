@@ -85,6 +85,7 @@ struct PostPreview: View {
         }
         .navigationTitle(String(localized: "Post preview", comment: "Navigation title for Post Preview screen"))
         .navigationBarTitleDisplayMode(.inline)
+        .background(themes.theme.background)
     }
 }
 
