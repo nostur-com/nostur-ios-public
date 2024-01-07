@@ -142,7 +142,7 @@ struct SmoothTable: UIViewControllerRepresentable {
             viewHolder.tableView.register(PostOrThreadCell.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell")
         }
         else {
-            viewHolder.tableView.register(PostOrThreadCell15.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell")
+            viewHolder.tableView.register(PostOrThreadCell15.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell15")
         }
         viewHolder.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "UITableViewCell")
         viewHolder.dataSource = viewHolder.createDataSource(coordinator: coordinator)
