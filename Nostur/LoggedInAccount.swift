@@ -154,7 +154,7 @@ class LoggedInAccount: ObservableObject {
         self.pubkey = pubkey
         
         // Set to true only if it is a brand new account, otherwise set to false and wait for kind 3 from relay
-        if let flags = account.flags, flags == "nostur_created" {
+        if account.flagsSet.contains("nostur_created") {
             FollowingGuardian.shared.didReceiveContactListThisSession = true
         }
         else {
