@@ -21,8 +21,10 @@ struct FeedSettings: View {
         let _ = Self._printChanges()
         #endif
         Form {
-            Section("App theme") {
-                AppThemeSwitcher()
+            if #available(iOS 16, *) {
+                Section("App theme") {
+                    AppThemeSwitcher()
+                }
             }
             
             Section("") {

@@ -14,8 +14,10 @@ struct ArticleFeedSettings: View {
     
     var body: some View {
         Form {
-            Section("App theme") {
-                AppThemeSwitcher()
+            if #available(iOS 16, *) {
+                Section("App theme") {
+                    AppThemeSwitcher()
+                }
             }
             Section {
                 Picker("Time frame", selection: $vm.ago) {
