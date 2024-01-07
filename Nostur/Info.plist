@@ -43,8 +43,6 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-    <key>TENOR_API_KEY</key>
-    <string>$(TENOR_API_KEY)</string>	
     <key>NIP89_APP_REFERENCE</key>
 	<string>$(NIP89_APP_REFERENCE)</string>
     <key>CI_BUILD_NUMBER</key>
