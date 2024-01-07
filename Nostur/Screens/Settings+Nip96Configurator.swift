@@ -65,6 +65,7 @@ struct Nip96Configurator: View {
                 TextField("", text: $address, prompt: Text(verbatim: "https://nostrcheck.me"))
                     .textFieldStyle(.roundedBorder)
                     .keyboardType(.URL)
+                    .autocorrectionDisabled()
                     .padding(.top, 0)
                     .padding(.horizontal, 10)
                 
@@ -89,13 +90,13 @@ struct Nip96Configurator: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle((String(localized:"Custom File Storage", comment:"Navigation title for setting up a custom File Storage Server")))
         .toolbar {
-            if state == .success {
-                ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if state == .success {
                     Button("Done") { dismiss() }
                 }
             }
-            else {
-                ToolbarItem(placement: .cancellationAction) {
+            ToolbarItem(placement: .cancellationAction) {
+                if state != .success {
                     Button("Cancel") { dismiss() }
                 }
             }
