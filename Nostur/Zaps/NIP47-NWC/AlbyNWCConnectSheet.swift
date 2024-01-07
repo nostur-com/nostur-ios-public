@@ -87,15 +87,16 @@ struct AlbyNWCConnectSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle((String(localized:"Nostr Wallet Connect", comment:"Navigation title for setting up Nostr Wallet Connect (NWC)")))
         .toolbar {
-            if nwcConnectSuccess {
-                ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if nwcConnectSuccess {
                     Button("Done") {
                         dismiss()
                     }
                 }
             }
-            else {
-                ToolbarItem(placement: .cancellationAction) {
+            
+            ToolbarItem(placement: .cancellationAction) {
+                if !nwcConnectSuccess {
                     Button("Cancel") {
                         dismiss()
                     }

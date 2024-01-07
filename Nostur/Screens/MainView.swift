@@ -72,18 +72,16 @@ struct MainView: View {
                         .presentationBackground(themes.theme.background)
                     }
                     .toolbar {
-                        if let account = self.account {
-                            ToolbarItem(placement: .navigationBarLeading) {
-                                PFP(pubkey: account.publicKey, account: account, size:30)
-                                    .onTapGesture {
-                                        SideBarModel.shared.showSidebar = true
-                                    }
-                                    .accessibilityLabel("Account menu")
-                            }
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            PFP(pubkey: account.publicKey, account: account, size: 30)
+                                .onTapGesture {
+                                    SideBarModel.shared.showSidebar = true
+                                }
+                                .accessibilityLabel("Account menu")
                         }
                         
-                        if let showingOtherContact = showingOtherContact {
-                            ToolbarItem(placement: .principal) {
+                        ToolbarItem(placement: .principal) {
+                            if let showingOtherContact = showingOtherContact {
                                 HStack(spacing: 6) {
                                     PFP(pubkey: showingOtherContact.pubkey, nrContact: showingOtherContact, size: 30)
                                         .frame(height:30)
@@ -103,9 +101,7 @@ struct MainView: View {
                                         }
                                 }
                             }
-                        }
-                        else {
-                            ToolbarItem(placement: .principal) {
+                            else {
                                 Image("NosturLogo")
                                     .resizable()
                                     .scaledToFit()

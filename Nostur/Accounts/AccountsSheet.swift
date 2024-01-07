@@ -65,8 +65,8 @@ struct AccountsSheet: View {
             .navigationTitle(String(localized:"Accounts", comment:"Navigation title for Accounts screen"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(content: {
-                if (withDismissButton) {
-                    ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .cancellationAction) {
+                    if (withDismissButton) {
                         Button(String(localized: "Close", comment: "Button to close this screen")) { dismiss() }
                     }
                 }
