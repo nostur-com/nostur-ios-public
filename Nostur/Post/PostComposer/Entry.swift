@@ -82,7 +82,7 @@ struct Entry: View {
             .background(alignment:.topLeading) {
                 Text(Self.PLACEHOLDER).foregroundColor(.gray)
                     .opacity(typingTextModel.text == "" ? 1 : 1)
-                    .offset(x: 5.0, y: 4.0)
+                    .offset(x: 5.0, y: 8.0)
             }
             .sheet(isPresented: $gifSheetShown) {
                 NBNavigationStack {
