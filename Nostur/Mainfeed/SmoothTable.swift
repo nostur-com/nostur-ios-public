@@ -138,7 +138,12 @@ struct SmoothTable: UIViewControllerRepresentable {
     
     func refresh(_ viewHolder:TViewHolder, coordinator:Coordinator) {
         L.sl.info("⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): refresh")
-        viewHolder.tableView.register(PostOrThreadCell.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell")
+        if #available(iOS 16, *) {
+            viewHolder.tableView.register(PostOrThreadCell.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell")
+        }
+        else {
+            viewHolder.tableView.register(PostOrThreadCell15.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell")
+        }
         viewHolder.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "UITableViewCell")
         viewHolder.dataSource = viewHolder.createDataSource(coordinator: coordinator)
         var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
@@ -487,6 +492,7 @@ struct SmoothTable: UIViewControllerRepresentable {
     }
 }
 
+@available(iOS 16, *)
 final class PostOrThreadCell: UITableViewCell {
 
     override func prepareForReuse() {
@@ -514,6 +520,66 @@ final class PostOrThreadCell: UITableViewCell {
     }
 }
 
+final class PostOrThreadCell15: UITableViewCell {
+
+    private var hostingController = UIHostingController<PostOrThread?>(rootView: nil)
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        contentConfiguration = nil
+    }
+
+    func configure(with nrPost: NRPost? = nil, dim: DIMENSIONS, themes: Themes) {
+        if let nrPost {
+            if #available(iOS 16.0, *) {
+                return self.contentConfiguration = UIHostingConfiguration {
+                    PostOrThread(nrPost: nrPost)
+                        .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
+                        .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
+                }
+                .margins(.all, 0)
+            } else {
+                // Fallback on earlier versions
+                let view = PostOrThread(nrPost: nrPost)
+                self.hostingController.rootView = view
+                self.hostingController.view.invalidateIntrinsicContentSize()
+                
+                contentView.addSubview(hostingController.view)
+                
+                hostingController.view
+                               .translatesAutoresizingMaskIntoConstraints = false
+                hostingController.view.leadingAnchor.constraint(
+                               equalTo: self.contentView.leadingAnchor
+                           ).isActive = true
+                hostingController.view.trailingAnchor.constraint(
+                               equalTo: self.contentView.trailingAnchor
+                           ).isActive = true
+                hostingController.view.topAnchor.constraint(
+                               equalTo: self.contentView.topAnchor
+                           ).isActive = true
+                hostingController.view.bottomAnchor.constraint(
+                               equalTo: self.contentView.bottomAnchor
+                           ).isActive = true
+                
+                return
+            }
+        }
+        
+        if #available(iOS 16.0, *) {
+            return self.contentConfiguration = UIHostingConfiguration {
+                Text("⚠️")
+                    .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
+                    .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
+            }
+            .margins(.all, 0)
+        } else {
+            // Fallback on earlier versions
+            return
+        }
+    }
+}
+
 
 final class TViewHolder {
     let tableView: UITableView
@@ -535,7 +601,9 @@ final class TViewHolder {
         tableView.prefetchDataSource = coordinator
         tableView.isPrefetchingEnabled = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.selfSizingInvalidation = .enabledIncludingConstraints
+        if #available(iOS 16.0, *) {
+            tableView.selfSizingInvalidation = .enabledIncludingConstraints
+        }
         //        tableView.selfSizingInvalidation = .enabled
         tableView.isOpaque = true
         tableView.dragInteractionEnabled = false
@@ -549,11 +617,20 @@ final class TViewHolder {
         return UITableViewDiffableDataSource<SingleSection, String>(
             tableView: tableView,
             cellProvider: { tableView, indexPath, identifier -> UITableViewCell? in
-                guard let cell = tableView.dequeueReusableCell(withIdentifier: PostOrThreadCell.description(), for: indexPath) as? PostOrThreadCell else {
-                    return UITableViewCell()
+                if #available(iOS 16, *) {
+                    guard let cell = tableView.dequeueReusableCell(withIdentifier: PostOrThreadCell.description(), for: indexPath) as? PostOrThreadCell else {
+                        return UITableViewCell()
+                    }
+                    cell.configure(with: coordinator.lvm.posts.value.elements[safe: indexPath.row]?.value, dim: coordinator.dim, themes: coordinator.themes)
+                    return cell
                 }
-                cell.configure(with: coordinator.lvm.posts.value.elements[safe: indexPath.row]?.value, dim: coordinator.dim, themes: coordinator.themes)
-                return cell
+                else {
+                    guard let cell = tableView.dequeueReusableCell(withIdentifier: PostOrThreadCell15.description(), for: indexPath) as? PostOrThreadCell15 else {
+                        return UITableViewCell()
+                    }
+                    cell.configure(with: coordinator.lvm.posts.value.elements[safe: indexPath.row]?.value, dim: coordinator.dim, themes: coordinator.themes)
+                    return cell
+                }
             }
         )
     }
