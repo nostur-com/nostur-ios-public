@@ -110,9 +110,9 @@ struct ProfileRelays: View {
                     .listRowBackground(themes.theme.background)
             }
         }
+        .scrollContentBackgroundHidden()
+        .scrollDisabledCompat()
         .frame(height: UIScreen.main.bounds.height * 2.5)
-        .scrollContentBackground(.hidden)
-        .scrollDisabled(true)
         .background(themes.theme.listBackground)
         .task {
             relayListMetadata.nsPredicate = NSPredicate(format: "kind == 10002 AND pubkey == %@", pubkey)

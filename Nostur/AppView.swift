@@ -109,7 +109,7 @@ struct AppView: View {
                     NosturRootMenu()
                         .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
                             ReadOnlyAccountInformationSheet()
-                                .presentationDetents([.large])
+                                .presentationDetentsLarge()
                                 .environmentObject(ns)
                                 .environmentObject(themes)
                         }

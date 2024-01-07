@@ -21,7 +21,7 @@ struct WebOfTrustLevelPicker: View {
         } label: {
             Text("Web of Trust filter", comment:"Setting on settings screen")
         }
-        .pickerStyle(.navigationLink)
+        .pickerStyleCompatNavigationLink()
         .onChange(of: settings.webOfTrustLevel) { newValue in
             if newValue == SettingsStore.WebOfTrustLevel.normal.rawValue {
                 bg().perform {

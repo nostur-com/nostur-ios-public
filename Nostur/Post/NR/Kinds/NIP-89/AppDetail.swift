@@ -48,7 +48,7 @@ struct AppDetail: View {
                 VStack(alignment: .leading) {
                     Text(appName)
                         .lineLimit(1)
-                        .fontWeight(.bold)
+                        .fontWeightBold()
                     Text("Web App")
                         .font(.subheadline)
                         .foregroundColor(theme.secondary)

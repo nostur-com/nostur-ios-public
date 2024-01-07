@@ -49,7 +49,7 @@ struct LinkPreviewView: View {
                         Text((tags["title"] ?? tags["fallback_title"]) ?? "")
                             .lineLimit(2)
                             .layoutPriority(1)
-                            .fontWeight(.bold)
+                            .fontWeightBold()
                         
                         Text(tags["description"] ?? "")
                             .lineLimit(2)

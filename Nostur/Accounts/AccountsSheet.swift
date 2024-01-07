@@ -49,7 +49,7 @@ struct AccountsSheet: View {
                     }
                     .listRowBackground(themes.theme.background)
                 }
-                .scrollContentBackground(.hidden)
+                .scrollContentBackgroundHidden()
                 .listStyle(.plain)
                 
                 NavigationLink {

@@ -33,7 +33,7 @@ struct ReplyingToEditable: View {
                     .lineLimit(3)
             }
             .font(.system(size: 13))
-            .fontWeight(.light)
+            .fontWeightLight()
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -42,7 +42,7 @@ struct ReplyingToEditable: View {
         }
         .sheet(isPresented: $showContactsToggleSheet) {
             ContactsToggleSheet(requiredP: requiredP, available: available, selected: $selected, unselected: $unselected)
-            .presentationDetents([.medium])
+            .presentationDetentsMedium()
         }
     }
 }

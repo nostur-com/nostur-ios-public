@@ -48,7 +48,7 @@ struct ThemePicker: View {
         } label: {
             Text("App theme")
         }
-        .pickerStyle(.navigationLink)
+        .pickerStyleCompatNavigationLink()
         .onChange(of: selectedTheme) { theme in
             // switch .load
             

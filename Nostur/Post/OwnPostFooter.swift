@@ -51,14 +51,14 @@ struct OwnPostFooter: View {
             if (own.isGoingToSend) {
                 HStack {
                     if own.flags == "nsecbunker_unsigned" {
-                        Text("Signing post...")
+                        Text("**Signing post...****")
                     }
                     else {
-                        Text("Sending post...")
+                        Text("****Sending post...****")
                     }
                     Spacer()
                     if own.flags != "nsecbunker_unsigned" {
-                        Button("Send now") {
+                        Button("**Send now**") {
                             nrPost.sendNow()
                             DispatchQueue.main.async {
                                 NRState.shared.draft = ""
@@ -90,7 +90,6 @@ struct OwnPostFooter: View {
                 }
                 .padding(.bottom, 5)
                 .foregroundColor(Color.primary)
-                .fontWeight(.bold)
             }
             else if !nrPost.isPreview && !["awaiting_send","nsecbunker_unsigned","draft"].contains(own.flags) {
                 HStack {

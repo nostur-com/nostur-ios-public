@@ -439,6 +439,7 @@
 		1FE8158E2B23B09F00ED3958 /* BackgroundNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE8158D2B23B09F00ED3958 /* BackgroundNotifications.swift */; };
 		1FE882882B47726800A903F0 /* AvailableWidthContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE882872B47726800A903F0 /* AvailableWidthContainer.swift */; };
 		1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */ = {isa = PBXBuildFile; productRef = 1FE8828A2B48E9DC00A903F0 /* NavigationBackport */; };
+		1FE8828D2B48EC9600A903F0 /* Compatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE8828C2B48EC9600A903F0 /* Compatibility.swift */; };
 		1FE9D2962A0E0F2200256B90 /* NRContentElementBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */; };
 		1FE9D2982A0E104D00256B90 /* NRTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2972A0E104D00256B90 /* NRTextParser.swift */; };
 		1FE9D29A2A0E1D2A00256B90 /* NRContentTextRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2992A0E1D2A00256B90 /* NRContentTextRenderer.swift */; };
@@ -934,6 +935,7 @@
 		1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapNotificationsView.swift; sourceTree = "<group>"; };
 		1FE8158D2B23B09F00ED3958 /* BackgroundNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundNotifications.swift; sourceTree = "<group>"; };
 		1FE882872B47726800A903F0 /* AvailableWidthContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailableWidthContainer.swift; sourceTree = "<group>"; };
+		1FE8828C2B48EC9600A903F0 /* Compatibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compatibility.swift; sourceTree = "<group>"; };
 		1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContentElementBuilder.swift; sourceTree = "<group>"; };
 		1FE9D2972A0E104D00256B90 /* NRTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTextParser.swift; sourceTree = "<group>"; };
 		1FE9D2992A0E1D2A00256B90 /* NRContentTextRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContentTextRenderer.swift; sourceTree = "<group>"; };
@@ -1725,6 +1727,7 @@
 				1F2AC5402B12F00E00F70662 /* DebugWindow.swift */,
 				1F3897502AB9822B001A874E /* NRState.swift */,
 				1F0F0F612A9CC75300E23BA7 /* Theme.swift */,
+				1FE8828C2B48EC9600A903F0 /* Compatibility.swift */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -2245,6 +2248,7 @@
 				1F91D8FB2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift in Sources */,
 				1F7D47A32B3670B90071476A /* GalleryFullScreenSwiper.swift in Sources */,
 				1FC78F7629CB4A920009C1C7 /* ChatInputField.swift in Sources */,
+				1FE8828D2B48EC9600A903F0 /* Compatibility.swift in Sources */,
 				1FE4D91B2A53D50F0064F649 /* ZapCustomizer.swift in Sources */,
 				1F0A25562A3E139E00178A5C /* WebOfTrust.swift in Sources */,
 				1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */,

@@ -20,7 +20,7 @@ struct AutodownloadLevelPicker: View {
         } label: {
             Text("Restrict media downloading", comment:"Setting on settings screen")
         }
-        .pickerStyle(.navigationLink)
+        .pickerStyleCompatNavigationLink()
     }
 }
 

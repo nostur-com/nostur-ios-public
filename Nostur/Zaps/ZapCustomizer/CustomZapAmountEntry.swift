@@ -42,7 +42,7 @@ struct CustomZapAmountEntry: View {
                     }
                 }
         }
-        .formStyle(.grouped)
+        .formStyleGrouped()
         .onAppear {
             customAmount = 0
             focusedField = .amount

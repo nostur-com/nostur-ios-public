@@ -104,9 +104,9 @@ struct Search: View {
     //
     //                    }
                     }
-                    .toolbarBackground(Visibility.visible, for: .navigationBar)
+                    .toolbarNavigationBackgroundVisible()
                 }
-                .scrollDismissesKeyboard(.immediately)
+                .scrollDismissesKeyboardCompat()
             }
             .overlay(alignment: .bottom) {
                 if settings.statusBubble {

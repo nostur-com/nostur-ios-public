@@ -83,7 +83,7 @@ struct ProfileView: View {
                                             NBNavigationStack {
                                                 AccountEditView(account: account)
                                             }
-                                            .presentationBackground(themes.theme.background)
+                                            .presentationBackgroundCompat(themes.theme.background)
                                         }
                                         .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
                                     }
@@ -203,7 +203,7 @@ struct ProfileView: View {
                                         NBNavigationStack {
                                             AccountEditView(account: account)
                                         }
-                                        .presentationBackground(themes.theme.background)
+                                        .presentationBackgroundCompat(themes.theme.background)
                                     }
                                 }
                                 else {
@@ -305,7 +305,7 @@ struct ProfileView: View {
                                     
                                 } label: {
                                     Image(systemName: "ellipsis")
-                                        .fontWeight(.bold)
+                                        .fontWeightBold()
                                         .padding(5)
                                 }
                                 if (isFollowingYou) {
@@ -364,7 +364,7 @@ struct ProfileView: View {
                     }
                 }
             }
-            .presentationBackground(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.background)
         }
         .onAppear {
             if let tab = tab {

@@ -111,7 +111,7 @@ struct SettingsDefaultZapAmount: View {
                 NBNavigationStack {
                     CustomZapAmountEntry(customAmount: $customAmount)
                 }
-                .presentationBackground(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.background)
             }
         }
     }

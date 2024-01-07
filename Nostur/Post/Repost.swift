@@ -112,7 +112,7 @@ struct RepostHeader: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: "arrow.2.squarepath")
-                .fontWeight(.bold)
+                .fontWeightBold()
                 .scaleEffect(0.6)
             Text(repostedHeader)
                 .font(.subheadline)

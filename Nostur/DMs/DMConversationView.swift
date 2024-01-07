@@ -339,7 +339,7 @@ struct DMConversationView: View {
                         }
                     }
                 }
-                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarNavigationBackgroundVisible()
                 .toolbar {
                     ToolbarItem(placement: .principal) {
                         Text("\(contact?.authorName ?? String(localized:"DM", comment:"Navigation title for a DM conversation screen (Direct Message)"))")
