@@ -67,10 +67,23 @@ class LUD16 {
         
         if (zapRequestNote != nil) {
             let zapRequest = URLQueryItem(name: "nostr", value: zapRequestNote?.eventJson())
-            callbackUrl.append(queryItems: [amount, zapRequest])
+            
+            if var urlComponents = URLComponents(url: callbackUrl, resolvingAgainstBaseURL: false) {
+                let newQueryItems = [amount, zapRequest]
+                let existingQueryItems = urlComponents.queryItems ?? []
+                urlComponents.queryItems = existingQueryItems + newQueryItems
+
+                callbackUrl = urlComponents.url ?? callbackUrl
+            }
         }
-        else {
-            callbackUrl.append(queryItems: [amount])
+        else {            
+            if var urlComponents = URLComponents(url: callbackUrl, resolvingAgainstBaseURL: false) {
+                let newQueryItems = [amount]
+                let existingQueryItems = urlComponents.queryItems ?? []
+                urlComponents.queryItems = existingQueryItems + newQueryItems
+
+                callbackUrl = urlComponents.url ?? callbackUrl
+            }
         }
         
         let urlSession = URLSession.shared
