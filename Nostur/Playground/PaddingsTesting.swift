@@ -42,8 +42,8 @@ struct PaddingsTesting_Previews: PreviewProvider {
             ])
         }) {
             SmoothListMock {
-                
-                if 1 == 1, let p = PreviewFetcher.fetchNRPost("5743635d30ebd55e8a05172a8394e263974525e54b02845b9f1b24524f591dab", withReplyTo: false, withParents: false) {
+                let testMe: Set<Int> = [1,12]
+                if testMe.contains(1), let p = PreviewFetcher.fetchNRPost("5743635d30ebd55e8a05172a8394e263974525e54b02845b9f1b24524f591dab", withReplyTo: false, withParents: false) {
                     // LINK PREVIEW
                     Box {
                         PostRowDeletable(nrPost: p, fullWidth: true)
@@ -53,7 +53,7 @@ struct PaddingsTesting_Previews: PreviewProvider {
                         PostRowDeletable(nrPost: p)
                     }
                 }     
-                if 1 == 2, let p = PreviewFetcher.fetchNRPost("049204249f4597dfea3acbb366c80b5c1593f060859fbc56f01cb42b3dbb3807", withReplyTo: true, withParents: true) {
+                if testMe.contains(2), let p = PreviewFetcher.fetchNRPost("049204249f4597dfea3acbb366c80b5c1593f060859fbc56f01cb42b3dbb3807", withReplyTo: true, withParents: true) {
                     // HIGHLIGHT
                     Box {
                         PostRowDeletable(nrPost: p, fullWidth: true)
@@ -64,14 +64,14 @@ struct PaddingsTesting_Previews: PreviewProvider {
                     }
                 }
                 
-                if 1 == 2, let p = PreviewFetcher.fetchNRPost("a7c70f513b8b3868d80aebc21027ae715ab033ad835c4274b07781310c2f077a", withReplyTo: true, withParents: true) {
+                if testMe.contains(3), let p = PreviewFetcher.fetchNRPost("a7c70f513b8b3868d80aebc21027ae715ab033ad835c4274b07781310c2f077a", withReplyTo: true, withParents: true) {
                     // A REPLY TO A HIGHLIGHT
                     // OR MENTIONING A HIGHLIGHT... AMBIGIOUS
                     PostOrThread(nrPost: p)
                 }
                 
                 
-                if 1 == 2, let p = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") {
+                if testMe.contains(4), let p = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") {
                     // A NIP-94 IMAGE (FILE META DATA) (KIND 1063)
                     Box {
                         PostRowDeletable(nrPost: p, fullWidth: true)
@@ -82,7 +82,7 @@ struct PaddingsTesting_Previews: PreviewProvider {
                     }
                 }
                 
-                if 1 == 2, let p = PreviewFetcher.fetchNRPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
+                if testMe.contains(5), let p = PreviewFetcher.fetchNRPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
                     // A POST EMBEDDING A NIP-94 IMAGE (FILE META DATA) (KIND 1063) WITH nostr:nevent1...
                     Box {
                         PostRowDeletable(nrPost: p, fullWidth: true)
@@ -96,7 +96,7 @@ struct PaddingsTesting_Previews: PreviewProvider {
                 
                 
                 // ARTICLE
-                if 1 == 2, let p = PreviewFetcher.fetchNRPost("d9af49548ae6445368315c2c01338334337027d89f8db133d1d92e2202fb0bb6") {
+                if testMe.contains(6), let p = PreviewFetcher.fetchNRPost("d9af49548ae6445368315c2c01338334337027d89f8db133d1d92e2202fb0bb6") {
                     Box(nrPost: p) {
                         PostRowDeletable(nrPost: p, fullWidth: true)
                     }
@@ -107,7 +107,7 @@ struct PaddingsTesting_Previews: PreviewProvider {
                 }
                 
                 // QUOTED ARTICLE
-                if 1 == 2, let p = PreviewFetcher.fetchNRPost("94ccb1abf7a359c7da82a380706d1a43b9a70391faa70caf41df9bbcdbdd9d27") {
+                if testMe.contains(7), let p = PreviewFetcher.fetchNRPost("94ccb1abf7a359c7da82a380706d1a43b9a70391faa70caf41df9bbcdbdd9d27") {
                     Box(nrPost: p) {
                         PostRowDeletable(nrPost: p, fullWidth: true)
                     }
@@ -117,7 +117,7 @@ struct PaddingsTesting_Previews: PreviewProvider {
                     }
                 }
                 
-                if 1 == 2, let p = PreviewFetcher.fetchNRPost("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab") {
+                if testMe.contains(8), let p = PreviewFetcher.fetchNRPost("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab") {
                     
                     Box {
                         PostRowDeletable(nrPost: p, fullWidth: true)
@@ -130,18 +130,18 @@ struct PaddingsTesting_Previews: PreviewProvider {
                     
                 }
                 
-                if 1 == 2, let gif = PreviewFetcher.fetchNRPost("8d49bc0204aad2c0e8bb292b9c99b7dc1bdd6c520a877d908724c27eb5ab8ce8") {
+                if testMe.contains(9), let gif = PreviewFetcher.fetchNRPost("8d49bc0204aad2c0e8bb292b9c99b7dc1bdd6c520a877d908724c27eb5ab8ce8") {
                     Box {
                         PostRowDeletable(nrPost: gif, fullWidth: true)
                     }
                 }
-                if 1 == 2, let gif = PreviewFetcher.fetchNRPost("1c0ba51ba48e5228e763f72c5c936d610088959fe44535f9c861627287fe8f6d") {
+                if testMe.contains(10), let gif = PreviewFetcher.fetchNRPost("1c0ba51ba48e5228e763f72c5c936d610088959fe44535f9c861627287fe8f6d") {
                     Box {
                         PostRowDeletable(nrPost: gif)
                     }
                 }
                 
-                if 1 == 2, let p = PreviewFetcher.fetchNRPost("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14") {
+                if testMe.contains(11), let p = PreviewFetcher.fetchNRPost("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14") {
                     // A POST WITH LIGHTNING INVOICE
                     Box {
                         PostRowDeletable(nrPost: p, fullWidth: true)

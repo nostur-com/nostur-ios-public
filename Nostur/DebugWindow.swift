@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@available(iOS 16.0, *)
 struct DebugWindow: View {
     @EnvironmentObject private var cp:ConnectionPool
     private var connections:[RelayConnection] {
@@ -46,6 +47,11 @@ struct DebugWindow: View {
 }
 
 #Preview {
-    DebugWindow()
-        .environmentObject(ConnectionPool.shared)
+    if #available(iOS 16.0, *) {
+        DebugWindow()
+            .environmentObject(ConnectionPool.shared)
+    }
+    else {
+        Text("!")
+    }
 }

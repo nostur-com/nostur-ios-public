@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct MainView: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @State private var fg:FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @State private var fn:FollowerNotifier = .shared
     
@@ -23,7 +23,7 @@ struct MainView: View {
     }
     
     @State private var navPath = NBNavigationPath()
-    @State private var account:CloudAccount? = nil
+    @State private var account: CloudAccount? = nil
     @State private var showingNewNote = false
     @ObservedObject private var settings:SettingsStore = .shared
     @State private var showingOtherContact:NRContact? = nil
