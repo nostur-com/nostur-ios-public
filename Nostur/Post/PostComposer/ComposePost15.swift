@@ -1,33 +1,14 @@
 //
-//  ComposePost.swift
+//  ComposePost15.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 06/10/2023.
+//  Created by Fabian Lachman on 06/01/2024.
 //
 
 import SwiftUI
 import NavigationBackport
 
-// TODO: Should add drafts and auto-save
-// TODO: Need to create better solution for typing @mentions
-
-struct ComposePostCompat: View {
-    public var replyTo: Event? = nil
-    public var quotingEvent: Event? = nil
-    public var directMention: Contact? = nil // For initiating a post from profile view
-    
-    var body: some View {
-        if #available(iOS 16.0, *) {
-            ComposePost(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
-        }
-        else {
-            ComposePost15(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention)
-        }
-    }
-}
-
-@available(iOS 16.0, *)
-struct ComposePost: View {
+struct ComposePost15: View {
     public var replyTo:Event? = nil
     public var quotingEvent:Event? = nil
     public var directMention:Contact? = nil // For initiating a post from profile view
@@ -37,7 +18,6 @@ struct ComposePost: View {
     @Environment(\.dismiss) public var dismissCompose
     
     @StateObject private var vm = NewPostModel()
-    @StateObject private var ipm = ImagePickerModel()
     @State private var gifSheetShown = false
     @State private var photoPickerShown = false
     @State private var cameraSheetShown = false
@@ -90,52 +70,9 @@ struct ComposePost: View {
                                 }
                             }
 //                            .padding(.bottom, 100) // Need some extra space for expanding account switcher
-                            .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
-                            .onChange(of: ipm.newImage) { newImage in
-                                if let newImage { vm.typingTextModel.pastedImages.append(PostedImageMeta(index: vm.typingTextModel.pastedImages.count, imageData: newImage, type: .jpeg)) }
-                            }
                             .padding(10)
 //                            .toolbar {
-//                                ToolbarItem(placement: .navigationBarLeading) {
-//                                    Button { dismissCompose() } label: { Text("Cancel") }
-//                                }
-//                                if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
-//                                    ToolbarItem(placement: .navigationBarTrailing) {
-//                                        Button { cameraSheetShown = true } label: {
-//                                            Image(systemName: "camera")
-//                                        }
-//                                        .buttonStyle(.borderless)
-//                                        .disabled(vm.typingTextModel.uploading)
-//                
-//                                    }
-//                                    ToolbarItem(placement: .navigationBarTrailing) {
-//                                        Button { photoPickerShown = true } label: {
-//                                            Image(systemName: "photo")
-//                                        }
-//                                        .buttonStyle(.borderless)
-//                                        .disabled(vm.typingTextModel.uploading)
-//                
-//                                    }
-//                                    ToolbarItem(placement: .navigationBarTrailing) {
-//                                        Button { gifSheetShown = true } label: {
-//                                            Image("GifButton")
-//                                        }
-//                                        .buttonStyle(.borderless)
-//                                        .disabled(vm.typingTextModel.uploading)
-//                                    }
-//                                }
-////                                ToolbarItem(placement: .navigationBarTrailing) {
-////                                    Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
-////                                        vm.showPreview(quotingEvent: quotingEvent)
-////                                    }
-////                                    .disabled(vm.typingTextModel.uploading)
-////                                }
 //                                
-//                                if let uploadError = vm.uploadError {
-//                                    ToolbarItem(placement: .principal) {
-//                                        Text(uploadError).foregroundColor(.red)
-//                                    }
-//                                }
 //                            }
                             .onAppear {
                                 signpost(NRState.shared, "New Post", .end, "New Post view ready")
@@ -203,42 +140,6 @@ struct ComposePost: View {
                 }
             }
             ConnectionPool.shared.connectAllWrite()
-        }
-    }
-}
-
-#Preview("New Post") {
-    PreviewContainer({ pe in
-        pe.loadAccounts()
-        pe.loadPosts()
-        pe.loadContacts()
-    }) {
-        VStack {
-            Button("New Post") { }
-                .sheet(isPresented: .constant(true)) {
-                    NBNavigationStack {
-                        ComposePostCompat()
-                    }
-                }
-        }
-    }
-}
-
-#Preview("New Reply") {
-    PreviewContainer({ pe in
-        pe.loadAccounts()
-        pe.loadPosts()
-        pe.loadContacts()
-    }) {
-        VStack {
-            Button("New Post") { }
-                .sheet(isPresented: .constant(true)) {
-                    NBNavigationStack {
-                        if let replyTo = PreviewFetcher.fetchEvent("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
-                            ComposePostCompat(replyTo: replyTo)
-                        }
-                    }
-                }
         }
     }
 }

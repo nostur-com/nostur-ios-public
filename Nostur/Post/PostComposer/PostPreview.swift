@@ -10,24 +10,24 @@ import SwiftUI
 struct PostPreview: View {
     @EnvironmentObject private var themes:Themes
     @StateObject private var dim = DIMENSIONS()
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss) private var dismissPostPreview
     public let nrPost:NRPost
     public let replyTo:Event?
     public let quotingEvent:Event?
     @ObservedObject public var vm:NewPostModel
     @ObservedObject public var typingTextModel:TypingTextModel
-    public let fullDismiss:DismissAction
+    public let onDismiss: () -> Void
     @State private var postPreviewWidth:CGFloat? = nil
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
     
-    init(nrPost: NRPost, replyTo: Event?, quotingEvent: Event?, vm: NewPostModel, fullDismiss: DismissAction) {
+    init(nrPost: NRPost, replyTo: Event?, quotingEvent: Event?, vm: NewPostModel, onDismiss: @escaping () -> Void) {
         self.nrPost = nrPost
         self.replyTo = replyTo
         self.quotingEvent = quotingEvent
         self.vm = vm
-        self.fullDismiss = fullDismiss
+        self.onDismiss = onDismiss
         self.typingTextModel = vm.typingTextModel
     }
 
@@ -56,14 +56,18 @@ struct PostPreview: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(String(localized:"Back", comment:"Button to go back")) {
-                    dismiss()
+                    dismissPostPreview()
                 }
             }
+            
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     typingTextModel.sending = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        self.vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, dismiss: fullDismiss)
+                        self.vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: {
+                            dismissPostPreview()
+                            onDismiss()
+                        })
                     }
                 } label: {
                     if (typingTextModel.uploading || typingTextModel.sending) {
@@ -164,7 +168,7 @@ struct PostPreview_Previews: PreviewProvider {
         }) {
             NBNavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost() {
-                    PostPreview(nrPost: nrPost, replyTo:nil, quotingEvent: nil, vm: vm, fullDismiss: dismiss)
+                    PostPreview(nrPost: nrPost, replyTo:nil, quotingEvent: nil, vm: vm, onDismiss: { dismiss() })
                 }
             }
         }

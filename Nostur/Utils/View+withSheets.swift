@@ -206,14 +206,14 @@ private struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePost(replyTo: eventNotification.event)
+                            ComposePostCompat(replyTo: eventNotification.event)
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                         }
                         .environmentObject(themes)
                     }
                     else {
-                        ComposePost(replyTo: eventNotification.event)
+                        ComposePostCompat(replyTo: eventNotification.event)
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
@@ -249,14 +249,14 @@ private struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePost(quotingEvent: quotePostEvent)
+                            ComposePostCompat(quotingEvent: quotePostEvent)
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                         }
                         .environmentObject(themes)
                     }
                     else {
-                        ComposePost(quotingEvent: quotePostEvent)
+                        ComposePostCompat(quotingEvent: quotePostEvent)
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)

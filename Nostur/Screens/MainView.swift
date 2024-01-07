@@ -62,11 +62,21 @@ struct MainView: View {
                         NBNavigationStack {
                             if account.isNC {
                                 WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                                    ComposePost()
+                                    if #available(iOS 16, *) {
+                                        ComposePost()
+                                    }
+                                    else {
+                                        ComposePost15()
+                                    }
                                 }
                             }   
                             else {
-                                ComposePost()
+                                if #available(iOS 16, *) {
+                                    ComposePost()
+                                }
+                                else {
+                                    ComposePost15()
+                                }
                             }
                         }
                         .presentationBackgroundCompat(themes.theme.background)

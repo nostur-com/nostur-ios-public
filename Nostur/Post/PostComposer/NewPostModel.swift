@@ -115,7 +115,7 @@ public final class NewPostModel: ObservableObject {
     static let typingRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|(?<![/\\?])#)", options: [])
     static let mentionRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\w+|(?<![/\\?])#\\S+)", options: [])
     
-    public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
+    public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, onDismiss: @escaping () -> Void) {
         if (!typingTextModel.pastedImages.isEmpty) {
             typingTextModel.uploading = true
             
@@ -158,7 +158,7 @@ public final class NewPostModel: ObservableObject {
                             guard let url = $0.downloadUrl else { return nil }
                             return Imeta(url: url, dim: $0.dim, hash: $0.sha256)
                         }
-                    self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+                    self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: onDismiss)
                 }
                 uploader.uploadingPublishers(for: mediaRequestBags, keys: keys)
                     .receive(on: RunLoop.main)
@@ -204,19 +204,19 @@ public final class NewPostModel: ObservableObject {
                     }, receiveValue: { urls in
                         if (self.typingTextModel.pastedImages.count == urls.count) {
                             let imetas = urls.map { Imeta(url: $0) }
-                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: onDismiss)
                         }
                     })
                     .store(in: &subscriptions)
             }
         }
         else {
-            self._sendNow(imetas: [], replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+            self._sendNow(imetas: [], replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: onDismiss)
         }
     }
     
     // TODO: NOTE: When updating this func, also update HighlightComposer.send or refactor.
-    private func _sendNow(imetas: [Imeta], replyTo: Event? = nil, quotingEvent: Event? = nil, dismiss: DismissAction) {
+    private func _sendNow(imetas: [Imeta], replyTo: Event? = nil, quotingEvent: Event? = nil, onDismiss: @escaping () -> Void) {
         guard let account = activeAccount else { return }
         account.lastLoginAt = .now
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
@@ -371,7 +371,7 @@ public final class NewPostModel: ObservableObject {
                 }
             }
         }
-        dismiss()
+        onDismiss()
         sendNotification(.didSend)
     }
     
