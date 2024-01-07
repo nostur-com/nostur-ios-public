@@ -42,8 +42,14 @@ struct NWCURI {
     }
     
     var walletPubkey:String? {
-        guard let host = uri.host() else { return nil }
-        guard host.firstMatch(of: /[0-9a-z]{64}/) != nil else { return nil }
+        guard let host = uri.host else { return nil }
+        if #available(iOS 16.0, *) {
+            guard host.firstMatch(of: /[0-9a-z]{64}/) != nil else { return nil }
+        } else {
+            guard let regex = try? NSRegularExpression(pattern: "[0-9a-z]{64}", options: .caseInsensitive) else { return nil }
+            let range = NSRange(host.startIndex..<host.endIndex, in: host)
+            guard regex.firstMatch(in: host, options: [], range: range) != nil else { return nil }
+        }
         
         return host
     }

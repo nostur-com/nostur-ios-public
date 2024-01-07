@@ -49,8 +49,14 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
         
         // dataTask callback seems main??? don't understand
         DispatchQueue.global().async {
-            let metaTags = parseMetaTags(html: html)
-            completion(.success(metaTags))
+            if #available(iOS 16.0, *) {
+                let metaTags = parseMetaTags(html: html)
+                completion(.success(metaTags))
+            } else {
+                // Fallback on earlier versions
+                let metaTags = parseMetaTags15(html: html)
+                completion(.success(metaTags))
+            }
         }
     }
     task.resume()
@@ -85,6 +91,7 @@ func parseYoutube(json: String) -> [String: String] {
     return metaTags
 }
 
+@available(iOS 16.0, *)
 func parseMetaTags(html: String) -> [String: String] {
     let html = html.count > 300000 ? String(html.prefix(300000)) : html
     var metaTags = [String: String]()
@@ -106,6 +113,38 @@ func parseMetaTags(html: String) -> [String: String] {
     // fallback title
     if metaTags["title"] == nil, let titleMatch = html.firstMatch(of: /<title(?:.*)>([^<]*)<\/title>/.ignoresCase())?.output {
         metaTags["fallback_title"] = String(titleMatch.1).htmlUnescape()
+    }
+    
+    return metaTags
+}
+
+func parseMetaTags15(html: String) -> [String: String] {
+    let html = html.count > 300000 ? String(html.prefix(300000)) : html
+    var metaTags = [String: String]()
+    let pattern = "<meta\\s+(?:property=|name=)\"(?:og|twitter):(.*?)\"\\s+content=\"([^\"]+)(?:\"\\s|\"[^>]*?/?>)"
+    let regex = try! NSRegularExpression(pattern: pattern, options: .caseInsensitive)
+    let matches = regex.matches(in: html, options: [], range: NSRange(location: 0, length: html.utf16.count))
+    
+    for match in matches {
+        let propertyRange = match.range(at: 1)
+        let contentRange = match.range(at: 2)
+        let property = (html as NSString).substring(with: propertyRange)
+        
+        if ["image", "title", "description"].contains(property) {
+            let content = (html as NSString).substring(with: contentRange)
+            metaTags[property] = property == "image" ? content : content.htmlUnescape()
+        }
+    }
+    
+    // Fallback title
+    if metaTags["title"] == nil {
+        let titlePattern = "<title(?:.*)>([^<]*)</title>"
+        if let titleRegex = try? NSRegularExpression(pattern: titlePattern, options: .caseInsensitive),
+           let titleMatch = titleRegex.firstMatch(in: html, options: [], range: NSRange(location: 0, length: html.utf16.count)) {
+            let titleRange = titleMatch.range(at: 1)
+            let title = (html as NSString).substring(with: titleRange)
+            metaTags["fallback_title"] = title.htmlUnescape()
+        }
     }
     
     return metaTags

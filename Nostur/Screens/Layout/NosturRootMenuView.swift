@@ -54,9 +54,19 @@ struct NosturRootMenu: View {
         L.og.info("handleUrl: \(url.absoluteString)")
         
         // CALLBACK FROM NWC
-        if let _ = url.absoluteString.firstMatch(of: /^nostur:\/\/nwc_callback(.*)/) {
-            sendNotification(.nwcCallbackReceived, AlbyCallback(url:url))
-            return
+        if #available(iOS 16.0, *) {
+            if let _ = url.absoluteString.firstMatch(of: /^nostur:\/\/nwc_callback(.*)/) {
+                sendNotification(.nwcCallbackReceived, AlbyCallback(url:url))
+                return
+            }
+        } else {
+            if let regex = try? NSRegularExpression(pattern: "^nostur://nwc_callback(.*)", options: .caseInsensitive) {
+                let nsRange = NSRange(url.absoluteString.startIndex..<url.absoluteString.endIndex, in: url.absoluteString)
+                if regex.firstMatch(in: url.absoluteString, options: [], range: nsRange) != nil {
+                    sendNotification(.nwcCallbackReceived, AlbyCallback(url: url))
+                    return
+                }
+            }
         }
         
         // LINKS FROM ANYWHERE (NPUB1/NOTE1)
@@ -144,13 +154,36 @@ struct NosturRootMenu: View {
         }
         
         // SHARE NEW HIGHLIGHT
-        if let newHighlight = url.absoluteString.firstMatch(of: /^(nostur:highlight:)(.*)(:url:)(.*)(:title:)(.*)$/) {
-            L.og.info("nostur: highlight")
-            guard let url = newHighlight.output.4.removingPercentEncoding else { return }
-            guard let selectedText = newHighlight.output.2.removingPercentEncoding else { return }
-            let title = newHighlight.output.6.removingPercentEncoding
-            sendNotification(.newHighlight, NewHighlight(url: url, selectedText: selectedText, title: title))
-            return
+        if #available(iOS 16.0, *) {
+            if let newHighlight = url.absoluteString.firstMatch(of: /^(nostur:highlight:)(.*)(:url:)(.*)(:title:)(.*)$/) {
+                L.og.info("nostur: highlight")
+                guard let url = newHighlight.output.4.removingPercentEncoding else { return }
+                guard let selectedText = newHighlight.output.2.removingPercentEncoding else { return }
+                let title = newHighlight.output.6.removingPercentEncoding
+                sendNotification(.newHighlight, NewHighlight(url: url, selectedText: selectedText, title: title))
+                return
+            }
+        } else {
+            // Fallback on earlier versions
+            let pattern = "^(nostur:highlight:)(.*)(:url:)(.*)(:title:)(.*)$"
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []),
+               let match = regex.firstMatch(in: url.absoluteString, options: [], range: NSRange(url.absoluteString.startIndex..<url.absoluteString.endIndex, in: url.absoluteString)) {
+
+                L.og.info("nostur: highlight")
+
+                let ranges = (1..<regex.numberOfCaptureGroups + 1).map { match.range(at: $0) }
+                guard ranges.count == 6 else { return }
+
+                let substrings = ranges.map { Range($0, in: url.absoluteString).map { url.absoluteString[$0] } }
+                guard let url = substrings[3]?.removingPercentEncoding,
+                      let selectedText = substrings[1]?.removingPercentEncoding else { return }
+
+                let title = substrings[5]?.removingPercentEncoding
+
+                sendNotification(.newHighlight, NewHighlight(url: url, selectedText: selectedText, title: title))
+                return
+            }
+
         }
     }
 }
