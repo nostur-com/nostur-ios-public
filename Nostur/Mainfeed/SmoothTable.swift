@@ -635,3 +635,32 @@ final class TViewHolder {
         )
     }
 }
+
+enum SingleSection: CaseIterable {
+    case main
+}
+
+func pfpImageRequestFor(_ pictureUrl:URL, size:CGFloat) -> ImageRequest {
+
+    //    thumbOptions.createThumbnailFromImageAlways = true
+    //    thumbOptions.shouldCacheImmediately = true
+    let options:ImageRequest.Options = SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : []
+
+    if !SettingsStore.shared.animatedPFPenabled || pictureUrl.absoluteString.suffix(4) != ".gif" {
+        return ImageRequest(url: pictureUrl,
+                            //                            userInfo: [.thumbnailKey: thumbOptions],
+                            processors: [
+                                .resize(size: CGSize(width: size, height: size),
+                                        unit: .points,
+                                        contentMode: .aspectFill,
+                                        crop: true,
+                                        upscale: true)
+                            ],
+                            options: options,
+                            userInfo: [.scaleKey: UIScreen.main.scale]
+                            //                            userInfo: [.scaleKey: 1, .thumbnailKey: thumbOptions]
+                            //                            userInfo: [.scaleKey: UIScreen.main.scale, .thumbnailKey: thumbOptions]
+        )
+    }
+    return ImageRequest(url: pictureUrl)
+}
