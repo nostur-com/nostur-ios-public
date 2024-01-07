@@ -45,7 +45,7 @@ struct AppRow: View {
             VStack(alignment: .leading) {
                 Text(appName)
                     .lineLimit(1)
-                    .fontWeight(.bold)
+                    .fontWeightBold()
                 if let appDescription {
                     Text(appDescription)
                         .lineLimit(1)
@@ -73,7 +73,7 @@ struct AppRow: View {
                         .padding()
                 }
             }
-            .presentationDetents( [.height(350), .large])
+            .presentationDetents350l()
         })
     }
     

@@ -128,7 +128,7 @@ struct ProfileBadgesView: View {
                     }
                 }
                 .padding(20)
-                .presentationDetents([.height(250), .medium])
+                .presentationDetents250medium()
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(role: .cancel) {
@@ -140,7 +140,7 @@ struct ProfileBadgesView: View {
                     }
                 }
             }
-            .presentationBackground(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.background)
         }
     }
 }

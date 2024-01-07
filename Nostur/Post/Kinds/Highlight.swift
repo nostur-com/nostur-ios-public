@@ -108,7 +108,7 @@ struct Highlight: View {
                             }
                         })
 //                        .fixedSize(horizontal: false, vertical: true)
-                        .italic()
+                        .fontItalic()
                         .padding(20)
                         .overlay(alignment:.topLeading) {
                             Image(systemName: "quote.opening")

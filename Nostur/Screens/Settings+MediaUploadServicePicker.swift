@@ -29,7 +29,7 @@ struct MediaUploadServicePicker: View {
         } label: {
             Text("Media upload service", comment:"Setting on settings screen")
         }
-        .pickerStyle(.navigationLink)
+        .pickerStyleCompatNavigationLink()
         .onChange(of: settings.defaultMediaUploadService) { newValue in
             if newValue.name == "Custom File Storage (NIP-96)" {
                 nip96configuratorShown = true

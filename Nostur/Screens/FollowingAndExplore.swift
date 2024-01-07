@@ -128,7 +128,7 @@ struct FollowingAndExplore: View {
                         tabsOffsetY = -36.0
                     }
                 }
-                .toolbar(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
+                .toolbarVisibleCompat(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
             }
             .frame(width: dim.listWidth, height: max(44.0 + tabsOffsetY,0))
             

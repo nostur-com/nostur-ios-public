@@ -38,7 +38,7 @@ struct NosturListsView: View {
                     }
                     .listRowBackground(themes.theme.background)
                 }
-                .scrollContentBackground(.hidden)
+                .scrollContentBackgroundCompat(.hidden)
                 .background(themes.theme.listBackground)
                 .onReceive(lists.publisher.collect()) { lists in
                     if !didRemoveDuplicates {
@@ -68,7 +68,7 @@ struct NosturListsView: View {
             NBNavigationStack {
                 NewListSheet()
             }
-            .presentationBackground(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.background)
         }
     }
     

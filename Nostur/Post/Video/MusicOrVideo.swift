@@ -123,7 +123,7 @@ struct MusicOrVideo: View {
                 .overlay(alignment:.topTrailing) {
                     Image(systemName: "music.note")
                         .foregroundColor(.white)
-                        .fontWeight(.bold)
+                        .fontWeightBold()
                         .padding(3)
                         .background(.black)
                         .padding(5)

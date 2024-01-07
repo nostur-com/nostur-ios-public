@@ -56,8 +56,8 @@ struct BadgesReceivedView: View {
                     .listRowBackground(themes.theme.background)
 //                    .background(themes.theme.background)
             }
+            .scrollContentBackgroundCompat(.hidden)
             .listStyle(.plain)
-            .scrollContentBackground(.hidden)
             .background(themes.theme.listBackground)
             
             Button {

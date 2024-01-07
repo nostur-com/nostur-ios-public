@@ -14,7 +14,7 @@ struct LazyNoteMenuButton: View {
     
     var body: some View {
         Image(systemName: "ellipsis")
-            .fontWeight(.bold)
+            .fontWeightBold()
             .foregroundColor(themes.theme.footerButtons)
             .padding(.leading, 15)
             .padding(.bottom, 14)
@@ -300,9 +300,9 @@ struct LazyNoteMenuSheet: View {
                     .listRowBackground(themes.theme.background)
                 }
             }
-            .background(themes.theme.background)
-            .scrollContentBackground(.hidden)
+            .scrollContentBackgroundHidden()
             .listStyle(.plain)
+            .background(themes.theme.background)
             .navigationTitle(String(localized:"Post actions", comment:"Title of sheet showing actions to perform on post"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

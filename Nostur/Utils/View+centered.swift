@@ -80,13 +80,13 @@ struct DebugDimensions: ViewModifier {
                                 .font(.caption)
                                 .foregroundColor(.white)
                                 .background(.brown)
-                                .fontWeight(.bold)
+                                .fontWeightBold()
                         }
                         Text(actualSize.debugDescription)
                             .font(.caption)
                             .foregroundColor(.white)
                             .background(.black)
-                            .fontWeight(.bold)
+                            .fontWeightBold()
                     }
                 }
             }

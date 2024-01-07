@@ -48,7 +48,7 @@ struct ListUnreadCounter: View {
                     .padding(.trailing, 8)
             }
 //            .padding(0)
-            .fontWeight(.bold)
+            .fontWeightBold()
             .foregroundColor(.white)
 
             .opacity(vmCounter.count > 0 ? 1.0 : 0)

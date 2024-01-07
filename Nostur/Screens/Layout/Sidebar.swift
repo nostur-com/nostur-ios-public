@@ -283,16 +283,16 @@ struct SideBar: View {
         .sheet(isPresented: $accountsSheetIsShown) {
             NBNavigationStack {
                 AccountsSheet()
-                    .presentationDetents([.fraction(0.45), .medium, .large])
+                    .presentationDetents45ml()
             }
-            .presentationBackground(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.background)
             .environmentObject(themes)
         }
         .sheet(isPresented: $showAnySigner) {
             NBNavigationStack {
                 AnySigner()
             }
-            .presentationBackground(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.background)
             .environmentObject(themes)
         }
         .actionSheet(item: $logoutAccount) { account in

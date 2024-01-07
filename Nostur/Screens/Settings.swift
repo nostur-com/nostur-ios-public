@@ -277,7 +277,7 @@ struct Settings: View {
                                 L.og.error("Unresolved error \(error)")
                             }
                         }
-                        .presentationBackground(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.background)
                         .environmentObject(themes)
                     }
                 }
@@ -480,9 +480,9 @@ struct Settings: View {
         .sheet(isPresented: $showDefaultZapAmountSheet) {
             SettingsDefaultZapAmount()
                 .environmentObject(themes)
-                .presentationBackground(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.background)
         }
-        .scrollContentBackground(.hidden)
+        .scrollContentBackgroundHidden()
         .background(themes.theme.listBackground)
         .onAppear {
             let bg = DataProvider.shared().container.newBackgroundContext()
@@ -509,7 +509,7 @@ struct Settings: View {
                     .environmentObject(NRState.shared)
             }
             .environmentObject(themes)
-            .presentationBackground(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.background)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
             NBNavigationStack {
@@ -517,7 +517,7 @@ struct Settings: View {
                     .environmentObject(NRState.shared)
             }
             .environmentObject(themes)
-            .presentationBackground(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.background)
         }
         .sheet(isPresented: $customNWCsheetShown) {
             NBNavigationStack {
@@ -525,7 +525,7 @@ struct Settings: View {
                     .environmentObject(NRState.shared)
             }
             .environmentObject(themes)
-            .presentationBackground(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.background)
         }
     }
 }

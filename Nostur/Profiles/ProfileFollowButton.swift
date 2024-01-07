@@ -55,7 +55,7 @@ struct ProfileFollowButton: View {
                 NBNavigationStack {
                     AccountEditView(account: account)
                 }
-                .presentationBackground(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.background)
             }
         }
     }

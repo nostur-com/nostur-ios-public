@@ -87,7 +87,7 @@ struct Entry: View {
                         typingTextModel.text += gifUrl + "\n"
                     }
                 }
-                .presentationBackground(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.background)
             }
             .sheet(isPresented: $cameraSheetShown) {
                 NBNavigationStack {
@@ -95,7 +95,7 @@ struct Entry: View {
                         typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, imageData: uiImage, type: .jpeg)) 
                     })
                 }
-                .presentationBackground(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.background)
             }
             if !typingTextModel.pastedImages.isEmpty {
                 HStack(spacing: 5) {

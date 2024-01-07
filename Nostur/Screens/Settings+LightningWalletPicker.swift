@@ -21,7 +21,7 @@ struct LightningWalletPicker: View {
         } label: {
             Text("Lightning wallet", comment:"Setting on settings screen")
         }
-        .pickerStyle(.navigationLink)
+        .pickerStyleCompatNavigationLink()
     }
 }
 

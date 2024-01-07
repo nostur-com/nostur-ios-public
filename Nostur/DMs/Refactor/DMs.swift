@@ -176,7 +176,7 @@ struct DMs: View {
                             }
                         }
                 }
-                .presentationBackground(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.background)
             }
             .onReceive(receiveNotification(.triggerDM)) { notification in
                 let preloadNewDMInfo = notification.object as! (String, Contact)

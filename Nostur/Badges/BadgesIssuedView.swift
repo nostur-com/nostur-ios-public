@@ -47,7 +47,7 @@ struct BadgesIssuedView: View {
                 }
                 .listRowBackground(themes.theme.background)
             }
-            .scrollContentBackground(.hidden)
+            .scrollContentBackgroundCompat(.hidden)
             .background(themes.theme.listBackground)
         }
         .background(themes.theme.listBackground)
@@ -71,7 +71,7 @@ struct BadgesIssuedView: View {
             NBNavigationStack {
                 CreateNewBadgeSheet()
             }
-            .presentationBackground(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.background)
         }
     }
 }
