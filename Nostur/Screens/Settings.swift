@@ -62,7 +62,9 @@ struct Settings: View {
                     }
                     #endif
                     
-                    ThemePicker()
+                    if #available(iOS 16, *) {
+                        ThemePicker()
+                    }
 
                     Toggle(isOn: $settings.fullWidthImages) {
                         Text("Enable full width pictures", comment:"Setting on settings screen")
