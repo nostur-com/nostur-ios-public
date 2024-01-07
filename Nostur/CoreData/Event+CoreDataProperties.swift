@@ -1488,16 +1488,37 @@ extension DataProvider {
 
 // FIX ALL REPLY MENTION ROOT DETECTION ETC
 extension NEvent {
+    @available(iOS 16.0, *)
     static let indexedMentionRegex = /#\[(\d+)\]/
     
+    static let indexedMentionRegex15 = try! NSRegularExpression(pattern: "#\\[(\\d+)\\]", options: [])
+
+    
     var mentionOnlyTags:[NostrTag] {
-        let matches = content.matches(of: NEvent.indexedMentionRegex) // TODO: hmmm performance hit measured with Instruments here...
-        let matchIndexes = matches.compactMap { Int($0.output.1) }
-        let t = tags.enumerated().filter { matchIndexes.contains($0.offset) }.map { $0.element }
-        let noRootOrReply = t.filter {
-            $0.type == "e" && $0.tag[safe: 3] != "root" && $0.tag[safe: 3] != "reply"
+        if #available(iOS 16.0, *) {
+            let matches = content.matches(of: NEvent.indexedMentionRegex)
+            // TODO: hmmm performance hit measured with Instruments here...
+            let matchIndexes = matches.compactMap { Int($0.output.1) }
+            let t = tags.enumerated().filter { matchIndexes.contains($0.offset) }.map { $0.element }
+            let noRootOrReply = t.filter {
+                $0.type == "e" && $0.tag[safe: 3] != "root" && $0.tag[safe: 3] != "reply"
+            }
+            return noRootOrReply
+        } else {
+            let range = NSRange(content.startIndex..<content.endIndex, in: content)
+                let matches = NEvent.indexedMentionRegex15.matches(in: content, options: [], range: range)
+                let matchIndexes = matches.compactMap { result in
+                    if let range = Range(result.range(at: 1), in: content) {
+                        return Int(content[range])
+                    }
+                    return nil
+                }
+                let t = tags.enumerated().filter { matchIndexes.contains($0.offset) }.map { $0.element }
+                let noRootOrReply = t.filter {
+                    $0.type == "e" && $0.tag[safe: 3] != "root" && $0.tag[safe: 3] != "reply"
+                }
+                return noRootOrReply
         }
-        return noRootOrReply
     }
     
     var threadETags:[NostrTag] {

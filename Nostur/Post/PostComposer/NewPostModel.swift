@@ -243,7 +243,12 @@ public final class NewPostModel: ObservableObject {
             }
         }
         // Typed @mentions to nostr:npub
-        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
+        if #available(iOS 16.0, *) {
+            nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
+        }
+        else {
+            nEvent.content = replaceMentionsWithNpubs15(nEvent.content, selected: typingTextModel.selectedMentions)
+        }
         
         // Pasted @npubs to nostr:npub and return pTags
         let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
@@ -382,7 +387,12 @@ public final class NewPostModel: ObservableObject {
         nEvent.publicKey = account.publicKey
         
         // @mentions to nostr:npub
-        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
+        if #available(iOS 16.0, *) {
+            nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
+        }
+        else {
+            nEvent.content = replaceMentionsWithNpubs15(nEvent.content, selected: typingTextModel.selectedMentions)
+        }
         
         // @npubs to nostr:npub and return pTags
         let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
