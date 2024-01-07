@@ -51,6 +51,7 @@ struct ComposePost15: View {
                                     PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom, theme: themes.theme)
                                         .onTapGesture { }
                                         .disabled(true)
+                                        .padding(.bottom, 10)
                                 }
                                 
                                 HStack(alignment: .top) {
@@ -62,15 +63,16 @@ struct ComposePost15: View {
                                         .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
                                         .id(textfield)
                                 }
-                                .padding(.top, 10)
                                 
                                 if let quotingNRPost = quotingNRPost {
                                     QuotedNoteFragmentView(nrPost: quotingNRPost, theme: themes.theme)
                                         .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
                                 }
+                                
+                                Spacer()
                             }
 //                            .padding(.bottom, 100) // Need some extra space for expanding account switcher
-                            .padding(10)
+                            .padding(.horizontal, 10)
 //                            .toolbar {
 //                                
 //                            }
