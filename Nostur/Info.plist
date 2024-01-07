@@ -49,15 +49,13 @@
 	<string>$(NIP89_APP_REFERENCE)</string>
     <key>CI_BUILD_NUMBER</key>
     <string>$(CI_BUILD_NUMBER)</string>
+	<dict>
+	</dict>
+	<key>TENOR_API_KEY</key>
+	<string>$(TENOR_API_KEY)</string>
 	<key>TENOR_CLIENT_KEY</key>
 	<string>$(TENOR_CLIENT_KEY)</string>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
-		<key>UISceneConfigurations</key>
-		<dict/>
-	</dict>
+
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
