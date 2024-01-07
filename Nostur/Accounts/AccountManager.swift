@@ -23,7 +23,7 @@ class AccountManager {
             account.name = name
             account.about = about
             account.publicKey = newKeys.publicKeyHex()
-            account.flags = "nostur_created full_account" // need this to know if we can enable to follow button, normally we wait after we received contact list
+            account.flagsSet = ["nostur_created", "full_account"] // need this to know if we can enable to follow button, normally we wait after we received contact list
             
             try! context.save()
             return account
