@@ -2,4 +2,8 @@
 "CFBundleDisplayName" = "Nostur";
 /* Bundle name */
 "CFBundleName" = "Nostur";
+/* Privacy - Camera Usage Description */
+"NSCameraUsageDescription" = "To take pictures you want to post on nostr";
+/* Privacy - Photo Library Additions Usage Description */
+"NSPhotoLibraryAddUsageDescription" = "To save a post screenshot to your Photo Library";
 "Nostur Events" = "Nostur Events";
