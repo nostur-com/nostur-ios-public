@@ -26,15 +26,15 @@ struct NosturListsView: View {
                 List(lists) { list in
                     NBNavigationLink(value: list) {
                         ListRow(list: list)
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    listToDelete = list
-                                    confirmDeleteShown = true
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                                
-                            }
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            listToDelete = list
+                            confirmDeleteShown = true
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        
                     }
                     .listRowBackground(themes.theme.background)
                 }
