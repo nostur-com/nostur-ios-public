@@ -22,11 +22,10 @@ struct Entry: View {
     private var onDismiss: () -> Void
     static let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
     
-    
     private var shouldDisablePostButton: Bool {
         typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty)
     }
-
+    
     init(vm: NewPostModel, photoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void) {
         self.replyTo = replyTo
         self.quotingEvent = quotingEvent
@@ -40,9 +39,9 @@ struct Entry: View {
     }
     
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         VStack(alignment: .leading, spacing: 3) {
             if replyTo != nil {
                 HStack(alignment: .top) { // name + reply + context menu
@@ -78,7 +77,7 @@ struct Entry: View {
                     }
                 }
             }
-            .background(alignment:.topLeading) {
+            .background(alignment: .topLeading) {
                 Text(Self.PLACEHOLDER).foregroundColor(.gray)
                     .opacity(typingTextModel.text == "" ? 1 : 1)
                     .offset(x: 5.0, y: 8.0)
@@ -95,7 +94,7 @@ struct Entry: View {
             .sheet(isPresented: $cameraSheetShown) {
                 NBNavigationStack {
                     CameraView(onUse: { uiImage in
-                        typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, imageData: uiImage, type: .jpeg)) 
+                        typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, imageData: uiImage, type: .jpeg))
                     })
                 }
                 .nbUseNavigationStack(.never)
@@ -105,19 +104,19 @@ struct Entry: View {
                 HStack(spacing: 5) {
                     ImagePreviews(pastedImages: $typingTextModel.pastedImages)
                 }
-//                .id(images)
+                //                .id(images)
             }
         }
-//        .onChange(of: typingTextModel.pastedImages) { newImages in
-////            if let newImage {
-////                vm.pastedImages.append(newImage)
-////                textHeight = 200
-//
-////            }
-//            withAnimation {
-//                proxy.scrollTo(images, anchor: .bottom)
-//            }
-//        }
+        //        .onChange(of: typingTextModel.pastedImages) { newImages in
+        ////            if let newImage {
+        ////                vm.pastedImages.append(newImage)
+        ////                textHeight = 200
+        //
+        ////            }
+        //            withAnimation {
+        //                proxy.scrollTo(images, anchor: .bottom)
+        //            }
+        //        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button { onDismiss() } label: { Text("Cancel") }
@@ -146,7 +145,7 @@ struct Entry: View {
                         .buttonStyle(.borderless)
                         .disabled(vm.typingTextModel.uploading)
                     }
-
+                    
                     Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
                         vm.showPreview(quotingEvent: quotingEvent)
                     }
@@ -171,7 +170,7 @@ struct Entry: View {
                     .opacity(shouldDisablePostButton ? 0.25 : 1.0)
                 }
             }
-                        
+            
             ToolbarItem(placement: .principal) {
                 if let uploadError = vm.uploadError {
                     Text(uploadError).foregroundColor(.red)

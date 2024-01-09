@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+import UniformTypeIdentifiers
 
 // TODO: Should add drafts and auto-save
 // TODO: Need to create better solution for typing @mentions
@@ -45,6 +46,7 @@ struct ComposePost: View {
     @Namespace private var textfield
     @State private var replyToNRPost:NRPost?
     @State private var quotingNRPost:NRPost?
+    @State private var isTargeted: Bool = false
 //    @State private var textHeight:CGFloat = 0
     
     private var waitingForReply:Bool {
@@ -139,7 +141,43 @@ struct ComposePost: View {
                     }
                 }
                 .overlay {
-                    AnyStatus(filter: "NewPost")
+                    ZStack {
+                        AnyStatus(filter: "NewPost")
+                        
+                        if isTargeted {
+                            ZStack {
+                                Color.black.opacity(0.7)
+                                VStack(spacing: 8) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.system(size: 60))
+                                    Text("Drop image...")
+                                }
+                                .font(.largeTitle)
+                                .fontWeightBold()
+                                .foregroundColor(.white)
+                                .frame(maxWidth: 250)
+                                .multilineTextAlignment(.center)
+                            }
+                            .animation(.default, value: isTargeted)
+                        }
+                    }
+                }
+                .onDrop(of: [.image], isTargeted: $isTargeted) { providers in
+                    guard let provider = providers.first else { return false }
+                    _ = provider.loadDataRepresentation(forTypeIdentifier:  UTType.image.identifier) { data, error in
+                        if error == nil, let data, let imageData = UIImage(data: data) {
+                            DispatchQueue.main.async {
+                                self.vm.typingTextModel.pastedImages.append(
+                                    PostedImageMeta(
+                                        index: self.vm.typingTextModel.pastedImages.count,
+                                        imageData: imageData,
+                                        type: .jpeg
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    return true
                 }
             }
             else {
