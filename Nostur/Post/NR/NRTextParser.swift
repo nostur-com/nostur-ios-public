@@ -17,7 +17,8 @@ class NRTextParser { // TEXT things
     static let shared = NRTextParser()
     private let context = bg()
 
-    func parseText(_ event:Event, text: String, availableWidth: CGFloat = DIMENSIONS.shared.availableNoteRowImageWidth()) -> AttributedStringWithPs {
+    func parseText(_ event:Event, text: String, availableWidth: CGFloat? = nil) -> AttributedStringWithPs {
+        let availableWidth = availableWidth ??  DIMENSIONS.shared.availableNoteRowImageWidth()
 
         // Remove image links
         // because they get rendered as embeds in PostDetail.

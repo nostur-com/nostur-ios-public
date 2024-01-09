@@ -44,6 +44,7 @@ struct NRContentTextRendererInner: View {
             if #available(iOS 16.0, *) {
                 NRTextFixed(text ?? attributedStringWithPs.output, height: height ?? attributedStringWithPs.height)
                     .id(text ?? attributedStringWithPs.output)
+//                    .debugDimensions("NRTextFixed")
                     .onReceive(
                         Importer.shared.contactSaved
                             .filter { pubkey in
