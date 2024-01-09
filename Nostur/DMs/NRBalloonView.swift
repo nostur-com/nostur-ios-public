@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NRBalloonView: View {
+    @EnvironmentObject private var dim: DIMENSIONS
     public var event: Event
     public var isSentByCurrentUser: Bool
     public var time: String
@@ -25,6 +26,7 @@ struct NRBalloonView: View {
             }
             else if !contentElements.isEmpty {
                 DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: DIMENSIONS.shared.listWidth, theme: themes.theme)
+//                    .debugDimensions("DMContentRenderer")
                     .padding(10)
                     .background(
                         RoundedRectangle(cornerRadius: 16)
@@ -55,7 +57,9 @@ struct NRBalloonView: View {
             }
         }
         .onAppear {
-            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(event, dm: true)
+            // Take width of NRContentTextRendererInner > NRTextFixed.debugDimensions("NRTextFixed")
+            // Substract that from dim.listWidth. We need to pass that result (98.0) to NRContentElementBuilder.buildElements(_ event:Event, dm:Bool, availableWidth: CGFloat?) so our NRTextFixed calculates correct heights and doesn't cut off
+            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(event, dm: true, availableWidth: dim.listWidth - 98.0)
             self.contentElements = elements
         }
     }

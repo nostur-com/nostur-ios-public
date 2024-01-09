@@ -351,6 +351,7 @@ struct DMConversationView: View {
                     }
                 }
             }
+//            .debugDimensions("ScrollViewReader")
 //            .navigationTitle("\(contact?.authorName ?? String(localized:"DM", comment:"Navigation title for a DM conversation screen (Direct Message)"))")
             .task {
                 // TODO: CHANGE TO REALTIME DM SUBSCRIPTION
