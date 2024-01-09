@@ -2,7 +2,7 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd">
   <file original="Highlight with Nostur/en.lproj/InfoPlist.strings" source-language="en" target-language="en" datatype="plaintext">
     <header>
-      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="14.3.1" build-num="14E300c"/>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.1" build-num="15C65"/>
     </header>
     <body>
       <trans-unit id="CFBundleDisplayName" xml:space="preserve">
@@ -24,7 +24,7 @@
   </file>
   <file original="Nostur/en.lproj/InfoPlist.strings" source-language="en" target-language="en" datatype="plaintext">
     <header>
-      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="14.3.1" build-num="14E300c"/>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.1" build-num="15C65"/>
     </header>
     <body>
       <trans-unit id="CFBundleDisplayName" xml:space="preserve">
@@ -37,6 +37,16 @@
         <target>Nostur</target>
         <note>Bundle name</note>
       </trans-unit>
+      <trans-unit id="NSCameraUsageDescription" xml:space="preserve">
+        <source>To take pictures you want to post on nostr</source>
+        <target>To take pictures you want to post on nostr</target>
+        <note>Privacy - Camera Usage Description</note>
+      </trans-unit>
+      <trans-unit id="NSPhotoLibraryAddUsageDescription" xml:space="preserve">
+        <source>To save a post screenshot to your Photo Library</source>
+        <target>To save a post screenshot to your Photo Library</target>
+        <note>Privacy - Photo Library Additions Usage Description</note>
+      </trans-unit>
       <trans-unit id="Nostur Events" xml:space="preserve">
         <source>Nostur Events</source>
         <target>Nostur Events</target>
@@ -46,7 +56,7 @@
   </file>
   <file original="Nostur/en.lproj/Localizable.strings" source-language="en" target-language="en" datatype="plaintext">
     <header>
-      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="14.3.1" build-num="14E300c"/>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="15.1" build-num="15C65"/>
     </header>
     <body>
       <trans-unit id="&#10;%@" xml:space="preserve">
@@ -55,13 +65,6 @@
         <target>
 %@</target>
         <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="&#10;**%lld** Following" xml:space="preserve">
-        <source>
-**%lld** Following</source>
-        <target>
-**%lld** Following</target>
-        <note>Text that shows how many people this account follows</note>
       </trans-unit>
       <trans-unit id="&#10;This will **wipe** your:&#10; - Public nostr profile&#10; - Public nostr following list&#10;" xml:space="preserve">
         <source>
@@ -81,16 +84,19 @@ This will **wipe** your:
         <target> · %@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id=" · via %@" xml:space="preserve">
+        <source> · via %@</source>
+        <target> · via %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="!" xml:space="preserve">
+        <source>!</source>
+        <target>!</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="%@" xml:space="preserve">
         <source>%@</source>
         <target>%@</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="%@&#10;" xml:space="preserve">
-        <source>%@
-</source>
-        <target>%@
-</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="%@ " xml:space="preserve">
@@ -98,9 +104,44 @@ This will **wipe** your:
         <target>%@ </target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="%@ %@" xml:space="preserve">
+        <source>%@ %@</source>
+        <target>%@ %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="%@ %@ %@" xml:space="preserve">
         <source>%@ %@ %@</source>
         <target>%@ %@ %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%@ Checking relays..." xml:space="preserve">
+        <source>%@ Checking relays...</source>
+        <target>%@ Checking relays...</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%@ Following" xml:space="preserve">
+        <source>%@ Following</source>
+        <target>%@ Following</target>
+        <note>Label for Following count</note>
+      </trans-unit>
+      <trans-unit id="%@ No internet connection" xml:space="preserve">
+        <source>%@ No internet connection</source>
+        <target>%@ No internet connection</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%@ has not published preferred relays or is using an older configuration." xml:space="preserve">
+        <source>%@ has not published preferred relays or is using an older configuration.</source>
+        <target>%@ has not published preferred relays or is using an older configuration.</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%@ kind %@ type not (yet) supported" xml:space="preserve">
+        <source>%@ kind %@ type not (yet) supported</source>
+        <target>%@ kind %@ type not (yet) supported</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%@ reads posts from" xml:space="preserve">
+        <source>%@ reads posts from</source>
+        <target>%@ reads posts from</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="%@ reposted" xml:space="preserve">
@@ -113,9 +154,29 @@ This will **wipe** your:
         <target>%@ sats %@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="%@ settings" xml:space="preserve">
+        <source>%@ settings</source>
+        <target>%@ settings</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%@'s posts can be found at" xml:space="preserve">
+        <source>%@'s posts can be found at</source>
+        <target>%@'s posts can be found at</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="%lld" xml:space="preserve">
         <source>%lld</source>
         <target>%lld</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%lld Following" xml:space="preserve">
+        <source>%lld Following</source>
+        <target>%lld Following</target>
+        <note>Label for Following count</note>
+      </trans-unit>
+      <trans-unit id="%lld conversation(s) hidden by you" xml:space="preserve">
+        <source>%lld conversation(s) hidden by you</source>
+        <target>%lld conversation(s) hidden by you</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="%lld min read" xml:space="preserve">
@@ -163,11 +224,6 @@ This will **wipe** your:
         <target>**%@** zapped your profile</target>
         <note>Message when someone zapped your profile</note>
       </trans-unit>
-      <trans-unit id="**%lld** " xml:space="preserve">
-        <source>**%lld** </source>
-        <target>**%lld** </target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="**%lld**  Following" xml:space="preserve">
         <source>**%lld**  Following</source>
         <target>**%lld**  Following</target>
@@ -183,6 +239,21 @@ This will **wipe** your:
         <target>**PUBLIC KEY:** %@</target>
         <note>Field that shows a public key</note>
       </trans-unit>
+      <trans-unit id="**Send now**" xml:space="preserve">
+        <source>**Send now**</source>
+        <target>**Send now**</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="**Sending post...**" xml:space="preserve">
+        <source>**Sending post...**</source>
+        <target>**Sending post...**</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="**Signing post...**" xml:space="preserve">
+        <source>**Signing post...**</source>
+        <target>**Signing post...**</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="**Terms and Conditions**&#10;" xml:space="preserve">
         <source>**Terms and Conditions**
 </source>
@@ -195,9 +266,19 @@ This will **wipe** your:
         <target>**♾️** Followers</target>
         <note>Label for followers count</note>
       </trans-unit>
+      <trans-unit id="+%lld" xml:space="preserve">
+        <source>+%lld</source>
+        <target>+%lld</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="+1" xml:space="preserve">
         <source>+1</source>
         <target>+1</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="+15" xml:space="preserve">
+        <source>+15</source>
+        <target>+15</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="0" xml:space="preserve">
@@ -270,15 +351,25 @@ This will **wipe** your:
         <target>@%@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="@Anon" xml:space="preserve">
-        <source>@Anon</source>
-        <target>@Anon</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="A nostr client for iOS &amp; macOS - nostur.com" xml:space="preserve">
         <source>A nostr client for iOS &amp; macOS - nostur.com</source>
         <target>A nostr client for iOS &amp; macOS - nostur.com</target>
         <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="AUTODOWNLOAD_ALL" xml:space="preserve">
+        <source>Unrestricted</source>
+        <target>Unrestricted</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="AUTODOWNLOAD_WOT_NORMAL" xml:space="preserve">
+        <source>Web of Trust only</source>
+        <target>Web of Trust only</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="AUTODOWNLOAD_WOT_STRICT" xml:space="preserve">
+        <source>Following only</source>
+        <target>Following only</target>
+        <note/>
       </trans-unit>
       <trans-unit id="Accept" xml:space="preserve">
         <source>Accept</source>
@@ -321,6 +412,11 @@ informational message showing account name(s)</note>
         <target>Accounts</target>
         <note>Navigation title for Accounts screen</note>
       </trans-unit>
+      <trans-unit id="Activate" xml:space="preserve">
+        <source>Activate</source>
+        <target>Activate</target>
+        <note>Button to check if a file storage server is compatible</note>
+      </trans-unit>
       <trans-unit id="Activate this filter" xml:space="preserve">
         <source>Activate this filter</source>
         <target>Activate this filter</target>
@@ -341,15 +437,10 @@ informational message showing account name(s)</note>
         <target>Add (nsecBunker)</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Add +1" xml:space="preserve">
-        <source>Add +1</source>
-        <target>Add +1</target>
+      <trans-unit id="Add +7" xml:space="preserve">
+        <source>Add +7</source>
+        <target>Add +7</target>
         <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Add comment" xml:space="preserve">
-        <source>Add comment</source>
-        <target>Add comment</target>
-        <note>Placeholder when typing a new reply</note>
       </trans-unit>
       <trans-unit id="Add contacts" xml:space="preserve">
         <source>Add contacts</source>
@@ -382,9 +473,9 @@ Navigation title for Add Existing Account screen</note>
         <target>Add relay</target>
         <note>Navigation title for Add relay screen</note>
       </trans-unit>
-      <trans-unit id="Add/Remove %@ from lists" xml:space="preserve">
-        <source>Add/Remove %@ from lists</source>
-        <target>Add/Remove %@ from lists</target>
+      <trans-unit id="Add/Remove %@ from custom feed" xml:space="preserve">
+        <source>Add/Remove %@ from custom feed</source>
+        <target>Add/Remove %@ from custom feed</target>
         <note>Post context menu button</note>
       </trans-unit>
       <trans-unit id="Add/Remove from feed" xml:space="preserve">
@@ -407,24 +498,9 @@ Navigation title for Add Existing Account screen</note>
         <target>All accounts</target>
         <note>Menu item to select All accounts</note>
       </trans-unit>
-      <trans-unit id="Allowed: %lld contacts" xml:space="preserve">
-        <source>Allowed: %lld contacts</source>
-        <target>Allowed: %lld contacts</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Allowed: Everyone" xml:space="preserve">
-        <source>Allowed: Everyone</source>
-        <target>Allowed: Everyone</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="Amount (satoshis)" xml:space="preserve">
         <source>Amount (satoshis)</source>
         <target>Amount (satoshis)</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Anon" xml:space="preserve">
-        <source>Anon</source>
-        <target>Anon</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="App theme" xml:space="preserve">
@@ -439,10 +515,20 @@ Navigation title for Add Existing Account screen</note>
 </target>
         <note>Confirmation text when you want to delete your account</note>
       </trans-unit>
+      <trans-unit id="Article feed settings" xml:space="preserve">
+        <source>Article feed settings</source>
+        <target>Article feed settings</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Article feed time frame" xml:space="preserve">
+        <source>Article feed time frame</source>
+        <target>Article feed time frame</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Articles" xml:space="preserve">
         <source>Articles</source>
         <target>Articles</target>
-        <note>Tab title for feed of articles</note>
+        <note>Tab title for the Articles feed</note>
       </trans-unit>
       <trans-unit id="Auto scroll to new posts" xml:space="preserve">
         <source>Auto scroll to new posts</source>
@@ -477,8 +563,8 @@ Navigation title for Add Existing Account screen</note>
       <trans-unit id="Badges" xml:space="preserve">
         <source>Badges</source>
         <target>Badges</target>
-        <note>Side bar navigation button
-Navigation title of Bagdes screen</note>
+        <note>Navigation title of Bagdes screen
+Side bar navigation button</note>
       </trans-unit>
       <trans-unit id="Badges received" xml:space="preserve">
         <source>Badges received</source>
@@ -489,6 +575,11 @@ Navigation title of Bagdes screen</note>
         <source>Badges: %@</source>
         <target>Badges: %@</target>
         <note>Message showing size of badges cache</note>
+      </trans-unit>
+      <trans-unit id="Based on your selection, the following relay set will be published so others can reach account: %@." xml:space="preserve">
+        <source>Based on your selection, the following relay set will be published so others can reach account: %@.</source>
+        <target>Based on your selection, the following relay set will be published so others can reach account: %@.</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Bio" xml:space="preserve">
         <source>Bio</source>
@@ -505,6 +596,36 @@ Navigation title of Bagdes screen</note>
         <target>Block %@</target>
         <note>Menu action
 Post context menu action to Block (name)</note>
+      </trans-unit>
+      <trans-unit id="Block for 1 day" xml:space="preserve">
+        <source>Block for 1 day</source>
+        <target>Block for 1 day</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Block for 1 hour" xml:space="preserve">
+        <source>Block for 1 hour</source>
+        <target>Block for 1 hour</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Block for 1 month" xml:space="preserve">
+        <source>Block for 1 month</source>
+        <target>Block for 1 month</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Block for 1 week" xml:space="preserve">
+        <source>Block for 1 week</source>
+        <target>Block for 1 week</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Block for 4 hours" xml:space="preserve">
+        <source>Block for 4 hours</source>
+        <target>Block for 4 hours</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Block for 8 hours" xml:space="preserve">
+        <source>Block for 8 hours</source>
+        <target>Block for 8 hours</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Block list" xml:space="preserve">
         <source>Block list</source>
@@ -525,8 +646,13 @@ Post context menu action to Block (name)</note>
         <source>Bookmarks</source>
         <target>Bookmarks</target>
         <note>Navigation title for Bookmarks screen
-Side bar navigation button
-Tab to switch to bookmarks</note>
+Tab to switch to bookmarks
+Side bar navigation button</note>
+      </trans-unit>
+      <trans-unit id="Button configurator" xml:space="preserve">
+        <source>Button configurator</source>
+        <target>Button configurator</target>
+        <note>Heading when entering Report details</note>
       </trans-unit>
       <trans-unit id="Caches" xml:space="preserve">
         <source>Caches</source>
@@ -548,6 +674,16 @@ Tab to switch to bookmarks</note>
         <target>Cancelled</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Cashu (Bitcoin) 🥜" xml:space="preserve">
+        <source>Cashu (Bitcoin) 🥜</source>
+        <target>Cashu (Bitcoin) 🥜</target>
+        <note>Title of cashu redeem card</note>
+      </trans-unit>
+      <trans-unit id="Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues." xml:space="preserve">
+        <source>Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues.</source>
+        <target>Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues.</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Choose content for this column" xml:space="preserve">
         <source>Choose content for this column</source>
         <target>Choose content for this column</target>
@@ -558,10 +694,10 @@ Tab to switch to bookmarks</note>
         <target>Choose feed</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Choose which wallet to use for zapping" xml:space="preserve">
-        <source>Choose which wallet to use for zapping</source>
-        <target>Choose which wallet to use for zapping</target>
-        <note>Setting on settings screen</note>
+      <trans-unit id="Choose one or more public relays you read from so you can receive notifications when others mention you." xml:space="preserve">
+        <source>Choose one or more public relays you read from so you can receive notifications when others mention you.</source>
+        <target>Choose one or more public relays you read from so you can receive notifications when others mention you.</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Clear" xml:space="preserve">
         <source>Clear</source>
@@ -603,10 +739,20 @@ Tab to switch to bookmarks</note>
         <target>Configure contacts...</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Configure published relays" xml:space="preserve">
+        <source>Configure published relays</source>
+        <target>Configure published relays</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Configure relays..." xml:space="preserve">
         <source>Configure relays...</source>
         <target>Configure relays...</target>
         <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Configure the reaction buttons for each post. You can also change the position or remove buttons you don't need." xml:space="preserve">
+        <source>Configure the reaction buttons for each post. You can also change the position or remove buttons you don't need.</source>
+        <target>Configure the reaction buttons for each post. You can also change the position or remove buttons you don't need.</target>
+        <note>Informational message</note>
       </trans-unit>
       <trans-unit id="Confirm log out" xml:space="preserve">
         <source>Confirm log out</source>
@@ -647,8 +793,8 @@ Action sheet title</note>
       <trans-unit id="Copy npub" xml:space="preserve">
         <source>Copy npub</source>
         <target>Copy npub</target>
-        <note>Menu action to copy a contacts public key in npub format to clipboard
-Menu action</note>
+        <note>Menu action
+Menu action to copy a contacts public key in npub format to clipboard</note>
       </trans-unit>
       <trans-unit id="Copy post text" xml:space="preserve">
         <source>Copy post text</source>
@@ -723,15 +869,15 @@ Menu action</note>
       <trans-unit id="Create new account" xml:space="preserve">
         <source>Create new account</source>
         <target>Create new account</target>
-        <note>Button to start creating a new account
-Navigation title of create new account screen
+        <note>Navigation title of create new account screen
+Button to start creating a new account
 Button to create a new account</note>
       </trans-unit>
       <trans-unit id="Create new badge" xml:space="preserve">
         <source>Create new badge</source>
         <target>Create new badge</target>
-        <note>Navigation title for Badge creation screen
-Button to create a new badge</note>
+        <note>Button to create a new badge
+Navigation title for Badge creation screen</note>
       </trans-unit>
       <trans-unit id="Create new feed" xml:space="preserve">
         <source>Create new feed</source>
@@ -741,6 +887,16 @@ Button to create a new badge</note>
       <trans-unit id="Create test keys" xml:space="preserve">
         <source>Create test keys</source>
         <target>Create test keys</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Currently allowed by the filter: %lld contacts" xml:space="preserve">
+        <source>Currently allowed by the filter: %lld contacts</source>
+        <target>Currently allowed by the filter: %lld contacts</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Currently allowed by the filter: Everyone" xml:space="preserve">
+        <source>Currently allowed by the filter: Everyone</source>
+        <target>Currently allowed by the filter: Everyone</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Custom" xml:space="preserve">
@@ -753,6 +909,11 @@ Button to create a new badge</note>
         <target>Custom Feed</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Custom File Storage" xml:space="preserve">
+        <source>Custom File Storage</source>
+        <target>Custom File Storage</target>
+        <note>Navigation title for setting up a custom File Storage Server</note>
+      </trans-unit>
       <trans-unit id="DM" xml:space="preserve">
         <source>DM</source>
         <target>DM</target>
@@ -762,6 +923,11 @@ Button to create a new badge</note>
         <source>Data export</source>
         <target>Data export</target>
         <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Data usage" xml:space="preserve">
+        <source>Data usage</source>
+        <target>Data usage</target>
+        <note>Setting heading on settings screen</note>
       </trans-unit>
       <trans-unit id="Day" xml:space="preserve">
         <source>Day</source>
@@ -792,8 +958,8 @@ Button to delete</note>
       <trans-unit id="Delete account" xml:space="preserve">
         <source>Delete account</source>
         <target>Delete account</target>
-        <note>Button to delete account
-Navigation title of Delete account screen</note>
+        <note>Navigation title of Delete account screen
+Button to delete account</note>
       </trans-unit>
       <trans-unit id="Delete feed %@" xml:space="preserve">
         <source>Delete feed %@</source>
@@ -856,6 +1022,16 @@ Button to disconnect from relay</note>
         <target>Done</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Drop image..." xml:space="preserve">
+        <source>Drop image...</source>
+        <target>Drop image...</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Duration" xml:space="preserve">
+        <source>Duration</source>
+        <target>Duration</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Edit muted word" xml:space="preserve">
         <source>Edit muted word</source>
         <target>Edit muted word</target>
@@ -907,6 +1083,11 @@ Navigation title for Edit Profile screen</note>
         <target>Enter JSON</target>
         <note>Label for field to enter a nostr json event</note>
       </trans-unit>
+      <trans-unit id="Enter a NIP-96 compatible media server address to host your images" xml:space="preserve">
+        <source>Enter a NIP-96 compatible media server address to host your images</source>
+        <target>Enter a NIP-96 compatible media server address to host your images</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Enter nsecBunker relay address" xml:space="preserve">
         <source>Enter nsecBunker relay address</source>
         <target>Enter nsecBunker relay address</target>
@@ -936,11 +1117,6 @@ Navigation title for Edit Profile screen</note>
         <source>Enter your name</source>
         <target>Enter your name</target>
         <note>Placeholder on input field on Edit Profile screen</note>
-      </trans-unit>
-      <trans-unit id="Enter your reply" xml:space="preserve">
-        <source>Enter your reply</source>
-        <target>Enter your reply</target>
-        <note>Placeholder when typing a reply</note>
       </trans-unit>
       <trans-unit id="Error: 00" xml:space="preserve">
         <source>Error: 00</source>
@@ -1000,8 +1176,8 @@ Navigation title for Edit Profile screen</note>
       <trans-unit id="Feeds" xml:space="preserve">
         <source>Feeds</source>
         <target>Feeds</target>
-        <note>Side bar navigation button
-Navigation title for Feeds screen</note>
+        <note>Navigation title for Feeds screen
+Side bar navigation button</note>
       </trans-unit>
       <trans-unit id="Fetch counts on timeline" xml:space="preserve">
         <source>Fetch counts on timeline</source>
@@ -1012,6 +1188,16 @@ Navigation title for Feeds screen</note>
         <source>Fetches like/zaps/replies counts as posts appear</source>
         <target>Fetches like/zaps/replies counts as posts appear</target>
         <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="File Storage Server address" xml:space="preserve">
+        <source>File Storage Server address</source>
+        <target>File Storage Server address</target>
+        <note>File Storage Server address</note>
+      </trans-unit>
+      <trans-unit id="File Storage server configured successfully!" xml:space="preserve">
+        <source>File Storage server configured successfully!</source>
+        <target>File Storage server configured successfully!</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Filter by your follows only (strict), or also your follows follows (normal)" xml:space="preserve">
         <source>Filter by your follows only (strict), or also your follows follows (normal)</source>
@@ -1038,34 +1224,49 @@ Navigation title for Feeds screen</note>
         <target>Follow %@</target>
         <note>Post context menu button to Follow (name)</note>
       </trans-unit>
+      <trans-unit id="Follow %@ on" xml:space="preserve">
+        <source>Follow %@ on</source>
+        <target>Follow %@ on</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Followers" xml:space="preserve">
         <source>Followers</source>
         <target>Followers</target>
         <note>Heading</note>
       </trans-unit>
+      <trans-unit id="Followers you know" xml:space="preserve">
+        <source>Followers you know</source>
+        <target>Followers you know</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Following" xml:space="preserve">
         <source>Following</source>
         <target>Following</target>
-        <note>Follow/Unfollow button when the state is 'Following'
-Tab title
+        <note>Menu choice to filter by Following
 Tab title for feed of people you follow
-Menu choice to filter by Following</note>
-      </trans-unit>
-      <trans-unit id="Following  " xml:space="preserve">
-        <source>Following  </source>
-        <target>Following  </target>
-        <note>Label for Following count</note>
+Shown when you follow someone in the multi follow sheet
+Follow/Unfollow button when the state is 'Following'</note>
       </trans-unit>
       <trans-unit id="Follows you" xml:space="preserve">
         <source>Follows you</source>
         <target>Follows you</target>
-        <note>Label that shows if someone is following you
-Label shown when someone follows you</note>
+        <note>Label shown when someone follows you
+Label that shows if someone is following you</note>
+      </trans-unit>
+      <trans-unit id="Footer buttons" xml:space="preserve">
+        <source>Footer buttons</source>
+        <target>Footer buttons</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Gallery" xml:space="preserve">
         <source>Gallery</source>
         <target>Gallery</target>
         <note>Tab title for the Gallery feed</note>
+      </trans-unit>
+      <trans-unit id="Gallery feed time frame" xml:space="preserve">
+        <source>Gallery feed time frame</source>
+        <target>Gallery feed time frame</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Green" xml:space="preserve">
         <source>Green</source>
@@ -1092,6 +1293,11 @@ Label shown when someone follows you</note>
         <target>Hide</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Hide posts you have already seen (beta)" xml:space="preserve">
+        <source>Hide posts you have already seen (beta)</source>
+        <target>Hide posts you have already seen (beta)</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
       <trans-unit id="Hide tab bars when scrolling" xml:space="preserve">
         <source>Hide tab bars when scrolling</source>
         <target>Hide tab bars when scrolling</target>
@@ -1102,10 +1308,25 @@ Label shown when someone follows you</note>
         <target>Hides badges from profiles and feeds</target>
         <note>Setting on settings screen</note>
       </trans-unit>
+      <trans-unit id="Home/Lock screen notifications" xml:space="preserve">
+        <source>Home/Lock screen notifications</source>
+        <target>Home/Lock screen notifications</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Home/Lock screen notifications are only active for the currently logged in account and can be a bit delayed" xml:space="preserve">
+        <source>Home/Lock screen notifications are only active for the currently logged in account and can be a bit delayed</source>
+        <target>Home/Lock screen notifications are only active for the currently logged in account and can be a bit delayed</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Hot" xml:space="preserve">
         <source>Hot</source>
         <target>Hot</target>
-        <note>Tab title for feed of hot/popular posts</note>
+        <note>Tab title for the Hot feed</note>
+      </trans-unit>
+      <trans-unit id="Hot feed time frame" xml:space="preserve">
+        <source>Hot feed time frame</source>
+        <target>Hot feed time frame</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="ID" xml:space="preserve">
         <source>ID</source>
@@ -1147,14 +1368,24 @@ Label shown when someone follows you</note>
         <target>Include Nostur caption when sharing posts</target>
         <note>Setting on settings screen</note>
       </trans-unit>
+      <trans-unit id="Include Nostur in post metadata" xml:space="preserve">
+        <source>Include Nostur in post metadata</source>
+        <target>Include Nostur in post metadata</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
       <trans-unit id="Include author" xml:space="preserve">
         <source>Include author</source>
         <target>Include author</target>
         <note>Button to include author in Highlight</note>
       </trans-unit>
-      <trans-unit id="Included hashtags:" xml:space="preserve">
-        <source>Included hashtags:</source>
-        <target>Included hashtags:</target>
+      <trans-unit id="Included hashtags" xml:space="preserve">
+        <source>Included hashtags</source>
+        <target>Included hashtags</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Internet connection unavailable" xml:space="preserve">
+        <source>Internet connection unavailable</source>
+        <target>Internet connection unavailable</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Invalid key" xml:space="preserve">
@@ -1182,6 +1413,11 @@ Label shown when someone follows you</note>
         <target>It's up to relays and other apps to honor your request</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Keeps track across all feeds posts you have already seen, don't show them again" xml:space="preserve">
+        <source>Keeps track across all feeds posts you have already seen, don't show them again</source>
+        <target>Keeps track across all feeds posts you have already seen, don't show them again</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
       <trans-unit id="Keys" xml:space="preserve">
         <source>Keys</source>
         <target>Keys</target>
@@ -1192,10 +1428,15 @@ Label shown when someone follows you</note>
         <target>Last seen: %@ ago</target>
         <note>Label on profile showing when last seen, example: Last seen: 10m ago</note>
       </trans-unit>
+      <trans-unit id="Last updated %@" xml:space="preserve">
+        <source>Last updated %@</source>
+        <target>Last updated %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Last updated: %@" xml:space="preserve">
         <source>Last updated: %@</source>
         <target>Last updated: %@</target>
-        <note>No comment provided by engineer.</note>
+        <note>Last updated date of WoT in Settings</note>
       </trans-unit>
       <trans-unit id="Last updated: May 27th, 2023&#10;    &#10;Your access to and use of the App is conditioned upon your acceptance of and compliance with these Terms. These Terms apply to all users of the App.&#10;&#10;By accessing or using the App, you agree to be bound by these Terms. If you disagree with any part of the terms, then you do not have permission to access the App.&#10;&#10;Accounts&#10;When you create an account with the App, you are responsible for maintaining the confidentiality of your account keys, as well as restricting access to your device. You agree to accept responsibility for any and all activities or actions that occur under your account.&#10;&#10;Content&#10;The App allows you to access, read, and post content through connecting to relays. You are responsible for the content that you post or access through the App, including its legality, reliability, and appropriateness.&#10;&#10;By posting content through the App, you represent and warrant that the content is yours (you own it) and/or you have the right to use it, and that the posting of your content through the App does not violate the privacy rights, publicity rights, copyrights, contract rights, or any other rights of any person or entity.&#10;&#10;Prohibited Activities&#10;You agree not to use the App for any illegal, harmful, or offensive activities, including but not limited to:&#10;&#10;Engaging in harassment, bullying, or any form of intimidation&#10;Distributing or promoting sexually explicit or pornographic material&#10;Promoting hate speech, racism, or discrimination of any kind&#10;Infringing upon the intellectual property rights of others&#10;Engaging in any form of fraud, phishing, or unauthorized data collection&#10;Intellectual Property&#10;The App and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of the Developer. The App is protected by copyright, trademark, and other laws of the United States and foreign countries. Any trademarks and trade dress may not be used in connection with any product or service without the prior written consent of the Developer.&#10;&#10;Limitation of Liability&#10;In no event shall the Developer be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the App; (ii) any conduct or content of any third party on the App; (iii) any content obtained from the App; and (iv) unauthorized access, use, or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not the Developer has been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.&#10;&#10;Privacy Policy&#10;Nostur does not collect information about you. The app stores information that you provide about your nostr profile, which can be anything you choose to share or not. The posts and content you share from Nostur are sent out to public relays so anyone can view those and Nostur stores this on your device so you can always view it yourself.&#10;The app uses the following external services:&#10;Tenor: for inluding animated GIFs in your posts&#10;Image upload services: For including images in your posts. You can opt out to using these services by not including images or GIFs in your posts and not uploading a profile picture or banner in the app.&#10;&#10;For any questions, please contact feedback@nostur.com." xml:space="preserve">
         <source>Last updated: May 27th, 2023
@@ -1275,6 +1516,11 @@ For any questions, please contact feedback@nostur.com.</target>
         <target>Let's go!</target>
         <note>Button to start using Nostur, during onboarding</note>
       </trans-unit>
+      <trans-unit id="Lets others know you are posting from Nostur" xml:space="preserve">
+        <source>Lets others know you are posting from Nostur</source>
+        <target>Lets others know you are posting from Nostur</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
       <trans-unit id="Lightning Address (LUD-06/16)" xml:space="preserve">
         <source>Lightning Address (LUD-06/16)</source>
         <target>Lightning Address (LUD-06/16)</target>
@@ -1290,9 +1536,39 @@ For any questions, please contact feedback@nostur.com.</target>
         <target>Likes</target>
         <note>Tab title</note>
       </trans-unit>
+      <trans-unit id="Limit Home/Lock screen notifications to only from people you follow" xml:space="preserve">
+        <source>Limit Home/Lock screen notifications to only from people you follow</source>
+        <target>Limit Home/Lock screen notifications to only from people you follow</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="List" xml:space="preserve">
         <source>List</source>
         <target>List</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Load default" xml:space="preserve">
+        <source>Load default</source>
+        <target>Load default</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Load preset 1" xml:space="preserve">
+        <source>Load preset 1</source>
+        <target>Load preset 1</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Load preset 2" xml:space="preserve">
+        <source>Load preset 2</source>
+        <target>Load preset 2</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Load preset 3" xml:space="preserve">
+        <source>Load preset 3</source>
+        <target>Load preset 3</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Load preset 4" xml:space="preserve">
+        <source>Load preset 4</source>
+        <target>Load preset 4</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Loading indicator" xml:space="preserve">
@@ -1300,16 +1576,26 @@ For any questions, please contact feedback@nostur.com.</target>
         <target>Loading indicator</target>
         <note>Setting on settings screen</note>
       </trans-unit>
-      <trans-unit id="Loading..." xml:space="preserve">
-        <source>Loading...</source>
-        <target>Loading...</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="Log out" xml:space="preserve">
         <source>Log out</source>
         <target>Log out</target>
         <note>Log out button
 Side bar navigation button</note>
+      </trans-unit>
+      <trans-unit id="Low Data mode" xml:space="preserve">
+        <source>Low Data mode</source>
+        <target>Low Data mode</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Main WoT" xml:space="preserve">
+        <source>Main WoT</source>
+        <target>Main WoT</target>
+        <note>Setting heading on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Main account" xml:space="preserve">
+        <source>Main account</source>
+        <target>Main account</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Make sure you have a back-up of your private key (nsec)&#10;Nostur cannot recover your account without it" xml:space="preserve">
         <source>Make sure you have a back-up of your private key (nsec)
@@ -1333,6 +1619,11 @@ informational message</note>
         <source>Media upload service</source>
         <target>Media upload service</target>
         <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Mentions, replies, or DMs" xml:space="preserve">
+        <source>Mentions, replies, or DMs</source>
+        <target>Mentions, replies, or DMs</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Message verification" xml:space="preserve">
         <source>Message verification</source>
@@ -1359,36 +1650,46 @@ informational message</note>
         <target>Most received recently on</target>
         <note>Heading above posts which received the most zaps</note>
       </trans-unit>
+      <trans-unit id="Multi-columns and more" xml:space="preserve">
+        <source>Multi-columns and more</source>
+        <target>Multi-columns and more</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Mute conversation" xml:space="preserve">
         <source>Mute conversation</source>
         <target>Mute conversation</target>
         <note>Post context menu action to mute conversation</note>
-      </trans-unit>
-      <trans-unit id="Mute new followers notifications" xml:space="preserve">
-        <source>Mute new followers notifications</source>
-        <target>Mute new followers notifications</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Mute reaction notifications" xml:space="preserve">
-        <source>Mute reaction notifications</source>
-        <target>Mute reaction notifications</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Mute zap notifications" xml:space="preserve">
-        <source>Mute zap notifications</source>
-        <target>Mute zap notifications</target>
-        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Muted conversations" xml:space="preserve">
         <source>Muted conversations</source>
         <target>Muted conversations</target>
         <note>Title of tab where Muted conversations are listed</note>
       </trans-unit>
+      <trans-unit id="NC" xml:space="preserve">
+        <source>NC</source>
+        <target>NC</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="NWC" xml:space="preserve">
+        <source>NWC</source>
+        <target>NWC</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Name" xml:space="preserve">
         <source>Name</source>
         <target>Name</target>
         <note>Label of Name text field on Create new account screen
 Label for input field for badge name on Badge creation screen</note>
+      </trans-unit>
+      <trans-unit id="New Post" xml:space="preserve">
+        <source>New Post</source>
+        <target>New Post</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="New Posts" xml:space="preserve">
+        <source>New Posts</source>
+        <target>New Posts</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="New direct message" xml:space="preserve">
         <source>New direct message</source>
@@ -1400,6 +1701,11 @@ Label for input field for badge name on Badge creation screen</note>
         <target>New feed</target>
         <note>Navigation title for screen to create a new feed</note>
       </trans-unit>
+      <trans-unit id="New followers" xml:space="preserve">
+        <source>New followers</source>
+        <target>New followers</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="New message" xml:space="preserve">
         <source>New message</source>
         <target>New message</target>
@@ -1410,24 +1716,39 @@ Label for input field for badge name on Badge creation screen</note>
         <target>New post</target>
         <note>Button to create a new post</note>
       </trans-unit>
+      <trans-unit id="New posts" xml:space="preserve">
+        <source>New posts</source>
+        <target>New posts</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="New posts by %@" xml:space="preserve">
+        <source>New posts by %@</source>
+        <target>New posts by %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="New private note" xml:space="preserve">
         <source>New private note</source>
         <target>New private note</target>
         <note>Navigation title for new private note screen</note>
       </trans-unit>
+      <trans-unit id="New reactions" xml:space="preserve">
+        <source>New reactions</source>
+        <target>New reactions</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="New reposts" xml:space="preserve">
+        <source>New reposts</source>
+        <target>New reposts</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="New zaps" xml:space="preserve">
+        <source>New zaps</source>
+        <target>New zaps</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Next" xml:space="preserve">
         <source>Next</source>
         <target>Next</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="No account selected" xml:space="preserve">
-        <source>No account selected</source>
-        <target>No account selected</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="No account selected " xml:space="preserve">
-        <source>No account selected </source>
-        <target>No account selected </target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="No articles found from your follow list in selected time frame." xml:space="preserve">
@@ -1455,9 +1776,19 @@ Label for input field for badge name on Badge creation screen</note>
         <target>Nostr address (NIP-05)</target>
         <note>Label for entering a NIP-05 username on Edit Profile screen</note>
       </trans-unit>
-      <trans-unit id="NosturTabsView()" xml:space="preserve">
-        <source>NosturTabsView()</source>
-        <target>NosturTabsView()</target>
+      <trans-unit id="Nostur %@ (Build: %@)" xml:space="preserve">
+        <source>Nostur %@ (Build: %@)</source>
+        <target>Nostur %@ (Build: %@)</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Nostur Pro" xml:space="preserve">
+        <source>Nostur Pro</source>
+        <target>Nostur Pro</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Not yet" xml:space="preserve">
+        <source>Not yet</source>
+        <target>Not yet</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public." xml:space="preserve">
@@ -1480,6 +1811,16 @@ Label for input field for badge name on Badge creation screen</note>
         <target>Notifications</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Notify selection (%lld)" xml:space="preserve">
+        <source>Notify selection (%lld)</source>
+        <target>Notify selection (%lld)</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Now using:" xml:space="preserve">
+        <source>Now using:</source>
+        <target>Now using:</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Nudity" xml:space="preserve">
         <source>Nudity</source>
         <target>Nudity</target>
@@ -1490,22 +1831,35 @@ Label for input field for badge name on Badge creation screen</note>
         <target>OK</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Only auto-download images in new posts from people you follow&#10;Toggle off to download from all" xml:space="preserve">
-        <source>Only auto-download images in new posts from people you follow
-Toggle off to download from all</source>
-        <target>Only auto-download images in new posts from people you follow
-Toggle off to download from all</target>
-        <note>Setting on settings screen</note>
+      <trans-unit id="Only for people where you have activated the notification bell" xml:space="preserve">
+        <source>Only for people where you have activated the notification bell</source>
+        <target>Only for people where you have activated the notification bell</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Only from follows" xml:space="preserve">
+        <source>Only from follows</source>
+        <target>Only from follows</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Only show content from your follows or follows-follows" xml:space="preserve">
         <source>Only show content from your follows or follows-follows</source>
         <target>Only show content from your follows or follows-follows</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Open in %@" xml:space="preserve">
+        <source>Open in %@</source>
+        <target>Open in %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Open latest" xml:space="preserve">
         <source>Open latest</source>
         <target>Open latest</target>
         <note>Button go to latest version of article</note>
+      </trans-unit>
+      <trans-unit id="Open with" xml:space="preserve">
+        <source>Open with</source>
+        <target>Open with</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Orange" xml:space="preserve">
         <source>Orange</source>
@@ -1532,6 +1886,11 @@ Toggle off to download from all</target>
         <target>Payment attempted</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Pin" xml:space="preserve">
+        <source>Pin</source>
+        <target>Pin</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Pin on tab bar" xml:space="preserve">
         <source>Pin on tab bar</source>
         <target>Pin on tab bar</target>
@@ -1542,15 +1901,15 @@ Toggle off to download from all</target>
         <target>Pink</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Please choose account first" xml:space="preserve">
-        <source>Please choose account first</source>
-        <target>Please choose account first</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="Please read these Terms and Conditions (&quot;Terms&quot;, &quot;Terms and Conditions&quot;) carefully before using Nostur (the &quot;App&quot;) operated by the independent developer (&quot;Developer&quot;)." xml:space="preserve">
         <source>Please read these Terms and Conditions ("Terms", "Terms and Conditions") carefully before using Nostur (the "App") operated by the independent developer ("Developer").</source>
         <target>Please read these Terms and Conditions ("Terms", "Terms and Conditions") carefully before using Nostur (the "App") operated by the independent developer ("Developer").</target>
         <note>Terms and conditions paragraph</note>
+      </trans-unit>
+      <trans-unit id="Please try again when there is a connection" xml:space="preserve">
+        <source>Please try again when there is a connection</source>
+        <target>Please try again when there is a connection</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Post actions" xml:space="preserve">
         <source>Post actions</source>
@@ -1584,11 +1943,20 @@ Button to post a highlight</note>
         <target>Posted on %@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Posted via %@" xml:space="preserve">
+        <source>Posted via %@</source>
+        <target>Posted via %@</target>
+        <note>Showing from which app this post was posted</note>
+      </trans-unit>
+      <trans-unit id="Posting" xml:space="preserve">
+        <source>Posting</source>
+        <target>Posting</target>
+        <note>Setting heading on settings screen</note>
+      </trans-unit>
       <trans-unit id="Posts" xml:space="preserve">
         <source>Posts</source>
         <target>Posts</target>
-        <note>Tab title
-Title of tab</note>
+        <note>Tab title</note>
       </trans-unit>
       <trans-unit id="Posts containing this will be filtered from your feed" xml:space="preserve">
         <source>Posts containing this will be filtered from your feed</source>
@@ -1609,7 +1977,7 @@ Title of tab</note>
         <source>Preview</source>
         <target>Preview</target>
         <note>Preview button when creating a new post
-Preview button when creating a new reply</note>
+Heading when entering Report details</note>
       </trans-unit>
       <trans-unit id="Previously known as: %@" xml:space="preserve">
         <source>Previously known as: %@</source>
@@ -1619,8 +1987,7 @@ Preview button when creating a new reply</note>
       <trans-unit id="Private Notes" xml:space="preserve">
         <source>Private Notes</source>
         <target>Private Notes</target>
-        <note>Navigation title for Private Notes screen
-Tab to switch to private notes</note>
+        <note>Tab to switch to private notes</note>
       </trans-unit>
       <trans-unit id="Private key copied to clipboard" xml:space="preserve">
         <source>Private key copied to clipboard</source>
@@ -1702,6 +2069,16 @@ Tab to switch to private notes</note>
         <target>Publish to this relay</target>
         <note>Label for toggle to publish to this relay</note>
       </trans-unit>
+      <trans-unit id="Published relays" xml:space="preserve">
+        <source>Published relays</source>
+        <target>Published relays</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Published relays for %@" xml:space="preserve">
+        <source>Published relays for %@</source>
+        <target>Published relays for %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Purple" xml:space="preserve">
         <source>Purple</source>
         <target>Purple</target>
@@ -1712,10 +2089,10 @@ Tab to switch to private notes</note>
         <target>Quote post</target>
         <note>Button to Quote a post</note>
       </trans-unit>
-      <trans-unit id="Reactions" xml:space="preserve">
-        <source>Reactions</source>
-        <target>Reactions</target>
-        <note>Title of tab</note>
+      <trans-unit id="Reaction buttons" xml:space="preserve">
+        <source>Reaction buttons</source>
+        <target>Reaction buttons</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Read only" xml:space="preserve">
         <source>Read only</source>
@@ -1744,10 +2121,20 @@ Tab to switch to private notes</note>
         <target>Rebroadcast (again)</target>
         <note>Button to broadcast own post again</note>
       </trans-unit>
+      <trans-unit id="Receipt from" xml:space="preserve">
+        <source>Receipt from</source>
+        <target>Receipt from</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Receive from this relay" xml:space="preserve">
         <source>Receive from this relay</source>
         <target>Receive from this relay</target>
         <note>Label for toggle to receive from this relay</note>
+      </trans-unit>
+      <trans-unit id="Receive notifications when Nostur is in background" xml:space="preserve">
+        <source>Receive notifications when Nostur is in background</source>
+        <target>Receive notifications when Nostur is in background</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Received" xml:space="preserve">
         <source>Received</source>
@@ -1764,9 +2151,39 @@ Tab to switch to private notes</note>
         <target>Recheck</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Recommended by" xml:space="preserve">
+        <source>Recommended by</source>
+        <target>Recommended by</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Reconfigure published relays" xml:space="preserve">
+        <source>Reconfigure published relays</source>
+        <target>Reconfigure published relays</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Red" xml:space="preserve">
         <source>Red</source>
         <target>Red</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Redeem" xml:space="preserve">
+        <source>Redeem</source>
+        <target>Redeem</target>
+        <note>Button to redeem a Cashu token</note>
+      </trans-unit>
+      <trans-unit id="Refresh" xml:space="preserve">
+        <source>Refresh</source>
+        <target>Refresh</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Relay" xml:space="preserve">
+        <source>Relay</source>
+        <target>Relay</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Relay Mastery" xml:space="preserve">
+        <source>Relay Mastery</source>
+        <target>Relay Mastery</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Relay URL" xml:space="preserve">
@@ -1787,7 +2204,18 @@ Tab to switch to private notes</note>
       <trans-unit id="Relays" xml:space="preserve">
         <source>Relays</source>
         <target>Relays</target>
-        <note>Relay settings heading</note>
+        <note>Tab title for relay mastery
+Relay settings heading</note>
+      </trans-unit>
+      <trans-unit id="Relays you post to" xml:space="preserve">
+        <source>Relays you post to</source>
+        <target>Relays you post to</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Relays you read from" xml:space="preserve">
+        <source>Relays you read from</source>
+        <target>Relays you read from</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Relays:" xml:space="preserve">
         <source>Relays:</source>
@@ -1837,8 +2265,8 @@ Tab to switch to private notes</note>
       <trans-unit id="Replying to: %@" xml:space="preserve">
         <source>Replying to: %@</source>
         <target>Replying to: %@</target>
-        <note>Shown when replying to an article (Replying to: (article title)
-Shown in a post, Replying to (names)</note>
+        <note>Shown in a post, Replying to (names)
+Shown when replying to an article (Replying to: (article title)</note>
       </trans-unit>
       <trans-unit id="Replying to: %@ and %lld others" xml:space="preserve">
         <source>Replying to: %@ and %lld others</source>
@@ -1901,10 +2329,25 @@ Button to publish report</note>
         <target>Restore %lld contacts</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Restrict images to following" xml:space="preserve">
-        <source>Restrict images to following</source>
-        <target>Restrict images to following</target>
+      <trans-unit id="Restrict auto-downloading of media posted by others" xml:space="preserve">
+        <source>Restrict auto-downloading of media posted by others</source>
+        <target>Restrict auto-downloading of media posted by others</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Restrict media downloading" xml:space="preserve">
+        <source>Restrict media downloading</source>
+        <target>Restrict media downloading</target>
         <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Retake" xml:space="preserve">
+        <source>Retake</source>
+        <target>Retake</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Retry" xml:space="preserve">
+        <source>Retry</source>
+        <target>Retry</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Reveal" xml:space="preserve">
         <source>Reveal</source>
@@ -1961,16 +2404,6 @@ Button to publish report</note>
         <target>See what's happening on nostr right now</target>
         <note>Nostur intro text</note>
       </trans-unit>
-      <trans-unit id="Select account account first" xml:space="preserve">
-        <source>Select account account first</source>
-        <target>Select account account first</target>
-        <note>Message shown when user needs to select account first</note>
-      </trans-unit>
-      <trans-unit id="Select account first" xml:space="preserve">
-        <source>Select account first</source>
-        <target>Select account first</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="Self-hosted nsecBunker" xml:space="preserve">
         <source>Self-hosted nsecBunker</source>
         <target>Self-hosted nsecBunker</target>
@@ -1991,11 +2424,6 @@ Button to publish report</note>
         <target>Send DM to</target>
         <note>Navigation title for screen to select a contact to send a Direct Message to</note>
       </trans-unit>
-      <trans-unit id="Send now" xml:space="preserve">
-        <source>Send now</source>
-        <target>Send now</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="Send payment test" xml:space="preserve">
         <source>Send payment test</source>
         <target>Send payment test</target>
@@ -2009,11 +2437,6 @@ Button to publish report</note>
       <trans-unit id="Send to: %@" xml:space="preserve">
         <source>Send to: %@</source>
         <target>Send to: %@</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Sending post..." xml:space="preserve">
-        <source>Sending post...</source>
-        <target>Sending post...</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Sending to: %@" xml:space="preserve">
@@ -2035,26 +2458,6 @@ Button to publish report</note>
         <source>Settings</source>
         <target>Settings</target>
         <note>Side bar navigation button</note>
-      </trans-unit>
-      <trans-unit id="Settings for %@" xml:space="preserve">
-        <source>Settings for %@</source>
-        <target>Settings for %@</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Settings for: Articles" xml:space="preserve">
-        <source>Settings for: Articles</source>
-        <target>Settings for: Articles</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Settings for: Gallery" xml:space="preserve">
-        <source>Settings for: Gallery</source>
-        <target>Settings for: Gallery</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Settings for: Hot" xml:space="preserve">
-        <source>Settings for: Hot</source>
-        <target>Settings for: Hot</target>
-        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Share highlight" xml:space="preserve">
         <source>Share highlight</source>
@@ -2091,10 +2494,15 @@ Button to publish report</note>
         <target>Show feed</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Show from which app someone posted" xml:space="preserve">
+        <source>Show from which app someone posted</source>
+        <target>Show from which app someone posted</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
       <trans-unit id="Show more" xml:space="preserve">
         <source>Show more</source>
         <target>Show more</target>
-        <note>Button to show more items</note>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Show post stats on timeline" xml:space="preserve">
         <source>Show post stats on timeline</source>
@@ -2105,6 +2513,16 @@ Button to publish report</note>
         <source>Show replies</source>
         <target>Show replies</target>
         <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Show unread count badge" xml:space="preserve">
+        <source>Show unread count badge</source>
+        <target>Show unread count badge</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Show wallet balance" xml:space="preserve">
+        <source>Show wallet balance</source>
+        <target>Show wallet balance</target>
+        <note>Setting on settings screen</note>
       </trans-unit>
       <trans-unit id="Shows 'Shared from Nostur' caption when sharing post screenshots" xml:space="preserve">
         <source>Shows 'Shared from Nostur' caption when sharing post screenshots</source>
@@ -2134,11 +2552,6 @@ Button to publish report</note>
       <trans-unit id="Signing as" xml:space="preserve">
         <source>Signing as</source>
         <target>Signing as</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Signing post..." xml:space="preserve">
-        <source>Signing post...</source>
-        <target>Signing post...</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Skip and try as guest first" xml:space="preserve">
@@ -2197,6 +2610,16 @@ Button to skip adding account and use the guest account instead</note>
         <target>Swipe to unblock/unmute</target>
         <note>Informational text</note>
       </trans-unit>
+      <trans-unit id="Tap account to exclude" xml:space="preserve">
+        <source>Tap account to exclude</source>
+        <target>Tap account to exclude</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Tap the notification bell when viewing someone's profile to receive a notification when they post." xml:space="preserve">
+        <source>Tap the notification bell when viewing someone's profile to receive a notification when they post.</source>
+        <target>Tap the notification bell when viewing someone's profile to receive a notification when they post.</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Tap to load media" xml:space="preserve">
         <source>Tap to load media</source>
         <target>Tap to load media</target>
@@ -2207,19 +2630,29 @@ Button to skip adding account and use the guest account instead</note>
         <target>Tap to load video</target>
         <note>Button to load a video in a post</note>
       </trans-unit>
+      <trans-unit id="Terms of Service" xml:space="preserve">
+        <source>Terms of Service</source>
+        <target>Terms of Service</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Test" xml:space="preserve">
         <source>Test</source>
         <target>Test</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="The Gallery feed shows pictures most liked by people you follow in the last %lld hours" xml:space="preserve">
-        <source>The Gallery feed shows pictures most liked by people you follow in the last %lld hours</source>
-        <target>The Gallery feed shows pictures most liked by people you follow in the last %lld hours</target>
+      <trans-unit id="Test Toggle" xml:space="preserve">
+        <source>Test Toggle</source>
+        <target>Test Toggle</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="The Hot feed shows posts most liked by people you follow in the last %lld hours" xml:space="preserve">
-        <source>The Hot feed shows posts most liked by people you follow in the last %lld hours</source>
-        <target>The Hot feed shows posts most liked by people you follow in the last %lld hours</target>
+      <trans-unit id="The Gallery feed shows pictures most liked or reposted by people you follow in the last %lld hours" xml:space="preserve">
+        <source>The Gallery feed shows pictures most liked or reposted by people you follow in the last %lld hours</source>
+        <target>The Gallery feed shows pictures most liked or reposted by people you follow in the last %lld hours</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="The Hot feed shows posts most liked or reposted by people you follow in the last %lld hours" xml:space="preserve">
+        <source>The Hot feed shows posts most liked or reposted by people you follow in the last %lld hours</source>
+        <target>The Hot feed shows posts most liked or reposted by people you follow in the last %lld hours</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="The article feed shows articles from people you follow in the selected time frame" xml:space="preserve">
@@ -2252,6 +2685,16 @@ Button to skip adding account and use the guest account instead</note>
         <target>There was a problem, could not send sats</target>
         <note>Error message</note>
       </trans-unit>
+      <trans-unit id="These relays are used for all accounts, and are not published unless configured on the account specific tabs." xml:space="preserve">
+        <source>These relays are used for all accounts, and are not published unless configured on the account specific tabs.</source>
+        <target>These relays are used for all accounts, and are not published unless configured on the account specific tabs.</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="These steps help you let others know on which relays they can find %@'s posts and which relays others should use to reach %@." xml:space="preserve">
+        <source>These steps help you let others know on which relays they can find %@'s posts and which relays others should use to reach %@.</source>
+        <target>These steps help you let others know on which relays they can find %@'s posts and which relays others should use to reach %@.</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="This NWC connection does not support payments" xml:space="preserve">
         <source>This NWC connection does not support payments</source>
         <target>This NWC connection does not support payments</target>
@@ -2261,6 +2704,11 @@ Button to skip adding account and use the guest account instead</note>
         <source>This article has been updated</source>
         <target>This article has been updated</target>
         <note>Message shown when there is a newer version available of an article</note>
+      </trans-unit>
+      <trans-unit id="This can be caused by the receiver switching to a different lightning address" xml:space="preserve">
+        <source>This can be caused by the receiver switching to a different lightning address</source>
+        <target>This can be caused by the receiver switching to a different lightning address</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="This gives more screen space when scrolling" xml:space="preserve">
         <source>This gives more screen space when scrolling</source>
@@ -2311,6 +2759,11 @@ Button to skip adding account and use the guest account instead</note>
         <target>Time frame</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Time-out" xml:space="preserve">
+        <source>Time-out</source>
+        <target>Time-out</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Time-out while loading gallery" xml:space="preserve">
         <source>Time-out while loading gallery</source>
         <target>Time-out while loading gallery</target>
@@ -2319,6 +2772,16 @@ Button to skip adding account and use the guest account instead</note>
       <trans-unit id="Time-out while loading hot feed" xml:space="preserve">
         <source>Time-out while loading hot feed</source>
         <target>Time-out while loading hot feed</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Time-out while loading posts" xml:space="preserve">
+        <source>Time-out while loading posts</source>
+        <target>Time-out while loading posts</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Tip" xml:space="preserve">
+        <source>Tip</source>
+        <target>Tip</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Title" xml:space="preserve">
@@ -2331,6 +2794,11 @@ Button to skip adding account and use the guest account instead</note>
         <target>Title of your feed</target>
         <note>Placeholder for input field to enter title of a List
 Placeholder for input field to enter title of a feed</note>
+      </trans-unit>
+      <trans-unit id="To log in with other accounts, but keep filtering using the main Web of Trust account" xml:space="preserve">
+        <source>To log in with other accounts, but keep filtering using the main Web of Trust account</source>
+        <target>To log in with other accounts, but keep filtering using the main Web of Trust account</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Total: %lld" xml:space="preserve">
         <source>Total: %lld</source>
@@ -2352,10 +2820,10 @@ Placeholder for input field to enter title of a feed</note>
         <target>Try guest account</target>
         <note>Button to try the guest account</note>
       </trans-unit>
-      <trans-unit id="Trying to fetch..." xml:space="preserve">
-        <source>Trying to fetch...</source>
-        <target>Trying to fetch...</target>
-        <note>Message shown when trying to fetch a post</note>
+      <trans-unit id="Try to use anyway" xml:space="preserve">
+        <source>Try to use anyway</source>
+        <target>Try to use anyway</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Turn off to save battery life and trust the relays for the authenticity of messages" xml:space="preserve">
         <source>Turn off to save battery life and trust the relays for the authenticity of messages</source>
@@ -2367,10 +2835,45 @@ Placeholder for input field to enter title of a feed</note>
         <target>Type your message...</target>
         <note>Placeholder for input field for new direct message</note>
       </trans-unit>
+      <trans-unit id="Unable to decode Cashu token" xml:space="preserve">
+        <source>Unable to decode Cashu token</source>
+        <target>Unable to decode Cashu token</target>
+        <note>Error message</note>
+      </trans-unit>
       <trans-unit id="Unable to decode lightning invoice" xml:space="preserve">
         <source>Unable to decode lightning invoice</source>
         <target>Unable to decode lightning invoice</target>
         <note>Error message</note>
+      </trans-unit>
+      <trans-unit id="Unable to fetch" xml:space="preserve">
+        <source>Unable to fetch</source>
+        <target>Unable to fetch</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Unable to fetch contacts" xml:space="preserve">
+        <source>Unable to fetch contacts</source>
+        <target>Unable to fetch contacts</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Unable to fetch content" xml:space="preserve">
+        <source>Unable to fetch content</source>
+        <target>Unable to fetch content</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Unable to fetch posts" xml:space="preserve">
+        <source>Unable to fetch posts</source>
+        <target>Unable to fetch posts</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Unable to fetch profile" xml:space="preserve">
+        <source>Unable to fetch profile</source>
+        <target>Unable to fetch profile</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Unable to load stream" xml:space="preserve">
+        <source>Unable to load stream</source>
+        <target>Unable to load stream</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Undo" xml:space="preserve">
         <source>Undo</source>
@@ -2380,6 +2883,16 @@ Placeholder for input field to enter title of a feed</note>
       <trans-unit id="Unfollow" xml:space="preserve">
         <source>Unfollow</source>
         <target>Unfollow</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Unhide" xml:space="preserve">
+        <source>Unhide</source>
+        <target>Unhide</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Unpin" xml:space="preserve">
+        <source>Unpin</source>
+        <target>Unpin</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Unverified zaps" xml:space="preserve">
@@ -2392,15 +2905,20 @@ Placeholder for input field to enter title of a feed</note>
         <target>Update</target>
         <note>Button to update WoT</note>
       </trans-unit>
-      <trans-unit id="Updated: %@" xml:space="preserve">
-        <source>Updated: %@</source>
-        <target>Updated: %@</target>
-        <note>Last updated date of WoT in Settings</note>
-      </trans-unit>
       <trans-unit id="Use existing account" xml:space="preserve">
         <source>Use existing account</source>
         <target>Use existing account</target>
         <note>Button to start using an existing account</note>
+      </trans-unit>
+      <trans-unit id="Use photo" xml:space="preserve">
+        <source>Use photo</source>
+        <target>Use photo</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Use relay for Search" xml:space="preserve">
+        <source>Use relay for Search</source>
+        <target>Use relay for Search</target>
+        <note>Label for toggle to search on this relay</note>
       </trans-unit>
       <trans-unit id="Verify message signatures" xml:space="preserve">
         <source>Verify message signatures</source>
@@ -2427,6 +2945,11 @@ Placeholder for input field to enter title of a feed</note>
         <target>We Don't Need No Stinkin' Badges</target>
         <note>Setting on settings screen</note>
       </trans-unit>
+      <trans-unit id="Web App" xml:space="preserve">
+        <source>Web App</source>
+        <target>Web App</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Web of Trust filter" xml:space="preserve">
         <source>Web of Trust filter</source>
         <target>Web of Trust filter</target>
@@ -2442,6 +2965,11 @@ Placeholder for input field to enter title of a feed</note>
         <target>Welcome to **Nostur**</target>
         <note>Welcoming the user to the app</note>
       </trans-unit>
+      <trans-unit id="What" xml:space="preserve">
+        <source>What</source>
+        <target>What</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="What's happening?" xml:space="preserve">
         <source>What's happening?</source>
         <target>What's happening?</target>
@@ -2452,15 +2980,35 @@ Placeholder for input field to enter title of a feed</note>
         <target>When at top, auto scroll if there are new posts</target>
         <note>Setting on settings screen</note>
       </trans-unit>
-      <trans-unit id="When you add a private note to a post or profile it will show up here." xml:space="preserve">
-        <source>When you add a private note to a post or profile it will show up here.</source>
-        <target>When you add a private note to a post or profile it will show up here.</target>
-        <note>Message shown when private note screen is empty</note>
-      </trans-unit>
       <trans-unit id="When you bookmark a post it will show up here." xml:space="preserve">
         <source>When you bookmark a post it will show up here.</source>
         <target>When you bookmark a post it will show up here.</target>
         <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Which relays should others use to find posts for account: %@? (choose 3 max)" xml:space="preserve">
+        <source>Which relays should others use to find posts for account: %@? (choose 3 max)</source>
+        <target>Which relays should others use to find posts for account: %@? (choose 3 max)</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Which relays should others use to reach account: %@? (choose 3 max)" xml:space="preserve">
+        <source>Which relays should others use to reach account: %@? (choose 3 max)</source>
+        <target>Which relays should others use to reach account: %@? (choose 3 max)</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Will not download media and previews" xml:space="preserve">
+        <source>Will not download media and previews</source>
+        <target>Will not download media and previews</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Will show balance in side bar" xml:space="preserve">
+        <source>Will show balance in side bar</source>
+        <target>Will show balance in side bar</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Will show from which app/client something was posted, if available" xml:space="preserve">
+        <source>Will show from which app/client something was posted, if available</source>
+        <target>Will show from which app/client something was posted, if available</target>
+        <note>Setting on settings screen</note>
       </trans-unit>
       <trans-unit id="Year" xml:space="preserve">
         <source>Year</source>
@@ -2494,6 +3042,11 @@ Switch to another account or add the private key to fully use this account.</tar
       <trans-unit id="Your address for receiving zaps has been set to: %@" xml:space="preserve">
         <source>Your address for receiving zaps has been set to: %@</source>
         <target>Your address for receiving zaps has been set to: %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Your balance:" xml:space="preserve">
+        <source>Your balance:</source>
+        <target>Your balance:</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Your name" xml:space="preserve">
@@ -2541,9 +3094,8 @@ Switch to another account or add the private key to fully use this account.</tar
       <trans-unit id="Zaps" xml:space="preserve">
         <source>Zaps</source>
         <target>Zaps</target>
-        <note>Tab title
-Title of tab
-Heading</note>
+        <note>Heading
+Tab title</note>
       </trans-unit>
       <trans-unit id="Zaps failed on: %@ (Timeout)." xml:space="preserve">
         <source>Zaps failed on: %@ (Timeout).</source>
@@ -2647,10 +3199,30 @@ Heading</note>
         <target>_Post from blocked account hidden_</target>
         <note>Message shown when a post is from a blocked account</note>
       </trans-unit>
+      <trans-unit id="and %lld others you follow." xml:space="preserve">
+        <source>and %lld others you follow.</source>
+        <target>and %lld others you follow.</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="and 1 other person you follow." xml:space="preserve">
+        <source>and 1 other person you follow.</source>
+        <target>and 1 other person you follow.</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="blocked until %@" xml:space="preserve">
+        <source>blocked until %@</source>
+        <target>blocked until %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="contact" xml:space="preserve">
         <source>contact</source>
         <target>contact</target>
         <note>The word "contact" when used as contact #1, contact #2 and contact #3.</note>
+      </trans-unit>
+      <trans-unit id="d" xml:space="preserve">
+        <source>d</source>
+        <target>d</target>
+        <note>short for days (ago), appended to number. Example: 2d</note>
       </trans-unit>
       <trans-unit id="decode ack" xml:space="preserve">
         <source>decode ack</source>
@@ -2687,6 +3259,11 @@ Heading</note>
         <target>eventId: %@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="failed zaps" xml:space="preserve">
+        <source>failed zaps</source>
+        <target>failed zaps</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="fetchRelays" xml:space="preserve">
         <source>fetchRelays</source>
         <target>fetchRelays</target>
@@ -2702,6 +3279,11 @@ Heading</note>
         <target>gmmm broken %@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="h" xml:space="preserve">
+        <source>h</source>
+        <target>h</target>
+        <note>short for hours (ago), appended to number. Example: 7h</note>
+      </trans-unit>
       <trans-unit id="hex" xml:space="preserve">
         <source>hex</source>
         <target>hex</target>
@@ -2710,12 +3292,31 @@ Heading</note>
       <trans-unit id="kind %@ type not (yet) supported" xml:space="preserve">
         <source>kind %@ type not (yet) supported</source>
         <target>kind %@ type not (yet) supported</target>
-        <note>Message shown when a 'kind X' post is not yet supported
-Message shown when a post kind (X) is not yet supported</note>
+        <note>Message shown when a 'kind X' post is not yet supported</note>
       </trans-unit>
       <trans-unit id="kind: %@" xml:space="preserve">
         <source>kind: %@</source>
         <target>kind: %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="m" xml:space="preserve">
+        <source>m</source>
+        <target>m</target>
+        <note>short for minutes (ago), appended to number. Example: 3m</note>
+      </trans-unit>
+      <trans-unit id="mentions" xml:space="preserve">
+        <source>mentions</source>
+        <target>mentions</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="new followers" xml:space="preserve">
+        <source>new followers</source>
+        <target>new followers</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="new posts" xml:space="preserve">
+        <source>new posts</source>
+        <target>new posts</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="no image" xml:space="preserve">
@@ -2763,10 +3364,30 @@ Message shown when a post kind (X) is not yet supported</note>
         <target>reactions</target>
         <note>Label for reactions count, example: (7) reactions</note>
       </trans-unit>
+      <trans-unit id="read" xml:space="preserve">
+        <source>read</source>
+        <target>read</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="read + write" xml:space="preserve">
+        <source>read + write</source>
+        <target>read + write</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="reposts" xml:space="preserve">
         <source>reposts</source>
         <target>reposts</target>
         <note>Label for reposts count, example: (7) reposts</note>
+      </trans-unit>
+      <trans-unit id="required" xml:space="preserve">
+        <source>required</source>
+        <target>required</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="s" xml:space="preserve">
+        <source>s</source>
+        <target>s</target>
+        <note>short for seconds (ago), appended to number. Example: 15s</note>
       </trans-unit>
       <trans-unit id="screenshot" xml:space="preserve">
         <source>screenshot</source>
@@ -2793,6 +3414,16 @@ Message shown when a post kind (X) is not yet supported</note>
         <target>test1</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="toggle red" xml:space="preserve">
+        <source>toggle red</source>
+        <target>toggle red</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="write" xml:space="preserve">
+        <source>write</source>
+        <target>write</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="wss://nostr.relay.url.here" xml:space="preserve">
         <source>wss://nostr.relay.url.here</source>
         <target>wss://nostr.relay.url.here</target>
@@ -2802,6 +3433,11 @@ Message shown when a post kind (X) is not yet supported</note>
         <source>wss://relay...</source>
         <target>wss://relay...</target>
         <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="y" xml:space="preserve">
+        <source>y</source>
+        <target>y</target>
+        <note>short for year (ago), appended to number. Example: 1y</note>
       </trans-unit>
       <trans-unit id="zaps" xml:space="preserve">
         <source>zaps</source>
@@ -2813,9 +3449,9 @@ Message shown when a post kind (X) is not yet supported</note>
         <target>·</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="⚡️" xml:space="preserve">
-        <source>⚡️</source>
-        <target>⚡️</target>
+      <trans-unit id="⚠️" xml:space="preserve">
+        <source>⚠️</source>
+        <target>⚠️</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="🤫 Following" xml:space="preserve">
