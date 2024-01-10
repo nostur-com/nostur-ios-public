@@ -180,7 +180,9 @@ class NRState: ObservableObject {
     @objc func powerStateChanged(_ notification: Notification) {
         if ProcessInfo.processInfo.isLowPowerModeEnabled {
             if SettingsStore.shared.animatedPFPenabled {
-                SettingsStore.shared.objectWillChange.send() // This will reload views to stop playing animated PFP GIFs
+                DispatchQueue.main.async {
+                    SettingsStore.shared.objectWillChange.send() // This will reload views to stop playing animated PFP GIFs
+                }
             }
         }
     }
