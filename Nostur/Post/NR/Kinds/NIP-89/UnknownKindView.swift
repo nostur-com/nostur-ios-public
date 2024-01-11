@@ -51,6 +51,7 @@ struct UnknownKindView: View {
                 else {
                     Text("\(Image(systemName: "exclamationmark.triangle.fill")) kind \(Double(nrPost.kind).clean) type not (yet) supported")
                         .fontWeight(.bold).lineLimit(1)
+                    NRTextDynamic((nrPost.content ?? nrPost.alt) ?? "")
                 }
             }
             .padding(.horizontal, 10)
@@ -60,10 +61,13 @@ struct UnknownKindView: View {
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
             )
         case .timeout:
-            Label(String(localized: "kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a 'kind X' post is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                .hCentered()
-                .frame(maxWidth: .infinity)
-                .background(theme.lineColor.opacity(0.2))
+            VStack {
+                Label(String(localized: "kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a 'kind X' post is not yet supported"), systemImage: "exclamationmark.triangle.fill")
+                    .hCentered()
+                    .frame(maxWidth: .infinity)
+                    .background(theme.lineColor.opacity(0.2))
+                NRTextDynamic((nrPost.content ?? nrPost.alt) ?? "")
+            }
         }
     }
     
