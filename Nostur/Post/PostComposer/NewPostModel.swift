@@ -498,7 +498,9 @@ public final class NewPostModel: ObservableObject {
             
         }
         else {
-            mentioning = false
+            if mentioning {
+                mentioning = false
+            }
         }
         
         let showMentioning = mentioning && !filteredContactSearchResults.isEmpty
