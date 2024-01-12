@@ -202,7 +202,7 @@ struct ContentRenderer: View { // VIEW things
                         
                         SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrPost.imageUrls)
                         //                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(width: max(25,scaledDimensions.width + 10), height: max(25,scaledDimensions.height))
+                            .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
 //                            .debugDimensions("sd.image \(scaledDimensions.width)x\(scaledDimensions.height)")
                             .background {
                                 if SettingsStore.shared.lowDataMode {
