@@ -129,3 +129,7 @@ func serializedE(_ id:String) -> String {
 func serializedT(_ tag:String) -> String {
     return "[\"t\",\"\(tag)"
 }
+
+func serializedR(_ tag:String) -> String {
+    return "[\"r\",\"\(tag)"
+}
