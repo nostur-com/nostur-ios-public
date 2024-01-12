@@ -48,6 +48,8 @@
 		1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F35672A31C76900AA9C41 /* InfoPlist.strings */; };
 		1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F356A2A31C76900AA9C41 /* Localizable.strings */; };
 		1F12422A2A1CB0BC003AC591 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1242292A1CB0BC003AC591 /* Logger.swift */; };
+		1F13BF9D2B4F7C4000607D98 /* URLView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F13BF9C2B4F7C4000607D98 /* URLView.swift */; };
+		1F13BF9F2B4F870D00607D98 /* BigLinkPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F13BF9E2B4F870D00607D98 /* BigLinkPreview.swift */; };
 		1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA6D29854B8E00EACCD5 /* ContactList.swift */; };
 		1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */; };
 		1F14BA762985984100EACCD5 /* ProfileRelaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */; };
@@ -551,6 +553,8 @@
 		1F0F356D2A31DFB700AA9C41 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1F0F356F2A31E54900AA9C41 /* ci_post_clone.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ci_post_clone.sh; sourceTree = "<group>"; };
 		1F1242292A1CB0BC003AC591 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		1F13BF9C2B4F7C4000607D98 /* URLView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLView.swift; sourceTree = "<group>"; };
+		1F13BF9E2B4F870D00607D98 /* BigLinkPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigLinkPreview.swift; sourceTree = "<group>"; };
 		1F14BA6D29854B8E00EACCD5 /* ContactList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactList.swift; sourceTree = "<group>"; };
 		1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRow.swift; sourceTree = "<group>"; };
 		1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelaysView.swift; sourceTree = "<group>"; };
@@ -1051,6 +1055,7 @@
 				1F7C4CAE2AB1DDD400145D83 /* Repost.swift */,
 				1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */,
 				1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */,
+				1F13BF9E2B4F870D00607D98 /* BigLinkPreview.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -1947,6 +1952,7 @@
 				1FD78EF22A0CB878003E7B3E /* Highlight.swift */,
 				1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */,
 				1F065A9829A37A47003421D3 /* NoteZaps.swift */,
+				1F13BF9C2B4F7C4000607D98 /* URLView.swift */,
 			);
 			path = Kinds;
 			sourceTree = "<group>";
@@ -2245,6 +2251,7 @@
 				1F45C7F529EFB13F00F58772 /* NostrBuildMediaUploadService.swift in Sources */,
 				1F0088EB29D735080016F111 /* ContentRenderer.swift in Sources */,
 				1FE6947A2A8B4DCD004BB949 /* FeedSettings+Hashtags.swift in Sources */,
+				1F13BF9F2B4F870D00607D98 /* BigLinkPreview.swift in Sources */,
 				1F38AFF12A27166C0035641E /* VideoHelpers.swift in Sources */,
 				1FC78F6F29CAD3510009C1C7 /* DMConversationView.swift in Sources */,
 				1FA3AB242A4E17070059F6B7 /* NIP46SecretManager.swift in Sources */,
@@ -2307,6 +2314,7 @@
 				1FBB901F2A85128A007A1550 /* StringMetric.swift in Sources */,
 				1FED0D852ACAF5F1002DAC02 /* CustomizableFooter.swift in Sources */,
 				1FC6807A29DB0BF7003EE054 /* ReportPostSheet.swift in Sources */,
+				1F13BF9D2B4F7C4000607D98 /* URLView.swift in Sources */,
 				1F740DAB29AF898400EFCCA7 /* BadgesView.swift in Sources */,
 				1FB38B6129E29CEC00B85156 /* ProfilePicPicker.swift in Sources */,
 				1FCB52752A535A85006D08DF /* OpenLatestUpdateMessage.swift in Sources */,

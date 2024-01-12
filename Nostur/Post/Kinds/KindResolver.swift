@@ -25,6 +25,8 @@ struct KindResolver: View {
 //        let _ = Self._printChanges()
 //        #endif
         switch nrPost.kind {
+        case 443:
+            URLView(nrPost: nrPost, theme: theme)
         case 9802:
             Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, grouped: grouped, theme: theme)
         case 30023:
