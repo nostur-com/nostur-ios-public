@@ -14,7 +14,7 @@ struct ThreadReplies: View {
     @State private var showNotWoT = false
     
     var body: some View {
-        LazyVStack(spacing: 10) {
+        VStack(spacing: 10) {
             ForEach(nrPost.groupedRepliesSorted) { reply in
                 PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
                     .id(reply.id)
@@ -36,10 +36,10 @@ struct ThreadReplies: View {
                 }
             }
             // If there are less than 5 replies, put some empty space so our detail note is at top of screen
-            if (nrPost.replies.count < 5) {
-                themes.theme.listBackground.frame(height: 400)
-            }
-            Spacer()
+//            if (nrPost.replies.count < 5) {
+//                themes.theme.listBackground.frame(height: 400)
+//            }
+//            Spacer()
         }
         .background(themes.theme.listBackground)
         .onAppear {
