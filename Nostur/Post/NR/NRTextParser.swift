@@ -53,6 +53,8 @@ class NRTextParser { // TEXT things
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
             
+            mutableAttributedString.addHashtagIcons()
+            
             let height = mutableAttributedString.boundingRect(
                 with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
                 options: [.usesLineFragmentOrigin, .usesFontLeading],
