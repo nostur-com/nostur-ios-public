@@ -36,7 +36,9 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
         return
     }
     
-    let request = URLRequest(url: url)
+    var request = URLRequest(url: url)
+    request.setValue("text/html; charset=utf-8", forHTTPHeaderField: "Content-Type")
+    request.setValue("text/html; charset=utf-8", forHTTPHeaderField: "Accept")
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         guard let data = data, error == nil else {
             completion(.failure(error!))
