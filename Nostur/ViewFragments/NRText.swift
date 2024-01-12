@@ -23,8 +23,9 @@ struct NRTextDynamic: View {
         
         do {
             let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-            
+                        
             let mutableAttributedString = NSMutableAttributedString(finalText)
+                        
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
                 .foregroundColor: UIColor(Themes.default.theme.primary)
@@ -87,15 +88,19 @@ struct NRTextDynamic: View {
 
 #Preview("NRTextDynamic") {
     VStack {
-        NRTextDynamic("Some text with a tag [#bitcoin](nostur:t:bitcoin)")
+        Text("[#bitcoin](nostur:t:bitcoin)")
+        let what = NRTextParser.replaceHashtagsWithMarkdownLinks(in: "Trying out some #nostr hashtags for the next update of #Nostur.\n\n#Zaps #Bitcoin")
+        let _ = print(what)
+        NRTextDynamic(what)
             .background(Color.red)
-        
+        Spacer()
         NRTextDynamic("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long")
             .background(Color.blue)
         
         Text("What")
             .background(Color.green)
     }
+    .padding()
     .environmentObject(Themes.default)
     .environmentObject(DIMENSIONS())
 }
@@ -180,6 +185,8 @@ struct NRTextFixed: UIViewRepresentable {
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
             
+            mutableAttributedString.addHashtagIcons()
+            
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
         }
         catch {
@@ -195,6 +202,8 @@ struct NRTextFixed: UIViewRepresentable {
                 attributes,
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
+            
+            mutableAttributedString.addHashtagIcons()
             
             L.og.error("NRTextParser: \(error)")
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
