@@ -35,6 +35,8 @@ struct NRTextDynamic: View {
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
             
+            mutableAttributedString.addHashtagIcons()
+            
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
         }
         catch {
@@ -50,6 +52,8 @@ struct NRTextDynamic: View {
                 attributes,
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
+            
+            mutableAttributedString.addHashtagIcons()
             
             L.og.error("NRTextParser: \(error)")
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
@@ -234,5 +238,26 @@ struct NRTextFixed: UIViewRepresentable {
         // You can use fittingSize.height if you want the height to be dynamic based on content.
         // If you have a specific height in mind, replace fittingSize.height with that value.
         return CGSize(width: proposal.width, height: fittingSize.height)
+    }
+}
+
+extension NSMutableAttributedString {
+    
+    func addHashtagIcons() {
+        let matches = NRTextParser.htRegex.matches(in: string, options: [], range: NSRange(location: 0, length: length))
+        let reversedMatches = Array(matches.reversed())
+
+        for match in reversedMatches {
+            if match.numberOfRanges == 1 {
+                let contentRange = match.range(at: 0)
+                let tagString = (string as NSString).substring(with: contentRange)
+                guard let tagImage = NRTextParser.shared.hashtagIcons[tagString.lowercased()] else { continue }
+                
+                let appendingImage = NSMutableAttributedString(string: " ")
+                appendingImage.append(tagImage)
+                
+                self.insert(appendingImage, at: contentRange.upperBound)
+            }
+        }
     }
 }
