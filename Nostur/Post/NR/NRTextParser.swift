@@ -312,6 +312,41 @@ class NRTextParser { // TEXT things
                                   with: "[$0](nostur:t:$2)",
                                   options: .regularExpression)
     }
+    
+    // hashtag -> image name
+    static let hashtags = ["#bitcoin": "HashtagBitcoin",
+                               "#btc": "HashtagBitcoin",
+                               "#sats": "HashtagBitcoin",
+                               "#satoshis": "HashtagBitcoin",
+                               "#nostur": "HashtagNostur",
+                               "#nostr": "HashtagNostr",
+                               "#lightning": "HashtagLightning",
+                               "#zapping": "HashtagLightning",
+                               "#zapper": "HashtagLightning",
+                               "#zapped": "HashtagLightning",
+                               "#zaps": "HashtagLightning",
+                               "#zap": "HashtagLightning",
+                               "#nostrich": "HashtagNostrich",
+                               "#nostriches": "HashtagNostrich"]
+    
+    // Cached regex that is used in NSMutableAttributedString.addHashtagIcons()
+    static let htRegex = try! NSRegularExpression(pattern: "\(hashtags.keys.joined(separator: "\\b|"))\\b", options: [.caseInsensitive])
+    
+    // Build NSAttributedString hashtag icons once for reuse in NSMutableAttributedString.addHashtagIcons()
+    public lazy var hashtagIcons: [String: NSAttributedString] = {
+        
+        let font = UIFont.preferredFont(forTextStyle: .body)
+        let size = (font.capHeight - font.pointSize).rounded() / 2
+        
+        return Self.hashtags.mapValues { imageName in
+            let attachment = NSTextAttachment()
+            attachment.image = UIImage(named: imageName)
+            attachment.bounds = CGRect(x: 0, y: size, width: font.pointSize, height: font.pointSize)
+            
+            let attributedImageString = NSAttributedString(attachment: attachment)
+            return attributedImageString
+        }
+    }()
 }
 
 struct TextWithPs: Hashable {
