@@ -45,13 +45,16 @@ func typeOfSearch(_ searchInput:String) -> TypeOfSearch {
     }
     else if searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true).count == 2 {
         let nip05parts = searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
-            
+        
         let domain = String(nip05parts[1])
         let name = String(nip05parts[0])
         
         let url = URL(string: "https://\(domain)/.well-known/nostr.json?name=\(name)")
         
         return .nip05(Nip05Parts(nip05url: url, domain: domain, name: name))
+    }
+    else if (searchTrimmed.prefix(8) == "https://") {
+        return .url(searchTrimmed)
     }
     
     return .other(searchTrimmed)
@@ -67,9 +70,10 @@ public enum TypeOfSearch {
     case note1(String)
     case hexId(String)
     case nip05(Nip05Parts)
+    case url(String)
     case other(String)
 }
-    
+
 public struct Nip05Parts {
     var nip05url:URL?
     let domain:String
@@ -118,10 +122,10 @@ extension Search {
         
         bg().perform {
             if let article = Event.fetchReplacableEvent(
-                    kind,
-                    pubkey: pubkey,
-                    definition: definition,
-                    context: bg()) {
+                kind,
+                pubkey: pubkey,
+                definition: definition,
+                context: bg()) {
                 
                 let article = NRPost(event: article)
                 
@@ -138,10 +142,10 @@ extension Search {
                     processResponseCommand: { taskId, _, _ in
                         bg().perform {
                             if let article = Event.fetchReplacableEvent(
-                                    kind,
-                                    pubkey: pubkey,
-                                    definition: definition,
-                                    context: bg()) {
+                                kind,
+                                pubkey: pubkey,
+                                definition: definition,
+                                context: bg()) {
                                 
                                 let article = NRPost(event: article)
                                 Task { @MainActor in
@@ -166,15 +170,15 @@ extension Search {
                                         context: bg()) == nil else { return }
                                     
                                     guard let relay = naddr.relays.first else { return }
-                                        
+                                    
                                     ConnectionPool
                                         .shared
                                         .sendEphemeralMessage(
                                             RM.getArticle(
-                                                    pubkey: pubkey,
-                                                    kind: Int(kind),
-                                                    definition: definition,
-                                                    subscriptionId: taskId
+                                                pubkey: pubkey,
+                                                kind: Int(kind),
+                                                definition: definition,
+                                                subscriptionId: taskId
                                             ),
                                             relay: relay
                                         )
@@ -192,7 +196,7 @@ extension Search {
     
     func neventSearch(_ term:String) {
         guard let identifier = try? ShareableIdentifier(term),
-                let noteHex = identifier.eventId
+              let noteHex = identifier.eventId
         else { return }
         
         searching = true
@@ -211,7 +215,7 @@ extension Search {
                 self.nrPosts = [nrPost]
             }
         }
-            
+        
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
             req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH)
         }, processResponseCommand: { taskId, _, _ in
@@ -229,7 +233,7 @@ extension Search {
         })
         backlog.add(searchTask1)
         searchTask1.fetch()
-
+        
         
         guard !identifier.relays.isEmpty else { return }
         searchTask = Task {
@@ -252,7 +256,7 @@ extension Search {
         searching = true
         guard NostrRegexes.default.matchingStrings(term, regex: NostrRegexes.default.cache[.npub]!).count == 1
         else { return }
-
+        
         let pubkey = Keys.hex(npub: term)
         contacts.nsPredicate = NSPredicate(format: "pubkey = %@", pubkey)
         nrPosts = []
@@ -290,7 +294,7 @@ extension Search {
             if tags[0] != tags[0].lowercased() {
                 tags.append(tags[0].lowercased())
             }
-                               
+            
             let filters = [Filters(tagFilter: TagFilter(tag: "t", values: tags))]
             if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
                 req(message, relayType: .SEARCH)
@@ -305,7 +309,7 @@ extension Search {
                 let nrPosts = results
                     .filter { !existingIds.contains($0.id) }
                     .map { NRPost(event: $0) }
-
+                
                 Task { @MainActor in
                     self.nrPosts = (self.nrPosts + nrPosts)
                         .sorted(by: { $0.createdAt > $1.createdAt })
@@ -321,7 +325,7 @@ extension Search {
             searching = true
             let key = try NIP19(displayString: term)
             contacts.nsPredicate = NSPredicate(value: false)
-     
+            
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "id = %@", key.hexString)
             fr.fetchLimit = 1
@@ -341,7 +345,7 @@ extension Search {
                 fr.fetchLimit = 1
                 bg().perform {
                     guard let result = try? bg().fetch(fr).first else { return }
-                        
+                    
                     let nrPost = NRPost(event: result)
                     Task { @MainActor in
                         self.nrPosts = [nrPost]
@@ -415,7 +419,7 @@ extension Search {
         let existingIds = self.nrPosts.map { $0.id }
         bg().perform {
             guard let results = try? bg().fetch(fr) else { return }
-                
+            
             let nrPosts = results
                 .filter { !existingIds.contains($0.id) }
                 .map { NRPost(event: $0) }
@@ -431,13 +435,103 @@ extension Search {
         guard let url = nip05parts.nip05url else { return }
         Task {
             let (data, _) = try await URLSession.shared.data(from: url)
-
+            
             guard let nostrJson = try? JSONDecoder().decode(NostrJson.self, from: data) else { return }
             
             guard let pubkey = nostrJson.names[nip05parts.name], !pubkey.isEmpty else { return }
-
+            
             hexIdSearch(pubkey)
         }
+    }
+    
+    func urlSearch(_ term:String) {
+        let blockedPubkeys = blocks()
+        searching = true
+        contacts.nsPredicate = NSPredicate(value: false)
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "kind == 443 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedR(term))
+        fr.fetchLimit = 150
+        bg().perform {
+            guard let results = try? bg().fetch(fr) else { return }
+            let nrPosts = results
+                .uniqued(on: { $0.fastTags.first(where: { $0.0 == "r" && $0.1 == term })?.1 ?? UUID().uuidString })
+                .map { NRPost(event: $0) }
+                .sorted(by: { $0.createdAt > $1.createdAt })
+            
+            nrPosts.forEach { x in
+                L.og.info("kind443s: \(x.id) ")
+            }
+            
+            Task { @MainActor in
+                self.nrPosts = nrPosts
+            }
+        }
+        
+        let searchTask1 = ReqTask(
+            timeout: 4.5,
+            prefix: "SEA-",
+            reqCommand: { taskId in
+                var tags = [term]
+                if tags[0] != tags[0].lowercased() {
+                    tags.append(tags[0].lowercased())
+                }
+                
+                let filters = [Filters(kinds:[443], tagFilter: TagFilter(tag: "r", values: tags))]
+                if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
+                    req(message, relayType: .SEARCH)
+                }
+            },
+            processResponseCommand: { taskId, _, _ in
+                let fr = Event.fetchRequest()
+                fr.predicate = NSPredicate(format: "kind == 443 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedR(term))
+                fr.fetchLimit = 150
+                let existingUrls = self.nrPosts.compactMap { $0.fastTags.first(where: { $0.0 == "r" })?.1 }
+                bg().perform {
+                    guard let results = try? bg().fetch(fr) else { return }
+                    let nrPosts = results
+                        .filter { kind443 in
+                            guard let url = kind443.fastTags.first(where: { $0.0 == "r" })?.1 else { return false }
+                            return !existingUrls.contains(url)
+                        }
+                        .map { NRPost(event: $0) }
+                    
+                    Task { @MainActor in
+                        self.nrPosts = (self.nrPosts + nrPosts)
+                            .sorted(by: { $0.createdAt > $1.createdAt })
+                    }
+                }
+            },
+            timeoutCommand: { taskId in
+                guard let account = account(), let pk = account.privateKey else { return  }
+                bg().perform {
+                    var kind443 = NEvent(content: "Comments on \(term)")
+                    kind443.publicKey = account.publicKey
+                    kind443.kind = .custom(443)
+                    kind443.tags.append(NostrTag(["r", term]))
+                    
+                    if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(kind443.publicKey)) {
+                        kind443.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                    }
+                    
+                    
+                    do {
+                        let signedKind443 = try kind443.sign(NKeys(privateKeyHex: pk))
+                        let unpublishedKind443 = Event.saveEvent(event: signedKind443)
+                        let nrPost = NRPost(event: unpublishedKind443)
+                        DispatchQueue.main.async {
+                            self.nrPosts = [nrPost]
+                        }
+                    }
+                    catch {
+                        L.og.error("Problem signing kind 443")
+                    }
+                    
+                }
+            })
+        backlog.add(searchTask1)
+        searchTask1.fetch()
     }
 }
 

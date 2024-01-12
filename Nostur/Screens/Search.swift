@@ -12,17 +12,17 @@ import NavigationBackport
 
 @MainActor
 struct Search: View {
-    @EnvironmentObject private var la:LoggedInAccount
-    @EnvironmentObject private var themes:Themes
-    @State var nrPosts:[NRPost] = []
+    @EnvironmentObject private var la: LoggedInAccount
+    @EnvironmentObject private var themes: Themes
+    @State var nrPosts: [NRPost] = []
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
         predicate: NSPredicate(value: false),
         animation: .none)
-    var contacts:FetchedResults<Contact>
+    var contacts: FetchedResults<Contact>
     
-    private var filteredContactSearchResults:[Contact] {
+    private var filteredContactSearchResults: [Contact] {
         let wot = WebOfTrust.shared
         if WOT_FILTER_ENABLED() {
             return contacts
@@ -48,13 +48,13 @@ struct Search: View {
     @State private var navPath = NBNavigationPath()
 
     @State private var searchText = ""
-    @State var searchTask:Task<Void, Never>? = nil
+    @State var searchTask: Task<Void, Never>? = nil
     @State var backlog = Backlog()
-    @ObservedObject var settings:SettingsStore = .shared
+    @ObservedObject var settings: SettingsStore = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
-    private var isSearchingHashtag:Bool {
+    private var isSearchingHashtag: Bool {
         let term = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         return isHashtag(term)
     }
@@ -160,6 +160,8 @@ struct Search: View {
                     hexIdSearch(term)
                 case .nip05(let nip05parts):
                     nip05Search(nip05parts)
+                case .url(let term):
+                    urlSearch(term)
                 case .other(let term):
                     otherSearch(term)
                 }
