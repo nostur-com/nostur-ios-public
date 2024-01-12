@@ -251,11 +251,18 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var aTag:String = ""
     var isPreview = false // hide 'Sent to 0 relays' in preview footer, disable animated gifs, Text instead of NRText
     
-    var anyName:String {
-        if let contact = contact {
-            return contact.anyName
+    var anyName: String {
+        if kind == 443 {
+            let url = (fastTags.first(where: { $0.0 == "r" })?.1 ?? "Website comments")
+                .replacingOccurrences(of: "https://", with: "")
+            return url
         }
-        return String(pubkey.suffix(11))
+        else {
+            if let contact = contact {
+                return contact.anyName
+            }
+            return String(pubkey.suffix(11))
+        }
     }
     
     private var withFooter = true // Use false for embedded posts, where footer is not visible so we don't load/listen for likes, replies etc.

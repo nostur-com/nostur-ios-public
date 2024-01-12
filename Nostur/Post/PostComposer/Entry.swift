@@ -20,19 +20,21 @@ struct Entry: View {
     private var quotingEvent: Event?
     private var directMention: Contact?
     private var onDismiss: () -> Void
+    private var replyToKind: Int64?
     static let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
     
     private var shouldDisablePostButton: Bool {
         typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty)
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?) {
         self.replyTo = replyTo
         self.quotingEvent = quotingEvent
         self.directMention = directMention
         self.vm = vm
         self.typingTextModel = vm.typingTextModel
         self.onDismiss = onDismiss
+        self.replyToKind = replyToKind
         _photoPickerShown = photoPickerShown
         _gifSheetShown = gifSheetShown
         _cameraSheetShown = cameraSheetShown
@@ -45,8 +47,14 @@ struct Entry: View {
         VStack(alignment: .leading, spacing: 3) {
             if replyTo != nil {
                 HStack(alignment: .top) { // name + reply + context menu
-                    ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $typingTextModel.selectedMentions, unselected: $typingTextModel.unselectedMentions)
-                        .offset(x: 5.0, y: 4.0)
+                    if replyToKind == 443 {
+                        Text("Commenting on website")
+                            .offset(x: 5.0, y: 4.0)
+                    }
+                    else {
+                        ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $typingTextModel.selectedMentions, unselected: $typingTextModel.unselectedMentions)
+                            .offset(x: 5.0, y: 4.0)
+                    }
                 }
                 .frame(height: 21.0)
             }

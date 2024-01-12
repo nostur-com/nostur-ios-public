@@ -84,7 +84,25 @@ struct Search: View {
                         }
                         ForEach(nrPosts.prefix(75)) { nrPost in
                             Box(nrPost: nrPost) {
-                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                                if nrPost.kind == 443 {
+                                    VStack {
+                                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                                        HStack(spacing: 0) {
+                                            self.replyButton
+                                                .foregroundColor(themes.theme.footerButtons)
+                                                .padding(.leading, 10)
+                                                .padding(.vertical, 5)
+                                                .contentShape(Rectangle())
+                                                .onTapGesture {
+                                                    navigateTo(nrPost)
+                                                }
+                                            Spacer()
+                                        }
+                                    }
+                                }
+                                else {
+                                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                                }
                             }
                             .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                         }
@@ -192,6 +210,12 @@ struct Search: View {
                        }
                    }))
         }
+    }
+    
+    @ViewBuilder
+    private var replyButton: some View {
+        Image("ReplyIcon")
+        Text("Comments")
     }
 }
 
