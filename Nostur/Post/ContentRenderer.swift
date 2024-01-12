@@ -32,7 +32,7 @@ struct ContentRenderer: View { // VIEW things
         _didStart = didStart
     }
     
-    private var shouldAutoload:Bool {
+    private var shouldAutoload: Bool {
         forceAutoload || SettingsStore.shouldAutodownload(nrPost)
     }
     
