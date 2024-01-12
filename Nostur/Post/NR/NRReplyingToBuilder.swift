@@ -21,6 +21,13 @@ class NRReplyingToBuilder {
             return String(localized:"Replying to: \(articleTitle)", comment: "Shown when replying to an article (Replying to: (article title)")
         }
         
+        if let replyTo = event.replyTo, replyTo.kind == 443 {
+            guard let url = replyTo.fastTags.first(where: { $0.0 == "r" })?.1 else {
+                return "Commenting on website"
+            }
+            return String(localized:"Commenting on \(url)", comment: "Shown when adding a comment to a website")
+        }
+        
         let tags = event.fastTags
         guard tags.count < 50 else { return String(localized:"Replying to \(tags.count) people", comment: "Shown in a post, Replying to (X) people ") }
 
