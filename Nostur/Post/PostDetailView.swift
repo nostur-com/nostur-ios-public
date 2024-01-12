@@ -98,10 +98,22 @@ struct PostDetailView: View {
                             .padding(10)
                             .background(themes.theme.background)
                         
-                            
+                        if (nrPost.kind == 443) {
+                            Text("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+                                .fontWeightBold()
+                                .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+                                
+                        }
                         
-                        // MARK: REPLIES TO OUR MAIN NOTE
-                        ThreadReplies(nrPost: nrPost)
+                        // MARK: REPLIES TO OUR MAIN POST
+                        if (nrPost.kind == 443) {
+                            // SPECIAL HANDLING FOR WEBSITE COMMENTS
+                            WebsiteComments(nrPost: nrPost)
+                        }
+                        else {
+                            // NORMAL REPLIES TO A POST
+                            ThreadReplies(nrPost: nrPost)
+                        }
                     }
                     .background(themes.theme.listBackground)
                 }
@@ -175,8 +187,37 @@ struct PostAndParent: View {
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
             if let replyTo = nrPost.replyTo {
                 if replyTo.deletedById == nil {
-                    
-                    if replyTo.kind == 30023 {
+                    if replyTo.kind == 443 {
+                        URLView(nrPost: replyTo, theme: themes.theme)
+                        
+                        
+                        if (replyTo.kind == 443) {
+                            Text("Comments on \(replyTo.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+                                .fontWeightBold()
+                                .padding(.top, 10)
+                                .padding(.bottom, 10)
+                                .frame(maxWidth: .infinity)
+                                .background(themes.theme.listBackground)
+                                .padding(.horizontal, -10)
+                            
+                            HStack(spacing: 0) {
+                                self.replyButton
+                                    .foregroundColor(themes.theme.footerButtons)
+                                    .padding(.leading, 10)
+                                    .padding(.vertical, 5)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        sendNotification(.createNewReply, EventNotification(event: nrPost.event))
+                                    }
+                                Spacer()
+                            }
+                            .padding(.bottom, 15)
+                            .background(themes.theme.listBackground)
+                            .padding(.top, -10)
+                            .padding(.horizontal, -10)
+                        }
+                    }
+                    else if replyTo.kind == 30023 {
                         ArticleView(replyTo, isParent:true, isDetail: true, fullWidth: true, theme: themes.theme)
                             .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
                             .background(Color(.secondarySystemBackground))
@@ -227,22 +268,32 @@ struct PostAndParent: View {
             // MARK: DETAIL NOTE
             VStack(alignment: .leading, spacing: 0) {
                 if nrPost.deletedById == nil {
-                    if isParent {
-                        ParentPost(nrPost: nrPost, connect:connect)
-                            .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-                            .background(
-                                themes.theme.background
-                                    .onTapGesture {
-                                        navigateTo(nrPost)
-                                    }
-                            )
+                    if nrPost.kind == 443 {
+                        URLView(nrPost: nrPost, theme: themes.theme)
+                        
+//                        if (nrPost.kind == 443) {
+//                            Text("Comments & replies on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+//                                .fontWeightBold()
+//                        }
                     }
                     else {
-                        DetailPost(nrPost: nrPost)
-                            .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-                            .id(nrPost.id)
-                            .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
-                            .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
+                        if isParent {
+                            ParentPost(nrPost: nrPost, connect:connect)
+                                .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
+                                .background(
+                                    themes.theme.background
+                                        .onTapGesture {
+                                            navigateTo(nrPost)
+                                        }
+                                )
+                        }
+                        else {
+                            DetailPost(nrPost: nrPost)
+                                .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
+                                .id(nrPost.id)
+                                .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
+                                .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
+                        }
                     }
                 }
                 else {
@@ -292,6 +343,12 @@ struct PostAndParent: View {
                 }
             }
         }
+    }
+    
+    @ViewBuilder
+    private var replyButton: some View {
+        Image("ReplyIcon")
+        Text("Add comment")
     }
 }
 
