@@ -140,6 +140,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
 //            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self.webSocketSub = nil
             
+            self.session?.invalidateAndCancel()
             self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
             
             if let urlURL = URL(string: relayData.url) {
@@ -300,6 +301,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self?.isSocketConnected = false
 //            self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self?.webSocketSub = nil
+            self?.session?.invalidateAndCancel()
         }
     }
     
@@ -360,6 +362,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self?.isSocketConnected = false
 //            self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self?.webSocketSub = nil
+            self?.session?.invalidateAndCancel()
             DispatchQueue.main.async {
                 sendNotification(.socketNotification, "Disconnected: \(self?.url ?? "")")
             }
@@ -380,6 +383,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self?.isSocketConnected = false
 //            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self?.webSocketSub = nil
+            self?.session?.invalidateAndCancel()
             if let url = self?.url {
                 let shortURL = URL(string: url)?.baseURL?.description ?? url
                 DispatchQueue.main.async {
@@ -458,6 +462,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self?.isSocketConnected = false
 //            self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self?.webSocketSub = nil
+            self?.session?.invalidateAndCancel()
             DispatchQueue.main.async {
                 sendNotification(.socketNotification, "Disconnected: \(self?.url ?? "")")
             }
