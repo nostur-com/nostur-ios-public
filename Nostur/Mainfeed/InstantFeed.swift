@@ -149,11 +149,12 @@ class InstantFeed {
                     self.events = events
                     L.og.notice("🟪 Received \(events.count) posts from relays (found in db)")
                 }
-            } timeoutCommand: { taskId in
+            } timeoutCommand: { [weak self] taskId in
+                guard let self = self else { return }
                 if self.events == nil {
                     L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
-                    bg().perform {
-                        self.events = []
+                    bg().perform { [weak self] in
+                        self?.events = []
                     }
                 }
             }

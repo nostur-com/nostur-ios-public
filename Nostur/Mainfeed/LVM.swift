@@ -125,13 +125,13 @@ class LVM: NSObject, ObservableObject {
             L.og.debug("COUNTER: \(self.lvmCounter.count) - wotEnabled change")
             instantFinished = false
             posts.send([:])
-            bg().perform {
-                self.nrPostLeafs = []
+            bg().perform { [weak self] in
+                self?.nrPostLeafs = []
                 if !SettingsStore.shared.appWideSeenTracker {
-                    self.onScreenSeen = []
+                    self?.onScreenSeen = []
                 }
-                self.leafIdsOnScreen = []
-                self.leafsAndParentIdsOnScreen = []
+                self?.leafIdsOnScreen = []
+                self?.leafsAndParentIdsOnScreen = []
             }
             startInstantFeed()
         }
@@ -144,14 +144,14 @@ class LVM: NSObject, ObservableObject {
         L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.reload()")
         instantFinished = false
         posts.send([:])
-        bg().perform {
-            self.nrPostLeafs = []
+        bg().perform { [weak self] in
+            self?.nrPostLeafs = []
             if !SettingsStore.shared.appWideSeenTracker {
-                self.onScreenSeen = []
+                self?.onScreenSeen = []
             }
-            self.leafIdsOnScreen = []
-            self.leafsAndParentIdsOnScreen = []
-        }  
+            self?.leafIdsOnScreen = []
+            self?.leafsAndParentIdsOnScreen = []
+        }
         startInstantFeed()
     }
     
@@ -159,15 +159,15 @@ class LVM: NSObject, ObservableObject {
         didSet {
             guard oldValue != hideReplies else { return }
             posts.send([:])
-            bg().perform {
-                self.nrPostLeafs = []
+            bg().perform { [weak self] in
+                self?.nrPostLeafs = []
                 if !SettingsStore.shared.appWideSeenTracker {
-                    self.onScreenSeen = []
+                    self?.onScreenSeen = []
                 }
-                self.leafIdsOnScreen = []
-                self.leafsAndParentIdsOnScreen = []
-                self.saveListState()
-                self.performLocalFetch.send(false)
+                self?.leafIdsOnScreen = []
+                self?.leafsAndParentIdsOnScreen = []
+                self?.saveListState()
+                self?.performLocalFetch.send(false)
             }
         }
     }
@@ -245,8 +245,8 @@ class LVM: NSObject, ObservableObject {
         }
         L.lvm.info("🟢🟢 \(self.id) \(self.name) \(self.pubkey?.short ?? "") didAppear")
         self.restoreSubscription()
-        bg().perform {
-            self._performLocalFetch(refreshInBackground: true, isVisible: true)
+        bg().perform { [weak self] in
+            self?._performLocalFetch(refreshInBackground: true, isVisible: true)
         }
         
         // TODO: Provide a setting to enable this again, instead of InstantFeed()... maybe for Lists only
@@ -611,7 +611,8 @@ class LVM: NSObject, ObservableObject {
                 let danglingEvents = danglers.map { $0.event }
                 
                 let idsOnScreen = self.leafsAndParentIdsOnScreen
-                bg().perform {
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
                     self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
                 }
             })
@@ -1080,8 +1081,8 @@ extension LVM {
             .sink { refreshInBackground in
                 DispatchQueue.main.async {
                     let isVisible = self.viewIsVisible
-                    bg().perform {
-                        self._performLocalFetch(refreshInBackground: refreshInBackground, isVisible: isVisible)
+                    bg().perform { [weak self] in
+                        self?._performLocalFetch(refreshInBackground: refreshInBackground, isVisible: isVisible)
                     }
                 }
             }
@@ -1099,7 +1100,8 @@ extension LVM {
                 guard SettingsStore.shared.fetchCounts else { return }
                 guard !SettingsStore.shared.lowDataMode else { return } // Also don't fetch if low data mode
 
-                bg().perform {
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
                     let events = self.nrPostLeafs
                         .filter { nrPostIds.contains($0.id) }
                         .compactMap {
@@ -1178,7 +1180,8 @@ extension LVM {
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 guard self.viewIsVisible else { return }
-                bg().perform {
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
                     guard self.nrPostLeafs.isEmpty else { return }
                     L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") renderFromLocalIfWeHaveNothingNew")
                     self.performLocalFetch.send(false)
@@ -1224,14 +1227,14 @@ extension LVM {
                 L.og.debug("COUNTER: 0 - listPubkeysChanged")
                 instantFinished = false
                 posts.send([:])
-                bg().perform {
-                    self.nrPostLeafs = []
+                bg().perform { [weak self] in
+                    self?.nrPostLeafs = []
                     if !SettingsStore.shared.appWideSeenTracker {
-                        self.onScreenSeen = []
+                        self?.onScreenSeen = []
                     }
-                    self.leafIdsOnScreen = []
-                    self.leafsAndParentIdsOnScreen = []
-                    self.startInstantFeed()
+                    self?.leafIdsOnScreen = []
+                    self?.leafsAndParentIdsOnScreen = []
+                    self?.startInstantFeed()
                 }
             }
             .store(in: &subscriptions)
@@ -1257,14 +1260,14 @@ extension LVM {
                     L.og.debug("COUNTER: 0 - listRelaysChanged")
                     instantFinished = false
                     posts.send([:])
-                    bg().perform {
-                        self.nrPostLeafs = []
+                    bg().perform { [weak self] in
+                        self?.nrPostLeafs = []
                         if !SettingsStore.shared.appWideSeenTracker {
-                            self.onScreenSeen = []
+                            self?.onScreenSeen = []
                         }
-                        self.leafIdsOnScreen = []
-                        self.leafsAndParentIdsOnScreen = []
-                        self.startInstantFeed()
+                        self?.leafIdsOnScreen = []
+                        self?.leafsAndParentIdsOnScreen = []
+                        self?.startInstantFeed()
                     }
                 }
                 else { // else LVM will clear from didSet on .wotEnabled
@@ -1304,8 +1307,8 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let nrPost = notification.object as! NRPost
-                bg().perform {
-                    self.nrPostLeafs.removeAll(where: { $0.id == nrPost.id })
+                bg().perform { [weak self] in
+                    self?.nrPostLeafs.removeAll(where: { $0.id == nrPost.id })
                 }
                 self.lvmCounter.count = max(0, self.lvmCounter.count - 1)
             }
@@ -1316,7 +1319,8 @@ extension LVM {
         receiveNotification(.muteListUpdated)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                bg().perform {
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
                     self.nrPostLeafs = self.nrPostLeafs.filter(notMuted)
                     self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
                 }
@@ -1327,7 +1331,8 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let blockedPubkeys = notification.object as! Set<String>
-                bg().perform {
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
                     self.nrPostLeafs = self.nrPostLeafs.filter({ !blockedPubkeys.contains($0.pubkey) })
                     self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
                 }
@@ -1338,7 +1343,8 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let words = notification.object as! [String]
-                bg().perform {
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
                     self.nrPostLeafs = self.nrPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
                     self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
                 }

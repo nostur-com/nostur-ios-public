@@ -21,14 +21,14 @@ extension LVM {
         L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.loadSomeonesFeed()")
         posts.send([:])
         instantFinished = false
-        bg().perform {
-            self.pubkeys = []
-            self.nrPostLeafs = []
+        bg().perform { [weak self] in
+            self?.pubkeys = []
+            self?.nrPostLeafs = []
             if !SettingsStore.shared.appWideSeenTracker {
-                self.onScreenSeen = []
+                self?.onScreenSeen = []
             }
-            self.leafIdsOnScreen = []
-            self.leafsAndParentIdsOnScreen = []
+            self?.leafIdsOnScreen = []
+            self?.leafsAndParentIdsOnScreen = []
         }
         fetchSomeoneElsesContacts(someonesPubkey)
     }
@@ -62,17 +62,18 @@ extension LVM {
                     }
                 }
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak self] taskId in
+                guard let self = self else { return }
                 if (self.pubkeys.isEmpty) {
                     L.og.notice("🟪  \(taskId) Timeout in fetching clEvent / pubkeys")
-                    bg().perform {
+                    bg().perform { [weak self] in
                         if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
-                            self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
+                            self?.pubkeys = Set(clEvent.fastPs.map { $0.1 })
                             
                             let hashtags = clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
-                            self.hashtags = Set(hashtags)
+                            self?.hashtags = Set(hashtags)
                             
-                            self.fetchSomeoneElsesFeed()
+                            self?.fetchSomeoneElsesFeed()
                         }
                     }
                 }
@@ -155,14 +156,14 @@ extension LVM {
         L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.revertBackToOwnFeed()")
         instantFinished = false
         posts.send([:])
-        bg().perform {
-            self.pubkeys = pubkeys
-            self.nrPostLeafs = []
+        bg().perform { [weak self] in
+            self?.pubkeys = pubkeys
+            self?.nrPostLeafs = []
             if !SettingsStore.shared.appWideSeenTracker {
-                self.onScreenSeen = []
+                self?.onScreenSeen = []
             }
-            self.leafIdsOnScreen = []
-            self.leafsAndParentIdsOnScreen = []
+            self?.leafIdsOnScreen = []
+            self?.leafsAndParentIdsOnScreen = []
         }
         startInstantFeed()
     }

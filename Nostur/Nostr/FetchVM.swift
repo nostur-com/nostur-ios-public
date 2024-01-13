@@ -46,15 +46,15 @@ class FetchVM<T: Equatable>: ObservableObject {
                 }
                 altReq(taskId)
             },
-            processResponseCommand: { taskId, relayMessage, event in
+            processResponseCommand: { [weak self] taskId, relayMessage, event in
                 L.og.info("FetchVM: ready to process relay response")
                 fetchParams.onComplete(relayMessage, event)
-                self.backlog.clear()
+                self?.backlog.clear()
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak self] taskId in
                 L.og.info("FetchVM: timeout")
                 fetchParams.onComplete(nil, nil)
-                self.backlog.clear()
+                self?.backlog.clear()
             })
 
         self.backlog.add(reqTask)
@@ -81,15 +81,15 @@ class FetchVM<T: Equatable>: ObservableObject {
             reqCommand: { taskId in
                 fetchParams.req(taskId)
             },
-            processResponseCommand: { taskId, relayMessage, event in
+            processResponseCommand: { [weak self] taskId, relayMessage, event in
                 L.og.info("FetchVM: ready to process relay response")
                 fetchParams.onComplete(relayMessage, event)
-                self.backlog.clear()
+                self?.backlog.clear()
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak self] taskId in
                 L.og.info("FetchVM: timeout")
                 fetchParams.onComplete(nil, nil)
-                self.backlog.clear()
+                self?.backlog.clear()
             })
 
         self.backlog.add(reqTask)

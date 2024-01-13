@@ -74,8 +74,8 @@ public class ConnectionPool: ObservableObject {
         else {
             let relayData = RelayData.new(url: url, read: true, write: true, search: false, excludedPubkeys: [])
             let newConnection = RelayConnection(relayData, isNC: true, queue: queue)
-            queue.async(flags: .barrier) {
-                self.connections[connectionId] = newConnection
+            queue.async(flags: .barrier) { [weak self] in
+                self?.connections[connectionId] = newConnection
             }
             return newConnection
         }
@@ -92,10 +92,10 @@ public class ConnectionPool: ObservableObject {
         
         
         stayConnectedTimer?.invalidate()
-        stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { _ in
+        stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { [weak self] _ in
             if NetworkMonitor.shared.isConnected {
                 if IS_CATALYST || !NRState.shared.appIsInBackground {
-                    self.stayConnectedPing()
+                    self?.stayConnectedPing()
                 }
             }
         })
@@ -111,8 +111,8 @@ public class ConnectionPool: ObservableObject {
         }
         
         stayConnectedTimer?.invalidate()
-        stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { _ in
-            self.stayConnectedPing()
+        stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { [weak self] _ in
+            self?.stayConnectedPing()
         })
     }
     
@@ -222,9 +222,9 @@ public class ConnectionPool: ObservableObject {
             let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"), relayType: .READ)
             connection.sendMessage(closeNotifications.message)
             
-            queue.async {
+            queue.async { [weak self] in
                 if !connection.nreqSubscriptions.isDisjoint(with: Set(["Following", "Notifications"])) {
-                    self.queue.async(flags: .barrier) {
+                    self?.queue.async(flags: .barrier) {
                         connection.nreqSubscriptions.subtract(Set(["Following", "Notifications"]))
                     }
                 }
@@ -236,9 +236,9 @@ public class ConnectionPool: ObservableObject {
     func allowNewFollowingSubscriptions() {
         // removes "Following" from the active subscriptions so when we try a new one when following keys has changed, it would be ignored because didn't pass !contains..
         for (_, connection) in self.connections {
-            self.queue.async {
+            self.queue.async { [weak self] in
                 if connection.nreqSubscriptions.contains("Following") {
-                    self.queue.async(flags: .barrier) {
+                    self?.queue.async(flags: .barrier) {
                         connection.nreqSubscriptions.remove("Following")
                     }
                 }
@@ -288,7 +288,8 @@ public class ConnectionPool: ObservableObject {
 
         let limitToRelayIds = relays.map({ $0.id })
         
-        queue.async {
+        queue.async { [weak self] in
+            guard let self = self else { return }
             for (_, connection) in self.connections {
                 if connection.isNWC || connection.isNC { // Logic for N(W)C relay is a bit different, no read/write difference
                     if connection.isNWC && !message.onlyForNWCRelay { continue }
