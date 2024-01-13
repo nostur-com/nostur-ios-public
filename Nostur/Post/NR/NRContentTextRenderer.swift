@@ -30,13 +30,10 @@ struct NRContentTextRendererInner: View {
     
     @State private var height: CGFloat? = nil
     @State private var text: NSAttributedString? = nil
-    @State private var previewText: AttributedString? = nil
     
     var body: some View {
-        if isPreview, let previewOutput = attributedStringWithPs.previewOutput {
-            Text(previewOutput)
-                .lineSpacing(3)
-                .lineLimit(isDetail ? 3000 : 20)
+        if isPreview {
+            NRTextDynamic(text ?? attributedStringWithPs.output)
                 .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -56,23 +53,12 @@ struct NRContentTextRendererInner: View {
                     ) { pubkey in
                         
                         bg().perform {
-                            if isPreview {
-                                let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
-                                if self.previewText != reparsed.previewOutput {
-                                    L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.previewOutput ?? "")")
-                                    DispatchQueue.main.async {
-                                        self.previewText = reparsed.previewOutput
-                                    }
-                                }
-                            }
-                            else {
-                                let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
-                                if self.text != reparsed.output {
-                                    L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
-                                    DispatchQueue.main.async {
-                                        self.text = reparsed.output
-                                        self.height = reparsed.height
-                                    }
+                            let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
+                            if self.text != reparsed.output {
+                                L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
+                                DispatchQueue.main.async {
+                                    self.text = reparsed.output
+                                    self.height = reparsed.height
                                 }
                             }
                         }
@@ -93,23 +79,12 @@ struct NRContentTextRendererInner: View {
                     ) { pubkey in
                         
                         bg().perform {
-                            if isPreview {
-                                let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
-                                if self.previewText != reparsed.previewOutput {
-                                    L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.previewOutput ?? "")")
-                                    DispatchQueue.main.async {
-                                        self.previewText = reparsed.previewOutput
-                                    }
-                                }
-                            }
-                            else {
-                                let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
-                                if self.text != reparsed.output {
-                                    L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
-                                    DispatchQueue.main.async {
-                                        self.text = reparsed.output
-                                        self.height = reparsed.height
-                                    }
+                            let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
+                            if self.text != reparsed.output {
+                                L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
+                                DispatchQueue.main.async {
+                                    self.text = reparsed.output
+                                    self.height = reparsed.height
                                 }
                             }
                         }
