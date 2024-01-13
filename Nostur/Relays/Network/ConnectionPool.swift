@@ -26,7 +26,7 @@ public class ConnectionPool: ObservableObject {
         connections.contains(where: { $0.value.isConnected })
     }
     
-    private var stayConnectedTimer:Timer?
+    private var stayConnectedTimer: Timer?
     
     @MainActor
     public func addConnection(_ relayData: RelayData) -> RelayConnection {
@@ -110,6 +110,7 @@ public class ConnectionPool: ObservableObject {
             }
         }
         
+        stayConnectedTimer?.invalidate()
         stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { _ in
             self.stayConnectedPing()
         })
