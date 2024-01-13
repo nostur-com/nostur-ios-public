@@ -368,6 +368,18 @@ class NRTextParser { // TEXT things
                                "#avalanche": "HashtagShitcoin",
                                "#litecoin": "HashtagShitcoin",
                                "#ltc": "HashtagShitcoin",
+                               "#toncoin": "HashtagShitcoin",
+                               "#ton": "HashtagShitcoin",
+                               "#zcash": "HashtagShitcoin",
+                               "#zec": "HashtagShitcoin",
+                               "#dash": "HashtagShitcoin",
+                               "#monero": "HashtagShitcoin",
+                               "#xmr": "HashtagShitcoin",
+                               "#hex": "HashtagShitcoin",
+                               "#pls": "HashtagShitcoin",
+                               "#pulsechain": "HashtagShitcoin",
+                               "#nano": "HashtagShitcoin",
+                               "#xno": "HashtagShitcoin",
                                "#nostriches": "HashtagNostrich"]
     
     // Cached regex that is used in NSMutableAttributedString.addHashtagIcons()
