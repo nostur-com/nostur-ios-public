@@ -283,9 +283,9 @@ class Backlog {
     // trigger the task.process() commands
     init(timeout:Double = 60.0, auto:Bool = false) {
         self.timeout = timeout
-        timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
-            guard let self = self else { return }
-            bg().perform {
+        timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { timer in
+            bg().perform { [weak self] in
+                guard let self = self else { return }
                 guard !self.tasks.isEmpty else { return } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
                 self.removeOldTasks()
             }
@@ -312,11 +312,11 @@ class Backlog {
                 .store(in: &subscriptions)
             
             receiveNotification(.receivedMessage)
-                .sink { [weak self] notification in
-                    guard let self = self else { return }
+                .sink { notification in
                     let receivedMessage = notification.object as! RelayMessage
                     guard let subscriptionId = receivedMessage.subscriptionId else { return }
-                    bg().perform {
+                    bg().perform { [weak self] in
+                        guard let self = self else { return }
                         let reqTasks = self.tasks(with: [subscriptionId])
                         for task in reqTasks {
                             task.process(receivedMessage)
@@ -343,20 +343,20 @@ class Backlog {
     }
     
     public func clear() {
-        bg().perform {
-            self.tasks.removeAll()
+        bg().perform { [weak self] in
+            self?.tasks.removeAll()
         }
     }
     
     public func add(_ task:ReqTask) {
-        bg().perform {
-            self.tasks.insert(task)
+        bg().perform { [weak self] in
+            self?.tasks.insert(task)
         }
     }
     
     public func remove(_ task:ReqTask) {
-        bg().perform {
-            self.tasks.remove(task)
+        bg().perform { [weak self] in
+            self?.tasks.remove(task)
         }
     }
     
