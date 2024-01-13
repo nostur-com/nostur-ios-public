@@ -66,6 +66,7 @@ struct QuotedNoteFragmentView: View {
                                     .equatable()
                                 if let via = nrPost.via {
                                     Text(" · via \(via)") //
+                                        .lineLimit(1)
                                         .font(.system(size: 14))
                                         .foregroundColor(.secondary)
                                 }

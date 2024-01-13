@@ -164,11 +164,14 @@ struct PostPreview_Previews: PreviewProvider {
     @Environment(\.dismiss) static var dismiss
     static var previews: some View {
         PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadZaps()
+//            pe.loadContacts()
+//            pe.loadZaps()
+            pe.parseMessages([
+                ###"["EVENT", "hashtags", {"id":"026e5287944b34bc4068fcf3882b307d3ba8581f5cd6bc6087142ff2594c4a2a","tags":[["t","nostr"],["t","Nostur"],["t","nostur"],["t","nostriches"],["t","zaps"],["t","bitcoin"],["client","Nostur","31990:9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33:1685868693432"]],"sig":"ab0a3cfb8c9136f75d650379a2defc2d61c8b54712a88072d174782d622cdd6d90b0fa197b7b9d86ee945e71fd03965a03f53e319a5de073f7397477f8254715","kind":1,"pubkey":"9c33d279c9a48af396cc159c844534e5f38e5d114667748a62fa33ffbc57b653","content":"Trying out some #nostr hashtags for the next update of #Nostur\n\n#nostriches\n\n#zaps  #bitcoin","created_at":1705092290}]"###
+            ])
         }) {
             NBNavigationStack {
-                if let nrPost = PreviewFetcher.fetchNRPost() {
+                if let nrPost = PreviewFetcher.fetchNRPost("026e5287944b34bc4068fcf3882b307d3ba8581f5cd6bc6087142ff2594c4a2a") {
                     PostPreview(nrPost: nrPost, replyTo:nil, quotingEvent: nil, vm: vm, onDismiss: { dismiss() })
                 }
             }
