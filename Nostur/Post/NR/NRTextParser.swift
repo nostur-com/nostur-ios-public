@@ -61,7 +61,7 @@ class NRTextParser { // TEXT things
                 context: nil
             ).height
             
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), previewOutput: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event, height: height)
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event, height: height)
             
             return a
         }
@@ -88,7 +88,7 @@ class NRTextParser { // TEXT things
             ).height
             
             L.og.error("NRTextParser: \(error)")
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), previewOutput: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event, height: height)
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event, height: height)
             return a
         }
     }
@@ -331,6 +331,43 @@ class NRTextParser { // TEXT things
                                "#zaps": "HashtagLightning",
                                "#zap": "HashtagLightning",
                                "#nostrich": "HashtagNostrich",
+                               "#eth": "HashtagShitcoin",
+                               "#ethereum": "HashtagShitcoin",
+                               "#bnb": "HashtagShitcoin",
+                               "#sol": "HashtagShitcoin",
+                               "#solana": "HashtagShitcoin",
+                               "#xrp": "HashtagShitcoin",
+                               "#cardano": "HashtagShitcoin",
+                               "#ada": "HashtagShitcoin",
+                               "#dogecoin": "HashtagShitcoin",
+                               "#doge": "HashtagShitcoin",
+                               "#bitcoincash": "HashtagShitcoin",
+                               "#bch": "HashtagShitcoin",
+                               "#bsv": "HashtagShitcoin",
+                               "#bitcoinsv": "HashtagShitcoin",
+                               "#iota": "HashtagShitcoin",
+                               "#ftt": "HashtagShitcoin",
+                               "#fil": "HashtagShitcoin",
+                               "#filecoin": "HashtagShitcoin",
+                               "#xlm": "HashtagShitcoin",
+                               "#stellar": "HashtagShitcoin",
+                               "#aptos": "HashtagShitcoin",
+                               "#apt": "HashtagShitcoin",
+                               "#near": "HashtagShitcoin",
+                               "#icp": "HashtagShitcoin",
+                               "#shib": "HashtagShitcoin",
+                               "#link": "HashtagShitcoin",
+                               "#chainlink": "HashtagShitcoin",
+                               "#polygon": "HashtagShitcoin",
+                               "#matic": "HashtagShitcoin",
+                               "#dot": "HashtagShitcoin",
+                               "#polkadot": "HashtagShitcoin",
+                               "#tron": "HashtagShitcoin",
+                               "#trx": "HashtagShitcoin",
+                               "#avax": "HashtagShitcoin",
+                               "#avalanche": "HashtagShitcoin",
+                               "#litecoin": "HashtagShitcoin",
+                               "#ltc": "HashtagShitcoin",
                                "#nostriches": "HashtagNostrich"]
     
     // Cached regex that is used in NSMutableAttributedString.addHashtagIcons()
