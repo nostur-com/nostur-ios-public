@@ -88,12 +88,13 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
         
         NetworkMonitor.shared.isConnectedSubject
             .receive(on: self.queue)
-            .sink { isNowConnected in
+            .sink { [weak self] isNowConnected in
+                guard let self = self else { return }
                 let fromDisconnectedToConnected = !self.isDeviceConnected && isNowConnected
                 let fromConnectedToDisconnected = self.isDeviceConnected && !isNowConnected
                 if self.isDeviceConnected != isNowConnected {
-                    self.queue.async(flags: .barrier) {
-                        self.isDeviceConnected = isNowConnected
+                    self.queue.async(flags: .barrier) { [weak self] in
+                        self?.isDeviceConnected = isNowConnected
                     }
                 }
                 if (fromDisconnectedToConnected) {
@@ -290,15 +291,15 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     
     
     public func disconnect() {
-        queue.async(flags: .barrier) {
-            self.exponentialReconnectBackOff = 0
-            self.skipped = 0
-            self.firstConnection = true
-            self.nreqSubscriptions = []
-            self.lastMessageReceivedAt = nil
-            self.isSocketConnected = false
-//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-            self.webSocketSub = nil
+        queue.async(flags: .barrier) { [weak self] in
+            self?.exponentialReconnectBackOff = 0
+            self?.skipped = 0
+            self?.firstConnection = true
+            self?.nreqSubscriptions = []
+            self?.lastMessageReceivedAt = nil
+            self?.isSocketConnected = false
+//            self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
+            self?.webSocketSub = nil
         }
     }
     
@@ -353,42 +354,45 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     }
     
     func didDisconnect() {
-        queue.async(flags: .barrier) {
-            self.nreqSubscriptions = []
-            self.lastMessageReceivedAt = nil
-            self.isSocketConnected = false
-//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-            self.webSocketSub = nil
+        queue.async(flags: .barrier) { [weak self] in
+            self?.nreqSubscriptions = []
+            self?.lastMessageReceivedAt = nil
+            self?.isSocketConnected = false
+//            self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
+            self?.webSocketSub = nil
             DispatchQueue.main.async {
-                sendNotification(.socketNotification, "Disconnected: \(self.url)")
+                sendNotification(.socketNotification, "Disconnected: \(self?.url ?? "")")
             }
         }
         L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url)")
     }
     
     func didDisconnectWithError(_ error: Error) {
-        queue.async(flags: .barrier) {
-            self.nreqSubscriptions = []
-            self.lastMessageReceivedAt = nil
-            if self.exponentialReconnectBackOff >= 512 {
-                self.exponentialReconnectBackOff = 512
+        queue.async(flags: .barrier) { [weak self] in
+            self?.nreqSubscriptions = []
+            self?.lastMessageReceivedAt = nil
+            if (self?.exponentialReconnectBackOff ?? 0) >= 512 {
+                self?.exponentialReconnectBackOff = 512
             }
             else {
-                self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+                self?.exponentialReconnectBackOff = max(1, (self?.exponentialReconnectBackOff ?? 0) * 2)
             }
-            self.isSocketConnected = false
+            self?.isSocketConnected = false
 //            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-            self.webSocketSub = nil
-            let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
-            DispatchQueue.main.async {
-                sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
+            self?.webSocketSub = nil
+            if let url = self?.url {
+                let shortURL = URL(string: url)?.baseURL?.description ?? url
+                DispatchQueue.main.async {
+                    sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
+                }
             }
         }
         L.sockets.info("🏎️🏎️🔌🔴🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
     }
     
     func didReceivePong() {
-        queue.async(flags: .barrier) {
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
             if self.isSocketConnecting {
                 self.isSocketConnecting = false
             }
@@ -400,7 +404,8 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     }
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-        queue.async(flags: .barrier) {
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
             self.nreqSubscriptions = []
             self.exponentialReconnectBackOff = 0
             self.skipped = 0
@@ -445,16 +450,16 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     }
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        queue.async(flags: .barrier) {
-            self.nreqSubscriptions = []
-            self.exponentialReconnectBackOff = 0
-            self.skipped = 0
-            self.lastMessageReceivedAt = .now
-            self.isSocketConnected = false
-//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-            self.webSocketSub = nil
+        queue.async(flags: .barrier) { [weak self] in
+            self?.nreqSubscriptions = []
+            self?.exponentialReconnectBackOff = 0
+            self?.skipped = 0
+            self?.lastMessageReceivedAt = .now
+            self?.isSocketConnected = false
+//            self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
+            self?.webSocketSub = nil
             DispatchQueue.main.async {
-                sendNotification(.socketNotification, "Disconnected: \(self.url)")
+                sendNotification(.socketNotification, "Disconnected: \(self?.url ?? "")")
             }
         }
         L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
