@@ -104,10 +104,11 @@ struct SmoothTable: UIViewControllerRepresentable {
                                           coordinator: Coordinator) -> ViewHolderType {
         L.sl.info("⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeViewHolder")
         let viewHolder = TViewHolder(coordinator: coordinator) { uiView in
-            //            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
+            
+            viewController.view.addSubview(uiView)
             uiView.translatesAutoresizingMaskIntoConstraints = false
             uiView.backgroundColor = UIColor(themes.theme.listBackground) // UIColor(named: "ListBackground")
-            viewController.view.addSubview(uiView)
+            
             
             NSLayoutConstraint.activate([
                 viewController.view.leadingAnchor.constraint(equalTo: uiView.leadingAnchor),
@@ -600,7 +601,6 @@ final class TViewHolder {
         tableView.delegate = coordinator
         tableView.prefetchDataSource = coordinator
         tableView.isPrefetchingEnabled = true
-        tableView.translatesAutoresizingMaskIntoConstraints = false
         if #available(iOS 16.0, *) {
             tableView.selfSizingInvalidation = .enabledIncludingConstraints
         }

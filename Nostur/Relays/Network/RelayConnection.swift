@@ -333,7 +333,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     
     // -- MARK: URLSessionWebSocketDelegate
     
-    func didReceiveData(_ data:Data) {
+    func didReceiveData(_ data: Data) {
         if self.isSocketConnecting {
             self.isSocketConnecting = false
         }
@@ -343,7 +343,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
         self.lastMessageReceivedAt = .now
     }
     
-    func didReceiveMessage(_ text:String) {
+    func didReceiveMessage(_ text: String) {
         if self.isSocketConnecting {
             self.isSocketConnecting = false
         }
