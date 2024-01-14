@@ -40,9 +40,7 @@ class NRTextParser { // TEXT things
         }
 
         do {
-            let finalText = try AttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-            
-            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let mutableAttributedString = try NSMutableAttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
                 .foregroundColor: UIColor(Themes.default.theme.primary)
@@ -66,9 +64,7 @@ class NRTextParser { // TEXT things
             return a
         }
         catch {
-            let finalText = AttributedString(newerTextWithPs.text)
-            
-            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let mutableAttributedString = NSMutableAttributedString(string: newerTextWithPs.text)
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
                 .foregroundColor: UIColor(Themes.default.theme.primary)

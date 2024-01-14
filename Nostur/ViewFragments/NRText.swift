@@ -22,9 +22,7 @@ struct NRTextDynamic: View {
     init(_ text: String, plain: Bool = false) {
         
         do {
-            let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-                        
-            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let mutableAttributedString = try NSMutableAttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
                         
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
@@ -41,9 +39,7 @@ struct NRTextDynamic: View {
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
         }
         catch {
-            let finalText = AttributedString(text)
-            
-            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let mutableAttributedString = NSMutableAttributedString(string: text)
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
                 .foregroundColor: UIColor(Themes.default.theme.primary)
@@ -172,9 +168,9 @@ struct NRTextFixed: UIViewRepresentable {
         self.themes = themes
         self.height = height
         do {
-            let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+//            let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             
-            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let mutableAttributedString = try NSMutableAttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
                 .foregroundColor: UIColor(themes.theme.primary)
@@ -190,9 +186,9 @@ struct NRTextFixed: UIViewRepresentable {
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
         }
         catch {
-            let finalText = AttributedString(text)
+//            let finalText = AttributedString(text)
             
-            let mutableAttributedString = NSMutableAttributedString(finalText)
+            let mutableAttributedString = NSMutableAttributedString(string: text)
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
                 .foregroundColor: UIColor(themes.theme.primary)
