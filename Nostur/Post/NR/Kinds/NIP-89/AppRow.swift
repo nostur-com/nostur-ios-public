@@ -69,8 +69,10 @@ struct AppRow: View {
             NBNavigationStack {
                 VStack(spacing: 10) {
                     Spacer()
-                    AppDetail(app: app, theme: theme)
-                        .padding()
+                    AppDetail(app: app, theme: theme, onDismiss: {
+                        showDetailSheet = false
+                    })
+                    .padding()
                 }
             }
             .nbUseNavigationStack(.never)

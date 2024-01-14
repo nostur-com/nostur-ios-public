@@ -10,7 +10,6 @@ import NukeUI
 
 struct AppDetail: View {
     @Environment(\.openURL) private var openURL
-    @Environment(\.dismiss) private var dismiss
     public var app: SuggestedApp
     private var appName: String { app.name }
     private var appDescription: String? { app.description }
@@ -19,6 +18,7 @@ struct AppDetail: View {
     private var recommendedByPFPs:[(Pubkey, URL)] { app.recommendedBy }
     
     public var theme: Theme
+    public var onDismiss: () -> Void
     
     @ObservedObject private var ss: SettingsStore = .shared
     @State private var showDetailSheet = false
@@ -106,14 +106,14 @@ struct AppDetail: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel") { onDismiss() }
             }
         }
     }
     
     private func openApp() {
         openURL(appOpenURL)
-        dismiss()
+        onDismiss()
     }
 }
 
@@ -153,7 +153,7 @@ struct AppDetail: View {
                                 URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
                             )
                         ]),
-                theme: Themes.default.theme)
+                theme: Themes.default.theme, onDismiss: { } )
             
             AppDetail(
                 app: SuggestedApp(
@@ -163,7 +163,7 @@ struct AppDetail: View {
                         logoUrl: URL(string: "https://nostur.com/nostur.png")!,
                         openUrl: URL(string: "https://nostur.com")!,
                         recommendedBy: []),
-                theme: Themes.default.theme)
+                theme: Themes.default.theme, onDismiss: { } )
             
             AppDetail(
                 app: SuggestedApp(
@@ -178,7 +178,7 @@ struct AppDetail: View {
                                 URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
                             )
                         ]),
-                theme: Themes.default.theme)
+                theme: Themes.default.theme, onDismiss: { } )
             
             AppDetail(
                 app: SuggestedApp(
@@ -197,7 +197,7 @@ struct AppDetail: View {
                                 URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
                             )
                         ]),
-                theme: Themes.default.theme)
+                theme: Themes.default.theme, onDismiss: { } )
             
             AppDetail(
                 app: SuggestedApp(
@@ -225,7 +225,7 @@ struct AppDetail: View {
                             ),
 
                         ]),
-                theme: Themes.default.theme)
+                theme: Themes.default.theme, onDismiss: { } )
         }
         .background(Color.black)
                 
