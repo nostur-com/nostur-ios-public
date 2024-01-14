@@ -126,11 +126,11 @@ class LoggedInAccount: ObservableObject {
     
     
     // BG high speed
-    public var followingPublicKeys:Set<String> = []
-    public var followingPFPs:[String: URL] = [:]
+    public var followingPublicKeys: Set<String> = []
+    public var followingPFPs: [String: URL] = [:]
     
     // View context
-    @Published var account:CloudAccount {
+    @Published var account: CloudAccount {
         didSet { // REMINDER, didSet does not run on init!
             Task { @MainActor in
                 self.setupAccount(account)
@@ -150,7 +150,7 @@ class LoggedInAccount: ObservableObject {
         self.setupAccount(account)
     }
     
-    @MainActor private func setupAccount(_ account:CloudAccount) {
+    @MainActor private func setupAccount(_ account: CloudAccount) {
         self.pubkey = pubkey
         
         // Set to true only if it is a brand new account, otherwise set to false and wait for kind 3 from relay
