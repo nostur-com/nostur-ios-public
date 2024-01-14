@@ -202,6 +202,7 @@ struct AddExistingAccountSheet: View {
         if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: keys.publicKeyHex(), context: viewContext)) {
             existingAccount.privateKey = keys.privateKeyHex()
             existingAccount.isNC = false
+            existingAccount.flagsSet.insert("full_account")
             NRState.shared.changeAccount(existingAccount)
             NRState.shared.onBoardingIsShown = false
             return
@@ -295,6 +296,7 @@ struct AddExistingAccountSheet: View {
     
     private func addExistingBunkerAccount(pubkey:String, token:String) {
         if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
+            existingAccount.flagsSet.insert("full_account")
             bunkerManager.connect(existingAccount, token: token)
             return
         }
