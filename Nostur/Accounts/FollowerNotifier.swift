@@ -33,10 +33,9 @@ class FollowerNotifier {
         generateNewFollowersNotification
             .debounce(for: .seconds(5), scheduler: RunLoop.main) // Debounce 5 seconds to allow collection of more contact lists during import
             .sink { [weak self] accountPubkey in
-                guard let self = self else { return }
                 // Should still be same account (account switch could have happened in 5 sec)
                 guard NRState.shared.activeAccountPublicKey == accountPubkey else { return }
-                self._generateNewFollowersNotification(accountPubkey)
+                self?._generateNewFollowersNotification(accountPubkey)
             }
             .store(in: &subscriptions)
         
@@ -87,13 +86,12 @@ class FollowerNotifier {
     func listenForAccountChanged() {
         
         receiveNotification(.activeAccountChanged)
-            .sink { [weak self] notification in
-                guard let self = self else { return }
+            .sink { notification in
                 let account = notification.object as! CloudAccount
                 let pubkey = account.publicKey
                 
-                bg().perform {
-                    self.loadCurrentFollowers(pubkey: pubkey)
+                bg().perform { [weak self] in
+                    self?.loadCurrentFollowers(pubkey: pubkey)
                 }
             }
             .store(in: &subscriptions)
@@ -103,12 +101,11 @@ class FollowerNotifier {
             .debounce(for: .seconds(20), scheduler: RunLoop.main)
             .sink { [weak self] notification in
                 guard !SettingsStore.shared.lowDataMode else { return }
-                guard let self = self else { return }
                 let account = notification.object as! CloudAccount
                 L.og.info("Checking for new followers after account switch")
                 let pubkey = account.publicKey
                 
-                self.checkForUpdatedContactList(pubkey: pubkey)
+                self?.checkForUpdatedContactList(pubkey: pubkey)
             }
             .store(in: &subscriptions)
     }

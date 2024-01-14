@@ -176,7 +176,7 @@ struct NotificationsReactions: View {
                         .compactMap { $0.toBG() }
                         .map { NRPost(event: $0) }
                     
-                    DispatchQueue.main.async {
+                    DispatchQueue.main.async { 
                         self.myNotesReactedToAsNRPosts = transformed
                     }
                 }

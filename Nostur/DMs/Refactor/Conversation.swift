@@ -45,7 +45,8 @@ class Conversation: Identifiable, Hashable, ObservableObject {
             .sink { _ in
                 let unreadSince = self.dmState.markedReadAt_ ?? Date(timeIntervalSince1970: 0)
                 let accepted = dmState.accepted
-                bg().perform {
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
                     let allReceived = Event.fetchEventsBy(pubkey: self.contactPubkey, andKind: 4, context: bg())
                     let unread = allReceived.filter { $0.date > unreadSince }.count
                     Task { @MainActor in
@@ -59,9 +60,9 @@ class Conversation: Identifiable, Hashable, ObservableObject {
         mostRecentEvent.contactUpdated
             .sink { contact in
                 let nrContact = NRContact(contact: contact, following: isFollowing(contact.pubkey))
-                Task { @MainActor in
-                    self.objectWillChange.send()
-                    self.nrContact = nrContact
+                Task { @MainActor [weak self] in
+                    self?.objectWillChange.send()
+                    self?.nrContact = nrContact
                 }
             }
             .store(in: &subscriptions)

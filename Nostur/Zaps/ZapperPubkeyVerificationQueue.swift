@@ -21,10 +21,10 @@ class ZapperPubkeyVerificationQueue {
     init() {
         ctx = bg()
         delayedRemove
-            .sink { [unowned self] event in
+            .sink { [weak self] event in
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(25)) {
-                    self.ctx.perform {
-                        self.queuedZaps.remove(event)
+                    self?.ctx.perform {
+                        self?.queuedZaps.remove(event)
                     }
                 }
             }

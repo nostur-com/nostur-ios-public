@@ -57,8 +57,9 @@ class Importer {
             .debounce(for: .seconds(0.15), scheduler: DispatchQueue.global())
             .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
-            .sink { () in
-                bg().perform {
+            .sink {
+                bg().perform { [weak self] in
+                    guard let self else { return }
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
                     let notified = self.callbackSubscriptionIds
                     self.importedMessagesFromSubscriptionIds.send(notified)
@@ -73,9 +74,9 @@ class Importer {
             .debounce(for: .seconds(0.15), scheduler: DispatchQueue.global())
             .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
-            .sink { () in
+            .sink { [weak self] in
                 L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.5 seconds), but sends first after debounce (0.15)")
-                self.importEvents()
+                self?.importEvents()
             }
             .store(in: &subscriptions)
         
@@ -83,9 +84,9 @@ class Importer {
             .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
             .throttle(for: 0.25, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
-            .sink { () in
+            .sink { [weak self] in
                 L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.25 seconds), but sends first after debounce (0.05)")
-                self.importPrioEvents()
+                self?.importPrioEvents()
             }
             .store(in: &subscriptions)
     }

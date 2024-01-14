@@ -194,18 +194,18 @@ class NotificationsViewModel: ObservableObject {
     private func setupSubscriptions() {
         // listen for account changes
         receiveNotification(.activeAccountChanged)
-            .sink { [unowned self] _ in
+            .sink { [weak self] _ in
                 bg().perform {
-                    self.needsUpdate = true
+                    self?.needsUpdate = true
                 }
-                self.unreadMentions_ = 0
-                self.unreadNewPosts_ = 0
-                self.unreadNewFollowers_ = 0
-                self.unreadReposts_ = 0
-                self.unreadReactions_ = 0
-                self.unreadZaps_ = 0
-                self.unreadFailedZaps_ = 0
-                self.addNotificationSubscriptions()
+                self?.unreadMentions_ = 0
+                self?.unreadNewPosts_ = 0
+                self?.unreadNewFollowers_ = 0
+                self?.unreadReposts_ = 0
+                self?.unreadReactions_ = 0
+                self?.unreadZaps_ = 0
+                self?.unreadFailedZaps_ = 0
+                self?.addNotificationSubscriptions()
             }
             .store(in: &subscriptions)
         
@@ -213,9 +213,8 @@ class NotificationsViewModel: ObservableObject {
             .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
             .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
             .sink { [weak self] _ in
-                guard let self = self else { return }
-                self.relayCheckNewestNotifications()
-                self.relayCheckSinceNotifications()
+                self?.relayCheckNewestNotifications()
+                self?.relayCheckSinceNotifications()
             }
             .store(in: &subscriptions)
     }
@@ -230,7 +229,8 @@ class NotificationsViewModel: ObservableObject {
             if error == nil {
                 // Provisional authorization granted.
                 self.objectWillChange
-                    .sink { _ in
+                    .sink { [weak self] _ in
+                        guard let self else { return }
                         let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
                         setAppIconBadgeCount(self.unread + dmsCount, center: center)
                     }

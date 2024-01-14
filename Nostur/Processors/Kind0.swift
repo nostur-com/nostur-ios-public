@@ -46,7 +46,8 @@ class Kind0Processor {
             .receive(on: DispatchQueue.global())
             .sink { pubkey in
                 // check LRU
-                Task {
+                Task { [weak self] in
+                    guard let self else { return }
                     if let profile = await self.getProfile(pubkey) {
                         self.receive.send(profile)
                         return
