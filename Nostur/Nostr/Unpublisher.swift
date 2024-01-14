@@ -157,12 +157,31 @@ class Unpublisher {
                     } catch {
                         L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
                     }
+                    
+                    if let accountCache = accountCache(), accountCache.pubkey == nEvent.publicKey {
+                        if nEvent.content == "+" {
+                            accountCache.addLike(nEvent.id)
+                        }
+                        else {
+                            accountCache.addReaction(nEvent.id, reactionType: nEvent.content)
+                        }
+                    }
                 }
                 
                 DataProvider.shared().bgSave()
                 if ([1,6,9802,30023,34235].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         sendNotification(.newPostSaved, savedEvent)
+                    }
+                    if savedEvent.kind == 6 {
+                        if let accountCache = accountCache(), accountCache.pubkey == savedEvent.pubkey, let firstquoteId = savedEvent.firstQuoteId  {
+                            accountCache.addReposted(firstquoteId)
+                        }
+                    }
+                    else if savedEvent.kind == 1 {
+                        if let accountCache = accountCache(), accountCache.pubkey == savedEvent.pubkey, let replyToId = savedEvent.replyToId  {
+                            accountCache.addRepliedTo(replyToId)
+                        }
                     }
                 }
                 DispatchQueue.main.async {

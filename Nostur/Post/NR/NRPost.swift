@@ -971,26 +971,38 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         if (reactionContent == "+") {
             self.footerAttributes.liked = true
         }
-        else {
-            self.footerAttributes.reactions.insert(reactionContent)
-        }
         bg().perform {
             self.event.likesCount += 1
+            
+            if let accountCache = accountCache() {
+                if (reactionContent == "+") {
+                    return accountCache.addLike(self.event.id)
+                }
+                else {
+                    return accountCache.addReaction(self.event.id, reactionType: reactionContent)
+                }
+            }
         }
         
         return EventMessageBuilder.makeReactionEvent(reactingTo: mainEvent, reactionContent: reactionContent)
     }
     
-    @MainActor public func unlike(_ reactionContent:String = "+") {
+    @MainActor public func unlike(_ reactionContent: String = "+") {
         self.footerAttributes.objectWillChange.send()
         if (reactionContent == "+") {
             self.footerAttributes.liked = false
         }
-        else {
-            self.footerAttributes.reactions.remove(reactionContent)
-        }
         bg().perform {
             self.event.likesCount -= 1
+            
+            if let accountCache = accountCache() {
+                if (reactionContent == "+") {
+                    return accountCache.removeLike(self.event.id)
+                }
+                else {
+                    return accountCache.removeReaction(self.event.id, reactionType: reactionContent)
+                }
+            }
         }
     }
     
@@ -1004,6 +1016,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             bgSave()
             DispatchQueue.main.async {
                 sendNotification(.unpublishedNRPost, self)
+            }
+            if let accountCache = accountCache(), accountCache.pubkey == self.pubkey {
+                if self.kind == 1, let replyToId = self.replyToId {
+                    accountCache.removeRepliedTo(replyToId)
+                }
+                else if self.kind == 6, let firstQuoteId = self.firstQuoteId {
+                    accountCache.removeReposted(firstQuoteId)
+                }
             }
         }
     }

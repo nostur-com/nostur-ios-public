@@ -294,6 +294,13 @@ func account() -> CloudAccount? {
     }
 }
 
+func accountCache() -> AccountCache? {
+    if let accountCache = NRState.shared.loggedInAccount?.accountCache, accountCache.cacheIsReady {
+        return accountCache
+    }
+    return nil
+}
+
 struct AccountData {
     let publicKey: String
     let lastSeenPostCreatedAt:Int64

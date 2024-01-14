@@ -143,6 +143,7 @@ struct ZapButtonInner: View {
             NWCRequestQueue.shared.ensureNWCconnection()
             let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), contact: contact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!, zapMessage: zapMessage)
             NWCZapQueue.shared.sendZap(zap)
+            accountCache()?.addZapped(nrPost.id)
         }
     }
     
@@ -151,6 +152,9 @@ struct ZapButtonInner: View {
         footerAttributes.cancelZap(cancellationId)
         activeColor = theme.footerButtons
         L.og.info("⚡️ Zap cancelled")
+        bg().perform {
+            accountCache()?.removeZapped(nrPost.id)
+        }
     }
     
     private func nonNWCtap() {

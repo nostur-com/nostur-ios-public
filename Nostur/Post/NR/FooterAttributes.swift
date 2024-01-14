@@ -20,7 +20,6 @@ class FooterAttributes: ObservableObject {
     
     @Published var liked:Bool
     @Published var likesCount:Int64
-    @Published var reactions:Set<String> = []
     
     @Published var zapped = false
     @Published var zapsCount:Int64
@@ -49,7 +48,6 @@ class FooterAttributes: ObservableObject {
         
         self.liked = withFooter && Self.isLiked(event)
         self.likesCount = event.likesCount
-        self.reactions = withFooter ? Self.loadReactions(event) : []
         
         self.zapState = withFooter && Self.hasZapReceipt(event) ? .zapReceiptConfirmed : event.zapState
         self.zapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
@@ -74,7 +72,6 @@ class FooterAttributes: ObservableObject {
             let isReplied = Self.isReplied(self.event)
             let isReposted = Self.isReposted(self.event)
             let isLikes = Self.isLiked(self.event)
-            let reactions = Self.loadReactions(self.event)
             let isBookmarked = Self.isBookmarked(self.event)
             let hasPrivateNote = Self.hasPrivateNote(self.event)
 //            let zapsCount = self.event.zapsCount
@@ -88,7 +85,6 @@ class FooterAttributes: ObservableObject {
                 self.replied = isReplied
                 self.reposted = isReposted
                 self.liked = isLikes
-                self.reactions = reactions
                 self.bookmarked = isBookmarked
                 self.hasPrivateNote = hasPrivateNote
                 self.zapped = isZapped
@@ -203,6 +199,10 @@ class FooterAttributes: ObservableObject {
     }
     
     static private func isBookmarked(_ event:Event) -> Bool {
+        if let accountCache = accountCache() {
+            return accountCache.isBookmarked(event.id)
+        }
+        
         // TODO: Need to cache this, update cache when bookmarks change
         let allBookmarks = Set(Bookmark.fetchAll(context: bg()).compactMap({ $0.eventId }))
         
@@ -210,6 +210,9 @@ class FooterAttributes: ObservableObject {
     }
     
     static private func isLiked(_ event:Event) -> Bool {
+        if let accountCache = accountCache() {
+            return accountCache.isLiked(event.id)
+        }
         if let account = account() {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7 AND content == \"+\"", event.created_at, event.id, account.publicKey)
@@ -221,23 +224,10 @@ class FooterAttributes: ObservableObject {
         return false
     }
     
-    static private func loadReactions(_ event:Event) -> Set<String> {
-        if let account = account() {
-            let fr = NSFetchRequest<NSDictionary>(entityName: "Event")
-            fr.sortDescriptors = []
-            fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7", event.created_at, event.id, account.publicKey)
-            fr.fetchLimit = 20
-            fr.resultType = .dictionaryResultType
-            fr.propertiesToFetch = ["content"]
-            guard let reactions = try? bg().fetch(fr) else {
-                return []
-            }
-            return Set(reactions.compactMap { $0["content"] as? String })
-        }
-        return []
-    }
-    
     static private func isReplied(_ event:Event) -> Bool {
+        if let accountCache = accountCache() {
+            return accountCache.isRepliedTo(event.id)
+        }
         if let account = account() {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at > %i AND replyToId == %@ AND pubkey == %@ AND kind == 1", event.created_at, event.id, account.publicKey)
@@ -250,6 +240,9 @@ class FooterAttributes: ObservableObject {
     }
     
     static private func isReposted(_ event:Event) -> Bool {
+        if let accountCache = accountCache() {
+            return accountCache.isReposted(event.id)
+        }
         if let account = account() {
             let fr = Event.fetchRequest()
             // TODO: Should use a generic .otherId, similar to .otherPubkey, to make all relational queries superfast.
@@ -264,6 +257,9 @@ class FooterAttributes: ObservableObject {
     }
     
     static private func hasZapReceipt(_ event:Event) -> Bool {
+        if let accountCache = accountCache() {
+            return accountCache.isZapped(event.id)
+        }
         if let account = account() {
             let fr = Event.fetchRequest()
             // TODO: Should use a generic .otherId, similar to .otherPubkey, to make all relational queries superfast.

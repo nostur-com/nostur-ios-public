@@ -126,6 +126,7 @@ class LoggedInAccount: ObservableObject {
     
     
     // BG high speed
+    public var accountCache: AccountCache?
     public var followingPublicKeys: Set<String> = []
     public var followingPFPs: [String: URL] = [:]
     
@@ -173,6 +174,7 @@ class LoggedInAccount: ObservableObject {
                 return
             }
             self.bgAccount = bgAccount
+            self.accountCache = AccountCache(self.pubkey)
             
             self.followingPublicKeys = follows
             self.followingPFPs = bgAccount.getFollowingPFPs()
