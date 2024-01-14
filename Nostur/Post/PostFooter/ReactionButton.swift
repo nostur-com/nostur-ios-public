@@ -29,24 +29,20 @@ struct ReactionButton: View, Equatable {
 }
 
 struct ReactionButtonInner: View {
-    private let nrPost:NRPost
-    private let reactionContent:String
-    @ObservedObject private var footerAttributes:FooterAttributes
-    @State private var unpublishLikeId:UUID? = nil
-    private var isFirst:Bool
-    private var isLast:Bool
+    private let nrPost: NRPost
+    private let reactionContent: String
+    @State private var unpublishLikeId: UUID? = nil
+    private var isFirst: Bool
+    private var isLast: Bool
     
-    init(nrPost: NRPost, reactionContent:String = "+", isFirst: Bool = false, isLast: Bool = false) {
+    init(nrPost: NRPost, reactionContent: String = "+", isFirst: Bool = false, isLast: Bool = false) {
         self.nrPost = nrPost
-        self.footerAttributes = nrPost.footerAttributes
         self.reactionContent = reactionContent
         self.isFirst = isFirst
         self.isLast = isLast
     }
     
-    private var isActivated:Bool {
-        footerAttributes.reactions.contains(reactionContent)
-    }
+    @State private var isActivated = false
     
     var body: some View {
         Text(reactionContent)
@@ -57,21 +53,27 @@ struct ReactionButtonInner: View {
             .onTapGesture {
                 tap()
             }
+            .onAppear {
+                isActivated = reactionContent != "+" && (accountCache()?.hasReaction(nrPost.id, reactionType: reactionContent) ?? false)
+            }
     }
     
+    @MainActor
     private func tap() {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
             nrPost.unlike(self.reactionContent)
             unpublishLikeId = nil
+            isActivated = false
         }
         else {
-            guard !footerAttributes.reactions.contains(reactionContent) else { return }
+            guard !isActivated else { return }
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             
             var likeNEvent = nrPost.like(self.reactionContent)
+            isActivated = true
             
             if account.isNC {
                 likeNEvent.publicKey = account.publicKey

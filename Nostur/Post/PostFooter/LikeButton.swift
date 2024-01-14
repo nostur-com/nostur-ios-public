@@ -48,6 +48,9 @@ struct LikeButton: View {
         if footerAttributes.liked && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
             nrPost.unlike()
             unpublishLikeId = nil
+            bg().perform {
+                accountCache()?.removeLike(nrPost.id)
+            }
         }
         else {
             guard isFullAccount() else { showReadOnlyMessage(); return }
@@ -56,6 +59,9 @@ struct LikeButton: View {
             impactMed.impactOccurred()
             
             var likeNEvent = nrPost.like()
+            bg().perform {
+                accountCache()?.addLike(nrPost.id)
+            }
             
             if account.isNC {
                 likeNEvent.publicKey = account.publicKey
