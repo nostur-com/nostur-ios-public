@@ -137,7 +137,7 @@ struct ZapButtonInner: View {
         }
         cancellationId = UUID()
         footerAttributes.zapped = true
-        
+        SoundManager.shared.playThunderzap()
         
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()

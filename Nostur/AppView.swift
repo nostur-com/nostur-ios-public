@@ -38,6 +38,7 @@ struct AppView: View {
     @State private var ot:NewOnboardingTracker = .shared
     @State private var dd:Deduplicator = .shared
     @State private var vmc:ViewModelCache = .shared
+    @State private var sound:SoundManager = .shared
     
 //    @EnvironmentObject private var themes:Themes
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
