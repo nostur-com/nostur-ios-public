@@ -247,6 +247,15 @@ struct AppView: View {
         var uniqueAccounts = Set<String>()
         let sortedAccounts = accounts.sorted { $0.mostRecentItemDate > $1.mostRecentItemDate }
         
+        accounts.forEach { account in
+            account.noPrivateKey = false // clear old cache method
+            
+            // check if "full_account" flag is missing, set it if we have private key
+            if !account.flagsSet.contains("full_account") && account.privateKey != nil {
+                account.flagsSet.insert("full_account")
+            }
+        }
+        
         let duplicates = sortedAccounts
             .filter { account in
                 guard let publicKey = account.publicKey_ else { return false }
