@@ -328,6 +328,9 @@
 		1FB6E6FD29E48109008BE8A6 /* LVMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */; };
 		1FB6E70329E52EF3008BE8A6 /* SmoothList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */; };
 		1FB8BD5C2AAB8D9600FBC15F /* NotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */; };
+		1FBAA6142B53E50D007C7535 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBAA6132B53E50D007C7535 /* SoundManager.swift */; };
+		1FBAA6182B53E694007C7535 /* Thunderzap16.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1FBAA6152B53E694007C7535 /* Thunderzap16.m4a */; };
+		1FBAA6192B53E694007C7535 /* Thunderzap71.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1FBAA6162B53E694007C7535 /* Thunderzap71.m4a */; };
 		1FBB901F2A85128A007A1550 /* StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901D2A85128A007A1550 /* StringMetric.swift */; };
 		1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901E2A85128A007A1550 /* String+StringMetric.swift */; };
 		1FBCA08F2AC84AC800913E16 /* ReplyingToEditable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */; };
@@ -828,6 +831,9 @@
 		1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LVMManager.swift; sourceTree = "<group>"; };
 		1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothList.swift; sourceTree = "<group>"; };
 		1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettings.swift; sourceTree = "<group>"; };
+		1FBAA6132B53E50D007C7535 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
+		1FBAA6152B53E694007C7535 /* Thunderzap16.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = Thunderzap16.m4a; sourceTree = "<group>"; };
+		1FBAA6162B53E694007C7535 /* Thunderzap71.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = Thunderzap71.m4a; sourceTree = "<group>"; };
 		1FBB901D2A85128A007A1550 /* StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringMetric.swift; sourceTree = "<group>"; };
 		1FBB901E2A85128A007A1550 /* String+StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+StringMetric.swift"; sourceTree = "<group>"; };
 		1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToEditable.swift; sourceTree = "<group>"; };
@@ -1353,6 +1359,7 @@
 				1F3309822989819700D4D8CF /* Maintenance.swift */,
 				1F75257B2996790D00477AF2 /* Notifications.swift */,
 				1FD49732297FCB5E0084F14E /* PreviewHelper.swift */,
+				1FBAA6132B53E50D007C7535 /* SoundManager.swift */,
 				1F987EB229805F33001E352E /* String+matchingStrings.swift */,
 				1F927C6E297DB3490024F665 /* ThreadWarning.swift */,
 				1FC78F7029CADEED0009C1C7 /* View+centered.swift */,
@@ -1881,6 +1888,8 @@
 				1FC2DFF329A9330600C8A9DA /* ProfileLightningButton.swift */,
 				1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */,
 				1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */,
+				1FBAA6152B53E694007C7535 /* Thunderzap16.m4a */,
+				1FBAA6162B53E694007C7535 /* Thunderzap71.m4a */,
 				1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */,
 				1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */,
 				1F5C82D82ACD336A00333775 /* ZapReceipt.swift */,
@@ -2134,8 +2143,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */,
+				1FBAA6192B53E694007C7535 /* Thunderzap71.m4a in Resources */,
 				1F0F0F642A9D220E00E23BA7 /* Themes.xcassets in Resources */,
 				1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */,
+				1FBAA6182B53E694007C7535 /* Thunderzap16.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2490,6 +2501,7 @@
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
 				1F2AC53F2B12B99300F70662 /* CashuTokenView.swift in Sources */,
 				1F2C86B72AA8D29E00D2D7B3 /* FrameTesting.swift in Sources */,
+				1FBAA6142B53E50D007C7535 /* SoundManager.swift in Sources */,
 				1F8B135E297B36DB002EB8CF /* HexEncoding.swift in Sources */,
 				1FCB52772A5369BB006D08DF /* Communities.swift in Sources */,
 				1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */,
