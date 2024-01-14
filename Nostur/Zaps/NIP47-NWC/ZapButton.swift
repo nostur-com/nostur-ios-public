@@ -116,6 +116,8 @@ struct ZapButtonInner: View {
                     GeometryReader { geo in
                         Color.clear
                             .onAppear {
+                                guard !footerAttributes.zapped else { return }
+                                guard cancellationId == nil else { return }
                                 guard let contact = nrPost.contact?.contact else { return }
                                 self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact)
                             }
