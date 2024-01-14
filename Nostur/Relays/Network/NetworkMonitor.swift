@@ -33,8 +33,8 @@ public class NetworkMonitor: ObservableObject {
         isConnectedSubject
             .subscribe(on: queue)
             .receive(on: RunLoop.main)
-            .sink { isConnected in
-                self.isConnected = isConnected
+            .sink { [weak self] isConnected in
+                self?.isConnected = isConnected
             }
             .store(in: &subscriptions)
         

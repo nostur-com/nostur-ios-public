@@ -881,9 +881,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         guard !withReplies else { return } // Skip if we already have repliesListener, which makes repliesCountListener not needed
         self.event.repliesUpdated
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { replies in
-                self.footerAttributes.objectWillChange.send()
-                self.footerAttributes.repliesCount = Int64(replies.count)
+            .sink { [weak self] replies in
+                self?.footerAttributes.objectWillChange.send()
+                self?.footerAttributes.repliesCount = Int64(replies.count)
             }
             .store(in: &subscriptions)
     }

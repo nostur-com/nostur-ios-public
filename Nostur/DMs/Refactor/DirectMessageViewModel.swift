@@ -71,34 +71,30 @@ class DirectMessageViewModel: ObservableObject {
             self._reloadAccepted
                 .debounce(for: 1.0, scheduler: RunLoop.main)
                 .sink { [weak self] _ in
-                    guard let self else { return }
-                    self.loadAcceptedConversations()
+                    self?.loadAcceptedConversations()
                 }
                 .store(in: &self.subscriptions)
             
             self._reloadMessageRequests
                 .debounce(for: 0.5, scheduler: RunLoop.main)
                 .sink { [weak self] _ in
-                    guard let self else { return }
-                    self.loadMessageRequests()
+                    self?.loadMessageRequests()
                 }
                 .store(in: &self.subscriptions)
             
             self._reloadMessageRequestsNotWot
                 .debounce(for: 0.5, scheduler: RunLoop.main)
                 .sink { [weak self] _ in
-                    guard let self else { return }
-                    self.loadOutSideWoT()
+                    self?.loadOutSideWoT()
                 }
                 .store(in: &self.subscriptions)
             
             receiveNotification(.blockListUpdated)
                 .sink { [weak self] _ in
-                    guard let self else { return }
-                    showNotWoT = false
-                    self.reloadAccepted()
-                    self.reloadMessageRequests()
-                    self.reloadMessageRequestsNotWot()
+                    self?.showNotWoT = false
+                    self?.reloadAccepted()
+                    self?.reloadMessageRequests()
+                    self?.reloadMessageRequestsNotWot()
                 }
                 .store(in: &self.subscriptions)
         }
@@ -113,7 +109,8 @@ class DirectMessageViewModel: ObservableObject {
             if error == nil {
                 // Provisional authorization granted.
                 self.objectWillChange
-                    .sink { _ in
+                    .sink { [weak self] _ in
+                        guard let self else { return }
                         let notificationsCount = NotificationsViewModel.shared.unread
                         setAppIconBadgeCount((self.unread + self.newRequests) + notificationsCount, center: center)
                     }

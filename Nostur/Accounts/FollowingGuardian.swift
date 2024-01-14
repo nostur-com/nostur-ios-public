@@ -63,7 +63,7 @@ class FollowingGuardian: ObservableObject {
     func listenForNewContactListEvents() {
         receiveNotification(.newFollowingListFromRelay)
             .receive(on: RunLoop.main)
-            .sink { notification in
+            .sink { [weak self] notification in
                 let nEvent = notification.object as! NEvent
                 guard nEvent.kind == .contactList else { return }
                 guard nEvent.publicKey == NRState.shared.activeAccountPublicKey else { return }
@@ -77,9 +77,9 @@ class FollowingGuardian: ObservableObject {
                 let added = pubkeysRelay.subtracting(pubkeysOwn)
                 L.og.info("FollowingGuardian: receiveNotification(.newFollowingListFromRelay): added: \(added)")
                 
-                self.followNewContacts(added: added, account: account)
+                self?.followNewContacts(added: added, account: account)
                 let tagsRelay = nEvent.tTags()
-                self.followTags(tagsRelay, account: account)
+                self?.followTags(tagsRelay, account: account)
                 
                 guard account.isFullAccount else { return }
                 

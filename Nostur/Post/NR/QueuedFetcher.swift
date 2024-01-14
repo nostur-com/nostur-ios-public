@@ -29,30 +29,31 @@ class QueuedFetcher {
     
     
     init() {
-        enqueuePsubject.sink { [unowned self] pTag in
-            self.pQueue.insert(pTag)
+        enqueuePsubject.sink { [weak self] pTag in
+            self?.pQueue.insert(pTag)
         }
         .store(in: &subscriptions)
         
-        dequeuePsubject.sink { [unowned self] pTag in
-            self.pQueue.remove(pTag)
+        dequeuePsubject.sink { [weak self] pTag in
+            self?.pQueue.remove(pTag)
         }
         .store(in: &subscriptions)
         
-        enqueueIDsubject.sink { [unowned self] eventId in
-            self.idQueue.insert(eventId)
+        enqueueIDsubject.sink { [weak self] eventId in
+            self?.idQueue.insert(eventId)
         }
         .store(in: &subscriptions)
         
-        dequeueIDsubject.sink { [unowned self] eventId in
-            self.idQueue.remove(eventId)
+        dequeueIDsubject.sink { [weak self] eventId in
+            self?.idQueue.remove(eventId)
         }
         .store(in: &subscriptions)
         
         fetchSubject
             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
-            .sink { [unowned self] _ in
-                ctx.perform {
+            .sink { [weak self] _ in
+                self?.ctx.perform {
+                    guard let self else { return }
                     guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
                     
                     if self.idQueue.isEmpty {
@@ -76,81 +77,81 @@ class QueuedFetcher {
     }
     
     public func enqueue(pTag: String) {
-        ctx.perform { [unowned self] in
-            self.enqueuePsubject.send(pTag)
-            self.fetch()
+        ctx.perform { [weak self] in
+            self?.enqueuePsubject.send(pTag)
+            self?.fetch()
         }
     }
     
     public func enqueue(pTags: [String]) {
-        ctx.perform { [unowned self] in
+        ctx.perform { [weak self] in
             guard !pTags.isEmpty else { return }
             pTags.forEach { pTag in
-                self.enqueuePsubject.send(pTag)
+                self?.enqueuePsubject.send(pTag)
             }
-            self.fetch()
+            self?.fetch()
         }
     }
     
     public func enqueue(pTags: Set<String>) {
         guard !pTags.isEmpty else { return }
-        ctx.perform { [unowned self] in
+        ctx.perform { [weak self] in
             pTags.forEach { pTag in
-                self.enqueuePsubject.send(pTag)
+                self?.enqueuePsubject.send(pTag)
             }
-            self.fetch()
+            self?.fetch()
         }
     }
     
     public func dequeue(pTag: String) {
-        ctx.perform { [unowned self] in
-            self.dequeuePsubject.send(pTag)
+        ctx.perform { [weak self] in
+            self?.dequeuePsubject.send(pTag)
         }
     }
     
     public func dequeue(pTags: [String]) {
-        ctx.perform { [unowned self] in
+        ctx.perform { [weak self] in
             pTags.forEach { pTag in
-                self.dequeuePsubject.send(pTag)
+                self?.dequeuePsubject.send(pTag)
             }
         }
     }
     
     public func dequeue(pTags: Set<String>) {
-        ctx.perform { [unowned self] in
+        ctx.perform { [weak self] in
             pTags.forEach { pTag in
-                self.dequeuePsubject.send(pTag)
+                self?.dequeuePsubject.send(pTag)
             }
         }
     }
     
     public func enqueue(id: String) {
-        ctx.perform { [unowned self] in
-            self.enqueueIDsubject.send(id)
-            self.fetch()
+        ctx.perform { [weak self] in
+            self?.enqueueIDsubject.send(id)
+            self?.fetch()
         }
     }
     
     public func enqueue(ids: [String]) {
         guard !ids.isEmpty else { return }
-        ctx.perform { [unowned self] in
+        ctx.perform { [weak self] in
             ids.forEach { id in
-                self.enqueuePsubject.send(id)
+                self?.enqueuePsubject.send(id)
             }
-            self.fetch()
+            self?.fetch()
         }
     }
     
     public func dequeue(id: String) {
-        ctx.perform { [unowned self] in
-            self.dequeueIDsubject.send(id)
+        ctx.perform { [weak self] in
+            self?.dequeueIDsubject.send(id)
         }
     }
     
     public func dequeue(ids: [String]) {
-        ctx.perform { [unowned self] in
+        ctx.perform { [weak self] in
             ids.forEach { id in
-                self.dequeueIDsubject.send(id)
+                self?.dequeueIDsubject.send(id)
             }
         }
     }
