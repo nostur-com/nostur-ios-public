@@ -53,7 +53,11 @@ struct ReplyButton: View {
                 .padding(.vertical, 5)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    sendNotification(.createNewReply, EventNotification(event: nrPost.event))
-                }   
+                    tap()
+                }
+    }
+    
+    private func tap() {
+        sendNotification(.createNewReply, EventNotification(event: nrPost.event))
     }
 }
