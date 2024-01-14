@@ -286,6 +286,16 @@ struct Settings: View {
                                 nwcSendBalanceRequest()
                             }
                         }
+                        
+                        Picker(selection: $settings.thunderzapLevel) {
+                            ForEach(ThunderzapLevel.allCases, id:\.self) {
+                                Text($0.localized).tag($0.rawValue)
+                                    .foregroundColor(themes.theme.primary)
+                            }
+                        } label: {
+                            Text("Lightning sound effect", comment:"Setting on settings screen")
+                        }
+                        .pickerStyleCompatNavigationLink()
                     }
                 }
                 .listRowBackground(themes.theme.background)
