@@ -24,6 +24,7 @@ final class SettingsStore: ObservableObject {
 //        static let hideEmojisInNames:String = "hide_emojis_in_names"
         static let hideBadges:String = "hide_badges"
         static let autoDownloadFrom:String = "autodownload_from"
+        static let thunderzapLevel:String = "thunderzal_level"
         static let restrictAutoDownload:String = "restrict_autodownload"
         static let animatedPFPenabled:String = "animated_pfp_enabled"
         static let rowFooterEnabled:String = "row_footer_enabled"
@@ -136,6 +137,7 @@ final class SettingsStore: ObservableObject {
 //            Keys.hideEmojisInNames: false,
             Keys.hideBadges: false,
             Keys.autoDownloadFrom: AutodownloadLevel.onlyWoT.rawValue,
+            Keys.thunderzapLevel: ThunderzapLevel.normal.rawValue,
             Keys.restrictAutoDownload: false,
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id,
             Keys.animatedPFPenabled: false,
@@ -328,6 +330,13 @@ final class SettingsStore: ObservableObject {
         get { defaults.bool(forKey: Keys.receiveLocalNotificationsLimitToFollows) }
     }
     
+    var thunderzapLevel: String {
+        set {
+            objectWillChange.send();
+            defaults.set(newValue, forKey: Keys.thunderzapLevel)
+        }
+        get { defaults.string(forKey: Keys.thunderzapLevel) ?? ThunderzapLevel.normal.rawValue }
+    }
     
     // MARK: -- SPECIAL HANDLING FOR PERFORMANCE ON EVERYTHING BELOW:
     
@@ -508,6 +517,16 @@ enum AutodownloadLevel:String, CaseIterable, Localizable, Identifiable {
     case all = "AUTODOWNLOAD_ALL"
     case onlyWoT = "AUTODOWNLOAD_WOT_NORMAL"
     case onlyWoTstrict = "AUTODOWNLOAD_WOT_STRICT"
+    
+    var id:String {
+        String(self.rawValue)
+    }
+}
+
+enum ThunderzapLevel:String, CaseIterable, Localizable, Identifiable {
+    case normal = "THUNDERZAP_NORMAL"
+    case low = "THUNDERZAP_LOW"
+    case off = "THUNDERZAP_OFF"
     
     var id:String {
         String(self.rawValue)

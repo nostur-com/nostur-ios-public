@@ -17,3 +17,7 @@ Button to publish report */
 "AUTODOWNLOAD_ALL" = "Unrestricted";
 "AUTODOWNLOAD_WOT_NORMAL" = "Web of Trust only";
 "AUTODOWNLOAD_WOT_STRICT" = "Following only";
+
+"THUNDERZAP_NORMAL" = "Normal";
+"THUNDERZAP_LOW" = "Low";
+"THUNDERZAP_OFF" = "Off";
