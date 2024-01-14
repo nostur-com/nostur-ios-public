@@ -38,6 +38,10 @@ struct ZapButtonInner: View {
     @State private var customZapId:UUID? = nil
     @State private var activeColor:Color? = nil
     @State private var isLoading = false
+    
+    
+    @State private var triggerStrike = false
+    
     private var isFirst:Bool
     private var isLast:Bool
     private var theme:Theme
@@ -72,46 +76,48 @@ struct ZapButtonInner: View {
             .foregroundColor(footerAttributes.zapped ? .yellow : theme.footerButtons)
             .padding(.vertical, 5)
             .contentShape(Rectangle())
-            .onTapGesture {
-                if ss.nwcReady {
-                    if let cancellationId = cancellationId {
-                        cancelZap(cancellationId)
+            .simultaneousGesture(
+                LongPressGesture()
+                    .onEnded { _ in
+                        guard isFullAccount() else { showReadOnlyMessage(); return }
+                        // Trigger custom zap
+                        customZapId = UUID()
+                        if let customZapId {
+                            sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
+                        }
                     }
-                    else {
-                        // do nothing
+            )
+            .highPriorityGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        if ss.nwcReady {
+                            if let cancellationId = cancellationId {
+                                cancelZap(cancellationId)
+                                triggerStrike = false
+                                SoundManager.shared.stop()
+                            }
+                            else if !footerAttributes.zapped, cancellationId == nil {
+                                triggerStrike = true
+                            }
+                        }
+                        else {
+                            nonNWCtap()
+                        }
                     }
-                }
-                else {
-                    nonNWCtap()
-                }
+            )
+            .onReceive(receiveNotification(.sendCustomZap)) { notification in
+                // Complete custom zap
+                let customZap = notification.object as! CustomZap
+                guard customZap.customZapId == customZapId else { return }
+                triggerStrike = true
             }
             .overlay {
-                if ss.nwcReady, !footerAttributes.zapped, cancellationId == nil, let contact = nrPost.contact?.contact {
+                if triggerStrike {
                     GeometryReader { geo in
                         Color.clear
-                            .contentShape(Rectangle())
-                            .simultaneousGesture(
-                                LongPressGesture()
-                                    .onEnded { _ in
-                                        guard isFullAccount() else { showReadOnlyMessage(); return }
-                                        // Trigger custom zap
-                                        customZapId = UUID()
-                                        if let customZapId {
-                                            sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
-                                        }
-                                    }
-                            )
-                            .highPriorityGesture(
-                                TapGesture()
-                                    .onEnded { _ in
-                                        self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact:contact)
-                                    }
-                            )
-                            .onReceive(receiveNotification(.sendCustomZap)) { notification in
-                                // Complete custom zap
-                                let customZap = notification.object as! CustomZap
-                                guard customZap.customZapId == customZapId else { return }
-                                self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact:contact, zapMessage:customZap.publicNote, amount: customZap.amount)
+                            .onAppear {
+                                guard let contact = nrPost.contact?.contact else { return }
+                                self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact)
                             }
                     }
                 }
