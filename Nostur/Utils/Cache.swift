@@ -214,7 +214,8 @@ class AccountCache {
     private func initZapped(_ pubkey: String) {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind == 9734 AND pubkey == %@", pubkey)
-        let allZappedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.zappedEventId })
+        let allZappedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.firstE() })
+
         self.zappedIds = allZappedIds
         self.initializedCaches.insert("zaps")
     }
