@@ -24,7 +24,7 @@ final class SettingsStore: ObservableObject {
 //        static let hideEmojisInNames:String = "hide_emojis_in_names"
         static let hideBadges:String = "hide_badges"
         static let autoDownloadFrom:String = "autodownload_from"
-        static let thunderzapLevel:String = "thunderzal_level"
+        static let thunderzapLevel:String = "thunderzap_level"
         static let restrictAutoDownload:String = "restrict_autodownload"
         static let animatedPFPenabled:String = "animated_pfp_enabled"
         static let rowFooterEnabled:String = "row_footer_enabled"
