@@ -208,8 +208,9 @@ class LoggedInAccount: ObservableObject {
         }
         if account.followingPubkeys.count < kind3.fastPs.count {
             L.og.debug("refetchContactListIfNeeded: Deleting because we need to refetch and parse")
+            let kind3nEvent = kind3.toNEvent()
             DispatchQueue.main.async {
-                sendNotification(.newFollowingListFromRelay, kind3.toNEvent())
+                sendNotification(.newFollowingListFromRelay, kind3nEvent)
             }
         }
     }
