@@ -168,7 +168,8 @@ class LoggedInAccount: ObservableObject {
         // Remove currectly active "Following" subscriptions from connected sockets
         ConnectionPool.shared.removeActiveAccountSubscriptions()
         
-        self.bg.perform {
+        self.bg.perform { [weak self] in
+            guard let self = self else { return }
             guard let bgAccount = try? self.bg.existingObject(with: self.account.objectID) as? CloudAccount else {
                 L.og.notice("🔴🔴 Problem loading bgAccount")
                 return

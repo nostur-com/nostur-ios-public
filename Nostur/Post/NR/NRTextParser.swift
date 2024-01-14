@@ -131,82 +131,47 @@ class NRTextParser { // TEXT things
     private func parseTagIndexedMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
         guard !event.fastTags.isEmpty else { return TextWithPs(text: text, pTags: []) }
 
-        if #available(iOS 16.0, *) {
-            var pTags = [Ptag]()
-            var newText = text
-            let matches = text.matches(of: /#\[(\d+)\]/)
+        var pTags = [Ptag]()
+        var newText = text
+
+        do {
+            let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
+            let matches = NEvent.indexedMentionRegex15.matches(in: text, options: [], range: nsRange)
+
             for match in matches.prefix(100) { // 100 limit for sanity
-                guard let tagIndex = Int(match.output.1) else { continue }
-                guard tagIndex < event.fastTags.count else { continue }
-                let tag = event.fastTags[tagIndex]
-
-                if (tag.0 == "p") {
-                    pTags.append(tag.1)
-                    if !plainText {
-                        newText = newText.replacingOccurrences(of: match.output.0, with: "[@\(contactUsername(fromPubkey: tag.1, event:event).escapeMD())](nostur:p:\(tag.1))")
-                    }
-                    else {
-                        newText = newText.replacingOccurrences(of: match.output.0, with: "@\(contactUsername(fromPubkey: tag.1, event:event))")
-                    }
-                }
-                else if (tag.0 == "e") {
-                    if !plainText {
-                        let key = try! NIP19(prefix: "note1", hexString: tag.1)
-                        newText = newText.replacingOccurrences(of: match.output.0, with: "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))")
-                    }
-                    else {
-                        let key = try! NIP19(prefix: "note1", hexString: tag.1)
-                        newText = newText.replacingOccurrences(of: match.output.0, with: "@\(String(key.displayString).prefix(11))")
-                    }
-                }
-            }
-            return TextWithPs(text: newText, pTags: pTags)
-        }
-        else {
-            var pTags = [Ptag]()
-            var newText = text
-
-            do {
-                let regexPattern = "#\\[(\\d+)\\]"
-                let regex = try NSRegularExpression(pattern: regexPattern)
-                let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
-                let matches = regex.matches(in: text, options: [], range: nsRange)
-
-                for match in matches.prefix(100) { // 100 limit for sanity
-                    let range = match.range(at: 1)
-                    guard let swiftRange = Range(range, in: text),
-                          let tagIndex = Int(text[swiftRange]),
-                          tagIndex < event.fastTags.count else {
-                        continue
-                    }
-                    
-                    let tag = event.fastTags[tagIndex]
-
-                    if tag.0 == "p" {
-                        pTags.append(tag.1)
-                        let replacementString = !plainText ?
-                            "[@\(contactUsername(fromPubkey: tag.1, event: event).escapeMD())](nostur:p:\(tag.1))" :
-                            "@\(contactUsername(fromPubkey: tag.1, event: event))"
-                        let entireMatchRange = match.range(at: 0)
-                        if let entireSwiftRange = Range(entireMatchRange, in: newText) {
-                            newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
-                        }
-                    } else if tag.0 == "e" {
-                        let key = try! NIP19(prefix: "note1", hexString: tag.1)
-                        let replacementString = !plainText ?
-                            "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))" :
-                            "@\(String(key.displayString).prefix(11))"
-                        let entireMatchRange = match.range(at: 0)
-                        if let entireSwiftRange = Range(entireMatchRange, in: newText) {
-                            newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
-                        }
-                    }
+                let range = match.range(at: 1)
+                guard let swiftRange = Range(range, in: text),
+                      let tagIndex = Int(text[swiftRange]),
+                      tagIndex < event.fastTags.count else {
+                    continue
                 }
                 
-                return TextWithPs(text: newText, pTags: pTags)
-            } catch {
-                return TextWithPs(text: newText, pTags: pTags)
+                let tag = event.fastTags[tagIndex]
+
+                if tag.0 == "p" {
+                    pTags.append(tag.1)
+                    let replacementString = !plainText ?
+                        "[@\(contactUsername(fromPubkey: tag.1, event: event).escapeMD())](nostur:p:\(tag.1))" :
+                        "@\(contactUsername(fromPubkey: tag.1, event: event))"
+                    let entireMatchRange = match.range(at: 0)
+                    if let entireSwiftRange = Range(entireMatchRange, in: newText) {
+                        newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
+                    }
+                } else if tag.0 == "e" {
+                    let key = try! NIP19(prefix: "note1", hexString: tag.1)
+                    let replacementString = !plainText ?
+                        "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))" :
+                        "@\(String(key.displayString).prefix(11))"
+                    let entireMatchRange = match.range(at: 0)
+                    if let entireSwiftRange = Range(entireMatchRange, in: newText) {
+                        newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
+                    }
+                }
             }
+            
+            return TextWithPs(text: newText, pTags: pTags)
+        } catch {
+            return TextWithPs(text: newText, pTags: pTags)
         }
     }
 
