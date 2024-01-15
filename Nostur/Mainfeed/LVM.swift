@@ -539,11 +539,10 @@ class LVM: NSObject, ObservableObject {
         
         guard !older else { return }
         DispatchQueue.main.async {
-            if !self.isAtTop || !SettingsStore.shared.autoScroll {
-                let before = self.lvmCounter.count
-                self.lvmCounter.count += addedCount
-                L.og.debug("COUNTER: \(before) -> \(self.lvmCounter.count) - putNewThreadsOnScreen")
-            }
+            if SettingsStore.shared.autoScroll && self.isAtTop { return }
+            let before = self.lvmCounter.count
+            self.lvmCounter.count += addedCount
+            L.og.debug("COUNTER: \(before) -> \(self.lvmCounter.count) - putNewThreadsOnScreen")
         }
         
     }
