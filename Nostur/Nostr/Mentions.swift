@@ -172,6 +172,29 @@ func getNostrNpubs(_ input:String) -> [String] {
     }
 }
 
+import NostrEssentials
+
+// Scan for any "nostr:note1..." or "nostr:nevent" and return as array of q tags
+// so they can be added to qTags
+func getQuoteTags(_ input:String) -> [String] {
+
+    let r = NostrRegexes.default
+    
+    let qTags: [String] = r.matchingStrings(input, regex: r.cache[.nostrUri]!)
+        .compactMap { match in
+            guard match.count == 3 else { return nil }
+            if match[2] == "note1" {
+                return NostrEssentials.Keys.hex(npub: match[1]) // TODO: update npub: to note:1 for readability
+            }
+            else if match[2] == "nevent1" {
+                return (try? NostrEssentials.ShareableIdentifier(match[1]))?.id
+            }
+            return nil
+        }
+    
+    return qTags
+}
+
 func toHex(_ bech:String) -> String? {
     guard let nip19 = try? NIP19(displayString: bech) else { return nil }
     return nip19.hexString

@@ -259,6 +259,9 @@ public final class NewPostModel: ObservableObject {
         let npubs = getNostrNpubs(nEvent.content)
         let nostrNpubTags = npubs.map { Keys.hex(npub: $0) }
         
+        // Scan for any nostr:note1 or nevent1 and return q tags
+        let qTags = Set(getQuoteTags(nEvent.content))
+        
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
 
@@ -285,11 +288,15 @@ public final class NewPostModel: ObservableObject {
             if let note1id = note1(quotingEvent.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
             }
-            nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
+            nEvent.tags.insert(NostrTag(["q", quotingEvent.id]), at: 0) // TODO: Add relay hint
             
             if !nEvent.pTags().contains(quotingEvent.pubkey) {
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
             }
+        }
+        
+        qTags.forEach { qTag in
+            nEvent.tags.append(NostrTag(["q", qTag]))
         }
         
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
@@ -429,7 +436,7 @@ public final class NewPostModel: ObservableObject {
             if let note1id = note1(quotingEvent.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
             }
-            nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
+            nEvent.tags.insert(NostrTag(["q", quotingEvent.id]), at: 0) // TODO: Add relay hint
             
             if !nEvent.pTags().contains(quotingEvent.pubkey) { 
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
