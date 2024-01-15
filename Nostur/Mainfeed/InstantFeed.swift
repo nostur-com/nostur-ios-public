@@ -49,7 +49,7 @@ class InstantFeed {
         self.onComplete = onComplete
 //        SocketPool.shared.ping()
         self.pubkeys = pubkeys
-        fetchPostsFromRelays()
+//        fetchPostsFromRelays() <-- No need, already done on .pubkeys { didSet }
     }
     
     public func start(_ relays:Set<RelayData>, onComplete: @escaping CompletionHandler) {
