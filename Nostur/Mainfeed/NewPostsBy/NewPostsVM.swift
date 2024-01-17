@@ -77,7 +77,8 @@ class NewPostsVM: ObservableObject {
     }
     
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.since, self.pubkeys, PROFILE_KINDS)
             fr.fetchLimit = 75
@@ -87,11 +88,11 @@ class NewPostsVM: ObservableObject {
             let nrPosts = events
                 .map { NRPost(event: $0, withReplyTo: true, withParents: false, withReplies: true) }
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 onComplete?()
-                self.posts = nrPosts
-                self.state = .ready
-                self.didLoad = true
+                self?.posts = nrPosts
+                self?.state = .ready
+                self?.didLoad = true
             }
             
             guard !nrPosts.isEmpty else { return }

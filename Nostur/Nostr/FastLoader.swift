@@ -105,7 +105,8 @@ class FastLoader: ObservableObject {
                     .filter { includeSpam || !$0.isSpam }
                     .compactMap { self.transformer($0) }
                 
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
                     self.nrPosts = self.nrPosts + nextItems
                     self.onComplete?()
                 }
@@ -165,7 +166,8 @@ class FastLoader: ObservableObject {
                 .filter { includeSpam || !$0.isSpam }
                 .compactMap { self.transformer($0) }
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.nrPosts = nextItems (\(nextItems.count)) + self.nrPosts ")
                 self.nrPosts = nextItems + self.nrPosts
                 self.onComplete?()

@@ -185,9 +185,9 @@ class GalleryViewModel: ObservableObject {
                 L.og.debug("Gallery feed: fetchPostsFromRelays: empty ids")
                 if (posts.count > 0) {
                     L.og.debug("Gallery feed: but we can render the duplicates")
-                    DispatchQueue.main.async {
-                        self.fetchPostsFromDB(onComplete)
-                        self.backlog.clear()
+                    DispatchQueue.main.async { [weak self] in
+                        self?.fetchPostsFromDB(onComplete)
+                        self?.backlog.clear()
                     }
                 }
                 else {
@@ -244,7 +244,8 @@ class GalleryViewModel: ObservableObject {
             return
         }
         let blockedPubkeys = blocks()
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             let sortedByLikesAndReposts = self.posts
                 .sorted(by: { $0.value.count > $1.value.count })
             
@@ -269,10 +270,10 @@ class GalleryViewModel: ObservableObject {
                 }
             }
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 onComplete?()
-                self.items = items
-                self.state = .ready
+                self?.items = items
+                self?.state = .ready
             }
         }
     }

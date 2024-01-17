@@ -54,7 +54,8 @@ class LVM: NSObject, ObservableObject {
                 }
             }
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 if self.id == "Following" {
                     signpost(NRState.shared, "LAUNCH", .event, "setting .posts")
                 }
@@ -419,8 +420,8 @@ class LVM: NSObject, ObservableObject {
 
             guard !transformedIds.isEmpty else {
                 L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Nothing transformed (all were duplicates or seen) - \(taskId)")
-                DispatchQueue.main.async {
-                    self.performingLocalOlderFetch = false
+                DispatchQueue.main.async { [weak self] in
+                    self?.performingLocalOlderFetch = false
                 }
                 return
             }
@@ -538,7 +539,8 @@ class LVM: NSObject, ObservableObject {
         self.fetchAllMissingPs(inserted)
         
         guard !older else { return }
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             if SettingsStore.shared.autoScroll && self.isAtTop { return }
             let before = self.lvmCounter.count
             self.lvmCounter.count += addedCount
@@ -1611,8 +1613,8 @@ extension LVM {
             self.startRenderingOlderSubject.send(newUnrenderedEvents)
         }
         else {
-            DispatchQueue.main.async {
-                self.performingLocalOlderFetch = false
+            DispatchQueue.main.async { [weak self] in
+                self?.performingLocalOlderFetch = false
             }
         }
     }

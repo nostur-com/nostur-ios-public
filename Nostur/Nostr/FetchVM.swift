@@ -28,9 +28,9 @@ class FetchVM<T: Equatable>: ObservableObject {
     }
     
     public func ready(_ item:T) {
-        DispatchQueue.main.async {
-            self.backlog.clear()
-            self.state = .ready(item)
+        DispatchQueue.main.async { [weak self] in
+            self?.backlog.clear()
+            self?.state = .ready(item)
         }
     }
 
@@ -40,9 +40,9 @@ class FetchVM<T: Equatable>: ObservableObject {
         let reqTask = ReqTask(
             prio: fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
-            reqCommand: { taskId in
+            reqCommand: { [weak self] taskId in
                 DispatchQueue.main.async {
-                    self.state = .altLoading
+                    self?.state = .altLoading
                 }
                 altReq(taskId)
             },
@@ -62,14 +62,14 @@ class FetchVM<T: Equatable>: ObservableObject {
     }
     
     public func timeout() {
-        DispatchQueue.main.async {
-            self.state = .timeout
+        DispatchQueue.main.async { [weak self] in
+            self?.state = .timeout
         }
     }
     
     public func error(_ text:String) {
-        DispatchQueue.main.async {
-            self.state = .error(text)
+        DispatchQueue.main.async { [weak self] in
+            self?.state = .error(text)
         }
     }
     

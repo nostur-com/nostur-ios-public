@@ -143,8 +143,8 @@ final class DetailTabsModel: ObservableObject {
             guard let savedTabsData = try? JSONEncoder().encode(saveableTabs) else { return }
             guard let savedTabsString = String(data: savedTabsData, encoding: .utf8) else { return }
             
-            DispatchQueue.main.async {
-                self.savedTabs = savedTabsString
+            DispatchQueue.main.async { [weak self] in
+                self?.savedTabs = savedTabsString
             }
         }
     }

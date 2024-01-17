@@ -25,7 +25,8 @@ class LoggedInAccount: ObservableObject {
     @MainActor public func follow(_ pubkey: String) {
         viewFollowingPublicKeys.insert(pubkey)
         
-        bg.perform {
+        bg.perform { [weak self] in
+            guard let self else { return }
             guard let account = self.bgAccount else { return }
             if let contact = Contact.contactBy(pubkey: pubkey, context: self.bg) {
                 contact.couldBeImposter = 0
@@ -42,7 +43,8 @@ class LoggedInAccount: ObservableObject {
             self.followingPFPs = account.getFollowingPFPs()
             
             account.publishNewContactList()
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 sendNotification(.followersChanged, self.viewFollowingPublicKeys)
                 sendNotification(.followingAdded, pubkey)
             }
@@ -51,7 +53,8 @@ class LoggedInAccount: ObservableObject {
     
     @MainActor public func follow(_ contact:Contact, pubkey: String) {
         viewFollowingPublicKeys.insert(pubkey)
-        bg.perform {
+        bg.perform { [weak self] in
+            guard let self else { return }
             guard let contact = self.bg.object(with: contact.objectID) as? Contact else {
                 L.og.error("🔴🔴 Contact in main but not in bg")
                 return
@@ -65,7 +68,8 @@ class LoggedInAccount: ObservableObject {
             self.followingPFPs = account.getFollowingPFPs()
 
             account.publishNewContactList()
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 sendNotification(.followersChanged, self.viewFollowingPublicKeys)
                 sendNotification(.followingAdded, pubkey)
             }
@@ -74,7 +78,8 @@ class LoggedInAccount: ObservableObject {
     
     @MainActor public func unfollow(_ pubkey: String) {
         viewFollowingPublicKeys.remove(pubkey)
-        bg.perform {
+        bg.perform { [weak self] in
+            guard let self else { return }
             guard let account = self.bgAccount else { return }
             account.followingPubkeys.remove(pubkey)
             bgSave()
@@ -82,7 +87,8 @@ class LoggedInAccount: ObservableObject {
             self.followingPFPs = account.getFollowingPFPs()
             
             account.publishNewContactList()
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 sendNotification(.followersChanged, self.viewFollowingPublicKeys)
             }
         }
@@ -133,7 +139,8 @@ class LoggedInAccount: ObservableObject {
     // View context
     @Published var account: CloudAccount {
         didSet { // REMINDER, didSet does not run on init!
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 self.setupAccount(account)
             }
         }
@@ -221,12 +228,13 @@ class LoggedInAccount: ObservableObject {
     }
     
     public func reloadFollows() {
-        self.bg.perform {
-            guard let bgAccount = self.bgAccount else { return } 
+        self.bg.perform { [weak self] in
+            guard let self, let bgAccount = self.bgAccount else { return }
             self.followingPublicKeys = bgAccount.getFollowingPublicKeys(includeBlocked: true)
             self.followingPFPs = bgAccount.getFollowingPFPs()
         
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 self.viewFollowingPublicKeys = self.followingPublicKeys
                 sendNotification(.followersChanged, self.followingPublicKeys)
             }

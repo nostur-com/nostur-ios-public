@@ -183,7 +183,8 @@ final class SettingsStore: ObservableObject {
         _autoDownloadFrom = defaults.string(forKey: Keys.autoDownloadFrom) ?? AutodownloadLevel.onlyWoT.rawValue
         _fullWidthImages = defaults.bool(forKey: Keys.fullWidthImages)
         _footerButtons = defaults.string(forKey: Keys.footerButtons) ?? "💬🔄+🔖"
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             ViewModelCache.shared.footerButtons = self._footerButtons
         }
         _fetchCounts = defaults.bool(forKey: Keys.fetchCounts)
@@ -472,7 +473,8 @@ final class SettingsStore: ObservableObject {
         defaultLightningWallet.scheme.contains(":nwc:") && !activeNWCconnectionId.isEmpty
     }
     private func updateNWCreadyCache() {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             self.objectWillChange.send();
             self.nwcReady = self.isNWCready()
         }

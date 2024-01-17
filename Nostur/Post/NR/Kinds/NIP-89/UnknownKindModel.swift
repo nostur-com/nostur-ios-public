@@ -35,8 +35,8 @@ class UnknownKindModel: ObservableObject {
                 }
                 else {
                     // Could not find any handlers
-                    DispatchQueue.main.async {
-                        self.state = .timeout
+                    DispatchQueue.main.async { [weak self] in
+                        self?.state = .timeout
                     }
                 }
             }
@@ -50,8 +50,8 @@ class UnknownKindModel: ObservableObject {
                 }
                 else {
                     // Could not find any handlers
-                    DispatchQueue.main.async {
-                        self.state = .timeout
+                    DispatchQueue.main.async { [weak self] in
+                        self?.state = .timeout
                     }
                 }
             }
@@ -189,7 +189,8 @@ class UnknownKindModel: ObservableObject {
                 })
                 .sorted(by: { $0.recommendedBy.count > $1.recommendedBy.count })
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 self.state = .ready((suggestedApps, self.alt ?? "Unknown post type (kind: \(self.unknownKind!))"))
             }
         }

@@ -18,12 +18,13 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         var zapState:Contact.ZapState? = nil {
             didSet {
                 guard zapState != nil else {
-                    DispatchQueue.main.async {
-                        self.isZapped = false
+                    DispatchQueue.main.async { [weak self] in
+                        self?.isZapped = false
                     }
                     return
                 }
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
                     self.isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
                 }
             }
@@ -125,11 +126,11 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                 let followingPubkeys = notification.object as! Set<String>
                 let isFollowing = followingPubkeys.contains(self.pubkey)
                 if isFollowing != self.following {
-                    DispatchQueue.main.async {
-                        self.objectWillChange.send()
-                        self.following = isFollowing
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.following = isFollowing
                         if (isFollowing) {
-                            self.couldBeImposter = 0
+                            self?.couldBeImposter = 0
                         }
                     }
                 }
@@ -173,8 +174,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.contact.nip05updated
             .subscribe(on: DispatchQueue.global())
             .sink { [weak self] (isVerified, nip05, name) in
-                guard let self = self else { return }
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
                     guard isVerified != self.nip05verified else { return }
                     self.objectWillChange.send()
                     self.nip05verified = isVerified
@@ -191,7 +192,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
             .sink { [weak self] contact in
                 guard let self = self else { return }
                 
-                bg().perform {
+                bg().perform { [weak self] in
                     let anyName = contact.anyName
                     let fixedName = contact.fixedName
                     let display_name = contact.display_name
@@ -218,7 +219,9 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     let zapperPubkey = contact.zapperPubkey
                     let zapState = contact.zapState
                     
-                    DispatchQueue.main.async {
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else { return }
+                        
                         self.objectWillChange.send()
                         
                         self.anyName = anyName
@@ -266,7 +269,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.couldBeImposter = 0
         self.privateFollow = privateFollow
         
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard let account = account() else { return }
             self.contact.isPrivateFollow = privateFollow 
             self.contact.couldBeImposter = 0
@@ -274,7 +278,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
             DataProvider.shared().bgSave()
             account.publishNewContactList()
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 NRState.shared.loggedInAccount?.reloadFollows()
                 sendNotification(.followingAdded, self.pubkey)
             }
@@ -286,7 +291,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.following = false
         self.privateFollow = false
         
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard let account = account() else { return }
             self.contact.isPrivateFollow = false
             account.followingPubkeys.remove(self.pubkey)

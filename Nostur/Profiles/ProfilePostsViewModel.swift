@@ -49,8 +49,8 @@ class ProfilePostsViewModel: ObservableObject {
                     guard event.pubkey == pubkey else { return }
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "ProfilePostsViewModel.newPostSaved")
                     let nrPost = NRPost(event: event, cancellationId: event.cancellationId) // TODO: TEST UNDO SEND
-                    DispatchQueue.main.async {
-                        self.posts.insert(nrPost, at: 0)
+                    DispatchQueue.main.async { [weak self] in
+                        self?.posts.insert(nrPost, at: 0)
                 }
             }
         }
@@ -60,15 +60,9 @@ class ProfilePostsViewModel: ObservableObject {
             let nrPost = notification.object as! NRPost
             
             // Remove from view
-            DispatchQueue.main.async {
-                self.posts.removeAll(where: { $0.id == nrPost.id })
+            DispatchQueue.main.async { [weak self] in
+                self?.posts.removeAll(where: { $0.id == nrPost.id })
             }
-            
-//            // Remove from database
-//            bg().perform {
-//                bg().delete(nrPost.event)
-//                DataProvider.shared().bgSave()
-//            }
         }
         .store(in: &subscriptions)
         
@@ -119,7 +113,8 @@ class ProfilePostsViewModel: ObservableObject {
         
         let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@", self.pubkey, PROFILE_KINDS)
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -133,10 +128,10 @@ class ProfilePostsViewModel: ObservableObject {
                 posts.append(NRPost(event: event, cancellationId: cancellationIds[event.id] ?? event.cancellationId))
             }
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 onComplete?()
-                self.posts = posts
-                self.state = .ready
+                self?.posts = posts
+                self?.state = .ready
             }
             
             guard !posts.isEmpty else { return }
@@ -242,7 +237,8 @@ class ProfilePostsViewModel: ObservableObject {
         // Always use offset from this post, else pagination will be messed up if a new post comes in
         guard let firstPostCreatedAt = self.posts.first?.created_at else { return }
         
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND created_at <= %i", self.pubkey, PROFILE_KINDS, Int(firstPostCreatedAt))
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -259,8 +255,8 @@ class ProfilePostsViewModel: ObservableObject {
             
             guard !posts.isEmpty else { return }
             
-            DispatchQueue.main.async {
-                self.posts.append(contentsOf: posts)
+            DispatchQueue.main.async { [weak self] in
+                self?.posts.append(contentsOf: posts)
             }
             
             guard SettingsStore.shared.fetchCounts else { return }
