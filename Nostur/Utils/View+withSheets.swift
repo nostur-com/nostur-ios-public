@@ -19,50 +19,50 @@ public extension View {
 }
 
 private struct WithSheets: ViewModifier {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) private var viewContext
-    @EnvironmentObject private var dim:DIMENSIONS
+    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
     
     
     // Sheet contents (item based)
-    @State private var privateNote:CloudPrivateNote? = nil
-    @State private var post:Event? = nil
-    @State private var contact:Contact? = nil
-    @State private var fullImage:FullScreenItem? = nil
-    @State private var fullImage17:FullScreenItem17? = nil
-    @State private var reportPost:ReportPost? = nil
-    @State private var reportContact:ReportContact? = nil
-    @State private var addRemoveContactFromList:Contact? = nil
+    @State private var privateNote: CloudPrivateNote? = nil
+    @State private var post: Event? = nil
+    @State private var contact: Contact? = nil
+    @State private var fullImage: FullScreenItem? = nil
+    @State private var fullImage17: FullScreenItem17? = nil
+    @State private var reportPost: ReportPost? = nil
+    @State private var reportContact: ReportContact? = nil
+    @State private var addRemoveContactFromList: Contact? = nil
     
     // Confirmation dialogs
     @State private var restoreContactSheet = false
-    @State private var removed:RemovedPubkeys? = nil
+    @State private var removed: RemovedPubkeys? = nil
     
     @State private var deletePostSheet = false
-    @State private var deletePost:DeletePost? = nil
+    @State private var deletePost: DeletePost? = nil
     
     // new post/quote post / new reply
-    @State private var replyToEvent:EventNotification? = nil
-    @State private var quoteOrRepostEvent:Event? = nil
-    @State private var quotePostEvent:Event? = nil
+    @State private var replyToEvent: EventNotification? = nil
+    @State private var quoteOrRepostEvent: Event? = nil
+    @State private var quotePostEvent: Event? = nil
     
     // Zap sheet
-    @State private var paymentInfo:PaymentInfo? = nil
+    @State private var paymentInfo: PaymentInfo? = nil
     
     // New highlight sheet
-    @State private var newHighlight:NewHighlight? = nil
+    @State private var newHighlight: NewHighlight? = nil
     
-    @State private var contextMenuNrPost:NRPost? = nil
-    @State private var zapCustomizerSheetInfo:ZapCustomizerSheetInfo? = nil
+    @State private var contextMenuNrPost: NRPost? = nil
+    @State private var zapCustomizerSheetInfo: ZapCustomizerSheetInfo? = nil
     
     // Share post screenshot
-    @State private var sharablePostImage:ShareablePostImage? = nil
-    @State private var screenshotRenderer:AnyCancellable? = nil
+    @State private var sharablePostImage: ShareablePostImage? = nil
+    @State private var screenshotRenderer: AnyCancellable? = nil
     //    @State private var renderer:ImageRenderer<AnyView>? = nil
-    @State private var shareableWeblink:ShareableWeblink? = nil
+    @State private var shareableWeblink: ShareableWeblink? = nil
     
-    @State private var miniProfileSheetInfo:MiniProfileSheetInfo? = nil
+    @State private var miniProfileSheetInfo: MiniProfileSheetInfo? = nil
     @State private var miniProfileAnimateIn = false
     @State private var mediaPostPreview = true
     
@@ -274,7 +274,7 @@ private struct WithSheets: ViewModifier {
                 self.paymentInfo = paymentInfo
             }
             .sheet(item: $paymentInfo) { paymentInfo in
-                PaymentAmountSelector(paymentInfo:paymentInfo)
+                PaymentAmountSelector(paymentInfo: paymentInfo)
                     .environmentObject(themes)
                     .presentationBackgroundCompat(themes.theme.background)
             }

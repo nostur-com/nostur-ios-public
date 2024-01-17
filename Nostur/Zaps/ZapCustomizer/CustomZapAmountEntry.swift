@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CustomZapAmountEntry: View {
     @Environment(\.dismiss) private var dismiss
-    @Binding public var customAmount:Double
+    @Binding public var customAmount: Double
     @State private var enteredAmount = ""
     @FocusState private var focusedField: FocusedField?
     

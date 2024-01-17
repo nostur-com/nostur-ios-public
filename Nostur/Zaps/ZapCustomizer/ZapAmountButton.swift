@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ZapAmountButton: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     private let amount:Double
     private let isSelected:Bool
     

@@ -13,28 +13,28 @@ import CoreData
 // No need to sort by likes, gather all media from a pubkey
 class ProfileGalleryViewModel: ObservableObject {
     
-    @Published var state:GalleryState
-    private var backlog:Backlog
-    private var pubkey:String
+    @Published var state: GalleryState
+    private var backlog: Backlog
+    private var pubkey: String
     private var didLoad = false
     private static let POSTS_LIMIT = 300
     private static let MAX_IMAGES_PER_POST = 10
     private var prefetchedIds = Set<String>()
         
-    @Published var items:[GalleryItem] = [] {
+    @Published var items: [GalleryItem] = [] {
         didSet {
             guard !items.isEmpty else { return }
             L.og.info("Gallery feed loaded \(self.items.count) items")
         }
     }
     
-    private var lastFetch:Date?
+    private var lastFetch: Date?
     
     public func timeout() {
         self.state = .timeout
     }
     
-    public init(_ pubkey:String) {
+    public init(_ pubkey: String) {
         self.pubkey = pubkey
         self.state = .initializing
         self.backlog = Backlog(timeout: 10.0, auto: true)
@@ -88,7 +88,7 @@ class ProfileGalleryViewModel: ObservableObject {
             fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", self.pubkey)
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             
-            var items:[GalleryItem] = []
+            var items: [GalleryItem] = []
             guard let events = try? bg().fetch(fr) else { return }
             
             for event in events {

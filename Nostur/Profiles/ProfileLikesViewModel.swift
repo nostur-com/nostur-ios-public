@@ -11,16 +11,16 @@ import Combine
 
 class ProfileLikesViewModel: ObservableObject {
     
-    @Published var state:State
-    private var pubkey:String
-    private var likedIds:Set<String>
-    private var backlog:Backlog
+    @Published var state: State
+    private var pubkey: String
+    private var likedIds: Set<String>
+    private var backlog: Backlog
     private static let POSTS_LIMIT = 25 // TODO: ADD PAGINATION
     private static let REQ_IDS_LIMIT = 500 // (strfry default)
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
         
-    @Published var posts:[NRPost] = [] {
+    @Published var posts: [NRPost] = [] {
         didSet {
             guard !posts.isEmpty else { return }
             L.og.info("Profile Likes: loaded \(self.posts.count) posts")
@@ -180,7 +180,7 @@ class ProfileLikesViewModel: ObservableObject {
                 return
             }
             
-            var nrPosts:[NRPost] = []
+            var nrPosts: [NRPost] = []
             for postId in self.likedIds {
                 if let event = try? Event.fetchEvent(id: postId, context: bg()) {
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns

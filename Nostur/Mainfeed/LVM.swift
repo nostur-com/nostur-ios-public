@@ -776,8 +776,6 @@ class LVM: NSObject, ObservableObject {
         
         self.loadHashtags()
         
-        let ctx = DataProvider.shared().viewContext
-        let bg = bg()
         if type == .relays {
             self.relays = Set(relays.map { $0.toStruct() })
             Task { @MainActor in
@@ -786,20 +784,20 @@ class LVM: NSObject, ObservableObject {
         }
         var ls:ListState?
         if let pubkey {
-            ls = ListState.fetchListState(pubkey, listId: listId, context: ctx)
+            ls = ListState.fetchListState(pubkey, listId: listId, context: DataProvider.shared().viewContext)
         }
         else {
-            ls = ListState.fetchListState(listId: listId, context: ctx)
+            ls = ListState.fetchListState(listId: listId, context: DataProvider.shared().viewContext)
         }
         
         if (ls == nil) {
-            bg.perform { [weak self] in
+            bg().perform { [weak self] in
                 guard let self = self else { return }
-                ls = ListState(context: bg)
+                ls = ListState(context: bg())
                 ls!.listId = listId
                 ls!.pubkey = pubkey
                 ls!.updatedAt = Date.now
-                do { try bg.save() }
+                do { try bg().save() }
                 catch { L.lvm.error("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") could not save new listState") }
                 self.listStateObjectId = ls!.objectID
             }
@@ -811,16 +809,6 @@ class LVM: NSObject, ObservableObject {
             self.restoreLeafs = ls!.leafs
             self.hideReplies = ls!.hideReplies
         }
-        
-        if (self.restoreLeafs != nil) {
-//            self.restoreScrollToId = ls!.lastAppearedId
-//            self.performLocalRestoreFetch()
-        }
-        else {
-//            self.performLocalFetch()
-        }
-        
-//        self.configureTimer()
         
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             let d = UserDefaults(suiteName: "preview_user_defaults")!
@@ -970,12 +958,8 @@ class LVM: NSObject, ObservableObject {
             fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
         }
         
-        if nrPostLeafs.isEmpty { // Nothing on screen
-            // Dont need anymore because InstantFeed()?:
-//            fetchNewestUntilNow(subscriptionId: self.id) // This one closes after EOSE
-//            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
-        }
-        else { // Already on screen, app probably returned from from background
+        if !nrPostLeafs.isEmpty {
+            // Already on screen, app probably returned from from background
             // Catch up?
             let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
@@ -1353,14 +1337,12 @@ extension LVM {
     
     func processNewEventsInBg() {
         startRenderingSubject
-//           .removeDuplicates()
            .sink { [weak self] posts in
                self?.processPostsInBackground(posts)
            }
            .store(in: &subscriptions)
         
         startRenderingOlderSubject
-//           .removeDuplicates()
            .receive(on: RunLoop.main)
            .sink { [weak self] posts in
                self?.processPostsInBackground(posts, older: true)
@@ -1378,15 +1360,11 @@ extension LVM {
                 guard let self = self else { return }
                 guard self.lastAppearedIndex != nil else { return }
                 guard !self.posts.value.isEmpty else { return }
-                
-//                print("COUNTER . new lastAppearedId. Index is: \(self.lastAppearedIndex) ")
-
-                
+                                
                 // unread should only go down, not up
                 // only way to go up is when new posts are added.
                 let itemsAfterLastAppeared = self.itemsAfterLastAppeared
                 if itemsAfterLastAppeared < self.lvmCounter.count {
-//                if self.itemsAfterLastAppeared != 0 && self.itemsAfterLastAppeared < self.lvmCounter.count {
                     let before = self.lvmCounter.count
                     self.lvmCounter.count = itemsAfterLastAppeared
                     L.og.debug("COUNTER: \(before) -> \(self.lvmCounter.count) - lastAppearedIdSubject.sink")
@@ -1429,16 +1407,8 @@ extension LVM {
             .store(in: &subscriptions)
     }
     
-    // 1 2 3 [4] 5 6 7 8 9 10
-    // 0 1 2 [3] 4 5 6 7 8 9
-    // Old version, without threads
-//    var itemsAfterLastAppeared:Int {
-//        guard let lastAppearedIndex = self.lastAppearedIndex else { return self.nrPosts.count }
-//        return max(0,((self.nrPosts.count - lastAppearedIndex) - 1))
-//    }
-    
     // With threads. cannot simply count, need to use the thread count value
-    var itemsAfterLastAppeared:Int {
+    var itemsAfterLastAppeared: Int {
         guard let lastAppearedIndex = self.lastAppearedIndex else {
             return 0
         }
@@ -1447,7 +1417,7 @@ extension LVM {
         return max(0,count) // cant go negative
     }
     
-    var itemsAfterLastRead:Int {
+    var itemsAfterLastRead: Int {
         guard let lastReadIndex = self.lastReadIdIndex else {
             return 0
         }
@@ -1461,9 +1431,6 @@ extension LVM {
             .dropFirst()
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .throttle(for: .seconds(10), scheduler: RunLoop.main, latest: true)
-        //            .debounce(for: .seconds(1), scheduler: DispatchQueue.global())
-        //            .throttle(for: .seconds(5), scheduler: DispatchQueue.global(), latest: false)
-//            .receive(on: DispatchQueue.global(qos: .background))
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 self.saveListState()
@@ -1472,11 +1439,10 @@ extension LVM {
     }
     
     func saveListState() {
-        let bg = bg()
-        bg.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             guard let listStateObjectId = self.listStateObjectId else { return }
-            guard let listState = bg.object(with: listStateObjectId) as? ListState else { return }
+            guard let listState = bg().object(with: listStateObjectId) as? ListState else { return }
             let lastAppearedId = self.lastAppearedIdSubject.value
             let lastReadId = self.lastReadId
             let leafs = self.nrPostLeafs.map { $0.id }.joined(separator: ",")
@@ -1487,7 +1453,7 @@ extension LVM {
             listState.hideReplies = hideReplies
             L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedId ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
-                try bg.save()
+                try bg().save()
             }
             catch {
                 L.lvm.error("🔴🔴 \(self.id) \(self.name)/\(self.pubkey?.short ?? "") Error saving list state \(self.id) \(listState.pubkey ?? "")")
@@ -1539,53 +1505,6 @@ extension LVM {
         }
     }
     
-//    func performLocalRestoreFetch(refreshInBackground:Bool = false) {
-//        let ctx = DataProvider.shared().bg
-//        ctx.perform { [weak self] in
-//            guard let self = self else { return }
-//            if let leafs = self.restoreLeafs?.split(separator: ",") {
-//                let fr = Event.fetchRequest()
-//                fr.predicate = NSPredicate(format: "id IN %@", leafs)
-//                if let events = try? ctx.fetch(fr) {
-//
-//
-//                    let restoredPosts = leafs
-//                        .compactMap({ leafId in
-//                            return events.first { event in
-//                                return event.id == leafId
-//                            }
-//                        })
-//                        .map {
-//                            $0.parentEvents = Event.getParentEvents($0)
-//                            return $0
-//                        }
-//
-//                    // don't load too many:
-//                    // if restored posts > MAX.
-//                    // and lastAppearedIndex < MAX-20 (so we can scroll at least 20 more back)
-//                    // example 500 (RESTORED) > 250 (MAX), 77 (LAST APPEARED) < 230 (MAX - 20)
-//                    // Then remove all after 250 (RESTORED.prefix(250))
-//                    if restoredPosts.count > LVM_MAX_VISIBLE, let lastAppearedIndex = restoredPosts.firstIndex(where: { $0.id == self.lastAppearedIdSubject.value }), lastAppearedIndex < (LVM_MAX_VISIBLE-20)  {
-////                        DispatchQueue.main.async {
-////                            self.state = .AWAITING_RESTORE_SCROLL
-////                        }
-//                        self.startRenderingSubject.send(Array(restoredPosts.prefix(250)))
-//                    }
-//                    else {
-////                        DispatchQueue.main.async {
-////                            self.state = .AWAITING_RESTORE_SCROLL
-////                        }
-//                        self.startRenderingSubject.send(restoredPosts)
-//                    }
-//                }
-//                self.performLocalFetch()
-//            }
-//            else {
-//                self.performLocalFetch()
-//            }
-//        }
-//    }
-    
     
     func performLocalOlderFetch() {
         guard !performingLocalOlderFetch else { // Data race in Nostur.LVM.performingLocalOlderFetch.setter : Swift.Bool at 0x114481300
@@ -1606,15 +1525,14 @@ extension LVM {
         }
         
         performingLocalOlderFetch = true
-        let ctx = bg()
         let hashtagRegex = self.hashtagRegex
-        ctx.perform { [weak self] in
+        bg().perform { [weak self] in
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalOlderFetch LVM.id (\(self.uuid)")
             let fr = type == .relays
                 ? Event.postsByRelays(self.relays, until: oldestEvent, hideReplies: self.hideReplies)
                 : Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
-            guard let posts = try? ctx.fetch(fr) else {
+            guard let posts = try? bg().fetch(fr) else {
                 DispatchQueue.main.async {
                     self.performingLocalOlderFetch = false
                 }
@@ -1624,7 +1542,7 @@ extension LVM {
         }
     }
     
-    var lastAppearedCreatedAt:Int64? {
+    var lastAppearedCreatedAt: Int64? {
         guard let lastAppearedId = self.lastAppearedIdSubject.value else { return nil }
         return nrPostLeafs.first(where: { $0.id == lastAppearedId })?.created_at
     }
@@ -1638,13 +1556,13 @@ extension LVM {
     }
     
     // MARK: FROM DB TO SCREEN STEP 2: FIRST FILTER PASS, GETTING PARENTS AND LIMIT, NOT ON SCREEN YET
-    func setUnorderedEvents(events:[Event], lastCreatedAt:Int64 = 0, idsOnScreen: Set<String> = []) {
+    func setUnorderedEvents(events: [Event], lastCreatedAt: Int64 = 0, idsOnScreen: Set<String> = []) {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
         #endif
-        var newUnrenderedEvents:[Event]
+        var newUnrenderedEvents: [Event]
         
         let filteredEvents = applyWoTifNeeded(events)
             .filter {
@@ -1654,39 +1572,19 @@ extension LVM {
                 return !onScreenSeen.contains($0.id)
             }
         
-//        switch (self.state) {
-//            case .INIT: // Show last X (FORCED CUTOFF)
-//                newUnrenderedEvents = filteredEvents.filter(onlyRootOrReplyingToFollower)
-//                    .prefix(LVM_MAX_VISIBLE)
-//                    .map {
-//                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0, fixRelations: true)
-//                        _ = $0.replyTo__
-//                        return $0
-//                    }
-//                let newEventIds = getAllEventIds(newUnrenderedEvents)
-//                let newCount = newEventIds.subtracting(idsOnScreen).count
-//                if newCount > 0 {
-//                    self.startRenderingSubject.send(newUnrenderedEvents)
-//                }
-//                
-//            default:
-                newUnrenderedEvents = filteredEvents
-                    .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
-                    .filter(onlyRootOrReplyingToFollower)
-                    .map {
-                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0, fixRelations: true)
-                        _ = $0.replyTo__
-                        return $0
-                    }
+        newUnrenderedEvents = filteredEvents
+            .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
+            .map {
+                $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0, fixRelations: true)
+                _ = $0.replyTo__
+                return $0
+            }
 
-                let newEventIds = getAllEventIds(newUnrenderedEvents)
-                let newCount = newEventIds.subtracting(idsOnScreen).count
-                if newCount > 0 {
-                    self.startRenderingSubject.send(newUnrenderedEvents)
-                }
-                
-//                return
-//        }
+        let newEventIds = getAllEventIds(newUnrenderedEvents)
+        let newCount = newEventIds.subtracting(idsOnScreen).count
+        if newCount > 0 {
+            self.startRenderingSubject.send(newUnrenderedEvents)
+        }
     }
     
     
@@ -1702,7 +1600,6 @@ extension LVM {
         let filteredEvents = applyWoTifNeeded(events)
         
         newUnrenderedEvents = filteredEvents
-            .filter(onlyRootOrReplyingToFollower)
             .map {
                 $0.parentEvents = Event.getParentEvents($0, fixRelations: true)
                 return $0
@@ -1719,43 +1616,32 @@ extension LVM {
             }
         }
     }
-        
-    func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
-        // TODO: Add setting to show replies to all...
-        return true
-//        if let replyToPubkey = event.replyTo?.pubkey {
-//            if pubkeys.contains(replyToPubkey) {
-//                return true
-//            }
-//        }
-//        return event.replyToId == nil
-    }
 }
 
 func notMutedWords(in text: String, mutedWords: [String]) -> Bool {
     return mutedWords.first(where: { text.localizedCaseInsensitiveContains($0) }) == nil
 }
 
-func notMuted(_ nrPost:NRPost) -> Bool {
-    let mutedRootIds:Set<String> = CloudBlocked.mutedRootIds()
+func notMuted(_ nrPost: NRPost) -> Bool {
+    let mutedRootIds: Set<String> = CloudBlocked.mutedRootIds()
     return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "NIL") && !mutedRootIds.contains(nrPost.replyToId ?? "NIL")
 }
 
 
 
-func threadCount(_ nrPosts:[NRPost]) -> Int {
+func threadCount(_ nrPosts: [NRPost]) -> Int {
     nrPosts.reduce(0) { partialResult, nrPost in
         (partialResult + nrPost.threadPostsCount) //  Data race in Nostur.NRPost.threadPostsCount.setter : Swift.Int at 0x10fbe9680 - thread 1
     }
 }
 
 struct NewPubkeysForList {
-    var subscriptionId:String
-    var pubkeys:Set<String>
+    var subscriptionId: String
+    var pubkeys: Set<String>
 }
 
 struct NewRelaysForList {
-    var subscriptionId:String
-    var relays:Set<RelayData>
-    var wotEnabled:Bool
+    var subscriptionId: String
+    var relays: Set<RelayData>
+    var wotEnabled: Bool
 }

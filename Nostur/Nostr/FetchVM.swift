@@ -10,14 +10,14 @@ import SwiftUI
 // Generic reusable fetcher
 class FetchVM<T: Equatable>: ObservableObject {
     
-    public typealias FetchParams = (prio:Bool?, req: (String?) -> Void, onComplete: (RelayMessage?, Event?) -> Void, altReq: ((String?) -> Void)?)
+    public typealias FetchParams = (prio: Bool?, req: (String?) -> Void, onComplete: (RelayMessage?, Event?) -> Void, altReq: ((String?) -> Void)?)
     
-    @Published var state:State
-    private let backlog:Backlog
-    private let debounceTime:Double
+    @Published var state: State
+    private let backlog: Backlog
+    private let debounceTime: Double
     private var fetchParams: FetchParams? = nil
     
-    init(timeout:Double = 5.0, debounceTime:Double = 0.5) {
+    init(timeout: Double = 5.0, debounceTime: Double = 0.5) {
         self.state = .initializing
         self.debounceTime = debounceTime
         self.backlog = Backlog(timeout: timeout, auto: true)
