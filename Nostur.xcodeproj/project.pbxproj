@@ -82,7 +82,6 @@
 		1F21442C29A797930090E78E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21442B29A797930090E78E /* Settings.swift */; };
 		1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21442D29A797B80090E78E /* SettingsStore.swift */; };
 		1F21CE432A067EC10021E2C7 /* View+onDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21CE422A067EC10021E2C7 /* View+onDelete.swift */; };
-		1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 1F21DDC029F01B3000C564EF /* CombineWebSocket */; };
 		1F2245B82AA46C6F00C06342 /* NostrAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2245B72AA46C6F00C06342 /* NostrAddress.swift */; };
 		1F2810BB2B1E150B00042928 /* NRBalloonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2810BA2B1E150B00042928 /* NRBalloonView.swift */; };
 		1F2810BD2B1E155F00042928 /* DMContentRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */; };
@@ -115,6 +114,7 @@
 		1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */; };
 		1F33EC3729B613F800615FB9 /* FullImageViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33EC3629B613F800615FB9 /* FullImageViewer.swift */; };
 		1F33EC3929B6849800615FB9 /* Centered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33EC3829B6849800615FB9 /* Centered.swift */; };
+		1F3647432B5719D00081B212 /* CombineWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3647422B5719D00081B212 /* CombineWebSocket */; };
 		1F365FBA2AF2F561003A82CB /* Bookmark+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F365FB82AF2F561003A82CB /* Bookmark+CoreDataClass.swift */; };
 		1F365FBB2AF2F561003A82CB /* Bookmark+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F365FB92AF2F561003A82CB /* Bookmark+CoreDataProperties.swift */; };
 		1F3706222ACED99F0077D6CA /* Req.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3706212ACED99F0077D6CA /* Req.swift */; };
@@ -991,6 +991,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
+				1F3647432B5719D00081B212 /* CombineWebSocket in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
 				1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
@@ -1001,7 +1002,6 @@
 				1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
-				1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
@@ -2056,13 +2056,13 @@
 				1F3E135329C89B9F00D076EA /* NukeVideo */,
 				1F006B0929D0A9BE0048C6DD /* Algorithms */,
 				1FB6E6F429E31C71008BE8A6 /* HTMLEntities */,
-				1F21DDC029F01B3000C564EF /* CombineWebSocket */,
 				1F2F54E92A0236E500B6D7E4 /* Gifu */,
 				1F91D8F52A17C55F00C419A3 /* Collections */,
 				1F77AD0A2A42133000585E12 /* MarkdownUI */,
 				1F7B21902AE3D6C000CE972E /* NostrEssentials */,
 				1F747A0F2B3F1E9D0020F4A5 /* RepresentableKit */,
 				1FE8828A2B48E9DC00A903F0 /* NavigationBackport */,
+				1F3647422B5719D00081B212 /* CombineWebSocket */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -2119,13 +2119,13 @@
 				1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				1F006B0829D0A9BE0048C6DD /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 				1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */,
-				1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */,
 				1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */,
 				1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */,
 				1F747A0E2B3F1E9C0020F4A5 /* XCRemoteSwiftPackageReference "RepresentableKit" */,
 				1FE882892B48E9DC00A903F0 /* XCRemoteSwiftPackageReference "NavigationBackport" */,
+				1F3647412B5719D00081B212 /* XCRemoteSwiftPackageReference "CombineWebSocket" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -2998,20 +2998,20 @@
 				version = 0.9.2;
 			};
 		};
-		1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/luizmb/CombineWebSocket";
-			requirement = {
-				kind = revision;
-				revision = 7ade1417198ad7b196858dd0d0601818adae5725;
-			};
-		};
 		1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kaishin/Gifu.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 3.4.1;
+			};
+		};
+		1F3647412B5719D00081B212 /* XCRemoteSwiftPackageReference "CombineWebSocket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/fabianfabian/CombineWebSocket";
+			requirement = {
+				kind = revision;
+				revision = aca69f455cf9cc27d1ecaa5c5b5dc9f54f496d7b;
 			};
 		};
 		1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
@@ -3051,7 +3051,7 @@
 			repositoryURL = "https://github.com/nostur-com/nostr-essentials";
 			requirement = {
 				kind = revision;
-				revision = 61b1d4ebb7a451d70f75173478164e5d54d09f7f;
+				revision = 292c71d6462ae1319f4c9919078d29df78a4f687;
 			};
 		};
 		1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */ = {
@@ -3091,15 +3091,15 @@
 			package = 1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */;
 			productName = secp256k1;
 		};
-		1F21DDC029F01B3000C564EF /* CombineWebSocket */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */;
-			productName = CombineWebSocket;
-		};
 		1F2F54E92A0236E500B6D7E4 /* Gifu */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */;
 			productName = Gifu;
+		};
+		1F3647422B5719D00081B212 /* CombineWebSocket */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F3647412B5719D00081B212 /* XCRemoteSwiftPackageReference "CombineWebSocket" */;
+			productName = CombineWebSocket;
 		};
 		1F3E135329C89B9F00D076EA /* NukeVideo */ = {
 			isa = XCSwiftPackageProductDependency;

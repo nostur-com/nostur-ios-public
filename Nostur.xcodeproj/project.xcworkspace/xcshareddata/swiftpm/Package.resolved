@@ -3,9 +3,9 @@
     {
       "identity" : "combinewebsocket",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/luizmb/CombineWebSocket",
+      "location" : "https://github.com/fabianfabian/CombineWebSocket",
       "state" : {
-        "revision" : "7ade1417198ad7b196858dd0d0601818adae5725"
+        "revision" : "aca69f455cf9cc27d1ecaa5c5b5dc9f54f496d7b"
       }
     },
     {
@@ -48,7 +48,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nostur-com/nostr-essentials",
       "state" : {
-        "revision" : "61b1d4ebb7a451d70f75173478164e5d54d09f7f"
+        "revision" : "292c71d6462ae1319f4c9919078d29df78a4f687"
       }
     },
     {
