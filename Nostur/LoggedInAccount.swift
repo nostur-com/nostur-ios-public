@@ -147,11 +147,11 @@ class LoggedInAccount: ObservableObject {
     }
     
     // BG context
-    public var bgAccount:CloudAccount? = nil
+    public var bgAccount: CloudAccount? = nil
     
-    public var mutedWords:[String] = []
+    public var mutedWords: [String] = []
     
-    @MainActor public init(_ account:CloudAccount) {
+    @MainActor public init(_ account: CloudAccount) {
         self.bg = Nostur.bg()
         self.pubkey = account.publicKey
         self.account = account
