@@ -92,7 +92,8 @@ class ArticlesFeedViewModel: ObservableObject {
         let blockedPubkeys = blocks()
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind == 30023 AND pubkey IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", agoTimestamp, follows, blockedPubkeys)
-        bg().perform {
+        bg().perform { [weak self]  in
+            guard let self else { return }
             
             guard let articles = try? bg().fetch(fr) else { return }
             
@@ -110,11 +111,11 @@ class ArticlesFeedViewModel: ObservableObject {
                 ($0.eventPublishedAt ?? $0.createdAt) > ($1.eventPublishedAt ?? $1.createdAt)
             })
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 onComplete?()
-                self.articles = sortedByPublishedAt
+                self?.articles = sortedByPublishedAt
                 if sortedByPublishedAt.isEmpty {
-                    self.nothingFound = true
+                    self?.nothingFound = true
                 }
             }
             

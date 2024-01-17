@@ -45,7 +45,8 @@ class ProfileGalleryViewModel: ObservableObject {
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "PROFILEGALLERY",
-            reqCommand: { taskId in
+            reqCommand: { [weak self] taskId in
+                guard let self else { return }
                 if let cm = NostrEssentials
                             .ClientMessage(type: .REQ,
                                            subscriptionId: taskId,
@@ -64,15 +65,15 @@ class ProfileGalleryViewModel: ObservableObject {
                     L.og.error("Gallery feed: Problem generating request")
                 }
             },
-            processResponseCommand: { taskId, relayMessage, _ in
-                self.backlog.clear()
-                self.fetchPostsFromDB(onComplete)
+            processResponseCommand: { [weak self] taskId, relayMessage, _ in
+                self?.backlog.clear()
+                self?.fetchPostsFromDB(onComplete)
 
                 L.og.info("Gallery feed: ready to process relay response")
             },
-            timeoutCommand: { taskId in
-                self.backlog.clear()
-                self.fetchPostsFromDB(onComplete)
+            timeoutCommand: { [weak self] taskId in
+                self?.backlog.clear()
+                self?.fetchPostsFromDB(onComplete)
                 L.og.info("Gallery feed: timeout ")
             })
 
@@ -83,7 +84,8 @@ class ProfileGalleryViewModel: ObservableObject {
     // STEP 2: FETCH RECEIVED POSTS FROM DB
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
 
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", self.pubkey)
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -101,10 +103,10 @@ class ProfileGalleryViewModel: ObservableObject {
                 }
             }
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 onComplete?()
-                self.items = items
-                self.state = .ready
+                self?.items = items
+                self?.state = .ready
             }
         }
     }
@@ -128,8 +130,8 @@ class ProfileGalleryViewModel: ObservableObject {
     public func refresh() async {
         self.state = .loading
         self.backlog.clear()
-        await withCheckedContinuation { continuation in
-            self.fetchPostsFromRelays {
+        await withCheckedContinuation { [weak self] continuation in
+            self?.fetchPostsFromRelays {
                 continuation.resume()
             }
         }

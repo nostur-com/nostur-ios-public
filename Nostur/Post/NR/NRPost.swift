@@ -123,8 +123,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var contact:NRContact?  {
         get { pfpAttributes.contact }
         set {
-            DispatchQueue.main.async {
-                self.pfpAttributes.contact = newValue
+            DispatchQueue.main.async { [weak self] in
+                self?.pfpAttributes.contact = newValue
             }
         }
     }
@@ -132,8 +132,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var replyingToUsernamesMarkDown:AttributedString?  {
         get { replyingToAttributes.replyingToUsernamesMarkDown }
         set {
-            DispatchQueue.main.async {
-                self.replyingToAttributes.replyingToUsernamesMarkDown = newValue
+            DispatchQueue.main.async { [weak self] in
+                self?.replyingToAttributes.replyingToUsernamesMarkDown = newValue
             }
         }
     }
@@ -146,8 +146,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         get { _parentPosts }
         set {
             _parentPosts = newValue // Thread 1 - Data race in Nostur.NRPost.parentPosts.setter : Swift.Array<Nostur.NRPost> at 0x112075600
-            DispatchQueue.main.async {
-                self.postOrThreadAttributes.parentPosts = newValue
+            DispatchQueue.main.async { [weak self] in
+                self?.postOrThreadAttributes.parentPosts = newValue
             }
         }
     }
@@ -199,8 +199,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var firstQuote:NRPost? {
         get { noteRowAttributes.firstQuote }
         set {
-            DispatchQueue.main.async {
-                self.noteRowAttributes.firstQuote = newValue
+            DispatchQueue.main.async { [weak self] in
+                self?.noteRowAttributes.firstQuote = newValue
             }
         }
     }
@@ -209,8 +209,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var deletedById:String? {
         get { postRowDeletableAttributes.deletedById }
         set {
-            DispatchQueue.main.async {
-                self.postRowDeletableAttributes.deletedById = newValue
+            DispatchQueue.main.async { [weak self] in
+                self?.postRowDeletableAttributes.deletedById = newValue
             }
         }
     }
@@ -227,8 +227,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var blocked: Bool {
         get { postRowDeletableAttributes.blocked }
         set {
-            DispatchQueue.main.async {
-                self.postRowDeletableAttributes.blocked = newValue
+            DispatchQueue.main.async { [weak self] in
+                self?.postRowDeletableAttributes.blocked = newValue
             }
         }
     }
@@ -241,8 +241,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var flags:String {
         get { ownPostAttributes.flags }
         set {
-            DispatchQueue.main.async {
-                self.ownPostAttributes.flags = newValue
+            DispatchQueue.main.async { [weak self] in
+                self?.ownPostAttributes.flags = newValue
             }
         }
     }
@@ -594,9 +594,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
 //                self.objectWillChange.send()
                 self.relays = relays
                 let relaysCount = relays.split(separator: " ").count
-                DispatchQueue.main.async {
-                    self.ownPostAttributes.objectWillChange.send()
-                    self.ownPostAttributes.relaysCount = relaysCount
+                DispatchQueue.main.async { [weak self] in
+                    self?.ownPostAttributes.objectWillChange.send()
+                    self?.ownPostAttributes.relaysCount = relaysCount
                 }
             }
             .store(in: &subscriptions)
@@ -613,11 +613,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 let flags = event.flags
                 let cancellationId = event.cancellationId
 
-                DispatchQueue.main.async {
-                    self.ownPostAttributes.objectWillChange.send()
-                    self.ownPostAttributes.relaysCount = relaysCount
-                    self.ownPostAttributes.flags = flags
-                    self.ownPostAttributes.cancellationId = cancellationId
+                DispatchQueue.main.async { [weak self] in
+                    self?.ownPostAttributes.objectWillChange.send()
+                    self?.ownPostAttributes.relaysCount = relaysCount
+                    self?.ownPostAttributes.flags = flags
+                    self?.ownPostAttributes.cancellationId = cancellationId
                 }
             }
             .store(in: &subscriptions)
@@ -631,12 +631,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 let followingPubkeys = notification.object as! Set<String>
                 let isFollowing = followingPubkeys.contains(self.pubkey)
                 if isFollowing != self.following {
-                    DispatchQueue.main.async {
-                        self.objectWillChange.send()
-                        self.following = isFollowing
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.following = isFollowing
                         if (isFollowing) {
-                            self.contact?.following = isFollowing
-                            self.contact?.couldBeImposter = 0
+                            self?.contact?.following = isFollowing
+                            self?.contact?.couldBeImposter = 0
                         }
                     }
                 }
@@ -668,9 +668,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 let eventId = notification.object as! String
                 guard eventId == self.id else { return }
                 
-                DispatchQueue.main.async {
-                    self.ownPostAttributes.objectWillChange.send()
-                    self.ownPostAttributes.cancellationId = nil
+                DispatchQueue.main.async { [weak self] in
+                    self?.ownPostAttributes.objectWillChange.send()
+                    self?.ownPostAttributes.cancellationId = nil
                 }
             }
             .store(in: &subscriptions)
@@ -692,9 +692,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
                 if self.kind == 6 {
-                    DispatchQueue.main.async {
-                        self.objectWillChange.send()
-                        self.repostedHeader = String(localized:"\(self.contact?.anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.repostedHeader = String(localized:"\(self?.contact?.anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
                     }
                 }
                 else {
@@ -707,9 +707,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         bg().perform {
                             guard let contact = Contact.fetchByPubkey(pubkey, context: bg()) else { return }
                             let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))
-                            DispatchQueue.main.async {
-                                self.highlightAttributes.objectWillChange.send()
-                                self.highlightAttributes.contact = nrContact
+                            DispatchQueue.main.async { [weak self] in
+                                self?.highlightAttributes.objectWillChange.send()
+                                self?.highlightAttributes.contact = nrContact
                             }
                         }
                     }
@@ -759,13 +759,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             let (contentElementsDetail, _, _) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(event)
             let (contentElements, _) = filteredForPreview(contentElementsDetail)
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 // self.objectWillChange.send() // Not needed? because this is only for things not on screen yet
                 // for on screen we already use .onReceive
                 // if it doens't work we need to change let nrPost:NRPost to @ObserverdObject var nrPost:NRPost on ContentRenderer
                 // and enable self.objectWillChange.send() here.
-                self.contentElementsDetail = contentElementsDetail
-                self.contentElements = contentElements
+                self?.contentElementsDetail = contentElementsDetail
+                self?.contentElements = contentElements
             }
         }
     }
@@ -774,9 +774,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             guard let self = self else { return }
             if let replyingToMarkdown = NRReplyingToBuilder.shared.replyingToUsernamesMarkDownString(self.event) {
                 let md = try? AttributedString(markdown: replyingToMarkdown)
-                DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                    self.replyingToUsernamesMarkDown = md
+                DispatchQueue.main.async { [weak self] in
+                    self?.objectWillChange.send()
+                    self?.replyingToUsernamesMarkDown = md
                 }
             }
         }
@@ -808,11 +808,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.event.replyToUpdated
             .sink { replyTo in
                 bg().perform { [weak self] in
-                    guard let self = self else { return }
                     let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
-                    DispatchQueue.main.async {
-                        self.objectWillChange.send()
-                        self.replyTo = nrReplyTo
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.replyTo = nrReplyTo
                         // self.loadReplyTo() // need this??
                     }
                 }
@@ -822,11 +821,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.event.replyToRootUpdated
             .sink { replyToRoot in
                 bg().perform { [weak self] in
-                    guard let self = self else { return }
                     let nrReplyToRoot = NRPost(event: replyToRoot, withReplyTo: true)
-                    DispatchQueue.main.async {
-                        self.objectWillChange.send()
-                        self.replyToRoot = nrReplyToRoot
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.replyToRoot = nrReplyToRoot
                         // self.loadReplyTo() // need this??
                     }
                 }
@@ -862,13 +860,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     }
                     else {
                         self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
-                        DispatchQueue.main.async {
-                            self.objectWillChange.send()
-                            self.replies = nrReplies
+                        DispatchQueue.main.async { [weak self] in
+                            self?.objectWillChange.send()
+                            self?.replies = nrReplies
                             
-                            self.footerAttributes.objectWillChange.send()
-                            self.footerAttributes.repliesCount = Int64(nrReplies.count)
-                            self.footerAttributes.replyPFPs = Array(replyPFPs)
+                            self?.footerAttributes.objectWillChange.send()
+                            self?.footerAttributes.repliesCount = Int64(nrReplies.count)
+                            self?.footerAttributes.replyPFPs = Array(replyPFPs)
                         }
                     }
                 }
@@ -912,11 +910,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 .filter { !blocks().contains($0.pubkey) }
                 .map { NRPost(event: $0, cancellationId: cancellationIds[$0.id]) }
             self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
-            DispatchQueue.main.async {
-                self.objectWillChange.send()
-                self.replies = nrReplies
-                self.footerAttributes.objectWillChange.send()
-                self.footerAttributes.repliesCount = Int64(nrReplies.count)
+            DispatchQueue.main.async { [weak self] in
+                self?.objectWillChange.send()
+                self?.replies = nrReplies
+                self?.footerAttributes.objectWillChange.send()
+                self?.footerAttributes.repliesCount = Int64(nrReplies.count)
             }
         }
     }
@@ -933,9 +931,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             
             if let replyTo = try? Event.fetchEvent(id: replyToId, context: bg()) {
                 let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
-                DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                    self.replyTo = nrReplyTo
+                DispatchQueue.main.async { [weak self] in
+                    self?.objectWillChange.send()
+                    self?.replyTo = nrReplyTo
                 }
             }
         }
@@ -954,10 +952,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             
             guard beforeThreadPostsCount != threadPostsCount else { return }
             
-            DispatchQueue.main.async {
-                self.objectWillChange.send()
-                self.parentPosts = parentPosts
-                self.threadPostsCount = threadPostsCount
+            DispatchQueue.main.async { [weak self] in
+                self?.objectWillChange.send()
+                self?.parentPosts = parentPosts
+                self?.threadPostsCount = threadPostsCount
             }
         }
     }
@@ -1259,13 +1257,13 @@ extension NRPost { // Helpers for grouped replies
             let groupedRepliesNotWoT = Array(self.sortGroupedRepliesNotWoT(groupedReplies).prefix(50))
             
             self.event.repliesCount = Int64(replies.count) // Fix wrong count in db
-            DispatchQueue.main.async {
-                self.objectWillChange.send()
-                self.replies = replies
-                self.groupedRepliesSorted = groupedRepliesSorted
-                self.groupedRepliesNotWoT = groupedRepliesNotWoT
-                self.footerAttributes.objectWillChange.send()
-                self.footerAttributes.repliesCount = Int64(replies.count)
+            DispatchQueue.main.async { [weak self] in
+                self?.objectWillChange.send()
+                self?.replies = replies
+                self?.groupedRepliesSorted = groupedRepliesSorted
+                self?.groupedRepliesNotWoT = groupedRepliesNotWoT
+                self?.footerAttributes.objectWillChange.send()
+                self?.footerAttributes.repliesCount = Int64(replies.count)
             }
         }
     }

@@ -82,7 +82,8 @@ class WebOfTrust: ObservableObject {
             default:
                 0
         }
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             self.allowedKeysCount = self.mainAccountWoTpubkey == "" ? 0 : allowedKeysCount
         }
     }
@@ -95,8 +96,8 @@ class WebOfTrust: ObservableObject {
     private init() {
         mainAccountWoTpubkey = UserDefaults.standard.string(forKey: SettingsStore.Keys.mainWoTaccountPubkey) ?? ""
         if _mainAccountWoTpubkey == "" {
-            DispatchQueue.main.async {
-                self.guessMainAccount()
+            DispatchQueue.main.async { [weak self] in
+                self?.guessMainAccount()
             }
         }
     }
@@ -141,10 +142,12 @@ class WebOfTrust: ObservableObject {
         let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.privateFollowingPubkeys) // We don't include silent follows in WoT
         let followingPubkeys = account.getFollowingPublicKeys(includeBlocked: true)
         
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             self.followingPubkeys = followingPubkeys
             guard wotFollowingPubkeys.count > 10 else {
-                DispatchQueue.main.async { 
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
                     sendNotification(.WoTReady)
                     self.updatingWoT = false
                 }
@@ -265,8 +268,8 @@ class WebOfTrust: ObservableObject {
         self.loadFollowingFollowing(wotFollowingPubkeys:wotFollowingPubkeys, force: force)
         if let lastUpdated = lastUpdatedDate(mainAccountWoTpubkey) {
             L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.mainAccountWoTpubkey).txt --> \(lastUpdated.description)")
-            DispatchQueue.main.async {
-                self.lastUpdated = lastUpdated
+            DispatchQueue.main.async { [weak self] in
+                self?.lastUpdated = lastUpdated
             }
         }
     }
@@ -341,7 +344,8 @@ class WebOfTrust: ObservableObject {
             self.addOwnFollowsIfNeeded()
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
             self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 sendNotification(.WoTReady)
                 self.updatingWoT = false
             }
@@ -357,8 +361,8 @@ class WebOfTrust: ObservableObject {
             
             if let lastUpdated = lastUpdatedDate(pubkey) {
                 L.og.info("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(pubkey).txt --> \(lastUpdated.description)")
-                DispatchQueue.main.async {
-                    self.lastUpdated = lastUpdated
+                DispatchQueue.main.async { [weak self] in
+                    self?.lastUpdated = lastUpdated
                 }
             }
         }
@@ -396,8 +400,8 @@ class WebOfTrust: ObservableObject {
     public func loadLastUpdatedDate() {
         guard mainAccountWoTpubkey != "" else { return }
         if let date = self.lastUpdatedDate(mainAccountWoTpubkey) {
-            DispatchQueue.main.async {
-                self.lastUpdated = date
+            DispatchQueue.main.async { [weak self] in
+                self?.lastUpdated = date
             }
         }
     }

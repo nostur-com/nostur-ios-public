@@ -36,15 +36,15 @@ class WebsiteCommentsViewModel: ObservableObject {
                     L.og.debug("Website Comments: Problem generating request")
                 }
             },
-            processResponseCommand: { taskId, relayMessage, _ in
-                self.backlog.clear()
-                self.fetchKind443sFromDb(url: url, onComplete: onComplete)
+            processResponseCommand: { [weak self] taskId, relayMessage, _ in
+                self?.backlog.clear()
+                self?.fetchKind443sFromDb(url: url, onComplete: onComplete)
                 
                 L.og.debug("Website Comments: ready to process relay response")
             },
-            timeoutCommand: { taskId in
-                self.backlog.clear()
-                self.fetchKind443sFromDb(url: url, onComplete: onComplete)
+            timeoutCommand: { [weak self] taskId in
+                self?.backlog.clear()
+                self?.fetchKind443sFromDb(url: url, onComplete: onComplete)
                 L.og.debug("Website Comments: timeout ")
             })
         
@@ -68,9 +68,9 @@ class WebsiteCommentsViewModel: ObservableObject {
                 .map { NRPost(event: $0) }
                 .sorted(by: { $0.createdAt > $1.createdAt })
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 onComplete?()
-                self.state = .ready(roots)
+                self?.state = .ready(roots)
             }
         }
     }

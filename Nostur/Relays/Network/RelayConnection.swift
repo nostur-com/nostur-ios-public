@@ -416,17 +416,17 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self.lastMessageReceivedAt = .now
             self.isSocketConnected = true
             if self.firstConnection {
-                DispatchQueue.main.async {
-                    sendNotification(.socketConnected, "Connected: \(self.url)")
+                DispatchQueue.main.async { [weak self] in
+                    sendNotification(.socketConnected, "Connected: \(self?.url ?? "?")")
                 }
             }
             else { // restore subscriptions
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
                     if IS_CATALYST || !NRState.shared.appIsInBackground {
                         LVMManager.shared.restoreSubscriptions()
                         NotificationsViewModel.shared.restoreSubscriptions()
                     }
-                    sendNotification(.socketConnected, "Connected: \(self.url)")
+                    sendNotification(.socketConnected, "Connected: \(self?.url ?? "?")")
                 }
             }
             self.firstConnection = false

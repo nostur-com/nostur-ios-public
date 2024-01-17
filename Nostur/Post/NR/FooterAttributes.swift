@@ -64,7 +64,8 @@ class FooterAttributes: ObservableObject {
     }
     
     @MainActor public func loadFooter() {
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard !self.withFooter else { return }
             self.withFooter = true
             self.setupListeners()
@@ -80,14 +81,14 @@ class FooterAttributes: ObservableObject {
             self.zapState = Self.hasZapReceipt(self.event) ? .zapReceiptConfirmed : self.event.zapState
             let isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
             
-            DispatchQueue.main.async {
-                self.objectWillChange.send()
-                self.replied = isReplied
-                self.reposted = isReposted
-                self.liked = isLikes
-                self.bookmarked = isBookmarked
-                self.hasPrivateNote = hasPrivateNote
-                self.zapped = isZapped
+            DispatchQueue.main.async { [weak self] in
+                self?.objectWillChange.send()
+                self?.replied = isReplied
+                self?.reposted = isReposted
+                self?.liked = isLikes
+                self?.bookmarked = isBookmarked
+                self?.hasPrivateNote = hasPrivateNote
+                self?.zapped = isZapped
 //                self.zapsCount = zapsCount
 //                self.zapTally = zapTally
             }
@@ -116,11 +117,8 @@ class FooterAttributes: ObservableObject {
         event.repostsDidChange
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] reposts in // Int64
-                guard let self = self else { return }
-//                DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                    self.repostsCount = reposts
-//                }
+                self?.objectWillChange.send()
+                self?.repostsCount = reposts
             }
             .store(in: &subscriptions)
     }
@@ -129,11 +127,8 @@ class FooterAttributes: ObservableObject {
         event.likesDidChange
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] likes in
-                guard let self = self else { return }
-//                DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                    self.likesCount = likes
-//                }
+                self?.objectWillChange.send()
+                self?.likesCount = likes
                 
                 // Also update own like (or slow? disbaled)
 //                if !self.liked && isLiked() { // nope. main bg thread mismatch
@@ -147,25 +142,21 @@ class FooterAttributes: ObservableObject {
         event.zapsDidChange
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] (count, tally) in
-                guard let self = self else { return }
-//                DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                    self.zapTally = tally
-                    self.zapsCount = count
-//                }
+                self?.objectWillChange.send()
+                self?.zapTally = tally
+                self?.zapsCount = count
             }
             .store(in: &subscriptions)
         
         event.zapStateChanged
             .sink { [weak self] zapState in
-                guard let self = self else { return }
                 guard let zapState = zapState else { return }
                 
                 let isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
                 
-                DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                    self.zapped = isZapped
+                DispatchQueue.main.async { [weak self] in
+                    self?.objectWillChange.send()
+                    self?.zapped = isZapped
                 }
             }
             .store(in: &subscriptions)
@@ -179,19 +170,19 @@ class FooterAttributes: ObservableObject {
                 let action = notification.object as! PostActionNotification
                 guard action.eventId == self.id else { return }
                 
-                DispatchQueue.main.async {
-                    self.objectWillChange.send()
+                DispatchQueue.main.async { [weak self] in
+                    self?.objectWillChange.send()
                     switch action.type {
                     case .bookmark:
-                        self.bookmarked = action.bookmarked
+                        self?.bookmarked = action.bookmarked
                     case .liked:
-                        self.liked = true
+                        self?.liked = true
                     case .replied:
-                        self.replied = true
+                        self?.replied = true
                     case .reposted:
-                        self.reposted = true
+                        self?.reposted = true
                     case .privateNote:
-                        self.hasPrivateNote = action.hasPrivateNote
+                        self?.hasPrivateNote = action.hasPrivateNote
                     }
                 }
             }

@@ -282,8 +282,8 @@ class NotificationsViewModel: ObservableObject {
         guard NRState.shared.activeAccountPublicKey != "" else { return }
                 
         let since = NTimestamp(timestamp: Int(self.requestSince))
-        bg().perform {
-            self.needsUpdate = true
+        bg().perform { [weak self] in
+            self?.needsUpdate = true
             
             DispatchQueue.main.async {
                 req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS), subscriptionId: "Notifications-CATCHUP", since: since))
@@ -382,7 +382,8 @@ class NotificationsViewModel: ObservableObject {
             .filter { ($0.created_at > lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || account.followingPubkeys.contains($0.pubkey)) }
             .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             if unreadMentionsCount != self.unreadMentions_ {
                 if SettingsStore.shared.receiveLocalNotifications {
                     
@@ -431,7 +432,8 @@ class NotificationsViewModel: ObservableObject {
                 
                 L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground(): mentions for notifications: \(mentionsForNotification.count)")
                 
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
                     if unreadMentionsCount != self.unreadMentions_ {
                         if SettingsStore.shared.receiveLocalNotifications {
                             
@@ -462,7 +464,8 @@ class NotificationsViewModel: ObservableObject {
         
         let unreadNewPosts = (try? bg().count(for: fetchRequest)) ?? 0
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             if unreadNewPosts != self.unreadNewPosts_ {
                 if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "New Posts" {
                     self.unreadNewPosts_ = 0
@@ -484,7 +487,8 @@ class NotificationsViewModel: ObservableObject {
             .filter { !$0.isSpam } // Need to filter so can't use .countResultType
             .count
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             if unreadReposts != self.unreadReposts_ {
                 if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {
                     self.unreadReposts_ = 0
@@ -503,7 +507,8 @@ class NotificationsViewModel: ObservableObject {
         
         let unreadNewFollowers = (try? bg().count(for: fetchRequest)) ?? 0
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             if unreadNewFollowers != self.unreadNewFollowers_ {
                 if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {
                     self.unreadNewFollowers_ = 0
@@ -524,7 +529,8 @@ class NotificationsViewModel: ObservableObject {
             .filter { !$0.isSpam } // Need to filter so can't use .countResultType
             .count
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             if unreadReactions != self.unreadReactions_ {
                 if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Reactions" {
                     self.unreadReactions_ = 0
@@ -545,7 +551,8 @@ class NotificationsViewModel: ObservableObject {
             .filter { !$0.isSpam } // Need to filter so can't use .countResultType
             .count
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             if unreadZaps != self.unreadZaps_ {
                 if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Zaps" {
                     self.unreadZaps_ = 0
@@ -564,7 +571,8 @@ class NotificationsViewModel: ObservableObject {
         
         let unreadFailedZaps = (try? bg().count(for: fetchRequest)) ?? 0
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             if unreadFailedZaps != self.unreadFailedZaps_ {
                 if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Zaps" {
                     self.unreadFailedZaps_ = 0
@@ -604,8 +612,8 @@ class NotificationsViewModel: ObservableObject {
                 }
             }
             bgSave()
-            DispatchQueue.main.async { // Maybe another query was running in parallel, so set to 0 again here.
-                self.unreadMentions_ = 0
+            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
+                self?.unreadMentions_ = 0
             }
         }
     }
@@ -627,8 +635,8 @@ class NotificationsViewModel: ObservableObject {
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
 
             bgSave()
-            DispatchQueue.main.async { // Maybe another query was running in parallel, so set to 0 again here.
-                self.unreadNewPosts_ = 0
+            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
+                self?.unreadNewPosts_ = 0
             }
         }
     }
@@ -658,8 +666,8 @@ class NotificationsViewModel: ObservableObject {
                 }
             }
             bgSave()
-            DispatchQueue.main.async { // Maybe another query was running in parallel, so set to 0 again here.
-                self.unreadReposts_ = 0
+            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
+                self?.unreadReposts_ = 0
             }
         }
     }
@@ -689,8 +697,8 @@ class NotificationsViewModel: ObservableObject {
                 }
             }
             bgSave()
-            DispatchQueue.main.async { // Maybe another query was running in parallel, so set to 0 again here.
-                self.unreadReactions_ = 0
+            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
+                self?.unreadReactions_ = 0
             }
         }
     }
@@ -733,9 +741,9 @@ class NotificationsViewModel: ObservableObject {
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
 
             bgSave()
-            DispatchQueue.main.async { // Maybe another query was running in parallel, so set to 0 again here.
-                self.unreadZaps_ = 0
-                self.unreadFailedZaps_ = 0
+            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
+                self?.unreadZaps_ = 0
+                self?.unreadFailedZaps_ = 0
             }
         }
     }
@@ -757,8 +765,8 @@ class NotificationsViewModel: ObservableObject {
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
 
             bgSave()
-            DispatchQueue.main.async { // Maybe another query was running in parallel, so set to 0 again here.
-                self.unreadNewFollowers_ = 0
+            DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
+                self?.unreadNewFollowers_ = 0
             }
         }
     }

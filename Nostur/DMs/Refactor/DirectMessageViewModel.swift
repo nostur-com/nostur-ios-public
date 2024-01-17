@@ -105,7 +105,8 @@ class DirectMessageViewModel: ObservableObject {
     
     private func setupBadgeNotifications() { // Copy pasta from NotificationsViewModel
         let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.badge, .provisional]) { granted, error in
+        center.requestAuthorization(options: [.badge, .provisional]) { [weak self] granted, error in
+            guard let self else { return }
             if error == nil {
                 // Provisional authorization granted.
                 self.objectWillChange
@@ -246,8 +247,8 @@ class DirectMessageViewModel: ObservableObject {
         
         // Wrap in bg().perform so it happens after the last bg() loop above
         bg().perform {
-            DispatchQueue.main.async {
-                
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 if let lastNotificationReceivedAt, self.lastNotificationReceivedAt == nil { // set most recent if we dont have it set yet
                     self.lastNotificationReceivedAt = lastNotificationReceivedAt
                 }
@@ -324,7 +325,8 @@ class DirectMessageViewModel: ObservableObject {
 
         // Wrap in bg().perform so it happens after the last bg() loop above
         bg().perform {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 
                 if let lastNotificationReceivedAt, self.lastNotificationReceivedAt == nil { // set most recent if we dont have it set yet
                     self.lastNotificationReceivedAt = lastNotificationReceivedAt
@@ -393,7 +395,8 @@ class DirectMessageViewModel: ObservableObject {
 
         // Wrap in bg().perform so it happens after the last bg() loop above
         bg().perform {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 self.requestRowsNotWoT = conversationRows
                     .sorted(by: { $0.mostRecentDate > $1.mostRecentDate })
                     .sorted(by: { $0.dmState.isPinned && !$1.dmState.isPinned })

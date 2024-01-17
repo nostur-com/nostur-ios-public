@@ -172,7 +172,7 @@ class HotViewModel: ObservableObject {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
         let posts = self.posts
-        bg().perform {
+        bg().perform { [weak self] in
             let onlyNewIds = posts.keys
                 .filter { postId in
                     Importer.shared.existingIds[postId] == nil
@@ -191,9 +191,9 @@ class HotViewModel: ObservableObject {
                 L.og.debug("Hot feed: fetchPostsFromRelays: empty ids")
                 if (posts.count > 0) {
                     L.og.debug("Hot feed: but we can render the duplicates")
-                    DispatchQueue.main.async {
-                        self.fetchPostsFromDB(onComplete)
-                        self.backlog.clear()
+                    DispatchQueue.main.async { [weak self] in
+                        self?.fetchPostsFromDB(onComplete)
+                        self?.backlog.clear()
                     }
                 }
                 else {
@@ -225,18 +225,18 @@ class HotViewModel: ObservableObject {
                         L.og.error("Hot feed: Problem generating posts request")
                     }
                 },
-                processResponseCommand: { taskId, relayMessage, _ in
-                    self.fetchPostsFromDB(onComplete)
-                    self.backlog.clear()
+                processResponseCommand: { [weak self] taskId, relayMessage, _ in
+                    self?.fetchPostsFromDB(onComplete)
+                    self?.backlog.clear()
                     L.og.info("Hot feed: ready to process relay response")
                 },
-                timeoutCommand: { taskId in
-                    self.fetchPostsFromDB(onComplete)
-                    self.backlog.clear()
+                timeoutCommand: { [weak self] taskId in
+                    self?.fetchPostsFromDB(onComplete)
+                    self?.backlog.clear()
                     L.og.info("Hot feed: timeout ")
                 })
 
-            self.backlog.add(reqTask)
+            self?.backlog.add(reqTask)
             reqTask.fetch()
            
         }
@@ -251,7 +251,8 @@ class HotViewModel: ObservableObject {
             return
         }
         let blockedPubkeys = blocks()
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             let sortedByLikesAndReposts = self.posts
                 .sorted(by: { $0.value.count > $1.value.count })
                 .prefix(Self.POSTS_LIMIT)
@@ -272,10 +273,10 @@ class HotViewModel: ObservableObject {
                 }
             }
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 onComplete?()
-                self.hotPosts = nrPosts
-                self.state = .ready
+                self?.hotPosts = nrPosts
+                self?.state = .ready
             }
             
             guard !nrPosts.isEmpty else { return }

@@ -462,8 +462,8 @@ public final class NewPostModel: ObservableObject {
                 previewEvent.previewImages = self.typingTextModel.pastedImages
             }
             let nrPost = NRPost(event: previewEvent, isPreview: true)
-            DispatchQueue.main.async {
-                self.previewNRPost = nrPost
+            DispatchQueue.main.async { [weak self] in
+                self?.previewNRPost = nrPost
             }
             bg().delete(previewEvent)
         }
