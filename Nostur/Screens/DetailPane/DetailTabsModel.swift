@@ -98,12 +98,12 @@ final class DetailTabsModel: ObservableObject {
     
     static public let shared = DetailTabsModel()
     
-    @Published var tabs:[TabModel] = [] {
+    @Published var tabs: [TabModel] = [] {
         didSet {
             self.saveTabs()
         }
     }
-    @Published var selected:TabModel? = nil {
+    @Published var selected: TabModel? = nil {
         didSet {
             self.saveTabs()
         }

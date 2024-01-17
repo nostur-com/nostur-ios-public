@@ -10,10 +10,10 @@ import SwiftUI
 struct PaymentAmountSelector: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
-    @State private var errorMessage:String? = nil
-    private let paymentInfo:PaymentInfo
+    @State private var errorMessage: String? = nil
+    private let paymentInfo: PaymentInfo
     
-    init(paymentInfo:PaymentInfo) {
+    init(paymentInfo: PaymentInfo) {
         self.paymentInfo = paymentInfo
     }
     

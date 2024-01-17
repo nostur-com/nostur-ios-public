@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileLightningButton: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     
     public var contact:Contact?
     

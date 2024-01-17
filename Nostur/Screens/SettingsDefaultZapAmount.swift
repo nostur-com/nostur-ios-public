@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct SettingsDefaultZapAmount: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) var dismiss
     
     @AppStorage("last_custom_zap_amount") var lastCustomZapAmount:Double = 0.0

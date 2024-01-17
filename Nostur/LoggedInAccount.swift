@@ -12,9 +12,9 @@ import CoreData
 class LoggedInAccount: ObservableObject {
 
     // VIEW
-    @Published public var pubkey:String
+    @Published public var pubkey: String
     
-    public var viewFollowingPublicKeys:Set<String> = []
+    public var viewFollowingPublicKeys: Set<String> = []
     
     @MainActor public func isFollowing(pubkey: String) -> Bool {
         viewFollowingPublicKeys.contains(pubkey)
@@ -22,7 +22,7 @@ class LoggedInAccount: ObservableObject {
     
     // USER ACTIONS - TRIGGERED FROM VIEWS
     
-    @MainActor public func follow(_ pubkey:String) {
+    @MainActor public func follow(_ pubkey: String) {
         viewFollowingPublicKeys.insert(pubkey)
         
         bg.perform {
