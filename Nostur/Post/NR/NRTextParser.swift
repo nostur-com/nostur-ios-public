@@ -134,47 +134,47 @@ class NRTextParser { // TEXT things
         var pTags = [Ptag]()
         var newText = text
 
-        do {
-            let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
-            let matches = NEvent.indexedMentionRegex15.matches(in: text, options: [], range: nsRange)
+        let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
+        let matches = NEvent.indexedMentionRegex15.matches(in: text, options: [], range: nsRange)
 
-            for match in matches.prefix(100) { // 100 limit for sanity
-                let range = match.range(at: 1)
-                guard let swiftRange = Range(range, in: text),
-                      let tagIndex = Int(text[swiftRange]),
-                      tagIndex < event.fastTags.count else {
-                    continue
-                }
-                
-                let tag = event.fastTags[tagIndex]
-
-                if tag.0 == "p" {
-                    pTags.append(tag.1)
-                    let replacementString = !plainText ?
-                        "[@\(contactUsername(fromPubkey: tag.1, event: event).escapeMD())](nostur:p:\(tag.1))" :
-                        "@\(contactUsername(fromPubkey: tag.1, event: event))"
-                    let entireMatchRange = match.range(at: 0)
-                    if let entireSwiftRange = Range(entireMatchRange, in: newText) {
-                        newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
-                    }
-                } else if tag.0 == "e" {
-                    let key = try! NIP19(prefix: "note1", hexString: tag.1)
-                    let replacementString = !plainText ?
-                        "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))" :
-                        "@\(String(key.displayString).prefix(11))"
-                    let entireMatchRange = match.range(at: 0)
-                    if let entireSwiftRange = Range(entireMatchRange, in: newText) {
-                        newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
-                    }
-                }
+        for match in matches.prefix(100) { // 100 limit for sanity
+            let range = match.range(at: 1)
+            guard let swiftRange = Range(range, in: text),
+                  let tagIndex = Int(text[swiftRange]),
+                  tagIndex < event.fastTags.count else {
+                continue
             }
             
-            return TextWithPs(text: newText, pTags: pTags)
-        } catch {
-            return TextWithPs(text: newText, pTags: pTags)
+            let tag = event.fastTags[tagIndex]
+
+            if tag.0 == "p" {
+                pTags.append(tag.1)
+                let replacementString = !plainText ?
+                    "[@\(contactUsername(fromPubkey: tag.1, event: event).escapeMD())](nostur:p:\(tag.1))" :
+                    "@\(contactUsername(fromPubkey: tag.1, event: event))"
+                let entireMatchRange = match.range(at: 0)
+                if let entireSwiftRange = Range(entireMatchRange, in: newText) {
+                    newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
+                }
+            } else if tag.0 == "e" {
+                let key = try! NIP19(prefix: "note1", hexString: tag.1)
+                let replacementString = !plainText ?
+                    "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))" :
+                    "@\(String(key.displayString).prefix(11))"
+                let entireMatchRange = match.range(at: 0)
+                if let entireSwiftRange = Range(entireMatchRange, in: newText) {
+                    newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
+                }
+            }
         }
+        
+        return TextWithPs(text: newText, pTags: pTags)
     }
 
+    
+    // Cached regex that is used in NSMutableAttributedString.addHashtagIcons()
+    static let npubNprofRegex = try! NSRegularExpression(pattern: "(?:nostr:)?@?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b", options: [])
+    
     // NIP-27 handle nostr:npub or nostr:nprofile
     private func parseUserMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
         let pattern = "(?:nostr:)?@?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b"
