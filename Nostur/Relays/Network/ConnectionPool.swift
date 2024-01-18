@@ -280,7 +280,7 @@ public class ConnectionPool: ObservableObject {
     }
     
     
-    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<RelayData> = [], accountPubkey:String? = nil, afterPing:Bool = false) {
+    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<RelayData> = [], accountPubkey:String? = nil) {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             print("Canvas.sendMessage: \(message.type) \(message.message)")
             return
@@ -304,12 +304,7 @@ public class ConnectionPool: ObservableObject {
                         }
                         // For NWC we just replace active subscriptions, else doesn't work
                         L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId ?? ""): \(message.message)")
-                        if afterPing {
-                            connection.sendMessageAfterPing(message.message)
-                        }
-                        else {
-                            connection.sendMessage(message.message)
-                        }
+                        connection.sendMessage(message.message)
                     }
                     else if message.type == .CLOSE {
                         if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
@@ -331,12 +326,7 @@ public class ConnectionPool: ObservableObject {
                             connection.connect()
                         }
                         L.sockets.info("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
-                        if afterPing {
-                            connection.sendMessageAfterPing(message.message)
-                        }
-                        else {
-                            connection.sendMessage(message.message)
-                        }
+                        connection.sendMessage(message.message)
                     }
                 }
                 
@@ -370,12 +360,7 @@ public class ConnectionPool: ObservableObject {
                             L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(connection.url): \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
                         }
                         L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId ?? ""): \(message.message)")
-                        if afterPing {
-                            connection.sendMessageAfterPing(message.message)
-                        }
-                        else {
-                            connection.sendMessage(message.message)
-                        }
+                        connection.sendMessage(message.message)
                     }
                     else if message.type == .CLOSE { // CLOSE FOR ALL RELAYS
                         if (!connection.relayData.read && !limitToRelayIds.contains(connection.url)) { continue }
@@ -398,12 +383,7 @@ public class ConnectionPool: ObservableObject {
                             connection.connect()
                         }
                         L.sockets.info("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
-                        if afterPing {
-                            connection.sendMessageAfterPing(message.message)
-                        }
-                        else {
-                            connection.sendMessage(message.message)
-                        }
+                        connection.sendMessage(message.message)
                     }
                 }
             }
