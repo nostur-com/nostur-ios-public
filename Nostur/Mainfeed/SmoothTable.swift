@@ -59,8 +59,8 @@ struct SmoothTable: UIViewControllerRepresentable {
         
         // set up 'scroll to'- listener
         receiveNotification(.shouldScrollToFirstUnread)
-            .sink { _ in
-                guard context.coordinator.lvm.viewIsVisible else { return }
+            .sink { [weak coordinator = context.coordinator, cvh] _ in
+                guard coordinator?.lvm.viewIsVisible ?? false else { return }
                 guard cvh.tableView.numberOfRows(inSection: 0) > 0 else { return }
                 guard context.coordinator.lvm.lvmCounter.count > 0 else {
                     // if no unread, scroll to top
@@ -90,10 +90,10 @@ struct SmoothTable: UIViewControllerRepresentable {
             .store(in: &context.coordinator.subscriptions)
         
         receiveNotification(.shouldScrollToTop)
-            .sink { _ in
-                guard context.coordinator.lvm.viewIsVisible else { return }
+            .sink { [weak coordinator = context.coordinator, cvh] _ in
+                guard coordinator?.lvm.viewIsVisible ?? false else { return }
                 guard cvh.tableView.numberOfRows(inSection: 0) > 0 else { return }
-                if !context.coordinator.lvm.posts.value.isEmpty {
+                if !(coordinator?.lvm.posts.value.isEmpty ?? true) {
                     cvh.tableView.scrollToRow(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
                 }
             }
@@ -156,8 +156,8 @@ struct SmoothTable: UIViewControllerRepresentable {
         coordinator.lvm.posts
             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
-            .sink { data in
-//                coordinator.data = data
+            .sink { [weak viewHolder, weak coordinator] data in
+                guard let coordinator = coordinator, let viewHolder = viewHolder else { return }
                 guard let dataSource = viewHolder.dataSource else { return }
                 let currentNumberOfItems = dataSource.snapshot().numberOfItems(inSection: .main)
                 let isInitialApply = coordinator.initialApply
@@ -188,7 +188,8 @@ struct SmoothTable: UIViewControllerRepresentable {
                 if isInitialApply && data.count > 0 {
                     signpost(NRState.shared, "LAUNCH", .event, "SmoothTable: Applying snapshot")
                 }
-                dataSource.apply(snapshot, animatingDifferences: shouldAnimate) {
+                dataSource.apply(snapshot, animatingDifferences: shouldAnimate) { [weak viewHolder, weak coordinator] in
+                    guard let coordinator = coordinator, let viewHolder = viewHolder else { return }
                     if (isInitialApply) {
                         coordinator.initialApply = false
                         // Scroll to initial position

@@ -86,7 +86,7 @@ class FollowerNotifier {
     func listenForAccountChanged() {
         
         receiveNotification(.activeAccountChanged)
-            .sink { notification in
+            .sink { [weak self] notification in
                 let account = notification.object as! CloudAccount
                 let pubkey = account.publicKey
                 

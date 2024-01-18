@@ -90,7 +90,8 @@ class GalleryViewModel: ObservableObject {
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "GALLERY",
-            reqCommand: { taskId in
+            reqCommand: { [weak self] taskId in
+                guard let self else { return }
                 if let cm = NostrEssentials
                             .ClientMessage(type: .REQ,
                                            subscriptionId: taskId,
@@ -111,13 +112,15 @@ class GalleryViewModel: ObservableObject {
                     onComplete?()
                 }
             },
-            processResponseCommand: { taskId, relayMessage, _ in
+            processResponseCommand: { [weak self] taskId, relayMessage, _ in
+                guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
 
                 L.og.info("Gallery feed: ready to process relay response")
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak self] taskId in
+                guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
                 L.og.info("Gallery feed: timeout ")
@@ -131,7 +134,8 @@ class GalleryViewModel: ObservableObject {
     private func fetchLikesAndRepostsFromDB(_ onComplete: (() -> ())? = nil) {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@", agoTimestamp, follows)
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard let likesOrReposts = try? bg().fetch(fr) else { return }
             for item in likesOrReposts {
                 switch item.kind {
@@ -166,7 +170,7 @@ class GalleryViewModel: ObservableObject {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
         let posts = self.posts
-        bg().perform {
+        bg().perform { [weak self] in
             let onlyNewIds = posts.keys
                 .filter { postId in
                     Importer.shared.existingIds[postId] == nil
@@ -185,7 +189,7 @@ class GalleryViewModel: ObservableObject {
                 L.og.debug("Gallery feed: fetchPostsFromRelays: empty ids")
                 if (posts.count > 0) {
                     L.og.debug("Gallery feed: but we can render the duplicates")
-                    DispatchQueue.main.async { [weak self] in
+                    DispatchQueue.main.async {
                         self?.fetchPostsFromDB(onComplete)
                         self?.backlog.clear()
                     }
@@ -213,24 +217,25 @@ class GalleryViewModel: ObservableObject {
                                                ]
                                 ).json() {
                         req(cm)
-    //                    self.lastFetch = Date.now
                     }
                     else {
                         L.og.error("Gallery feed: Problem generating posts request")
                     }
                 },
-                processResponseCommand: { taskId, relayMessage, _ in
+                processResponseCommand: { [weak self] taskId, relayMessage, _ in
+                    guard let self else { return }
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
                     L.og.info("Gallery feed: ready to process relay response")
                 },
-                timeoutCommand: { taskId in
+                timeoutCommand: { [weak self] taskId in
+                    guard let self else { return }
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
                     L.og.info("Gallery feed: timeout ")
                 })
 
-            self.backlog.add(reqTask)
+            self?.backlog.add(reqTask)
             reqTask.fetch()
         }
     }

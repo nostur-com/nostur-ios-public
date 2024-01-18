@@ -96,7 +96,8 @@ struct ProfileZaps: View {
         .frame(minHeight: 800)
 //        .padding(.top, 5)
 //        .background(themes.theme.listBackground)
-        .task {
+        .task { [weak backlog] in
+            guard let backlog else { return }
             guard !didLoad else { return }
             didLoad = true
             loadZaps()
@@ -111,8 +112,9 @@ struct ProfileZaps: View {
                 processResponseCommand: { (taskId, _, _) in
                     self.loadZaps()
                 },
-                timeoutCommand: { (taskId) in
-                    self.backlog.timeout = 4
+                timeoutCommand: { [weak backlog] (taskId) in
+                    guard let backlog else { return }
+                    backlog.timeout = 4
                     try60days()
                 }
             )

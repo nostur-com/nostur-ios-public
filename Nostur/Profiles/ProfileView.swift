@@ -374,15 +374,17 @@ struct ProfileView: View {
                 selectedSubTab = tab
             }
         }
-        .task {
+        .task { [weak nrContact] in
             bg().perform {
+                guard let nrContact else { return }
                 if (NIP05Verifier.shouldVerify(nrContact.contact)) {
                     NIP05Verifier.shared.verify(nrContact.contact)
                 }
             }
         }
-        .onChange(of: nrContact.nip05) { nip05 in
+        .onChange(of: nrContact.nip05) { [weak nrContact] nip05 in
             bg().perform {
+                guard let nrContact else { return }
                 if (NIP05Verifier.shouldVerify(nrContact.contact)) {
                     NIP05Verifier.shared.verify(nrContact.contact)
                 }
@@ -392,7 +394,8 @@ struct ProfileView: View {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:nrContact.pictureUrl!, isFollowing: nrContact.following)
                 .environmentObject(themes)
         }
-        .task {
+        .task { [weak nrContact] in
+            guard let nrContact else { return }
             guard !SettingsStore.shared.lowDataMode else { return }
             let contact = nrContact
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
@@ -406,7 +409,7 @@ struct ProfileView: View {
             let cPubkey = contact.pubkey
             let currentAccountPubkey = NRState.shared.activeAccountPublicKey
             
-            bg().perform {
+            bg().perform { [weak contact] in
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows.first(where: {
@@ -423,6 +426,7 @@ struct ProfileView: View {
                     }
                     
                     DispatchQueue.main.async {
+                        guard let contact else { return }
                         guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                         self.similarPFP = similarPFP
                         contact.couldBeImposter = similarPFP ? 1 : 0
@@ -430,7 +434,8 @@ struct ProfileView: View {
                 }
             }
         }
-        .task {
+        .task { [weak backlog] in
+            guard let backlog else { return }
             let contactPubkey = pubkey
             let reqTask = ReqTask(prefix: "SEEN-", reqCommand: { taskId in
                 req(RM.getLastSeen(pubkey: contactPubkey, subscriptionId: taskId))
@@ -457,10 +462,10 @@ struct ProfileView: View {
             backlog.add(reqTask)
             reqTask.fetch()
         }
-        .task {
-            let contact = nrContact.contact
-            
+        .task { [weak nrContact, weak backlog] in
+            guard let backlog else { return }
             bg().perform {
+                guard let contact = nrContact?.contact else { return }
                 EventRelationsQueue.shared.addAwaitingContact(contact)
                 if (contact.followsYou()) {
                     DispatchQueue.main.async {
@@ -469,11 +474,13 @@ struct ProfileView: View {
                 }
                 
                 let task = ReqTask(
-                    reqCommand: { (taskId) in
+                    reqCommand: { [weak contact] (taskId) in
+                        guard let contact else { return }
                         req(RM.getUserProfileKinds(pubkey: contact.pubkey, subscriptionId: taskId, kinds: [0,3,30008,10002]))
                     },
-                    processResponseCommand: { (taskId, _, _) in
+                    processResponseCommand: { [weak contact] (taskId, _, _) in
                         bg().perform {
+                            guard let contact else { return }
                             if (contact.followsYou()) {
                                 DispatchQueue.main.async {
                                     isFollowingYou = true
@@ -481,8 +488,9 @@ struct ProfileView: View {
                             }
                         }
                     },
-                    timeoutCommand: { taskId in
+                    timeoutCommand: { [weak contact] taskId in
                         bg().perform {
+                            guard let contact else { return }
                             if (contact.followsYou()) {
                                 DispatchQueue.main.async {
                                     isFollowingYou = true
@@ -501,12 +509,13 @@ struct ProfileView: View {
                 guard contact.anyLud else { return }
                 let lud16orNil = contact.lud16
                 let lud06orNil = contact.lud06
-                Task {
+                Task { [weak contact] in
                     do {
                         if let lud16 = lud16orNil, lud16 != "" {
                             let response = try await LUD16.getCallbackUrl(lud16: lud16)
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 await bg().perform {
+                                    guard let contact else { return }
                                     contact.zapperPubkey = response.nostrPubkey!
                                     L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
                                 }
@@ -516,6 +525,7 @@ struct ProfileView: View {
                             let response = try await LUD16.getCallbackUrl(lud06: lud06)
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 await bg().perform {
+                                    guard let contact else { return }
                                     contact.zapperPubkey = response.nostrPubkey!
                                     L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
                                 }

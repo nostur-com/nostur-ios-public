@@ -43,24 +43,24 @@ class ProfilePostsViewModel: ObservableObject {
         self.backlog = Backlog(timeout: 8.0, auto: true)
         
         receiveNotification(.newPostSaved)
-            .sink { notification in
+            .sink { [weak self] notification in
                 bg().perform {
                     let event = notification.object as! Event
                     guard event.pubkey == pubkey else { return }
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "ProfilePostsViewModel.newPostSaved")
                     let nrPost = NRPost(event: event, cancellationId: event.cancellationId) // TODO: TEST UNDO SEND
-                    DispatchQueue.main.async { [weak self] in
+                    DispatchQueue.main.async {
                         self?.posts.insert(nrPost, at: 0)
                 }
             }
         }
         .store(in: &subscriptions)
         
-        receiveNotification(.unpublishedNRPost).sink { notification in
+        receiveNotification(.unpublishedNRPost).sink { [weak self] notification in
             let nrPost = notification.object as! NRPost
             
             // Remove from view
-            DispatchQueue.main.async { [weak self] in
+            DispatchQueue.main.async {
                 self?.posts.removeAll(where: { $0.id == nrPost.id })
             }
         }
@@ -73,7 +73,8 @@ class ProfilePostsViewModel: ObservableObject {
         let reqTask = ReqTask(
             debounceTime: 0.1,
             subscriptionId: "PROFILEPOSTS",
-            reqCommand: { taskId in
+            reqCommand: { [weak self] taskId in
+                guard let self else { return }
                 if let cm = NostrEssentials
                             .ClientMessage(type: .REQ,
                                            subscriptionId: taskId,
@@ -92,13 +93,15 @@ class ProfilePostsViewModel: ObservableObject {
                     L.og.error("Profile posts feed: Problem generating request")
                 }
             },
-            processResponseCommand: { taskId, relayMessage, _ in
+            processResponseCommand: { [weak self] taskId, relayMessage, _ in
+                guard let self else { return }
                 self.backlog.clear()
                 self.fetchPostsFromDB(onComplete)
 
                 L.og.info("Profile posts feed: ready to process relay response")
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak self] taskId in
+                guard let self else { return }
                 self.backlog.clear()
                 self.fetchPostsFromDB(onComplete)
                 L.og.info("Profile posts feed: timeout ")

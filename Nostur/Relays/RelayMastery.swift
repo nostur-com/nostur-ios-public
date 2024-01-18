@@ -176,15 +176,17 @@ struct AccountRelaySettings: View {
     private var loadingView: some View {
         Section("Published relays for \(account.anyName)") {
             Text("\(Image(systemName: "hourglass.circle.fill")) Checking relays...")
-                .onAppear {
+                .onAppear { [weak vm, weak account] in
+                    guard let vm, let account else { return }
                     if !account.accountRelays.isEmpty {
                         vm.ready(Array(account.accountRelays))
                     }
                     else {
                         vm.setFetchParams((
                             prio: false,
-                            req: { _ in
+                            req: { [weak vm] _ in
                                 bg().perform { // 1. FIRST CHECK LOCAL DB
+                                    guard let vm else { return }
                                     if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
                                         
                                         let relays:[AccountRelayData] = kind10002.tags().compactMap { tag in
@@ -203,7 +205,8 @@ struct AccountRelaySettings: View {
                                             return nil
                                         }
                                         vm.ready(relays)
-                                        DispatchQueue.main.async {
+                                        DispatchQueue.main.async { [weak account] in
+                                            guard let account else { return }
                                             account.accountRelays = Set(relays)
                                             DataProvider.shared().save()
                                         }
@@ -211,8 +214,9 @@ struct AccountRelaySettings: View {
                                     else { req(RM.getRelays(pubkeys: [accountPubkey])) }
                                 }
                             },
-                            onComplete: { relayMessage, _ in
+                            onComplete: { [weak vm] relayMessage, _ in
                                 bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
+                                    guard let vm else { return }
                                     if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
                                         let relays:[AccountRelayData] = kind10002.tags().compactMap { tag in
                                             if (tag.type != "r") { return nil }
@@ -230,7 +234,8 @@ struct AccountRelaySettings: View {
                                             return nil
                                         }
                                         vm.ready(relays)
-                                        DispatchQueue.main.async {
+                                        DispatchQueue.main.async { [weak account] in
+                                            guard let account else { return }
                                             account.accountRelays = Set(relays)
                                             DataProvider.shared().save()
                                         }

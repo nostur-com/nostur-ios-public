@@ -154,7 +154,7 @@ class FooterAttributes: ObservableObject {
                 
                 let isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
                 
-                DispatchQueue.main.async { [weak self] in
+                DispatchQueue.main.async {
                     self?.objectWillChange.send()
                     self?.zapped = isZapped
                 }

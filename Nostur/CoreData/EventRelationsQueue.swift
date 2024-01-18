@@ -49,7 +49,8 @@ class EventRelationsQueue {
         cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true, block: { [unowned self] timer in
             let now = Date()
             
-            bg().perform {
+            bg().perform { [weak self] in
+                guard let self else { return }
                 self.waitingEvents = self.waitingEvents.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
                 self.waitingContacts = self.waitingContacts.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
             }            
@@ -108,15 +109,15 @@ class EventRelationsQueue {
     }
     
     public func removeAll() {
-        ctx.perform {
-            self.waitingEvents = [EventId:QueuedEvent]()
-            self.waitingContacts = [ContactPubkey:QueuedContact]()
+        ctx.perform { [unowned self] in
+            self.waitingEvents = [EventId: QueuedEvent]()
+            self.waitingContacts = [ContactPubkey: QueuedContact]()
         }
     }
     
     /// Adds contact to the queue waiting for info to be updated
     /// - Parameter contact: Contact should be from .bg context, if not this function will fetch it from .bg using .objectID
-    public func addAwaitingContact(_ contact:Contact, debugInfo:String? = "") {
+    public func addAwaitingContact(_ contact: Contact, debugInfo: String? = "") {
         if contact.managedObjectContext == ctx {
             ctx.perform { [unowned self] in
                 guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
@@ -141,7 +142,7 @@ class EventRelationsQueue {
     }
     
     
-    public func getAwaitingBgContact(byPubkey pubkey:ContactPubkey) -> Contact? {
+    public func getAwaitingBgContact(byPubkey pubkey: ContactPubkey) -> Contact? {
         return self.waitingContacts[pubkey]?.contact
     }
 }

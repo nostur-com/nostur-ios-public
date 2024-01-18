@@ -35,25 +35,25 @@ class FetchVM<T: Equatable>: ObservableObject {
     }
 
     public func altFetch() {
-        guard let fetchParams = self.fetchParams else { L.og.error("🔴🔴 FetchVM: missing fetchParams"); return }
-        guard let altReq = fetchParams.altReq else { L.og.error("🔴🔴 FetchVM: missing fetchParams.altReq"); return }
+        guard let _fetchParams = self.fetchParams else { L.og.error("🔴🔴 FetchVM: missing fetchParams"); return }
+        guard let _altReq = _fetchParams.altReq else { L.og.error("🔴🔴 FetchVM: missing fetchParams.altReq"); return }
         let reqTask = ReqTask(
-            prio: fetchParams.prio ?? false,
+            prio: _fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
             reqCommand: { [weak self] taskId in
                 DispatchQueue.main.async {
                     self?.state = .altLoading
                 }
-                altReq(taskId)
+                _altReq(taskId)
             },
             processResponseCommand: { [weak self] taskId, relayMessage, event in
                 L.og.info("FetchVM: ready to process relay response")
-                fetchParams.onComplete(relayMessage, event)
+                _fetchParams.onComplete(relayMessage, event)
                 self?.backlog.clear()
             },
             timeoutCommand: { [weak self] taskId in
                 L.og.info("FetchVM: timeout")
-                fetchParams.onComplete(nil, nil)
+                _fetchParams.onComplete(nil, nil)
                 self?.backlog.clear()
             })
 
@@ -74,21 +74,21 @@ class FetchVM<T: Equatable>: ObservableObject {
     }
     
     public func fetch() {
-        guard let fetchParams = self.fetchParams else { L.og.error("🔴🔴 FetchVM: missing fetchParams"); return }
+        guard let _fetchParams = self.fetchParams else { L.og.error("🔴🔴 FetchVM: missing fetchParams"); return }
         let reqTask = ReqTask(
-            prio: fetchParams.prio ?? false,
+            prio: _fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
             reqCommand: { taskId in
-                fetchParams.req(taskId)
+                _fetchParams.req(taskId)
             },
             processResponseCommand: { [weak self] taskId, relayMessage, event in
                 L.og.info("FetchVM: ready to process relay response")
-                fetchParams.onComplete(relayMessage, event)
+                _fetchParams.onComplete(relayMessage, event)
                 self?.backlog.clear()
             },
             timeoutCommand: { [weak self] taskId in
                 L.og.info("FetchVM: timeout")
-                fetchParams.onComplete(nil, nil)
+                _fetchParams.onComplete(nil, nil)
                 self?.backlog.clear()
             })
 

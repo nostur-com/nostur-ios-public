@@ -27,8 +27,9 @@ struct ProfileFollowingList: View {
                 .onAppear {
                     vm.setFetchParams((
                         prio: false, // Can't use prio, different relays can send different event and we need most recent.
-                        req: { _ in
+                        req: { [weak vm] _ in
                             bg().perform { // 1. FIRST CHECK LOCAL DB
+                                guard let vm else { return }
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     
                                     let silentFollows:Set<String> = clEvent.pubkey == account()?.publicKey
@@ -43,8 +44,9 @@ struct ProfileFollowingList: View {
                                 else { req(RM.getAuthorContactsList(pubkey: pubkey)) }
                             }
                         }, 
-                        onComplete: { relayMessage, _ in
+                        onComplete: { [weak vm] relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
+                                guard let vm else { return }
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     let silentFollows:Set<String> = clEvent.pubkey == account()?.publicKey
                                         ? (account()?.privateFollowingPubkeys ?? [])

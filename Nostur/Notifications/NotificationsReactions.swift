@@ -191,10 +191,10 @@ struct NotificationsReactions: View {
             NRState.shared.blockedPubkeys
         )
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fl.onComplete = {
+        fl.onComplete = { [weak fl] in
             saveLastSeenReactionCreatedAt() // onComplete from local database
             self.fetchNewer()
-            fl.onComplete = { // set onComplete again because self.fetchNewer() should only run once
+            fl?.onComplete = { // set onComplete again because self.fetchNewer() should only run once
                 saveLastSeenReactionCreatedAt() // onComplete from local database
             }
         }
@@ -206,7 +206,8 @@ struct NotificationsReactions: View {
     func fetchNewer() {
         guard let account = account() else { return }
         let fetchNewerTask = ReqTask(
-            reqCommand: { (taskId) in
+            reqCommand: { [weak fl] (taskId) in
+                guard let fl else { return }
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
                     kinds: [7],
@@ -215,7 +216,8 @@ struct NotificationsReactions: View {
                     since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
                 ))
             },
-            processResponseCommand: { (taskId, _, _) in
+            processResponseCommand: { [weak fl] (taskId, _, _) in
+                guard let fl else { return }
 //                    print("🟠🟠🟠 processResponseCommand \(taskId)")
                 let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
@@ -226,7 +228,8 @@ struct NotificationsReactions: View {
                 )
                 fl.loadNewerEvents(5000, taskId: taskId)
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak fl] taskId in
+                guard let fl else { return }
                 fl.loadNewerEvents(5000, taskId: taskId)
             })
         

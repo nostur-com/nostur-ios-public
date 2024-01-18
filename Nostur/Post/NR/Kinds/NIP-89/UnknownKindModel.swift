@@ -71,15 +71,15 @@ class UnknownKindModel: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self]  taskId, _, _ in
-                guard let self = self else { return }
                 bg().perform {
+                    guard let self = self else { return }
                     self.didFinishFetchingHandlers = true
                     self.appHandlers = self.fetchApps(kind: unknownKind)
                 }
             },
             timeoutCommand: { [weak self] taskId in
-                guard let self = self else { return }
                 bg().perform {
+                    guard let self = self else { return }
                     self.didFinishFetchingHandlers = true
                     self.appHandlers = self.fetchApps(kind: unknownKind)
                 }
@@ -93,8 +93,8 @@ class UnknownKindModel: ObservableObject {
     private func fetchAppRecommendations(unknownKind: Int64) {
         let reqTask = ReqTask(
             reqCommand: { [weak self] taskId in
-                guard let self = self else { return }
                 bg().perform {
+                    guard let self = self else { return }
                     let filters = [Filters(authors: self.follows!, kinds: [31989], tagFilter: TagFilter(tag: "d", values: ["\(unknownKind)"]), limit: 200)]
                     
                     if let reqJson = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters).json() {
@@ -103,15 +103,15 @@ class UnknownKindModel: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self] taskId, _, _ in
-                guard let self = self else { return }
                 bg().perform {
+                    guard let self = self else { return }
                     self.didFinishFetchingRecommendations = true
                     self.appRecommendations = self.fetchRecommendations(kind: unknownKind)
                 }
             },
             timeoutCommand: { [weak self] taskId in
-                guard let self = self else { return }
                 bg().perform {
+                    guard let self = self else { return }
                     self.didFinishFetchingRecommendations = true
                     self.appRecommendations = self.fetchRecommendations(kind: unknownKind)
                 }
@@ -152,7 +152,8 @@ class UnknownKindModel: ObservableObject {
     // STEP 4
     // Take all handlers and recommendations, sort apps by recommendations (only web-handlers for now)
     private func buildSuggestedApps(unknownKind: Int64, pubkey: String, eventId: String) {
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             let decoder = JSONDecoder()
             let suggestedApps = self.appHandlers
                 .compactMap({ (handler: Event) -> SuggestedApp? in

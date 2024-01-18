@@ -54,8 +54,7 @@ class WebsiteCommentsViewModel: ObservableObject {
     
     // STEP 2: FETCH RECEIVED POSTS FROM DB
     private func fetchKind443sFromDb(url: String, onComplete: (() -> ())? = nil) {
-        
-        bg().perform {
+        bg().perform { [weak self] in
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "kind == 443 AND tagsSerialized CONTAINS %@", ###"["r",""###)
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -68,7 +67,7 @@ class WebsiteCommentsViewModel: ObservableObject {
                 .map { NRPost(event: $0) }
                 .sorted(by: { $0.createdAt > $1.createdAt })
             
-            DispatchQueue.main.async { [weak self] in
+            DispatchQueue.main.async {
                 onComplete?()
                 self?.state = .ready(roots)
             }

@@ -29,7 +29,8 @@ struct WithNSecBunkerConnection<Content: View>: View {
                 Divider()
             }
             content
-                .task {
+                .task { [weak nsecBunker] in
+                    guard let nsecBunker else { return }
                     nsecBunker.state = .connecting
                     nsecBunker.describe()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {

@@ -40,8 +40,8 @@ extension LVM {
                 L.og.notice("🟪 Fetching clEvent from relays")
                 reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
             },
-            processResponseCommand: { taskId, _, clEvent in
-                bg().perform { [weak self] in
+            processResponseCommand: { [weak self] taskId, _, clEvent in
+                bg().perform {
                     guard let self = self else { return }
                     L.og.notice("🟪 Processing clEvent response from relays")
                     if let clEvent = clEvent {
@@ -90,20 +90,20 @@ extension LVM {
                 L.og.notice("🟪 Fetching posts from relays using \(self.pubkeys.count) pubkeys")
                 reqP(RM.getFollowingEvents(pubkeys: Array(self.pubkeys), limit: 400, subscriptionId: taskId))
             },
-            processResponseCommand: { taskId, _, _  in
-                bg().perform { [weak self] in
+            processResponseCommand: { [weak self] taskId, _, _  in
+                bg().perform {
                     guard let self = self else { return }
-                    let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
+                    let fr = Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: 0)
                     guard let events = try? bg().fetch(fr) else {
-                        L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
+                        L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(self.pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
                         return
                     }
                     guard events.count > 20 else {
                         L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more. Our pubkey: \(self.pubkey?.short ?? "-") ")
                         return
                     }
-                    DispatchQueue.main.async {
-                        self.loadSomeoneElsesEvents(events)
+                    DispatchQueue.main.async { [weak self] in
+                        self?.loadSomeoneElsesEvents(events)
                     }
                     L.og.notice("🟪 Received \(events.count) posts from relays (found in db)")
                 }

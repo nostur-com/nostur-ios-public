@@ -74,8 +74,8 @@ class InstantFeed {
 
     private func fetchContactListPubkeys(pubkey: Pubkey) {
         signpost(self, "InstantFeed", .event, "Fetching contact list pubkeys")
-        Task.detached {
-            bg().perform { [weak self] in
+        Task.detached { [weak self] in
+            bg().perform {
                 guard let self = self else { return }
                 if let account = try? CloudAccount.fetchAccount(publicKey: pubkey, context: bg()), !account.followingPubkeys.isEmpty {
                     L.og.notice("🟪 Using account.follows")
@@ -94,15 +94,16 @@ class InstantFeed {
                     let getContactListTask = ReqTask(subscriptionId: "RM.getAuthorContactsList") { taskId in
                         L.og.notice("🟪 Fetching clEvent from relays")
                         reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
-                    } processResponseCommand: { taskId, _, _ in
-                        bg().perform { [weak self] in
+                    } processResponseCommand: { [weak self] taskId, _, _ in
+                        bg().perform {
                             guard let self = self else { return }
                             L.og.notice("🟪 Processing clEvent response from relays")
                             if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                 self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
                             }
                         }
-                    } timeoutCommand: { taskId in
+                    } timeoutCommand: { [weak self] taskId in
+                        guard let self else { return }
                         if (self.pubkeys == nil) {
                             L.og.notice("🟪  \(taskId) Timeout in fetching clEvent / pubkeys")
                         }
@@ -134,8 +135,8 @@ class InstantFeed {
             let getFollowingEventsTask = ReqTask(prefix: "GFET-") { taskId in
                 L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
                 reqP(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
-            } processResponseCommand: { taskId, _, _ in
-                bg().perform { [weak self] in
+            } processResponseCommand: { [weak self] taskId, _, _ in
+                bg().perform {
                     guard let self = self else { return }
                     let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
                     guard let events = try? bg().fetch(fr) else {
@@ -168,14 +169,14 @@ class InstantFeed {
         guard !relays.isEmpty else { return }
         let relayCount = relays.count
         
-        Task.detached {
-            bg().perform { [weak self] in
+        Task.detached { [weak self] in
+            bg().perform {
                 guard let self = self else { return }
                 let getGlobalEventsTask = ReqTask(subscriptionId: "RM.getGlobalFeedEvents-" + UUID().uuidString) { taskId in
                     L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
                     reqP(RM.getGlobalFeedEvents(limit: 200, subscriptionId: taskId), relays: self.relays)
-                } processResponseCommand: { taskId, _, _ in
-                    bg().perform { [weak self] in
+                } processResponseCommand: { [weak self] taskId, _, _ in
+                    bg().perform {
                         guard let self = self else { return }
                         let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: 0)
                         guard let events = try? bg().fetch(fr) else {
@@ -189,7 +190,8 @@ class InstantFeed {
                         self.events = events
                         L.og.notice("🟪 Received \(events.count) posts from relays (found in db)")
                     }
-                } timeoutCommand: { taskId in
+                } timeoutCommand: { [weak self] taskId in
+                    guard let self else { return }
                     if self.events == nil {
                         L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from globalish relays using \(relayCount) relays. ")
                         self.events = []

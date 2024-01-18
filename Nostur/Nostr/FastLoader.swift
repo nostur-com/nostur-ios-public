@@ -314,10 +314,10 @@ class Backlog {
                 .store(in: &subscriptions)
             
             receiveNotification(.receivedMessage)
-                .sink { notification in
+                .sink { [weak self] notification in
                     let receivedMessage = notification.object as! RelayMessage
                     guard let subscriptionId = receivedMessage.subscriptionId else { return }
-                    bg().perform { [weak self] in
+                    bg().perform {
                         guard let self = self else { return }
                         let reqTasks = self.tasks(with: [subscriptionId])
                         for task in reqTasks {

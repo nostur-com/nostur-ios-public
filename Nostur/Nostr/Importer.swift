@@ -57,8 +57,8 @@ class Importer {
             .debounce(for: .seconds(0.15), scheduler: DispatchQueue.global())
             .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
-            .sink {
-                bg().perform { [weak self] in
+            .sink { [weak self] in
+                bg().perform { 
                     guard let self else { return }
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
                     let notified = self.callbackSubscriptionIds
@@ -105,7 +105,8 @@ class Importer {
             let existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
                 dict[event.id] = EventState(status: .SAVED, relays: event.relays)
             }
-            bg().performAndWait {
+            bg().performAndWait { [weak self] in
+                guard let self else { return }
                 self.existingIds = existingIds
                 L.og.debug("\(self.existingIds.count) existing ids added to cache")
             }

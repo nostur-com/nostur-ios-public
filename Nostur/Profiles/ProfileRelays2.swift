@@ -39,7 +39,7 @@ struct ProfileRelays: View {
                 ProgressView()
                     .hCentered()
                     .listRowBackground(themes.theme.background)
-                    .task {
+                    .task { [weak backlog] in
                         let task = ReqTask(
                             debounceTime: 0.02,
                             subscriptionId: "P-10002",
@@ -51,14 +51,16 @@ struct ProfileRelays: View {
                                 }
                                 req(rm)
                             }, processResponseCommand: { taskId, relayMessage, event in
+                                guard let backlog else { return }
                                 loading = false
                                 backlog.clear()
                             }, timeoutCommand: { taskId in
+                                guard let backlog else { return }
                                 loading = false
                                 backlog.clear()
                             }
                         )
-                        backlog.add(task)
+                        backlog?.add(task)
                         task.fetch()
                     }
             }

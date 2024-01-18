@@ -190,9 +190,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.contact.contactUpdated
             .subscribe(on: DispatchQueue.global())
             .sink { [weak self] contact in
-                guard let self = self else { return }
-                
-                bg().perform { [weak self] in
+                bg().perform {
+                    guard let self = self else { return }
                     let anyName = contact.anyName
                     let fixedName = contact.fixedName
                     let display_name = contact.display_name

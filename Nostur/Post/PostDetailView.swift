@@ -21,11 +21,12 @@ struct NoteById: View {
             ProgressView()
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .task {
-                    vm.setFetchParams((
+                .task { [weak vm] in
+                    vm?.setFetchParams((
                         prio: true,
                         req: { taskId in
                             bg().perform {
+                                guard let vm else { return }
                                 if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
                                     vm.ready(NRPost(event: event, withFooter: false))
                                 }
@@ -35,6 +36,7 @@ struct NoteById: View {
                             }
                         },
                         onComplete: { relayMessage, event in
+                            guard let vm else { return }
                             if let event = event {
                                 vm.ready(NRPost(event: event, withFooter: false))
                             }
@@ -54,7 +56,7 @@ struct NoteById: View {
                             req(RM.getEvent(id: self.id, subscriptionId: taskId), relayType: .SEARCH)
                         }
                     ))
-                    vm.fetch()
+                    vm?.fetch()
                 }
         case .ready(let nrPost):
             if nrPost.kind == 30023 {
@@ -299,6 +301,9 @@ struct PostAndParent: View {
                                             navigateTo(nrPost)
                                         }
                                 )
+                        }
+                        else if nrPost.isRepost { // who opens a repost in detail?
+                            Repost(nrPost: nrPost, hideFooter: false, missingReplyTo: false, connect: .none, fullWidth: false, isReply: false, isDetail: true, grouped: false, theme: themes.theme)
                         }
                         else {
                             DetailPost(nrPost: nrPost)
