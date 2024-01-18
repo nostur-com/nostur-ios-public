@@ -29,20 +29,20 @@ class EventRelationsQueue {
     typealias ContactPubkey = String
     
     struct QueuedEvent {
-        let event:Event
+        let event: Event
         let queuedAt: Date
     }
     
     struct QueuedContact {
-        let contact:Contact
+        let contact: Contact
         let queuedAt: Date
     }
     
     static let shared = EventRelationsQueue()
     
     private var ctx = bg()
-    private var waitingEvents = [EventId:QueuedEvent]()
-    private var waitingContacts = [ContactPubkey:QueuedContact]()
+    private var waitingEvents = [EventId: QueuedEvent]()
+    private var waitingContacts = [ContactPubkey: QueuedContact]()
     private var cleanUpTimer: Timer?
     
     init() {

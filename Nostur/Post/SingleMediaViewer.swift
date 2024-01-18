@@ -369,8 +369,8 @@ struct ImageProgressView: View {
     public let state: LazyImageState
     public var numericOnly = false
     
-    @State var percent:Int = 0
-    @State var subscriptions = Set<AnyCancellable>()
+    @State var percent: Int = 0
+//    @State var subscriptions = Set<AnyCancellable>()
 
     var body: some View {
         if !numericOnly && percent == 0 {

@@ -10,31 +10,31 @@ import CoreData
 import Combine
 
 class FooterAttributes: ObservableObject {
-    @Published var replyPFPs:[URL] = []
+    @Published var replyPFPs: [URL] = []
     
-    @Published var replied:Bool
-    @Published var repliesCount:Int64
+    @Published var replied: Bool
+    @Published var repliesCount: Int64
     
-    @Published var reposted:Bool
-    @Published var repostsCount:Int64 // was mentionsCount
+    @Published var reposted: Bool
+    @Published var repostsCount: Int64 // was mentionsCount
     
-    @Published var liked:Bool
-    @Published var likesCount:Int64
+    @Published var liked: Bool
+    @Published var likesCount: Int64
     
     @Published var zapped = false
-    @Published var zapsCount:Int64
-    @Published var zapTally:Int64
+    @Published var zapsCount: Int64
+    @Published var zapTally: Int64
     
-    @Published var bookmarked:Bool
-    @Published var hasPrivateNote:Bool
+    @Published var bookmarked: Bool
+    @Published var hasPrivateNote: Bool
     
-    private var zapState:Event.ZapState?
-    private var withFooter:Bool
-    private var event:Event
+    private var zapState: Event.ZapState?
+    private var withFooter: Bool
+    private var event: Event
     private var subscriptions = Set<AnyCancellable>()
-    private var id:String
+    private var id: String
     
-    init(replyPFPs:[URL] = [], event:Event, withFooter:Bool = true, repliesCount:Int64 = 0) {
+    init(replyPFPs: [URL] = [], event: Event, withFooter: Bool = true, repliesCount: Int64 = 0) {
         self.event = event
         self.id = event.id
         self.withFooter = withFooter

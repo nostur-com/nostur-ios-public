@@ -9,7 +9,7 @@ import SwiftUI
 
 struct WithNSecBunkerConnection<Content: View>: View {
     private let content: Content
-    @ObservedObject var nsecBunker:NSecBunkerManager
+    @ObservedObject var nsecBunker: NSecBunkerManager
     
     init(nsecBunker: NSecBunkerManager, @ViewBuilder content: () -> Content) {
         self.nsecBunker = nsecBunker

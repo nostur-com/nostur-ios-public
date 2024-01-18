@@ -110,10 +110,10 @@ struct PlaceholderPostHeader: View {
 }
 
 struct PostHeader: View {
-    @ObservedObject public var contact:NRContact
-    @ObservedObject var settings:SettingsStore = .shared
-    public let nrPost:NRPost
-    public let singleLine:Bool
+    @ObservedObject public var contact: NRContact
+    @ObservedObject var settings: SettingsStore = .shared
+    public let nrPost: NRPost
+    public let singleLine: Bool
     
     var body: some View {
         HStack(alignment: .bottom, spacing: 5) {

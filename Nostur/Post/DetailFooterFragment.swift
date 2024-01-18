@@ -9,8 +9,8 @@ import SwiftUI
 import NavigationBackport
 
 struct DetailFooterFragment: View {
-    private var nrPost:NRPost
-    @ObservedObject private var footerAttributes:FooterAttributes
+    private var nrPost: NRPost
+    @ObservedObject private var footerAttributes: FooterAttributes
     
     init(nrPost: NRPost) {
         self.nrPost = nrPost

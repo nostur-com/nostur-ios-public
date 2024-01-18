@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct ThreadReplies: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject public var nrPost:NRPost
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject public var nrPost: NRPost
     @State private var timer:Timer? = nil
     @State private var showNotWoT = false
     

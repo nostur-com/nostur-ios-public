@@ -11,10 +11,10 @@ import NukeUI
 import HTMLEntities
 
 struct LinkPreviewView: View {
-    public let url:URL
-    public var autoload:Bool = false
-    public var theme:Theme
-    @State var tags:[String: String] = [:]
+    public let url: URL
+    public var autoload: Bool = false
+    public var theme: Theme
+    @State var tags: [String: String] = [:]
     
     static let aspect:CGFloat = 16/9
     

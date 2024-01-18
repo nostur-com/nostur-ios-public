@@ -71,24 +71,24 @@ struct ProfileOverlayCardContainer: View {
 }
 
 struct ProfileOverlayCard: View {
-    @ObservedObject public var contact:NRContact
-    public var zapEtag:String? // so other clients can still tally zaps
+    @ObservedObject public var contact: NRContact
+    public var zapEtag: String? // so other clients can still tally zaps
     public var withoutFollowButton = false
     
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var dim:DIMENSIONS
-    @EnvironmentObject private var npn:NewPostNotifier
-    @ObservedObject private var fg:FollowingGuardian = .shared
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
+    @EnvironmentObject private var npn: NewPostNotifier
+    @ObservedObject private var fg: FollowingGuardian = .shared
     
     @State private var similarPFP = false
     @State private var backlog = Backlog(timeout: 5.0, auto: true)
-    @State private var lastSeen:String? = nil
+    @State private var lastSeen: String? = nil
     @State private var isFollowingYou = false
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
-    var couldBeImposter:Bool {
+    var couldBeImposter: Bool {
         guard let account = account() else { return false }
         guard account.publicKey != contact.pubkey else { return false }
         guard !contact.following else { return false }

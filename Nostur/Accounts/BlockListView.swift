@@ -53,7 +53,7 @@ struct BlockedAccounts:View {
     @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt_, order: .reverse)], predicate: NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.contact.rawValue))
     var blockedPubkeys:FetchedResults<CloudBlocked>
     
-    @State private var blocksUntil:[String: Date] = [:] // [pubkey: blocked until]
+    @State private var blocksUntil: [String: Date] = [:] // [pubkey: blocked until]
     
     var body: some View {
         ScrollView {

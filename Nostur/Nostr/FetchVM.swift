@@ -27,7 +27,7 @@ class FetchVM<T: Equatable>: ObservableObject {
         self.fetchParams = fetchParams
     }
     
-    public func ready(_ item:T) {
+    public func ready(_ item: T) {
         DispatchQueue.main.async { [weak self] in
             self?.backlog.clear()
             self?.state = .ready(item)

@@ -24,7 +24,7 @@ class NRState: ObservableObject {
     @MainActor public static let shared = NRState()
     
     // view context
-    public var accounts:[CloudAccount] = [] {
+    public var accounts: [CloudAccount] = [] {
         didSet {
             let accountPubkeys = Set(accounts.map { $0.publicKey })
             let fullAccountPubkeys = Set(accounts.filter { $0.isFullAccount }.map { $0.publicKey })
