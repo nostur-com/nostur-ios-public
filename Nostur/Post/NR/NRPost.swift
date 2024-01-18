@@ -249,7 +249,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var dTag:String?
     var alt:String?
     var aTag:String = ""
-    var isPreview = false // hide 'Sent to 0 relays' in preview footer, disable animated gifs, Text instead of NRText
+    var isScreenshot = false // hide 'Sent to 0 relays' in preview footer, disable animated gifs, Text instead of NRText
+    var isPreview = false // same but can use NRText (for hashtags)
     
     var anyName: String {
         if kind == 443 {
@@ -286,11 +287,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var eventUrl: URL?
     var mostRecentId: String?
     
-    init(event: Event, withFooter:Bool = true, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isPreview:Bool = false, cancellationId:UUID? = nil) {
+    init(event: Event, withFooter:Bool = true, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isScreenshot:Bool = false, isPreview:Bool = false, cancellationId:UUID? = nil) {
         var isAwaiting = false
         
         self.event = event // Only touch this in BG context!!!
         self.postRowDeletableAttributes = PostRowDeletableAttributes(blocked: Self.isBlocked(pubkey: event.pubkey), deletedById: event.deletedById)
+        self.isScreenshot = isScreenshot
         self.isPreview = isPreview
         self.id = event.id
         self.pubkey = event.pubkey

@@ -32,7 +32,7 @@ struct NEventView: View {
                                 bg().perform { // 1. CHECK LOCAL DB
                                     guard let vm else { return }
                                     if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
-                                        vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
+                                        vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                                     }
                                     else { // 2. ELSE CHECK RELAY
                                         req(RM.getEvent(id: eventId, subscriptionId: taskId))
@@ -42,13 +42,13 @@ struct NEventView: View {
                             onComplete: { relayMessage, event in
                                 guard let vm else { return }
                                 if let event = event {
-                                    vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
+                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                                 }
                                 else if let event = try? Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
                                     if vm.state == .altLoading, let relay = identifier.relays.first {
                                         L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
                                     }
-                                    vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
+                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                                 }
                                 // Still don't have the event? try to fetch from relay hint
                                 // TODO: Should try a relay we don't already have in our relay set

@@ -40,7 +40,7 @@ struct QuotedNoteFragmentView: View {
                     VStack(alignment: .leading) { // Name + menu "replying to"
                         HStack(spacing: 5) {
                             // profile image
-                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20, forceFlat: nrPost.isPreview)
+                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20, forceFlat: nrPost.isScreenshot)
                                 .onTapGesture(perform: navigateToContact)
                             
                             if let contact = nrPost.contact {

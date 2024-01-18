@@ -16,16 +16,18 @@ struct NRContentTextRenderer: View, Equatable {
     
     public let attributedStringWithPs: AttributedStringWithPs
     public var isDetail = false
+    public var isScreenshot = false
     public var isPreview = false
     
     var body: some View {
-        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isPreview: isPreview)
+        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isScreenshot: isScreenshot, isPreview: isPreview)
     }
 }
 
 struct NRContentTextRendererInner: View {
     public let attributedStringWithPs:AttributedStringWithPs
     public var isDetail = false
+    public var isScreenshot = false
     public var isPreview = false
     
     @State private var height: CGFloat? = nil
@@ -37,8 +39,14 @@ struct NRContentTextRendererInner: View {
                 .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+        else if isScreenshot {
+            let aString = AttributedString(text ?? attributedStringWithPs.output)
+            Text(aString)
+                .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
         else {
-            if #available(iOS 16.0, *) {
+            if #available(iOS 16.0, *) { // because 15.0 doesn't have sizeThatFits(_ proposal: ProposedViewSize...
                 NRTextFixed(text ?? attributedStringWithPs.output, height: height ?? attributedStringWithPs.height)
                     .id(text ?? attributedStringWithPs.output)
 //                    .debugDimensions("NRTextFixed")

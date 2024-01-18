@@ -28,7 +28,7 @@ struct EmbedById: View {
                                 bg().perform {
                                     guard let vm, let dim else { return }
                                     if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
-                                        vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
+                                        vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                                     }
                                     else {
                                         req(RM.getEvent(id: self.id, subscriptionId: taskId))
@@ -38,10 +38,10 @@ struct EmbedById: View {
                             onComplete: { relayMessage, event in
                                 guard let vm, let dim else { return }
                                 if let event = event {
-                                    vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
+                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                                 }
                                 else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
-                                    vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
+                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                                 }
                                 else if [.initializing, .loading].contains(vm.state) {
                                     // try search relays
