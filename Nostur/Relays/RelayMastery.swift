@@ -111,10 +111,10 @@ struct SharedRelaySettings: View {
 }
 
 struct AccountRelaySettings: View {
-    @EnvironmentObject private var themes:Themes
-    public var accountPubkey:String
-    public var relays:[CloudRelay] = []
-    @ObservedObject public var account:CloudAccount
+    @EnvironmentObject private var themes: Themes
+    public var accountPubkey: String
+    public var relays: [CloudRelay] = []
+    @ObservedObject public var account: CloudAccount
     
     @State private var showWizard = false
     

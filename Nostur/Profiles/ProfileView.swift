@@ -14,30 +14,30 @@ struct ProfileView: View {
     private let pubkey:String
     private var tab:String?
     
-    @EnvironmentObject private var npn:NewPostNotifier
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var dim:DIMENSIONS
-    @ObservedObject private var settings:SettingsStore = .shared
-    @ObservedObject private var fg:FollowingGuardian = .shared
-    @ObservedObject private var nrContact:NRContact
+    @EnvironmentObject private var npn: NewPostNotifier
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject private var settings: SettingsStore = .shared
+    @ObservedObject private var fg: FollowingGuardian = .shared
+    @ObservedObject private var nrContact: NRContact
 
     @State private var profilePicViewerIsShown = false
     @State private var selectedSubTab = "Posts"
     @State private var backlog = Backlog(timeout: 4.0, auto: true)
-    @State private var lastSeen:String? = nil
+    @State private var lastSeen: String? = nil
     @State private var isFollowingYou = false
-    @State private var editingAccount:CloudAccount?
+    @State private var editingAccount: CloudAccount?
     @State private var similarPFP = false
     @State private var showingNewNote = false
     
     
-    init(nrContact:NRContact, tab:String? = nil) {
+    init(nrContact: NRContact, tab:String? = nil) {
         self.nrContact = nrContact
         self.pubkey = nrContact.pubkey
         self.tab = tab
     }
     
-    private var couldBeImposter:Bool {
+    private var couldBeImposter: Bool {
         guard let account = account() else { return false }
         guard account.publicKey != nrContact.pubkey else { return false }
         guard !nrContact.following else { return false }

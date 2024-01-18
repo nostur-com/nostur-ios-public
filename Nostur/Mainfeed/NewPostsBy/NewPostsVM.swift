@@ -11,12 +11,12 @@ import Combine
 
 class NewPostsVM: ObservableObject {
     
-    @Published var state:FeedState
-    @Published var posts:[NRPost] = []
+    @Published var state: FeedState
+    @Published var posts: [NRPost] = []
     
-    private var backlog:Backlog
-    private var pubkeys:Set<Pubkey>
-    private var since:Int64
+    private var backlog: Backlog
+    private var pubkeys: Set<Pubkey>
+    private var since: Int64
     private var didLoad = false
     private static let POSTS_LIMIT = 75
     private var prefetchedIds = Set<String>()

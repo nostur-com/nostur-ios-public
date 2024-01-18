@@ -11,8 +11,8 @@ import CoreData
 import Combine
 
 struct EventState {
-    let status:ProcessStatus
-    var relays:String?
+    let status: ProcessStatus
+    var relays: String?
 }
 
 enum ProcessStatus {
@@ -39,7 +39,7 @@ class Importer {
     public var contactSaved = PassthroughSubject<String, Never>()
     public var listStatus = PassthroughSubject<String, Never>()
     
-    var existingIds:[String: EventState] = [:]
+    var existingIds: [String: EventState] = [:]
     var didPreload = false // Main context
     
     static let shared = Importer()

@@ -9,12 +9,12 @@ import SwiftUI
 import NavigationBackport
 
 struct ProfileByPubkey: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     
-    public let pubkey:String
-    public var tab:String?
+    public let pubkey: String
+    public var tab: String?
         
-    @State private var editingAccount:CloudAccount? = nil
+    @State private var editingAccount: CloudAccount? = nil
     @StateObject private var vm = FetchVM<NRContact>()
 
     var body: some View {

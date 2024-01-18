@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileFollowingCount: View {
-    let pubkey:String
+    let pubkey: String
     
     @StateObject private var vm = FetchVM<Int>()
 
