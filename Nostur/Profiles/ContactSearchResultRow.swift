@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContactSearchResultRow: View {
     @EnvironmentObject private var themes:Themes
-    @ObservedObject var contact:Contact
+    @ObservedObject var contact: Contact
     var onSelect:(() -> Void)?
     
     @State var similarPFP = false
@@ -76,7 +76,8 @@ struct ContactSearchResultRow: View {
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in
             isFollowing = Nostur.isFollowing(contact.pubkey)
         }
-        .task {
+        .task { [weak contact] in
+            guard let contact else { return }
             if (Nostur.isFollowing(contact.pubkey)) {
                 isFollowing = true
             }
@@ -92,7 +93,7 @@ struct ContactSearchResultRow: View {
                 let cPubkey = contact.pubkey
                 let currentAccountPubkey = NRState.shared.activeAccountPublicKey
                 
-                bg().perform {
+                bg().perform { [weak contact] in
                     guard let account = account() else { return }
                     guard account.publicKey == currentAccountPubkey else { return }
                     guard let similarContact = account.follows.first(where: {
@@ -109,6 +110,7 @@ struct ContactSearchResultRow: View {
                         }
                         
                         DispatchQueue.main.async {
+                            guard let contact else { return }
                             guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                             self.similarPFP = similarPFP
                             contact.couldBeImposter = similarPFP ? 1 : 0

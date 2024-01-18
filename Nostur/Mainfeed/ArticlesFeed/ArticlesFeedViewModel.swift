@@ -149,7 +149,8 @@ class ArticlesFeedViewModel: ObservableObject {
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "ARTICLES",
-            reqCommand: { taskId in
+            reqCommand: { [weak self] taskId in
+                guard let self else { return }
                 if let cm = NostrEssentials
                             .ClientMessage(type: .REQ,
                                            subscriptionId: taskId,
@@ -169,12 +170,14 @@ class ArticlesFeedViewModel: ObservableObject {
                     L.og.error("Article feed: Problem generating request")
                 }
             },
-            processResponseCommand: { taskId, relayMessage, _ in
+            processResponseCommand: { [weak self] taskId, relayMessage, _ in
+                guard let self else { return }
                 self.fetchFromDB(onComplete)
                 self.backlog.clear()
                 L.og.info("Article feed: ready to process relay response")
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak self] taskId in
+                guard let self else { return }
                 self.fetchFromDB(onComplete)
                 self.backlog.clear()
                 L.og.info("Article feed: timeout")

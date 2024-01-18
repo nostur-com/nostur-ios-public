@@ -21,15 +21,16 @@ struct NEventView: View {
                 ProgressView()
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .task {
+                    .task { [weak vm] in
                         guard let eventId = identifier.eventId else {
-                            vm.error("Problem parsing nostr identifier")
+                            vm?.error("Problem parsing nostr identifier")
                             return
                         }
-                        vm.setFetchParams((
+                        vm?.setFetchParams((
                             prio: true,
                             req: { taskId in
                                 bg().perform { // 1. CHECK LOCAL DB
+                                    guard let vm else { return }
                                     if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
                                         vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                     }
@@ -39,6 +40,7 @@ struct NEventView: View {
                                 }
                             },
                             onComplete: { relayMessage, event in
+                                guard let vm else { return }
                                 if let event = event {
                                     vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                 }
@@ -70,7 +72,7 @@ struct NEventView: View {
                             }
                             
                         ))
-                        vm.fetch()
+                        vm?.fetch()
                     }
             case .ready(let nrPost):
                 EmbeddedPost(nrPost, forceAutoload: forceAutoload, theme: theme)

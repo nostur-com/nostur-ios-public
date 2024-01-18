@@ -36,11 +36,12 @@ class NewPostsVM: ObservableObject {
     }
     
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
-        bg().perform {
+        bg().perform { [weak self] in
             let reqTask = ReqTask(
                 debounceTime: 0.1,
                 subscriptionId: "NEWPOSTS",
                 reqCommand: { taskId in
+                    guard let self else { return }
                     if let cm = NostrEssentials
                         .ClientMessage(type: .REQ,
                                        subscriptionId: taskId,
@@ -60,17 +61,20 @@ class NewPostsVM: ObservableObject {
                     }
                 },
                 processResponseCommand: { taskId, relayMessage, _ in
+                    guard let self else { return }
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
                     L.og.info("New Posts feed: ready to process relay response")
                 },
                 timeoutCommand: { taskId in
+                    guard let self else { return }
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
                     L.og.info("New Posts feed: timeout ")
                 })
             
-            self.backlog.add(reqTask)
+            self?.backlog.add(reqTask)
+            guard let self else { return }
             reqTask.fetch()
             
         }

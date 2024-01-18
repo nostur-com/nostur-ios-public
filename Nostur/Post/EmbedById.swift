@@ -21,11 +21,12 @@ struct EmbedById: View {
                 ProgressView()
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .task {
-                        vm.setFetchParams((
+                    .task { [weak vm, weak dim] in
+                        vm?.setFetchParams((
                             prio: true,
                             req: { taskId in
                                 bg().perform {
+                                    guard let vm, let dim else { return }
                                     if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
                                         vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                     }
@@ -35,6 +36,7 @@ struct EmbedById: View {
                                 }
                             },
                             onComplete: { relayMessage, event in
+                                guard let vm, let dim else { return }
                                 if let event = event {
                                     vm.ready(NRPost(event: event, withFooter: false, isPreview: dim.isScreenshot))
                                 }
@@ -54,7 +56,7 @@ struct EmbedById: View {
                                 req(RM.getEvent(id: self.id, subscriptionId: taskId), relayType: .SEARCH)
                             }
                         ))
-                        vm.fetch()
+                        vm?.fetch()
                     }
             case .ready(let nrPost):
                 if nrPost.kind == 30023 {
@@ -79,7 +81,10 @@ struct EmbedById: View {
             case .timeout:
                 VStack {
                     Text("Unable to fetch content")
-                    Button("Retry") { vm.state = .loading; vm.fetch() }
+                    Button("Retry") { [weak vm] in
+                        vm?.state = .loading
+                        vm?.fetch()
+                    }
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)

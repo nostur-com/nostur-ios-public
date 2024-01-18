@@ -19,16 +19,18 @@ struct ProfileFollowingCount: View {
                 .onAppear {
                     vm.setFetchParams((
                         prio: false,
-                        req: { _ in // TODO: can we use prio here? not sure if properly replaced, should check
+                        req: { [weak vm] _ in // TODO: can we use prio here? not sure if properly replaced, should check
                             bg().perform { // 1. FIRST CHECK LOCAL DB
+                                guard let vm else { return }
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     vm.ready(clEvent.pTags().count)
                                 }
                                 else { req(RM.getAuthorContactsList(pubkey: pubkey)) }
                             }
                         }, 
-                        onComplete: { relayMessage, _ in
+                        onComplete: { [weak vm] relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
+                                guard let vm else { return }
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     vm.ready(clEvent.pTags().count)
                                 }

@@ -784,10 +784,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private func quotedPostListener() {
         self.event.firstQuoteUpdated
-            .sink { firstQuote in
-                bg().perform { [weak self] in
+            .sink { [weak self] firstQuote in
+                bg().perform {
                     guard let self = self else { return }
-                    let nrFirstQuote = NRPost(event: firstQuote, withReplyTo: true, withReplies: withReplies)
+                    let nrFirstQuote = NRPost(event: firstQuote, withReplyTo: true, withReplies: self.withReplies)
                     self.firstQuote = nrFirstQuote
                 }
             }
@@ -806,10 +806,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private func replyAndReplyRootListener() {
         self.event.replyToUpdated
-            .sink { replyTo in
-                bg().perform { [weak self] in
+            .sink { [weak self] replyTo in
+                bg().perform {
                     let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
-                    DispatchQueue.main.async { [weak self] in
+                    DispatchQueue.main.async {
                         self?.objectWillChange.send()
                         self?.replyTo = nrReplyTo
                         // self.loadReplyTo() // need this??
@@ -819,10 +819,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .store(in: &subscriptions)
         
         self.event.replyToRootUpdated
-            .sink { replyToRoot in
-                bg().perform { [weak self] in
+            .sink { [weak self] replyToRoot in
+                bg().perform {
                     let nrReplyToRoot = NRPost(event: replyToRoot, withReplyTo: true)
-                    DispatchQueue.main.async { [weak self] in
+                    DispatchQueue.main.async {
                         self?.objectWillChange.send()
                         self?.replyToRoot = nrReplyToRoot
                         // self.loadReplyTo() // need this??
@@ -837,9 +837,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private func repliesListener() {
         self.event.repliesUpdated
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { replies in
+            .sink { [weak self] replies in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
-                bg().perform { [weak self] in
+                bg().perform {
                     guard let self = self else { return }
                     let nrReplies = replies
                             .filter { !blocks().contains($0.pubkey) }
@@ -855,7 +855,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         .uniqued(on: ({ $0 }))
                         .prefix(8)
                     
-                    if (withGroupedReplies) {
+                    if (self.withGroupedReplies) {
                         self.groupRepliesToRoot.send(nrReplies)
                     }
                     else {
@@ -1134,10 +1134,10 @@ extension NRPost { // Helpers for grouped replies
     private func repliesToRootListener() {
         self.event.replyToRootUpdated
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { reply in
+            .sink { [weak self] reply in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
                 
-                bg().perform { [weak self] in
+                bg().perform {
                     guard let self = self else { return }
                     
                     let nrReply = NRPost(event: reply, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[reply.id]) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()

@@ -31,7 +31,7 @@ struct ArticleByNaddr: View {
             }
             else {
                 ProgressView()
-                    .onAppear {
+                    .onAppear { [weak backlog] in
                         bg().perform {
                             if let naddr = try? ShareableIdentifier(naddr1),
                                let kind = naddr.kind,
@@ -56,6 +56,7 @@ struct ArticleByNaddr: View {
                                         },
                                         processResponseCommand: { taskId, _, article in
                                             bg().perform {
+                                                guard let backlog else { return }
                                                 if let article = article {
                                                     let article = NRPost(event: article)
                                                     DispatchQueue.main.async {
@@ -81,6 +82,7 @@ struct ArticleByNaddr: View {
                                             }
                                         })
                                     
+                                    guard let backlog else { return }
                                     backlog.add(reqTask)
                                     reqTask.fetch()
                                 }

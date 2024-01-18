@@ -97,7 +97,8 @@ class HotViewModel: ObservableObject {
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "HOT",
-            reqCommand: { taskId in
+            reqCommand: { [weak self] taskId in
+                guard let self else { return }
                 if let cm = NostrEssentials
                             .ClientMessage(type: .REQ,
                                            subscriptionId: taskId,
@@ -117,13 +118,15 @@ class HotViewModel: ObservableObject {
                     L.og.error("Hot feed: Problem generating request")
                 }
             },
-            processResponseCommand: { taskId, relayMessage, _ in
+            processResponseCommand: { [weak self] taskId, relayMessage, _ in
+                guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
 
                 L.og.info("Hot feed: ready to process relay response")
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak self] taskId in
+                guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
                 L.og.info("Hot feed: timeout ")
@@ -137,7 +140,8 @@ class HotViewModel: ObservableObject {
     private func fetchLikesAndRepostsFromDB(_ onComplete: (() -> ())? = nil) {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@", agoTimestamp, follows)
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard let likesOrReposts = try? bg().fetch(fr) else { return }
             for item in likesOrReposts {
                 switch item.kind {
@@ -219,7 +223,6 @@ class HotViewModel: ObservableObject {
                                                ]
                                 ).json() {
                         req(cm)
-    //                    self.lastFetch = Date.now
                     }
                     else {
                         L.og.error("Hot feed: Problem generating posts request")

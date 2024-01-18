@@ -58,8 +58,8 @@ class NIP05Verifier {
                     .eraseToAnyPublisher()
             }
             .filter { (task, data) in data != nil }
-            .sink { (task, data) in
-                bg().perform { [weak self] in
+            .sink { [weak self] (task, data) in
+                bg().perform {
                     guard let self else { return }
                     if let nostrJson = try? self.decoder.decode(NostrJson.self, from: data!) {
                         if let pubkey = nostrJson.names[task.name] {

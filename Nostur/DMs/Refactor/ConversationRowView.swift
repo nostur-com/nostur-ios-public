@@ -77,7 +77,8 @@ struct ConversationRowView: View {
                         let currentAccountPubkey = NRState.shared.activeAccountPublicKey
                         let cPubkey = contact.pubkey
                         
-                        bg().perform {
+                        bg().perform { [weak conv] in
+                            guard let conv else { return }
                             guard let account = account() else { return }
                             guard account.publicKey == currentAccountPubkey else { return }
                             guard let similarContact = account.follows.first(where: {

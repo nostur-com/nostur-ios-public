@@ -44,7 +44,7 @@ class Kind0Processor {
             // TODO: Add throttle and batching
             .subscribe(on: DispatchQueue.global())
             .receive(on: DispatchQueue.global())
-            .sink { pubkey in
+            .sink { [weak self] pubkey in
                 // check LRU
                 Task { [weak self] in
                     guard let self else { return }

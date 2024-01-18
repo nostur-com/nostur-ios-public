@@ -172,7 +172,8 @@ struct PostHeader: View {
                 QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
             }
         }
-        .task {
+        .task { [weak contact] in
+            guard let contact else { return }
             guard !SettingsStore.shared.lowDataMode else { return }
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard contact.metadata_created_at != 0 else { return }
@@ -184,7 +185,8 @@ struct PostHeader: View {
             let currentAccountPubkey = NRState.shared.activeAccountPublicKey
             let cPubkey = contact.pubkey
             
-            bg().perform {
+            bg().perform { [weak contact] in
+                guard let contact else { return }
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows.first(where: {

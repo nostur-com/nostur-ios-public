@@ -246,8 +246,8 @@ class DirectMessageViewModel: ObservableObject {
         }
         
         // Wrap in bg().perform so it happens after the last bg() loop above
-        bg().perform {
-            DispatchQueue.main.async { [weak self] in
+        bg().perform { [weak self] in
+            DispatchQueue.main.async {
                 guard let self else { return }
                 if let lastNotificationReceivedAt, self.lastNotificationReceivedAt == nil { // set most recent if we dont have it set yet
                     self.lastNotificationReceivedAt = lastNotificationReceivedAt
@@ -324,8 +324,8 @@ class DirectMessageViewModel: ObservableObject {
         }
 
         // Wrap in bg().perform so it happens after the last bg() loop above
-        bg().perform {
-            DispatchQueue.main.async { [weak self] in
+        bg().perform { [weak self] in
+            DispatchQueue.main.async {
                 guard let self else { return }
                 
                 if let lastNotificationReceivedAt, self.lastNotificationReceivedAt == nil { // set most recent if we dont have it set yet
@@ -394,8 +394,8 @@ class DirectMessageViewModel: ObservableObject {
         }
 
         // Wrap in bg().perform so it happens after the last bg() loop above
-        bg().perform {
-            DispatchQueue.main.async { [weak self] in
+        bg().perform { [weak self] in
+            DispatchQueue.main.async {
                 guard let self else { return }
                 self.requestRowsNotWoT = conversationRows
                     .sorted(by: { $0.mostRecentDate > $1.mostRecentDate })
@@ -453,7 +453,8 @@ class DirectMessageViewModel: ObservableObject {
         
         for i in 0...monthsAgo {
             let ago = monthsAgoRange(monthsAgo - i)
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(5 * i)) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(5 * i)) { [weak self] in
+                guard let self else { return }
                 self.scanningMonthsAgo = i+1 == (monthsAgo + 1) ? 0 : i+1
                 
                 if let message = CM(

@@ -19,10 +19,12 @@ struct ProfileCardByPubkey: View {
                 ProgressView()
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .task {
+                    .task { [weak vm] in
+                        guard let vm else { return }
                         vm.setFetchParams((
                             prio: false,
-                            req: { _ in
+                            req: { [weak vm] _ in
+                                guard let vm else { return }
                                 if let contact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().viewContext) { // 1. CHECK LOCAL DB
                                     vm.ready(contact)
                                 }
@@ -30,8 +32,9 @@ struct ProfileCardByPubkey: View {
                                     req(RM.getUserMetadata(pubkey: pubkey))
                                 }
                             },
-                            onComplete: { relayMessage, _ in // TODO: Should make compatible with Contact also instead of just Event
+                            onComplete: { [weak vm] relayMessage, _ in // TODO: Should make compatible with Contact also instead of just Event
                                 DispatchQueue.main.async {
+                                    guard let vm else { return }
                                     if let contact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().viewContext) { // 3. WE FOUND IT ON RELAY
                                         vm.ready(contact)
                                     }
@@ -157,7 +160,8 @@ struct ProfileRow: View {
             guard let follows = notification.object as? Set<String> else { return }
             isFollowing = follows.contains(contact.pubkey)
         }
-        .task {
+        .task { [weak contact] in
+            guard let contact else { return }
             if la.isFollowing(pubkey: contact.pubkey) {
                 isFollowing = true
             }

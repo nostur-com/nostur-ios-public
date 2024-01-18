@@ -1063,8 +1063,9 @@ extension LVM {
         performLocalFetch
             .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
             .throttle(for: .seconds(5.0), scheduler: DispatchQueue.global(), latest: true)
-            .sink { refreshInBackground in
+            .sink { [weak self] refreshInBackground in
                 DispatchQueue.main.async {
+                    guard let self else { return }
                     let isVisible = self.viewIsVisible
                     bg().perform { [weak self] in
                         self?._performLocalFetch(refreshInBackground: refreshInBackground, isVisible: isVisible)

@@ -34,8 +34,8 @@ class NotificationsViewModel: ObservableObject {
     public func checkNeedsUpdate(_ failedZapNotification:PersistentNotification) {
         guard let account = account() else { return }
         if failedZapNotification.pubkey == account.publicKey {
-            bg().perform {
-                self.needsUpdate = true
+            bg().perform { [weak self] in
+                self?.needsUpdate = true
             }
         }
     }
@@ -225,7 +225,8 @@ class NotificationsViewModel: ObservableObject {
     
     private func setupBadgeNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.badge, .provisional]) { granted, error in
+        center.requestAuthorization(options: [.badge, .provisional]) { [weak self] granted, error in
+            guard let self else { return }
             if error == nil {
                 // Provisional authorization granted.
                 self.objectWillChange
@@ -339,28 +340,35 @@ class NotificationsViewModel: ObservableObject {
 //            }
 //        }
         
-        bg().perform { self.checkForUnreadMentions() }
-        bg().perform {
+        bg().perform { [weak self] in self?.checkForUnreadMentions() }
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard !self.muteNewPosts else { return }
             self.checkForUnreadNewPosts()
         }
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard !self.muteReposts else { return }
             self.checkForUnreadReposts()
         }
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard !self.muteFollows else { return }
             self.checkForUnreadNewFollowers()
         }
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard !self.muteReactions else { return }
             self.checkForUnreadReactions()
         }
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             guard !self.muteZaps else { return }
             self.checkForUnreadZaps()
         }
-        bg().perform { self.checkForUnreadFailedZaps() }
+        bg().perform { [weak self] in
+            self?.checkForUnreadFailedZaps()
+        }
     }
     
     public func checkForUnreadMentions() {
@@ -411,8 +419,9 @@ class NotificationsViewModel: ObservableObject {
     // async for background fetch, copy paste of checkForUnreadMentions() with withCheckedContinuation added
     public func checkForUnreadMentionsBackground(accountData: AccountData) async {
         L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground()")
-        await withCheckedContinuation { continuation in
+        await withCheckedContinuation { [weak self] continuation in
             bg().perform {
+                guard let self else { return }
                 guard let fetchRequest = self.q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData) else { continuation.resume(); return }
                  
                 let unreadMentionsWithSpam = ((try? bg().fetch(fetchRequest)) ?? [])

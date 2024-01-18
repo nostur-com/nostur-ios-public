@@ -292,7 +292,8 @@ struct ProfileOverlayCard: View {
             themes.theme.background
                 .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
         }
-        .task {
+        .task { [weak contact] in
+            guard let contact else { return }
             guard !SettingsStore.shared.lowDataMode else { return }
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard !contact.following else { return }
@@ -305,7 +306,7 @@ struct ProfileOverlayCard: View {
             let cPubkey = contact.pubkey
             let currentAccountPubkey = NRState.shared.activeAccountPublicKey
             
-            bg().perform {
+            bg().perform { [weak contact] in
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows.first(where: {
@@ -322,6 +323,7 @@ struct ProfileOverlayCard: View {
                     }
                     
                     DispatchQueue.main.async {
+                        guard let contact else { return }
                         guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                         self.similarPFP = similarPFP
                         contact.couldBeImposter = similarPFP ? 1 : 0
@@ -329,10 +331,12 @@ struct ProfileOverlayCard: View {
                 }
             }
         }
-        .task {
-            let contact = contact.contact
+        .task { [weak contact, weak backlog] in
+            guard let nrContact = contact else { return }
+            let contact = nrContact.contact
             
-            bg().perform {
+            bg().perform { [weak contact] in
+                guard let contact, let backlog else { return }
                 EventRelationsQueue.shared.addAwaitingContact(contact)
                 if (contact.followsYou()) {
                     DispatchQueue.main.async {
@@ -344,8 +348,9 @@ struct ProfileOverlayCard: View {
                     reqCommand: { (taskId) in
                         req(RM.getUserProfileKinds(pubkey: contact.pubkey, subscriptionId: taskId, kinds: [0,3]))
                     },
-                    processResponseCommand: { (taskId, _, _) in
+                    processResponseCommand: { [weak contact] (taskId, _, _) in
                         bg().perform {
+                            guard let contact else { return }
                             if (contact.followsYou()) {
                                 DispatchQueue.main.async {
                                     isFollowingYou = true
@@ -353,8 +358,9 @@ struct ProfileOverlayCard: View {
                             }
                         }
                     },
-                    timeoutCommand: { taskId in
+                    timeoutCommand: { [weak contact] taskId in
                         bg().perform {
+                            guard let contact else { return }
                             if (contact.followsYou()) {
                                 DispatchQueue.main.async {
                                     isFollowingYou = true
@@ -373,12 +379,13 @@ struct ProfileOverlayCard: View {
                 guard contact.anyLud else { return }
                 let lud16orNil = contact.lud16
                 let lud06orNil = contact.lud06
-                Task {
+                Task { [weak contact] in
                     do {
                         if let lud16 = lud16orNil, lud16 != "" {
                             let response = try await LUD16.getCallbackUrl(lud16: lud16)
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 await bg().perform {
+                                    guard let contact else { return }
                                     contact.zapperPubkey = response.nostrPubkey!
                                     L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
                                 }
@@ -388,6 +395,7 @@ struct ProfileOverlayCard: View {
                             let response = try await LUD16.getCallbackUrl(lud06: lud06)
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 await bg().perform {
+                                    guard let contact else { return }
                                     contact.zapperPubkey = response.nostrPubkey!
                                     L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
                                 }
@@ -400,14 +408,16 @@ struct ProfileOverlayCard: View {
                 }
             }
         }
-        .onChange(of: contact.nip05) { _ in
+        .onChange(of: contact.nip05) { [weak contact] _ in
             bg().perform {
+                guard let contact else { return }
                 if (NIP05Verifier.shouldVerify(contact.contact)) {
                     NIP05Verifier.shared.verify(contact.contact)
                 }
             }
         }
-        .task {
+        .task { [weak contact, weak backlog] in
+            guard let contact, let backlog else { return }
             let contactPubkey = contact.pubkey
             // Note: can't use prio queue here, because if multiple relays respond and the first one has older data, SEEN will be incorrect.
             let reqTask = ReqTask(prefix: "SEEN-", reqCommand: { taskId in
@@ -435,8 +445,9 @@ struct ProfileOverlayCard: View {
             backlog.add(reqTask)
             reqTask.fetch()
         }
-        .onDisappear {
+        .onDisappear { [weak contact] in
             bg().perform {
+                guard let contact else { return }
                 contact.contact.zapState = .none
             }
         }

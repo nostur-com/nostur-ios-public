@@ -27,7 +27,7 @@ struct ArticleById: View {
             }
             else {
                 ProgressView()
-                    .onAppear {
+                    .onAppear { [weak backlog] in
                         bg().perform {
                             if let article = try? Event.fetchEvent(id: id, context: bg()) {
                                 let article = NRPost(event: article)
@@ -44,6 +44,7 @@ struct ArticleById: View {
                                     },
                                     processResponseCommand: { taskId, _, article in
                                         bg().perform {
+                                            guard let backlog else { return }
                                             if let article = article {
                                                 let article = NRPost(event: article)
                                                 DispatchQueue.main.async {
@@ -66,6 +67,7 @@ struct ArticleById: View {
                                         }
                                     })
                                 
+                                guard let backlog else { return }
                                 backlog.add(reqTask)
                                 reqTask.fetch()
                             }

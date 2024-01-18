@@ -42,7 +42,8 @@ class Conversation: Identifiable, Hashable, ObservableObject {
         self.accepted = accepted
         
         dmState.didUpdate
-            .sink { _ in
+            .sink { [weak self] _ in
+                guard let self else { return }
                 let unreadSince = self.dmState.markedReadAt_ ?? Date(timeIntervalSince1970: 0)
                 let accepted = dmState.accepted
                 bg().perform { [weak self] in
@@ -58,7 +59,7 @@ class Conversation: Identifiable, Hashable, ObservableObject {
             .store(in: &subscriptions)
         
         mostRecentEvent.contactUpdated
-            .sink { contact in
+            .sink { [weak self] contact in
                 let nrContact = NRContact(contact: contact, following: isFollowing(contact.pubkey))
                 Task { @MainActor [weak self] in
                     self?.objectWillChange.send()

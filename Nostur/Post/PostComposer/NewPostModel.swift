@@ -456,7 +456,8 @@ public final class NewPostModel: ObservableObject {
         }
     
         
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             let previewEvent = createPreviewEvent(nEvent)
             if (!self.typingTextModel.pastedImages.isEmpty) {
                 previewEvent.previewImages = self.typingTextModel.pastedImages

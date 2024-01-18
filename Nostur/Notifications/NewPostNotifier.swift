@@ -65,7 +65,8 @@ class NewPostNotifier: ObservableObject {
         let task = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "NP",
-            reqCommand: { taskId in
+            reqCommand: { [weak self] taskId in
+                guard let self else { return }
                 if let cm = NostrEssentials
                     .ClientMessage(type: .REQ,
                                    subscriptionId: taskId,
@@ -85,9 +86,11 @@ class NewPostNotifier: ObservableObject {
                     L.og.info("NewPostNotifier: unable to create REQ")
                 }
             },
-            processResponseCommand: { taskId, relayMessage, event in
+            processResponseCommand: { [weak self] taskId, relayMessage, event in
+                guard let self else { return }
                 self.backlog.clear()
-                bg().perform {
+                bg().perform { [weak self] in
+                    guard let self else { return }
                     let fr = Event.fetchRequest()
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
                     fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS)
@@ -96,10 +99,12 @@ class NewPostNotifier: ObservableObject {
                     }
                 }
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak self] taskId in
+                guard let self else { return }
                 self.backlog.clear()
                 L.og.debug("NewPostNotifier.runCheck(): timeout")
-                bg().perform {
+                bg().perform { [weak self] in
+                    guard let self else { return }
                     let fr = Event.fetchRequest()
                     fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS)
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {

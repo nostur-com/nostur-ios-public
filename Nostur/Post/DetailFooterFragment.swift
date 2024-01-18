@@ -65,7 +65,8 @@ struct DetailFooterFragment: View {
         .buttonStyle(.plain)
         .foregroundColor(.gray)
         .font(.system(size: 14))
-        .task {
+        .task { [weak nrPost] in
+            guard let nrPost else { return }
             guard let contact = nrPost.contact?.mainContact else { return }
             guard contact.anyLud else { return }
             guard contact.zapperPubkey == nil else {

@@ -186,7 +186,8 @@ class Zap {
     }
     
     private func fetchCallbackUrl() {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             do {
                 let response = try await (lud16 != nil ? LUD16.getCallbackUrl(lud16: lud16!) : LUD16.getCallbackUrl(lud06: lud06!))
                 if let callback = response.callback {
@@ -225,8 +226,9 @@ class Zap {
                 guard let account = account() else { return }
                 if isNC {
                     let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
-                    NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedEvent in
-                        Task {
+                    NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { [weak self] signedEvent in
+                        Task { [weak self] in
+                            guard let self else { return }
                             if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedEvent) {
                                 
                                 if let pr = response.pr {
@@ -246,7 +248,8 @@ class Zap {
                     
                     let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {
-                        Task {
+                        Task { [weak self] in
+                            guard let self else { return }
                             if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedZapRequestNote) {
                                 
                                 if let pr = response.pr {
@@ -270,7 +273,8 @@ class Zap {
             }
         }
         else {
-            Task {
+            Task { [weak self] in
+                guard let self else { return }
                 do {
                     let response = try await LUD16.getInvoice(url:callbackUrl, amount:UInt64(amount * 1000))
                     

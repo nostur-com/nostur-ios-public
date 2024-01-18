@@ -216,7 +216,7 @@ class WebOfTrust: ObservableObject {
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Received contact list")
                 self?.regenerateWoTWithFollowsOf(pubkey)
             },
-            timeoutCommand: {  [weak self] _ in
+            timeoutCommand: { [weak self] _ in
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Time-out")
                 self?.regenerateWoTWithFollowsOf(pubkey)
             })
