@@ -42,7 +42,7 @@ public class Event: NSManagedObject, Identifiable {
     }
     var parentEvents: [Event] = []
     
-    var isPreview:Bool = false
+    var isScreenshot: Bool = false // Must use Text
     var previewImages:[PostedImageMeta] = []
     var cancellationId:UUID?
     

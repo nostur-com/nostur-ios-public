@@ -43,7 +43,7 @@ struct ContentRenderer: View { // VIEW things
                 case .nrPost(let nrPost):
                     EmbeddedPost(nrPost, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
                     //                        .fixedSize(horizontal: false, vertical: true)
 //                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
@@ -53,7 +53,7 @@ struct ContentRenderer: View { // VIEW things
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
                         .id(index)
@@ -79,7 +79,7 @@ struct ContentRenderer: View { // VIEW things
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, forceAutoload: shouldAutoload, theme: theme)
 //                            .frame(minHeight: 75)
-                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
+                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
 //                            .debugDimensions("QuoteById.note1")
                             .padding(.vertical, 10)
 //                            .withoutAnimation()
@@ -97,7 +97,7 @@ struct ContentRenderer: View { // VIEW things
                 case .noteHex(let hex):
                     EmbedById(id: hex, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isPreview))
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
 //                        .debugDimensions("QuoteById.noteHex")
                         .padding(.vertical, 10)
 //                        .withoutAnimation()
@@ -116,7 +116,7 @@ struct ContentRenderer: View { // VIEW things
                         }
                         .id(index)
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isPreview: nrPost.isPreview)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview)
                         .equatable()
                         .onTapGesture {
                             guard !isDetail else { return }
