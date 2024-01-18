@@ -239,56 +239,57 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
         }
     }
     
-    public func sendMessageAfterPing(_ text:String) {
-            L.sockets.info("🟪 sendMessageAfterPing  \(text)")
-            queue.async(flags: .barrier) { [weak self] in
-                guard let self = self else { return }
-                if !self.isDeviceConnected {
-                    L.sockets.info("🔴🔴 No internet. Did not sendMessage \(self.url)")
-                    return
-                }
-                guard let webSocket = self.webSocket else {
-                    L.sockets.info("🟪🔴🔴 Not connected.  \(self.url)")
-                    return
-                }
-                let socketMessage = SocketMessage(text: text)
-                self.outQueue.append(socketMessage)
-    
-                webSocket.ping()
-                    .subscribe(Subscribers.Sink(
-                        receiveCompletion: { [weak self] completion in
-                            guard let self = self else { return }
-                            switch completion {
-                            case .failure(let error):
-                                // Handle the failure case
-                                #if DEBUG
-                                L.sockets.info("🟪 \(self.url) Ping Failure: \(error), trying to reconnect")
-                                #endif
-                                self.connect(andSend:text)
-                            case .finished:
-                                // The ping completed successfully
-                                L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
-                                L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-                                webSocket.send(text)
-                                    .subscribe(Subscribers.Sink(
-                                        receiveCompletion: { [weak self] completion in
-                                            switch completion {
-                                            case .finished:
-                                                self?.queue.async(flags: .barrier) {
-                                                    self?.outQueue.removeAll(where: { $0.id == socketMessage.id })
-                                                }
-                                            case .failure(let error):
-                                                L.og.error("🟪🔴🔴 Error sending \(error): \(text)")
-                                            }
-                                        },
-                                        receiveValue: { _ in }
-                                    ))
-                            }
-                        },
-                        receiveValue: { _ in }
-                    ))
-            }
-        }
+
+//    public func sendMessageAfterPing(_ text:String) {
+//            L.sockets.info("🟪 sendMessageAfterPing  \(text)")
+//            queue.async(flags: .barrier) { [weak self] in
+//                guard let self = self else { return }
+//                if !self.isDeviceConnected {
+//                    L.sockets.info("🔴🔴 No internet. Did not sendMessage \(self.url)")
+//                    return
+//                }
+//                guard let webSocket = self.webSocket else {
+//                    L.sockets.info("🟪🔴🔴 Not connected.  \(self.url)")
+//                    return
+//                }
+//                let socketMessage = SocketMessage(text: text)
+//                self.outQueue.append(socketMessage)
+//    
+//                webSocket.ping()
+//                    .subscribe(Subscribers.Sink(
+//                        receiveCompletion: { [weak self] completion in
+//                            guard let self = self else { return }
+//                            switch completion {
+//                            case .failure(let error):
+//                                // Handle the failure case
+//                                #if DEBUG
+//                                L.sockets.info("🟪 \(self.url) Ping Failure: \(error), trying to reconnect")
+//                                #endif
+//                                self.connect(andSend:text)
+//                            case .finished:
+//                                // The ping completed successfully
+//                                L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
+//                                L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
+//                                webSocket.send(text)
+//                                    .subscribe(Subscribers.Sink(
+//                                        receiveCompletion: { [weak self] completion in
+//                                            switch completion {
+//                                            case .finished:
+//                                                self?.queue.async(flags: .barrier) {
+//                                                    self?.outQueue.removeAll(where: { $0.id == socketMessage.id })
+//                                                }
+//                                            case .failure(let error):
+//                                                L.og.error("🟪🔴🔴 Error sending \(error): \(text)")
+//                                            }
+//                                        },
+//                                        receiveValue: { _ in }
+//                                    ))
+//                            }
+//                        },
+//                        receiveValue: { _ in }
+//                    ))
+//            }
+//        }
     
     
     public func disconnect() {

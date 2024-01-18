@@ -217,7 +217,7 @@ class NSecBunkerManager: ObservableObject {
             req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: bunkerManagedPublicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
             
             // Send connection request
-            ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey, afterPing: true)
+            ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey)
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) { // Must wait until connected to bunker relay
@@ -274,7 +274,7 @@ class NSecBunkerManager: ObservableObject {
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey, afterPing: true)
+        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey)
     }
     
     
@@ -312,7 +312,7 @@ class NSecBunkerManager: ObservableObject {
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey, afterPing: true)
+        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey)
     }
     
     private func handleSignedEvent(eventString:String) {

@@ -553,8 +553,7 @@ func reqP(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData>
     ConnectionPool.shared.sendMessage(
         ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm, relayType: relayType, accountPubkey: (accountPubkey ?? NRState.shared.activeAccountPublicKey)),
         subscriptionId: activeSubscriptionId,
-        relays: relays,
-        afterPing: true
+        relays: relays
     )
 }
 
