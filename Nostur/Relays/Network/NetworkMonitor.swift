@@ -29,7 +29,7 @@ public class NetworkMonitor: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
     public var isConnectedSubject = PassthroughSubject<Bool, Never>()
     
-    init() {
+    private init() {
         isConnectedSubject
             .subscribe(on: queue)
             .receive(on: RunLoop.main)
