@@ -939,51 +939,51 @@ class LVM: NSObject, ObservableObject {
             }
             return
         }
-        let isImporting = bg().performAndWait { // TODO: Hang here... need to remove ..AndWait { }
-            return Importer.shared.isImporting
-        }
-        guard !isImporting else {
-            L.lvm.info("\(self.id) \(self.name) ⏳ fetchFeedTimerNextTick: Still importing, new fetch skipped.")
-            return
-        }
-        
-        if !UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
-            DispatchQueue.main.async {
-                UserDefaults.standard.set(true, forKey: "firstTimeCompleted")
+        bg().perform { [weak self] in
+            guard let self else { return }
+            guard !Importer.shared.isImporting else {
+                L.lvm.info("\(self.id) \(self.name) ⏳ fetchFeedTimerNextTick: Still importing, new fetch skipped.")
+                return
             }
-        }
-        
-        if type == .relays {
-            fetchRelaysRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
-        }
-        else {
-            fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
-        }
-        
-        if !nrPostLeafs.isEmpty {
-            // Already on screen, app probably returned from from background
-            // Catch up?
-            let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
-
-            // Continue from first (newest) on screen?
-            let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
             
-            if (!self.didCatchup) {
-                if self.id == "Following" {
-                    L.lvm.debug("fetchFeedTimerNextTick: catching up after 8 sec, since: \( Date(timeIntervalSince1970: Double(since)).agoString ) ")
+            if !UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
+                DispatchQueue.main.async {
+                    UserDefaults.standard.set(true, forKey: "firstTimeCompleted")
                 }
-                // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
-                    guard let self = self else { return }
-                    if type == .relays {
-                        self.fetchRelaysNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+            }
+            
+            if type == .relays {
+                fetchRelaysRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
+            }
+            else {
+                fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
+            }
+            
+            if !nrPostLeafs.isEmpty {
+                // Already on screen, app probably returned from from background
+                // Catch up?
+                let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
+
+                // Continue from first (newest) on screen?
+                let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
+                
+                if (!self.didCatchup) {
+                    if self.id == "Following" {
+                        L.lvm.debug("fetchFeedTimerNextTick: catching up after 8 sec, since: \( Date(timeIntervalSince1970: Double(since)).agoString ) ")
                     }
-                    else {
-                        self.fetchNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
-                        fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+                    // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
+                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
+                        guard let self = self else { return }
+                        if type == .relays {
+                            self.fetchRelaysNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                        }
+                        else {
+                            self.fetchNewerSince(subscriptionId: (self.id + String(since)), since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+                        }
                     }
+                    self.didCatchup = true
                 }
-                self.didCatchup = true
             }
         }
     }

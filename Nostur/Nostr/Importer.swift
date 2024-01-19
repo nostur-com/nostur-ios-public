@@ -97,16 +97,17 @@ class Importer {
     // Might as well just load all??? Its fast anyway
     func preloadExistingIdsCache() {
         didPreload = true
-        let fr = Event.fetchRequest()
-        fr.fetchLimit = 1_000_000
-        fr.propertiesToFetch = ["id", "relays"]
-        
-        if let results = try? DataProvider.shared().viewContext.fetch(fr) {
-            let existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
-                dict[event.id] = EventState(status: .SAVED, relays: event.relays)
-            }
-            bg().performAndWait { [weak self] in
-                guard let self else { return }
+        bg().performAndWait { [weak self] in
+            guard let self else { return }
+            
+            let fr = Event.fetchRequest()
+            fr.fetchLimit = 1_000_000
+            fr.propertiesToFetch = ["id", "relays"]
+            
+            if let results = try? bg().fetch(fr) {
+                let existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
+                    dict[event.id] = EventState(status: .SAVED, relays: event.relays)
+                }
                 self.existingIds = existingIds
                 L.og.debug("\(self.existingIds.count) existing ids added to cache")
             }

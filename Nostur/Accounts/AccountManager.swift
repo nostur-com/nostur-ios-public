@@ -17,17 +17,14 @@ class AccountManager {
         let newKeys = NKeys.newKeys()
         storeKeys(newKeys)
         
-        let account = context.performAndWait {
-            let account = CloudAccount(context: context)
-            account.createdAt = Date()
-            account.name = name
-            account.about = about
-            account.publicKey = newKeys.publicKeyHex()
-            account.flagsSet = ["nostur_created", "full_account"] // need this to know if we can enable to follow button, normally we wait after we received contact list
-            
-            try! context.save()
-            return account
-        }
+        let account = CloudAccount(context: context)
+        account.createdAt = Date()
+        account.name = name
+        account.about = about
+        account.publicKey = newKeys.publicKeyHex()
+        account.flagsSet = ["nostur_created", "full_account"] // need this to know if we can enable to follow button, normally we wait after we received contact list
+        
+        try! context.save()
         return account
     }
     
