@@ -7,21 +7,12 @@
 
 import Foundation
 import Combine
-import CombineWebSocket
+//import CombineWebSocket
 
-protocol RelayConnectionDelegate: URLSessionWebSocketDelegate {
-    func didReceiveData(_ data:Data)
-    
-    func didReceiveMessage(_ text:String)
-    
-    func didDisconnect()
-    
-    func didDisconnectWithError(_ error:Error)
-    
-    func didReceivePong()
-}
+import Network
+import NWWebSocket
 
-public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObject, Identifiable {
+public class RelayConnection: NSObject, WebSocketConnectionDelegate, ObservableObject, Identifiable {
     
     // for views (viewContext)
     @Published private(set) var isConnected = false { // don't set directly, set isDeviceConnected or isSocketConnected
@@ -43,10 +34,8 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     
     
     public var relayData:RelayData
-    private var session:URLSession?
     private var queue:DispatchQueue
-    private var webSocket:WebSocket?
-    private var webSocketSub:AnyCancellable?
+    private var webSocket:NWWebSocket?
     private var subscriptions = Set<AnyCancellable>()
     private var outQueue:[SocketMessage] = []
     
@@ -137,51 +126,13 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                 self.outQueue.append(SocketMessage(text: andSend))
             }
             
-            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-            self.webSocketSub = nil
-            
-            self.session?.invalidateAndCancel()
-            self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-            
+           
             if let urlURL = URL(string: relayData.url) {
-                let urlRequest = URLRequest(url: urlURL)
-                self.webSocket = session?.webSocket(with: urlRequest)
+                self.webSocket = NWWebSocket(url: urlURL)
+                self.webSocket?.delegate = self
             }
             
-            guard let webSocket = webSocket else {
-                self.isSocketConnecting = false
-                return
-            }
-            
-            // Subscribe to the WebSocket. This will connect to the remote server and start listening
-            // for messages (URLSessionWebSocketTask.Message).
-            // URLSessionWebSocketTask.Message is an enum for either Data or String
-            self.webSocketSub = webSocket.publisher
-                .receive(on: queue)
-                .sink(receiveCompletion: { [weak self] completion in
-                    switch completion {
-                    case .finished:
-                        self?.didDisconnect()
-                        self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-                        self?.webSocketSub = nil
-                    case .failure(let error):
-                        self?.didDisconnectWithError(error)
-                        self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-                        self?.webSocketSub = nil
-                    }
-                },
-                receiveValue: { [weak self] message in
-                    switch message {
-                    case .data(let data):
-                        // Handle Data message
-                        self?.didReceiveData(data)
-                    case .string(let string):
-                        // Handle String message
-                        self?.didReceiveMessage(string)
-                    @unknown default:
-                        L.og.debug("dunno")
-                    }
-                })
+            self.webSocket?.connect()
             
             if self.exponentialReconnectBackOff >= 512 {
                 self.exponentialReconnectBackOff = 512
@@ -190,22 +141,12 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                 self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
             }
             
-            guard !outQueue.isEmpty else { return }
+            
+            guard let webSocket = self.webSocket, !outQueue.isEmpty else { return }
+                    
             for out in outQueue {
-                webSocket.send(out.text)
-                    .subscribe(Subscribers.Sink(
-                        receiveCompletion: { [weak self] completion in
-                            switch completion {
-                            case .finished:
-                                self?.queue.async(flags: .barrier) {
-                                    self?.outQueue.removeAll(where: { $0.id == out.id })
-                                }
-                            case .failure(let error):
-                                L.og.error("🟪🔴🔴 Error sending \(error): \(out.text)")
-                            }
-                        },
-                        receiveValue: { _ in }
-                    ))
+                webSocket.send(string: out.text)
+                self.outQueue.removeAll(where: { $0.id == out.id })
             }
         }
     }
@@ -226,20 +167,13 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                 return
             }
             L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-            self.webSocket?.send(text)
-                .subscribe(Subscribers.Sink(
-                    receiveCompletion: { completion in
-                        switch completion {
-                        case .finished:
-                            self.queue.async(flags: .barrier) {
-                                self.outQueue.removeAll(where: { $0.id == socketMessage.id })
-                            }
-                        case .failure(let error):
-                            L.og.error("🟪🔴🔴 Error sending \(error): \(text)")
-                        }
-                    },
-                    receiveValue: { _ in }
-                ))
+            
+            guard let webSocket = self.webSocket, !outQueue.isEmpty else { return }
+                    
+            for out in outQueue {
+                webSocket.send(string: out.text)
+                self.outQueue.removeAll(where: { $0.id == out.id })
+            }
         }
     }
     
@@ -298,15 +232,13 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
     
     public func disconnect() {
         queue.async(flags: .barrier) { [weak self] in
+            self?.webSocket?.disconnect()
             self?.exponentialReconnectBackOff = 0
             self?.skipped = 0
             self?.firstConnection = true
             self?.nreqSubscriptions = []
             self?.lastMessageReceivedAt = nil
             self?.isSocketConnected = false
-//            self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-            self?.webSocketSub = nil
-            self?.session?.invalidateAndCancel()
         }
     }
         
@@ -314,68 +246,40 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
         L.sockets.info("Trying to ping: \(self.url)")
         queue.async { [weak self] in
             guard let self = self else { return }
-            guard let webSocket = self.webSocket else {
+            if webSocket == nil {
                 L.sockets.info("🔴🔴 Not connected. ????? \(self.url)")
                 return
             }
+            self.webSocket?.ping()
+        }
+    }
+    
+    public func webSocketDidReceiveMessage(connection: WebSocketConnection, string: String) {
+        // Respond to a WebSocket connection receiving a `String` message
+        if self.isSocketConnecting {
+            self.isSocketConnecting = false
+        }
+        if !self.isSocketConnected {
+            self.isSocketConnected = true
+        }
+        L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(string)")
+        MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url, client: self)
+        self.lastMessageReceivedAt = .now
+    }
+    
+    public func webSocketDidReceiveMessage(connection: WebSocketConnection, data: Data) {
+        // Respond to a WebSocket connection receiving a binary `Data` message
+        if self.isSocketConnecting {
+            self.isSocketConnecting = false
+        }
+        if !self.isSocketConnected {
+            self.isSocketConnected = true
+        }
+        self.lastMessageReceivedAt = .now
+    }
 
-            var singlePing: AnyCancellable?
-            singlePing = webSocket.ping()
-                .sink(receiveCompletion: { [weak self] completion in
-                    switch completion {
-                    case .failure(let error):
-                        L.sockets.info("\(self?.url ?? "") Ping Failure: \(error), trying to reconnect")
-                        self?.connect()
-                        singlePing?.cancel()
-                    case .finished:
-                        L.sockets.info("\(self?.url ?? "") Ping succeeded")
-                        self?.didReceivePong()
-                        singlePing?.cancel()
-                    }
-                }, receiveValue: { _ in } )
-        }
-    }
-    
-    // -- MARK: URLSessionWebSocketDelegate
-    
-    func didReceiveData(_ data: Data) {
-        if self.isSocketConnecting {
-            self.isSocketConnecting = false
-        }
-        if !self.isSocketConnected {
-            self.isSocketConnected = true
-        }
-        self.lastMessageReceivedAt = .now
-    }
-    
-    func didReceiveMessage(_ text: String) {
-        if self.isSocketConnecting {
-            self.isSocketConnecting = false
-        }
-        if !self.isSocketConnected {
-            self.isSocketConnected = true
-        }
-        L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(text)")
-        MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client: self)
-        self.lastMessageReceivedAt = .now
-    }
-    
-    func didDisconnect() {
-        queue.async(flags: .barrier) { [weak self] in
-            self?.nreqSubscriptions = []
-            self?.lastMessageReceivedAt = nil
-            self?.isSocketConnected = false
-//            self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-            self?.webSocketSub = nil
-            self?.session?.invalidateAndCancel()
-            DispatchQueue.main.async {
-                sendNotification(.socketNotification, "Disconnected: \(self?.url ?? "")")
-            }
-        }
-        L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url)")
-    }
-    
-    func didDisconnectWithError(_ error: Error) {
+    public func webSocketDidReceiveError(connection: WebSocketConnection, error: NWError) {
+        // Respond to a WebSocket error event
         queue.async(flags: .barrier) { [weak self] in
             self?.nreqSubscriptions = []
             self?.lastMessageReceivedAt = nil
@@ -386,9 +290,6 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                 self?.exponentialReconnectBackOff = max(1, (self?.exponentialReconnectBackOff ?? 0) * 2)
             }
             self?.isSocketConnected = false
-//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-            self?.webSocketSub = nil
-            self?.session?.invalidateAndCancel()
             if let url = self?.url {
                 let shortURL = URL(string: url)?.baseURL?.description ?? url
                 DispatchQueue.main.async {
@@ -398,8 +299,9 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
         }
         L.sockets.info("🏎️🏎️🔌🔴🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
     }
-    
-    func didReceivePong() {
+
+    public func webSocketDidReceivePong(connection: WebSocketConnection) {
+        // Respond to a WebSocket connection receiving a Pong from the peer
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             if self.isSocketConnecting {
@@ -412,7 +314,9 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
         }
     }
     
-    public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
+    public func webSocketDidConnect(connection: WebSocketConnection) {
+            // Respond to a WebSocket connection event
+        
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             self.nreqSubscriptions = []
@@ -437,42 +341,39 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self.firstConnection = false
            
             
-            guard !self.outQueue.isEmpty else { return }
-            for out in self.outQueue {
-                self.webSocket?.send(out.text)
-                    .subscribe(Subscribers.Sink(
-                        receiveCompletion: { [weak self] completion in
-                            switch completion {
-                            case .finished:
-                                self?.queue.async(flags: .barrier) {
-                                    self?.outQueue.removeAll(where: { $0.id == out.id })
-                                }
-                            case .failure(let error):
-                                L.og.error("🟪🔴🔴 Error sending \(error): \(out.text)")
-                            }
-                        },
-                        receiveValue: { _ in }
-                    ))
+            guard let webSocket = self.webSocket, !outQueue.isEmpty else { return }
+                    
+            for out in outQueue {
+                webSocket.send(string: out.text)
+                self.outQueue.removeAll(where: { $0.id == out.id })
             }
         }
         L.sockets.info("🏎️🏎️🔌 CONNECTED \(self.url)")
     }
     
-    public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
+    public func webSocketDidDisconnect(connection: WebSocketConnection,
+                                closeCode: NWProtocolWebSocket.CloseCode, reason: Data?) {
+        // Respond to a WebSocket disconnection event
         queue.async(flags: .barrier) { [weak self] in
             self?.nreqSubscriptions = []
             self?.exponentialReconnectBackOff = 0
             self?.skipped = 0
             self?.lastMessageReceivedAt = .now
             self?.isSocketConnected = false
-//            self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
-            self?.webSocketSub = nil
-            self?.session?.invalidateAndCancel()
             DispatchQueue.main.async {
                 sendNotification(.socketNotification, "Disconnected: \(self?.url ?? "")")
             }
         }
-        L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
-
+        L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url): \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
     }
+    
+    public func webSocketViabilityDidChange(connection: WebSocketConnection, isViable: Bool) {
+        // Respond to a WebSocket connection viability change event
+    }
+
+    public func webSocketDidAttemptBetterPathMigration(result: Result<WebSocketConnection, NWError>) {
+        // Respond to when a WebSocket connection migrates to a better network path
+        // (e.g. A device moves from a cellular connection to a Wi-Fi connection)
+    }
+
 }
