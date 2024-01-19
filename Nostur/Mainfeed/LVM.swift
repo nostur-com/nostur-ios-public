@@ -858,6 +858,7 @@ class LVM: NSObject, ObservableObject {
             }
 //            fetchFeedTimerNextTick()
             self.instantFinished = true
+            self.instantFeed = InstantFeed()
             signpost(instantFeed, "InstantFeed", .end, "Completed")
             
             if type == .relays {

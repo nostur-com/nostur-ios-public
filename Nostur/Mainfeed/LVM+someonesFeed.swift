@@ -123,6 +123,7 @@ extension LVM {
             self.performLocalFetchAfterImport()
         }
         self.instantFinished = true
+        self.instantFeed = InstantFeed()
         
         DispatchQueue.main.async {
             self.fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
