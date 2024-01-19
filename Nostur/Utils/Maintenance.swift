@@ -86,13 +86,13 @@ struct Maintenance {
     // Keeps own events
     // Keeps contacts/posts with private notes
     // Could run in background, maybe on app minimize
-    static func dailyMaintenance(context:NSManagedObjectContext, completion: @escaping (Bool) -> Void) {
+    static func dailyMaintenance(context:NSManagedObjectContext, force: Bool = false, completion: @escaping (Bool) -> Void) {
         
         // Time based migrations
     
         let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
         let hoursAgo = Date(timeIntervalSinceNow: (-24 * 60 * 60))
-        guard lastMaintenanceTimestamp < hoursAgo else { // don't do maintenance more than once every 24 hours
+        guard force || (lastMaintenanceTimestamp < hoursAgo) else { // don't do maintenance more than once every 24 hours
             L.maintenance.info("Skipping maintenance");
             completion(false)
             return

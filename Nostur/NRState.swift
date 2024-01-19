@@ -161,12 +161,10 @@ class NRState: ObservableObject {
     }
     
     public func loadMutedWords() {
-        bg().perform {
-            let fr = MutedWords.fetchRequest()
-            fr.predicate = NSPredicate(format: "enabled == true")
-            guard let mutedWords = try? bg().fetch(fr) else { return }
-            self.mutedWords = mutedWords.map { $0.words }.compactMap { $0 }.filter { $0 != "" }
-        }
+        let fr = MutedWords.fetchRequest()
+        fr.predicate = NSPredicate(format: "enabled == true")
+        guard let mutedWords = try? viewContext().fetch(fr) else { return }
+        self.mutedWords = mutedWords.map { $0.words }.compactMap { $0 }.filter { $0 != "" }
     }
     
     public func loadBlockedPubkeys() {

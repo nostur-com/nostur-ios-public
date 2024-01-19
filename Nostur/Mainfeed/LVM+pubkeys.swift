@@ -241,10 +241,7 @@ extension Event {
             }
         }
         
-        let ctx = bg()
-        let newFirstEvent = ctx.performAndWait {
-            return try? ctx.fetch(frBefore).last
-        }
+        let newFirstEvent = try? bg().fetch(frBefore).last
         
         let newCutOffPoint = newFirstEvent != nil ? newFirstEvent!.created_at : cutOffPoint
         

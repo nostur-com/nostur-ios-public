@@ -112,10 +112,7 @@ extension Event {
             frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, regex)
         }
         
-        let ctx = bg()
-        let newFirstEvent = ctx.performAndWait {
-            return try? ctx.fetch(frBefore).last
-        }
+        let newFirstEvent = try? bg().fetch(frBefore).last
         
         let newCutOffPoint = newFirstEvent != nil ? newFirstEvent!.created_at : cutOffPoint
         
