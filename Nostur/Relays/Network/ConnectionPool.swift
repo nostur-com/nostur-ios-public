@@ -7,7 +7,7 @@
 
 import Foundation
 import Combine
-import CombineWebSocket
+//import CombineWebSocket
 import CoreData
 
 public typealias CanonicalRelayUrl = String // lowercased, without trailing slash on root domain

@@ -61,6 +61,15 @@
       }
     },
     {
+      "identity" : "nwwebsocket",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pusher/NWWebSocket.git",
+      "state" : {
+        "revision" : "3bb4cd1ae2c4cd3c1f7ca78e782ca0bf6e1809a2",
+        "version" : "0.5.4"
+      }
+    },
+    {
       "identity" : "representablekit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/fabianfabian/RepresentableKit",
