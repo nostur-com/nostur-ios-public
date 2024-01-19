@@ -119,7 +119,8 @@ struct NotificationsReactions: View {
             guard !didLoad else { return }
             load()
         }
-        .onReceive(receiveNotification(.newReactions)) { _ in
+        .onReceive(receiveNotification(.newReactions)) { [weak fl] _ in
+            guard let fl else { return }
             guard let account = account() else { return }
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
             fl.onComplete = {
@@ -134,20 +135,23 @@ struct NotificationsReactions: View {
             )
             fl.loadNewerEvents(5000, taskId:"newReactions")
         }
-        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { subscriptionIds in
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak fl, weak backlog] subscriptionIds in
             bg().perform {
+                guard let fl, let backlog else { return }
                 let reqTasks = backlog.tasks(with: subscriptionIds)
                 reqTasks.forEach { task in
                     task.process()
                 }
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+        .onReceive(receiveNotification(.activeAccountChanged)) { [weak fl, weak backlog] _ in
+            guard let fl, let backlog else { return }
             fl.events = []
             backlog.clear()
             load()
         }
-        .onChange(of: settings.webOfTrustLevel) { _ in
+        .onChange(of: settings.webOfTrustLevel) { [weak fl, weak backlog] _ in
+            guard let fl, let backlog else { return }
             fl.events = []
             backlog.clear()
             load()

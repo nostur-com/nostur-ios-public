@@ -471,7 +471,12 @@ struct SmoothTable: UIViewControllerRepresentable {
                        !self.lvm.isInserting {
                             self.lvm.lastAppearedIdSubject.send(lastAppearedId)
                     }
-                    self.lvm.postsAppearedSubject.send(indexPaths.compactMap { self.lvm.posts.value.elements[safe: $0.row]?.value.id })
+                    self.lvm.postsAppearedSubject.send(
+                        indexPaths.compactMap { [weak self] in
+                            guard let self else { return nil }
+                            return self.lvm.posts.value.elements[safe: $0.row]?.value.id
+                        }
+                    )
                 }
                 .store(in: &subscriptions)
         }

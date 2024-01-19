@@ -69,7 +69,8 @@ struct NotificationsRepostsGrouped: View {
             guard !didLoad else { return }
             load()
         }
-        .onReceive(receiveNotification(.newReposts)) { _ in
+        .onReceive(receiveNotification(.newReposts)) { [weak fl] _ in
+            guard let fl else { return }
             guard let account = account() else { return }
             let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
             fl.onComplete = {
@@ -87,29 +88,34 @@ struct NotificationsRepostsGrouped: View {
             )
             fl.loadNewer(250, taskId: "newReposts")
         }
-        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { subscriptionIds in
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak fl, weak backlog] subscriptionIds in
             bg().perform {
+                guard let fl, let backlog else { return }
                 let reqTasks = backlog.tasks(with: subscriptionIds)
                 reqTasks.forEach { task in
                     task.process()
                 }
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+        .onReceive(receiveNotification(.activeAccountChanged)) { [weak fl, weak backlog] _ in
+            guard let fl, let backlog else { return }
             fl.nrPosts = []
             backlog.clear()
             load()
         }
-        .onChange(of: settings.webOfTrustLevel) { _ in
+        .onChange(of: settings.webOfTrustLevel) { [weak fl, weak backlog] _ in
+            guard let fl, let backlog else { return }
             fl.nrPosts = []
             backlog.clear()
             load()
         }
-        .onReceive(receiveNotification(.blockListUpdated)) { notification in
+        .onReceive(receiveNotification(.blockListUpdated)) { [weak fl] notification in
+            guard let fl else { return }
             let blockedPubkeys = notification.object as! Set<String>
             fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
         }
-        .onReceive(receiveNotification(.muteListUpdated)) { _ in
+        .onReceive(receiveNotification(.muteListUpdated)) { [weak fl] _ in
+            guard let fl else { return }
             fl.nrPosts = fl.nrPosts.filter(notMuted)
         }
         .simultaneousGesture(
@@ -136,7 +142,8 @@ struct NotificationsRepostsGrouped: View {
         
         
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fl.onComplete = {
+        fl.onComplete = { [weak fl] in
+            guard let fl else { return }
             saveLastSeenRepostCreatedAt() // onComplete from local database
             self.fetchNewer()
             fl.onComplete = {
@@ -149,7 +156,8 @@ struct NotificationsRepostsGrouped: View {
     private func fetchNewer() {
         guard let account = account() else { return }
         let fetchNewerTask = ReqTask(
-            reqCommand: { (taskId) in
+            reqCommand: { [weak fl] (taskId) in
+                guard let fl else { return }
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
                     kinds: [6],
@@ -158,7 +166,8 @@ struct NotificationsRepostsGrouped: View {
                     since: NTimestamp(timestamp: Int(fl.nrPosts.first?.created_at ?? 0))
                 ))
             },
-            processResponseCommand: { (taskId, _, _) in
+            processResponseCommand: { [weak fl] (taskId, _, _) in
+                guard let fl else { return }
                 let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
@@ -172,7 +181,8 @@ struct NotificationsRepostsGrouped: View {
                   )
                 fl.loadNewer(taskId: taskId)
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak fl] taskId in
+                guard let fl else { return }
                 fl.loadNewer(taskId: taskId)
             })
 
@@ -206,7 +216,8 @@ struct NotificationsRepostsGrouped: View {
             NRState.shared.mutedRootIds)
         fl.loadMore(25)
         let fetchMoreTask = ReqTask(
-            reqCommand: { (taskId) in
+            reqCommand: { [weak fl] (taskId) in
+                guard let fl else { return }
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
                     kinds: [6],
@@ -215,7 +226,8 @@ struct NotificationsRepostsGrouped: View {
                     until: NTimestamp(timestamp: Int(fl.nrPosts.last?.created_at ?? Int64(Date.now.timeIntervalSince1970)))
                 ))
             },
-            processResponseCommand: { (taskId, _, _) in
+            processResponseCommand: { [weak fl] (taskId, _, _) in
+                guard let fl else { return }
                 fl.predicate = NSPredicate(
                     format: "NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
                     (NRState.shared.blockedPubkeys + [account.publicKey]),

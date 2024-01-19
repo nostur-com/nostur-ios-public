@@ -101,9 +101,12 @@ class FastLoader: ObservableObject {
                 let onlyUnrendered = dbEvents.filter { item in
                     !currentNRPostIds.contains(item.id)
                 }
-                let nextItems = onlyUnrendered
+                let nextItems: [NRPost] = onlyUnrendered
                     .filter { includeSpam || !$0.isSpam }
-                    .compactMap { self.transformer($0) }
+                    .compactMap { [weak self] in
+                        guard let self else { return nil }
+                        return self.transformer($0)
+                    }
                 
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
@@ -162,9 +165,12 @@ class FastLoader: ObservableObject {
             let onlyUnrendered = dbEvents.filter { item in
                 !currentNRPostIds.contains(item.id)
             }
-            let nextItems = onlyUnrendered
+            let nextItems: [NRPost] = onlyUnrendered
                 .filter { includeSpam || !$0.isSpam }
-                .compactMap { self.transformer($0) }
+                .compactMap { [weak self] in
+                    guard let self else { return nil }
+                    return self.transformer($0)
+                }
             
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }

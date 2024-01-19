@@ -24,10 +24,10 @@ struct ProfileFollowingList: View {
             ProgressView()
                 .padding(10)
                 .frame(maxWidth:.infinity, alignment: .center)
-                .onAppear {
-                    vm.setFetchParams((
+                .onAppear { [weak vm] in
+                    let fetchParams: FetchVM.FetchParams = (
                         prio: false, // Can't use prio, different relays can send different event and we need most recent.
-                        req: { [weak vm] _ in
+                        req: { _ in
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 guard let vm else { return }
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
@@ -38,12 +38,12 @@ struct ProfileFollowingList: View {
                                     
                                     let pubkeys = clEvent.fastPs.map({ $0.1 })
                                     
-                                    vm.ready(FollowsInfo(follows: pubkeys, silentFollows: 
+                                    vm.ready(FollowsInfo(follows: pubkeys, silentFollows:
                                                             Array(silentFollows)))
                                 }
                                 else { req(RM.getAuthorContactsList(pubkey: pubkey)) }
                             }
-                        }, 
+                        },
                         onComplete: { [weak vm] relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 guard let vm else { return }
@@ -60,15 +60,18 @@ struct ProfileFollowingList: View {
                             }
                         },
                         altReq: nil
-                    ))
-                    vm.fetch()
+                    )
+                    vm?.setFetchParams(fetchParams)
+                    vm?.fetch()
                 }
         case .ready(let followsInfo):
             ContactList(pubkeys: followsInfo.follows, silent: followsInfo.silentFollows)
         case .timeout:
             VStack(alignment: .center) {
                 Text("Unable to fetch contacts")
-                Button("Try again") { vm.fetch() }
+                Button("Try again") { [weak vm] in
+                    vm?.fetch()
+                }
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .center)

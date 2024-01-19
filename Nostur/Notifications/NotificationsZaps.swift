@@ -151,7 +151,8 @@ struct NotificationsZaps: View {
             guard !didLoad else { return }
             load()
         }
-        .onReceive(receiveNotification(.newZaps)) { _ in
+        .onReceive(receiveNotification(.newZaps)) { [weak fl] _ in
+            guard let fl else { return }
             guard let account = account() else { return }
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
             fl.onComplete = {
@@ -169,20 +170,23 @@ struct NotificationsZaps: View {
             )
             fl.loadNewerEvents(5000, taskId:"newZaps")
         }
-        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { subscriptionIds in
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak fl, weak backlog] subscriptionIds in
             bg().perform {
+                guard let fl, let backlog else { return }
                 let reqTasks = backlog.tasks(with: subscriptionIds)
                 reqTasks.forEach { task in
                     task.process()
                 }
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+        .onReceive(receiveNotification(.activeAccountChanged)) { [weak fl, weak backlog] _ in
+            guard let fl, let backlog else { return }
             fl.events = []
             backlog.clear()
             load()
         }
-        .onChange(of: settings.webOfTrustLevel) { _ in
+        .onChange(of: settings.webOfTrustLevel) { [weak fl] _ in
+            guard let fl else { return }
             fl.events = []
             backlog.clear()
             load()
@@ -241,7 +245,8 @@ struct NotificationsZaps: View {
             NRState.shared.blockedPubkeys
             )
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fl.onComplete = {
+        fl.onComplete = { [weak fl] in
+            guard let fl else { return }
             self.saveLastSeenZapCreatedAt()
             self.fetchNewer()
             fl.onComplete = {
@@ -254,7 +259,8 @@ struct NotificationsZaps: View {
     private func fetchNewer() {
         guard let account = account() else { return }
         let fetchNewerTask = ReqTask(
-            reqCommand: { (taskId) in
+            reqCommand: { [weak fl] (taskId) in
+                guard let fl else { return }
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
                     kinds: [9735],
@@ -263,7 +269,8 @@ struct NotificationsZaps: View {
                     since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
                 ))
             },
-            processResponseCommand: { (taskId, _, _) in
+            processResponseCommand: { [weak fl] (taskId, _, _) in
+                guard let fl else { return }
                 L.og.debug("🟠🟠🟠 processResponseCommand \(taskId)")
                 let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
@@ -275,7 +282,8 @@ struct NotificationsZaps: View {
                   )
                 fl.loadNewerEvents(5000, taskId: taskId)
             },
-            timeoutCommand: { taskId in
+            timeoutCommand: { [weak fl] taskId in
+                guard let fl else { return }
                 fl.loadNewerEvents(5000, taskId: taskId)
             })
 
