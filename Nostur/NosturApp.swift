@@ -15,7 +15,7 @@ struct AppScene: Scene {
     private let ss:SettingsStore = .shared
     private let nvm:NotificationsViewModel = .shared
     private let dm:DirectMessageViewModel = .default
-    private let networkMonitor = NetworkMonitor()
+    private let networkMonitor:NetworkMonitor = .shared
     private let ns:NRState = .shared
     private let importer:Importer = .shared
     private let backlog:Backlog = .shared
@@ -74,7 +74,7 @@ struct RefreshingAppScene: Scene {
     private let ss:SettingsStore = .shared
     private let nvm:NotificationsViewModel = .shared
     private let dm:DirectMessageViewModel = .default
-    private let networkMonitor = NetworkMonitor()
+    private let networkMonitor:NetworkMonitor = .shared
     private let ns:NRState = .shared
     private let importer:Importer = .shared
     private let backlog:Backlog = .shared
