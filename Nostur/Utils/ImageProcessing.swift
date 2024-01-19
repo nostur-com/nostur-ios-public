@@ -57,7 +57,7 @@ class ImageProcessing {
             let dataCache = try! DataCache(name: "com.nostur.image.banner")
             dataCache.sizeLimit = 1024 * 1024 * Self.BANNER_SIZE_MB
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)  // 50 MB
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 10)
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeEncodedImages
         }
@@ -110,7 +110,7 @@ class ImageProcessing {
             let dataCache = try! DataCache(name: "com.nostur.image.badges")
             dataCache.sizeLimit = 1024 * 1024 * 100
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 200)  // 100 MB
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 25, countLimit: 200)  // 100 MB
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeEncodedImages
         }

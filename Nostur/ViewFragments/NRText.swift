@@ -67,6 +67,7 @@ struct NRTextDynamic: View {
     
     func makeUITextView() -> UITextView {
         let view = UITextView()
+//        _ = view.layoutManager
         view.isScrollEnabled = false
         view.tintColor = UIColor(themes.theme.accent)
         view.isSelectable = true
@@ -209,6 +210,7 @@ struct NRTextFixed: UIViewRepresentable {
     
     func makeUIView(context: Context) -> UITextView {
         let view = UITextView()
+//        _ = view.layoutManager
         view.isScrollEnabled = false
         view.tintColor = UIColor(themes.theme.accent)
         view.isSelectable = true
