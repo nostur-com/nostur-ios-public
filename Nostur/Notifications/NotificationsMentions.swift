@@ -73,7 +73,8 @@ struct NotificationsMentions: View {
             guard !didLoad else { return }
             load()
         }
-        .onReceive(receiveNotification(.newMentions)) { _ in
+        .onReceive(receiveNotification(.newMentions)) { [weak fl] _ in
+            guard let fl else { return }
             guard let account = account() else { return }
             let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
             fl.onComplete = {
@@ -91,29 +92,34 @@ struct NotificationsMentions: View {
             )
             fl.loadNewer(250, taskId:"newMentions")
         }
-        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { subscriptionIds in
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
             bg().perform {
+                guard let backlog else { return }
                 let reqTasks = backlog.tasks(with: subscriptionIds)
                 reqTasks.forEach { task in
                     task.process()
                 }
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+        .onReceive(receiveNotification(.activeAccountChanged)) { [weak fl, weak backlog] _ in
+            guard let fl, let backlog else { return }
             fl.nrPosts = []
             backlog.clear()
             load()
         }
-        .onChange(of: settings.webOfTrustLevel) { _ in
+        .onChange(of: settings.webOfTrustLevel) { [weak fl, weak backlog] _ in
+            guard let fl, let backlog else { return }
             fl.nrPosts = []
             backlog.clear()
             load()
         }
-        .onReceive(receiveNotification(.blockListUpdated)) { notification in
+        .onReceive(receiveNotification(.blockListUpdated)) { [weak fl] notification in
+            guard let fl else { return }
             let blockedPubkeys = notification.object as! Set<String>
             fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
         }
-        .onReceive(receiveNotification(.muteListUpdated)) { _ in
+        .onReceive(receiveNotification(.muteListUpdated)) { [weak fl] _ in
+            guard let fl else { return }
             fl.nrPosts = fl.nrPosts.filter(notMuted)
         }
         .simultaneousGesture(
@@ -153,7 +159,8 @@ struct NotificationsMentions: View {
     private func fetchNewer() {
         guard let account = account() else { return }
         let fetchNewerTask = ReqTask(
-            reqCommand: { (taskId) in
+            reqCommand: { [weak fl] (taskId) in
+                guard let fl else { return }
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
                     kinds: [1,9802,30023,34235],
@@ -162,7 +169,8 @@ struct NotificationsMentions: View {
                     since: NTimestamp(timestamp: Int(fl.nrPosts.first?.created_at ?? 0))
                 ))
             },
-            processResponseCommand: { (taskId, _, _) in
+            processResponseCommand: { [weak fl] (taskId, _, _) in
+                guard let fl else { return }
                 let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
@@ -176,8 +184,8 @@ struct NotificationsMentions: View {
                   )
                 fl.loadNewer(taskId: taskId)
             },
-            timeoutCommand: { taskId in
-                fl.loadNewer(taskId: taskId)
+            timeoutCommand: { [weak fl] taskId in
+                fl?.loadNewer(taskId: taskId)
             })
 
         backlog.add(fetchNewerTask)
@@ -210,7 +218,8 @@ struct NotificationsMentions: View {
             NRState.shared.mutedRootIds)
         fl.loadMore(25)
         let fetchMoreTask = ReqTask(
-            reqCommand: { (taskId) in
+            reqCommand: { [weak fl] (taskId) in
+                guard let fl else { return }
                 req(RM.getMentions(
                     pubkeys: [account.publicKey],
                     kinds: [1,9802,30023,34235],
@@ -219,7 +228,8 @@ struct NotificationsMentions: View {
                     until: NTimestamp(timestamp: Int(fl.nrPosts.last?.created_at ?? Int64(Date.now.timeIntervalSince1970)))
                 ))
             },
-            processResponseCommand: { (taskId, _, _) in
+            processResponseCommand: { [weak fl] (taskId, _, _) in
+                guard let fl else { return }
                 fl.predicate = NSPredicate(
                     format: "NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"",
                     (NRState.shared.blockedPubkeys + [account.publicKey]),

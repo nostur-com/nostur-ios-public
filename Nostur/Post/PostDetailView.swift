@@ -21,8 +21,8 @@ struct NoteById: View {
             ProgressView()
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .task { [weak vm] in
-                    vm?.setFetchParams((
+                .onAppear { [weak vm] in
+                    let fetchParams: FetchVM.FetchParams = (
                         prio: true,
                         req: { taskId in
                             bg().perform {
@@ -55,7 +55,8 @@ struct NoteById: View {
                             // Try search relays
                             req(RM.getEvent(id: self.id, subscriptionId: taskId), relayType: .SEARCH)
                         }
-                    ))
+                    )
+                    vm?.setFetchParams(fetchParams)
                     vm?.fetch()
                 }
         case .ready(let nrPost):

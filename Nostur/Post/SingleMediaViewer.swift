@@ -375,17 +375,24 @@ struct ImageProgressView: View {
     var body: some View {
         if !numericOnly && percent == 0 {
             Image(systemName: "hourglass.tophalf.filled")
-                .task {
-                    state.progress.objectWillChange
-                        .sink { _ in
-                            if Int(state.progress.fraction * 100) % 3 == 0 {
-                                if Int(ceil(state.progress.fraction * 100)) != percent {
-                                    percent = Int(ceil(state.progress.fraction * 100))
-                                }
-                            }
+                .onReceive(state.progress.objectWillChange, perform: { _ in
+                    if Int(state.progress.fraction * 100) % 3 == 0 {
+                        if Int(ceil(state.progress.fraction * 100)) != percent {
+                            percent = Int(ceil(state.progress.fraction * 100))
                         }
-                        .store(in: &subscriptions)
-                }
+                    }
+                })
+//                .task {
+//                    state.progress.objectWillChange
+//                        .sink { _ in
+//                            if Int(state.progress.fraction * 100) % 3 == 0 {
+//                                if Int(ceil(state.progress.fraction * 100)) != percent {
+//                                    percent = Int(ceil(state.progress.fraction * 100))
+//                                }
+//                            }
+//                        }
+//                        .store(in: &subscriptions)
+//                }
         }
         else { // not numeric only and not 0
             Text(percent, format: .percent)

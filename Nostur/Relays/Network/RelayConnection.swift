@@ -137,7 +137,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                 self.outQueue.append(SocketMessage(text: andSend))
             }
             
-//            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
+            self.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
             self.webSocketSub = nil
             
             self.session?.invalidateAndCancel()
@@ -162,8 +162,12 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                     switch completion {
                     case .finished:
                         self?.didDisconnect()
+                        self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
+                        self?.webSocketSub = nil
                     case .failure(let error):
                         self?.didDisconnectWithError(error)
+                        self?.webSocketSub?.cancel() // .cancel() gives Data race? Maybe not even needed.
+                        self?.webSocketSub = nil
                     }
                 },
                 receiveValue: { [weak self] message in
@@ -305,7 +309,7 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
             self?.session?.invalidateAndCancel()
         }
     }
-    
+        
     public func ping() {
         L.sockets.info("Trying to ping: \(self.url)")
         queue.async { [weak self] in
@@ -315,20 +319,20 @@ public class RelayConnection: NSObject, RelayConnectionDelegate, ObservableObjec
                 return
             }
 
-            webSocket.ping()
-                .subscribe(Subscribers.Sink(
-                    receiveCompletion: { [weak self] completion in
-                        switch completion {
-                        case .failure(let error):
-                            L.sockets.info("\(self?.url ?? "") Ping Failure: \(error), trying to reconnect")
-                            self?.connect()
-                        case .finished:
-                            L.sockets.info("\(self?.url ?? "") Ping succeeded")
-                            self?.didReceivePong()
-                        }
-                    },
-                    receiveValue: { _ in }
-                ))
+            var singlePing: AnyCancellable?
+            singlePing = webSocket.ping()
+                .sink(receiveCompletion: { [weak self] completion in
+                    switch completion {
+                    case .failure(let error):
+                        L.sockets.info("\(self?.url ?? "") Ping Failure: \(error), trying to reconnect")
+                        self?.connect()
+                        singlePing?.cancel()
+                    case .finished:
+                        L.sockets.info("\(self?.url ?? "") Ping succeeded")
+                        self?.didReceivePong()
+                        singlePing?.cancel()
+                    }
+                }, receiveValue: { _ in } )
         }
     }
     

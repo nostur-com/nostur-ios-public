@@ -22,10 +22,10 @@ struct ProfileByPubkey: View {
         case .initializing, .loading, .altLoading:
             ProgressView()
                 .frame(alignment: .center)
-                .onAppear {
-                    vm.setFetchParams((
+                .onAppear { [weak vm] in
+                    vm?.setFetchParams((
                         prio: false,
-                        req: { [weak vm] _ in
+                        req: { _ in
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 guard let vm else { return }
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
@@ -35,7 +35,7 @@ struct ProfileByPubkey: View {
                                 else { req(RM.getUserMetadata(pubkey: pubkey)) } // 2B. FETCH IF WE DONT HAVE
                             }
                         }, 
-                        onComplete: { [weak vm] relayMessage, _ in
+                        onComplete: { relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 guard let vm else { return }
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
@@ -49,6 +49,7 @@ struct ProfileByPubkey: View {
                         },
                         altReq: nil
                     ))
+                    guard let vm else { return }
                     vm.fetch()
                 }
         case .ready(let nrContact):
