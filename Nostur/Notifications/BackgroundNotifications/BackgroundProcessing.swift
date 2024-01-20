@@ -45,11 +45,9 @@ class DatabaseCleanUpOperation: Operation {
         context.performAndWait {
             do {
                 Maintenance.databaseCleanUp(context)
-                try context.save() // backgroundContext (saves to main)
-                DataProvider.shared().save() { // main context (saves to disk)
-                    Task {
-                        await Importer.shared.preloadExistingIdsCache()
-                    }
+                try context.save() // backgroundContext (but saves to store) (.parent is store)
+                Task {
+                    await Importer.shared.preloadExistingIdsCache()
                 }
             } catch {
                 L.maintenance.error("Error running daily maintenance: \(error)")

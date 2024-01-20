@@ -45,6 +45,11 @@ struct Settings: View {
     @State private var badgesSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
     
     @ObservedObject private var wot = WebOfTrust.shared
+    
+    @State private var isOptimizing = false
+    @State private var dbNumberOfEvents = "-"
+    @State private var dbNumberOfContacts = "-"
+    
 
     var body: some View {
 
@@ -358,6 +363,19 @@ struct Settings: View {
                 RelayMasteryLink() // Wrapped in View else SwiftUI will freeze
                     .listRowBackground(themes.theme.background)
                 
+                Section(header: Text("Data usage", comment: "Setting heading on settings screen")) {
+                    Toggle(isOn: $settings.lowDataMode) {
+                        VStack(alignment: .leading) {
+                            Text("Low Data mode", comment: "Setting on settings screen")
+                            Text("Will not download media and previews", comment:"Setting on settings screen")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    // TODO: add limited/primary relay selection
+                }
+                .listRowBackground(themes.theme.background)
+                
                 Section(header: Text("Caches", comment: "Settings heading")) {
                     HStack {
                         Text("Profile pictures: \(pfpSize)", comment: "Message showing size of Profile pictures cache")
@@ -441,19 +459,48 @@ struct Settings: View {
                     }
                 }
                 .listRowBackground(themes.theme.background)
-                
             }
             
-            Section(header: Text("Data usage", comment: "Setting heading on settings screen")) {
-                Toggle(isOn: $settings.lowDataMode) {
-                    VStack(alignment: .leading) {
-                        Text("Low Data mode", comment: "Setting on settings screen")
-                        Text("Will not download media and previews", comment:"Setting on settings screen")
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
+            Section(header: Text("Database status", comment: "Settings heading")) {
+                HStack {
+                    Text("Nostr events:")
+                    Spacer()
+                    Text(dbNumberOfEvents)
+                }
+                .onAppear {
+                    countDbEvents()
+                }
+                
+                HStack {
+                    Text("Contacts:")
+                    Spacer()
+                    Text(dbNumberOfContacts)
+                }
+                .onAppear {
+                    countDbContacts()
+                }
+                
+                HStack {
+                    Text("Last optimize: \(SettingsStore.shared.lastMaintenanceTimestamp != 0 ? Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp)).formatted() : "Never")", comment: "Last run: (date) of maintanace")
+                    Spacer()
+                    if isOptimizing {
+                        ProgressView()
+                    }
+                    else {
+                        Button(String(localized:"Optimize now", comment:"Button to run database clean up now")) {
+                            Task {
+                                let didRun = await Maintenance.dailyMaintenance(context: bg(), force: true)
+                                if didRun {
+                                    await Importer.shared.preloadExistingIdsCache()
+                                    DispatchQueue.main.async {
+                                        countDbEvents()
+                                        countDbContacts()
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-                // TODO: add limited/primary relay selection
             }
             .listRowBackground(themes.theme.background)
             
@@ -469,83 +516,6 @@ struct Settings: View {
             }
             .listRowBackground(themes.theme.background)
             
-//            Section(header: Text("Dev")) {
-//                Toggle(isOn: $devToggle) {
-//                    VStack(alignment: .leading) {
-//                        Text("Dev mode")
-//                        if (devToggle) {
-//                            Text(vm.throttleText)
-//                        }
-//                    }
-//                }.padding(10)
-//                if (devToggle) {
-//                    VStack(alignment: .leading) {
-//                        Group {
-//
-//                            Button { removeOlderKind3Events() } label: {
-//                                Text("Remove old contact lists (kind=3)")
-//                            }
-//
-//                            Button { Maintenance.maintenance(context: viewContext) } label: {
-//                                Text("Clean up older than 3 days")
-//                            }
-//
-//                            Button { fixPointers() } label: {
-//                                Text("Rebuild referenced things (tagsSerialized -> someId, anotherId)")
-//                            }
-//
-//                            Button { rebuildCountingCache() } label: {
-//                                Text("Rebuild counter cache (likes, mentions, replies, zaps)")
-//                            }
-//
-//                            Button { rebuildContactCache() } label: {
-//                                Text("Rebuild contact cache (banner, picture etc)")
-//                            }
-//                        }
-//                        .buttonStyle(.bordered)
-//
-//
-//                        Group {
-//                            Button { deleteAll = true } label: {
-//                                Text("Delete all contacts \(contactsCount?.description ?? "")")
-//                            }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
-//                                Button("YES DELETE ALL CONTACTS", role: .destructive) { deleteAllContacts() }
-//                            })
-//
-//                            Button { showDeleteAllEventsConfirmation = true } label: {
-//                                Text("Delete all events \(eventsCount?.description ?? "")")
-//                            }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
-//                                Button("YES DELETE ALL EVENTS", role: .destructive) {
-//                                    deleteAllEvents()
-//                                }
-//                            }
-//
-//                            Button { fixContactEventRelations() } label: {
-//                                Text("Fix event.pubkey -> event.contact")
-//                            }
-//
-//                            Button { putContactsInEventsForPs() } label: {
-//                                Text("Fix contacts (p) in event")
-//                            }
-//
-//                            Button { fixRelations() } label: { Text("Fix relations (replyToId -> replyTo) etc") }
-//
-//                            Button { clearImageCache()} label: {
-//                                Text("Clear image cache")
-//                            }
-//                        }
-//                        .buttonStyle(.bordered)
-//                    }
-//                }
-//            }
-//            .listRowBackground(themes.theme.background)
-//                Section(header: Text("Private key protector")) {
-//                    Toggle(isOn: $settings.replaceNsecWithHunter2Enabled) {
-//                        Text("Don't allow nsec in posts")
-//                        Text("Replaces any \"nsec1...\" in new posts with \"hunter2\" ")
-//                    }
-//                }
-//                .listRowBackground(themes.theme.background)
             if account()?.privateKey != nil && !(account()?.isNC ?? false) {
                 Section(header: Text("Account", comment: "Heading for section to delete account")) {
                     Button(role: .destructive) {
@@ -564,24 +534,6 @@ struct Settings: View {
         }
         .scrollContentBackgroundHidden()
         .background(themes.theme.listBackground)
-        .onAppear {
-            let bg = DataProvider.shared().container.newBackgroundContext()
-            bg.perform {
-                let r = Event.fetchRequest()
-                r.resultType = .countResultType
-                let eventsCount = (try? bg.count(for: r)) ?? 0
-                
-                let c = Contact.fetchRequest()
-                c.resultType = .countResultType
-                let contactsCount = (try? bg.count(for: c)) ?? 0
-                
-                DispatchQueue.main.async {
-                    self.contactsCount = contactsCount
-                    self.eventsCount = eventsCount
-                }
-            }
-            
-        }
         .navigationTitle("Settings")
         .sheet(isPresented: $deleteAccountIsShown) {
             NBNavigationStack {
@@ -609,6 +561,21 @@ struct Settings: View {
             .nbUseNavigationStack(.never)
             .environmentObject(themes)
             .presentationBackgroundCompat(themes.theme.background)
+        }
+    }
+    
+    private func countDbEvents() {
+        dbNumberOfEvents = Importer.shared.existingIds.count.formatted()
+    }
+    
+    private func countDbContacts() {
+        bg().perform {
+            let fr = Contact.fetchRequest()
+            fr.resultType = .countResultType
+            let count = (try? bg().count(for: fr)) ?? 0
+            DispatchQueue.main.async {
+                dbNumberOfContacts = count.formatted()
+            }
         }
     }
 }

@@ -170,15 +170,10 @@ struct AppView: View {
                                     
                                     if IS_CATALYST { // macOS doesn't do background processing tasks, so we do it here instead of .scheduleDatabaseCleaningIfNeeded()
                                         // 1. Clean up
-                                        Maintenance.dailyMaintenance(context: DataProvider.shared().viewContext) { didRun in
-                                            // 2. Save
-                                            DataProvider.shared().save() {
-                                                // 3. If Clean up "didRun", need to preload cache again
-                                                if didRun {
-                                                    Task {
-                                                        await Importer.shared.preloadExistingIdsCache()
-                                                    }
-                                                }
+                                        Task {
+                                            let didRun = await Maintenance.dailyMaintenance(context: bg())
+                                            if didRun {
+                                                await Importer.shared.preloadExistingIdsCache()
                                             }
                                         }
                                     }
