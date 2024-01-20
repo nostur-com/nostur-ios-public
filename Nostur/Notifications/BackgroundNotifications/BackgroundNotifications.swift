@@ -151,7 +151,9 @@ func checkForNotifications() async {
         Task { @MainActor in
             guard !NRState.shared.activeAccountPublicKey.isEmpty else { continuation.resume(); return }
             if !Importer.shared.didPreload {
-                Importer.shared.preloadExistingIdsCache()
+                Task {
+                    await Importer.shared.preloadExistingIdsCache()
+                }
             }
             guard let account = try? CloudAccount.fetchAccount(publicKey: NRState.shared.activeAccountPublicKey, context: context())
             else {

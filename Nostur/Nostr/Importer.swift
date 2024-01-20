@@ -95,9 +95,9 @@ class Importer {
     // Load all kind 3 ids, these are expensive to parse
     // and load recent 5000
     // Might as well just load all??? Its fast anyway
-    func preloadExistingIdsCache() {
+    func preloadExistingIdsCache() async {
         didPreload = true
-        bg().performAndWait { [weak self] in
+        await bg().perform { [weak self] in
             guard let self else { return }
             
             let fr = Event.fetchRequest()
@@ -350,7 +350,7 @@ class Importer {
                 self.importEvents()
             }
             else {
-                DataProvider.shared().save()
+                bgSave()
             }
         }
     }

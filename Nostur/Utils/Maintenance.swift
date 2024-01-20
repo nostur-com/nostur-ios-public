@@ -18,8 +18,8 @@ struct Maintenance {
     // Removed: too many subscriptions "wss://relay.snort.social"
     
     @MainActor
-    static func ensureBootstrapRelaysExist(context:NSManagedObjectContext) {
-        context.performAndWait {
+    static func ensureBootstrapRelaysExist(context:NSManagedObjectContext) async {
+        await context.perform {
             let r = CloudRelay.fetchRequest()
             if let relaysCount = try? context.fetch(r).count {
                 var relays:[RelayData] = []
@@ -44,9 +44,9 @@ struct Maintenance {
     
     // Version based migrations
     // Runs on viewContext. Must finish before app can continue launch
-    static func upgradeDatabase(context:NSManagedObjectContext) {
+    static func upgradeDatabase(context: NSManagedObjectContext) async {
         L.maintenance.info("Starting version based maintenance")
-        context.performAndWait {
+        await context.perform {
             Self.runDeleteEventsWithoutId(context: context)
             Self.runUseDtagForReplacableEvents(context: context)
             Self.runInsertFixedNames(context: context)
