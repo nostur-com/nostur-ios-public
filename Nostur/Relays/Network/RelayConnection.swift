@@ -128,7 +128,9 @@ public class RelayConnection: NSObject, WebSocketConnectionDelegate, ObservableO
             
            
             if let urlURL = URL(string: relayData.url) {
-                self.webSocket = NWWebSocket(url: urlURL)
+                let options = NWProtocolWebSocket.Options()
+                options.autoReplyPing = true
+                self.webSocket = NWWebSocket(url: urlURL, options: options, connectionQueue: self.queue)
                 self.webSocket?.delegate = self
             }
             
