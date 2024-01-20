@@ -72,7 +72,7 @@ struct ReactionButtonInner: View {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             
-            var likeNEvent = nrPost.like(self.reactionContent)
+            guard var likeNEvent = nrPost.like(self.reactionContent) else { return }
             isActivated = true
             
             if account.isNC {

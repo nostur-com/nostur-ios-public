@@ -88,7 +88,7 @@ struct LazyNoteMenuSheet: View {
                     }
                     Button {
                         dismiss()
-                        guard let contact = nrPost.mainEvent.contact else { return }
+                        guard let contact = nrPost.mainEvent?.contact else { return }
                         DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
                             sendNotification(.addRemoveToListsheet, contact)
                         }
@@ -97,7 +97,7 @@ struct LazyNoteMenuSheet: View {
                     }
                     Button {
                         dismiss()
-                        if let pn = nrPost.mainEvent.privateNote {
+                        if let pn = nrPost.mainEvent?.privateNote {
                             DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
                                 sendNotification(.editingPrivateNote, pn)
                             }
@@ -112,7 +112,7 @@ struct LazyNoteMenuSheet: View {
                     }
                     HStack {
                         Button {
-                            UIPasteboard.general.string = nrPost.mainEvent.plainText
+                            UIPasteboard.general.string = nrPost.plainText
                             dismiss()
                         } label: {
                             Label(String(localized:"Copy post text", comment: "Post context menu button"), systemImage: "doc.on.clipboard")
@@ -121,7 +121,7 @@ struct LazyNoteMenuSheet: View {
                         .buttonStyle(.plain)
                         Divider()
                         Button {
-                            UIPasteboard.general.string = nrPost.mainEvent.noteId
+                            UIPasteboard.general.string = nrPost.mainEvent?.noteId
                             dismiss()
                         } label: {
                             Text("ID", comment:"Label for post identifier (ID)")
@@ -134,7 +134,7 @@ struct LazyNoteMenuSheet: View {
                                 .scaleEffect(x: 1.75, y:1.7)
                         )
                         .onTapGesture {
-                            UIPasteboard.general.string = nrPost.mainEvent.noteId
+                            UIPasteboard.general.string = nrPost.mainEvent?.noteId
                             dismiss()
                         }
                         
@@ -159,7 +159,7 @@ struct LazyNoteMenuSheet: View {
                         Divider()
                         Button {
                             dismiss()
-                            UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
+                            UIPasteboard.general.string = nrPost.mainEvent?.toNEvent().eventJson()
                         } label: {
                             Text("source", comment: "The word 'source' as in source code")
                                 .padding(.horizontal, 5)
@@ -172,7 +172,7 @@ struct LazyNoteMenuSheet: View {
                         )
                         .onTapGesture {
                             dismiss()
-                            UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
+                            UIPasteboard.general.string = nrPost.mainEvent?.toNEvent().eventJson()
                         }
                     }
                     Button {
@@ -261,9 +261,10 @@ struct LazyNoteMenuSheet: View {
                 
                 Button {
                     dismiss()
-                    let nEvent = nrPost.mainEvent.toNEvent()                    
+                    guard let mainEvent = nrPost.mainEvent else { return }
+                    let nEvent = mainEvent.toNEvent()
                     
-                    if nrPost.pubkey == NRState.shared.activeAccountPublicKey && nrPost.mainEvent.flags == "nsecbunker_unsigned" && la.account.isNC {
+                    if nrPost.pubkey == NRState.shared.activeAccountPublicKey && mainEvent.flags == "nsecbunker_unsigned" && la.account.isNC {
                         NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: la.account,  whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })

@@ -58,7 +58,7 @@ struct LikeButton: View {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             
-            var likeNEvent = nrPost.like()
+            guard var likeNEvent = nrPost.like() else { return }
             bg().perform {
                 accountCache()?.addLike(nrPost.id)
             }

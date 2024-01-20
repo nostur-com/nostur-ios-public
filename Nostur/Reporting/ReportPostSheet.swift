@@ -77,7 +77,7 @@ struct ReportPostSheet: View {
                         })
                     }
                     else {
-                        guard let signedReport = NRState.shared.loggedInAccount?.report(nrPost.mainEvent, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
+                        guard let mainEvent = nrPost.mainEvent, let signedReport = NRState.shared.loggedInAccount?.report(mainEvent, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
                             return
                         }
                         Unpublisher.shared.publishNow(signedReport)

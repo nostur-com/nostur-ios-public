@@ -43,7 +43,8 @@ struct EventPrivateNoteToggle: View {
             .contentShape(Rectangle())
             .opacity(footerAttributes.hasPrivateNote ? 1 : 0.2)
             .onTapGesture {
-                if let pn = nrPost.mainEvent.privateNote {
+                guard let mainEvent = nrPost.mainEvent else { return }
+                if let pn = mainEvent.privateNote {
                     sendNotification(.editingPrivateNote, pn)
                 }
                 else {

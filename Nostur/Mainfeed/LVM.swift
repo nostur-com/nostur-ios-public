@@ -591,7 +591,7 @@ class LVM: NSObject, ObservableObject {
                 let idsOnScreen = self.leafsAndParentIdsOnScreen
                 bg().perform { [weak self] in
                     guard let self = self else { return }
-                    let danglingEvents = danglers.map { $0.event }
+                    let danglingEvents = danglers.compactMap { $0.event }
                     if older {
                         self.setOlderEvents(events: self.filterMutedWords(danglingEvents))
                     }
@@ -609,7 +609,7 @@ class LVM: NSObject, ObservableObject {
                 }
                 
                 let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
-                let danglingEvents = danglers.map { $0.event }
+                let danglingEvents: [Event] = danglers.compactMap { $0.event }
                 
                 let idsOnScreen = self.leafsAndParentIdsOnScreen
                 bg().perform { [weak self] in
@@ -1332,7 +1332,10 @@ extension LVM {
                 let words = notification.object as! [String]
                 bg().perform { [weak self] in
                     guard let self = self else { return }
-                    self.nrPostLeafs = self.nrPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
+                    self.nrPostLeafs = self.nrPostLeafs.filter {
+                        guard let noteText = $0.event?.noteText else { return true }
+                        return notMutedWords(in: noteText, mutedWords: words)
+                    }
                     self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
                 }
             }
