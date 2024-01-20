@@ -21,44 +21,7 @@ struct EmbedById: View {
                 ProgressView()
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .onAppear { [weak vm, weak dim] in
-                        let fetchParams: FetchVM.FetchParams = (
-                            prio: true,
-                            req: { taskId in
-                                bg().perform {
-                                    guard let vm, let dim else { return }
-                                    if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
-                                        vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
-                                    }
-                                    else {
-                                        req(RM.getEvent(id: self.id, subscriptionId: taskId))
-                                    }
-                                }
-                            },
-                            onComplete: { relayMessage, event in
-                                guard let vm, let dim else { return }
-                                if let event = event {
-                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
-                                }
-                                else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
-                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
-                                }
-                                else if [.initializing, .loading].contains(vm.state) {
-                                    // try search relays
-                                    vm.altFetch()
-                                }
-                                else {
-                                    vm.timeout()
-                                }
-                            },
-                            altReq: { taskId in
-                                // Try search relays
-                                req(RM.getEvent(id: self.id, subscriptionId: taskId), relayType: .SEARCH)
-                            }
-                        )
-                        vm?.setFetchParams(fetchParams)
-                        vm?.fetch()
-                    }
+                    .onAppear(perform: load)
             case .ready(let nrPost):
                 if nrPost.kind == 30023 {
                     ArticleView(nrPost, hideFooter: true, forceAutoload: forceAutoload, theme: theme)
@@ -99,6 +62,45 @@ struct EmbedById: View {
             RoundedRectangle(cornerRadius: 15)
                 .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
         )
+    }
+    
+    private func load() {
+        let fetchParams: FetchVM.FetchParams = (
+            prio: true,
+            req: { [weak vm = self.vm, weak dim = self.dim] taskId in
+                bg().perform {
+                    guard let vm, let dim else { return }
+                    if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
+                        vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                    }
+                    else {
+                        req(RM.getEvent(id: self.id, subscriptionId: taskId))
+                    }
+                }
+            },
+            onComplete: { [weak vm = self.vm, weak dim = self.dim] relayMessage, event in
+                guard let vm, let dim else { return }
+                if let event = event {
+                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                }
+                else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
+                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                }
+                else if [.initializing, .loading].contains(vm.state) {
+                    // try search relays
+                    vm.altFetch()
+                }
+                else {
+                    vm.timeout()
+                }
+            },
+            altReq: { taskId in
+                // Try search relays
+                req(RM.getEvent(id: self.id, subscriptionId: taskId), relayType: .SEARCH)
+            }
+        )
+        self.vm.setFetchParams(fetchParams)
+        self.vm.fetch()
     }
 }
 
