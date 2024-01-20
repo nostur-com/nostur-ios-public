@@ -14,7 +14,7 @@ import AVFoundation
 /// The main app view
 ///
 /// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
-struct AppView: View {
+struct AppView: View {  
     @EnvironmentObject private var ns:NRState
     @EnvironmentObject private var networkMonitor:NetworkMonitor
     @EnvironmentObject private var dm:DirectMessageViewModel
@@ -52,22 +52,7 @@ struct AppView: View {
         .merge(with: Just(Date()))
     
     @StateObject private var themes:Themes = .default
-    
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt, order: .reverse)])
-    private var accounts:FetchedResults<CloudAccount>
-    
-    @State private var noAccounts = false
-    
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.markedReadAt_, order: .reverse)])
-    private var dmStates:FetchedResults<CloudDMState>
-    
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.updatedAt_, order: .reverse)])
-    private var relays:FetchedResults<CloudRelay>
-    
-    @State private var noDMStates = false
-    
-    @State private var didRemoveDuplicateRelays = false
-    
+
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -93,307 +78,221 @@ struct AppView: View {
                 .padding()
                 
             }
-            else if !didAcceptTerms || isOnboarding || (accounts.isEmpty && noAccounts) || ns.activeAccountPublicKey.isEmpty {
-                Onboarding()
-                    .nbUseNavigationStack(.never)
-                    .environmentObject(ns)
-                    .environmentObject(networkMonitor)
-                    .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
-                    .onAppear {
-                        if ns.activeAccountPublicKey.isEmpty {
-                            isOnboarding = true
-                        }
-                    }
-            }
             else {
-                if let loggedInAccount = ns.loggedInAccount {
-                    NosturRootMenu()
+                if !didAcceptTerms || isOnboarding || (didLoad && ns.accounts.isEmpty) || ns.activeAccountPublicKey.isEmpty {
+                    Onboarding()
                         .nbUseNavigationStack(.never)
-                        .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
-                            ReadOnlyAccountInformationSheet()
-                                .presentationDetentsLarge()
-                                .environmentObject(ns)
-                                .environmentObject(themes)
-                        }
-                        .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                         .environmentObject(ns)
-                        .environmentObject(dm)
-                        .environmentObject(NotificationsViewModel.shared)
                         .environmentObject(networkMonitor)
-                        .environmentObject(loggedInAccount)
-                        .onReceive(priceLoop) { time in
-//                            if (!isViewDisplayed) { return }
-                            Task.detached(priority: .low) {
-                                if let newPrice = await fetchBitcoinPrice() {
-                                    if (newPrice != ExchangeRateModel.shared.bitcoinPrice) {
-                                        ExchangeRateModel.shared.bitcoinPrice = newPrice
+                        .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
+                        .onAppear {
+                            if ns.activeAccountPublicKey.isEmpty {
+                                isOnboarding = true
+                            }
+                        }
+                }
+//                    else if (1 == 1) {
+//                        Text("test")
+//                            .onReceive(ViewUpdates.shared.bookmarkUpdates.receive(on: RunLoop.main), perform: { update in
+////                                    let update = update as! BookmarkUpdate
+////                                    guard eventModel.isRelevantUpdate(update) else { return }
+////                                    eventModel.applyUpdate(update)
+//
+//                                print("new update: \(update.id) isBookmarked: \(update.isBookmarked)")
+//                                bg().perform {
+//                                    try? bg().save()
+//                                }
+//                            })
+//                    }
+                else {
+                    if let loggedInAccount = ns.loggedInAccount { // 74 MB -> 175MB
+                        NosturRootMenu()
+                            .nbUseNavigationStack(.never)
+                            .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
+                                ReadOnlyAccountInformationSheet()
+                                    .presentationDetentsLarge()
+                                    .environmentObject(ns)
+                                    .environmentObject(themes)
+                            }
+                            .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
+                            .environmentObject(ns)
+    //                        .environmentObject(dm)
+                            .environmentObject(NotificationsViewModel.shared)
+                            .environmentObject(networkMonitor)
+                            .environmentObject(loggedInAccount)
+                            .onReceive(priceLoop) { time in
+    //                            if (!isViewDisplayed) { return }
+                                Task.detached(priority: .low) {
+                                    if let newPrice = await fetchBitcoinPrice() {
+                                        if (newPrice != ExchangeRateModel.shared.bitcoinPrice) {
+                                            ExchangeRateModel.shared.bitcoinPrice = newPrice
+                                        }
                                     }
                                 }
                             }
-                        }
-                        .background(themes.theme.listBackground)
-                        .environmentObject(themes)
-//                        .buttonStyle(NRButtonStyle(theme: themes.theme)) // This breaks .swipeActions in Lists - WTF?
-                        .tint(themes.theme.accent)
-                        .onAppear {
-                            ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
-                            configureAudioSession()
-                        }
-                        .onChange(of: scenePhase) { newScenePhase in
-                            switch newScenePhase {
-                            case .active:
-                                L.og.notice("scenePhase active")
-                                if !IS_CATALYST {
-                                    if (NRState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
+                            .background(themes.theme.listBackground)
+                            .environmentObject(themes)
+    //                        .buttonStyle(NRButtonStyle(theme: themes.theme)) // This breaks .swipeActions in Lists - WTF?
+                            .tint(themes.theme.accent)
+                            .onAppear {
+                                ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
+                                configureAudioSession()
+                            }
+                            .onChange(of: scenePhase) { newScenePhase in
+                                switch newScenePhase {
+                                case .active:
+                                    L.og.notice("scenePhase active")
+                                    if !IS_CATALYST {
+                                        if (NRState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
+                                            ConnectionPool.shared.connectAll()
+                                            sendNotification(.scenePhaseActive)
+                                            lvmManager.restoreSubscriptions()
+                                            NotificationsViewModel.shared.restoreSubscriptions()
+                                            ns.startTaskTimers()
+                                        }
+                                        NRState.shared.appIsInBackground = false
+                                    }
+                                    else {
                                         ConnectionPool.shared.connectAll()
                                         sendNotification(.scenePhaseActive)
                                         lvmManager.restoreSubscriptions()
                                         NotificationsViewModel.shared.restoreSubscriptions()
                                         ns.startTaskTimers()
                                     }
-                                    NRState.shared.appIsInBackground = false
-                                }
-                                else {
-                                    ConnectionPool.shared.connectAll()
-                                    sendNotification(.scenePhaseActive)
-                                    lvmManager.restoreSubscriptions()
-                                    NotificationsViewModel.shared.restoreSubscriptions()
-                                    ns.startTaskTimers()
-                                }
-                                
-                            case .background:
-                                L.og.notice("scenePhase background")
-                                if !IS_CATALYST {
-                                    NRState.shared.appIsInBackground = true
-                                    lvmManager.stopSubscriptions()
-                                }
-                                sendNotification(.scenePhaseBackground)
-                                
-                                if IS_CATALYST { // macOS doesn't do background processing tasks, so we do it here instead of .scheduleDatabaseCleaningIfNeeded()
-                                    // 1. Clean up
-                                    Maintenance.dailyMaintenance(context: DataProvider.shared().viewContext) { didRun in
-                                        // 2. Save
-                                        DataProvider.shared().save() {
-                                            // 3. If Clean up "didRun", need to preload cache again
-                                            if didRun {
-                                                Importer.shared.preloadExistingIdsCache()
+                                    
+                                case .background:
+                                    L.og.notice("scenePhase background")
+                                    if !IS_CATALYST {
+                                        NRState.shared.appIsInBackground = true
+                                        lvmManager.stopSubscriptions()
+                                    }
+                                    sendNotification(.scenePhaseBackground)
+                                    
+                                    if IS_CATALYST { // macOS doesn't do background processing tasks, so we do it here instead of .scheduleDatabaseCleaningIfNeeded()
+                                        // 1. Clean up
+                                        Maintenance.dailyMaintenance(context: DataProvider.shared().viewContext) { didRun in
+                                            // 2. Save
+                                            DataProvider.shared().save() {
+                                                // 3. If Clean up "didRun", need to preload cache again
+                                                if didRun {
+                                                    Task {
+                                                        await Importer.shared.preloadExistingIdsCache()
+                                                    }
+                                                }
                                             }
                                         }
                                     }
+                                case .inactive:
+                                    L.og.notice("scenePhase inactive")
+                                    
+                                default:
+                                    break
                                 }
-                            case .inactive:
-                                L.og.notice("scenePhase inactive")
-                                
-                            default:
-                                break
                             }
-                        }
-                }
-                else {
-                    ProgressView()
+                    }
+                    else {
+                        ProgressView()
+                    }
                 }
             }
         }
-//        .onAppear  { startNosturing(); self.isViewDisplayed = true }
-        .onAppear  { startNosturing() }
-//        .onDisappear { self.isViewDisplayed = false }
+        .task {
+            await startNosturing()
+        }
         .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in
             let onBoardingIsShown = notification.object as! Bool
             if onBoardingIsShown != isOnboarding {
                 isOnboarding = onBoardingIsShown
             }
         }
-        .onReceive(accounts.publisher.collect(), perform: { accounts in
-            if accounts.count != NRState.shared.accounts.count {
-                if ns.activeAccountPublicKey.isEmpty && !isOnboarding {
-                    ns.activeAccountPublicKey = accounts.last?.publicKey ?? ""
-                }
-                L.og.debug("loading \(accounts.count) accounts. \(ns.activeAccountPublicKey)")
-                removeDuplicateAccounts()
-                NRState.shared.accounts = Array(accounts)
-            }
-            else if NRState.shared.accounts.isEmpty && !accounts.isEmpty {
-                L.og.debug("loading \(accounts.count) accounts. \(ns.activeAccountPublicKey)")
-                removeDuplicateAccounts()
-                NRState.shared.accounts = Array(accounts)
-            }
-            else if accounts.isEmpty {
-                noAccounts = true
-            }
-        })
-        
-        .onReceive(relays.publisher.collect(), perform: { relays in
-            if !relays.isEmpty && !didRemoveDuplicateRelays {
-                removeDuplicateRelays()
-            }
-        })
-        
-        .onReceive(dmStates.publisher.collect(), perform: { dmStates in
-            if dmStates.count != dm.dmStates.count {
-                removeDuplicateDMStates()
-                dm.dmStates = Array(dmStates)
-            }
-            else if dm.dmStates.isEmpty && !dmStates.isEmpty {
-                removeDuplicateDMStates()
-                dm.dmStates = Array(dmStates)
-            }
-            else if dmStates.isEmpty {
-                noDMStates = true
-            }
-        })
         .environmentObject(themes)
     }
     
-    private func removeDuplicateAccounts() {
-        var uniqueAccounts = Set<String>()
-        let sortedAccounts = accounts.sorted { $0.mostRecentItemDate > $1.mostRecentItemDate }
-        
-        accounts.forEach { account in
-            account.noPrivateKey = false // clear old cache method
-            
-            // check if "full_account" flag is missing, set it if we have private key
-            if !account.flagsSet.contains("full_account") && account.privateKey != nil {
-                account.flagsSet.insert("full_account")
-            }
-        }
-        
-        let duplicates = sortedAccounts
-            .filter { account in
-                guard let publicKey = account.publicKey_ else { return false }
-                return !uniqueAccounts.insert(publicKey).inserted
-            }
-        
-        L.cloud.debug("Deleting: \(duplicates.count) duplicate accounts")
-        duplicates.forEach({ duplicateAccount in
-            // Before deleting, .union the follows to the existing account
-            if let existingAccount = sortedAccounts.first(where: { existingAccount in
-                return existingAccount.publicKey == duplicateAccount.publicKey
-            }) {
-                existingAccount.followingPubkeys.formUnion(duplicateAccount.followingPubkeys)
-                existingAccount.privateFollowingPubkeys.formUnion(duplicateAccount.privateFollowingPubkeys)
-                existingAccount.followingHashtags.formUnion(duplicateAccount.followingHashtags)
-                existingAccount.flagsSet.formUnion(duplicateAccount.flagsSet)
-                
-                existingAccount.lastFollowerCreatedAt = max(existingAccount.lastFollowerCreatedAt, duplicateAccount.lastFollowerCreatedAt)
-                existingAccount.lastSeenPostCreatedAt = max(existingAccount.lastSeenPostCreatedAt, duplicateAccount.lastSeenPostCreatedAt)
-                existingAccount.lastSeenZapCreatedAt = max(existingAccount.lastSeenZapCreatedAt, duplicateAccount.lastSeenZapCreatedAt)
-                existingAccount.lastSeenRepostCreatedAt = max(existingAccount.lastSeenRepostCreatedAt, duplicateAccount.lastSeenRepostCreatedAt)
-                existingAccount.lastSeenReactionCreatedAt = max(existingAccount.lastSeenReactionCreatedAt, duplicateAccount.lastSeenReactionCreatedAt)
-                existingAccount.lastSeenDMRequestCreatedAt = max(existingAccount.lastSeenDMRequestCreatedAt, duplicateAccount.lastSeenDMRequestCreatedAt)
-                existingAccount.lastProfileReceivedAt = max(existingAccount.lastProfileReceivedAt ?? .distantPast, duplicateAccount.lastProfileReceivedAt ?? .distantPast)
-                existingAccount.lastLoginAt = max(existingAccount.lastLoginAt, duplicateAccount.lastLoginAt)
-            }
-            DataProvider.shared().viewContext.delete(duplicateAccount)
-        })
-        if !duplicates.isEmpty {
-            DataProvider.shared().save()
-        }
-    }
-    
-    private func removeDuplicateDMStates() {
-        var uniqueDMStates = Set<String>()
-        let sortedDMStates = dmStates.sorted { ($0.markedReadAt_ ?? .distantPast) > ($1.markedReadAt_ ?? .distantPast) }
-        
-        let duplicates = sortedDMStates
-            .filter { dmState in
-                guard dmState.contactPubkey_ != nil else { return false }
-                guard dmState.accountPubkey_ != nil else { return false }
-                return !uniqueDMStates.insert(dmState.conversionId).inserted
-            }
-        
-        L.cloud.debug("Deleting: \(duplicates.count) duplicate DM conversation states")
-        duplicates.forEach({ duplicateDMState in
-            DataProvider.shared().viewContext.delete(duplicateDMState)
-        })
-        if !duplicates.isEmpty {
-            DataProvider.shared().save()
-        }
-    }
-    
-    private func removeDuplicateRelays() {
-        guard !didRemoveDuplicateRelays else { return }
-        var uniqueRelays = Set<String>()
-        let sortedRelays = relays.sorted { $0.updatedAt > $1.updatedAt }
-        
-        let duplicates = sortedRelays
-            .filter { relay in
-                guard let url = relay.url_ else { return false }
-                let normalizedUrl = normalizeRelayUrl(url)
-                return !uniqueRelays.insert(normalizedUrl).inserted
-            }
-        
-        L.cloud.debug("Deleting: \(duplicates.count) duplicate relays")
-        duplicates.forEach({ duplicateRelay in
-            DataProvider.shared().viewContext.delete(duplicateRelay)
-        })
-        if !duplicates.isEmpty {
-            DataProvider.shared().save()
-        }
-    }
-    
-    private func startNosturing() {
+    private func startNosturing() async {
         UserDefaults.standard.register(defaults: ["selected_subtab" : "Following"])
-        let viewContext = DataProvider.shared().container.viewContext
-        // Daily cleanup.
+        
         if (firstTimeCompleted) {
-            Maintenance.upgradeDatabase(context: viewContext)
+            await Maintenance.upgradeDatabase(context: bg())
         }
-        Importer.shared.preloadExistingIdsCache()
-        
-        
-        Maintenance.ensureBootstrapRelaysExist(context: viewContext)
-        
-        DispatchQueue.main.async {
-            ns.startTaskTimers()
+        else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                bg().perform {
+                    _ = GuestAccountManager.shared.createGuestAccount()
+                    DataProvider.shared().save()
+                    do {
+                        try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
+                    }
+                    catch {
+                        L.og.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR")
+                    }
+                }
+            }
         }
         
-        // Setup connections
-        let relays:[RelayData] = CloudRelay.fetchAll(context: viewContext).map { $0.toStruct() }
+        await Maintenance.ensureBootstrapRelaysExist(context: bg())
         
-        for relay in relays {
-            _ = ConnectionPool.shared.addConnection(relay)
+        await Importer.shared.preloadExistingIdsCache() // 43 MB -> 103-132 MB (but if bg is child of store instead of viewContetr: 74 MB)
+
+        Task {
+            let relays: [RelayData] = await bg().perform {
+                ns.startTaskTimers()
+                
+                // Setup connections
+                return CloudRelay.fetchAll(context: bg()).map { $0.toStruct() }
+            }
+            
+            
+            
+            for relay in relays {
+                _ = ConnectionPool.shared.addConnection(relay)
+            }
+            
+            ConnectionPool.shared.connectAll()
         }
-        ConnectionPool.shared.connectAll()
-        
-        let ss = SettingsStore.shared
-        if !ss.activeNWCconnectionId.isEmpty, let nwc = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: DataProvider.shared().viewContext) {
-            let addedConnection = ConnectionPool.shared.addNWCConnection(connectionId: nwc.connectionId, url: nwc.relay)
-            addedConnection.connect()
-            bg().perform {
-                if let nwcConnection = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: bg()) {
+
+        Task {
+            let addedConnection: RelayConnection? = await bg().perform {
+                if !SettingsStore.shared.activeNWCconnectionId.isEmpty,
+                    let nwc = NWCConnection.fetchConnection(SettingsStore.shared.activeNWCconnectionId, context: bg()) {
+                    
+                    return ConnectionPool.shared.addNWCConnection(connectionId: nwc.connectionId, url: nwc.relay)
+                }
+                return nil
+            }
+            addedConnection?.connect()
+            
+            await bg().perform {
+                if let nwcConnection = NWCConnection.fetchConnection(SettingsStore.shared.activeNWCconnectionId, context: bg()) {
                     NWCRequestQueue.shared.nwcConnection = nwcConnection
                     Importer.shared.nwcConnection = nwcConnection
                 }
             }
-        }
-        
-        if (!firstTimeCompleted) {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                _ = GuestAccountManager.shared.createGuestAccount()
-                do {
-                    try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
-                }
-                catch {
-                    L.og.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR")
-                }
-            }
-        }
-        if (ns.rawExplorePubkeys.isEmpty) {
-            // Fetch updated contactlist for Explore feed
             
-            // First get from cache
-            bg().perform {
-                let r = Event.fetchRequest()
-                r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", EXPLORER_PUBKEY)
-                r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                if let exploreContactList = try? bg().fetch(r).first {
-                    ns.rawExplorePubkeys = Set(exploreContactList.pTags())
+            Task {
+                if (ns.rawExplorePubkeys.isEmpty) {
+                    // Fetch updated contactlist for Explore feed
+        
+                    // First get from cache
+                    let rawExplorePubkeys = await bg().perform {
+                        let r = Event.fetchRequest()
+                        r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", EXPLORER_PUBKEY)
+                        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                        if let exploreContactList = try? bg().fetch(r).first {
+                            return Set(exploreContactList.pTags())
+                        }
+                        return Set()
+                    }
+                    ns.rawExplorePubkeys = rawExplorePubkeys
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        req(RM.getAuthorContactsList(pubkey: EXPLORER_PUBKEY))
+                    }
                 }
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                req(RM.getAuthorContactsList(pubkey: EXPLORER_PUBKEY))
-            }
         }
+
+        loadAccounts()
+        return
+
     }
     
     func configureAudioSession() {
@@ -403,10 +302,10 @@ struct AppView: View {
             L.og.error("Failed to configure audio session: \(error.localizedDescription)")
         }
     }
-}
-
-struct AppView_Previews: PreviewProvider {
-    static var previews: some View {
-        AppView()
+    
+    @State private var didLoad = false
+    private func loadAccounts() {
+        NRState.shared.loadAccountsState()
+        didLoad = true
     }
 }
