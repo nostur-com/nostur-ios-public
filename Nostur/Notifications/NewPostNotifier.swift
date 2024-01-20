@@ -29,7 +29,7 @@ class NewPostNotifier: ObservableObject {
     private var lastCheck:Date? = nil
     
     private init() {
-        self.load()
+        
     }
     
     @MainActor
