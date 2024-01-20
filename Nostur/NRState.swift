@@ -299,16 +299,12 @@ func accountCache() -> AccountCache? {
     return nil
 }
 
-struct AccountData {
-    let publicKey: String
-    let lastSeenPostCreatedAt:Int64
-    let followingPubkeys:Set<String>
-}
+
 
 func accountData() -> AccountData? {
     guard let account = Thread.isMainThread ? NRState.shared.loggedInAccount?.account : NRState.shared.loggedInAccount?.bgAccount 
     else { return nil }
-    return AccountData(publicKey: account.publicKey, lastSeenPostCreatedAt: account.lastSeenPostCreatedAt, followingPubkeys: account.followingPubkeys)
+    return account.toStruct()
 }
 
 func follows() -> Set<String> {
