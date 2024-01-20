@@ -118,8 +118,8 @@ public class ConnectionPool: ObservableObject {
     
     private func stayConnectedPing() {
         for (_, connection) in self.connections {
-            queue.async {
-                guard connection.relayData.shouldConnect else { return }
+            queue.async { [weak connection] in
+                guard let connection, connection.relayData.shouldConnect else { return }
                 guard !connection.isNWC else { return }
                 guard !connection.isNC else { return }
                 
@@ -207,9 +207,9 @@ public class ConnectionPool: ObservableObject {
         }
         
         for (_, connection) in connections {
-            queue.async {
-                guard connection.relayData.shouldConnect else { return }
-                connection.ping()
+            queue.async { [weak connection] in
+                guard connection?.relayData.shouldConnect ?? false else { return }
+                connection?.ping()
             }
         }
     }
@@ -222,10 +222,11 @@ public class ConnectionPool: ObservableObject {
             let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"), relayType: .READ)
             connection.sendMessage(closeNotifications.message)
             
-            queue.async { [weak self] in
+            queue.async { [weak self, weak connection] in
+                guard let connection, let self else { return }
                 if !connection.nreqSubscriptions.isDisjoint(with: Set(["Following", "Notifications"])) {
-                    self?.queue.async(flags: .barrier) {
-                        connection.nreqSubscriptions.subtract(Set(["Following", "Notifications"]))
+                    self.queue.async(flags: .barrier) { [weak connection] in
+                        connection?.nreqSubscriptions.subtract(Set(["Following", "Notifications"]))
                     }
                 }
             }
@@ -236,10 +237,11 @@ public class ConnectionPool: ObservableObject {
     func allowNewFollowingSubscriptions() {
         // removes "Following" from the active subscriptions so when we try a new one when following keys has changed, it would be ignored because didn't pass !contains..
         for (_, connection) in self.connections {
-            self.queue.async { [weak self] in
+            self.queue.async { [weak self, weak connection] in
+                guard let connection else { return }
                 if connection.nreqSubscriptions.contains("Following") {
-                    self?.queue.async(flags: .barrier) {
-                        connection.nreqSubscriptions.remove("Following")
+                    self?.queue.async(flags: .barrier) { [weak connection] in
+                        connection?.nreqSubscriptions.remove("Following")
                     }
                 }
             }
@@ -248,7 +250,8 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func closeSubscription(_ subscriptionId:String) {
-        queue.async {
+        queue.async { [weak self] in
+            guard let self else { return }
             for (_, connection) in self.connections {
                 guard connection.isSocketConnected else { continue }
                 
@@ -256,8 +259,8 @@ public class ConnectionPool: ObservableObject {
                     L.lvm.info("Closing subscriptions for .relays - subscriptionId: \(subscriptionId)");
                     let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
                     connection.sendMessage(closeSubscription.message)
-                    self.queue.async(flags: .barrier) {
-                        connection.nreqSubscriptions.remove(subscriptionId)
+                    self.queue.async(flags: .barrier) { [weak connection] in
+                        connection?.nreqSubscriptions.remove(subscriptionId)
                     }
                 }
             }
@@ -354,8 +357,8 @@ public class ConnectionPool: ObservableObject {
                         // skip if we already have an active subcription
                         if subscriptionId != nil && connection.nreqSubscriptions.contains(subscriptionId!) { continue }
                         if (subscriptionId != nil) {
-                            self.queue.async(flags: .barrier) {
-                                connection.nreqSubscriptions.insert(subscriptionId!)
+                            self.queue.async(flags: .barrier) { [weak connection] in
+                                connection?.nreqSubscriptions.insert(subscriptionId!)
                             }
                             L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(connection.url): \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
                         }

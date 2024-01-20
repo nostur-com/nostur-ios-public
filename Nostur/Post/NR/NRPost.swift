@@ -155,8 +155,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private var _replies: [NRPost] = []
 
     var replies: [NRPost] {
-        get { NRState.shared.nrPostQueue.sync { _replies } }
-        set { NRState.shared.nrPostQueue.async(flags: .barrier) { self._replies = newValue } }
+        get { NRState.shared.nrPostQueue.sync { [weak self] in
+            self?._replies ?? []
+        } }
+        set {
+            NRState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
+                self?._replies = newValue
+            }
+        }
     }
     
     private var _repliesToRoot: [NRPost] = [] {
@@ -168,8 +174,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
 
     var repliesToRoot: [NRPost] {
-        get { NRState.shared.nrPostQueue.sync { _repliesToRoot } }
-        set { NRState.shared.nrPostQueue.async(flags: .barrier) { self._repliesToRoot = newValue } }
+        get { NRState.shared.nrPostQueue.sync { [weak self] in
+            self?._repliesToRoot ?? []
+        } }
+        set { NRState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
+            self?._repliesToRoot = newValue
+        } }
     }
     var groupedReplies = [NRPost]()
     
@@ -187,13 +197,21 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var firstQuoteId:String?
     
     var replyTo:NRPost?  {
-        get { NRState.shared.nrPostQueue.sync { _replyTo } }
-        set { NRState.shared.nrPostQueue.async(flags: .barrier) { self._replyTo = newValue } }
+        get { NRState.shared.nrPostQueue.sync { [weak self] in
+            self?._replyTo
+        } }
+        set { NRState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
+            self?._replyTo = newValue
+        } }
     }
     
     var replyToRoot:NRPost? {
-        get { NRState.shared.nrPostQueue.sync { _replyToRoot } }
-        set { NRState.shared.nrPostQueue.async(flags: .barrier) { self._replyToRoot = newValue } }
+        get { NRState.shared.nrPostQueue.sync { [weak self] in
+            self?._replyToRoot
+        } }
+        set { NRState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
+            self?._replyToRoot = newValue
+        } }
     }
     
     var firstQuote:NRPost? {

@@ -34,8 +34,8 @@ class Kind0Processor {
     }
     
     private func setProfile(_ profile: Profile) {
-        queue.async(flags: .barrier) {
-            self._lru[profile.pubkey] = profile
+        queue.async(flags: .barrier) { [weak self] in
+            self?._lru[profile.pubkey] = profile
         }
     }
     
