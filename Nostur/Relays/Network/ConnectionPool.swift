@@ -269,7 +269,7 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     private func removeAfterDelay(_ url:String) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(60)) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(35)) { [weak self] in
             if let (_ ,connection) = self?.ephemeralConnections.first(where: { (key: String, value: RelayConnection) in
                 key == url
             }) {
