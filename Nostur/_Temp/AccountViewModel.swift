@@ -55,23 +55,6 @@ class AccountViewModel: ObservableObject, Identifiable {
         self.followingHashtags = update.followingHashtags
     }
     
-    var privateKey: String? {
-        get {
-            if isNC {
-                return NIP46SecretManager.shared.getSecret(pubkey: publicKey)
-            }
-            
-            return AccountManager.shared.getPrivateKeyHex(pubkey: publicKey)
-        }
-        set(privateKeyHex) {
-            guard privateKeyHex != nil else {
-                AccountManager.shared.deletePrivateKey(forPublicKeyHex: self.publicKey)
-                return
-            }
-            AccountManager.shared.storePrivateKey(privateKeyHex: privateKeyHex!, forPublicKeyHex: self.publicKey)
-        }
-    }
-    
     var isFullAccount: Bool {
         return self.flags.contains("full_account")
     }
