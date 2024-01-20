@@ -59,7 +59,8 @@ class EventRelationsQueue {
     
     /// Adds event to the queue waiting for related data that is being fetched
     /// - Parameter event: Event should be from .bg context, if not this function will fetch it from .bg using .objectID
-    public func addAwaitingEvent(_ event:Event, debugInfo:String? = "") {
+    public func addAwaitingEvent(_ event: Event? = nil, debugInfo:String? = "") {
+        guard let event = event else { return }
         let isBGevent = event.managedObjectContext == ctx
         if Thread.isMainThread {
             if isBGevent {

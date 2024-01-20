@@ -117,7 +117,8 @@ struct WebsiteComments: View {
                     .padding(.vertical, 5)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        sendNotification(.createNewReply, EventNotification(event: nrPost.event))
+                        guard let event = nrPost.event else { return }
+                        sendNotification(.createNewReply, EventNotification(event: event))
                     }
                 Spacer()
             }

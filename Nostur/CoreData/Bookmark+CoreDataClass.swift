@@ -41,7 +41,7 @@ extension Bookmark {
         bg().perform {
             let bookmark = Bookmark(context: bg())
             bookmark.eventId = nrPost.id
-            bookmark.json = nrPost.event.toNEvent().eventJson()
+            bookmark.json = nrPost.event?.toNEvent().eventJson()
             bookmark.createdAt = .now
             bg().transactionAuthor = "addBookmark"
             DataProvider.shared().save()

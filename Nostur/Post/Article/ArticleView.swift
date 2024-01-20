@@ -197,14 +197,16 @@ struct ArticleView: View {
                     // Fetch all that reference this detail note (Replies, zaps, reactions) - E:
                     req(RM.getEventReferences(ids: [article.id], subscriptionId: "DETAIL-"+UUID().uuidString))
                     // Same but use the a-tag (proper) // TODO: when other clients handle replies to ParaReplaceEvents properly we can remove the old E fetching
-                    req(RM.getPREventReferences(aTag: article.event.aTag, subscriptionId: "ROOT-"+UUID().uuidString))
+                    
+                    req(RM.getPREventReferences(aTag: article.aTag, subscriptionId: "ROOT-"+UUID().uuidString))
+                        
                     
                     
                     // REAL TIME UPDATES FOR ARTICLE DETAIL
                     req(RM.getEventReferences(ids: [article.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
                     
                     // Same but use the a-tag (proper) // TODO: when other clients handle replies to ParaReplaceEvents properly we can remove the old E fetching
-                    req(RM.getPREventReferences(aTag: article.event.aTag, subscriptionId: "REALTIME-DETAIL-A", since: NTimestamp(date: Date.now)))
+                    req(RM.getPREventReferences(aTag: article.aTag, subscriptionId: "REALTIME-DETAIL-A", since: NTimestamp(date: Date.now)))
                 }
             }
             .onDisappear {

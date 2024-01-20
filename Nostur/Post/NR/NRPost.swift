@@ -233,7 +233,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
-    let event:Event // Only touch this in BG context!!!
+    weak var event: Event? // Only touch this in BG context!!!
     
     var missingPs:Set<String> // missing or have no contact info
     var fastTags:[(String, String, String?, String?)] = []
@@ -607,7 +607,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func relaysUpdatedListener() {
-        event.relaysUpdated
+        event?.relaysUpdated
 //            .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
             .sink { [weak self] relays in
                 guard let self = self else { return }
@@ -623,7 +623,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func updateNRPostListener() {
-        event.updateNRPost
+        event?.updateNRPost
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] event in
                 guard let self = self else { return }
@@ -760,7 +760,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
                 bg().perform { [weak self] in
-                    guard let contact = self?.event.contact else { return }
+                    guard let contact = self?.event?.contact else { return }
                     let nrContact = NRContact(contact: contact, following: self?.following ?? false)
                     DispatchQueue.main.async {
                         self?.objectWillChange.send()
@@ -774,7 +774,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private func rebuildContentElements() {
         bg().perform { [weak self] in
-            guard let self = self else { return }
+            guard let self = self, let event = event else { return }
             
             let (contentElementsDetail, _, _) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(event)
             let (contentElements, _) = filteredForPreview(contentElementsDetail)
@@ -791,8 +791,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     private func rerenderReplyingToFragment() {
         bg().perform { [weak self] in
-            guard let self = self else { return }
-            if let replyingToMarkdown = NRReplyingToBuilder.shared.replyingToUsernamesMarkDownString(self.event) {
+            guard let self = self, let event = event else { return }
+            if let replyingToMarkdown = NRReplyingToBuilder.shared.replyingToUsernamesMarkDownString(event) {
                 let md = try? AttributedString(markdown: replyingToMarkdown)
                 DispatchQueue.main.async { [weak self] in
                     self?.objectWillChange.send()
@@ -803,7 +803,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func quotedPostListener() {
-        self.event.firstQuoteUpdated
+        self.event?.firstQuoteUpdated
             .sink { [weak self] firstQuote in
                 bg().perform {
                     guard let self = self else { return }
@@ -815,7 +815,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func postDeletedListener() {
-        self.event.postDeleted
+        self.event?.postDeleted
             .receive(on: RunLoop.main)
             .sink { [weak self] deletedById in
                 guard let self = self else { return }
@@ -825,7 +825,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func replyAndReplyRootListener() {
-        self.event.replyToUpdated
+        self.event?.replyToUpdated
             .sink { [weak self] replyTo in
                 bg().perform {
                     let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
@@ -838,7 +838,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
             .store(in: &subscriptions)
         
-        self.event.replyToRootUpdated
+        self.event?.replyToRootUpdated
             .sink { [weak self] replyToRoot in
                 bg().perform {
                     let nrReplyToRoot = NRPost(event: replyToRoot, withReplyTo: true)
@@ -855,12 +855,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func repliesListener() {
-        self.event.repliesUpdated
+        self.event?.repliesUpdated
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] replies in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
                 bg().perform {
-                    guard let self = self else { return }
+                    guard let self else { return }
                     let nrReplies = replies
                             .filter { !blocks().contains($0.pubkey) }
                             .map { event in
@@ -879,7 +879,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         self.groupRepliesToRoot.send(nrReplies)
                     }
                     else {
-                        self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
+                        self.event?.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
                         DispatchQueue.main.async { [weak self] in
                             self?.objectWillChange.send()
                             self?.replies = nrReplies
@@ -897,7 +897,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     // Same as repliesListener but only for counts
     private func repliesCountListener() {
         guard !withReplies else { return } // Skip if we already have repliesListener, which makes repliesCountListener not needed
-        self.event.repliesUpdated
+        self.event?.repliesUpdated
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] replies in
                 self?.footerAttributes.objectWillChange.send()
@@ -914,22 +914,22 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         let ctx = bg()
         let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         ctx.perform { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "kind == 1 AND replyToId == %@ AND NOT pubkey IN %@", String(self.id), blocks()) // _PFManagedObject_coerceValueForKeyWithDescription + 1472 (NSManagedObject.m:0) - Maybe fix with String(self.id)
             if let foundReplies = try? ctx.fetch(fr) {
-                if let existingReplies = self.event.replies {
-                    self.event.replies = existingReplies.union(Set(foundReplies))
+                if let existingReplies = self.event?.replies {
+                    self.event?.replies = existingReplies.union(Set(foundReplies))
                 }
                 else {
-                    self.event.replies = Set(foundReplies)
+                    self.event?.replies = Set(foundReplies)
                 }
             }
-            let nrReplies = self.event.replies_
+            let nrReplies = (self.event?.replies_ ?? [])
                 .filter { !blocks().contains($0.pubkey) }
                 .map { NRPost(event: $0, cancellationId: cancellationIds[$0.id]) }
-            self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
+            self.event?.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
             DispatchQueue.main.async { [weak self] in
                 self?.objectWillChange.send()
                 self?.replies = nrReplies
@@ -962,13 +962,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     @MainActor public func loadParents() {
         let beforeThreadPostsCount = self.threadPostsCount
         bg().perform { [weak self] in
-            guard let self = self else { return }
+            guard let self, let event = self.event else { return }
             guard !self.withParents else { return }
             self.withParents = true
             
-            let parents = Event.getParentEvents(self.event, fixRelations: true)//, until:self.id)
+            let parents = Event.getParentEvents(event, fixRelations: true)//, until:self.id)
             let parentPosts = parents.map { NRPost(event: $0) }
-            let threadPostsCount = 1 + self.event.parentEvents.count
+            let threadPostsCount = 1 + event.parentEvents.count
             
             guard beforeThreadPostsCount != threadPostsCount else { return }
             
@@ -980,28 +980,30 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
-    var mainEvent:Event {
-        DataProvider.shared().viewContext.object(with: event.objectID) as! Event
+    var mainEvent: Event? {
+        guard let event else { return nil }
+        return DataProvider.shared().viewContext.object(with: event.objectID) as? Event
     }
     
-    @MainActor public func like(_ reactionContent:String = "+") -> NEvent {
+    @MainActor public func like(_ reactionContent:String = "+") -> NEvent? {
         self.footerAttributes.objectWillChange.send()
         if (reactionContent == "+") {
             self.footerAttributes.liked = true
         }
-        bg().perform {
-            self.event.likesCount += 1
-            
+        bg().perform { [weak self] in
+            guard let event = self?.event else { return }
+            event.likesCount += 1
+
             if let accountCache = accountCache() {
                 if (reactionContent == "+") {
-                    return accountCache.addLike(self.event.id)
+                    accountCache.addLike(event.id)
                 }
                 else {
-                    return accountCache.addReaction(self.event.id, reactionType: reactionContent)
+                    accountCache.addReaction(event.id, reactionType: reactionContent)
                 }
             }
         }
-        
+        guard let mainEvent else { return nil }
         return EventMessageBuilder.makeReactionEvent(reactingTo: mainEvent, reactionContent: reactionContent)
     }
     
@@ -1010,15 +1012,16 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         if (reactionContent == "+") {
             self.footerAttributes.liked = false
         }
-        bg().perform {
-            self.event.likesCount -= 1
+        bg().perform { [weak self] in
+            guard let event = self?.event else { return }
+            event.likesCount -= 1
             
             if let accountCache = accountCache() {
                 if (reactionContent == "+") {
-                    return accountCache.removeLike(self.event.id)
+                    return accountCache.removeLike(event.id)
                 }
                 else {
-                    return accountCache.removeReaction(self.event.id, reactionType: reactionContent)
+                    return accountCache.removeReaction(event.id, reactionType: reactionContent)
                 }
             }
         }
@@ -1029,8 +1032,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         _ = Unpublisher.shared.cancel(cancellationId)
         self.ownPostAttributes.objectWillChange.send()
         self.ownPostAttributes.cancellationId = nil
-        bg().perform {
-            bg().delete(self.event)
+        bg().perform { [weak self] in
+            guard let self, let event = self.event else { return }
+            bg().delete(event)
             bgSave()
             DispatchQueue.main.async {
                 sendNotification(.unpublishedNRPost, self)
@@ -1152,7 +1156,7 @@ extension NRPost { // Helpers for grouped replies
     }
     
     private func repliesToRootListener() {
-        self.event.replyToRootUpdated
+        self.event?.replyToRootUpdated
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] reply in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
@@ -1168,7 +1172,7 @@ extension NRPost { // Helpers for grouped replies
             .store(in: &subscriptions)
     }
     
-    var repliesToLeaf:[NRPost] {
+    var repliesToLeaf: [NRPost] {
         // if we are not root we cannot use replyToRootId
         // we need only the replies under our leaf id
         // so we have to traverse manually:
@@ -1176,16 +1180,17 @@ extension NRPost { // Helpers for grouped replies
         // we just start from a leaf and traverse up, if we hit our self.id its ours,
         // else it will go up to the actual root and we dont need it
         
-        var ourReplies:[NRPost] = []
+        var ourReplies: [NRPost] = []
         for post in repliesToRoot {
-            if traversesUpToThisPost(post.event) {
+            guard let event = post.event else { continue }
+            if traversesUpToThisPost(event) {
                 ourReplies.append(post)
             }
         }
         return ourReplies
     }
     
-    private func traversesUpToThisPost(_ event:Event) -> Bool {
+    private func traversesUpToThisPost(_ event: Event) -> Bool {
         var currentEvent:Event? = event
         while currentEvent != nil {
             if let replyToId = currentEvent?.replyToId, replyToId == self.id {
@@ -1196,9 +1201,9 @@ extension NRPost { // Helpers for grouped replies
         return false
     }
     
-    private func _groupRepliesToRoot(_ newReplies:[NRPost]) {
+    private func _groupRepliesToRoot(_ newReplies: [NRPost]) {
         bg().perform { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             renderedReplyIds.removeAll()
             let replies = (newReplies.isEmpty ? self.replies : newReplies)
             // Load parents/replyTo
@@ -1213,9 +1218,11 @@ extension NRPost { // Helpers for grouped replies
                 }
                 .map { reply in
                     // use until:self.id so we don't render duplicates
-                    reply.event.parentEvents = Event.getParentEvents(reply.event, fixRelations: true, until:self.id)
-                    reply.parentPosts = reply.event.parentEvents.map { NRPost(event: $0) }
-                    reply.threadPostsCount = 1 + reply.event.parentEvents.count
+                    if let replyEvent = reply.event {
+                        replyEvent.parentEvents = Event.getParentEvents(replyEvent, fixRelations: true, until:self.id)
+                        reply.parentPosts = replyEvent.parentEvents.map { NRPost(event: $0) } ?? []
+                        reply.threadPostsCount = 1 + replyEvent.parentEvents.count
+                    }
 
 //                    if let replyTo = reply.event.replyTo__ { // TODO: NEED THIS OR NO?
 //                        reply.replyTo = NRPost(event: replyTo)
@@ -1239,7 +1246,7 @@ extension NRPost { // Helpers for grouped replies
                     continue
                 }
                 
-                let firstId = thread.event.parentEvents.first?.id ?? thread.id
+                let firstId = thread.event?.parentEvents.first?.id ?? thread.id
                 if let existingThread = uniqueThreads[firstId] {
                     // TODO:
                     // if we have a forked thread, then both will have the same firstId
@@ -1253,7 +1260,11 @@ extension NRPost { // Helpers for grouped replies
             }
             
             renderedReplyIds = Set(uniqueThreads.keys).union(uniqueThreads.values.reduce(Set<NRPostID>(), { partialResult, nrPost in
-                return partialResult.union(Set(nrPost.event.parentEvents.map { $0.id }))
+                return partialResult.union(
+                    Set(
+                        nrPost.event?.parentEvents.map { $0.id } ?? []
+                    )
+                )
             }))
             
             // Second pass
@@ -1276,7 +1287,7 @@ extension NRPost { // Helpers for grouped replies
             let groupedRepliesSorted = Array(self.sortGroupedReplies(groupedReplies).prefix(50))
             let groupedRepliesNotWoT = Array(self.sortGroupedRepliesNotWoT(groupedReplies).prefix(50))
             
-            self.event.repliesCount = Int64(replies.count) // Fix wrong count in db
+            self.event?.repliesCount = Int64(replies.count) // Fix wrong count in db
             DispatchQueue.main.async { [weak self] in
                 self?.objectWillChange.send()
                 self?.replies = replies
