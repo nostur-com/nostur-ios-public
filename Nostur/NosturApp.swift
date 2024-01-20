@@ -133,11 +133,11 @@ struct RefreshingAppScene: Scene {
             L.og.debug(".appRefresh()")
             // Always schedule the next refresh
             scheduleAppRefresh(seconds: 180.0)
-
+            
             // Check for any new notifications (relays), if there are unread mentions it will trigger a (iOS) notification
             await checkForNotifications() // <-- Must await, "The system considers the task completed when the action closure that you provide returns. If the action closure has not returned when the task runs out of time to complete, the system cancels the task. Use withTaskCancellationHandler(operation:onCancel:) to observe whether the task is low on runtime."
-
-
+            
+            
         }
     }
 }
@@ -153,10 +153,105 @@ struct AppLoader {
     }
 }
 
+
+// Only Text = 37 MB
+@available(iOS 16, *)
+struct SimpleScene: Scene {
+    private let networkMonitor: NetworkMonitor = .shared
+    private let importer: Importer = .shared
+    private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
+    private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
+    private let lpc: LRUCache2<URL, [String: String]> = LinkPreviewCache.shared
+    // ^ 37,4 MB
+    
+    private let dataProvider = DataProvider.shared()
+    // ^ 37,7 MB
+    
+    private let backlog: Backlog = .shared
+    // ^ 41 MB
+    
+    private let ns: NRState = .shared
+    private let ss: SettingsStore = .shared
+    private let ceb: NRContentElementBuilder = .shared
+    private let cp: ConnectionPool = .shared
+    // ^ 41 MB
+    
+    private let npn: NewPostNotifier = .shared
+    // ^ 41 MB
+    
+    private let nvm: NotificationsViewModel = .shared
+    // ^ 42 MB
+    
+    private let dm: DirectMessageViewModel = .default
+    // ^ 42 MB
+    
+    private let viewUpdates: ViewUpdates = .shared
+    
+    private let cloudSyncManager: CloudSyncManager = .shared
+    
+    @Environment(\.scenePhase) private var phase
+    
+    
+    var body: some Scene {
+        WindowGroup {
+            AppView()
+//            Text("DD")
+//                .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
+                .environmentObject(cp)
+                .environmentObject(npn)
+                .environmentObject(ss)
+                .environmentObject(nvm)
+                .environmentObject(dm)
+                .environmentObject(networkMonitor)
+                .environmentObject(ns)
+                .environmentObject(dataProvider)
+        }
+        .onChange(of: phase) { newPhase in
+            switch newPhase {
+            case .active:
+                npn.reload()
+            case .background:
+                if !IS_CATALYST {
+                    scheduleDatabaseCleaningIfNeeded()
+                }
+                if SettingsStore.shared.receiveLocalNotifications {
+                    guard let account = account() else { return }
+                    if account.lastSeenPostCreatedAt == 0 {
+                        account.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                    }
+                    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_dm_local_notification_timestamp")
+                    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_local_notification_timestamp")
+                    scheduleAppRefresh()
+                }
+            default:
+                break
+            }
+        }
+        .backgroundTask(.appRefresh("com.nostur.app-refresh")) {
+            if !IS_CATALYST {
+                NRState.shared.appIsInBackground = true
+            }
+            guard ss.receiveLocalNotifications else {
+                L.og.debug(".appRefresh() - receiveLocalNotifications: false - skipping")
+                return
+            }
+            L.og.debug(".appRefresh()")
+            // Always schedule the next refresh
+            scheduleAppRefresh(seconds: 180.0)
+            
+            // Check for any new notifications (relays), if there are unread mentions it will trigger a (iOS) notification
+            await checkForNotifications() // <-- Must await, "The system considers the task completed when the action closure that you provide returns. If the action closure has not returned when the task runs out of time to complete, the system cancels the task. Use withTaskCancellationHandler(operation:onCancel:) to observe whether the task is low on runtime."
+            
+            
+        }
+    }
+}
+
 @available (iOS 16, *)
 struct New_iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var body: some Scene {
+//        SimpleScene()
         RefreshingAppScene()
     }
 }

@@ -88,6 +88,7 @@ class DataProvider: ObservableObject {
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.undoManager = nil
+        container.viewContext.name = "nostur-viewContext"
         
         return container
     }()
@@ -101,8 +102,14 @@ class DataProvider: ObservableObject {
         if let bgStored {
             return bgStored
         }
-        let newBG = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        newBG.parent = container.viewContext
+        
+        // bg is child of store
+        let newBG = container.newBackgroundContext() // 74 MB
+        
+        // Or: bg is child of viewContext: 100 MB instead of 74 MB
+//        let newBG = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+//        newBG.parent = container.viewContext
+        
         newBG.automaticallyMergesChangesFromParent = true
         newBG.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         newBG.undoManager = nil
@@ -222,7 +229,21 @@ class DataProvider: ObservableObject {
         
         let bg = self.bgStored ?? self.bg
         
-        bg.perform {
+        if Thread.isMainThread {
+            bg.perform {
+                L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count)")
+                if bg.hasChanges {
+                    do {
+                        try bg.save()
+                    }
+                    catch {
+                        L.og.error("🔴🔴 Could not save bgContext \(error)")
+                    }
+                }
+            }
+        }
+        else {
+            L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count)")
             if bg.hasChanges {
                 do {
                     try bg.save()
@@ -232,6 +253,8 @@ class DataProvider: ObservableObject {
                 }
             }
         }
+        
+        
     }
     
     // 254    468.00 ms    0.9%    254.00 ms                static DataProvider.shared()
@@ -252,6 +275,17 @@ func viewContext() -> NSManagedObjectContext {
 
 func bg() -> NSManagedObjectContext {
     (DataProvider.shared().bgStored ?? DataProvider.shared().bg) // .bg lazy computed, so may have thread contention issues when used alot, try to directly access .bgStored here.
+}
+
+func viewContextSave() {
+    if DataProvider.shared().viewContext.hasChanges {
+        do {
+            try DataProvider.shared().viewContext.save()
+        }
+        catch {
+            L.og.error("🔴🔴 Could not save() context \(error)")
+        }
+    }
 }
 
 func bgSave() {

@@ -24,55 +24,9 @@ class NRState: ObservableObject {
     @MainActor public static let shared = NRState()
     
     // view context
-    public var accounts: [CloudAccount] = [] {
-        didSet {
-            let accountPubkeys = Set(accounts.map { $0.publicKey })
-            let fullAccountPubkeys = Set(accounts.filter { $0.isFullAccount }.map { $0.publicKey })
-            bg().perform {
-                self.accountPubkeys = accountPubkeys
-                self.fullAccountPubkeys = fullAccountPubkeys
-            }
-            
-            // No account selected
-            if activeAccountPublicKey.isEmpty {
-                self.loggedInAccount = nil
-                self.onBoardingIsShown = true
-                sendNotification(.clearNavigation)
-                LVMManager.shared.listVMs.removeAll()
-                Task { @MainActor in
-                    self.changeAccount(nil)
-                }
-                return
-            }
-            else {
-                // activeAccountPublicKey but CloudAccounts changed (deduplicated?)
-                if let account = accounts.first(where: { $0.publicKey == activeAccountPublicKey }) {
-                    if loggedInAccount?.account != account {
-                        Task { @MainActor in
-                            changeAccount(account)
-                        }
-                    }
-                }
-                else if let nextAccount = accounts.last { // can't find account, change to next account
-                    Task { @MainActor in
-                        changeAccount(nextAccount)
-                    }
-                }
-                else { // we don't have any accounts
-                    self.loggedInAccount = nil
-                    self.onBoardingIsShown = true
-                    sendNotification(.clearNavigation)
-                    LVMManager.shared.listVMs.removeAll()
-                    Task { @MainActor in
-                        self.changeAccount(nil)
-                    }
-                    return
-                }
-            }
-        }
-    }
-
-    @Published public var loggedInAccount:LoggedInAccount? = nil {
+    public var accounts: [CloudAccount] = []
+    
+    @Published public var loggedInAccount: LoggedInAccount? = nil {
         didSet {
             loggedInAccount?.account.lastLoginAt = .now
         }
@@ -137,12 +91,52 @@ class NRState: ObservableObject {
         loadMutedRootIds()
     }
     
-//    @MainActor public func loadAccounts(onComplete: (([CloudAccount]) -> Void)? = nil) { // main context
-//        let r = CloudAccount.fetchRequest()
-//        guard let accounts = try? DataProvider.shared().viewContext.fetch(r) else { return }
-//        self.accounts = accounts
-//        onComplete?(accounts)
-//    }
+    @MainActor public func loadAccountsState() {
+        self.accounts = CloudAccount.fetchAccounts(context: context())
+        let accountPubkeys = Set(accounts.map { $0.publicKey })
+        let fullAccountPubkeys = Set(accounts.filter { $0.isFullAccount }.map { $0.publicKey })
+        bg().perform {
+            self.accountPubkeys = accountPubkeys
+            self.fullAccountPubkeys = fullAccountPubkeys
+        }
+        
+        // No account selected
+        if activeAccountPublicKey.isEmpty {
+            self.loggedInAccount = nil
+            self.onBoardingIsShown = true
+            sendNotification(.clearNavigation)
+            LVMManager.shared.listVMs.removeAll()
+            Task { @MainActor in
+                self.changeAccount(nil)
+            }
+            return
+        }
+        else {
+            // activeAccountPublicKey but CloudAccounts changed (deduplicated?)
+            if let account = accounts.first(where: { $0.publicKey == activeAccountPublicKey }) {
+                if loggedInAccount?.account != account {
+                    Task { @MainActor in
+                        changeAccount(account)
+                    }
+                }
+            }
+            else if let nextAccount = accounts.last { // can't find account, change to next account
+                Task { @MainActor in
+                    changeAccount(nextAccount)
+                }
+            }
+            else { // we don't have any accounts
+                self.loggedInAccount = nil
+                self.onBoardingIsShown = true
+                sendNotification(.clearNavigation)
+                LVMManager.shared.listVMs.removeAll()
+                Task { @MainActor in
+                    self.changeAccount(nil)
+                }
+                return
+            }
+        }
+    }
     
     @MainActor public func loadAccount(_ account: CloudAccount) { // main context
         guard loggedInAccount == nil || account.publicKey != self.activeAccountPublicKey else {
