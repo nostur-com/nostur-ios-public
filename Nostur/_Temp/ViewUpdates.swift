@@ -57,21 +57,4 @@ struct AccountData: Identifiable, Hashable {
     let flags: Set<String>
     let isNC: Bool
     let anyName: String
-    
-    var privateKey:String? {
-        get {
-            if isNC {
-                return NIP46SecretManager.shared.getSecret(pubkey: publicKey)
-            }
-            
-            return AccountManager.shared.getPrivateKeyHex(pubkey: publicKey)
-        }
-        set(privateKeyHex) {
-            guard privateKeyHex != nil else {
-                AccountManager.shared.deletePrivateKey(forPublicKeyHex: self.publicKey)
-                return
-            }
-            AccountManager.shared.storePrivateKey(privateKeyHex: privateKeyHex!, forPublicKeyHex: self.publicKey)
-        }
-    }
 }

@@ -614,7 +614,11 @@ class LVM: NSObject, ObservableObject {
                 let idsOnScreen = self.leafsAndParentIdsOnScreen
                 bg().perform { [weak self] in
                     guard let self = self else { return }
-                    self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt, idsOnScreen: idsOnScreen)
+                    self.setUnorderedEvents(
+                        events: self.filterMutedWords(danglingEvents),
+                        lastCreatedAt: lastCreatedAt,
+                        idsOnScreen: idsOnScreen
+                    )
                 }
             })
 
