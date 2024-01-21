@@ -487,7 +487,8 @@ struct Settings: View {
                         ProgressView()
                     }
                     else {
-                        Button(String(localized:"Optimize now", comment:"Button to run database clean up now")) {
+                        Button(String(localized: "Optimize now", comment:"Button to run database clean up now")) {
+                            isOptimizing = true
                             Task {
                                 let didRun = await Maintenance.dailyMaintenance(context: bg(), force: true)
                                 if didRun {
@@ -496,6 +497,9 @@ struct Settings: View {
                                         countDbEvents()
                                         countDbContacts()
                                     }
+                                }
+                                Task { @MainActor in
+                                    isOptimizing = false
                                 }
                             }
                         }
