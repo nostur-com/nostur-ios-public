@@ -246,6 +246,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public func didReceiveError(_ error: Error) {
         // Respond to a WebSocket error event
         queue.async(flags: .barrier) { [weak self] in
+            self?.webSocketTask?.cancel()
+            self?.session?.invalidateAndCancel()
             self?.nreqSubscriptions = []
             self?.lastMessageReceivedAt = nil
             if (self?.exponentialReconnectBackOff ?? 0) >= 512 {
