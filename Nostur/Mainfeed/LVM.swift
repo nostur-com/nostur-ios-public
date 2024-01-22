@@ -924,8 +924,7 @@ class LVM: NSObject, ObservableObject {
     func configureTimer() {
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            self.fetchFeedTimerNextTick()
+            self?.fetchFeedTimerNextTick()
         }
         self.fetchFeedTimer?.tolerance = 2.0
     }

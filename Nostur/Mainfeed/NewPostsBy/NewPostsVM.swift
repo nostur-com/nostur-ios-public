@@ -74,7 +74,7 @@ class NewPostsVM: ObservableObject {
                 })
             
             self?.backlog.add(reqTask)
-            guard let self else { return }
+            guard self != nil else { return }
             reqTask.fetch()
             
         }

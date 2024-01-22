@@ -46,10 +46,10 @@ class EventRelationsQueue {
     private var cleanUpTimer: Timer?
     
     init() {
-        cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true, block: { [unowned self] timer in
+        cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true, block: { [weak self] timer in
             let now = Date()
             
-            bg().perform { [weak self] in
+            bg().perform {
                 guard let self else { return }
                 self.waitingEvents = self.waitingEvents.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
                 self.waitingContacts = self.waitingContacts.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
