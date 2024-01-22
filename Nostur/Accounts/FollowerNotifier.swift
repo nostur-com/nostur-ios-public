@@ -39,16 +39,16 @@ class FollowerNotifier {
             }
             .store(in: &subscriptions)
         
-        checkForNewTimer = Timer.scheduledTimer(withTimeInterval: 3600*4, repeats: true, block: { _ in
+        checkForNewTimer = Timer.scheduledTimer(withTimeInterval: 3600*4, repeats: true, block: { [weak self] _ in
             
             guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
             let pubkey = NRState.shared.activeAccountPublicKey
-            self.checkForUpdatedContactList(pubkey: pubkey)
+            self?.checkForUpdatedContactList(pubkey: pubkey)
         })
-        DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15) { [weak self] in
             guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
             let pubkey = NRState.shared.activeAccountPublicKey
-            self.checkForUpdatedContactList(pubkey: pubkey)
+            self?.checkForUpdatedContactList(pubkey: pubkey)
         }
     }
     

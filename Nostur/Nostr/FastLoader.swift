@@ -291,8 +291,8 @@ class Backlog {
     // trigger the task.process() commands
     init(timeout:Double = 60.0, auto:Bool = false) {
         self.timeout = timeout
-        timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { timer in
-            bg().perform { [weak self] in
+        timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
+            bg().perform {
                 guard let self = self else { return }
                 guard !self.tasks.isEmpty else { return } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
                 self.removeOldTasks()

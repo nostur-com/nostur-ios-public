@@ -98,9 +98,9 @@ class Unpublisher {
         
         queue
             .filter { $0.createdAt < Date.now.addingTimeInterval(-(PUBLISH_DELAY)) }
-            .forEach({ item in
-                sendToRelays(item.nEvent)
-                queue.removeAll { q in
+            .forEach({ [weak self] item in
+                self?.sendToRelays(item.nEvent)
+                self?.queue.removeAll { q in
                     q.cancellationId == item.cancellationId
                 }
             })
