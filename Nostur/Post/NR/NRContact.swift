@@ -11,31 +11,31 @@ import CoreData
 
 class NRContact: ObservableObject, Identifiable, Hashable {
     
-    public class ZappableAttributes: ObservableObject {
-        
-        @Published var isZapped = false
-        
-        var zapState:Contact.ZapState? = nil {
-            didSet {
-                guard zapState != nil else {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.isZapped = false
-                    }
-                    return
-                }
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-                    self.isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
-                }
-            }
-        }
-        
-        init(zapState: Contact.ZapState? = nil) {
-            self.zapState = zapState
-        }
-    }
+//    public class ZappableAttributes: ObservableObject {
+//        
+//        @Published var isZapped = false
+//        
+//        var zapState: ZapState? = nil {
+//            didSet {
+//                guard zapState != nil else {
+//                    DispatchQueue.main.async { [weak self] in
+//                        self?.isZapped = false
+//                    }
+//                    return
+//                }
+//                DispatchQueue.main.async { [weak self] in
+//                    guard let self else { return }
+//                    self.isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
+//                }
+//            }
+//        }
+//        
+//        init(zapState: ZapState? = nil) {
+//            self.zapState = zapState
+//        }
+//    }
     
-    var zappableAttributes:ZappableAttributes
+//    var zappableAttributes: ZappableAttributes
     
     static func == (lhs: NRContact, rhs: NRContact) -> Bool {
         lhs.pubkey == rhs.pubkey
@@ -71,6 +71,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var privateFollow:Bool = false
     var zapperPubkey: String?
     var hasPrivateNote = false
+    var zapState: ZapState?
     
     let contact:Contact // Only touch this in BG context!!!
 
@@ -104,18 +105,17 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         
         self.following = isFollowing(contact.pubkey)
         self.privateFollow = contact.isPrivateFollow
-        self.zappableAttributes = ZappableAttributes(zapState: contact.zapState)
+        self.zapState = contact.zapState
         
         self.hasPrivateNote = _hasPrivateNote()
         
         listenForChanges()
         isFollowingListener()
         listenForNip05()
-        listenForZapState()
     }
     
     private func _hasPrivateNote() -> Bool {
-        return contact.privateNote != nil
+        return contact?.privateNote != nil
     }
     
     private func isFollowingListener() {
@@ -158,17 +158,6 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     }
     
     var subscriptions = Set<AnyCancellable>()
-    
-    private func listenForZapState() {
-        self.contact.zapStateChanged
-            .subscribe(on: DispatchQueue.global())
-            .sink { [weak self] (zapState, _) in
-                guard let self = self else { return }
-                guard zapState != zappableAttributes.zapState else { return }
-                zappableAttributes.zapState = zapState
-            }
-            .store(in: &subscriptions)
-    }
     
     private func listenForNip05() {
         self.contact.nip05updated
@@ -218,7 +207,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                     let lud06 = contact.lud06
                     let lud16 = contact.lud16
                     let zapperPubkey = contact.zapperPubkey
-                    let zapState = contact.zapState
+//                    let zapState = contact.zapState
                     
                     DispatchQueue.main.async { [weak self] in
                         guard let self else { return }
@@ -244,7 +233,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                         self.lud06 = lud06
                         self.lud16 = lud16
                         self.zapperPubkey = zapperPubkey
-                        self.zappableAttributes.zapState = zapState
+//                        self.zappableAttributes.zapState = zapState
                     }
                 }
             }

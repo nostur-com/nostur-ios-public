@@ -21,21 +21,22 @@ class FooterAttributes: ObservableObject {
     @Published var liked: Bool
     @Published var likesCount: Int64
     
-    @Published var zapped = false
     @Published var zapsCount: Int64
     @Published var zapTally: Int64
     
     @Published var bookmarked: Bool
     @Published var hasPrivateNote: Bool
     
-    private var zapState: Event.ZapState?
+    public var zapState: ZapState?
     private var withFooter: Bool
     private var event: Event
+    private var pubkey: String // need for zap info
     private var subscriptions = Set<AnyCancellable>()
     private var id: String
     
     init(replyPFPs: [URL] = [], event: Event, withFooter: Bool = true, repliesCount: Int64 = 0) {
         self.event = event
+        self.pubkey = event.pubkey
         self.id = event.id
         self.withFooter = withFooter
         self.replyPFPs = replyPFPs
@@ -50,7 +51,7 @@ class FooterAttributes: ObservableObject {
         self.likesCount = event.likesCount
         
         self.zapState = withFooter && Self.hasZapReceipt(event) ? .zapReceiptConfirmed : event.zapState
-        self.zapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
+        
         self.zapsCount = event.zapsCount
         self.zapTally = event.zapTally
         
@@ -79,7 +80,7 @@ class FooterAttributes: ObservableObject {
 //            let zapTally = self.event.zapTally
             
             self.zapState = Self.hasZapReceipt(self.event) ? .zapReceiptConfirmed : self.event.zapState
-            let isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
+//            let isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
             
             DispatchQueue.main.async { [weak self] in
                 self?.objectWillChange.send()
@@ -88,7 +89,7 @@ class FooterAttributes: ObservableObject {
                 self?.liked = isLikes
                 self?.bookmarked = isBookmarked
                 self?.hasPrivateNote = hasPrivateNote
-                self?.zapped = isZapped
+//                self?.zapped = isZapped
 //                self.zapsCount = zapsCount
 //                self.zapTally = zapTally
             }
@@ -96,19 +97,15 @@ class FooterAttributes: ObservableObject {
         
     }
     
-    @MainActor public func cancelZap(_ cancellationId:UUID) {
+    @MainActor public func cancelZap(_ cancellationId: UUID) {
         _ = Unpublisher.shared.cancel(cancellationId)
         NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
         NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
-        zapped = false
-        bg().perform {
-            self.zapState = .cancelled
-        }
+        self.zapState = .cancelled
+        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: pubkey, eTag: id, zapState: .cancelled))
     }
     
     private func setupListeners() {
-        zapsListener()
-    
         let id = self.id
         ViewUpdates.shared.eventStatChanged
             .filter { $0.id == id }
@@ -161,18 +158,6 @@ class FooterAttributes: ObservableObject {
             }
             .store(in: &subscriptions)
         
-        event.zapStateChanged
-            .sink { [weak self] zapState in
-                guard let zapState = zapState else { return }
-                
-                let isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(zapState)
-                
-                DispatchQueue.main.async {
-                    self?.objectWillChange.send()
-                    self?.zapped = isZapped
-                }
-            }
-            .store(in: &subscriptions)
         actionListener()
     }
 

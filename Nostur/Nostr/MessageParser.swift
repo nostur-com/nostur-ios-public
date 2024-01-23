@@ -128,8 +128,7 @@ class MessageParser {
                                             nwcSendBalanceRequest()
                                         }
                                         if let ev = try? Event.fetchEvent(id: eventId, context: self.bgQueue) {
-                                            ev.zapState = .none
-                                            ev.zapStateChanged.send(.none)
+                                            ev.zapState = nil
                                         }
                                     }
                                     else {

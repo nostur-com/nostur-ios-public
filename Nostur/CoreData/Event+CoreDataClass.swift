@@ -13,20 +13,7 @@ import Combine
 
 public class Event: NSManagedObject, Identifiable {
     
-    enum ZapState:String {
-        case initiated = "INITIATED"
-        case nwcConfirmed = "NWC_CONFIRMED"
-        case zapReceiptConfirmed = "ZAP_RECEIPT_CONFIRMED"
-        case failed = "FAILED"
-        case cancelled = "CANCELLED" // (by Undo)
-    }
-    
-    var zapState:ZapState? {
-        didSet {
-            zapStateChanged.send(zapState)
-            ViewUpdates.shared.zapStateChanged.send((zapState, self.id))
-        }
-    }
+    var zapState: ZapState?
     var parentEvents: [Event] = []
     
     var isScreenshot: Bool = false // Must use Text

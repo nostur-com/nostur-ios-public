@@ -1004,7 +1004,7 @@ extension Event {
                     }
                     if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
-                        ViewUpdates.shared.zapStateChanged.send((.zapReceiptConfirmed, savedEvent.zappedEventId))
+                        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, eTag: savedEvent.zappedEventId, zapState: .zapReceiptConfirmed))
                     }
                 }
                 if let firstP = event.firstP() {
