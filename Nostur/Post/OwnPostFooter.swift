@@ -17,8 +17,8 @@ import Combine
 class OwnPostAttributes: ObservableObject {
     private let id: String
     var isOwnPost = false // all own accounts, so can undo from quick account switch post too
-    @Published var relaysCount:Int
-    @Published var cancellationId:UUID? = nil
+    @Published var relaysCount: Int
+    @Published var cancellationId: UUID? = nil
     @Published var flags = ""
     
     private var subscriptions =  Set<AnyCancellable>()
@@ -33,7 +33,7 @@ class OwnPostAttributes: ObservableObject {
     }
     
     // If true, still time to Undo
-    var isGoingToSend:Bool {
+    var isGoingToSend: Bool {
         relaysCount == 0 && (cancellationId != nil || flags == "nsecbunker_unsigned" || flags == "awaiting_send")
     }
     

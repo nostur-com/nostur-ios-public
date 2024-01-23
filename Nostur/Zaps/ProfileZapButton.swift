@@ -10,16 +10,16 @@ import SwiftUI
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ProfileZapButton: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var dim:DIMENSIONS
-    private let er:ExchangeRateModel = .shared // Not Observed for performance
+    @EnvironmentObject private var dim: DIMENSIONS
+    private let er: ExchangeRateModel = .shared // Not Observed for performance
     
-    @ObservedObject var contact:NRContact
+    @ObservedObject var contact: NRContact
     public var zapEtag: String?
     
-    @ObservedObject private var ss:SettingsStore = .shared
-    @State private var cancellationId:UUID? = nil
-    @State private var customZapId:UUID? = nil
+    @ObservedObject private var ss: SettingsStore = .shared
     @State private var isZapped = false
+    @State private var cancellationId: UUID? = nil
+    @State private var customZapId: UUID? = nil
     @State private var activeColor = Self.grey
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
@@ -146,7 +146,6 @@ struct ProfileZapButton: View {
 
         bg().perform {
             let bgContact = contact.contact
-            bgContact.zapStateChanged.send((.initiated, zapEtag))
             NWCRequestQueue.shared.ensureNWCconnection()
             guard let cancellationId = cancellationId else { return }
             let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), contact: bgContact, eventId: zapEtag, cancellationId: cancellationId, zapMessage: zapMessage)

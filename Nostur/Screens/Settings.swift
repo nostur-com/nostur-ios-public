@@ -482,6 +482,7 @@ struct Settings: View {
                 
                 HStack {
                     Text("Last optimize: \(SettingsStore.shared.lastMaintenanceTimestamp != 0 ? Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp)).formatted() : "Never")", comment: "Last run: (date) of maintanace")
+                        .font(.caption).lineLimit(1)
                     Spacer()
                     if isOptimizing {
                         ProgressView()

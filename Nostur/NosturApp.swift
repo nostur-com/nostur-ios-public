@@ -19,6 +19,7 @@ struct AppScene: Scene {
     private let ns:NRState = .shared
     private let importer:Importer = .shared
     private let backlog:Backlog = .shared
+    private let cloudSyncManager: CloudSyncManager = .shared
     
     private let puc:LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc:LRUCache2<String, Date> = FailedURLCache.shared
@@ -78,6 +79,7 @@ struct RefreshingAppScene: Scene {
     private let ns:NRState = .shared
     private let importer:Importer = .shared
     private let backlog:Backlog = .shared
+    private let cloudSyncManager: CloudSyncManager = .shared
     
     private let puc:LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc:LRUCache2<String, Date> = FailedURLCache.shared

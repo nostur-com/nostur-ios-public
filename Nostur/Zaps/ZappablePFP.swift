@@ -10,17 +10,14 @@ import Combine
 
 // PFP with animation when zapped
 struct ZappablePFP: View {
-    let pubkey:String
-    var contact:NRContact?
-    var size:CGFloat = 50.0
-    var forceFlat:Bool?
-    @State private var isZapped:Bool = false
-    @State private var subscriptions = Set<AnyCancellable>()
-    
+    let pubkey: String
+    var contact: NRContact?
+    var size: CGFloat = 50.0
     var zapEtag: String?
+    var forceFlat: Bool?
     @State private var isZapped: Bool = false
     @State private var animate = false
-    @State private var opacity:Double = 0.0
+    @State private var opacity: Double = 0.0
     
     var body: some View {
         PFP(pubkey: pubkey, nrContact: contact, size: size, forceFlat: (forceFlat ?? false))

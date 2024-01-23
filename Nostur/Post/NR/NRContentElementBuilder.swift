@@ -293,10 +293,10 @@ struct AttributedStringWithPs: Hashable {
         return hasher.combine(id)
     }
     
-    var input:String
-    var output:NSAttributedString // For selectable text
-    var pTags:[Ptag]
     var event:Event
+    var input: String
+    var output: NSAttributedString // For selectable text
+    var pTags: [Ptag]
     var height: CGFloat // precalculated height
 }
 
@@ -307,10 +307,10 @@ struct MarkdownContentWithPs: Hashable {
         return hasher.combine(id)
     }
     
-    var input:String
-    var output:MarkdownContent
-    var pTags:[Ptag]
     var event:Event
+    var input: String
+    var output: MarkdownContent
+    var pTags: [Ptag]
 }
 
 
