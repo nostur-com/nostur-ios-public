@@ -203,17 +203,16 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public func ping() {
         L.sockets.info("Trying to ping: \(self.url)")
         queue.async { [weak self] in
-            guard let self = self else { return }
-            if webSocketTask == nil {
-                L.sockets.info("🔴🔴 Not connected. ????? \(self.url)")
+            if self?.webSocketTask == nil {
+                L.sockets.info("🔴🔴 Not connected. ????? \(self?.url ?? "")")
                 return
             }
-            self.webSocketTask?.sendPing(pongReceiveHandler: { error in
+            self?.webSocketTask?.sendPing(pongReceiveHandler: { error in
                 if let error {
-                    L.sockets.info("🔴🔴 No pong \(self.url): \(error)")
+                    L.sockets.info("🔴🔴 No pong \(self?.url ?? ""): \(error)")
                 }
                 else {
-                    self.didReceivePong()
+                    self?.didReceivePong()
                 }
             })
         }

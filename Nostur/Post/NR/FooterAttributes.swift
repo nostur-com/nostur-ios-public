@@ -10,6 +10,7 @@ import CoreData
 import Combine
 
 class FooterAttributes: ObservableObject {
+    
     @Published var replyPFPs: [URL] = []
     
     @Published var replied: Bool
@@ -131,20 +132,21 @@ class FooterAttributes: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] change in
                 guard let self else { return }
+                
                 self.objectWillChange.send()
-                if let likes = change.likes {
+                if let likes = change.likes, likes != self.likesCount {
                     self.likesCount = likes
                 }
-                if let replies = change.replies {
+                if let replies = change.replies, replies != self.repliesCount {
                     self.repliesCount = replies
                 }
-                if let reposts = change.reposts {
+                if let reposts = change.reposts, reposts != self.repostsCount {
                     self.repostsCount = reposts
                 }
-                if let zaps = change.zaps {
+                if let zaps = change.zaps, zaps != self.zapsCount {
                     self.zapsCount = zaps
                 }
-                if let zapTally = change.zapTally {
+                if let zapTally = change.zapTally, zapTally != self.zapTally {
                     self.zapTally = zapTally
                 }
 //                if let relaysCount = change.relaysCount {

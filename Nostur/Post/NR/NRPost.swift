@@ -797,7 +797,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .store(in: &subscriptions)
     }
     
+    private var repliesToRootListenerActive = false
     private var relationListenerActive = false
+    
     private func relationListener() {
         guard !relationListenerActive else { return }
         relationListenerActive = true
@@ -1150,8 +1152,8 @@ extension NRPost { // Helpers for grouped replies
     }
     
     private func repliesToRootListener() {
-        guard !relationListenerActive else { return }
-        relationListenerActive = true
+        guard !repliesToRootListenerActive else { return }
+        repliesToRootListenerActive = true
         let id = self.id
         ViewUpdates.shared.eventRelationUpdate
             .filter { $0.id == id && $0.relationType == .replyToRoot }

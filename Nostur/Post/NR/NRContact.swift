@@ -160,16 +160,18 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var subscriptions = Set<AnyCancellable>()
     
     private func listenForNip05() {
-        self.contact.nip05updated
+        let pubkey = self.pubkey
+        ViewUpdates.shared.nip05updated
             .subscribe(on: DispatchQueue.global())
-            .sink { [weak self] (isVerified, nip05, name) in
-                DispatchQueue.main.async { [weak self] in
+            .filter { $0.pubkey == pubkey }
+            .sink { [weak self] nip05update in
+                DispatchQueue.main.async {
                     guard let self else { return }
-                    guard isVerified != self.nip05verified else { return }
+                    guard nip05update.isVerified != self.nip05verified else { return }
                     self.objectWillChange.send()
-                    self.nip05verified = isVerified
-                    self.nip05 = nip05
-                    self.nip05nameOnly = name
+                    self.nip05verified = nip05update.isVerified
+                    self.nip05 = nip05update.nip05
+                    self.nip05nameOnly = nip05update.nameOnly
                 }
             }
             .store(in: &subscriptions)
