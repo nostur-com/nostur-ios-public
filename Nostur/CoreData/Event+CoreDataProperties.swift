@@ -1113,14 +1113,7 @@ extension Event {
                 savedEvent.replyToId = replyToEtag.id
                 
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                if let replyTo = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) {
-                    savedEvent.replyTo = replyTo
-                    replyTo.addToReplies(savedEvent)
-                    replyTo.repliesCount += 1
-//                    replyTo.repliesUpdated.send(replyTo.replies_)
-                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyTo.id, replies: replyTo.replies_))
-                }
-                else if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
+                if let replyTo = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) ?? (try? Event.fetchEvent(id: replyToEtag.id, context: context)) {
                     savedEvent.replyTo = replyTo
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
@@ -1139,30 +1132,16 @@ extension Event {
                 if (savedEvent.replyToId == nil) {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                 }
-                if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) {
+                if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (try? Event.fetchEvent(id: replyToRootEtag.id, context: context)) {
                     savedEvent.replyToRoot = replyToRoot
-//                    replyToRoot.replyToRootUpdated.send(savedEvent)
+                    
                     ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: replyToRoot))
                     if (savedEvent.replyToId == savedEvent.replyToRootId) {
                         savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         replyToRoot.addToReplies(savedEvent)
                         replyToRoot.repliesCount += 1
-//                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
                         ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyToRoot.id, replies: replyToRoot.replies_))
-//                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
                         ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyTo, id: savedEvent.id, event: replyToRoot))
-                    }
-                }
-                else if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
-                    savedEvent.replyToRoot = replyToRoot
-//                    replyToRoot.replyToRootUpdated.send(savedEvent)
-                    ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: replyToRoot.id, event: savedEvent))
-                    if (savedEvent.replyToId == savedEvent.replyToRootId) {
-                        savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                        replyToRoot.addToReplies(savedEvent)
-                        replyToRoot.repliesCount += 1
-//                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
-                        ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyToRoot.id, replies: replyToRoot.replies_))
                     }
                 }
             }
