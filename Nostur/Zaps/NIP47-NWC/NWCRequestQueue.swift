@@ -198,7 +198,7 @@ class NWCRequestQueue: ObservableObject {
         self.waitingRequests.removeValue(forKey: byId)
     }
     
-    public func removeRequest(byCancellationId cancellationId:UUID) {
+    public func removeRequest(byCancellationId cancellationId: UUID) {
         if let r = self.waitingRequests.first (where: { rId, qR in
             qR.cancellationId == cancellationId
         }) {

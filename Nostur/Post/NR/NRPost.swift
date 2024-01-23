@@ -305,7 +305,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var eventUrl: URL?
     var mostRecentId: String?
     
-    init(event: Event, withFooter:Bool = true, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false, isScreenshot:Bool = false, isPreview:Bool = false, cancellationId:UUID? = nil) {
+    init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isScreenshot: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil) {
         var isAwaiting = false
         
         self.event = event // Only touch this in BG context!!!
@@ -608,7 +608,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .filter { $0.id == id }
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] event in
-                guard let self = self else { return }
+                guard let self else { return }
                 
                 self.relays = event.relays
                 let relaysCount = event.relays.split(separator: " ").count
@@ -616,10 +616,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 let cancellationId = event.cancellationId
 
                 DispatchQueue.main.async { [weak self] in
-                    self?.ownPostAttributes.objectWillChange.send()
-                    self?.ownPostAttributes.relaysCount = relaysCount
-                    self?.ownPostAttributes.flags = flags
-                    self?.ownPostAttributes.cancellationId = cancellationId
+                    guard let self else { return }
+                    self.ownPostAttributes.objectWillChange.send()
+                    self.ownPostAttributes.relaysCount = relaysCount
+                    self.ownPostAttributes.flags = flags
+                    self.ownPostAttributes.cancellationId = cancellationId
                 }
             }
             .store(in: &subscriptions)
@@ -1286,12 +1287,13 @@ extension NRPost { // Helpers for grouped replies
             
             self.event?.repliesCount = Int64(replies.count) // Fix wrong count in db
             DispatchQueue.main.async { [weak self] in
-                self?.objectWillChange.send()
-                self?.replies = replies
-                self?.groupedRepliesSorted = groupedRepliesSorted
-                self?.groupedRepliesNotWoT = groupedRepliesNotWoT
-                self?.footerAttributes.objectWillChange.send()
-                self?.footerAttributes.repliesCount = Int64(replies.count)
+                guard let self else { return }
+                self.objectWillChange.send()
+                self.replies = replies
+                self.groupedRepliesSorted = groupedRepliesSorted
+                self.groupedRepliesNotWoT = groupedRepliesNotWoT
+                self.footerAttributes.objectWillChange.send()
+                self.footerAttributes.repliesCount = Int64(replies.count)
             }
         }
     }
