@@ -41,7 +41,7 @@ struct RepostButton: View {
             .onTapGesture {
 //                guard !footerAttributes.reposted else { return }
                 guard let mainEvent = nrPost.mainEvent else { return }
-                sendNotification(.createNewQuoteOrRepost, nrPost.mainEvent)
+                sendNotification(.createNewQuoteOrRepost, mainEvent)
             }
     }
 }

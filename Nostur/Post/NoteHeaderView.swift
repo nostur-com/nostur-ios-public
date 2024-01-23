@@ -168,7 +168,8 @@ struct PostHeader: View {
 //        }
         .onAppear {
             if contact.metadata_created_at == 0 {
-                EventRelationsQueue.shared.addAwaitingContact(contact.contact, debugInfo: "NoteHeaderView.001")
+                guard let bgContact = contact.contact else { return }
+                EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "NoteHeaderView.001")
                 QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
             }
         }
@@ -200,7 +201,7 @@ struct PostHeader: View {
                         contact.couldBeImposter = similarPFP ? 1 : 0
                         bg().perform {
                             guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
-                            contact.contact.couldBeImposter = similarPFP ? 1 : 0
+                            contact.contact?.couldBeImposter = similarPFP ? 1 : 0
 //                            DataProvider.shared().bgSave()
                         }
                     }
@@ -299,7 +300,8 @@ struct NameAndNip: View {
             .layoutPriority(2)
             .onAppear {
                 if contact.metadata_created_at == 0 {
-                    EventRelationsQueue.shared.addAwaitingContact(contact.contact, debugInfo: "NameAndNip.001")
+                    guard let contact = contact.contact else { return }
+                    EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "NameAndNip.001")
                     QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
                 }
             }

@@ -28,8 +28,8 @@ struct ProfileTabs: View {
                     case "Likes":
                         ProfileLikesView(pubkey: pubkey)
                     case "Zaps":
-                        if #available(iOS 16.0, *) {
-                            ProfileZaps(pubkey: pubkey, contact: nrContact.mainContact)
+                        if #available(iOS 16.0, *), let mainContact = nrContact.mainContact {
+                            ProfileZaps(pubkey: pubkey, contact: mainContact)
                         }
                         else {
                             EmptyView()

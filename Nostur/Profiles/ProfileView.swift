@@ -261,7 +261,9 @@ struct ProfileView: View {
                                 .opacity(lastSeen != nil ? 1.0 : 0)
                             
                             HStack {
-                                ContactPrivateNoteToggle(contact: nrContact.mainContact)
+                                if let mainContact = nrContact.mainContact {
+                                    ContactPrivateNoteToggle(contact: mainContact)
+                                }
                                 Menu {
                                     Button {
                                         UIPasteboard.general.string = npub(nrContact.pubkey)
@@ -376,17 +378,17 @@ struct ProfileView: View {
         }
         .task { [weak nrContact] in
             bg().perform {
-                guard let nrContact else { return }
-                if (NIP05Verifier.shouldVerify(nrContact.contact)) {
-                    NIP05Verifier.shared.verify(nrContact.contact)
+                guard let nrContact, let contact = nrContact.contact else { return }
+                if (NIP05Verifier.shouldVerify(contact)) {
+                    NIP05Verifier.shared.verify(contact)
                 }
             }
         }
         .onChange(of: nrContact.nip05) { [weak nrContact] nip05 in
             bg().perform {
-                guard let nrContact else { return }
-                if (NIP05Verifier.shouldVerify(nrContact.contact)) {
-                    NIP05Verifier.shared.verify(nrContact.contact)
+                guard let nrContact, let contact = nrContact.contact else { return }
+                if (NIP05Verifier.shouldVerify(contact)) {
+                    NIP05Verifier.shared.verify(contact)
                 }
             }
         }

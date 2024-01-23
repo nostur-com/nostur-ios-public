@@ -73,7 +73,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var hasPrivateNote = false
     var zapState: ZapState?
     
-    let contact:Contact // Only touch this in BG context!!!
+    var contact: Contact? // Only touch this in BG context!!!
 
     init(contact: Contact, following:Bool? = nil) {
         self.contact = contact
@@ -240,16 +240,17 @@ class NRContact: ObservableObject, Identifiable, Hashable {
             .store(in: &subscriptions)
     }
     
-    var mainContact:Contact {
-        DataProvider.shared().viewContext.object(with: contact.objectID) as! Contact
+    var mainContact: Contact? {
+        guard let contact = self.contact else { return nil }
+        return DataProvider.shared().viewContext.object(with: contact.objectID) as? Contact
     }
     
     @MainActor public func setFixedName(_ name:String) {
         guard name != self.fixedName else { return }
         self.objectWillChange.send()
         self.fixedName = name
-        bg().perform {
-            self.contact.fixedName = name
+        bg().perform { [weak self] in
+            self?.contact?.fixedName = name
         }
     }
     
@@ -262,8 +263,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         bg().perform { [weak self] in
             guard let self else { return }
             guard let account = account() else { return }
-            self.contact.isPrivateFollow = privateFollow 
-            self.contact.couldBeImposter = 0
+            self.contact?.isPrivateFollow = privateFollow
+            self.contact?.couldBeImposter = 0
             account.followingPubkeys.insert(self.pubkey)
             DataProvider.shared().bgSave()
             account.publishNewContactList()
@@ -284,7 +285,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         bg().perform { [weak self] in
             guard let self else { return }
             guard let account = account() else { return }
-            self.contact.isPrivateFollow = false
+            self.contact?.isPrivateFollow = false
             account.followingPubkeys.remove(self.pubkey)
             DataProvider.shared().bgSave()
             account.publishNewContactList()

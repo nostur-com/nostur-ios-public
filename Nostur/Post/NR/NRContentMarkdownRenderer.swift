@@ -46,9 +46,9 @@ struct NRContentMarkdownRenderer: View {
                     }
                     .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             ) { pubkey in
-                
                 bg().perform {
-                    let reparsed = NRTextParser.shared.parseMD(markdownContentWithPs.event, text: markdownContentWithPs.input)
+                    guard let event = markdownContentWithPs.event else { return }
+                    let reparsed = NRTextParser.shared.parseMD(event, text: markdownContentWithPs.input)
                     DispatchQueue.main.async {
                         L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output.renderPlainText())")
                         if self.text != reparsed.output {

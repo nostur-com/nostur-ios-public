@@ -410,9 +410,9 @@ struct ProfileOverlayCard: View {
         }
         .onChange(of: contact.nip05) { [weak contact] _ in
             bg().perform {
-                guard let contact else { return }
-                if (NIP05Verifier.shouldVerify(contact.contact)) {
-                    NIP05Verifier.shared.verify(contact.contact)
+                guard let contact = contact?.contact else { return }
+                if (NIP05Verifier.shouldVerify(contact)) {
+                    NIP05Verifier.shared.verify(contact)
                 }
             }
         }
