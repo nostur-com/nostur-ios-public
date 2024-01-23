@@ -508,7 +508,9 @@ extension Event {
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
     static func updateLikeCountCache(_ event:Event, content:String, context:NSManagedObjectContext) throws -> Bool {
         switch content {
-            case "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩","⚡️","🔥","💥","🚀":
+            case "-": // (down vote)
+                break
+            default:
                 // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
                 if let lastEtag = event.lastE() {
                     let request = NSFetchRequest<Event>(entityName: "Event")
@@ -518,23 +520,17 @@ extension Event {
                     
                     if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-//                        reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
                     }
                     else if let reactingToEvent = try context.fetch(request).first {
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-//                        reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
                     }
                 }
-            case "-":
-                print("downvote")
-            default:
-                break
         }
         return true
     }
