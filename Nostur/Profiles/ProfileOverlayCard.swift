@@ -448,7 +448,7 @@ struct ProfileOverlayCard: View {
         .onDisappear { [weak contact] in
             bg().perform {
                 guard let contact else { return }
-                contact.contact.zapState = .none
+                contact.contact?.zapState = nil
             }
         }
     }

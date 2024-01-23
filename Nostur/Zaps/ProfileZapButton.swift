@@ -19,6 +19,7 @@ struct ProfileZapButton: View {
     @ObservedObject private var ss:SettingsStore = .shared
     @State private var cancellationId:UUID? = nil
     @State private var customZapId:UUID? = nil
+    @State private var isZapped = false
     @State private var activeColor = Self.grey
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
@@ -44,19 +45,21 @@ struct ProfileZapButton: View {
                             NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
                             self.cancellationId = nil
                             // TODO: MOVE state to contact (maybe increase lightning ring size)
-//                            nrPost.zapState = .cancelled
                             activeColor = Self.grey
-                            contact.zappableAttributes.isZapped = false
+                            isZapped = false
+                            contact.zapState = .cancelled
                             bg().perform {
-                                contact.contact.zapState = .cancelled
-                                contact.contact.zapStateChanged.send((.cancelled, zapEtag))
+                                contact.contact?.zapState = .cancelled
+                                if let zapEtag {
+                                    ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: contact.pubkey, eTag: zapEtag, zapState: .cancelled))
+                                }
                             }
                             L.og.info("⚡️ Zap cancelled")
                         }
                 }
             }
             // TODO elsif zap .failed .overlay error !
-            else if contact.zappableAttributes.isZapped {
+            else if isZapped {
                 HStack {
                     Text("Zapped \(Image(systemName: "bolt.fill"))", comment: "Text in zap button after zapping")
                         .padding(.horizontal, 10)
@@ -116,6 +119,9 @@ struct ProfileZapButton: View {
                                    }
                         }
                     )
+                    .onAppear {
+                        isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(contact.zapState)
+                    }
             }
         }
         else {
@@ -135,7 +141,8 @@ struct ProfileZapButton: View {
             activeColor = .yellow
         }
         cancellationId = UUID()
-        contact.zappableAttributes.isZapped = true
+        SoundManager.shared.playThunderzap()
+        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: contact.pubkey, eTag: zapEtag, zapState: .initiated))
 
         bg().perform {
             let bgContact = contact.contact

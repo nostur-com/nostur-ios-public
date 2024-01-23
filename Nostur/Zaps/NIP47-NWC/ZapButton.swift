@@ -42,6 +42,8 @@ struct ZapButtonInner: View {
     
     @State private var triggerStrike = false
     
+    @State private var isZapped = false
+    
     private var isFirst:Bool
     private var isLast:Bool
     private var theme:Theme
@@ -56,7 +58,7 @@ struct ZapButtonInner: View {
     
     private var icon:String {
         return if isLoading { "hourglass.tophalf.filled" }
-               else if (footerAttributes.zapped || cancellationId != nil) { "bolt.fill"}
+               else if (isZapped || cancellationId != nil) { "bolt.fill"}
                else { "bolt" }
     }
     
@@ -73,7 +75,7 @@ struct ZapButtonInner: View {
                 //                            .offset(x: 18)
             }
             .padding(.trailing, 34)
-            .foregroundColor(footerAttributes.zapped ? .yellow : theme.footerButtons)
+            .foregroundColor(isZapped ? .yellow : theme.footerButtons)
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .simultaneousGesture(
@@ -96,7 +98,7 @@ struct ZapButtonInner: View {
                                 triggerStrike = false
                                 SoundManager.shared.stop()
                             }
-                            else if !footerAttributes.zapped, cancellationId == nil {
+                            else if !isZapped, cancellationId == nil {
                                 triggerStrike = true
                             }
                         }
@@ -116,13 +118,20 @@ struct ZapButtonInner: View {
                     GeometryReader { geo in
                         Color.clear
                             .onAppear {
-                                guard !footerAttributes.zapped else { return }
+                                guard !isZapped else { return }
                                 guard cancellationId == nil else { return }
                                 guard let contact = nrPost.contact?.contact else { return }
                                 self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact)
                             }
                     }
                 }
+            }
+            .onAppear {
+                isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(footerAttributes.zapState)
+            }
+            .onReceive(ViewUpdates.shared.zapStateChanged.receive(on: RunLoop.main)) { zapStateChange in
+                guard nrPost.id == zapStateChange.eTag else { return }
+                isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
             }
     }
     
@@ -138,8 +147,9 @@ struct ZapButtonInner: View {
             activeColor = .yellow
         }
         cancellationId = UUID()
-        footerAttributes.zapped = true
+        isZapped = true
         SoundManager.shared.playThunderzap()
+        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrPost.pubkey, eTag: nrPost.id, zapState: .initiated))
         
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
@@ -152,6 +162,7 @@ struct ZapButtonInner: View {
     private func cancelZap(_ cancellationId:UUID) {
         self.cancellationId = nil
         footerAttributes.cancelZap(cancellationId)
+        isZapped = false
         activeColor = theme.footerButtons
         L.og.info("⚡️ Zap cancelled")
         bg().perform {

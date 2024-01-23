@@ -118,8 +118,7 @@ class NWCRequestQueue: ObservableObject {
                     
                     for f in failedZaps  {
                         if let event = f.event {
-                            event.zapState = .none
-                            event.zapStateChanged.send(.none)
+                            event.zapState = nil
                         }
                     }
                 }
@@ -136,8 +135,7 @@ class NWCRequestQueue: ObservableObject {
                     
                     for t in timeoutZaps  {
                         if let event = t.event {
-                            event.zapState = .none
-                            event.zapStateChanged.send(.none)
+                            event.zapState = nil
                         }
                     }
                 }

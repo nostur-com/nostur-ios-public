@@ -13,11 +13,12 @@ struct ZappablePFP: View {
     let pubkey:String
     var contact:NRContact?
     var size:CGFloat = 50.0
-    var zapEtag:String?
     var forceFlat:Bool?
     @State private var isZapped:Bool = false
     @State private var subscriptions = Set<AnyCancellable>()
     
+    var zapEtag: String?
+    @State private var isZapped: Bool = false
     @State private var animate = false
     @State private var opacity:Double = 0.0
     
@@ -61,36 +62,15 @@ struct ZappablePFP: View {
             }
             .onAppear {
                 guard let contact = contact else { return }
-                bg().perform {
-                    if let zapState = contact.contact.zapState {
-                        if [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState) {
-                            DispatchQueue.main.async {
-                                contact.zappableAttributes.isZapped = true
-                                isZapped = true
-                            }
-                        }
-                        else {
-                            DispatchQueue.main.async {
-                                isZapped = false
-                                contact.zappableAttributes.isZapped = false
-                            }
-                        }
-                    }
-                    contact.contact.zapStateChanged
-                        .sink { (zapState, zapEtag) in
-                            DispatchQueue.main.async {
-                                if let zapState = zapState,
-//                                   let zapEtag = zapEtag,
-                                   [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState) {
-                                    isZapped = true
-                                }
-                                else {
-                                    isZapped = false
-                                }
-                            }
-                        }
-                        .store(in: &subscriptions)
-                }
+                guard let zapState = contact.zapState else { return }
+
+                isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState)
+            }
+            .onReceive(ViewUpdates.shared.zapStateChanged.receive(on: RunLoop.main)) { zapStateChange in
+                guard let thisEtag = self.zapEtag else { return }
+                guard thisEtag == zapStateChange.eTag else { return }
+                
+                isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
             }
 //            .transaction { t in t.animation = nil }
 //            .transaction { t in
@@ -119,28 +99,28 @@ struct ZappablePreviews: View {
             if let contact = contact1 {
                 ZappablePFP(pubkey: contact.pubkey, contact: contact)
                     .onTapGesture {
-                        contact.zappableAttributes.zapState = .initiated
+                        contact.zapState = .initiated
                     }
             }
             
             if let contact = contact2 {
                 ZappablePFP(pubkey: contact.pubkey, contact: contact)
                     .onTapGesture {
-                        contact.zappableAttributes.zapState = .initiated
+                        contact.zapState = .initiated
                     }
             }
             
             if let contact = contact3 {
                 ZappablePFP(pubkey: contact.pubkey, contact: contact)
                     .onTapGesture {
-                        contact.zappableAttributes.zapState = .initiated
+                        contact.zapState = .initiated
                     }
             }
             
             if let contact = contact4 {
                 ZappablePFP(pubkey: contact.pubkey, contact: contact)
                     .onTapGesture {
-                        contact.zappableAttributes.zapState = .initiated
+                        contact.zapState = .initiated
                     }
             }
         }

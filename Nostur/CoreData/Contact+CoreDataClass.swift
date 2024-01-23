@@ -11,17 +11,8 @@ import CoreData
 import Combine
 
 public class Contact: NSManagedObject {
-    var zapStateChanged = PassthroughSubject<(ZapState?, ZapEtag?), Never>()
-        
-    public enum ZapState:String {
-        case initiated = "INITIATED"
-        case nwcConfirmed = "NWC_CONFIRMED"
-        case zapReceiptConfirmed = "ZAP_RECEIPT_CONFIRMED"
-        case failed = "FAILED"
-        case cancelled = "CANCELLED" // (by Undo)
-    }
-    
-    var zapState:ZapState?
+
+    var zapState: ZapState?
     
     func followsYou() -> Bool {
         guard let clEvent = clEvent else { return false }

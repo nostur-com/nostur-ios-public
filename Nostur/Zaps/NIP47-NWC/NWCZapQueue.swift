@@ -167,11 +167,11 @@ class Zap {
                     // Revert zap state
                     if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: eventId) {
                         L.og.info("Revert from queue")
-                        event.zapStateChanged.send(.none)
+                        event.zapState = nil
                     }
                     else if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
                         L.og.info("Revert from DB")
-                        event.zapStateChanged.send(.none)
+                        event.zapState = nil
                     }
                 }
                 else {

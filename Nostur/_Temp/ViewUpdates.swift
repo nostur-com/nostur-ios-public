@@ -25,7 +25,7 @@ class ViewUpdates {
         bookmarkUpdates.send(BookmarkUpdate(id: "3a72941da6030f155b6e5209e96057aec77ab3851a60bce61a36227c327c5322", isBookmarked: Bool.random()))
     }
     
-    var zapStateChanged = PassthroughSubject<(ZapState?, ZapEtag?), Never>()
+    var zapStateChanged = PassthroughSubject<ZapStateChange, Never>()
     var eventStatChanged = PassthroughSubject<EventStatChange, Never>()
     var repliesUpdated = PassthroughSubject<EventRepliesChange, Never>()
     var postDeleted = PassthroughSubject<(toDelete: String, deletedBy: String), Never>()
@@ -33,6 +33,12 @@ class ViewUpdates {
     var contactUpdated = PassthroughSubject<Contact, Never>()
     var nip05updated = PassthroughSubject<(pubkey: String, isVerified: Bool, nip05: String, nameOnly: String), Never>() //
     var updateNRPost = PassthroughSubject<Event, Never>()
+}
+
+struct ZapStateChange {
+    let pubkey: String
+    var eTag: String?
+    var zapState: ZapState?
 }
 
 struct EventRelationUpdate {
