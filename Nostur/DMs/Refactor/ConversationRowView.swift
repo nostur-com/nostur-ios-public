@@ -19,8 +19,8 @@ struct ConversationRowView: View {
         HStack(alignment: .top) {
             PFP(pubkey: conv.contactPubkey, nrContact: conv.nrContact)
                 .onAppear {
-                    if let nrContact = conv.nrContact, nrContact.metadata_created_at == 0 {
-                        EventRelationsQueue.shared.addAwaitingContact(nrContact.contact)
+                    if let nrContact = conv.nrContact, nrContact.metadata_created_at == 0, let contact = nrContact.contact {
+                        EventRelationsQueue.shared.addAwaitingContact(contact)
                         QueuedFetcher.shared.enqueue(pTag: conv.contactPubkey)
                     }
                 }
@@ -61,7 +61,8 @@ struct ConversationRowView: View {
                     }
                     .onAppear {
                         if contact.metadata_created_at == 0 {
-                            EventRelationsQueue.shared.addAwaitingContact(contact.contact, debugInfo: "ConversationRowView.001")
+                            guard let contact = contact.contact else { return }
+                            EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "ConversationRowView.001")
                             QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
                         }
                     }
@@ -95,7 +96,7 @@ struct ConversationRowView: View {
                                     contact.couldBeImposter = similarPFP ? 1 : 0
                                     bg().perform {
                                         guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
-                                        contact.contact.couldBeImposter = similarPFP ? 1 : 0
+                                        contact.contact?.couldBeImposter = similarPFP ? 1 : 0
             //                            DataProvider.shared().bgSave()
                                     }
                                 }

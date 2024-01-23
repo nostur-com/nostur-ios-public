@@ -233,7 +233,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
-    weak var event: Event? // Only touch this in BG context!!!
+    var event: Event? // Only touch this in BG context!!!
     
     var missingPs:Set<String> // missing or have no contact info
     var fastTags:[(String, String, String?, String?)] = []

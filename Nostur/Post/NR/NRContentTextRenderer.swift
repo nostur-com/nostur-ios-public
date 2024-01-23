@@ -59,9 +59,9 @@ struct NRContentTextRendererInner: View {
                             }
                             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
                     ) { pubkey in
-                        
                         bg().perform {
-                            let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
+                            guard let event = attributedStringWithPs.event else { return }
+                            let reparsed = NRTextParser.shared.parseText(event, text: attributedStringWithPs.input)
                             if self.text != reparsed.output {
                                 L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                                 DispatchQueue.main.async {
@@ -85,9 +85,9 @@ struct NRContentTextRendererInner: View {
                             }
                             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
                     ) { pubkey in
-                        
                         bg().perform {
-                            let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
+                            guard let event = attributedStringWithPs.event else { return }
+                            let reparsed = NRTextParser.shared.parseText(event, text: attributedStringWithPs.input)
                             if self.text != reparsed.output {
                                 L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                                 DispatchQueue.main.async {

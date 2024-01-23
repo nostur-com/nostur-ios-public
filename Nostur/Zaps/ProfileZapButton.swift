@@ -145,7 +145,7 @@ struct ProfileZapButton: View {
         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: contact.pubkey, eTag: zapEtag, zapState: .initiated))
 
         bg().perform {
-            let bgContact = contact.contact
+            guard let bgContact = contact.contact else { return }
             NWCRequestQueue.shared.ensureNWCconnection()
             guard let cancellationId = cancellationId else { return }
             let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), contact: bgContact, eventId: zapEtag, cancellationId: cancellationId, zapMessage: zapMessage)
