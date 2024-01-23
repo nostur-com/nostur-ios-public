@@ -219,7 +219,7 @@ class Importer {
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays)
                                 
                                 if let kind6firstQuote = kind6firstQuote {
-                                    kind6firstQuote.repostsCount = 1
+//                                    kind6firstQuote.repostsCount = 1
                                     NotificationsViewModel.shared.checkNeedsUpdate(kind6firstQuote)
                                 }
                             }
@@ -434,7 +434,7 @@ class Importer {
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays)
                                 
                                 if let kind6firstQuote = kind6firstQuote {
-                                    kind6firstQuote.repostsCount = 1
+//                                    kind6firstQuote.repostsCount = 1 
                                     NotificationsViewModel.shared.checkNeedsUpdate(kind6firstQuote)
                                 }
                             }
