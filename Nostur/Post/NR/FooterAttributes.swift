@@ -107,44 +107,57 @@ class FooterAttributes: ObservableObject {
     }
     
     private func setupListeners() {
-        repostsListener()
-        likesListener()
         zapsListener()
-        actionListener()
-    }
     
-    private func repostsListener() {
-        event.repostsDidChange
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] reposts in // Int64
-                self?.objectWillChange.send()
-                self?.repostsCount = reposts
-            }
-            .store(in: &subscriptions)
-    }
-    
-    private func likesListener() {
-        event.likesDidChange
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] likes in
-                self?.objectWillChange.send()
-                self?.likesCount = likes
+        let id = self.id
+        ViewUpdates.shared.eventStatChanged
+            .filter { $0.id == id }
+//            .debounce(for: .seconds(1), scheduler: DispatchQueue.main) // Adjust the debounce time as needed
+//                .scan(nil) { (accumulated: EventStatChange?, change: EventStatChange) -> EventStatChange? in
+//                    if let acc = accumulated, acc.id == change.id {
+//                        var mergedChange = acc
+//                        mergedChange.replies = change.replies ?? acc.replies
+//                        mergedChange.replies = change.replies ?? acc.replies
+//                        mergedChange.likes = change.likes ?? acc.likes
+//                        mergedChange.zaps = change.zaps ?? acc.zaps
+//                        mergedChange.zapTally = change.zapTally ?? acc.zapTally
+//                        return mergedChange
+//                    }
+//                    return change
+//                }
+//                .compactMap { $0 } // Filter out nil values
+//                .sink { combinedChange in
+//                    // Handle the single combined change here
+//                }
+//                .store(in: &subscriptions) // Assuming you have a subscriptions array
+//            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] change in
+                guard let self else { return }
+                self.objectWillChange.send()
+                if let likes = change.likes {
+                    self.likesCount = likes
+                }
+                if let replies = change.replies {
+                    self.repliesCount = replies
+                }
+                if let reposts = change.reposts {
+                    self.repostsCount = reposts
+                }
+                if let zaps = change.zaps {
+                    self.zapsCount = zaps
+                }
+                if let zapTally = change.zapTally {
+                    self.zapTally = zapTally
+                }
+//                if let relaysCount = change.relaysCount {
+//                    self.relays = relaysCount
+//                }
                 
                 // Also update own like (or slow? disbaled)
 //                if !self.liked && isLiked() { // nope. main bg thread mismatch
 //                    self.liked = true
 //                }
-            }
-            .store(in: &subscriptions)
-    }
-    
-    private func zapsListener() {
-        event.zapsDidChange
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] (count, tally) in
-                self?.objectWillChange.send()
-                self?.zapTally = tally
-                self?.zapsCount = count
             }
             .store(in: &subscriptions)
         
@@ -160,7 +173,9 @@ class FooterAttributes: ObservableObject {
                 }
             }
             .store(in: &subscriptions)
+        actionListener()
     }
+
     
     private func actionListener() {
         receiveNotification(.postAction)

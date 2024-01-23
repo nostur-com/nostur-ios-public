@@ -286,7 +286,7 @@ extension Contact : Identifiable {
                     contact.lud06 = metaData.lud06
                     contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                     contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
-                    contact.contactUpdated.send(contact)
+                    ViewUpdates.shared.contactUpdated.send(contact)
                     Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
                     
                     
@@ -340,14 +340,14 @@ extension Contact : Identifiable {
                 waitingEvent.objectWillChange.send() // Needed for zaps on notification screen
                 if waitingEvent.contact == nil {
                     waitingEvent.contact = contact
-                    waitingEvent.contactUpdated.send(contact)
+                    ViewUpdates.shared.contactUpdated.send(contact)
                 }
             }
             if let tagsSerialized = waitingEvent.tagsSerialized, tagsSerialized.contains(serializedP(contact.pubkey)) {
                 waitingEvent.objectWillChange.send()
                 if !waitingEvent.contacts_.contains(contact) {
                     waitingEvent.addToContacts(contact)
-                    waitingEvent.contactsUpdated.send(waitingEvent.contacts_)
+//                    waitingEvent.contactsUpdated.send(waitingEvent.contacts_) // TODO: Not used anywhere???
                 }
             }
         }
@@ -365,6 +365,7 @@ extension Contact : Identifiable {
                     zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
                     zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
                     zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
                     L.og.info("⚡️👍 zap \(zap.id) verified after fetching contact \(contact.pubkey)")
                 }
             }

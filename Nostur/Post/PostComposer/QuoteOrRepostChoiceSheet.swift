@@ -43,7 +43,8 @@ struct QuoteOrRepostChoiceSheet: View {
                                     savedEvent.sig = signedEvent.signature
                                     savedEvent.flags = "awaiting_send"
                                     savedEvent.cancellationId = cancellationId
-                                    savedEvent.updateNRPost.send(savedEvent)
+//                                    savedEvent.updateNRPost.send(savedEvent)
+                                    ViewUpdates.shared.updateNRPost.send(savedEvent)
                                     DispatchQueue.main.async {
                                         Unpublisher.shared.publishNow(originalEvent.toNEvent()) // publish original
                                         _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)

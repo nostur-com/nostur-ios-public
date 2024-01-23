@@ -518,13 +518,15 @@ extension Event {
                     
                     if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-                        reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
+//                        reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
+                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
                     }
                     else if let reactingToEvent = try context.fetch(request).first {
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-                        reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
+//                        reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
+                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
                     }
@@ -547,11 +549,13 @@ extension Event {
             
             if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
                 repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+//                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
             }
             else if let repostedEvent = try context.fetch(request).first {
                 repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+//                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
             }
         }
         return true
@@ -566,7 +570,8 @@ extension Event {
             request.fetchLimit = 1
             
             if let reactingToEvent = try context.fetch(request).first {
-                reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
+//                reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                 event.reactionTo = reactingToEvent
                 event.reactionToId = reactingToEvent.id
             }
@@ -616,7 +621,8 @@ extension Event {
         if let zappedEvent = zap.zappedEvent {
             zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
             zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
-            zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
+//            zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
         }
         return true
     }
@@ -892,7 +898,8 @@ extension Event {
                 let uniqueRelays = Set(existingRelays + newRelays)
                 if uniqueRelays.count > existingRelays.count {
                     event.relays = uniqueRelays.joined(separator: " ")
-                    event.relaysUpdated.send(event.relays)
+//                    event.relaysUpdated.send(event.relays)
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: event.id, relaysCount: event.relays.split(separator: " ").count))
                     do {
                         try bg.save()
                     }
@@ -907,7 +914,8 @@ extension Event {
                 let uniqueRelays = Set(existingRelays + newRelays)
                 if uniqueRelays.count > existingRelays.count {
                     event.relays = uniqueRelays.joined(separator: " ")
-                    event.relaysUpdated.send(event.relays)
+//                    event.relaysUpdated.send(event.relays)
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: event.id, relaysCount: event.relays.split(separator: " ").count))
                     do {
                         try bg.save()
                     }
@@ -1000,7 +1008,7 @@ extension Event {
                     }
                     if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
-                        savedEvent.zappedEvent?.zapStateChanged.send(.zapReceiptConfirmed)
+                        ViewUpdates.shared.zapStateChanged.send((.zapReceiptConfirmed, savedEvent.zappedEventId))
                     }
                 }
                 if let firstP = event.firstP() {
@@ -1045,12 +1053,14 @@ extension Event {
                     if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
                         savedEvent.firstQuote = repostedEvent
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+//                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
                     else if let repostedEvent = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                         savedEvent.firstQuote = repostedEvent
                         repostedEvent.repostsCount += 1
-                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+//                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
                 }
                 
@@ -1076,7 +1086,8 @@ extension Event {
                     
                     dbArticle.addToReplies(savedEvent)
                     dbArticle.repliesCount += 1
-                    dbArticle.repliesUpdated.send(dbArticle.replies_)
+//                    dbArticle.repliesUpdated.send(dbArticle.replies_)
+                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: dbArticle.id, replies: dbArticle.replies_))
                 }
                 else {
                     // we don't have the article yet, store aTag in replyToId
@@ -1110,13 +1121,15 @@ extension Event {
                     savedEvent.replyTo = replyTo
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
-                    replyTo.repliesUpdated.send(replyTo.replies_)
+//                    replyTo.repliesUpdated.send(replyTo.replies_)
+                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyTo.id, replies: replyTo.replies_))
                 }
                 else if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
                     savedEvent.replyTo = replyTo
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
-                    replyTo.repliesUpdated.send(replyTo.replies_)
+//                    replyTo.repliesUpdated.send(replyTo.replies_)
+                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyTo.id, replies: replyTo.replies_))
                 }
             }
             
@@ -1132,23 +1145,28 @@ extension Event {
                 }
                 if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) {
                     savedEvent.replyToRoot = replyToRoot
-                    replyToRoot.replyToRootUpdated.send(savedEvent)
+//                    replyToRoot.replyToRootUpdated.send(savedEvent)
+                    ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: replyToRoot))
                     if (savedEvent.replyToId == savedEvent.replyToRootId) {
                         savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         replyToRoot.addToReplies(savedEvent)
                         replyToRoot.repliesCount += 1
-                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
-                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
+//                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
+                        ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyToRoot.id, replies: replyToRoot.replies_))
+//                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
+                        ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyTo, id: savedEvent.id, event: replyToRoot))
                     }
                 }
                 else if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                     savedEvent.replyToRoot = replyToRoot
-                    replyToRoot.replyToRootUpdated.send(savedEvent)
+//                    replyToRoot.replyToRootUpdated.send(savedEvent)
+                    ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: replyToRoot.id, event: savedEvent))
                     if (savedEvent.replyToId == savedEvent.replyToRootId) {
                         savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         replyToRoot.addToReplies(savedEvent)
                         replyToRoot.repliesCount += 1
-                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
+//                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
+                        ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyToRoot.id, replies: replyToRoot.replies_))
                     }
                 }
             }
@@ -1162,7 +1180,8 @@ extension Event {
                 if let replyTo = savedEvent.replyTo {
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
-                    replyTo.repliesUpdated.send(replyTo.replies_)
+//                    replyTo.repliesUpdated.send(replyTo.replies_)
+                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyTo.id, replies: replyTo.replies_))
                 }
             }
             
@@ -1269,7 +1288,8 @@ extension Event {
             
             if let repostedEvent = savedEvent.firstQuote { // we already got firstQuote passed in as param
                 repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+//                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
             }
             else {
                 // We need to get firstQuote from db or cache
@@ -1277,12 +1297,14 @@ extension Event {
                     if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
                         savedEvent.firstQuote = repostedEvent
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+//                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
                     else if let repostedEvent = try? Event.fetchEvent(id: firstE, context: context) {
                         savedEvent.firstQuote = repostedEvent
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+//                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
                 }
             }
@@ -1336,7 +1358,7 @@ extension Event {
                     if (d.pubkey == event.publicKey) {
 //                        d.objectWillChange.send()
                         d.deletedById = event.id
-                        d.postDeleted.send(event.id)
+                        ViewUpdates.shared.postDeleted.send((d.id, event.id))
                     }
                 }
             }
@@ -1405,15 +1427,18 @@ extension Event {
             for waitingEvent in awaitingEvents {
                 if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
                     waitingEvent.replyTo = savedEvent
-                    waitingEvent.replyToUpdated.send(savedEvent)
+//                    waitingEvent.replyToUpdated.send(savedEvent)
+                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyTo, id: waitingEvent.id, event: savedEvent)))
                 }
                 if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
                     waitingEvent.replyToRoot = savedEvent
-                    waitingEvent.replyToRootUpdated.send(savedEvent)
+//                    waitingEvent.replyToRootUpdated.send(savedEvent)
+                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRoot, id: waitingEvent.id, event: savedEvent)))
                 }
                 if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
                     waitingEvent.firstQuote = savedEvent
-                    waitingEvent.firstQuoteUpdated.send(savedEvent)
+//                    waitingEvent.firstQuoteUpdated.send(savedEvent)
+                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .firstQuote, id: waitingEvent.id, event: savedEvent)))
                 }
             }
         }

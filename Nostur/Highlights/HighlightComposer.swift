@@ -161,7 +161,8 @@ struct HighlightComposer: View {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"
                             savedEvent.cancellationId = cancellationId
-                            savedEvent.updateNRPost.send(savedEvent)
+                            ViewUpdates.shared.updateNRPost.send(savedEvent)
+//                            savedEvent.updateNRPost.send(savedEvent)
                             DispatchQueue.main.async {
                                 _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
                             }
