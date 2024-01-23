@@ -187,8 +187,10 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     }
     
     private func listenForChanges() {
-        self.contact.contactUpdated
+        let pubkey = self.pubkey
+        ViewUpdates.shared.contactUpdated
             .subscribe(on: DispatchQueue.global())
+            .filter { $0.pubkey == pubkey }
             .sink { [weak self] contact in
                 bg().perform {
                     guard let self = self else { return }

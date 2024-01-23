@@ -58,7 +58,8 @@ class Conversation: Identifiable, Hashable, ObservableObject {
             }
             .store(in: &subscriptions)
         
-        mostRecentEvent.contactUpdated
+        ViewUpdates.shared.contactUpdated
+            .filter { contactPubkey == $0.pubkey }
             .sink { [weak self] contact in
                 let nrContact = NRContact(contact: contact, following: isFollowing(contact.pubkey))
                 Task { @MainActor [weak self] in

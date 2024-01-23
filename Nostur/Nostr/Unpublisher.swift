@@ -145,7 +145,7 @@ class Unpublisher {
                 
                 dbEvent.flags = ""
                 dbEvent.cancellationId = nil
-                dbEvent.updateNRPost.send(dbEvent)
+                ViewUpdates.shared.updateNRPost.send(dbEvent)
             }
             else {
                 // Event not in db yet

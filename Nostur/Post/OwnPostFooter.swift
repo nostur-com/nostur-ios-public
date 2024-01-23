@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+import Combine
 // .relays
 // .cancellationId
 // .flags
@@ -15,21 +15,40 @@ import SwiftUI
 // .isScreenshot
 
 class OwnPostAttributes: ObservableObject {
+    private let id: String
     var isOwnPost = false // all own accounts, so can undo from quick account switch post too
     @Published var relaysCount:Int
     @Published var cancellationId:UUID? = nil
     @Published var flags = ""
     
-    init(isOwnPost: Bool = false, relaysCount: Int = 0, cancellationId: UUID? = nil, flags: String = "") {
+    private var subscriptions =  Set<AnyCancellable>()
+    
+    init(id: String, isOwnPost: Bool = false, relaysCount: Int = 0, cancellationId: UUID? = nil, flags: String = "") {
+        self.id = id
         self.isOwnPost = isOwnPost
         self.relaysCount = relaysCount
         self.cancellationId = cancellationId
         self.flags = flags
+        self.setupListeners()
     }
     
     // If true, still time to Undo
     var isGoingToSend:Bool {
         relaysCount == 0 && (cancellationId != nil || flags == "nsecbunker_unsigned" || flags == "awaiting_send")
+    }
+    
+    func setupListeners() {
+        let id = self.id
+        ViewUpdates.shared.eventStatChanged
+            .filter { $0.id == id }
+            .sink { [weak self] change in
+                guard let relaysCount = change.relaysCount else { return }
+                DispatchQueue.main.async {
+                    self?.objectWillChange.send()
+                    self?.relaysCount = relaysCount
+                }
+            }
+            .store(in: &subscriptions)
     }
 }
 

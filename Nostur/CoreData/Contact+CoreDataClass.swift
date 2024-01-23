@@ -11,9 +11,6 @@ import CoreData
 import Combine
 
 public class Contact: NSManagedObject {
-    var contactUpdated = PassthroughSubject<Contact, Never>()
-    var nip05updated = PassthroughSubject<(Bool, String, String), Never>()
-    
     var zapStateChanged = PassthroughSubject<(ZapState?, ZapEtag?), Never>()
         
     public enum ZapState:String {

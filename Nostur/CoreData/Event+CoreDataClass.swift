@@ -13,20 +13,6 @@ import Combine
 
 public class Event: NSManagedObject, Identifiable {
     
-    var repostsDidChange = PassthroughSubject<Int64, Never>()
-    var likesDidChange = PassthroughSubject<Int64, Never>()
-    var zapsDidChange = PassthroughSubject<(Int64, Int64), Never>()
-    var postDeleted = PassthroughSubject<String, Never>()
-    var repliesUpdated = PassthroughSubject<[Event], Never>()
-    var replyToUpdated = PassthroughSubject<Event, Never>()
-    var replyToRootUpdated = PassthroughSubject<Event, Never>()
-    var firstQuoteUpdated = PassthroughSubject<Event, Never>()
-    var contactUpdated = PassthroughSubject<Contact, Never>()
-    var contactsUpdated = PassthroughSubject<[Contact], Never>()
-    var relaysUpdated = PassthroughSubject<String, Never>()
-    var zapStateChanged = PassthroughSubject<ZapState?, Never>()
-    var updateNRPost = PassthroughSubject<Event, Never>()
-        
     enum ZapState:String {
         case initiated = "INITIATED"
         case nwcConfirmed = "NWC_CONFIRMED"
@@ -38,6 +24,7 @@ public class Event: NSManagedObject, Identifiable {
     var zapState:ZapState? {
         didSet {
             zapStateChanged.send(zapState)
+            ViewUpdates.shared.zapStateChanged.send((zapState, self.id))
         }
     }
     var parentEvents: [Event] = []

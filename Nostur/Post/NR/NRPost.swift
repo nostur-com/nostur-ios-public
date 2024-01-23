@@ -324,7 +324,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         let replies = withReplies && withFooter ? event.replies_.map { NRPost(event: $0) } : []
         self._replies = replies
-        self.ownPostAttributes = OwnPostAttributes(isOwnPost: NRState.shared.fullAccountPubkeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
+        self.ownPostAttributes = OwnPostAttributes(id: event.id, isOwnPost: NRState.shared.fullAccountPubkeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
         
         if withReplies && withFooter {
             self.footerAttributes = FooterAttributes(replyPFPs: Array(_replies.compactMap { reply in
@@ -573,10 +573,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             contactSavedListener()
         }
         
-        if firstQuoteId != nil {
-            quotedPostListener()
-        }
-        
         if deletedById == nil {
             postDeletedListener()
         }
@@ -587,12 +583,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         else if withRepliesCount {
             repliesCountListener()
         }
-        
-        if withReplyTo {
-            replyAndReplyRootListener()
+        if withReplyTo || (firstQuoteId != nil && firstQuote == nil) {
+            relationListener()
         }
         
-        relaysUpdatedListener()
         updateNRPostListener()
         isFollowingListener()
         unpublishListener()
@@ -606,24 +600,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .store(in: &subscriptions)
     }
     
-    private func relaysUpdatedListener() {
-        event?.relaysUpdated
-//            .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
-            .sink { [weak self] relays in
-                guard let self = self else { return }
-//                self.objectWillChange.send()
-                self.relays = relays
-                let relaysCount = relays.split(separator: " ").count
-                DispatchQueue.main.async { [weak self] in
-                    self?.ownPostAttributes.objectWillChange.send()
-                    self?.ownPostAttributes.relaysCount = relaysCount
-                }
-            }
-            .store(in: &subscriptions)
-    }
+    
     
     private func updateNRPostListener() {
-        event?.updateNRPost
+        let id = id
+        ViewUpdates.shared.updateNRPost
+            .filter { $0.id == id }
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] event in
                 guard let self = self else { return }
@@ -802,66 +784,72 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
-    private func quotedPostListener() {
-        self.event?.firstQuoteUpdated
-            .sink { [weak self] firstQuote in
-                bg().perform {
-                    guard let self = self else { return }
-                    let nrFirstQuote = NRPost(event: firstQuote, withReplyTo: true, withReplies: self.withReplies)
-                    self.firstQuote = nrFirstQuote
-                }
-            }
-            .store(in: &subscriptions)
-    }
-    
     private func postDeletedListener() {
-        self.event?.postDeleted
+        let id = id
+        ViewUpdates.shared.postDeleted
+            .filter { $0.toDelete == id }
             .receive(on: RunLoop.main)
-            .sink { [weak self] deletedById in
+            .sink { [weak self] deletion in
                 guard let self = self else { return }
-                self.deletedById = deletedById
+                self.deletedById = deletion.deletedBy
             }
             .store(in: &subscriptions)
     }
     
-    private func replyAndReplyRootListener() {
-        self.event?.replyToUpdated
-            .sink { [weak self] replyTo in
+    private var relationListenerActive = false
+    private func relationListener() {
+        guard !relationListenerActive else { return }
+        relationListenerActive = true
+        let id = id
+        ViewUpdates.shared.eventRelationUpdate
+            .filter { $0.id == id }
+            .sink { [weak self] relationUpdate in
                 bg().perform {
-                    let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
-                    DispatchQueue.main.async {
-                        self?.objectWillChange.send()
-                        self?.replyTo = nrReplyTo
-                        // self.loadReplyTo() // need this??
+                    guard let self else { return }
+                    switch relationUpdate.relationType {
+                    case .replyTo:
+                        let nrReplyTo = NRPost(event: relationUpdate.event, withReplyTo: true)
+                        DispatchQueue.main.async {
+                            self.objectWillChange.send()
+                            self.replyTo = nrReplyTo
+                            // self.loadReplyTo() // need this??
+                        }
+                    case .replyToRoot:
+                        let nrReplyToRoot = NRPost(event: relationUpdate.event, withReplyTo: true)
+                        DispatchQueue.main.async {
+                            self.objectWillChange.send()
+                            self.replyToRoot = nrReplyToRoot
+                            // self.loadReplyTo() // need this??
+                        }
+                    case .firstQuote:
+                        let nrFirstQuote = NRPost(event: relationUpdate.event, withReplyTo: true, withReplies: self.withReplies)
+                        self.firstQuote = nrFirstQuote
+                        DispatchQueue.main.async {
+                            self.objectWillChange.send()
+                            self.firstQuote = nrFirstQuote
+                        }
                     }
+                    
+                    
                 }
             }
             .store(in: &subscriptions)
-        
-        self.event?.replyToRootUpdated
-            .sink { [weak self] replyToRoot in
-                bg().perform {
-                    let nrReplyToRoot = NRPost(event: replyToRoot, withReplyTo: true)
-                    DispatchQueue.main.async {
-                        self?.objectWillChange.send()
-                        self?.replyToRoot = nrReplyToRoot
-                        // self.loadReplyTo() // need this??
-                    }
-                }
-            }
-            .store(in: &subscriptions)
-        
-        
     }
+    
+    private var repliesUpdatedListenerActive = false
     
     private func repliesListener() {
-        self.event?.repliesUpdated
+        guard !repliesUpdatedListenerActive else { return }
+        repliesUpdatedListenerActive = true
+        let id = self.id
+        ViewUpdates.shared.repliesUpdated
+            .filter { $0.id == id }
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] replies in
+            .sink { [weak self] change in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
                 bg().perform {
                     guard let self else { return }
-                    let nrReplies = replies
+                    let nrReplies = change.replies
                             .filter { !blocks().contains($0.pubkey) }
                             .map { event in
                                 let nrPost = NRPost(event: event, cancellationId: cancellationIds[event.id])
@@ -895,13 +883,18 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     // Same as repliesListener but only for counts
+    // NO NEED? ALREADY PART OF ViewUpdates.shared.eventStatChanged ??
     private func repliesCountListener() {
         guard !withReplies else { return } // Skip if we already have repliesListener, which makes repliesCountListener not needed
-        self.event?.repliesUpdated
+        guard !repliesUpdatedListenerActive else { return }
+        repliesUpdatedListenerActive = true
+        let id = self.id
+        ViewUpdates.shared.repliesUpdated
+            .filter { $0.id == id }
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] replies in
+            .sink { [weak self] change in
                 self?.footerAttributes.objectWillChange.send()
-                self?.footerAttributes.repliesCount = Int64(replies.count)
+                self?.footerAttributes.repliesCount = Int64(change.replies.count)
             }
             .store(in: &subscriptions)
     }
@@ -942,7 +935,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     public func loadReplyTo() {
         if (!self.withReplyTo) {
             self.withReplyTo = true
-            replyAndReplyRootListener()
+            relationListener()
         }
         bg().perform { [weak self] in
             guard let self = self else { return }
@@ -1156,15 +1149,19 @@ extension NRPost { // Helpers for grouped replies
     }
     
     private func repliesToRootListener() {
-        self.event?.replyToRootUpdated
+        guard !relationListenerActive else { return }
+        relationListenerActive = true
+        let id = self.id
+        ViewUpdates.shared.eventRelationUpdate
+            .filter { $0.id == id && $0.relationType == .replyToRoot }
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
-            .sink { [weak self] reply in
+            .sink { [weak self] relation in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
                 
                 bg().perform {
                     guard let self = self else { return }
                     
-                    let nrReply = NRPost(event: reply, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[reply.id]) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
+                    let nrReply = NRPost(event: relation.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[relation.event.id]) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
                     self.repliesToRoot.append(nrReply)
                     self.groupRepliesToRoot.send(self.replies)
                 }
