@@ -1084,7 +1084,8 @@ extension LVM {
             .filter { _ in
                 !ProcessInfo.processInfo.isLowPowerModeEnabled
             }
-            .throttle(for: .seconds(0.5), scheduler: RunLoop.main, latest: true)
+            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
+            .throttle(for: .seconds(1.0), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] nrPostIds in
                 guard let self = self else { return }
                 guard SettingsStore.shared.fetchCounts else { return }
