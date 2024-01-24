@@ -481,6 +481,11 @@ extension Contact : Identifiable {
     
     
     static func fetchByPubkey(_ pubkey:String, context:NSManagedObjectContext) -> Contact? {
+        if !Thread.isMainThread { // Try to get from following cache first (bg only for now)
+            if let contact = NRState.shared.loggedInAccount?.followingCache[pubkey]?.bgContact {
+                return contact
+            }
+        }
         let r = Contact.fetchRequest()
         r.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         r.fetchLimit = 1

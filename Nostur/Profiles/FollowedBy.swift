@@ -55,11 +55,9 @@ struct FollowedBy: View {
             }
         }
         .task {
-            guard let pubkey, let followingPFPs = NRState.shared.loggedInAccount?.followingPFPs else {
-                return
-            }
+            guard let pubkey else { return }
             commonFollowerPFPs = commonFollowers(for: pubkey).compactMap({ pubkey in
-                if let url = followingPFPs[pubkey] {
+                if let url = followingPFP(pubkey) {
                     return (pubkey, url)
                 }
                 return nil

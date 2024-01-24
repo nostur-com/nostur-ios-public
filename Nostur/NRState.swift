@@ -274,7 +274,7 @@ func isFollowing(_ pubkey:String) -> Bool {
 }
 
 func followingPFP(_ pubkey: String) -> URL? {
-    NRState.shared.loggedInAccount?.followingPFPs[pubkey]
+    NRState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL
 }
 
 func account() -> CloudAccount? {

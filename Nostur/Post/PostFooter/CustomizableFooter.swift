@@ -106,9 +106,9 @@ struct CustomizablePreviewFooterFragmentView: View {
 
 #Preview("Customizable Footer") {
     PreviewContainer({ pe in
-        NRState.shared.loggedInAccount?.followingPFPs["7ecd3fe6353ec4c53672793e81445c2a319ccf0a298a91d77adcfa386b52f30d"] = URL(string: "https://files.peakd.com/file/peakd-hive/chekohler/AK297i3PX3mZpwVagu4FhZjVLcSW7UpEDv7b4mXRKSQav5vwsWgw46iGUcqSoDi.jpg")!
-        NRState.shared.loggedInAccount?.followingPFPs["738f69184aeda675002b687fe47c8e9e2f7b1a267d6f9145b1193312f97c18ef"] = URL(string: "https://pbs.twimg.com/profile_images/1431273817477992452/arsE5HEn_400x400.jpg")!
-        NRState.shared.loggedInAccount?.followingPFPs["79b647ba67c6f434b348e4af011e0984af14a459b6d86fd05e8f2ee8d32ec8c9"] = URL(string: "https://hitony.com/tony.gif")!
+        NRState.shared.loggedInAccount?.followingCache["7ecd3fe6353ec4c53672793e81445c2a319ccf0a298a91d77adcfa386b52f30d"] = FollowCache(anyName: "TBM", pfpURL: URL(string: "https://files.peakd.com/file/peakd-hive/chekohler/AK297i3PX3mZpwVagu4FhZjVLcSW7UpEDv7b4mXRKSQav5vwsWgw46iGUcqSoDi.jpg")!, bgContact: nil)
+        NRState.shared.loggedInAccount?.followingCache["738f69184aeda675002b687fe47c8e9e2f7b1a267d6f9145b1193312f97c18ef"] = FollowCache(anyName: "BB", pfpURL: URL(string: "https://pbs.twimg.com/profile_images/1431273817477992452/arsE5HEn_400x400.jpg")!, bgContact: nil)
+        NRState.shared.loggedInAccount?.followingCache["79b647ba67c6f434b348e4af011e0984af14a459b6d86fd05e8f2ee8d32ec8c9"] = FollowCache(anyName: "Tony", pfpURL: URL(string: "https://hitony.com/tony.gif")!, bgContact: nil)
         pe.loadContacts()
         pe.loadRepliesAndReactions()
     }) {
