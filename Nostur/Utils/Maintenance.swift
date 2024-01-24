@@ -87,7 +87,7 @@ struct Maintenance {
     // Keeps own events
     // Keeps contacts/posts with private notes
     // Could run in background, maybe on app minimize
-    static func dailyMaintenance(context:NSManagedObjectContext, force: Bool = false) async -> Bool {
+    static func dailyMaintenance(context: NSManagedObjectContext, force: Bool = false) async -> Bool {
         
         // Time based migrations
     
@@ -102,6 +102,7 @@ struct Maintenance {
         
         return await context.perform {
             Self.databaseCleanUp(context)
+            try? context.save()
             return true
         }
     }
