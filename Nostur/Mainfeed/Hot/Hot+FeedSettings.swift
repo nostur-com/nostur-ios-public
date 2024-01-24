@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HotFeedSettings: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var hotVM:HotViewModel
+    @ObservedObject var hotVM: HotViewModel
     @State var needsReload = false
     
     var body: some View {

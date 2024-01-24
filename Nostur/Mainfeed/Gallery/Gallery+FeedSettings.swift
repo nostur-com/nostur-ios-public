@@ -9,7 +9,7 @@ import SwiftUI
 
 struct GalleryFeedSettings: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var vm:GalleryViewModel
+    @ObservedObject var vm: GalleryViewModel
     @State var needsReload = false
     
     var body: some View {

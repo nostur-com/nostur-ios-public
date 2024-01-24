@@ -9,7 +9,7 @@ import SwiftUI
 import NukeUI
 
 struct GifSearcher: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) var dismiss
     @State var searchTerm = ""
     @State var searchResults:[TenorResult] = []

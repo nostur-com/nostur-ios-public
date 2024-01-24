@@ -157,7 +157,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
-    public func sendMessage(_ text:String) {
+    public func sendMessage(_ text: String) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             if !self.isDeviceConnected {

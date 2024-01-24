@@ -76,7 +76,6 @@ struct NewAccountSheet: View {
     
     func createAccount() {
         let newAccount = AccountManager.shared.generateAccount(name: name, about: about, context: viewContext)
-
         do {
             
             guard let newKind0EventSigned = try AccountManager.createMetadataEvent(account: newAccount) else { throw "could not create newKind0EventSigned " }

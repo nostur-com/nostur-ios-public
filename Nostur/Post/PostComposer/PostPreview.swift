@@ -8,16 +8,16 @@
 import SwiftUI
 
 struct PostPreview: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @StateObject private var dim = DIMENSIONS()
     @Environment(\.dismiss) private var dismissPostPreview
-    public let nrPost:NRPost
-    public let replyTo:Event?
-    public let quotingEvent:Event?
-    @ObservedObject public var vm:NewPostModel
-    @ObservedObject public var typingTextModel:TypingTextModel
+    public let nrPost: NRPost
+    public let replyTo: Event?
+    public let quotingEvent: Event?
+    @ObservedObject public var vm: NewPostModel
+    @ObservedObject public var typingTextModel: TypingTextModel
     public let onDismiss: () -> Void
-    @State private var postPreviewWidth:CGFloat? = nil
+    @State private var postPreviewWidth: CGFloat? = nil
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits

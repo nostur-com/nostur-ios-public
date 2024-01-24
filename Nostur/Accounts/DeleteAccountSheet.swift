@@ -10,7 +10,7 @@ import Combine
 import NavigationBackport
 
 struct DeleteAccountSheet: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var la:LoggedInAccount
     @Environment(\.dismiss) private var dismiss
     @State private var remaining = 10

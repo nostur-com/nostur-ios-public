@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct MediaUploadServicePicker: View {  
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @State private var nip96apiUrl:String // Should just use @AppStorage("nip96_api_url") here, but this freezes on desktop. so workaround via init() and .onChange(of: nip96apiUrl).
     
     @ObservedObject private var settings: SettingsStore = .shared
