@@ -28,8 +28,8 @@ struct NEventView: View {
                         }
                         let fetchParams: FetchVM.FetchParams = (
                             prio: true,
-                            req: { taskId in
-                                bg().perform { // 1. CHECK LOCAL DB
+                            req: { [weak vm, weak dim] taskId in
+                                bg().perform { [weak vm, weak dim] in // 1. CHECK LOCAL DB
                                     guard let vm, let dim else { return }
                                     if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
                                         vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
@@ -39,7 +39,7 @@ struct NEventView: View {
                                     }
                                 }
                             },
-                            onComplete: { relayMessage, event in
+                            onComplete: { [weak vm, weak dim] relayMessage, event in
                                 guard let vm, let dim else { return }
                                 if let event = event {
                                     vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))

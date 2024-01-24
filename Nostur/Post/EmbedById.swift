@@ -65,16 +65,17 @@ struct EmbedById: View {
     }
     
     private func load() {
+        let id = id
         let fetchParams: FetchVM.FetchParams = (
             prio: true,
             req: { [weak vm = self.vm, weak dim = self.dim] taskId in
                 bg().perform {
                     guard let vm, let dim else { return }
-                    if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
+                    if let event = try? Event.fetchEvent(id: id, context: bg()) {
                         vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                     }
                     else {
-                        req(RM.getEvent(id: self.id, subscriptionId: taskId))
+                        req(RM.getEvent(id: id, subscriptionId: taskId))
                     }
                 }
             },
@@ -83,7 +84,7 @@ struct EmbedById: View {
                 if let event = event {
                     vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                 }
-                else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
+                else if let event = try? Event.fetchEvent(id: id, context: bg()) {
                     vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                 }
                 else if [.initializing, .loading].contains(vm.state) {
