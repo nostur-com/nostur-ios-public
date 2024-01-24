@@ -125,19 +125,18 @@ public struct RequestMessage {
     // or reactions by others reacting to the people you follow
     static func getFollowingEvents(pubkeys:[String], limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("F-"+UUID().uuidString)
-        let pubs = fasterShort(pubkeys)
         if let since {
             return """
-["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802,30023,34235], "since": \(since.timestamp)}]
+["REQ", "\(sub)", {"authors":  \(JSON.shared.toString(pubkeys)), "kinds": [1,5,6,9802,30023,34235], "since": \(since.timestamp)}]
 """
         }
         else if let until {
             return """
-["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802,30023,34235], "until": \(until.timestamp)}]
+["REQ", "\(sub)", {"authors":  \(JSON.shared.toString(pubkeys)), "kinds": [1,5,6,9802,30023,34235], "until": \(until.timestamp)}]
 """
         }
         return """
-["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802,30023,34235], "limit": \(limit)}]
+["REQ", "\(sub)", {"authors":  \(JSON.shared.toString(pubkeys)), "kinds": [1,5,6,9802,30023,34235], "limit": \(limit)}]
 """
     }
     // Same as above but pubkeys already in string
@@ -270,7 +269,7 @@ public struct RequestMessage {
     
     static func getAuthorContactsLists(pubkeys:[String], limit:Int = 3000, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? ("ACLS-" + UUID().uuidString))", {"authors": \(fasterShort(pubkeys)), "kinds": [3], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("ACLS-" + UUID().uuidString))", {"authors": \(JSON.shared.toString(pubkeys)), "kinds": [3], "limit": \(limit)}]
 """
     }
     
@@ -374,13 +373,13 @@ public struct RequestMessage {
     
     static func getRelays(pubkeys:[String], subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [3,10002] }]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON.shared.toString(pubkeys)), "kinds": [3,10002] }]
 """
     }
     
     static func getAuthorsNotes(pubkeys:[String], limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [1], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON.shared.toString(pubkeys)), "kinds": [1], "limit": \(limit)}]
 """
     }
     
@@ -413,18 +412,18 @@ public struct RequestMessage {
         
         if let since {
             return """
-    ["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "since": \(since.timestamp)}]
+    ["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": \(JSON.shared.toString(pubkeys)), "kinds": [0], "since": \(since.timestamp)}]
     """
         }
         else if let until {
             return """
-    ["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "until": \(until.timestamp)}]
+    ["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": \(JSON.shared.toString(pubkeys)), "kinds": [0], "until": \(until.timestamp)}]
     """
         }
         
         let limit = limit ?? (pubkeys.count + 20) // add 20 in case of multiple setMetadata's for a pubkey maybe?? not sure
         return """
-["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("UM-" + UUID().uuidString))", {"authors": \(JSON.shared.toString(pubkeys)), "kinds": [0], "limit": \(limit)}]
 """
     }
 }
@@ -513,15 +512,6 @@ enum ReportType:String {
     case spam = "spam"
     case impersonation = "impersonation"
 }
-
-func short(_ pubkeys:[String], prefixLength:Int = 10) -> [String] {
-    pubkeys.map { String( "\"" +  $0.prefix(prefixLength) + "\"") }
-}
-
-func fasterShort(_ pubkeys:[String], prefixLength:Int = 10) -> String {
-    "[" + pubkeys.map {  "\"" +  $0.prefix(prefixLength) + "\"" }.joined(separator: ",") + "]"
-}
-
 
 // Short-hand usage example:
 
