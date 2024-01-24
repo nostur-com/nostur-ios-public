@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct ListViewContainer: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var dim:DIMENSIONS
-    public let vm:LVM
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
+    public let vm: LVM
     
     var body: some View {
         #if DEBUG
