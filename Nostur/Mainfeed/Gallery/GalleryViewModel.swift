@@ -353,7 +353,7 @@ struct GalleryItem: Identifiable, Equatable {
         self.id = UUID()
         self.pubkey = event?.pubkey
         if let event {
-            self.pfpPictureURL = NRState.shared.loggedInAccount?.followingPFPs[event.pubkey]
+            self.pfpPictureURL = NRState.shared.loggedInAccount?.followingCache[event.pubkey]?.pfpURL
         }
     }
 

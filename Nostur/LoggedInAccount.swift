@@ -40,7 +40,7 @@ class LoggedInAccount: ObservableObject {
                 account.followingPubkeys.insert(pubkey)
             }
             self.followingPublicKeys = self.viewFollowingPublicKeys
-            self.followingPFPs = account.getFollowingPFPs()
+            self.followingCache = account.loadFollowingCache()
             
             account.publishNewContactList()
             DispatchQueue.main.async { [weak self] in
@@ -65,7 +65,7 @@ class LoggedInAccount: ObservableObject {
             bgSave()
             
             self.followingPublicKeys = self.viewFollowingPublicKeys
-            self.followingPFPs = account.getFollowingPFPs()
+            self.followingCache = account.loadFollowingCache()
 
             account.publishNewContactList()
             DispatchQueue.main.async { [weak self] in
@@ -84,7 +84,7 @@ class LoggedInAccount: ObservableObject {
             account.followingPubkeys.remove(pubkey)
             bgSave()
             self.followingPublicKeys = self.viewFollowingPublicKeys
-            self.followingPFPs = account.getFollowingPFPs()
+            self.followingCache = account.loadFollowingCache()
             
             account.publishNewContactList()
             DispatchQueue.main.async { [weak self] in
@@ -134,7 +134,7 @@ class LoggedInAccount: ObservableObject {
     // BG high speed
     public var accountCache: AccountCache?
     public var followingPublicKeys: Set<String> = []
-    public var followingPFPs: [String: URL] = [:]
+    public var followingCache: [String: FollowCache] = [:]
     
     // View context
     @Published var account: CloudAccount {
@@ -185,7 +185,7 @@ class LoggedInAccount: ObservableObject {
             self.accountCache = AccountCache(self.pubkey)
             
             self.followingPublicKeys = follows
-            self.followingPFPs = bgAccount.getFollowingPFPs()
+            self.followingCache = bgAccount.loadFollowingCache()
             self.reprocessContactListIfNeeded(bgAccount)
             
             DispatchQueue.main.async {
@@ -231,7 +231,7 @@ class LoggedInAccount: ObservableObject {
         self.bg.perform { [weak self] in
             guard let self, let bgAccount = self.bgAccount else { return }
             self.followingPublicKeys = bgAccount.getFollowingPublicKeys(includeBlocked: true)
-            self.followingPFPs = bgAccount.getFollowingPFPs()
+            self.followingCache = bgAccount.loadFollowingCache()
         
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
@@ -246,4 +246,11 @@ class LoggedInAccount: ObservableObject {
     
     // Other
     private var bg:NSManagedObjectContext
+}
+
+
+public struct FollowCache {
+    public let anyName: String
+    public var pfpURL: URL?
+    public var bgContact: Contact?
 }

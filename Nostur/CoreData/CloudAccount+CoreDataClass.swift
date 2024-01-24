@@ -13,14 +13,22 @@ import CoreData
 public class CloudAccount: NSManagedObject {
     var noPrivateKey = false
  
-    public func getFollowingPFPs() -> [String: URL] {
+    public func loadFollowingCache() -> [String: FollowCache] {
         return Dictionary(grouping: follows) { contact in
             contact.pubkey
         }
         .compactMapValues({ contacts in
-            guard let picture = contacts.first?.picture else { return nil }
-            guard picture.prefix(7) != "http://" else { return nil }
-            return URL(string: picture)
+            guard let contact = contacts.first else { return nil }
+            let pfpURL: URL? = if let picture = contact.picture, picture.prefix(7) != "http://" {
+                URL(string: picture)
+            }
+            else {
+                nil
+            }
+            return FollowCache(
+                anyName: contact.anyName,
+                pfpURL: pfpURL,
+                bgContact: contact)
         })
     }
     
