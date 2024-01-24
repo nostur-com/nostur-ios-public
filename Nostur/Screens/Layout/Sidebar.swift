@@ -292,18 +292,18 @@ struct SideBar: View {
             NBNavigationStack {
                 AccountsSheet()
                     .presentationDetents45ml()
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
-            .environmentObject(themes)
         }
         .sheet(isPresented: $showAnySigner) {
             NBNavigationStack {
                 AnySigner()
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.background)
-            .environmentObject(themes)
         }
         .actionSheet(item: $logoutAccount) { account in
             ActionSheet(

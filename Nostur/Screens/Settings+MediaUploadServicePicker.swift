@@ -46,6 +46,7 @@ struct MediaUploadServicePicker: View {
         .sheet(isPresented: $nip96configuratorShown) {
             NBNavigationStack {
                 Nip96Configurator()
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
         }
