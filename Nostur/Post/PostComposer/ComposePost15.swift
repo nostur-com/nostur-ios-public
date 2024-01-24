@@ -109,6 +109,7 @@ struct ComposePost15: View {
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         NBNavigationStack {
                             PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                                .environmentObject(themes)
                         }
                         .nbUseNavigationStack(.never)
                         .presentationBackgroundCompat(themes.theme.background)

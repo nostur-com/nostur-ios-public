@@ -63,10 +63,12 @@ struct MainView: View {
                             if account.isNC {
                                 WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                                     ComposePostCompat(onDismiss: { showingNewNote = false })
+                                        .environmentObject(themes)
                                 }
                             }
                             else {
                                 ComposePostCompat(onDismiss: { showingNewNote = false })
+                                    .environmentObject(themes)
                             }
                         }
                         .presentationBackgroundCompat(themes.theme.background)

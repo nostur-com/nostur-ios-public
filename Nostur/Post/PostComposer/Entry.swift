@@ -95,6 +95,7 @@ struct Entry: View {
                     GifSearcher { gifUrl in
                         typingTextModel.text += gifUrl + "\n"
                     }
+                    .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)

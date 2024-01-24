@@ -543,28 +543,28 @@ struct Settings: View {
         .sheet(isPresented: $deleteAccountIsShown) {
             NBNavigationStack {
                 DeleteAccountSheet()
+                    .environmentObject(themes)
                     .environmentObject(NRState.shared)
             }
             .nbUseNavigationStack(.never)
-            .environmentObject(themes)
             .presentationBackgroundCompat(themes.theme.background)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
             NBNavigationStack {
                 AlbyNWCConnectSheet()
+                    .environmentObject(themes)
                     .environmentObject(NRState.shared)
             }
             .nbUseNavigationStack(.never)
-            .environmentObject(themes)
             .presentationBackgroundCompat(themes.theme.background)
         }
         .sheet(isPresented: $customNWCsheetShown) {
             NBNavigationStack {
                 CustomNWCConnectSheet()
+                    .environmentObject(themes)
                     .environmentObject(NRState.shared)
             }
             .nbUseNavigationStack(.never)
-            .environmentObject(themes)
             .presentationBackgroundCompat(themes.theme.background)
         }
     }

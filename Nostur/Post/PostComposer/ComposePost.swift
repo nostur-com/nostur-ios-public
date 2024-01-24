@@ -135,6 +135,7 @@ struct ComposePost: View {
                         else {
                             NBNavigationStack {
                                 PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                                    .environmentObject(themes)
                             }
                             .presentationBackgroundCompat(themes.theme.background)
                         }
