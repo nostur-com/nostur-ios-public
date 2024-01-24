@@ -24,7 +24,7 @@ class InstantFeed {
     }
     private var events:[Event]? {
         didSet {
-            if let events {
+            if let events, events.count > 20 {
                 self.isRunning = false
                 self.onComplete?(events)
                 self.backlog.clear()

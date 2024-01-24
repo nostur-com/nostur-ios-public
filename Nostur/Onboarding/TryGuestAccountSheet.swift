@@ -81,6 +81,7 @@ struct TryGuestAccountSheet: View {
         if let guestAccount {
             NRState.shared.changeAccount(guestAccount)
         }
+        NRState.shared.loadAccountsState()
     }
 }
 

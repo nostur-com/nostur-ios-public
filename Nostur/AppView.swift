@@ -210,21 +210,8 @@ struct AppView: View {
             await Maintenance.upgradeDatabase(context: bg())
         }
         else {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                bg().perform {
-                    _ = GuestAccountManager.shared.createGuestAccount()
-                    DataProvider.shared().save()
-                    do {
-                        try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
-                    }
-                    catch {
-                        L.og.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR")
-                    }
-                }
-            }
+            await Maintenance.ensureBootstrapRelaysExist(context: bg())
         }
-        
-        await Maintenance.ensureBootstrapRelaysExist(context: bg())
         
         await Importer.shared.preloadExistingIdsCache() // 43 MB -> 103-132 MB (but if bg is child of store instead of viewContext: 74 MB)
 
@@ -275,6 +262,22 @@ struct AppView: View {
                             req(RM.getAuthorContactsList(pubkey: EXPLORER_PUBKEY))
                         }
                     }
+                    
+                    if (!firstTimeCompleted) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            bg().perform {
+                                _ = GuestAccountManager.shared.createGuestAccount()
+                                DataProvider.shared().save()
+                                do {
+                                    try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
+                                }
+                                catch {
+                                    L.og.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR")
+                                }
+                            }
+                        }
+                    }
+                    
                     loadAccounts()
                 }
             }
