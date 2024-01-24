@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ArticleFeedSettings: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var vm:ArticlesFeedViewModel
+    @ObservedObject var vm: ArticlesFeedViewModel
     @State var needsReload = false
     
     var body: some View {

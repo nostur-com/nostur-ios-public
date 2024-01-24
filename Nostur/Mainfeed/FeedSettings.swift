@@ -9,8 +9,8 @@ import SwiftUI
 
 struct FeedSettings: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject public var lvm:LVM
-    public var list:CloudFeed? = nil
+    @ObservedObject public var lvm: LVM
+    public var list: CloudFeed? = nil
     
     @EnvironmentObject private var la:LoggedInAccount
     

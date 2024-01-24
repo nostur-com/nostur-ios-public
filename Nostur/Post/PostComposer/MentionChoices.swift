@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MentionChoices: View {
-    @ObservedObject var vm:NewPostModel
+    @ObservedObject var vm: NewPostModel
     
     var body: some View {
         if vm.showMentioning {
