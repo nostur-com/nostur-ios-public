@@ -191,7 +191,7 @@ struct PostHeader: View {
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
                 guard let similarContact = account.follows.first(where: {
-                    $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
+                    $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName) // TODO: follows.anyName cache could help, put in same followsPFP dict?
                 }) else { return }
                 guard let cPic = contact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
                 Task.detached(priority: .background) {
