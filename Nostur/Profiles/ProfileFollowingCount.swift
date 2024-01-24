@@ -19,8 +19,8 @@ struct ProfileFollowingCount: View {
                 .onAppear { [weak vm] in
                     let fetchParams: FetchVM.FetchParams = (
                         prio: false,
-                        req: { _ in // TODO: can we use prio here? not sure if properly replaced, should check
-                            bg().perform { // 1. FIRST CHECK LOCAL DB
+                        req: { [weak vm] _ in // TODO: can we use prio here? not sure if properly replaced, should check
+                            bg().perform { [weak vm] in // 1. FIRST CHECK LOCAL DB
                                 guard let vm else { return }
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     vm.ready(clEvent.pTags().count)
@@ -28,8 +28,8 @@ struct ProfileFollowingCount: View {
                                 else { req(RM.getAuthorContactsList(pubkey: pubkey)) }
                             }
                         },
-                        onComplete: { relayMessage, _ in
-                            bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
+                        onComplete: { [weak vm] relayMessage, _ in
+                            bg().perform { [weak vm] in // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 guard let vm else { return }
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     vm.ready(clEvent.pTags().count)
