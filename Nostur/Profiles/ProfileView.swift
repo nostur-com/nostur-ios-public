@@ -11,8 +11,8 @@ import NukeUI
 import NavigationBackport
 
 struct ProfileView: View {
-    private let pubkey:String
-    private var tab:String?
+    private let pubkey: String
+    private var tab: String?
     
     @EnvironmentObject private var npn: NewPostNotifier
     @EnvironmentObject private var themes: Themes
@@ -20,7 +20,7 @@ struct ProfileView: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject private var fg: FollowingGuardian = .shared
     @ObservedObject private var nrContact: NRContact
-
+    
     @State private var profilePicViewerIsShown = false
     @State private var selectedSubTab = "Posts"
     @State private var backlog = Backlog(timeout: 4.0, auto: true)
