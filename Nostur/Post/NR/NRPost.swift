@@ -831,9 +831,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                             self.objectWillChange.send()
                             self.firstQuote = nrFirstQuote
                         }
+                    case .replyToRootInverse:
+                        let nrReply = NRPost(event: relationUpdate.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false)
+                        self.repliesToRoot.append(nrReply)
+                        self.groupRepliesToRoot.send(self.replies)
                     }
-                    
-                    
                 }
             }
             .store(in: &subscriptions)
@@ -1156,7 +1158,7 @@ extension NRPost { // Helpers for grouped replies
         repliesToRootListenerActive = true
         let id = self.id
         ViewUpdates.shared.eventRelationUpdate
-            .filter { $0.id == id && $0.relationType == .replyToRoot }
+            .filter { $0.id == id && $0.relationType == .replyToRootInverse }
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] relation in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
