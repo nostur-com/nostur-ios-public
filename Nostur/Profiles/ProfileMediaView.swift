@@ -22,65 +22,65 @@ struct ProfileMediaView: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        VStack(spacing: 0) {
-            switch vm.state {
-            case .initializing, .loading:
-                ProgressView()
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .task(id: "profilegallery") {
-                        do {
-                            try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                            vm.state = .timeout
-                        } catch { }
-                    }
-            case .ready:
-                if !vm.items.isEmpty {
-                    if #available(iOS 17, *) {
-                        LazyVGrid(columns: gridColumns) {
-                            ForEach(vm.items.indices, id:\.self) { index in
-                                GeometryReader { geo in
-                                    GridItemView17(size: geo.size.width, item: vm.items[index])
-                                }
-                                .clipped()
-                                .aspectRatio(1, contentMode: .fit)
-                                .id(index)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
-                                }
+        switch vm.state {
+        case .initializing, .loading:
+            ProgressView()
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .task(id: "profilegallery") {
+                    do {
+                        try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
+                        vm.state = .timeout
+                    } catch { }
+                }
+        case .ready:
+            if !vm.items.isEmpty {
+                if #available(iOS 17, *) {
+                    LazyVGrid(columns: gridColumns) {
+                        ForEach(vm.items.indices, id:\.self) { index in
+                            GeometryReader { geo in
+                                GridItemView17(size: geo.size.width, item: vm.items[index])
                             }
-                        }
-                    }
-                    else {
-                        LazyVGrid(columns: gridColumns) {
-                            ForEach(vm.items) { item in
-                                GeometryReader { geo in
-                                    GridItemView(size: geo.size.width, item: item)
-                                }
-                                .clipped()
-                                .aspectRatio(1, contentMode: .fit)
+                            .clipped()
+                            .aspectRatio(1, contentMode: .fit)
+                            .id(index)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
                             }
                         }
                     }
                 }
                 else {
-                    Button("Refresh") { vm.reload() }
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    LazyVGrid(columns: gridColumns) {
+                        ForEach(vm.items) { item in
+                            GeometryReader { geo in
+                                GridItemView(size: geo.size.width, item: item)
+                            }
+                            .clipped()
+                            .aspectRatio(1, contentMode: .fit)
+                        }
+                    }
                 }
-            case .timeout:
-                VStack(alignment: .center) {
-                    Text("Unable to fetch content")
-                    Button("Try again") { vm.reload() }
-                }
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .center)
             }
+            else {
+                Button("Refresh") { vm.reload() }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+        case .timeout:
+            VStack(alignment: .center) {
+                Text("Unable to fetch content")
+                Button("Try again") { vm.reload() }
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
-        .onAppear {
-            vm.load()
-        }  
+        
+        Color.clear
+            .onAppear {
+                vm.load()
+            }
     }
 }
 

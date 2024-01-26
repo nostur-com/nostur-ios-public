@@ -31,21 +31,17 @@ struct ProfileLikesView: View {
                     } catch { }
                 }
         case .ready:
-            LazyVStack(spacing: 10) {
-                ForEach(vm.posts, id:\.id) { nrPost in
-                    Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                    }
-//                    .id(nrPost.id)
-                    .onBecomingVisible {
-                        // SettingsStore.shared.fetchCounts should be true for below to work
-                        vm.prefetch(nrPost)
-                    }
-                    .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+            ForEach(vm.posts, id:\.id) { nrPost in
+                Box(nrPost: nrPost) {
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                 }
+//                    .id(nrPost.id)
+                .onBecomingVisible {
+                    // SettingsStore.shared.fetchCounts should be true for below to work
+                    vm.prefetch(nrPost)
+                }
+                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
             }
-//            .padding(.top, 10)
-//            .background(themes.theme.listBackground)
         case .timeout:
             VStack(alignment: .center) {
                 Text("Unable to fetch content")

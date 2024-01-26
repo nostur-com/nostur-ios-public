@@ -37,99 +37,94 @@ struct ProfileZaps: View {
     
     
     var body: some View {
-        VStack {
-            if !nrPosts.isEmpty {
-                Grid {
-                    GridRow {
-                        Text("Zaps received recently", comment: "Heading")
-                            .foregroundColor(.gray)
-                            .font(.system(size: 20))
-                            .gridCellColumns(2)
-                            .padding(.top, 10)
-                    }
-                    Divider()
-                    GridRow {
-                        Text("Zaps", comment: "Heading")
-                        Text("Sats", comment: "Heading (short for Satoshis)")
-                    }
-                    .font(.system(size: 20))
-                    Group {
-                        GridRow {
-                            Text(verifiedZapsCount.description)
-                                .foregroundColor(.green)
-                                .padding(5)
-                            Text(verbatim:"\(verifiedZapsSum.clean)")
-                                .foregroundColor(.green)
-                                .padding(5)
-                        }
-                        GridRow {
-                            Text(verbatim:"")
-                            Text(verbatim:"\(verifiedZapsFiat)")
-                                .foregroundColor(.green).opacity(0.4)
-                        }
-                    }
-                    .font(.system(size: 30))
-                    .fontWeight(.bold)
+        if !nrPosts.isEmpty {
+            Grid {
+                GridRow {
+                    Text("Zaps received recently", comment: "Heading")
+                        .foregroundColor(.gray)
+                        .font(.system(size: 20))
+                        .gridCellColumns(2)
+                        .padding(.top, 10)
                 }
-                
                 Divider()
-                
-                Text("Most received recently on", comment: "Heading above posts which received the most zaps")
-                    .foregroundColor(.gray)
-                    .font(.system(size: 20))
-            }
-            LazyVStack(spacing: 10) {
-                ForEach(nrPosts) { nrPost in
-                    Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                GridRow {
+                    Text("Zaps", comment: "Heading")
+                    Text("Sats", comment: "Heading (short for Satoshis)")
+                }
+                .font(.system(size: 20))
+                Group {
+                    GridRow {
+                        Text(verifiedZapsCount.description)
+                            .foregroundColor(.green)
+                            .padding(5)
+                        Text(verbatim:"\(verifiedZapsSum.clean)")
+                            .foregroundColor(.green)
+                            .padding(5)
                     }
-                    .id(nrPost.id)
-                    .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                    GridRow {
+                        Text(verbatim:"")
+                        Text(verbatim:"\(verifiedZapsFiat)")
+                            .foregroundColor(.green).opacity(0.4)
+                    }
+                }
+                .font(.system(size: 30))
+                .fontWeight(.bold)
+            }
+            
+            Divider()
+            
+            Text("Most received recently on", comment: "Heading above posts which received the most zaps")
+                .foregroundColor(.gray)
+                .font(.system(size: 20))
+        }
+        ForEach(nrPosts) { nrPost in
+            Box(nrPost: nrPost) {
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+            }
+            .id(nrPost.id)
+            .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
 //                    .fixedSize(horizontal: false, vertical: true)
-                }
-                if nrPosts.isEmpty {
-                    ProgressView()
-                        .centered()
+        }
+        if nrPosts.isEmpty {
+            ProgressView()
+                .centered()
+        }
+        
+        Color.clear
+            .task { [weak backlog] in
+                guard let backlog else { return }
+                guard !didLoad else { return }
+                didLoad = true
+                loadZaps()
+                
+                let calendar = Calendar.current
+                let ago = calendar.date(byAdding: .day, value: -14, to: Date())!
+                
+                let fetchNewerTask = ReqTask(
+                    reqCommand: { (taskId) in
+                        req(RM.getAuthorZaps(pubkey: pubkey, since: NTimestamp(date: ago), subscriptionId: taskId))
+                    },
+                    processResponseCommand: { (taskId, _, _) in
+                        self.loadZaps()
+                    },
+                    timeoutCommand: { [weak backlog] (taskId) in
+                        guard let backlog else { return }
+                        backlog.timeout = 4
+                        try60days()
+                    }
+                )
+                
+                backlog.add(fetchNewerTask)
+                fetchNewerTask.fetch()
+            }
+            .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { subscriptionIds in
+                bg().perform {
+                    let reqTasks = backlog.tasks(with: subscriptionIds)
+                    reqTasks.forEach { task in
+                        task.process()
+                    }
                 }
             }
-        }
-        .frame(minHeight: 800)
-//        .padding(.top, 5)
-//        .background(themes.theme.listBackground)
-        .task { [weak backlog] in
-            guard let backlog else { return }
-            guard !didLoad else { return }
-            didLoad = true
-            loadZaps()
-            
-            let calendar = Calendar.current
-            let ago = calendar.date(byAdding: .day, value: -14, to: Date())!
-            
-            let fetchNewerTask = ReqTask(
-                reqCommand: { (taskId) in
-                    req(RM.getAuthorZaps(pubkey: pubkey, since: NTimestamp(date: ago), subscriptionId: taskId))
-                },
-                processResponseCommand: { (taskId, _, _) in
-                    self.loadZaps()
-                },
-                timeoutCommand: { [weak backlog] (taskId) in
-                    guard let backlog else { return }
-                    backlog.timeout = 4
-                    try60days()
-                }
-            )
-            
-            backlog.add(fetchNewerTask)
-            fetchNewerTask.fetch()
-        }
-        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { subscriptionIds in
-            bg().perform {
-                let reqTasks = backlog.tasks(with: subscriptionIds)
-                reqTasks.forEach { task in
-                    task.process()
-                }
-            }
-        }
     }
     
     func try60days() {

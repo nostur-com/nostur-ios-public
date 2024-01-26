@@ -167,7 +167,6 @@
 		1F5F5A5C29838F1D00DED8F4 /* DataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */; };
 		1F62F4C62A2C572700783892 /* KrakenApiResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */; };
 		1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */; };
-		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
 		1F6629122B0D429D00508988 /* RelayConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629112B0D429D00508988 /* RelayConnection.swift */; };
 		1F6629142B0D49BD00508988 /* RelayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629132B0D49BD00508988 /* RelayData.swift */; };
 		1F6629182B0E672500508988 /* Kind10002ConfigurationWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629172B0E672500508988 /* Kind10002ConfigurationWizard.swift */; };
@@ -240,6 +239,7 @@
 		1F810B3429E670AB006B1614 /* MutedWords+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B3229E670AB006B1614 /* MutedWords+CoreDataProperties.swift */; };
 		1F810B3529E67145006B1614 /* MutedWordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F810B2F29E67017006B1614 /* MutedWordsView.swift */; };
 		1F81C4A72AC033DF0006CAA2 /* NotificationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F81C4A62AC033DF0006CAA2 /* NotificationsViewModel.swift */; };
+		1F8322D12B62A23B0098AEAD /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8322D02B62A23B0098AEAD /* ProfileView.swift */; };
 		1F83497F29DD6F980032E52B /* LRUCache2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83497E29DD6F980032E52B /* LRUCache2.swift */; };
 		1F83498129DE28290032E52B /* ProfileRelays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498029DE28290032E52B /* ProfileRelays.swift */; };
 		1F8418992A2BDCB1001EFE7A /* NIP47SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8418982A2BDCB1001EFE7A /* NIP47SecretManager.swift */; };
@@ -683,7 +683,6 @@
 		1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataProvider.swift; sourceTree = "<group>"; };
 		1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KrakenApiResponse.swift; sourceTree = "<group>"; };
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
-		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		1F6629112B0D429D00508988 /* RelayConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayConnection.swift; sourceTree = "<group>"; };
 		1F6629132B0D49BD00508988 /* RelayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayData.swift; sourceTree = "<group>"; };
 		1F6629172B0E672500508988 /* Kind10002ConfigurationWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind10002ConfigurationWizard.swift; sourceTree = "<group>"; };
@@ -750,6 +749,7 @@
 		1F810B3129E670AB006B1614 /* MutedWords+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MutedWords+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F810B3229E670AB006B1614 /* MutedWords+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MutedWords+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F81C4A62AC033DF0006CAA2 /* NotificationsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsViewModel.swift; sourceTree = "<group>"; };
+		1F8322D02B62A23B0098AEAD /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		1F83497E29DD6F980032E52B /* LRUCache2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRUCache2.swift; sourceTree = "<group>"; };
 		1F83498029DE28290032E52B /* ProfileRelays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelays.swift; sourceTree = "<group>"; };
 		1F8418982A2BDCB1001EFE7A /* NIP47SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP47SecretManager.swift; sourceTree = "<group>"; };
@@ -1972,12 +1972,12 @@
 				1FCCAC992AB6D6B000B3F00A /* ProfilePostsView.swift */,
 				1FCCAC972AB6D41000B3F00A /* ProfilePostsViewModel.swift */,
 				1F83498029DE28290032E52B /* ProfileRelays.swift */,
+				1FF853872B1FDA3E00C336E6 /* ProfileRelays2.swift */,
 				1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */,
 				1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */,
 				1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */,
 				1F716C742A14D4F300B202CA /* ProfileTabs.swift */,
-				1FF853872B1FDA3E00C336E6 /* ProfileRelays2.swift */,
-				1F65121A29C75AC9009FD4AE /* ProfileView.swift */,
+				1F8322D02B62A23B0098AEAD /* ProfileView.swift */,
 				1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */,
 			);
 			path = Profiles;
@@ -2281,6 +2281,7 @@
 				1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */,
 				1F5C82D92ACD336A00333775 /* ZapReceipt.swift in Sources */,
 				1F1F13092AA9D9B000DDED82 /* HotViewModel.swift in Sources */,
+				1F8322D12B62A23B0098AEAD /* ProfileView.swift in Sources */,
 				1F558B3C29FE4DA0002938A3 /* EventRelationsQueue.swift in Sources */,
 				1FB130BF29C1A314004AC98D /* QuotedNoteFragmentView.swift in Sources */,
 				1F62F4C62A2C572700783892 /* KrakenApiResponse.swift in Sources */,
@@ -2602,7 +2603,6 @@
 				1F15F0A42AAF9CAE0004E706 /* Gallery+FeedSettings.swift in Sources */,
 				1F15F0A02AAF35560004E706 /* LikeButton.swift in Sources */,
 				1F685B522A0D18D2009EEC9B /* NRContact.swift in Sources */,
-				1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */,
 				1FF30DEF2A05784F00B0F011 /* SearchBox.swift in Sources */,
 				1F8836E82AA5A82000F252C1 /* DMs.swift in Sources */,
 				1F88490F29B537B400145340 /* URL.swift in Sources */,
