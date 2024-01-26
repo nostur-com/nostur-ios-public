@@ -88,13 +88,15 @@ struct ConversationRowView: View {
                             guard let cPic = contact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
                             Task.detached(priority: .background) {
                                 let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                                DispatchQueue.main.async {
+                                DispatchQueue.main.async { [weak contact] in
+                                    guard let contact else { return }
                                     guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                                     if similarPFP && contact.couldBeImposter != 1 {
                                         conv.objectWillChange.send() // need to rerender
                                     }
                                     contact.couldBeImposter = similarPFP ? 1 : 0
-                                    bg().perform {
+                                    bg().perform { [weak contact] in
+                                        guard let contact else { return }
                                         guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
                                         contact.contact?.couldBeImposter = similarPFP ? 1 : 0
             //                            DataProvider.shared().bgSave()

@@ -177,7 +177,7 @@ struct ProfileRow: View {
                 let cPubkey = contact.pubkey
                 let currentAccountPubkey = la.pubkey
                 
-                bg().perform {
+                bg().perform { [weak contact] in
                     guard let account = la.bgAccount else { return }
                     guard account.publicKey == currentAccountPubkey else { return }
                     guard let similarContact = account.follows.first(where: {
@@ -194,6 +194,7 @@ struct ProfileRow: View {
                         }
                         
                         DispatchQueue.main.async {
+                            guard let contact else { return }
                             guard currentAccountPubkey == la.pubkey else { return }
                             self.similarPFP = similarPFP
                             contact.couldBeImposter = similarPFP ? 1 : 0
