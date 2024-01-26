@@ -484,7 +484,7 @@ struct PreviewContainer<Content: View>: View {
     }
     
     var body: some View {
-        VStack(spacing:0) {
+        VStack(spacing: 0) {
             if didSetup, let la = NRState.shared.loggedInAccount {
                 content()
                     .environment(\.managedObjectContext, pe.context)

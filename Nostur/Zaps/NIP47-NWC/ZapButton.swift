@@ -13,10 +13,10 @@ struct ZapButton: View, Equatable {
         true
     }
     
-    private let nrPost:NRPost
-    private var isFirst:Bool
-    private var isLast:Bool
-    private var theme:Theme
+    private let nrPost: NRPost
+    private var isFirst: Bool
+    private var isLast: Bool
+    private var theme: Theme
     
     init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -31,12 +31,12 @@ struct ZapButton: View, Equatable {
 }
 
 struct ZapButtonInner: View {
-    private let nrPost:NRPost
-    @ObservedObject private var footerAttributes:FooterAttributes
-    @ObservedObject private var ss:SettingsStore = .shared
-    @State private var cancellationId:UUID? = nil
-    @State private var customZapId:UUID? = nil
-    @State private var activeColor:Color? = nil
+    private let nrPost: NRPost
+    @ObservedObject private var footerAttributes: FooterAttributes
+    @ObservedObject private var ss: SettingsStore = .shared
+    @State private var cancellationId: UUID? = nil
+    @State private var customZapId: UUID? = nil
+    @State private var activeColor: Color? = nil
     @State private var isLoading = false
     
     
@@ -44,9 +44,9 @@ struct ZapButtonInner: View {
     
     @State private var isZapped = false
     
-    private var isFirst:Bool
-    private var isLast:Bool
-    private var theme:Theme
+    private var isFirst: Bool
+    private var isLast: Bool
+    private var theme: Theme
     
     init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -56,7 +56,7 @@ struct ZapButtonInner: View {
         self.theme = theme
     }
     
-    private var icon:String {
+    private var icon: String {
         return if isLoading { "hourglass.tophalf.filled" }
                else if (isZapped || cancellationId != nil) { "bolt.fill"}
                else { "bolt" }
@@ -64,6 +64,9 @@ struct ZapButtonInner: View {
     
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         Image(systemName: icon)
             .overlay(alignment: .leading) {
                 AnimatedNumberString(number: footerAttributes.zapTally.formatNumber)
@@ -81,30 +84,13 @@ struct ZapButtonInner: View {
             .simultaneousGesture(
                 LongPressGesture()
                     .onEnded { _ in
-                        guard isFullAccount() else { showReadOnlyMessage(); return }
-                        // Trigger custom zap
-                        customZapId = UUID()
-                        if let customZapId {
-                            sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
-                        }
+                        self.longTap()
                     }
             )
             .highPriorityGesture(
                 TapGesture()
                     .onEnded { _ in
-                        if ss.nwcReady {
-                            if let cancellationId = cancellationId {
-                                cancelZap(cancellationId)
-                                triggerStrike = false
-                                SoundManager.shared.stop()
-                            }
-                            else if !isZapped, cancellationId == nil {
-                                triggerStrike = true
-                            }
-                        }
-                        else {
-                            nonNWCtap()
-                        }
+                        self.tap()
                     }
             )
             .onReceive(receiveNotification(.sendCustomZap)) { notification in
@@ -133,6 +119,31 @@ struct ZapButtonInner: View {
                 guard nrPost.id == zapStateChange.eTag else { return }
                 isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
             }
+    }
+    
+    private func tap() {
+        if ss.nwcReady {
+            if let cancellationId = cancellationId {
+                cancelZap(cancellationId)
+                triggerStrike = false
+                SoundManager.shared.stop()
+            }
+            else if !isZapped, cancellationId == nil {
+                triggerStrike = true
+            }
+        }
+        else {
+            nonNWCtap()
+        }
+    }
+    
+    private func longTap() {
+        guard isFullAccount() else { showReadOnlyMessage(); return }
+        // Trigger custom zap
+        customZapId = UUID()
+        if let customZapId {
+            sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
+        }
     }
     
     func triggerZap(strikeLocation:CGPoint, contact:Contact, zapMessage:String = "", amount:Double? = nil) {

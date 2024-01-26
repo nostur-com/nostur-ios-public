@@ -9,7 +9,7 @@ import SwiftUI
 
 // MEDIA ON USER PROFILE SCREEN
 struct ProfileMediaView: View {
-    @StateObject private var vm:ProfileGalleryViewModel
+    @StateObject private var vm: ProfileGalleryViewModel
     
     init(pubkey: String) {
         _vm = StateObject(wrappedValue: ProfileGalleryViewModel(pubkey))
