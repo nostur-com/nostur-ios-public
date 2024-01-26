@@ -41,6 +41,8 @@ struct ZapButtonInner: View {
     
     
     @State private var triggerStrike = false
+    @State private var customAmount: Double? = nil
+    @State private var zapMessage: String = ""
     
     @State private var isZapped = false
     
@@ -97,6 +99,8 @@ struct ZapButtonInner: View {
                 // Complete custom zap
                 let customZap = notification.object as! CustomZap
                 guard customZap.customZapId == customZapId else { return }
+                customAmount = customZap.amount
+                zapMessage = customZap.publicNote
                 triggerStrike = true
             }
             .overlay {
@@ -107,7 +111,7 @@ struct ZapButtonInner: View {
                                 guard !isZapped else { return }
                                 guard cancellationId == nil else { return }
                                 guard let contact = nrPost.contact?.contact else { return }
-                                self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact)
+                                self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact, zapMessage: zapMessage, amount: customAmount)
                             }
                     }
                 }
