@@ -37,7 +37,7 @@ class ProfileGalleryViewModel: ObservableObject {
     public init(_ pubkey: String) {
         self.pubkey = pubkey
         self.state = .initializing
-        self.backlog = Backlog(timeout: 10.0, auto: true)
+        self.backlog = Backlog(timeout: 13.0, auto: true)
     }
     
     // STEP 1: FETCH LIKES FROM FOLLOWS FROM RELAYS
