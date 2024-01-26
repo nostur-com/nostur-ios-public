@@ -30,6 +30,10 @@ struct PostPreview: View {
         self.onDismiss = onDismiss
         self.typingTextModel = vm.typingTextModel
     }
+    
+    private var shouldDisablePostButton: Bool {
+        typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty)
+    }
 
     var body: some View {
         ScrollView {
@@ -79,8 +83,8 @@ struct PostPreview: View {
                 }
                 .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 .cornerRadius(20)
-                .disabled(typingTextModel.sending || typingTextModel.uploading || typingTextModel.text.isEmpty)
-                .opacity(typingTextModel.text.isEmpty ? 0.25 : 1.0)
+                .disabled(shouldDisablePostButton)
+                .opacity(shouldDisablePostButton ? 0.25 : 1.0)
             }
         }
         .navigationTitle(String(localized: "Post preview", comment: "Navigation title for Post Preview screen"))
