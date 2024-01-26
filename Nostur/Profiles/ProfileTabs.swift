@@ -51,7 +51,7 @@ struct ProfileTabs: View {
             .frame(minHeight: 800)
         } header: {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing:0) {
+                HStack(spacing: 0) {
                     TabButton(
                         action: { selectedSubTab = "Posts" },
                         title: String(localized:"Posts", comment:"Tab title"),
