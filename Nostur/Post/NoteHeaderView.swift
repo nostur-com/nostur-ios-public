@@ -194,9 +194,10 @@ struct PostHeader: View {
                     $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName) // TODO: follows.anyName cache could help, put in same followsPFP dict?
                 }) else { return }
                 guard let cPic = contact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
-                Task.detached(priority: .background) {
+                Task.detached(priority: .background) { 
                     let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                    DispatchQueue.main.async {
+                    DispatchQueue.main.async { [weak contact] in
+                        guard let contact else { return }
                         guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                         contact.couldBeImposter = similarPFP ? 1 : 0
                         bg().perform {
