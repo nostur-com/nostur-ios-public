@@ -45,7 +45,7 @@ struct ProfileRelays: View {
                             subscriptionId: "P-10002",
                             reqCommand: { taskId in
                                 guard let rm = NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: [Filters(authors: [pubkey], kinds: [10002])]).json()
-                                else { 
+                                else {
                                     loading = false
                                     return
                                 }
@@ -97,13 +97,12 @@ struct ProfileRelays: View {
                         }
                     } header: {
                         Text("\(name) reads posts from")
-                    } footer: {
-                        Text("Last updated \(item.date.formatted())")
-                            .font(.caption)
-                            .padding(.top, 40)
                     }
                     .listRowBackground(themes.theme.background)
                 }
+                
+                Text("Last updated \(item.date.formatted())")
+                    .font(.caption)
 
             }
             else {

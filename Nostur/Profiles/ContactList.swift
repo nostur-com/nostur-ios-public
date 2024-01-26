@@ -37,23 +37,10 @@ struct ContactList: View {
     }
     
     var body: some View {
-        VStack {
-            LazyVStack {
-                ForEach(contacts) { contact in
-                    ProfileRow(contact: contact)
-                        .frame(height: 120)
-                    Divider()
-                }
-            }
-            
-            VStack {
-                ForEach(noMetadata, id:\.self) { pubkey in
-                    ProfileRowMissing(pubkey: pubkey)
-                        .frame(height: 120)
-                    Divider()
-                }
-            }
-            
+        ForEach(contacts) { contact in
+            ProfileRow(contact: contact)
+                .frame(height: 120)
+//            Divider()
         }
         .onAppear {
             guard !missing.isEmpty else { return }
@@ -63,6 +50,12 @@ struct ContactList: View {
         .onDisappear {
             guard !missing.isEmpty else { return }
             QueuedFetcher.shared.dequeue(pTags: missing)
+        }
+        
+        ForEach(noMetadata, id:\.self) { pubkey in
+            ProfileRowMissing(pubkey: pubkey)
+                .frame(height: 120)
+//            Divider()
         }
     }
     

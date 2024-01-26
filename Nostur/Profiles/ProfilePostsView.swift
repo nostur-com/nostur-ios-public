@@ -35,31 +35,26 @@ struct ProfilePostsView: View {
                     } catch { }
                 }
         case .ready:
-            VStack {
-                LazyVStack(spacing: 10) {
-                    ForEach(vm.posts) { nrPost in
-                        Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: themes.theme)
-                        }
-                        .id(nrPost.id)
-                        .onBecomingVisible {
-                            // SettingsStore.shared.fetchCounts should be true for below to work
-                            vm.prefetch(nrPost)
-                            
-                            guard nrPost == vm.posts.last else { return }
-                            guard lastFetchAtId != nrPost.id else { return }
-                            vm.loadMore(after: nrPost, amount: 10)
-                            vm.fetchMore(after: nrPost, amount: 20)
-//                            vm.loadMore(after: nrPost, amount: max(20, vm.posts.count * 2))
-                            lastFetchAtId = nrPost.id
-                        }
-                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                    }
+            ForEach(vm.posts) { nrPost in
+                Box(nrPost: nrPost) {
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: themes.theme)
                 }
+                .id(nrPost.id)
+                .onBecomingVisible {
+                    // SettingsStore.shared.fetchCounts should be true for below to work
+                    vm.prefetch(nrPost)
+                    
+                    // on iPhone we can use vm.posts.last but on macOS it only works on second to last?? wtf!
+                    guard nrPost == vm.posts[safe: vm.posts.count - 2] else { return }
+                    
+                    guard lastFetchAtId != nrPost.id else { return }
+                    vm.loadMore(after: nrPost, amount: 10)
+                    vm.fetchMore(after: nrPost, amount: 20)
+//                            vm.loadMore(after: nrPost, amount: max(20, vm.posts.count * 2))
+                    lastFetchAtId = nrPost.id
+                }
+                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
             }
-            
-//            .padding(.top, 10)
-//            .background(themes.theme.listBackground)
         case .timeout:
             VStack(alignment: .center) {
                 Text("Unable to fetch posts")

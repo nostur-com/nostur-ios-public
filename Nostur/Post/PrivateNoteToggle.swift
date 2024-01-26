@@ -23,6 +23,7 @@ struct ContactPrivateNoteToggle: View {
                 Image(systemName: "note.text")
                     .padding(5)
             }
+            .buttonStyle(.borderless)
             .opacity(contact.privateNote != nil ? 1 : 0.2)
         }
     }

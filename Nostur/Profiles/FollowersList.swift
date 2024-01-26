@@ -53,30 +53,18 @@ struct FollowersList: View {
     @State var rechecking = false
     
     var body: some View {
-        VStack {
-            HStack {
-                Text("Total: \(clEventsPerPubkey.count)")
-                if !rechecking {
-                    Image(systemName:"arrow.clockwise.circle.fill")
-                        .onTapGesture {
-                            req(RM.getFollowers(pubkey: pubkey))
-                            rechecking = true
-                        }
-                        .help("Recheck")
-                }
+        HStack {
+            Spacer()
+            Text("Total: \(clEventsPerPubkey.count)")
+            if !rechecking {
+                Image(systemName:"arrow.clockwise.circle.fill")
+                    .onTapGesture {
+                        req(RM.getFollowers(pubkey: pubkey))
+                        rechecking = true
+                    }
+                    .help("Recheck")
             }
-            LazyVStack {
-                ForEach(clEventsFollowingPubkeyWithContact) { event in
-                    ProfileRow(contact: event.contact!)
-                        .frame(height: 120)
-                    Divider()
-                }
-                ForEach(clEventsFollowingPubkeyMissingContact, id:\.self) { event in
-                    ProfileRowMissing(pubkey: event.pubkey)
-                        .frame(height: 120)
-                    Divider()
-                }
-            }
+            Spacer()
         }
         .onAppear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
@@ -95,6 +83,17 @@ struct FollowersList: View {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
             guard !missing.isEmpty else { return }
             QueuedFetcher.shared.dequeue(pTags: missing)
+        }
+        
+        ForEach(clEventsFollowingPubkeyWithContact) { event in
+            ProfileRow(contact: event.contact!)
+                .frame(height: 120)
+//            Divider()
+        }
+        ForEach(clEventsFollowingPubkeyMissingContact, id:\.self) { event in
+            ProfileRowMissing(pubkey: event.pubkey)
+                .frame(height: 120)
+//            Divider()
         }
     }
     
