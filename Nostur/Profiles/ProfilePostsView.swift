@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct ProfilePostsView: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var settings:SettingsStore = .shared
-    @StateObject private var vm:ProfilePostsViewModel
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var settings: SettingsStore = .shared
+    @StateObject private var vm: ProfilePostsViewModel
     @State var showMore = true
     @State var lastFetchAtId = ""
     

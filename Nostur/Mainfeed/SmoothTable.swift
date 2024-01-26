@@ -610,7 +610,6 @@ final class TViewHolder {
         if #available(iOS 16.0, *) {
             tableView.selfSizingInvalidation = .enabledIncludingConstraints
         }
-        //        tableView.selfSizingInvalidation = .enabled
         tableView.isOpaque = true
         tableView.dragInteractionEnabled = false
         tableView.allowsSelection = false

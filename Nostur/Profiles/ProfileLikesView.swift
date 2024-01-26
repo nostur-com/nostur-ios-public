@@ -9,9 +9,9 @@ import SwiftUI
 import CoreData
 
 struct ProfileLikesView: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var settings:SettingsStore = .shared
-    @StateObject private var vm:ProfileLikesViewModel
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var settings: SettingsStore = .shared
+    @StateObject private var vm: ProfileLikesViewModel
     
     init(pubkey: String) {
         _vm = StateObject(wrappedValue: ProfileLikesViewModel(pubkey))
