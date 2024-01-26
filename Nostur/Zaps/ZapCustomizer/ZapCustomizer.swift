@@ -9,18 +9,18 @@ import SwiftUI
 import NavigationBackport
 
 struct ZapCustomizerSheet: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var ss:SettingsStore = .shared
-    public var name:String
-    public var customZapId:UUID?
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var ss: SettingsStore = .shared
+    public var name: String
+    public var customZapId: UUID?
     public var supportsZap = false
-    public var sendAction:((CustomZap) -> Void)?
+    public var sendAction: ((CustomZap) -> Void)?
     @Environment(\.dismiss) private var dismiss
     
-    @AppStorage("last_custom_zap_amount") private var lastCustomZapAmount:Double = 0.0
+    @AppStorage("last_custom_zap_amount") private var lastCustomZapAmount: Double = 0.0
     @State private var zapMessage = ""
-    @State private var selectedAmount:Double = 3
-    @State private var customAmount:Double = 0.0
+    @State private var selectedAmount: Double = 3
+    @State private var customAmount: Double = 0.0
     @State private var showCustomAmountsheet = false
     @State private var setAmountAsDefault = false
     
@@ -253,16 +253,16 @@ struct ZapCustomizerSheet: View {
 }
 
 struct ZapCustomizerSheetInfo: Identifiable {
-    let name:String
-    var customZapId:UUID?
-    var id:UUID { customZapId ?? UUID() }
+    let name: String
+    var customZapId: UUID?
+    var id: UUID { customZapId ?? UUID() }
 }
 
 struct CustomZap: Identifiable {
-    var id:UUID { customZapId ?? UUID() }
+    var id: UUID { customZapId ?? UUID() }
     var publicNote = ""
-    var customZapId:UUID?
-    let amount:Double
+    var customZapId: UUID?
+    let amount: Double
 }
 
 #Preview("ZapCustomizerSheet") {

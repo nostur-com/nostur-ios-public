@@ -150,14 +150,14 @@ struct ZapButtonInner: View {
         }
     }
     
-    func triggerZap(strikeLocation:CGPoint, contact:Contact, zapMessage:String = "", amount:Double? = nil) {
+    func triggerZap(strikeLocation: CGPoint, contact: Contact, zapMessage: String = "", amount: Double? = nil) {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         let isNC = account.isNC
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
         let selectedAmount = amount ?? ss.defaultZapAmount
-        sendNotification(.lightningStrike, LightningStrike(location:strikeLocation, amount: selectedAmount))
+        sendNotification(.lightningStrike, LightningStrike(location: strikeLocation, amount: selectedAmount))
         withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
             activeColor = .yellow
         }
@@ -168,7 +168,7 @@ struct ZapButtonInner: View {
         
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), contact: contact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!, zapMessage: zapMessage)
+            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), contact: contact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!, zapMessage: zapMessage)
             NWCZapQueue.shared.sendZap(zap)
             accountCache()?.addZapped(nrPost.id)
         }
