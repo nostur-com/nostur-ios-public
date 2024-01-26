@@ -178,6 +178,8 @@ struct ZapButtonInner: View {
         self.cancellationId = nil
         footerAttributes.cancelZap(cancellationId)
         isZapped = false
+        customAmount = nil
+        zapMessage = ""
         activeColor = theme.footerButtons
         L.og.info("⚡️ Zap cancelled")
         bg().perform {
