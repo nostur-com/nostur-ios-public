@@ -50,6 +50,7 @@ struct EventRelationUpdate {
 enum EventRelationType {
     case replyTo
     case replyToRoot
+    case replyToRootInverse
     case firstQuote
 }
 

@@ -1113,12 +1113,12 @@ extension Event {
                 savedEvent.replyToId = replyToEtag.id
                 
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                if let replyTo = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) ?? (try? Event.fetchEvent(id: replyToEtag.id, context: context)) {
-                    savedEvent.replyTo = replyTo
-                    replyTo.addToReplies(savedEvent)
-                    replyTo.repliesCount += 1
+                if let parent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) ?? (try? Event.fetchEvent(id: replyToEtag.id, context: context)) {
+                    savedEvent.replyTo = parent
+                    parent.addToReplies(savedEvent)
+                    parent.repliesCount += 1
 //                    replyTo.repliesUpdated.send(replyTo.replies_)
-                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyTo.id, replies: replyTo.replies_))
+                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
                 }
             }
             
@@ -1132,16 +1132,17 @@ extension Event {
                 if (savedEvent.replyToId == nil) {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                 }
-                if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (try? Event.fetchEvent(id: replyToRootEtag.id, context: context)) {
-                    savedEvent.replyToRoot = replyToRoot
+                if let root = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (try? Event.fetchEvent(id: replyToRootEtag.id, context: context)) {
+                    savedEvent.replyToRoot = root
                     
-                    ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: replyToRoot))
+                    ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: root))
+                    ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRootInverse, id:  root.id, event: savedEvent))
                     if (savedEvent.replyToId == savedEvent.replyToRootId) {
-                        savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                        replyToRoot.addToReplies(savedEvent)
-                        replyToRoot.repliesCount += 1
-                        ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyToRoot.id, replies: replyToRoot.replies_))
-                        ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyTo, id: savedEvent.id, event: replyToRoot))
+                        savedEvent.replyTo = root // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                        root.addToReplies(savedEvent)
+                        root.repliesCount += 1
+                        ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: root.id, replies: root.replies_))
+                        ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyTo, id: savedEvent.id, event: root))
                     }
                 }
             }
@@ -1152,11 +1153,11 @@ extension Event {
                 savedEvent.replyToId = savedEvent.replyToRootId
                 savedEvent.replyTo = savedEvent.replyToRoot
                 
-                if let replyTo = savedEvent.replyTo {
-                    replyTo.addToReplies(savedEvent)
-                    replyTo.repliesCount += 1
+                if let parent = savedEvent.replyTo {
+                    parent.addToReplies(savedEvent)
+                    parent.repliesCount += 1
 //                    replyTo.repliesUpdated.send(replyTo.replies_)
-                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: replyTo.id, replies: replyTo.replies_))
+                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
                 }
             }
             
@@ -1409,6 +1410,7 @@ extension Event {
                     waitingEvent.replyToRoot = savedEvent
 //                    waitingEvent.replyToRootUpdated.send(savedEvent)
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRoot, id: waitingEvent.id, event: savedEvent)))
+                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRootInverse, id: savedEvent.id, event: waitingEvent)))
                 }
                 if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
                     waitingEvent.firstQuote = savedEvent
