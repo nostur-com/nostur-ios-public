@@ -470,7 +470,7 @@ extension Search {
         }
         
         let searchTask1 = ReqTask(
-            timeout: 4.5,
+            timeout: 3.5,
             prefix: "SEA-",
             reqCommand: { taskId in
                 var tags = [term]
@@ -519,6 +519,7 @@ extension Search {
                     do {
                         let signedKind443 = try kind443.sign(NKeys(privateKeyHex: pk))
                         let unpublishedKind443 = Event.saveEvent(event: signedKind443)
+                        try? bg().save() 
                         let nrPost = NRPost(event: unpublishedKind443)
                         DispatchQueue.main.async {
                             self.nrPosts = [nrPost]
