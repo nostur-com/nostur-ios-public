@@ -20,23 +20,23 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     // other (should use queue: "connection-pool"
-    public var firstConnection:Bool = true // flag to know if it is connect or reconnect - reconnect will restore some things not needed at first connect in background fetch
-    public var url:String { relayData.id }
-    public var nreqSubscriptions:Set<String> = []
-    public var isNWC:Bool
-    public var isNC:Bool
+    public var firstConnection: Bool = true // flag to know if it is connect or reconnect - reconnect will restore some things not needed at first connect in background fetch
+    public var url: String { relayData.id }
+    public var nreqSubscriptions: Set<String> = []
+    public var isNWC: Bool
+    public var isNC: Bool
     
-    public var lastMessageReceivedAt:Date? = nil
+    public var lastMessageReceivedAt: Date? = nil
     private var exponentialReconnectBackOff = 0
-    private var skipped:Int = 0
+    private var skipped: Int = 0
     
     
-    public var relayData:RelayData
-    private var queue:DispatchQueue
+    public var relayData: RelayData
+    private var queue: DispatchQueue
     private var session: URLSession?
     private var webSocketTask: URLSessionWebSocketTask?
     private var subscriptions = Set<AnyCancellable>()
-    private var outQueue:[SocketMessage] = []
+    private var outQueue: [SocketMessage] = []
     
     
     private var isDeviceConnected = false {
@@ -66,7 +66,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
-    init(_ relayData: RelayData, isNWC:Bool = false, isNC:Bool = false, queue: DispatchQueue) {
+    init(_ relayData: RelayData, isNWC: Bool = false, isNC: Bool = false, queue: DispatchQueue) {
         self.relayData = relayData
         self.queue = queue
         self.isNC = isNC
