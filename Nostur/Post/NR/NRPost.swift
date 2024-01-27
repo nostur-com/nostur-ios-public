@@ -860,18 +860,18 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                                 let nrPost = NRPost(event: event, cancellationId: cancellationIds[event.id])
                                 return nrPost
                             }
-                    
-                    let replyPFPs = nrReplies
-                        .compactMap { reply in
-                            return followingPFP(reply.pubkey)
-                        }
-                        .uniqued(on: ({ $0 }))
-                        .prefix(8)
-                    
+  
                     if (self.withGroupedReplies) {
                         self.groupRepliesToRoot.send(nrReplies)
                     }
                     else {
+                        let replyPFPs = nrReplies
+                            .compactMap { reply in
+                                return followingPFP(reply.pubkey)
+                            }
+                            .uniqued(on: ({ $0 }))
+                            .prefix(8)
+                        
                         self.event?.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
                         DispatchQueue.main.async { [weak self] in
                             self?.objectWillChange.send()
