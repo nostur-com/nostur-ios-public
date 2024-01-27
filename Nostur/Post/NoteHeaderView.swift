@@ -301,8 +301,8 @@ struct NameAndNip: View {
             .layoutPriority(2)
             .onAppear {
                 if contact.metadata_created_at == 0 {
-                    guard let contact = contact.contact else { return }
-                    EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "NameAndNip.001")
+                    guard let bgContact = contact.contact else { return }
+                    EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "NameAndNip.001")
                     QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
                 }
             }
