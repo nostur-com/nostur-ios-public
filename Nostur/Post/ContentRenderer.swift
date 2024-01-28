@@ -20,6 +20,7 @@ struct ContentRenderer: View { // VIEW things
     private let contentElements:[ContentElement]
     private let forceAutoload:Bool
     @Binding var didStart:Bool
+    @StateObject private var childDIM: DIMENSIONS
     
     init(nrPost: NRPost, isDetail:Bool = false, fullWidth:Bool = false, availableWidth:CGFloat, forceAutoload: Bool = false, theme:Theme, didStart: Binding<Bool> = .constant(false)) {
         self.isDetail = isDetail
@@ -30,6 +31,7 @@ struct ContentRenderer: View { // VIEW things
         self.forceAutoload = forceAutoload
         self.theme = theme
         _didStart = didStart
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
     }
     
     private var shouldAutoload: Bool {
@@ -43,7 +45,7 @@ struct ContentRenderer: View { // VIEW things
                 case .nrPost(let nrPost):
                     EmbeddedPost(nrPost, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
+                        .environmentObject(childDIM)
                     //                        .fixedSize(horizontal: false, vertical: true)
 //                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
@@ -53,7 +55,7 @@ struct ContentRenderer: View { // VIEW things
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
+                        .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
                         .id(index)
@@ -79,7 +81,7 @@ struct ContentRenderer: View { // VIEW things
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, forceAutoload: shouldAutoload, theme: theme)
 //                            .frame(minHeight: 75)
-                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
+                            .environmentObject(childDIM)
 //                            .debugDimensions("QuoteById.note1")
                             .padding(.vertical, 10)
 //                            .withoutAnimation()
@@ -97,7 +99,7 @@ struct ContentRenderer: View { // VIEW things
                 case .noteHex(let hex):
                     EmbedById(id: hex, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
+                        .environmentObject(childDIM)
 //                        .debugDimensions("QuoteById.noteHex")
                         .padding(.vertical, 10)
 //                        .withoutAnimation()

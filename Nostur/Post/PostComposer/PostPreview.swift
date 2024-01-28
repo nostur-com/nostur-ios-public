@@ -18,6 +18,7 @@ struct PostPreview: View {
     @ObservedObject public var typingTextModel: TypingTextModel
     public let onDismiss: () -> Void
     @State private var postPreviewWidth: CGFloat? = nil
+    @StateObject private var previewDIM = DIMENSIONS()
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
@@ -42,13 +43,14 @@ struct PostPreview: View {
                 .onPreferenceChange(SizePreferenceKey.self) { size in
                     guard size.width > 0 else { return }
                     postPreviewWidth = size.width
+                    previewDIM.listWidth = (size.width - 80.0)
                 }
             if let postPreviewWidth {
                 AnyStatus()
                 PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: themes.theme)
                     .padding(10)
                     .disabled(true)
-                    .environmentObject(DIMENSIONS.embeddedDim(availableWidth: postPreviewWidth - 80.0))
+                    .environmentObject(previewDIM)
             }
             Spacer()
         }

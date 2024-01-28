@@ -18,12 +18,14 @@ struct DMContentRenderer: View { // VIEW things
     private let availableWidth:CGFloat
     private let contentElements:[ContentElement]
     @State private var didStart = false
+    @StateObject private var childDIM: DIMENSIONS
     
     init(pubkey: String, contentElements:[ContentElement] = [], availableWidth:CGFloat, theme:Theme) {
         self.pubkey = pubkey
         self.availableWidth = availableWidth
         self.contentElements = contentElements
         self.theme = theme
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
     }
     
     var body: some View {
@@ -32,13 +34,13 @@ struct DMContentRenderer: View { // VIEW things
                 switch contentElement {
                 case .nrPost(let nrPost):
                     EmbeddedPost(nrPost, forceAutoload: false, theme: theme)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
+                        .environmentObject(childDIM)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                 
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, forceAutoload: false, theme: theme)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
+                        .environmentObject(childDIM)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                 
@@ -56,7 +58,7 @@ struct DMContentRenderer: View { // VIEW things
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, forceAutoload: true, theme: theme)
-                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
+                            .environmentObject(childDIM)
                             .padding(.vertical, 10)
                             .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                             .onTapGesture {
@@ -68,7 +70,7 @@ struct DMContentRenderer: View { // VIEW things
                     }
                 case .noteHex(let hex):
                     EmbedById(id: hex, forceAutoload: true, theme: theme)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
+                        .environmentObject(childDIM)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                         .onTapGesture {

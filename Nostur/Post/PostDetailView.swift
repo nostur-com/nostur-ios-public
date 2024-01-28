@@ -24,7 +24,7 @@ struct NoteById: View {
                 .onAppear { [weak vm] in
                     let fetchParams: FetchVM.FetchParams = (
                         prio: true,
-                        req: { taskId in
+                        req: { [weak vm] taskId in
                             bg().perform {
                                 guard let vm else { return }
                                 if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
@@ -35,7 +35,7 @@ struct NoteById: View {
                                 }
                             }
                         },
-                        onComplete: { relayMessage, event in
+                        onComplete: { [weak vm] relayMessage, event in
                             guard let vm else { return }
                             if let event = event {
                                 vm.ready(NRPost(event: event, withFooter: false))

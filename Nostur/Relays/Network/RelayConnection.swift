@@ -207,7 +207,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 L.sockets.info("🔴🔴 Not connected. ????? \(self?.url ?? "")")
                 return
             }
-            self?.webSocketTask?.sendPing(pongReceiveHandler: { error in
+            self?.webSocketTask?.sendPing(pongReceiveHandler: { [weak self] error in
                 if let error {
                     L.sockets.info("🔴🔴 No pong \(self?.url ?? ""): \(error)")
                 }
