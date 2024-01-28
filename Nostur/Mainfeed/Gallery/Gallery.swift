@@ -9,8 +9,8 @@ import SwiftUI
 import NukeUI
 
 struct Gallery: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject var vm:GalleryViewModel
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject var vm: GalleryViewModel
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }

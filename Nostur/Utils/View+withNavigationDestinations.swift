@@ -160,6 +160,6 @@ func navigateTo(_ path:any Hashable) {
     }
 }
 
-func navigateToOnMain(_ path:any Hashable) {
+func navigateToOnMain(_ path: any Hashable) {
     sendNotification(.navigateToOnMain, NavigationDestination(destination: path))
 }

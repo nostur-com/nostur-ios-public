@@ -10,7 +10,7 @@ import UIKit
 import NavigationBackport
 
 struct DetailPane: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @StateObject private var dim = DIMENSIONS.shared
     @StateObject private var tm = DetailTabsModel()
     @State private var offsetX = 200.0

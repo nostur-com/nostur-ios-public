@@ -9,17 +9,17 @@ import SwiftUI
 
 class TabModel: ObservableObject, Identifiable, Equatable {
     
-    var id:UUID
-    var notePath:NotePath?
-    var contactPath:ContactPath?
-    var nrContactPath:NRContactPath?
-    var event:Event?
-    var nrPost:NRPost?
-    var nrContact:NRContact?
-    var naddr1:Naddr1Path?
-    var articlePath:ArticlePath?
-    var profileTab:String?
-    var isArticle:Bool {
+    var id: UUID
+    var notePath: NotePath?
+    var contactPath: ContactPath?
+    var nrContactPath: NRContactPath?
+    var event: Event?
+    var nrPost: NRPost?
+    var nrContact: NRContact?
+    var naddr1: Naddr1Path?
+    var articlePath: ArticlePath?
+    var profileTab: String?
+    var isArticle: Bool {
         naddr1 != nil || articlePath != nil
     }
     @Published var navigationTitle = "" {
