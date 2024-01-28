@@ -81,7 +81,7 @@ struct BigLinkPreview: View {
                 guard !SettingsStore.shared.lowDataMode else { return }
                 guard url.absoluteString.prefix(7) != "http://" else { return }
                 DispatchQueue.global().async {
-                    if let tags = LinkPreviewCache.shared.retrieveObject(at: url) {
+                    if let tags = LinkPreviewCache.shared.cache.retrieveObject(at: url) {
                         DispatchQueue.main.async {
                             self.tags = tags
                         }
@@ -93,7 +93,7 @@ struct BigLinkPreview: View {
                                 DispatchQueue.main.async {
                                     self.tags = tags
                                 }
-                                LinkPreviewCache.shared.setObject(for: url, value: tags)
+                                LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
                             }
                             catch {
                                 
