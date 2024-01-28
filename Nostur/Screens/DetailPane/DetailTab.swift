@@ -9,10 +9,10 @@ import SwiftUI
 import NavigationBackport
 
 struct DetailTab: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @State private var navPath = NBNavigationPath()
-    private let tm:DetailTabsModel = .shared
-    @ObservedObject public var tab:TabModel
+    private let tm: DetailTabsModel = .shared
+    @ObservedObject public var tab: TabModel
     
     var body: some View {
         NBNavigationStack(path: $navPath) {
