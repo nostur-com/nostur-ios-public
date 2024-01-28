@@ -68,7 +68,17 @@ class NRState: ObservableObject {
     }
     
     // Instruments: wtf? --> 70.00 ms    2.4%    70.00 ms             NRState.activeAccountPublicKey.getter
-    @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
+//    @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
+    
+    public var activeAccountPublicKey: String {
+        get { _activeAccountPublicKey }
+        set { 
+            _activeAccountPublicKey = newValue
+            UserDefaults.standard.setValue(newValue, forKey: "activeAccountPublicKey")
+        }
+    }
+    
+    private var _activeAccountPublicKey: String = ""
     
     // BG high speed vars
     public var accountPubkeys:Set<String> = []
@@ -82,6 +92,7 @@ class NRState: ObservableObject {
     public var mutedRootIds:Set<String> = []
     
     @MainActor private init() {
+        self._activeAccountPublicKey = UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? ""
         self.wot = WebOfTrust.shared
         self.nsecBunker = NSecBunkerManager.shared
         signpost(self, "LAUNCH", .begin, "Initializing Nostur App State")
