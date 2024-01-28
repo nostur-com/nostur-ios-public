@@ -16,6 +16,8 @@ import UIKit
 class NRTextParser { // TEXT things
     static let shared = NRTextParser()
     private let context = bg()
+    
+    private init() { }
 
     func parseText(_ event:Event, text: String, availableWidth: CGFloat? = nil) -> AttributedStringWithPs {
         let availableWidth = availableWidth ??  DIMENSIONS.shared.availableNoteRowImageWidth()
@@ -172,33 +174,28 @@ class NRTextParser { // TEXT things
     }
 
     
-    // Cached regex that is used in NSMutableAttributedString.addHashtagIcons()
+    // Cached regex
     static let npubNprofRegex = try! NSRegularExpression(pattern: "(?:nostr:)?@?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b", options: [])
     
     // NIP-27 handle nostr:npub or nostr:nprofile
-    private func parseUserMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
-        let pattern = "(?:nostr:)?@?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b"
-
+    private func parseUserMentions(event: Event, text: String, plainText: Bool = false) -> TextWithPs {
         var replacedString = text
-        var range = text.startIndex..<text.endIndex
+        let nsRange = NSRange(replacedString.startIndex..<replacedString.endIndex, in: text)
         var pTags = [Ptag]()
 
         var sanityIndex = 0
-        while let matchRange = replacedString.range(of: pattern, options: .regularExpression, range: range, locale: nil) {
-            if sanityIndex > 100 { break }
+        for match in Self.npubNprofRegex.matches(in: replacedString, range: nsRange).reversed() {
+            if sanityIndex > 200 { break }
             sanityIndex += 1
-            let match = replacedString[matchRange].replacingOccurrences(of: "@", with: "")
-            var replacement = match
+            var replacement = (replacedString as NSString).substring(with: match.range).replacingOccurrences(of: "@", with: "")
             
-            let pub1OrProfile1 = match.prefix(11) == "nostr:npub1" || match.prefix(5) == "npub1"
+            let pub1OrProfile1 = replacement.prefix(11) == "nostr:npub1" || replacement.prefix(5) == "npub1"
                 ? "npub1"
                 : "nprofile1"
             
-            //let identifier = try ShareableIdentifier(match)
-            
             switch pub1OrProfile1 {
                 case "npub1":
-                    let npub = match.replacingOccurrences(of: "nostr:", with: "")
+                    let npub = replacement.replacingOccurrences(of: "nostr:", with: "")
                     do {
                         let pubkey = try toPubkey(npub)
                         pTags.append(pubkey)
@@ -213,7 +210,7 @@ class NRTextParser { // TEXT things
                         L.og.debug("problem decoding npub")
                     }
                 case "nprofile1":
-                let nprofile = match.replacingOccurrences(of: "nostr:", with: "")
+                let nprofile = replacement.replacingOccurrences(of: "nostr:", with: "")
                     do {
                         let identifier = try ShareableIdentifier(nprofile)
                         if let pubkey = identifier.pubkey {
@@ -232,17 +229,13 @@ class NRTextParser { // TEXT things
                 default:
                     L.og.debug("eeuh")
             }
-
-            replacedString.replaceSubrange(matchRange, with: replacement)
             
-            // Check if the next index is valid
-            if matchRange.lowerBound >= replacedString.endIndex {
-                break
+          
+            if let range = Range(match.range, in: replacedString) {
+                replacedString.replaceSubrange(range, with: replacement)
             }
-
-            let newStartIndex = replacedString.index(after: matchRange.lowerBound)
-            range = newStartIndex..<replacedString.endIndex
         }
+
         return TextWithPs(text: replacedString, pTags: pTags)
     }
 
