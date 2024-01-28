@@ -23,11 +23,17 @@ struct PubkeyUsernameCache {
     }()
 }
 
-struct LinkPreviewCache {
-    static let shared:LRUCache2<URL, [String: String]> = {
-        let cache = LRUCache2<URL, [String: String]>(countLimit: 2000)
-        return cache
-    }()
+class LinkPreviewCache {
+    
+    public let cache = LRUCache2<URL, [String: String]>(countLimit: 2000)
+    
+    public let metaTagsRegex = try! NSRegularExpression(pattern: #"<meta\s+(?:property=|name=)"(?:og|twitter):(.*?)"\s+content="([^"]+)(?:"\s|"[^>]*?\/?>)"#, options: .caseInsensitive)
+    
+    public let titleRegex = try! NSRegularExpression(pattern: "<title(?:.*)>([^<]*)</title>", options: .caseInsensitive)
+    
+    static let shared = LinkPreviewCache()
+    
+    private init() {}
 }
 
 class AccountCache {

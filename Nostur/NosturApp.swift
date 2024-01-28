@@ -23,7 +23,7 @@ struct AppScene: Scene {
     
     private let puc:LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc:LRUCache2<String, Date> = FailedURLCache.shared
-    private let lpc:LRUCache2<URL, [String: String]> = LinkPreviewCache.shared
+    private let lpc: LinkPreviewCache = .shared
     
     @Environment(\.scenePhase) private var phase
     
@@ -83,7 +83,7 @@ struct RefreshingAppScene: Scene {
     
     private let puc:LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc:LRUCache2<String, Date> = FailedURLCache.shared
-    private let lpc:LRUCache2<URL, [String: String]> = LinkPreviewCache.shared
+    private let lpc: LinkPreviewCache = .shared
     
     @Environment(\.scenePhase) private var phase
     
@@ -163,7 +163,7 @@ struct SimpleScene: Scene {
     private let importer: Importer = .shared
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
-    private let lpc: LRUCache2<URL, [String: String]> = LinkPreviewCache.shared
+    private let lpc: LinkPreviewCache = .shared
     // ^ 37,4 MB
     
     private let dataProvider = DataProvider.shared()

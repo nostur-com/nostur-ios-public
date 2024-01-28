@@ -328,7 +328,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                         fetchMetaTags(url: url) { result in
                             do {
                                 let tags = try result.get()
-                                LinkPreviewCache.shared.setObject(for: url, value: tags)
+                                LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
                                 L.og.info("✓✓ Loaded link preview meta tags from \(url)")
                             }
                             catch { }
