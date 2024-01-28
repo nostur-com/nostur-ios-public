@@ -9,20 +9,20 @@ import SwiftUI
 
 struct AppScene: Scene {
     private let dataProvider = DataProvider.shared()
-    private let ceb:NRContentElementBuilder = .shared
-    private let cp:ConnectionPool = .shared
-    private let npn:NewPostNotifier = .shared
-    private let ss:SettingsStore = .shared
-    private let nvm:NotificationsViewModel = .shared
-    private let dm:DirectMessageViewModel = .default
-    private let networkMonitor:NetworkMonitor = .shared
-    private let ns:NRState = .shared
-    private let importer:Importer = .shared
-    private let backlog:Backlog = .shared
+    private let ceb: NRContentElementBuilder = .shared
+    private let cp: ConnectionPool = .shared
+    private let npn: NewPostNotifier = .shared
+    private let ss: SettingsStore = .shared
+    private let nvm: NotificationsViewModel = .shared
+    private let dm: DirectMessageViewModel = .default
+    private let networkMonitor: NetworkMonitor = .shared
+    private let ns: NRState = .shared
+    private let importer: Importer = .shared
+    private let backlog: Backlog = .shared
     private let cloudSyncManager: CloudSyncManager = .shared
     
-    private let puc:LRUCache2<String, String> = PubkeyUsernameCache.shared
-    private let fuc:LRUCache2<String, Date> = FailedURLCache.shared
+    private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
+    private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
     private let lpc: LinkPreviewCache = .shared
     
     @Environment(\.scenePhase) private var phase
@@ -69,20 +69,20 @@ struct AppScene: Scene {
 @available(iOS 16, *)
 struct RefreshingAppScene: Scene {
     private let dataProvider = DataProvider.shared()
-    private let ceb:NRContentElementBuilder = .shared
-    private let cp:ConnectionPool = .shared
-    private let npn:NewPostNotifier = .shared
-    private let ss:SettingsStore = .shared
-    private let nvm:NotificationsViewModel = .shared
-    private let dm:DirectMessageViewModel = .default
-    private let networkMonitor:NetworkMonitor = .shared
-    private let ns:NRState = .shared
-    private let importer:Importer = .shared
-    private let backlog:Backlog = .shared
+    private let ceb: NRContentElementBuilder = .shared
+    private let cp: ConnectionPool = .shared
+    private let npn: NewPostNotifier = .shared
+    private let ss: SettingsStore = .shared
+    private let nvm: NotificationsViewModel = .shared
+    private let dm: DirectMessageViewModel = .default
+    private let networkMonitor: NetworkMonitor = .shared
+    private let ns: NRState = .shared
+    private let importer: Importer = .shared
+    private let backlog: Backlog = .shared
     private let cloudSyncManager: CloudSyncManager = .shared
     
-    private let puc:LRUCache2<String, String> = PubkeyUsernameCache.shared
-    private let fuc:LRUCache2<String, Date> = FailedURLCache.shared
+    private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
+    private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
     private let lpc: LinkPreviewCache = .shared
     
     @Environment(\.scenePhase) private var phase
