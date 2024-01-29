@@ -276,6 +276,7 @@ class NRTextParser { // TEXT things
                                "#btc": "HashtagBitcoin",
                                "#sats": "HashtagBitcoin",
                                "#satoshis": "HashtagBitcoin",
+                               "#биткоин": "HashtagBitcoin",
                                "#nostur": "HashtagNostur",
                                "#nostr": "HashtagNostr",
                                "#lightning": "HashtagLightning",
@@ -337,7 +338,7 @@ class NRTextParser { // TEXT things
                                "#nostriches": "HashtagNostrich"]
     
     // Cached regex that is used in NSMutableAttributedString.addHashtagIcons()
-    static let htRegex = try! NSRegularExpression(pattern: "\(hashtags.keys.joined(separator: "\\b|"))\\b", options: [.caseInsensitive])
+    static let htRegex = try! NSRegularExpression(pattern: "\\b\(hashtags.keys.joined(separator: "\\b|"))\\b", options: [.caseInsensitive])
     
     // Build NSAttributedString hashtag icons once for reuse in NSMutableAttributedString.addHashtagIcons()
     public lazy var hashtagIcons: [String: NSAttributedString] = {
