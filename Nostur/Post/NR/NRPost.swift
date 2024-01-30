@@ -564,7 +564,18 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         return Nostur.blocks().contains(pubkey)
     }
     
-    private var subscriptions = Set<AnyCancellable>()
+    private var contactSavedSubscription: AnyCancellable?
+    private var removeMissingPsSubscription: AnyCancellable?
+    private var postDeletedSubscription: AnyCancellable?
+    private var repliesSubscription: AnyCancellable?
+    private var repliesCountSubscription: AnyCancellable?
+    private var relationSubscription: AnyCancellable?
+    private var updateNRPostSubscription: AnyCancellable?
+    private var isFollowingSubscription: AnyCancellable?
+    private var unpublishSubscription: AnyCancellable?
+    private var publishSubscription: AnyCancellable?
+    private var repliesToRootSubscription: AnyCancellable?
+    private var groupRepliesToRootSubscription: AnyCancellable?
     
     private func setupSubscriptions() {
         // Don't listen if there is no need to listen (performance?)
@@ -591,20 +602,20 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         isFollowingListener()
         unpublishListener()
         
-        groupRepliesToRoot
+        groupRepliesToRootSubscription = groupRepliesToRoot
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] nrPosts in
                 guard let self = self else { return }
                 self._groupRepliesToRoot(nrPosts)
             }
-            .store(in: &subscriptions)
     }
     
     
     
     private func updateNRPostListener() {
+        guard updateNRPostSubscription == nil else { return }
         let id = id
-        ViewUpdates.shared.updateNRPost
+        updateNRPostSubscription = ViewUpdates.shared.updateNRPost
             .filter { $0.id == id }
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] event in
@@ -623,11 +634,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     self.ownPostAttributes.cancellationId = cancellationId
                 }
             }
-            .store(in: &subscriptions)
     }
     
     private func isFollowingListener() {
-        receiveNotification(.followersChanged)
+        guard isFollowingSubscription == nil else { return }
+        isFollowingSubscription = receiveNotification(.followersChanged)
             .subscribe(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }
@@ -644,13 +655,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     }
                 }
             }
-            .store(in: &subscriptions)
     }
     
     private func unpublishListener() {
+        guard unpublishSubscription == nil else { return }
 
         // the undo can be in the replies, so don't check for own account keys yet
-        receiveNotification(.unpublishedNRPost)
+        unpublishSubscription = receiveNotification(.unpublishedNRPost)
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 guard self.withGroupedReplies else { return }
@@ -659,13 +670,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 else { return }
                 self.loadGroupedReplies()
             }
-            .store(in: &subscriptions)
         
         
         // Only for our accounts, handle undo of this post.
         guard NRState.shared.fullAccountPubkeys.contains(self.pubkey) else { return }
         
-        receiveNotification(.publishingEvent)
+        publishSubscription = receiveNotification(.publishingEvent)
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let eventId = notification.object as! String
@@ -676,16 +686,15 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     self?.ownPostAttributes.cancellationId = nil
                 }
             }
-            .store(in: &subscriptions)
     }
     
     // For rerendering ReplyingToFragment, or setting .contact
     // Or Rebuilding content elements for mentions in text
     private func contactSavedListener() {
-
+        guard contactSavedSubscription == nil else { return }
         // Rerender ReplyingToFragment when the new contact is saved (only if we replyToId is set)
         // Rerender content elements also for mentions in text
-        Importer.shared.contactSaved
+        contactSavedSubscription = Importer.shared.contactSaved
             .subscribe(on: DispatchQueue.global())
             .filter({ [weak self] pubkey in
                 guard let self = self else { return false }
@@ -694,6 +703,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
+                bg().perform { [weak self] in
+                    guard let contact = self?.event?.contact else { return }
+                    let nrContact = NRContact(contact: contact, following: self?.following ?? false)
+                    DispatchQueue.main.async {
+                        self?.objectWillChange.send()
+                        self?.contact = nrContact
+                    }
+                }
                 if self.kind == 6 {
                     DispatchQueue.main.async { [weak self] in
                         self?.objectWillChange.send()
@@ -717,11 +734,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         }
                     }
                 }
+                
             }
-            .store(in: &subscriptions)
        
         // Remove from missingPs so we don't fetch again at any .onAppear
-        Importer.shared.contactSaved
+        removeMissingPsSubscription = Importer.shared.contactSaved
             .subscribe(on: DispatchQueue.global())
             .filter({ [weak self] pubkey in
                 guard let self = self else { return false }
@@ -731,27 +748,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self = self else { return }
                 self.missingPs.remove(pubkey)
             }
-            .store(in: &subscriptions)
-        
-        Importer.shared.contactSaved
-            .subscribe(on: DispatchQueue.global())
-            .filter({ [weak self] pubkey in
-                guard let self = self else { return false }
-                return self.pubkey == pubkey
-            })
-            .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
-            .sink { [weak self] pubkey in
-                guard let self = self else { return }
-                bg().perform { [weak self] in
-                    guard let contact = self?.event?.contact else { return }
-                    let nrContact = NRContact(contact: contact, following: self?.following ?? false)
-                    DispatchQueue.main.async {
-                        self?.objectWillChange.send()
-                        self?.contact = nrContact
-                    }
-                }
-            }
-            .store(in: &subscriptions)
     }
 
     
@@ -786,25 +782,22 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func postDeletedListener() {
+        guard postDeletedSubscription == nil else { return }
         let id = id
-        ViewUpdates.shared.postDeleted
+        postDeletedSubscription = ViewUpdates.shared.postDeleted
             .filter { $0.toDelete == id }
             .receive(on: RunLoop.main)
             .sink { [weak self] deletion in
                 guard let self = self else { return }
                 self.deletedById = deletion.deletedBy
             }
-            .store(in: &subscriptions)
     }
     
-    private var repliesToRootListenerActive = false
-    private var relationListenerActive = false
-    
     private func relationListener() {
-        guard !relationListenerActive else { return }
-        relationListenerActive = true
+        guard relationSubscription == nil else { return }
+        
         let id = id
-        ViewUpdates.shared.eventRelationUpdate
+        relationSubscription = ViewUpdates.shared.eventRelationUpdate
             .filter { $0.id == id }
             .sink { [weak self] relationUpdate in
                 bg().perform {
@@ -838,16 +831,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     }
                 }
             }
-            .store(in: &subscriptions)
     }
     
-    private var repliesUpdatedListenerActive = false
-    
     private func repliesListener() {
-        guard !repliesUpdatedListenerActive else { return }
-        repliesUpdatedListenerActive = true
+        guard repliesSubscription == nil else { return }
+
         let id = self.id
-        ViewUpdates.shared.repliesUpdated
+        repliesSubscription = ViewUpdates.shared.repliesUpdated
             .filter { $0.id == id }
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] change in
@@ -884,24 +874,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     }
                 }
             }
-            .store(in: &subscriptions)
     }
     
     // Same as repliesListener but only for counts
     // NO NEED? ALREADY PART OF ViewUpdates.shared.eventStatChanged ??
     private func repliesCountListener() {
-        guard !withReplies else { return } // Skip if we already have repliesListener, which makes repliesCountListener not needed
-        guard !repliesUpdatedListenerActive else { return }
-        repliesUpdatedListenerActive = true
+        guard repliesSubscription == nil else { return } // Skip if we already have repliesListener, which makes repliesCountListener not needed
+        guard repliesCountSubscription == nil else { return }
+        guard !withReplies else { return }
+
         let id = self.id
-        ViewUpdates.shared.repliesUpdated
+        repliesCountSubscription = ViewUpdates.shared.repliesUpdated
             .filter { $0.id == id }
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] change in
                 self?.footerAttributes.objectWillChange.send()
                 self?.footerAttributes.repliesCount = Int64(change.replies.count)
             }
-            .store(in: &subscriptions)
     }
     
     private func loadReplies() {
@@ -1154,10 +1143,10 @@ extension NRPost { // Helpers for grouped replies
     }
     
     private func repliesToRootListener() {
-        guard !repliesToRootListenerActive else { return }
-        repliesToRootListenerActive = true
+        guard repliesToRootSubscription == nil else { return }
+
         let id = self.id
-        ViewUpdates.shared.eventRelationUpdate
+        repliesToRootSubscription = ViewUpdates.shared.eventRelationUpdate
             .filter { $0.id == id && $0.relationType == .replyToRootInverse }
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] relation in
@@ -1171,7 +1160,6 @@ extension NRPost { // Helpers for grouped replies
                     self.groupRepliesToRoot.send(self.replies)
                 }
             }
-            .store(in: &subscriptions)
     }
     
     var repliesToLeaf: [NRPost] {
