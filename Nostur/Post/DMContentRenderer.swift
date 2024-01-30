@@ -19,12 +19,14 @@ struct DMContentRenderer: View { // VIEW things
     private let contentElements:[ContentElement]
     @State private var didStart = false
     @StateObject private var childDIM: DIMENSIONS
+    private let isSentByCurrentUser: Bool
     
-    init(pubkey: String, contentElements:[ContentElement] = [], availableWidth:CGFloat, theme:Theme) {
+    init(pubkey: String, contentElements: [ContentElement] = [], availableWidth: CGFloat, theme: Theme, isSentByCurrentUser: Bool = false) {
         self.pubkey = pubkey
         self.availableWidth = availableWidth
         self.contentElements = contentElements
         self.theme = theme
+        self.isSentByCurrentUser = isSentByCurrentUser
         _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
     }
     
@@ -83,7 +85,7 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: true, isScreenshot: false)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: true, isScreenshot: false, primaryColor: isSentByCurrentUser ? .white : theme.primary)
                         .equatable()
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     

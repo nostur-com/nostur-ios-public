@@ -13,20 +13,23 @@ struct NRTextDynamic: View {
     
     private let attributedString: NSAttributedString
     private let plain: Bool
+    private let fontColor: Color
     
-    init(_ attributedString: NSAttributedString, plain: Bool = false) {
+    init(_ attributedString: NSAttributedString, plain: Bool = false, fontColor: Color = Themes.default.theme.primary) {
         self.attributedString = attributedString
         self.plain = plain
+        self.fontColor = fontColor
+        
     }
     
-    init(_ text: String, plain: Bool = false) {
-        
+    init(_ text: String, plain: Bool = false, fontColor: Color = Themes.default.theme.primary) {
+        self.fontColor = fontColor
         do {
             let mutableAttributedString = try NSMutableAttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
                         
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(Themes.default.theme.primary)
+                .foregroundColor: UIColor(self.fontColor)
             ]
             
             mutableAttributedString.addAttributes(
@@ -42,7 +45,7 @@ struct NRTextDynamic: View {
             let mutableAttributedString = NSMutableAttributedString(string: text)
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(Themes.default.theme.primary)
+                .foregroundColor: UIColor(self.fontColor)
             ]
             
             mutableAttributedString.addAttributes(
@@ -69,6 +72,7 @@ struct NRTextDynamic: View {
         let view = UITextView()
 //        _ = view.layoutManager
         view.isScrollEnabled = false
+        view.textColor = UIColor(self.fontColor)
         view.tintColor = UIColor(themes.theme.accent)
         view.isSelectable = true
         view.isEditable = false
@@ -154,27 +158,30 @@ struct NRTextFixed: UIViewRepresentable {
     private let plain: Bool
     private let themes: Themes
     private let height: CGFloat
+    private let fontColor: Color
     
     // Height calculation is expensive, so calculate before in background, then pass as prop.
     // see AttributedStringWithPs.
     // For other situations maybe use GeometryReader
-    init(_ attributedString: NSAttributedString, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default) {
+    init(_ attributedString: NSAttributedString, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default, fontColor: Color? = nil) {
         self.attributedString = attributedString
         self.plain = plain
         self.themes = themes
         self.height = height
+        self.fontColor = Color.red
     }
     
-    init(_ text: String, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default) {
+    init(_ text: String, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default, fontColor: Color? = nil) {
         self.themes = themes
         self.height = height
+        self.fontColor = fontColor ?? themes.theme.primary
         do {
 //            let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             
             let mutableAttributedString = try NSMutableAttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(themes.theme.primary)
+                .foregroundColor: UIColor(self.fontColor)
             ]
             
             mutableAttributedString.addAttributes(
@@ -192,7 +199,7 @@ struct NRTextFixed: UIViewRepresentable {
             let mutableAttributedString = NSMutableAttributedString(string: text)
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(themes.theme.primary)
+                .foregroundColor: UIColor(self.fontColor)
             ]
             
             mutableAttributedString.addAttributes(
@@ -212,6 +219,7 @@ struct NRTextFixed: UIViewRepresentable {
         let view = UITextView()
 //        _ = view.layoutManager
         view.isScrollEnabled = false
+        view.textColor = UIColor(self.fontColor)
         view.tintColor = UIColor(themes.theme.accent)
         view.isSelectable = true
         view.isEditable = false
