@@ -67,7 +67,8 @@ class DirectMessageViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
     
     private init() {
-        bg().perform {
+        bg().perform { [weak self] in
+            guard let self else { return }
             self._reloadAccepted
                 .debounce(for: 1.0, scheduler: RunLoop.main)
                 .sink { [weak self] _ in

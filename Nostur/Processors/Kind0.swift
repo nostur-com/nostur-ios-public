@@ -54,7 +54,8 @@ class Kind0Processor {
                     }
                     
                     // check DB
-                    await bg().perform {
+                    await bg().perform { [weak self] in
+                        guard let self else { return }
                         if let profile = self.fetchProfile(pubkey: pubkey) {
                             self.receive.send(profile)
                             self.setProfile(profile)
@@ -71,8 +72,8 @@ class Kind0Processor {
         receive
             .subscribe(on: DispatchQueue.global())
             .receive(on: DispatchQueue.global())
-            .sink { profile in
-                self.setProfile(profile)
+            .sink { [weak self] profile in
+                self?.setProfile(profile)
             }
             .store(in: &subscriptions)
     }

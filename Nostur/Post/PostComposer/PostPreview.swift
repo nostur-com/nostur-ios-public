@@ -45,7 +45,7 @@ struct PostPreview: View {
                     postPreviewWidth = size.width
                     previewDIM.listWidth = (size.width - 80.0)
                 }
-            if let postPreviewWidth {
+            if postPreviewWidth != nil {
                 AnyStatus()
                 PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: themes.theme)
                     .padding(10)

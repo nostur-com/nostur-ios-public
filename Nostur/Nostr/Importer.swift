@@ -58,7 +58,7 @@ class Importer {
             .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
-                bg().perform { 
+                bg().perform { [weak self] in
                     guard let self else { return }
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
                     let notified = self.callbackSubscriptionIds
