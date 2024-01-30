@@ -71,7 +71,7 @@ struct MainView: View {
                                     .environmentObject(themes)
                             }
                         }
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .presentationBackgroundCompat(themes.theme.background)
                         .nbUseNavigationStack(.never)
                     }
                     .toolbar {
