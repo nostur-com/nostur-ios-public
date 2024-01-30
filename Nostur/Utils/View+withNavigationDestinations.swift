@@ -67,6 +67,7 @@ enum ViewPath: Hashable {
     case Lists
     case Relays
     case Badges
+    case Gallery(vm: GalleryViewModel)
 }
 
 extension View {
@@ -162,4 +163,8 @@ func navigateTo(_ path:any Hashable) {
 
 func navigateToOnMain(_ path: any Hashable) {
     sendNotification(.navigateToOnMain, NavigationDestination(destination: path))
+}
+
+func navigateOnDetail(_ path: any Hashable) {
+    sendNotification(.navigateToOnDetail, NavigationDestination(destination: path))
 }

@@ -19,6 +19,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     var naddr1: Naddr1Path?
     var articlePath: ArticlePath?
     var profileTab: String?
+    var galleryVM: GalleryViewModel?
     var isArticle: Bool {
         naddr1 != nil || articlePath != nil
     }
@@ -30,7 +31,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     
     @Published var suspended = false
     
-    init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, nrContactPath:NRContactPath? = nil, event:Event? = nil, nrContact:NRContact? = nil, nrPost:NRPost? = nil, naddr1:Naddr1Path? = nil, articlePath:ArticlePath? = nil, profileTab:String? = nil) {
+    init(notePath: NotePath? = nil, contactPath: ContactPath? = nil, nrContactPath: NRContactPath? = nil, event: Event? = nil, nrContact: NRContact? = nil, nrPost: NRPost? = nil, naddr1: Naddr1Path? = nil, articlePath: ArticlePath? = nil, profileTab: String? = nil, galleryVM: GalleryViewModel? = nil) {
         self.id = UUID()
         self.notePath = notePath
         self.contactPath = contactPath
@@ -41,6 +42,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
         self.naddr1 = naddr1
         self.articlePath = articlePath
         self.profileTab = profileTab
+        self.galleryVM = galleryVM
         self.configureNavigationTitle()
     }
     
@@ -83,6 +85,11 @@ class TabModel: ObservableObject, Identifiable, Equatable {
             navigationTitle = nrContact.anyName
             return
         }
+        
+        if galleryVM != nil {
+            navigationTitle = "Gallery"
+            return
+        }
         navigationTitle = "＿"
     }
     
@@ -94,10 +101,8 @@ class TabModel: ObservableObject, Identifiable, Equatable {
 import NostrEssentials
 typealias si = NostrEssentials.ShareableIdentifier
 
-final class DetailTabsModel: ObservableObject {
-    
-    static public let shared = DetailTabsModel()
-    
+class DetailTabsModel: ObservableObject {
+
     @Published var tabs: [TabModel] = [] {
         didSet {
             self.saveTabs()

@@ -10,7 +10,17 @@ import NostrEssentials
 import CoreData
 import Combine
 
-class GalleryViewModel: ObservableObject {
+class GalleryViewModel: ObservableObject, Equatable, Hashable {
+    
+    static func == (lhs: GalleryViewModel, rhs: GalleryViewModel) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    let id = UUID()
     
     @Published var state:GalleryState
     private var posts:[PostID: RecommendedBy<Pubkey>]

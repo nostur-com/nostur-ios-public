@@ -113,6 +113,10 @@ extension Notification.Name {
     static var navigateToOnMain: Notification.Name {
         return Notification.Name("navigateToOnMain")
     }
+         
+    static var navigateToOnDetail: Notification.Name {
+        return Notification.Name("navigateToOnDetail")
+    }
      
     static var newPostSaved: Notification.Name {
         return Notification.Name("newPostSaved")
