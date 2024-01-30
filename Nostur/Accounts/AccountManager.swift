@@ -28,7 +28,7 @@ class AccountManager {
         return account
     }
     
-    func getPrivateKeyHex(pubkey:String, account: CloudAccount) -> String? {
+    func getPrivateKeyHex(pubkey: String, account: CloudAccount) -> String? {
         let keychain = Keychain(service: "nostur.com.Nostur")
             .synchronizable(true)
         do {
