@@ -148,7 +148,7 @@ struct ProfileView: View {
                                     AccountEditView(account: account)
                                 }
                                 .nbUseNavigationStack(.never)
-                                .presentationBackgroundCompat(themes.theme.background)
+                                .presentationBackgroundCompat(themes.theme.listBackground)
                             }
                         }
                         else {
@@ -400,7 +400,7 @@ struct ProfileView: View {
                 }
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .onAppear {
             if let tab = tab {
@@ -607,7 +607,7 @@ struct ProfileToolbar: View {
                             AccountEditView(account: account)
                         }
                         .nbUseNavigationStack(.never)
-                        .presentationBackgroundCompat(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                     }
                     .layoutPriority(2)
                     //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))

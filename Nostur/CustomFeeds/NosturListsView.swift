@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct NosturListsView: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)])
@@ -69,8 +69,9 @@ struct NosturListsView: View {
                 NewListSheet()
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
+        .nosturNavBgCompat(themes: themes)
     }
     
     func removeDuplicateLists() {

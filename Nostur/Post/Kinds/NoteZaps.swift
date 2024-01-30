@@ -65,6 +65,7 @@ struct NoteZaps: View {
             Spacer()
         }
         .background(themes.theme.listBackground)
+        .nosturNavBgCompat(themes: themes)
         .onAppear {
             loadZaps(zapsSorted)
         }

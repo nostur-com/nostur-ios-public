@@ -72,7 +72,7 @@ struct BadgesIssuedView: View {
                 CreateNewBadgeSheet()
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
     }
 }

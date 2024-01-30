@@ -130,14 +130,14 @@ struct ComposePost: View {
                             NavigationStack {
                                 PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
                             }
-                            .presentationBackgroundCompat(themes.theme.background)
+                            .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                         else {
                             NBNavigationStack {
                                 PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
                                     .environmentObject(themes)
                             }
-                            .presentationBackgroundCompat(themes.theme.background)
+                            .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                     }
                 }

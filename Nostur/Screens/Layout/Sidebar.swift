@@ -295,7 +295,7 @@ struct SideBar: View {
                     .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .sheet(isPresented: $showAnySigner) {
             NBNavigationStack {
@@ -303,7 +303,7 @@ struct SideBar: View {
                     .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .actionSheet(item: $logoutAccount) { account in
             ActionSheet(

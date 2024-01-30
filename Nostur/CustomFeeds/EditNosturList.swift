@@ -40,6 +40,7 @@ struct EditNosturList: View {
         }
         .scrollContentBackgroundCompat(.hidden)
         .background(themes.theme.listBackground)
+        .nosturNavBgCompat(themes: themes)
         .listStyle(.plain)
         .navigationTitle("\(list.name ?? "feed")")
         .navigationBarTitleDisplayMode(.inline)
@@ -62,9 +63,10 @@ struct EditNosturList: View {
         .sheet(item: $editList, content: { list in
             NBNavigationStack {
                 EditListTitleSheet(list: list)
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         })
         .sheet(isPresented: $addContactsSheetShown) {
             NBNavigationStack {
@@ -85,9 +87,10 @@ struct EditNosturList: View {
                         }
                     }
                 }
+                .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
     }
 }

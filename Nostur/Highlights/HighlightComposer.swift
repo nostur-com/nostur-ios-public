@@ -115,7 +115,7 @@ struct HighlightComposer: View {
                         }
                     }
                     .nbUseNavigationStack(.never)
-                    .presentationBackgroundCompat(themes.theme.background)
+                    .presentationBackgroundCompat(themes.theme.listBackground)
                 }
             }
         }

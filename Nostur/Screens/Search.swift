@@ -134,6 +134,7 @@ struct Search: View {
                 }
             }
             .background(themes.theme.listBackground)
+            .nosturNavBgCompat(themes: themes)
             .withNavigationDestinations()
             .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)

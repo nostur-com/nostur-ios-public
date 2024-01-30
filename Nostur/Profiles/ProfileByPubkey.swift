@@ -73,7 +73,7 @@ struct ProfileByPubkey: View {
                     AccountEditView(account: account)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.listBackground)
             }
         case .error(let error):
             Text(error)

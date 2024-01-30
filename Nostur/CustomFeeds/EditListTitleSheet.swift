@@ -9,25 +9,26 @@ import SwiftUI
 import NavigationBackport
 
 struct EditListTitleSheet: View {
-    
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) var dismiss
     var list: CloudFeed
     @State var newTitle = ""
     @State var showAsTab = false
     
     var body: some View {
-        VStack {
-            Form {
-                Section(header: Text("Title", comment: "Header for entering title of a feed")) {
-                    TextField(String(localized:"Title of your feed", comment:"Placeholder for input field to enter title of a feed"), text: $newTitle)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                    
-                    Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
-                }
+        Form {
+            Section(header: Text("Title", comment: "Header for entering title of a feed")) {
+                TextField(String(localized:"Title of your feed", comment:"Placeholder for input field to enter title of a feed"), text: $newTitle)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                
+                Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
             }
-            Spacer()
+            .listRowBackground(themes.theme.background)
         }
+        .scrollContentBackgroundCompat(.hidden)
+        .background(themes.theme.listBackground)
+        .nosturNavBgCompat(themes: themes)
         .onAppear {
             newTitle = list.name_
             showAsTab = list.showAsTab
@@ -48,6 +49,7 @@ struct EditListTitleSheet: View {
                 .disabled(newTitle.isEmpty)
             }
         }
+        
     }
 }
 

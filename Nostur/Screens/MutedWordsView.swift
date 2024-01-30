@@ -33,7 +33,7 @@ struct MutedWordsView: View {
         }
         .sheet(item: $selected) { words in
             EditWordSheet(mutedWords: words)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {

@@ -153,6 +153,8 @@ struct PostDetailView: View {
                 .navigationBarHidden(navTitleHidden)
             }
         }
+            .nosturNavBgCompat(themes: themes)
+            .background(themes.theme.listBackground)
     }
 }
 

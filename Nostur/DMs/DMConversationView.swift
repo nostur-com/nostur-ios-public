@@ -144,6 +144,7 @@ struct DMConversationView: View {
                         }
                         .listRowInsets(.init())
                         .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
                         
                         
                         if let contactPubkey {
@@ -242,11 +243,18 @@ struct DMConversationView: View {
                                 req(RM.getUserMetadata(pubkey: contactPubkey))
                             }
                             .scaleEffect(x: 1, y: -1, anchor: .center)
+                            .listRowInsets(.init())
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(themes.theme.listBackground)
                         }
                         Color.clear.frame(height: 1)
                             .id(top)
+                            .listRowInsets(.init())
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(themes.theme.listBackground)
                         
                     }
+                    .scrollContentBackgroundCompat(.hidden)
                     .listStyle(.plain)
                     .padding(.top, 55)
                     .scaleEffect(x: 1, y: -1, anchor: .center)
@@ -295,7 +303,7 @@ struct DMConversationView: View {
                             }
                         }
                         .padding(.vertical, 5)
-                        .background(.thinMaterial)
+                        .background(themes.theme.listBackground)
                     }
                 }
                 .onAppear {
@@ -350,7 +358,9 @@ struct DMConversationView: View {
                             }
                     }
                 }
+                .background(themes.theme.listBackground)
             }
+            .nosturNavBgCompat(themes: themes)
 //            .debugDimensions("ScrollViewReader")
 //            .navigationTitle("\(contact?.authorName ?? String(localized:"DM", comment:"Navigation title for a DM conversation screen (Direct Message)"))")
             .task {
@@ -366,6 +376,7 @@ struct DMConversationView: View {
         else {
             Text("Error: could not find contact pubkey", comment: "Error shown on DM conversation screen")
                 .centered()
+                .nosturNavBgCompat(themes: themes)
         }
     }
 }
