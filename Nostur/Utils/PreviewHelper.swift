@@ -15,7 +15,6 @@ public class PreviewEnvironment {
     
     var didLoad = false
     let er:ExchangeRateModel = .shared
-    let tm:DetailTabsModel = .shared
     let dim:DIMENSIONS = .shared
     let sm:SideBarModel = .shared
     let themes:Themes = .default
@@ -494,7 +493,6 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.er)
                     .environmentObject(pe.ss)
                     .environmentObject(pe.sm)
-                    .environmentObject(pe.tm)
                     .environmentObject(pe.dim)
                     .environmentObject(pe.themes)
                     .environmentObject(pe.dim)

@@ -11,7 +11,7 @@ import NavigationBackport
 struct DetailTab: View {
     @EnvironmentObject private var themes: Themes
     @State private var navPath = NBNavigationPath()
-    private let tm: DetailTabsModel = .shared
+    @EnvironmentObject private var tm: DetailTabsModel
     @ObservedObject public var tab: TabModel
     
     var body: some View {
