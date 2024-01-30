@@ -210,7 +210,15 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             }
             self?.webSocketTask?.sendPing(pongReceiveHandler: { [weak self] error in
                 if let error {
-                    L.sockets.info("🔴🔴 No pong \(self?.url ?? ""): \(error)")
+                    self?.queue.async(flags: .barrier) { [weak self] in
+                        self?.session?.invalidateAndCancel()
+                        self?.nreqSubscriptions = []
+                        self?.exponentialReconnectBackOff = 0
+                        self?.skipped = 0
+                        self?.lastMessageReceivedAt = nil
+                        self?.isSocketConnected = false
+                    }
+                    L.sockets.info("🔴🔴 PING: No pong \(self?.url ?? ""): \(error)")
                 }
                 else {
                     self?.didReceivePong()
@@ -327,7 +335,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self?.nreqSubscriptions = []
             self?.exponentialReconnectBackOff = 0
             self?.skipped = 0
-            self?.lastMessageReceivedAt = .now
+            self?.lastMessageReceivedAt = nil
             self?.isSocketConnected = false
             DispatchQueue.main.async {
                 sendNotification(.socketNotification, "Disconnected: \(self?.url ?? "")")
