@@ -36,7 +36,6 @@ struct NRContentTextRendererInner: View {
     @State private var text: NSAttributedString? = nil
     
     var body: some View {
-        let _ = print("WWWWTTTTFFF: primaryColor \(primaryColor.debugDescription)")
         if isPreview {
             NRTextDynamic(text ?? attributedStringWithPs.output, fontColor: primaryColor ?? Themes.default.theme.primary)
                 .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack

@@ -172,8 +172,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 L.sockets.info("🔴🔴 Not connected. Did not sendMessage \(self.url)")
                 return
             }
+            #if DEBUG
             L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-            
+            #endif
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
             
             for out in outQueue {
@@ -201,10 +202,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     public func ping() {
-        L.sockets.info("Trying to ping: \(self.url)")
+        L.sockets.info("PING: Trying to ping: \(self.url)")
         queue.async { [weak self] in
             if self?.webSocketTask == nil {
-                L.sockets.info("🔴🔴 Not connected. ????? \(self?.url ?? "")")
+                L.sockets.info("🔴🔴 PING: Not connected. ????? \(self?.url ?? "")")
                 return
             }
             self?.webSocketTask?.sendPing(pongReceiveHandler: { [weak self] error in
@@ -226,7 +227,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         if !self.isSocketConnected {
             self.isSocketConnected = true
         }
+        #if DEBUG
         L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(string)")
+        #endif
         MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url, client: self)
         self.lastMessageReceivedAt = .now
     }
