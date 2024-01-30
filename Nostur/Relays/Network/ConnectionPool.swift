@@ -125,12 +125,12 @@ public class ConnectionPool: ObservableObject {
                 
                 if let lastReceivedMessageAt = connection.lastMessageReceivedAt {
                     if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
-                        L.sockets.info("\(connection.url) Last message older that 45 seconds, sending ping")
+                        L.sockets.debug("PING: \(connection.url) Last message older that 45 seconds, sending ping")
                         connection.ping()
                     }
                 }
                 else {
-                    L.sockets.info("\(connection.url) Last message = nil. (re)connecting.. connection.isSocketConnecting: \(connection.isSocketConnecting) ")
+                    L.sockets.debug("\(connection.url) Last message = nil. (re)connecting.. connection.isSocketConnecting: \(connection.isSocketConnecting) ")
                     connection.connect()
                 }
             }
@@ -306,7 +306,6 @@ public class ConnectionPool: ObservableObject {
                             }
                         }
                         // For NWC we just replace active subscriptions, else doesn't work
-                        L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId ?? ""): \(message.message)")
                         connection.sendMessage(message.message)
                     }
                     else if message.type == .CLOSE {
@@ -362,7 +361,6 @@ public class ConnectionPool: ObservableObject {
                             }
                             L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(connection.url): \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
                         }
-                        L.sockets.debug("⬇️⬇️ REQUESTING \(subscriptionId ?? ""): \(message.message)")
                         connection.sendMessage(message.message)
                     }
                     else if message.type == .CLOSE { // CLOSE FOR ALL RELAYS

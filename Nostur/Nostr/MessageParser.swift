@@ -71,11 +71,15 @@ class MessageParser {
                     guard let subscriptionId = message.subscriptionId else { return }
                     if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
                         // Send close message to this specific socket, not all.
+                        #if DEBUG
                         L.sockets.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
+                        #endif
                         client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
                     }
                     else {
+                        #if DEBUG
                         L.sockets.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId)")
+                        #endif
                     }
                 default:
                     if (message.type == .EVENT) {

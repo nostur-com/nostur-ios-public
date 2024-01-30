@@ -71,7 +71,7 @@ struct NRContentTextRendererInner: View {
                             }
                         }
                     }
-                    .animation(.none)
+                    .transaction { t in t.animation = nil }
             }
             else {
                 NRTextDynamic(text ?? attributedStringWithPs.output)
@@ -97,7 +97,7 @@ struct NRContentTextRendererInner: View {
                             }
                         }
                     }
-                    .animation(.none)
+                    .transaction { t in t.animation = nil }
             }
         }
     }

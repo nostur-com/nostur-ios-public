@@ -45,13 +45,3 @@ struct DebugWindow: View {
         }
     }
 }
-
-#Preview {
-    if #available(iOS 16.0, *) {
-        DebugWindow()
-            .environmentObject(ConnectionPool.shared)
-    }
-    else {
-        Text("!")
-    }
-}
