@@ -26,7 +26,7 @@ struct ProfileMediaView: View {
         case .initializing, .loading:
             ProgressView()
                 .padding(10)
-                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
                 .task(id: "profilegallery") {
                     do {
                         try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)

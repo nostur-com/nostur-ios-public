@@ -22,7 +22,7 @@ struct ProfileLikesView: View {
         case .initializing, .loading:
             ProgressView()
                 .padding(10)
-                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
                 .onAppear { vm.load() }
                 .task(id: "profilelikes") {
                     do {

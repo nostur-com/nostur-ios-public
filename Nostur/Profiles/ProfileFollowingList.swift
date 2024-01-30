@@ -23,7 +23,7 @@ struct ProfileFollowingList: View {
         case .initializing, .loading, .altLoading:
             ProgressView()
                 .padding(10)
-                .frame(maxWidth:.infinity, alignment: .center)
+                .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
                 .onAppear { [weak vm] in
                     let fetchParams: FetchVM.FetchParams = (
                         prio: false, // Can't use prio, different relays can send different event and we need most recent.
