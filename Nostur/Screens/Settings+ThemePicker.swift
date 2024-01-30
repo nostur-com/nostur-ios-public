@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ThemePicker: View {
-    @State private var selectedTheme:String // Should just use @AppStorage("app_theme") here, but this freezes on desktop. so workaround via init() and .onChange(of: selectedTheme).
+    @State private var selectedTheme: String // Should just use @AppStorage("app_theme") here, but this freezes on desktop. so workaround via init() and .onChange(of: selectedTheme).
     
     init() {
         let selectedTheme = UserDefaults.standard.string(forKey: "app_theme") ?? "default"

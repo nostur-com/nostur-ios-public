@@ -25,7 +25,7 @@ class Kind0Processor {
     // Don't access directly, use get/setProfile which goes through own queue
     private var _lru = [Pubkey: Profile]() // TODO: Turn into real LRU
     
-    private func getProfile(_ pubkey:String) async -> Profile? {
+    private func getProfile(_ pubkey: String) async -> Profile? {
         await withCheckedContinuation { continuation in
             queue.async {
                 continuation.resume(returning: self._lru[pubkey])

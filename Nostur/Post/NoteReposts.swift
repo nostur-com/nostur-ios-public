@@ -10,15 +10,15 @@ import NostrEssentials
 
 // Copy pasta from NoteReactions and adjusted a bit. ReactionRow replaced with ProfileRows
 struct NoteReposts: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     
-    let id:String
+    let id: String
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
-    var reposts:FetchedResults<Event>
-    var repostsPubkeys:[String] { reposts.filter({ $0.firstE() == id }) .map ({ $0.pubkey }) }
+    var reposts: FetchedResults<Event>
+    var repostsPubkeys: [String] { reposts.filter({ $0.firstE() == id }) .map ({ $0.pubkey }) }
     
-    init(id:String) {
+    init(id: String) {
         self.id = id
         _reposts = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "kind == 6 AND tagsSerialized CONTAINS %@", serializedE(id)))
     }

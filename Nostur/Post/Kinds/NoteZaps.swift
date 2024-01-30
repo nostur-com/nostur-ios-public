@@ -8,28 +8,28 @@
 import SwiftUI
 
 struct NoteZaps: View {
-    @EnvironmentObject private var themes:Themes
-    private let id:String
+    @EnvironmentObject private var themes: Themes
+    private let id: String
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
-    private var zaps:FetchedResults<Event>
-    private var zapsSorted:[Event] { 
+    private var zaps: FetchedResults<Event>
+    private var zapsSorted: [Event] {
         zaps.sorted(by: { $0.naiveSats > $1.naiveSats })
             .uniqued(on: { $0.id })
     }
     
-    @State private var verifiedZaps:[ZapAndZapFrom] = []
-    @State private var unverifiedZaps:[ZapAndZapFrom] = []
+    @State private var verifiedZaps: [ZapAndZapFrom] = []
+    @State private var unverifiedZaps: [ZapAndZapFrom] = []
     
     // hack to get both zap and zap from for optimized ForEach
     // need to clean up some day
     struct ZapAndZapFrom: Identifiable {
-        var id:String { zap.id }
-        let zap:Event
-        let zapFrom:Event
+        var id: String { zap.id }
+        let zap: Event
+        let zapFrom: Event
     }
     
-    init(id:String) {
+    init(id: String) {
         self.id = id
         _zaps = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "zappedEventId == %@ AND kind == 9735", id))
     }

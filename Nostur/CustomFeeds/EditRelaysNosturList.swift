@@ -10,14 +10,14 @@ import NavigationBackport
 
 struct EditRelaysNosturList: View {
     
-    let list:CloudFeed
+    let list: CloudFeed
     @Environment(\.dismiss) var dismiss
     
     @State var title = ""
     @State var wotEnabled = true
-    @State var selectedRelays:Set<CloudRelay> = []
+    @State var selectedRelays: Set<CloudRelay> = []
     
-    private var selectedRelaysData:Set<RelayData> {
+    private var selectedRelaysData: Set<RelayData> {
         Set(selectedRelays.map { $0.toStruct() })
     }
     
@@ -28,7 +28,7 @@ struct EditRelaysNosturList: View {
         animation: .default)
     var relays: FetchedResults<CloudRelay>
     
-    var formIsValid:Bool {
+    var formIsValid: Bool {
         guard !title.isEmpty else { return false }
         guard !selectedRelays.isEmpty else { return false }
         return true

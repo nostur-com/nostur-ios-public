@@ -112,7 +112,7 @@ struct DetailPane: View {
             ZStack {
                 ForEach(tm.tabs) { tab in
                     if !tab.suspended {
-                        DetailTab(tab:tab)
+                        DetailTab(tab: tab)
     //                        .padding(.vertical, 10)
     //                        .background(Color.systemBackground)
     //                        .roundedCorner(10, corners: [.topLeft, .topRight])

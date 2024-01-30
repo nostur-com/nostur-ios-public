@@ -16,31 +16,31 @@ import Combine
 // and then reverse the rows, and flip then also.
 struct DMConversationView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Namespace private var top
     
-    @EnvironmentObject var la:LoggedInAccount
+    @EnvironmentObject var la: LoggedInAccount
     
-    private let recentDM:Event
-    private let pubkey:String
-    private let theirPubkey:String?
-    private let dateHeaderFormatter:DateFormatter
+    private let recentDM: Event
+    private let pubkey: String
+    private let theirPubkey: String?
+    private let dateHeaderFormatter: DateFormatter
     
-    @State private var text:String = ""
+    @State private var text: String = ""
     @State private var didLoad = false
     
     @FetchRequest
-    private var theirs:FetchedResults<Event>
+    private var theirs: FetchedResults<Event>
     
     @FetchRequest
-    private var mine:FetchedResults<Event>
+    private var mine: FetchedResults<Event>
     
-    private var messages:[Event] {
+    private var messages: [Event] {
         chain(theirs,mine)
             .sorted(by: { $0.created_at < $1.created_at })
     }
     
-    private var messagesByDay:[Date: [Event]] {
+    private var messagesByDay: [Date: [Event]] {
         let calendar = Calendar.current
         
         return Dictionary(grouping: messages) { event in
@@ -48,7 +48,7 @@ struct DMConversationView: View {
         }
     }
     
-    private var contact:Contact? {
+    private var contact: Contact? {
         guard let rootDM = rootDM else { return nil }
         // contact is in .pubkey or in .firstP (depending on incoming/outgoing DM.
         // if there are multiple P's, we try lastP if firstP is same as pubkey (edge case)
@@ -63,7 +63,7 @@ struct DMConversationView: View {
         }
     }
     
-    private var contactPubkey:String? {
+    private var contactPubkey: String? {
         guard let rootDM = rootDM else { return nil }
         // pubkey is .pubkey or .firstP (depending on incoming/outgoing DM.)
         // if there are multiple P's, we try lastP if firstP is same as pubkey (edge case)
@@ -78,22 +78,22 @@ struct DMConversationView: View {
         }
     }
     
-    private var rootDM:Event? {
+    private var rootDM: Event? {
         allMessagesSorted.first
     }
     
-    private var isAccepted:Bool {
+    private var isAccepted: Bool {
         // if possible infer accepted by checking if we responded (mine)
         conv.accepted || (!mine.isEmpty)
     }
     
-    private var allMessagesSorted:[Event] {
+    private var allMessagesSorted: [Event] {
         chain(theirs, mine).sorted(by: { $0.created_at < $1.created_at })
     }
     
-    @ObservedObject private var conv:Conversation
+    @ObservedObject private var conv: Conversation
     
-    init(recentDM:Event, pubkey:String, conv:Conversation) {
+    init(recentDM: Event, pubkey: String, conv: Conversation) {
         self.conv = conv
         self.pubkey = pubkey
         self.recentDM = recentDM

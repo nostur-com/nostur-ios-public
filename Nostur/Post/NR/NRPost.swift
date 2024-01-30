@@ -22,7 +22,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     class PostOrThreadAttributes: ObservableObject {
         @Published var parentPosts:[NRPost] = []
         
-        init(parentPosts:[NRPost] = []) {
+        init(parentPosts: [NRPost] = []) {
             self.parentPosts = parentPosts
         }
     }
@@ -38,23 +38,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     class NoteRowAttributes: ObservableObject {
-        @Published var firstQuote:NRPost? = nil
+        @Published var firstQuote: NRPost? = nil
         
-        init(firstQuote:NRPost? = nil) {
+        init(firstQuote: NRPost? = nil) {
             self.firstQuote = firstQuote
         }
     }
     
     class PFPAttributes: ObservableObject {
-        @Published var contact:NRContact? = nil
+        @Published var contact: NRContact? = nil
         
-        init(contact:NRContact? = nil) {
+        init(contact: NRContact? = nil) {
             self.contact = contact
         }
     }
     
     class HighlightAttributes: ObservableObject {
-        @Published var contact:NRContact? = nil
+        @Published var contact: NRContact? = nil
         
         public var authorPubkey: String?
         public var anyName: String? {
@@ -69,7 +69,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         public var url: String?
         // TODO: Add naddr support
 
-        init(contact:NRContact? = nil, authorPubkey:String? = nil, url:String? = nil) {
+        init(contact: NRContact? = nil, authorPubkey: String? = nil, url: String? = nil) {
             self.contact = contact
             self.authorPubkey = authorPubkey
             self.url = url
@@ -77,9 +77,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     class ReplyingToAttributes: ObservableObject {
-        @Published var replyingToUsernamesMarkDown:AttributedString? = nil
+        @Published var replyingToUsernamesMarkDown: AttributedString? = nil
         
-        init(replyingToUsernamesMarkDown:AttributedString? = nil) {
+        init(replyingToUsernamesMarkDown: AttributedString? = nil) {
             self.replyingToUsernamesMarkDown = replyingToUsernamesMarkDown
         }
     }
@@ -94,7 +94,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var footerAttributes: FooterAttributes
     var ownPostAttributes: OwnPostAttributes
     
-    let SPAM_LIMIT_P:Int = 50
+    let SPAM_LIMIT_P: Int = 50
  
     static func == (lhs: NRPost, rhs: NRPost) -> Bool {
         lhs.id == rhs.id
@@ -183,20 +183,20 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     var groupedReplies = [NRPost]()
     
-    let isRepost:Bool
+    let isRepost: Bool
     var repostedHeader = ""
-    var threadPostsCount:Int
-    var isTruncated:Bool = false
+    var threadPostsCount: Int
+    var isTruncated: Bool = false
     
-    var replyToId:String?
-    var replyToRootId:String?
+    var replyToId: String?
+    var replyToRootId: String?
     
-    var _replyTo:NRPost?
-    var _replyToRoot:NRPost?
+    var _replyTo: NRPost?
+    var _replyToRoot: NRPost?
     
-    var firstQuoteId:String?
+    var firstQuoteId: String?
     
-    var replyTo:NRPost?  {
+    var replyTo: NRPost?  {
         get { NRState.shared.nrPostQueue.sync { [weak self] in
             self?._replyTo
         } }
@@ -205,7 +205,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         } }
     }
     
-    var replyToRoot:NRPost? {
+    var replyToRoot: NRPost? {
         get { NRState.shared.nrPostQueue.sync { [weak self] in
             self?._replyToRoot
         } }
@@ -214,7 +214,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         } }
     }
     
-    var firstQuote:NRPost? {
+    var firstQuote: NRPost? {
         get { noteRowAttributes.firstQuote }
         set {
             DispatchQueue.main.async { [weak self] in
@@ -223,8 +223,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
   
-    var firstE:String? // Needed for muting
-    var deletedById:String? {
+    var firstE: String? // Needed for muting
+    var deletedById: String? {
         get { postRowDeletableAttributes.deletedById }
         set {
             DispatchQueue.main.async { [weak self] in
@@ -252,11 +252,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
 
     
-    var linkPreviewURLs:[URL] = []
-    var imageUrls:[URL] = []
-    var previewWeights:PreviewWeights?
+    var linkPreviewURLs: [URL] = []
+    var imageUrls: [URL] = []
+    var previewWeights: PreviewWeights?
     var plainTextOnly = false
-    var flags:String {
+    var flags: String {
         get { ownPostAttributes.flags }
         set {
             DispatchQueue.main.async { [weak self] in
@@ -264,9 +264,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
         }
     }
-    var dTag:String?
-    var alt:String?
-    var aTag:String = ""
+    var dTag: String?
+    var alt: String?
+    var aTag: String = ""
     var isScreenshot = false // hide 'Sent to 0 relays' in preview footer, disable animated gifs, Text instead of NRText
     var isPreview = false // same but can use NRText (for hashtags)
     

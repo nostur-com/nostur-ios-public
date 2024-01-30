@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct NoteReactions: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     
-    private let id:String
+    private let id: String
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
     private var reactions:FetchedResults<Event>

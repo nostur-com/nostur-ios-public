@@ -12,24 +12,24 @@ struct RelayEditView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     @ObservedObject var relay: CloudRelay
-    @ObservedObject private var cp:ConnectionPool = .shared
+    @ObservedObject private var cp: ConnectionPool = .shared
     @State private var connection: RelayConnection?
     @State private var refresh: Bool = false
     @State private var confirmRemoveShown = false
     @State private var relayUrl =  ""
     
-    @State private var excludedPubkeys:Set<String> = []
-    private var accounts:[CloudAccount] {
+    @State private var excludedPubkeys: Set<String> = []
+    private var accounts: [CloudAccount] {
         NRState.shared.accounts
             .sorted(by: { $0.publicKey < $1.publicKey })
             .filter { $0.isFullAccount }
     }
     
-    private var isConnected:Bool {
+    private var isConnected: Bool {
         connection?.isConnected ?? false
     }
     
-    private func toggleAccount(_ account:CloudAccount) {
+    private func toggleAccount(_ account: CloudAccount) {
         if excludedPubkeys.contains(account.publicKey) {
             excludedPubkeys.remove(account.publicKey)
         }
@@ -38,7 +38,7 @@ struct RelayEditView: View {
         }
     }
     
-    private func isExcluded(_ account:CloudAccount) -> Bool {
+    private func isExcluded(_ account: CloudAccount) -> Bool {
         return excludedPubkeys.contains(account.publicKey)
     }
     

@@ -10,8 +10,8 @@ import SwiftUI
 
 struct ChatInputField: View {
     @EnvironmentObject private var themes: Themes
-    @Binding var message:String
-    var onSubmit:(() -> Void)?
+    @Binding var message: String
+    var onSubmit: (() -> Void)?
     
     enum FocusedField {
         case message
