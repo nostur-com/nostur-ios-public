@@ -32,7 +32,6 @@ class FooterAttributes: ObservableObject {
     private var withFooter: Bool
     private var event: Event
     private var pubkey: String // need for zap info
-    private var subscriptions = Set<AnyCancellable>()
     private var id: String
     
     init(replyPFPs: [URL] = [], event: Event, withFooter: Bool = true, repliesCount: Int64 = 0) {
@@ -106,9 +105,13 @@ class FooterAttributes: ObservableObject {
         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: pubkey, eTag: id, zapState: .cancelled))
     }
     
+    private var eventStatChangeSubscription: AnyCancellable?
+    private var postActionSubscription: AnyCancellable?
+    
     private func setupListeners() {
+        guard eventStatChangeSubscription == nil else { return }
         let id = self.id
-        ViewUpdates.shared.eventStatChanged
+        eventStatChangeSubscription = ViewUpdates.shared.eventStatChanged
             .filter { $0.id == id }
 //            .debounce(for: .seconds(1), scheduler: DispatchQueue.main) // Adjust the debounce time as needed
 //                .scan(nil) { (accumulated: EventStatChange?, change: EventStatChange) -> EventStatChange? in
@@ -158,14 +161,14 @@ class FooterAttributes: ObservableObject {
 //                    self.liked = true
 //                }
             }
-            .store(in: &subscriptions)
         
         actionListener()
     }
 
     
     private func actionListener() {
-        receiveNotification(.postAction)
+        guard postActionSubscription == nil else { return }
+        postActionSubscription = receiveNotification(.postAction)
             .subscribe(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }
@@ -188,7 +191,6 @@ class FooterAttributes: ObservableObject {
                     }
                 }
             }
-            .store(in: &subscriptions)
     }
     
     static private func isBookmarked(_ event:Event) -> Bool {
