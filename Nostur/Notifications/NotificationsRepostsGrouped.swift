@@ -88,9 +88,9 @@ struct NotificationsRepostsGrouped: View {
             )
             fl.loadNewer(250, taskId: "newReposts")
         }
-        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak fl, weak backlog] subscriptionIds in
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
             bg().perform {
-                guard let fl, let backlog else { return }
+                guard let backlog else { return }
                 let reqTasks = backlog.tasks(with: subscriptionIds)
                 reqTasks.forEach { task in
                     task.process()

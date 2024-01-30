@@ -135,7 +135,7 @@ struct NotificationsReactions: View {
             )
             fl.loadNewerEvents(5000, taskId:"newReactions")
         }
-        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak fl, weak backlog] subscriptionIds in
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
             bg().perform {
                 guard let backlog else { return }
                 let reqTasks = backlog.tasks(with: subscriptionIds)
