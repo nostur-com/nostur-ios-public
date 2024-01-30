@@ -113,6 +113,7 @@ struct DetailPane: View {
                 ForEach(tm.tabs) { tab in
                     if !tab.suspended {
                         DetailTab(tab: tab)
+                            .environmentObject(tm)
     //                        .padding(.vertical, 10)
     //                        .background(Color.systemBackground)
     //                        .roundedCorner(10, corners: [.topLeft, .topRight])

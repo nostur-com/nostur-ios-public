@@ -21,7 +21,6 @@ struct AppView: View {
     
     @Environment(\.scenePhase) private var scenePhase
     // These singletons always exists during the apps lifetime
-    @State private var tm:DetailTabsModel = .shared
     @State private var er:ExchangeRateModel = .shared
     @State private var eventRelationsQueue:EventRelationsQueue = .shared
     @State private var lvmManager:LVMManager = .shared
