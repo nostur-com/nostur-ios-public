@@ -319,14 +319,16 @@ struct ProfileView: View {
                     ProfileRelays(pubkey: pubkey, name: nrContact.anyName)
                         .background(themes.theme.listBackground)
                 case "Followers":
-                    Text("Followers", comment: "Heading")
-                        .font(.headline)
-                        .fontWeight(.heavy)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 10)
-                        
-                    FollowersList(pubkey: nrContact.pubkey)
-                        .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
+                    VStack {
+                        Text("Followers", comment: "Heading")
+                            .font(.headline)
+                            .fontWeight(.heavy)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 10)
+                            
+                        FollowersList(pubkey: nrContact.pubkey)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
 //                    .background(themes.theme.listBackground)
                 default:
                     Text("🥪")
