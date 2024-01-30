@@ -17,8 +17,8 @@ public class Event: NSManagedObject, Identifiable {
     var parentEvents: [Event] = []
     
     var isScreenshot: Bool = false // Must use Text
-    var previewImages:[PostedImageMeta] = []
-    var cancellationId:UUID?
+    var previewImages: [PostedImageMeta] = []
+    var cancellationId: UUID?
     
     public override func validateValue(_ value: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey key: String) throws {
         

@@ -18,7 +18,7 @@ class DirectMessageViewModel: ObservableObject {
     
     static public let `default` = DirectMessageViewModel()
     
-    public var dmStates:[CloudDMState] = [] {
+    public var dmStates: [CloudDMState] = [] {
         didSet {
             if didLoad {
                 // normally we load in LoggedInAccount.setupAccount() after WoT or not.
@@ -30,13 +30,13 @@ class DirectMessageViewModel: ObservableObject {
         }
     }
     
-    var pubkey:String?
-    var lastNotificationReceivedAt:Date? = nil
+    var pubkey: String?
+    var lastNotificationReceivedAt: Date? = nil
     var didLoad = false
     
-    @Published var conversationRows:[Conversation] = []
-    @Published var requestRows:[Conversation] = []
-    @Published var requestRowsNotWoT:[Conversation] = []
+    @Published var conversationRows: [Conversation] = []
+    @Published var requestRows: [Conversation] = []
+    @Published var requestRowsNotWoT: [Conversation] = []
     
     @Published var showNotWoT = false {
         didSet {
@@ -49,18 +49,18 @@ class DirectMessageViewModel: ObservableObject {
         }
     }
      
-    var unread:Int {
+    var unread: Int {
         conversationRows.reduce(0) { $0 + $1.unread }
     }
-    var newRequests:Int {
+    var newRequests: Int {
         requestRows.reduce(0) { $0 + $1.unread }
     }
     
-    var newRequestsNotWoT:Int {
+    var newRequestsNotWoT: Int {
         requestRowsNotWoT.count
     }
     
-    public var hiddenDMs:Int {
+    public var hiddenDMs: Int {
         dmStates.filter { $0.accountPubkey_ == self.pubkey && $0.isHidden }.count
     }
     
