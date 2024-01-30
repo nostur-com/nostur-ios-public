@@ -207,6 +207,7 @@ struct PostAndParent: View {
                 if replyTo.deletedById == nil {
                     if replyTo.kind == 443 {
                         URLView(nrPost: replyTo, theme: themes.theme)
+                            .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
                         
                         
                         if (replyTo.kind == 443) {
