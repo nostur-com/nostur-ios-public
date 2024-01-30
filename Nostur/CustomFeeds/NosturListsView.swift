@@ -13,10 +13,10 @@ struct NosturListsView: View {
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)])
-    var lists:FetchedResults<CloudFeed>
+    var lists: FetchedResults<CloudFeed>
     
     @State var confirmDeleteShown = false
-    @State var listToDelete:CloudFeed? = nil
+    @State var listToDelete: CloudFeed? = nil
     @State var newListSheet = false
     @State private var didRemoveDuplicates = false
         

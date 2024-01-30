@@ -79,9 +79,9 @@ struct NoteById: View {
 }
 
 struct PostDetailView: View {
-    @EnvironmentObject private var themes:Themes
-    private let nrPost:NRPost
-    private var navTitleHidden:Bool = false
+    @EnvironmentObject private var themes: Themes
+    private let nrPost: NRPost
+    private var navTitleHidden: Bool = false
     @State private var didLoad = false
     @State private var didScroll = false
     

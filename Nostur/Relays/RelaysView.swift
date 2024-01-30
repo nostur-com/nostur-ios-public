@@ -86,9 +86,9 @@ struct RelayRowView: View {
 }
 
 struct RelaysView: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @State var createRelayPresented = false
-    @State var editRelay:CloudRelay?
+    @State var editRelay: CloudRelay?
 
     @Environment(\.managedObjectContext) private var viewContext
 

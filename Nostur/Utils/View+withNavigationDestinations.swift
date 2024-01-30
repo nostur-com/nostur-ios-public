@@ -10,59 +10,59 @@ import SwiftUI
 import NavigationBackport
 
 struct NotePath: Hashable {
-    var id:String
-    var navigationTitle:String? = nil
+    var id: String
+    var navigationTitle: String? = nil
 }
 
 struct ContactPath: Hashable {
-    var key:String
-    var navigationTitle:String? = nil
-    var tab:String? = nil
+    var key: String
+    var navigationTitle: String? = nil
+    var tab: String? = nil
 }
 
 struct NRContactPath: Hashable {
-    var nrContact:NRContact
-    var navigationTitle:String? = nil
-    var tab:String? = nil
+    var nrContact: NRContact
+    var navigationTitle: String? = nil
+    var tab: String? = nil
 }
 
 struct HashtagPath: Hashable {
-    var hashTag:String
-    var navigationTitle:String? = nil
+    var hashTag: String
+    var navigationTitle: String? = nil
 }
 
 struct Nevent1Path: Hashable {
-    var nevent1:String
-    var navigationTitle:String? = nil
+    var nevent1: String
+    var navigationTitle: String? = nil
 }
 
 struct Naddr1Path: Hashable {
-    var naddr1:String
-    var navigationTitle:String? = nil
+    var naddr1: String
+    var navigationTitle: String? = nil
 }
 
 struct ArticlePath: Hashable {
-    var id:String
-    var navigationTitle:String? = nil
+    var id: String
+    var navigationTitle: String? = nil
 }
 
 struct Nprofile1Path: Hashable {
-    var nprofile1:String
-    var navigationTitle:String? = nil
+    var nprofile1: String
+    var navigationTitle: String? = nil
 }
 
 struct ArticleCommentsPath: Identifiable, Hashable {
-    var id:String { article.id }
-    let article:NRPost
+    var id: String { article.id }
+    let article: NRPost
 }
 
 enum ViewPath: Hashable {
-    case Post(nrPost:NRPost)
+    case Post(nrPost: NRPost)
     case Blocklist
-    case Bookmarks(account:CloudAccount)
-    case NoteReactions(id:String)
-    case NoteReposts(id:String)
-    case NoteZaps(id:String)
+    case Bookmarks(account: CloudAccount)
+    case NoteReactions(id: String)
+    case NoteReposts(id: String)
+    case NoteZaps(id: String)
     case Settings
     case Lists
     case Relays
@@ -81,10 +81,10 @@ extension View {
                 }
             }
             .nbNavigationDestination(for: Naddr1Path.self) { path in
-                ArticleByNaddr(naddr1: path.naddr1, navigationTitle:path.navigationTitle)
+                ArticleByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
             }
             .nbNavigationDestination(for: ArticlePath.self) { path in
-                ArticleById(id: path.id, navigationTitle:path.navigationTitle)
+                ArticleById(id: path.id, navigationTitle: path.navigationTitle)
             }
             .nbNavigationDestination(for: ArticleCommentsPath.self) { articleCommentsPath in
                 ArticleCommentsView(article: articleCommentsPath.article)
@@ -93,10 +93,10 @@ extension View {
                 NoteById(id: path.id)
             }
             .nbNavigationDestination(for: ContactPath.self) { path in
-                ProfileByPubkey(pubkey: path.key, tab:path.tab)
-            }            
+                ProfileByPubkey(pubkey: path.key, tab: path.tab)
+            }
             .nbNavigationDestination(for: NRContactPath.self) { path in
-                ProfileView(nrContact: path.nrContact, tab:path.tab)
+                ProfileView(nrContact: path.nrContact, tab: path.tab)
             }
             .nbNavigationDestination(for: NRContact.self) { nrContact in
                 ProfileView(nrContact: nrContact)
@@ -140,7 +140,7 @@ extension View {
 }
 
 struct NavigationDestination {
-    let destination:any Hashable
+    let destination: any Hashable
 }
 
 func navigateTo(_ path:any Hashable) {

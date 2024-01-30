@@ -11,7 +11,7 @@ import NavigationBackport
 struct EditListTitleSheet: View {
     
     @Environment(\.dismiss) var dismiss
-    var list:CloudFeed
+    var list: CloudFeed
     @State var newTitle = ""
     @State var showAsTab = false
     

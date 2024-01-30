@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BadgesView: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @State var tab = "Issued"
     
     var body: some View {

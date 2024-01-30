@@ -9,16 +9,16 @@ import SwiftUI
 import NavigationBackport
 
 struct EditNosturList: View {
-    @ObservedObject public var list:CloudFeed
+    @ObservedObject public var list: CloudFeed
     
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     
     @State private var confirmDeleteShown = false
-    @State private var contactToRemove:Contact? = nil
+    @State private var contactToRemove: Contact? = nil
     @State private var addContactsSheetShown = false
-    @State private var editList:CloudFeed? = nil
-    @State private var selectedContacts:Set<Contact> = []
+    @State private var editList: CloudFeed? = nil
+    @State private var selectedContacts: Set<Contact> = []
     
     var body: some View {
         List(list.contacts_) { contact in

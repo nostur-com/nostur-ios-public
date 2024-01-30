@@ -11,7 +11,7 @@ import NavigationBackport
 
 struct DMs: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @State private var navPath = NBNavigationPath()
     
     private var selectedTab: String {
@@ -21,12 +21,12 @@ struct DMs: View {
     
     @State private var tab = "Accepted"
     
-    public let pubkey:String
-    @EnvironmentObject private var vm:DirectMessageViewModel    
+    public let pubkey: String
+    @EnvironmentObject private var vm: DirectMessageViewModel
     
     @State private var showingNewDM = false
     @State private var showDMToggles = false
-    @State private var preloadNewDMInfo:(String, Contact)? = nil // pubkey and Contact
+    @State private var preloadNewDMInfo: (String, Contact)? = nil // pubkey and Contact
     
     var body: some View {
         #if DEBUG
@@ -40,7 +40,7 @@ struct DMs: View {
                             tab = "Accepted"
                         }
                     } label: {
-                        VStack(spacing:0) {
+                        VStack(spacing: 0) {
                             HStack {
                                 Text("Accepted", comment: "Tab title for accepted DMs (Direct Messages)").lineLimit(1)
                                     .font(.subheadline)
@@ -81,7 +81,7 @@ struct DMs: View {
                             tab = "Requests"
                         }
                     } label: {
-                        VStack(spacing:0) {
+                        VStack(spacing: 0) {
                             HStack {
                                 Text("Requests", comment: "Tab title for DM (Direct Message) requests").lineLimit(1)
                                     .font(.subheadline)
@@ -242,7 +242,7 @@ struct DirectMessagesX_Previews: PreviewProvider {
 }
 
 struct DMContainer: View {
-    @EnvironmentObject var la:LoggedInAccount
+    @EnvironmentObject var la: LoggedInAccount
     
     var body: some View {
         if la.account.isNC {
