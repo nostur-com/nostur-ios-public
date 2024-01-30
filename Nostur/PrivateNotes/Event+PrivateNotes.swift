@@ -11,6 +11,7 @@ extension Event {
     var privateNote:CloudPrivateNote? {
         let fr = CloudPrivateNote.fetchRequest()
         fr.predicate = NSPredicate(format: "eventId == %@", self.id)
+        fr.fetchLimit = 1
         if Thread.isMainThread {
             return try? DataProvider.shared().viewContext.fetch(fr).first
         }
