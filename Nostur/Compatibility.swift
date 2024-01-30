@@ -251,7 +251,20 @@ extension View {
         if #available(iOS 16.0, *) {
             self
                 .toolbarBackground(themes.theme.listBackground, for: .tabBar)
+                .toolbarBackground(.visible, for: .tabBar)
                 .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
+        }
+        else {
+            self
+        }
+    }
+    
+    @ViewBuilder
+    func nosturNavBgCompat(themes: Themes) -> some View {
+        if #available(iOS 16.0, *) {
+            self
+                .toolbarBackground(themes.theme.listBackground, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
         }
         else {
             self

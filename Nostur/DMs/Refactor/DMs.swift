@@ -168,6 +168,7 @@ struct DMs: View {
             .sheet(isPresented: $showingNewDM) {
                 NBNavigationStack {
                     NewDM(showingNewDM: $showingNewDM, tab: $tab)
+                        .nosturNavBgCompat(themes: themes)
                         .onAppear {
                             if let preloadNewDMInfo {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
@@ -177,7 +178,7 @@ struct DMs: View {
                         }
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.listBackground)
             }
             .onReceive(receiveNotification(.triggerDM)) { notification in
                 let preloadNewDMInfo = notification.object as! (String, Contact)

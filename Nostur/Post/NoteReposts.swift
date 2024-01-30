@@ -33,6 +33,7 @@ struct NoteReposts: View {
         .onAppear {
             req(CM(type: .REQ, filters: [Filters(kinds: [6], tagFilter: TagFilter(tag: "e", values: [id]))]).json()!)
         }
+        .nosturNavBgCompat(themes: themes)
     }
 }
 

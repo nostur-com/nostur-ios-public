@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RelayEditView: View {
-    
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     @ObservedObject var relay: CloudRelay
@@ -43,91 +43,90 @@ struct RelayEditView: View {
     }
     
     var body: some View {
-        VStack {
-            Form {
-                Section(header: Text("Relay URL", comment: "Relay URL header") ) {
-                    TextField(String(localized:"wss://nostr.relay.url.here", comment:"Placeholder for entering a relay URL"), text: $relayUrl)
-                        .keyboardType(.URL)
-                        .disableAutocorrection(true)
-                        .textInputAutocapitalization(.never)
+        Form {
+            Section(header: Text("Relay URL", comment: "Relay URL header") ) {
+                TextField(String(localized:"wss://nostr.relay.url.here", comment:"Placeholder for entering a relay URL"), text: $relayUrl)
+                    .keyboardType(.URL)
+                    .disableAutocorrection(true)
+                    .textInputAutocapitalization(.never)
+            }
+            .onChange(of: relayUrl) { newValue in
+                guard relayUrl != newValue else { return } // same url
+                guard newValue != connection?.url else { return } // init from "" to socket.url
+                connection?.disconnect()
+            }
+            .listRowBackground(themes.theme.background)
+            
+            Section(header: Text("Relay settings", comment: "Relay settings header") ) {
+                Toggle(isOn: $relay.search) {
+                    Text("Use relay for Search", comment: "Label for toggle to search on this relay")
                 }
-                .onChange(of: relayUrl) { newValue in
-                    guard relayUrl != newValue else { return } // same url
-                    guard newValue != connection?.url else { return } // init from "" to socket.url
-                    connection?.disconnect()
+                Toggle(isOn: $relay.read) {
+                    Text("Receive from this relay", comment: "Label for toggle to receive from this relay")
                 }
-                Section(header: Text("Relay settings", comment: "Relay settings header") ) {
-                    Toggle(isOn: $relay.search) {
-                        Text("Use relay for Search", comment: "Label for toggle to search on this relay")
-                    }
-                    Toggle(isOn: $relay.read) {
-                        Text("Receive from this relay", comment: "Label for toggle to receive from this relay")
-                    }
-                    Toggle(isOn: $relay.write) {
-                        Text("Publish to this relay", comment: "Label for toggle to publish to this relay") .background(refresh ? Color.clear : Color.clear)
-                        if relay.write {
-                            ScrollView(.horizontal) {
-                                HStack {
-                                    ForEach(accounts) { account in
-                                        PFP(pubkey: account.publicKey, account: account, size: 30)
-                                            .onTapGesture {
-                                                toggleAccount(account)
-                                            }
-                                            .opacity(isExcluded(account) ? 0.25 : 1.0)
-                                    }
+                Toggle(isOn: $relay.write) {
+                    Text("Publish to this relay", comment: "Label for toggle to publish to this relay") .background(refresh ? Color.clear : Color.clear)
+                    if relay.write {
+                        ScrollView(.horizontal) {
+                            HStack {
+                                ForEach(accounts) { account in
+                                    PFP(pubkey: account.publicKey, account: account, size: 30)
+                                        .onTapGesture {
+                                            toggleAccount(account)
+                                        }
+                                        .opacity(isExcluded(account) ? 0.25 : 1.0)
                                 }
                             }
-                            Text("Tap account to exclude")
                         }
+                        Text("Tap account to exclude")
                     }
                 }
-                Section(header: Text("Status", comment: "Connection status header") ) {
-                    HStack {
-                        if (isConnected) {
-                            Image(systemName: "circle.fill")
-                                .foregroundColor(.green)
-                                .opacity(1)
-                            Text("Connected", comment: "Relay status when connected")
-                            Spacer()
-                            Button {
+            }
+            .listRowBackground(themes.theme.background)
+            
+            Section(header: Text("Status", comment: "Connection status header") ) {
+                HStack {
+                    if (isConnected) {
+                        Image(systemName: "circle.fill")
+                            .foregroundColor(.green)
+                            .opacity(1)
+                        Text("Connected", comment: "Relay status when connected")
+                        Spacer()
+                        Button {
+                            connection?.disconnect()
+                        } label: {
+                            Text("Disconnect", comment: "Button to disconnect from relay")
+                        }
+                    }
+                    else {
+                        Image(systemName: "circle.fill")
+                            .foregroundColor(.gray)
+                            .opacity(0.2)
+                        Text("Disconnected", comment: "Relay status when disconnected")
+                        Spacer()
+                        Button {
+                            if (connection?.url != relayUrl) { // url change?
                                 connection?.disconnect()
-                            } label: {
-                                Text("Disconnect", comment: "Button to disconnect from relay")
-                            }
-                        }
-                        else {
-                            Image(systemName: "circle.fill")
-                                .foregroundColor(.gray)
-                                .opacity(0.2)
-                            Text("Disconnected", comment: "Relay status when disconnected")
-                            Spacer()
-                            Button {
-                                if (connection?.url != relayUrl) { // url change?
-                                    connection?.disconnect()
-                                    
-                                    // Replace the connection first
-                                    if let oldUrl = relay.url_ {
-                                        ConnectionPool.shared.removeConnection(oldUrl.lowercased())
-                                    }
-                                    let newRelayData = RelayData.new(url: relayUrl, read: relay.read, write: relay.write, search: relay.search, excludedPubkeys:  relay.excludedPubkeys)
-                                    
-                                    let replacedConnection = ConnectionPool.shared.addConnection(newRelayData)
-                                    connection = replacedConnection
-                                }
                                 
-                                // Then connect (force)
-                                connection?.connect(forceConnectionAttempt: true)
-                            } label: {
-                                Text("Connect", comment: "Button to connect to relay")
+                                // Replace the connection first
+                                if let oldUrl = relay.url_ {
+                                    ConnectionPool.shared.removeConnection(oldUrl.lowercased())
+                                }
+                                let newRelayData = RelayData.new(url: relayUrl, read: relay.read, write: relay.write, search: relay.search, excludedPubkeys:  relay.excludedPubkeys)
+                                
+                                let replacedConnection = ConnectionPool.shared.addConnection(newRelayData)
+                                connection = replacedConnection
                             }
+                            
+                            // Then connect (force)
+                            connection?.connect(forceConnectionAttempt: true)
+                        } label: {
+                            Text("Connect", comment: "Button to connect to relay")
                         }
                     }
                 }
             }
-//            
-//            Text("isConnected: \(a)")
-//            Text("isSocketConnecting: \(b)")
-//            Text("isSocketConnected: \(c)")
+            .listRowBackground(themes.theme.background)
         }
         .navigationTitle(String(localized:"Edit relay", comment:"Navigation title for Edit relay screen"))
         .navigationBarTitleDisplayMode(.inline)

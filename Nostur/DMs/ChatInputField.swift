@@ -45,7 +45,7 @@ struct ChatInputField: View {
             }
             .accentColor(themes.theme.accent)
         }
-        .background(Color(UIColor.systemGray6))
+        .background(themes.theme.listBackground)
         .cornerRadius(25)
         .overlay(
             RoundedRectangle(cornerRadius: 25)

@@ -111,9 +111,10 @@ struct RelaysView: View {
             NBNavigationStack {
                 RelayEditView(relay: relay)
             }
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         })
-    }    
+        .nosturNavBgCompat(themes: themes)
+    }
 }
 
 struct RelaysView_Previews: PreviewProvider {

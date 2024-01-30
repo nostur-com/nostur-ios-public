@@ -45,6 +45,7 @@ struct NoteReactions: View {
             
             QueuedFetcher.shared.enqueue(pTags: missing.map { $0.pubkey })
         }
+        .nosturNavBgCompat(themes: themes)
     }
 }
 

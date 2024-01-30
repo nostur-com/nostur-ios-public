@@ -112,7 +112,7 @@ struct ComposePost15: View {
                                 .environmentObject(themes)
                         }
                         .nbUseNavigationStack(.never)
-                        .presentationBackgroundCompat(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                     }
                 }
                 .overlay {

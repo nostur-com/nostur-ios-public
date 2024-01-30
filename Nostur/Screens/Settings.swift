@@ -52,7 +52,6 @@ struct Settings: View {
     
 
     var body: some View {
-
         Form {
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Group {
@@ -354,7 +353,7 @@ struct Settings: View {
                                 L.og.error("Unresolved error \(error)")
                             }
                         }
-                        .presentationBackgroundCompat(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                         .environmentObject(themes)
                     }
                 }
@@ -535,10 +534,11 @@ struct Settings: View {
         .sheet(isPresented: $showDefaultZapAmountSheet) {
             SettingsDefaultZapAmount()
                 .environmentObject(themes)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .scrollContentBackgroundHidden()
         .background(themes.theme.listBackground)
+        .nosturNavBgCompat(themes: themes)
         .navigationTitle("Settings")
         .sheet(isPresented: $deleteAccountIsShown) {
             NBNavigationStack {
@@ -547,7 +547,7 @@ struct Settings: View {
                     .environmentObject(NRState.shared)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
             NBNavigationStack {
@@ -556,7 +556,7 @@ struct Settings: View {
                     .environmentObject(NRState.shared)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .sheet(isPresented: $customNWCsheetShown) {
             NBNavigationStack {
@@ -565,7 +565,7 @@ struct Settings: View {
                     .environmentObject(NRState.shared)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
     }
     

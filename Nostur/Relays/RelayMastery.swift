@@ -105,7 +105,7 @@ struct SharedRelaySettings: View {
                 RelayEditView(relay: relay)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         })
     }
 }

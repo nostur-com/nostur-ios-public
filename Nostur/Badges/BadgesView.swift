@@ -36,6 +36,7 @@ struct BadgesView: View {
             Spacer()
         }
         .background(themes.theme.listBackground)
+        .nosturNavBgCompat(themes: themes)
     }
 }
 
