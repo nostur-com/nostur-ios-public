@@ -400,7 +400,7 @@ struct ProfileView: View {
                 }
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(themes.theme.background)
         }
         .onAppear {
             if let tab = tab {

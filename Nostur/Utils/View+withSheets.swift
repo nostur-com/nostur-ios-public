@@ -224,7 +224,7 @@ private struct WithSheets: ViewModifier {
                     }
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(themes.theme.background)
             }
         
             .sheet(item: $quoteOrRepostEvent) { event in
@@ -268,7 +268,7 @@ private struct WithSheets: ViewModifier {
                     }
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(themes.theme.background)
             }
         
             .onReceive(receiveNotification(.showZapSheet)) { notification in
