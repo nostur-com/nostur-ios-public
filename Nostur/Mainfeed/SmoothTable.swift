@@ -202,14 +202,16 @@ struct SmoothTable: UIViewControllerRepresentable {
                             coordinator.lvm.isAtTop = false
                             viewHolder.tableView.scrollToRow(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
                         }
-                        else if (viewHolder.tableView.contentOffset.y == 0) {
+                        else {
                             DispatchQueue.main.async {
-                                // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
-                                L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
-                                if coordinator.lvm.lvmCounter.count != 0 {
-                                    coordinator.lvm.lvmCounter.count = 0
+                                if (viewHolder.tableView.contentOffset.y == 0) {
+                                    // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
+                                    L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
+                                    if coordinator.lvm.lvmCounter.count != 0 {
+                                        coordinator.lvm.lvmCounter.count = 0
+                                    }
+                                    coordinator.lvm.lastReadId = data.keys.elements.first
                                 }
-                                coordinator.lvm.lastReadId = data.keys.elements.first
                             }
                         }
                     }
