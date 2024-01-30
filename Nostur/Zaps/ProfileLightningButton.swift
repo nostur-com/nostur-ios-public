@@ -10,11 +10,11 @@ import SwiftUI
 struct ProfileLightningButton: View {
     @EnvironmentObject private var themes: Themes
     
-    public var contact:Contact?
+    public var contact: Contact?
     
     @State private var isLoading = false
     @State private var payAmountSelectorShown = false
-    @State private var paymentInfo:PaymentInfo?
+    @State private var paymentInfo: PaymentInfo?
     
     var body: some View {
 //        let _ = Self._printChanges()

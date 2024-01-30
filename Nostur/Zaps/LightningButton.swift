@@ -43,12 +43,12 @@ struct LightningButton: View {
 
 class PaymentInfo: Identifiable {
     var id = UUID()
-    var min:UInt64 = 0
-    var max:UInt64 = 5000000
+    var min: UInt64 = 0
+    var max: UInt64 = 5000000
     var callback = ""
     var supportsZap = false
-    var nrPost:NRPost?
-    var contact:Contact?
+    var nrPost: NRPost?
+    var contact: Contact?
     
     init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost:NRPost? = nil, contact:Contact? = nil) {
         self.min = min
