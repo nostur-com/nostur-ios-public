@@ -14,8 +14,8 @@ struct ProfilePostsView: View {
     @State var showMore = true
     @State var lastFetchAtId = ""
     
-    init(pubkey: String) {
-        _vm = StateObject(wrappedValue: ProfilePostsViewModel(pubkey))
+    init(pubkey: String, type: ProfilePostsViewModel.ProfilePostsType) {
+        _vm = StateObject(wrappedValue: ProfilePostsViewModel(pubkey, type: type))
     }
     
     var body: some View {
@@ -26,7 +26,7 @@ struct ProfilePostsView: View {
         case .initializing, .loading:
             ProgressView()
                 .padding(10)
-                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
                 .onAppear { vm.load() }
                 .task(id: "profileposts") {
                     do {
@@ -49,7 +49,12 @@ struct ProfilePostsView: View {
                     
                     guard lastFetchAtId != nrPost.id else { return }
                     vm.loadMore(after: nrPost, amount: 10)
-                    vm.fetchMore(after: nrPost, amount: 20)
+                    
+                    // There is no way to query just root posts separate from replies
+                    // So if we want to find root posts we increase the limit to increase the chance of getting enough root posts. (There could be many replies included in the response and we don't need them, unless we are querying for replies)
+                    let requestLimit = vm.type == .posts ? 40 : 20
+                    
+                    vm.fetchMore(after: nrPost, amount: requestLimit)
 //                            vm.loadMore(after: nrPost, amount: max(20, vm.posts.count * 2))
                     lastFetchAtId = nrPost.id
                 }
@@ -78,7 +83,7 @@ struct ProfilePostsView: View {
     }) {
         ScrollView {
             LazyVStack {
-                ProfilePostsView(pubkey: pubkey)
+                ProfilePostsView(pubkey: pubkey, type: .posts)
             }
         }
     }

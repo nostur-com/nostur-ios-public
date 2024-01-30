@@ -16,28 +16,35 @@ let PROFILE_KINDS = Set([1,6,9802,30023,34235])
 // Then reload remaining later
 class ProfilePostsViewModel: ObservableObject {
     
-    @Published var state:State
-    private var backlog:Backlog
-    private var pubkey:String
+    enum ProfilePostsType {
+        case posts
+        case replies
+    }
+    
+    @Published var state: State
+    private var backlog: Backlog
+    public var type: ProfilePostsType
+    private var pubkey: String
     private var didLoad = false
 //    private static let POSTS_LIMIT = 300
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
         
-    @Published var posts:[NRPost] = [] {
+    @Published var posts: [NRPost] = [] {
         didSet {
             guard !posts.isEmpty else { return }
             L.og.info("Profile posts feed loaded \(self.posts.count) items")
         }
     }
     
-    private var lastFetch:Date?
+    private var lastFetch: Date?
     
     public func timeout() {
         self.state = .timeout
     }
     
-    public init(_ pubkey:String) {
+    public init(_ pubkey: String, type: ProfilePostsType) {
+        self.type = type
         self.pubkey = pubkey
         self.state = .initializing
         self.backlog = Backlog(timeout: 8.0, auto: true)
@@ -119,7 +126,12 @@ class ProfilePostsViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@", self.pubkey, PROFILE_KINDS)
+            if self.type == .posts {
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToId == nil AND replyToRootId == nil", self.pubkey, PROFILE_KINDS)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToId != nil OR replyToRootId != nil)", self.pubkey, PROFILE_KINDS)
+            }
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             fr.fetchOffset = 0
             fr.fetchLimit = 10
@@ -243,7 +255,12 @@ class ProfilePostsViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND created_at <= %i", self.pubkey, PROFILE_KINDS, Int(firstPostCreatedAt))
+            if self.type == .posts {
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND created_at <= %i", self.pubkey, PROFILE_KINDS, Int(firstPostCreatedAt))
+            }
+            else {
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToRootId != nil OR replyToId != nil) AND created_at <= %i", self.pubkey, PROFILE_KINDS, Int(firstPostCreatedAt))
+            }
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             fr.fetchOffset = offset
             fr.fetchLimit = amount

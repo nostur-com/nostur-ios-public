@@ -292,7 +292,10 @@ struct ProfileView: View {
             Section(content: {
                 switch selectedSubTab {
                 case "Posts":
-                    ProfilePostsView(pubkey: pubkey)
+                    ProfilePostsView(pubkey: pubkey, type: .posts)
+                        .background(themes.theme.listBackground)
+                case "Replies":
+                    ProfilePostsView(pubkey: pubkey, type: .replies)
                         .background(themes.theme.listBackground)
                 case "Following":
                     ProfileFollowingList(pubkey: pubkey)
@@ -306,6 +309,7 @@ struct ProfileView: View {
                 case "Zaps":
                     if #available(iOS 16.0, *), let mainContact = nrContact.mainContact {
                         ProfileZaps(pubkey: pubkey, contact: mainContact)
+                            .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
                             .background(themes.theme.listBackground)
                     }
                     else {
@@ -322,6 +326,7 @@ struct ProfileView: View {
                         .padding(.vertical, 10)
                         
                     FollowersList(pubkey: nrContact.pubkey)
+                        .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
 //                    .background(themes.theme.listBackground)
                 default:
                     Text("🥪")
@@ -333,6 +338,11 @@ struct ProfileView: View {
                             action: { selectedSubTab = "Posts" },
                             title: String(localized:"Posts", comment:"Tab title"),
                             selected: selectedSubTab == "Posts")
+                        Spacer()
+                        TabButton(
+                            action: { selectedSubTab = "Replies" },
+                            title: String(localized:"Replies", comment:"Tab title"),
+                            selected: selectedSubTab == "Replies")
                         Spacer()
                         TabButton(
                             action: { selectedSubTab = "Following" },
