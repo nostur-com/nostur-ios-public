@@ -249,6 +249,44 @@ struct DetailPane: View {
         .onAppear {
             tm.restoreTabs()
         }
+        .onReceive(receiveNotification(.unpublishedNRPost)) { notification in
+            
+            // On Undo send, if we have our post open in a tab it needs to be removed
+        
+            let nrPost = notification.object as! NRPost
+            if let index = tm.tabs.firstIndex(where: { nrPost.id == $0.nrPost?.id }) {
+                // Copy pasta from onClose above:
+                if (index < tm.tabs.count && tm.selected == tm.tabs[index]) {
+                    if (index != 0) {
+                        tm.selected = tm.tabs[(index - 1)]
+                        tm.selected?.suspended = false
+                        
+                    }
+                    else if (tm.tabs.count > 1) {
+                        tm.selected = tm.tabs[1]
+                        tm.selected?.suspended = false
+                       
+                    }
+                    if let nrPost = tm.selected?.nrPost, tm.tabs.count > 1  {
+                        bg().perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onClose")
+                        }
+                        if nrPost.kind == 30023 {
+                            req(RM.getPREventReferences(aTag: nrPost.aTag, subscriptionId: "REALTIME-DETAIL"))
+                        }
+                        else {
+                            req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
+                        }
+                    }
+                    else {
+                        // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
+                        let closeMessage = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "REALTIME-DETAIL"), relayType: .READ)
+                        ConnectionPool.shared.sendMessage(closeMessage)
+                    }
+                }
+                tm.tabs.remove(at: index)
+            }
+        }
     }
 }
 

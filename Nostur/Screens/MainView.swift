@@ -12,6 +12,7 @@ struct MainView: View {
     @EnvironmentObject private var themes: Themes
     @State private var fg:FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @State private var fn:FollowerNotifier = .shared
+    @State private var newPost: NRPost? // Setting this will show shortcut to open a new just posted post in toolbar
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -23,6 +24,7 @@ struct MainView: View {
     }
     
     @State private var navPath = NBNavigationPath()
+    @State private var lastPathPostId: String? = nil // Need to track .id of last added to navigation stack so we can remove on undo send if needed
     @State private var account: CloudAccount? = nil
     @State private var showingNewNote = false
     @ObservedObject private var settings:SettingsStore = .shared
@@ -76,11 +78,23 @@ struct MainView: View {
                     }
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
-                            PFP(pubkey: account.publicKey, account: account, size: 30)
-                                .onTapGesture {
-                                    SideBarModel.shared.showSidebar = true
+                            HStack(spacing: 10) {
+                                PFP(pubkey: account.publicKey, account: account, size: 30)
+                                    .onTapGesture {
+                                        SideBarModel.shared.showSidebar = true
+                                    }
+                                    .accessibilityLabel("Account menu")
+                                
+                                // Shortcut to open a new just posted post
+                                if newPost != nil {
+                                    Image(systemName: "ellipsis.bubble")
+                                        .frame(height: 30)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            self.goToNewPost()
+                                        }
                                 }
-                                .accessibilityLabel("Account menu")
+                            }
                         }
                         
                         ToolbarItem(placement: .principal) {
@@ -155,10 +169,25 @@ struct MainView: View {
             guard !IS_IPAD || horizontalSizeClass == .compact else { return }
             guard selectedTab == "Main" else { return }
             navPath.append(destination.destination)
+            
+            // We need to know which .id is last added the stack (for undo), but we can't get from .navPath (private / internal)
+            // So we track it seperately in .lastPathPostId
+            if (type(of: destination.destination) == NRPost.self) {
+                let lastPath = destination.destination as! NRPost
+                lastPathPostId = lastPath.id
+            }
         }
         .onReceive(receiveNotification(.navigateToOnMain)) { notification in
             let destination = notification.object as! NavigationDestination
             navPath.append(destination.destination)
+            
+            
+            // We need to know which .id is last added the stack (for undo), but we can't get from .navPath (private / internal)
+            // So we track it seperately in .lastPathPostId
+            if (type(of: destination.destination) == NRPost.self) {
+                let lastPath = destination.destination as! NRPost
+                lastPathPostId = lastPath.id
+            }
         }
         .onReceive(receiveNotification(.didTapTab)) { notification in
             guard let tabName = notification.object as? String, tabName == "Main" else { return }
@@ -169,6 +198,7 @@ struct MainView: View {
         .onReceive(receiveNotification(.clearNavigation)) { notification in
             // No need to clear if we are already at root
             guard navPath.count > 0 else { return }
+            lastPathPostId = nil
             
             // if notification.object is not empty/nil
             if let tab = notification.object as? String, tab == "Main" {
@@ -179,6 +209,42 @@ struct MainView: View {
                 navPath.removeLast(navPath.count)
             }
         }
+        .onReceive(receiveNotification(.newPostSaved)) { notification in
+            
+            // When a new post is made by our account, we show a quick shortcut in toolbar to open that post
+
+            guard let account = account else { return }
+            let accountPubkey = account.publicKey
+            let event = notification.object as! Event
+            bg().perform {
+                guard event.pubkey == accountPubkey else { return }
+                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "MainView.newPostSaved")
+                
+                let newPost = NRPost(event: event, withParents: true, withReplies: true, withRepliesCount: true, cancellationId: event.cancellationId)
+
+                DispatchQueue.main.async {
+                    self.newPost = newPost // Setting this will activate the shortcut
+                }
+            }
+        }
+        .onReceive(receiveNotification(.unpublishedNRPost)) { notification in
+            
+            // When we 'Undo send' a new post, we need to remove it from the stack
+            
+            let nrPost = notification.object as! NRPost
+            if nrPost.id == newPost?.id {
+                newPost = nil // Also remove the shortcut from toolbar
+                
+                // Pop last from stack if the lastPathPostId is the undo post
+                guard let lastPathPostId, lastPathPostId == nrPost.id else { return }
+                navPath.pop()
+            }
+        }
+    }
+    
+    func goToNewPost() {
+        guard let newPost else { return }
+        navigateTo(newPost)
     }
 }
 
