@@ -25,7 +25,7 @@ struct NRBalloonView: View {
                 NRTextDynamic(convertToHieroglyphs(text: event.noteText))
             }
             else if !contentElements.isEmpty {
-                DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: DIMENSIONS.shared.listWidth, theme: themes.theme)
+                DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: DIMENSIONS.shared.listWidth, theme: themes.theme, isSentByCurrentUser: isSentByCurrentUser)
 //                    .debugDimensions("DMContentRenderer")
                     .padding(10)
                     .background(
@@ -59,7 +59,7 @@ struct NRBalloonView: View {
         .onAppear {
             // Take width of NRContentTextRendererInner > NRTextFixed.debugDimensions("NRTextFixed")
             // Substract that from dim.listWidth. We need to pass that result (98.0) to NRContentElementBuilder.buildElements(_ event:Event, dm:Bool, availableWidth: CGFloat?) so our NRTextFixed calculates correct heights and doesn't cut off
-            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(event, dm: true, availableWidth: dim.listWidth - 98.0)
+            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(event, dm: true, availableWidth: dim.listWidth - 98.0, primaryColor: isSentByCurrentUser ? .white : themes.theme.primary)
             self.contentElements = elements
         }
     }

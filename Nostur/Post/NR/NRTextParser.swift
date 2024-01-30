@@ -7,7 +7,8 @@
 
 import Foundation
 import MarkdownUI
-import UIKit
+import SwiftUI
+
 // Renders links for the text parts of post contents (in TEXT)
 // Handles profile links
 // Tag links
@@ -19,7 +20,8 @@ class NRTextParser { // TEXT things
     
     private init() { }
 
-    func parseText(_ event:Event, text: String, availableWidth: CGFloat? = nil) -> AttributedStringWithPs {
+    func parseText(_ event:Event, text: String, availableWidth: CGFloat? = nil, primaryColor: Color? = nil) -> AttributedStringWithPs {
+        let fontColor = primaryColor ?? Themes.default.theme.primary
         let availableWidth = availableWidth ??  DIMENSIONS.shared.availableNoteRowImageWidth()
 
         // Remove image links
@@ -45,7 +47,7 @@ class NRTextParser { // TEXT things
             let mutableAttributedString = try NSMutableAttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(Themes.default.theme.primary)
+                .foregroundColor: UIColor(fontColor)
             ]
             
             mutableAttributedString.addAttributes(
@@ -69,7 +71,7 @@ class NRTextParser { // TEXT things
             let mutableAttributedString = NSMutableAttributedString(string: newerTextWithPs.text)
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(Themes.default.theme.primary)
+                .foregroundColor: UIColor(fontColor)
             ]
             
             mutableAttributedString.addAttributes(

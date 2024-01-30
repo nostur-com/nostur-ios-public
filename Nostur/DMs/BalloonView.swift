@@ -26,7 +26,7 @@ struct BalloonView: View {
                 Spacer()
             }
             
-            NRTextDynamic(renderedMessage)
+            NRTextDynamic(renderedMessage, fontColor: .white)
                 .padding(10)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
