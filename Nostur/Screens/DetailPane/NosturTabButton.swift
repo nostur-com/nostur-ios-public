@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct NosturTabButton: View {
     @EnvironmentObject private var themes:Themes
@@ -17,6 +18,7 @@ struct NosturTabButton: View {
     
     @State var isHoveringCloseButton = false
     @State var isHoveringTab = false
+    @State var showGallerySettings = false
     
     var body: some View {
         HStack(spacing:5) {
@@ -45,6 +47,25 @@ struct NosturTabButton: View {
                 .lineLimit(1)
                 .foregroundColor(themes.theme.accent)
                 .frame(maxWidth: 150)
+            
+            if let galleryVM = tab.galleryVM {
+                Text(String(format: "%ih", galleryVM.ago)).lineLimit(1)
+                    .font(.caption)
+                    .foregroundColor(themes.theme.accent.opacity(0.5))
+                
+                Image(systemName: "gearshape")
+                    .onTapGesture {
+                        showGallerySettings = true
+                    }
+                    .sheet(isPresented: $showGallerySettings, content: {
+                        NBNavigationStack {
+                            GalleryFeedSettings(vm: galleryVM)
+                        }
+                        .nbUseNavigationStack(.never)
+                    })
+                    .foregroundColor(themes.theme.accent)
+                    .padding(.leading, 5)
+            }
         }
         .padding(.trailing, 23)
         .padding(.vertical, 10)

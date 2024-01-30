@@ -104,7 +104,8 @@ struct Gallery: View {
         }
         .background(themes.theme.listBackground)
         .onAppear {
-            guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
+            // Load if tab is active OR if macOS (detail pane)
+            guard IS_CATALYST || (selectedTab == "Main" && selectedSubTab == "Gallery") else { return }
             vm.load()
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in

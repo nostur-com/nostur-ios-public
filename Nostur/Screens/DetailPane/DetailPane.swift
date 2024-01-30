@@ -225,6 +225,23 @@ struct DetailPane: View {
             }
             
         }
+        .onReceive(receiveNotification(.navigateToOnDetail)) { notification in
+            // For now, for opening the Gallery on Detail Pane. Could use for other things too
+            let destination = notification.object as! NavigationDestination
+
+            if type(of: destination.destination) == ViewPath.self {
+                let viewPath = destination.destination as! ViewPath
+                switch viewPath {
+                    case .Gallery(let galleryVM):
+                    
+                    let tab = TabModel(galleryVM: galleryVM)
+                    tm.tabs.append(tab)
+                    tm.selected = tab
+                    default:
+                        break
+                }
+            }            
+        }
         .onChange(of: tm.tabs) { _ in
             tm.saveTabs()
         }

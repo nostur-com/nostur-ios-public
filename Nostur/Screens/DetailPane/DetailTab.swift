@@ -77,6 +77,16 @@ struct DetailTab: View {
                 }
                 
             }
+            else if let galleryVM = tab.galleryVM {
+                ZStack {
+                    themes.theme.listBackground
+                        .ignoresSafeArea()
+                    Gallery()
+                        .environmentObject(galleryVM)
+//                        .withNavigationDestinations()
+                }
+                
+            }
             else {
                 EmptyView()
             }
@@ -86,7 +96,7 @@ struct DetailTab: View {
             let destination = notification.object as! NavigationDestination
             guard type(of: destination.destination) != HashtagPath.self else  { return }
             navPath.append(destination.destination)
-        }
+        }        
     }
 }
 

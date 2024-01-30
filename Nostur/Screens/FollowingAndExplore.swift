@@ -92,7 +92,14 @@ struct FollowingAndExplore: View {
                     
                     if account.followingPubkeys.count > 10 {
                         TabButton(
-                            action: { selectedSubTab = "Gallery" },
+                            action: {
+                                if IS_CATALYST { // On macOS we open the Gallery in the detail pane
+                                    navigateOnDetail(ViewPath.Gallery(vm: galleryVM))
+                                }
+                                else {
+                                    selectedSubTab = "Gallery"
+                                }
+                            },
                             title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
                             secondaryText: String(format: "%ih", galleryVM.ago),
                             selected: selectedSubTab == "Gallery")
