@@ -30,6 +30,7 @@ struct ProfileView: View {
     @State private var similarPFP = false
     @State private var showingNewNote = false
     
+    @State private var showArticlesTab = false
     
     @State private var scrollPosition = ScrollPosition()
     
@@ -349,11 +350,13 @@ struct ProfileView: View {
                             title: String(localized:"Replies", comment:"Tab title"),
                             selected: selectedSubTab == "Replies")
                         Spacer()
-                        TabButton(
-                            action: { selectedSubTab = "Articles" },
-                            title: String(localized:"Articles", comment:"Tab title"),
-                            selected: selectedSubTab == "Articles")
-                        Spacer()
+                        if showArticlesTab {
+                            TabButton(
+                                action: { selectedSubTab = "Articles" },
+                                title: String(localized:"Articles", comment:"Tab title"),
+                                selected: selectedSubTab == "Articles")
+                            Spacer()
+                        }
                         TabButton(
                             action: { selectedSubTab = "Following" },
                             title: String(localized:"Following", comment:"Tab title"),
@@ -590,6 +593,36 @@ struct ProfileView: View {
                     }
                 }
             }
+        }
+        .task { [weak backlog] in
+            guard let backlog else { return }
+            let contactPubkey = pubkey
+            let reqTask = ReqTask(prefix: "HASART-", reqCommand: { taskId in
+                req(RM.getUserProfileKinds(pubkey: contactPubkey, subscriptionId: taskId, kinds: [30023]) )
+            }, processResponseCommand: { taskId, _, _ in
+                bg().perform {
+                    if let last = Event.fetchMostRecentEventBy(pubkey: contactPubkey, andKind: 30023, context: bg()) {
+                        DispatchQueue.main.async {
+                            withAnimation {
+                                self.showArticlesTab = true
+                            }
+                        }
+                    }
+                }
+            }, timeoutCommand: { taskId in
+                bg().perform {
+                    if let last = Event.fetchMostRecentEventBy(pubkey: contactPubkey, andKind: 30023, context: bg()) {
+                        DispatchQueue.main.async {
+                            withAnimation {
+                                self.showArticlesTab = true
+                            }
+                        }
+                    }
+                }
+            })
+            
+            backlog.add(reqTask)
+            reqTask.fetch()
         }
     }
 }
