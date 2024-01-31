@@ -11,6 +11,7 @@ struct ProfileLightningButton: View {
     @EnvironmentObject private var themes: Themes
     
     public var contact: Contact?
+    public var zapEtag: String?
     
     @State private var isLoading = false
     @State private var payAmountSelectorShown = false
@@ -67,7 +68,7 @@ struct ProfileLightningButton: View {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 contact!.zapperPubkey = response.nostrPubkey!
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact)
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact, zapEtag: zapEtag)
                             payAmountSelectorShown = true
                             isLoading = false
                         }
@@ -95,7 +96,7 @@ struct ProfileLightningButton: View {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 contact!.zapperPubkey = response.nostrPubkey!
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact)
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact, zapEtag: zapEtag)
                             payAmountSelectorShown = true
                             isLoading = false
                         }

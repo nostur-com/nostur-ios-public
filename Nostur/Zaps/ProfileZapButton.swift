@@ -125,7 +125,7 @@ struct ProfileZapButton: View {
             }
         }
         else {
-            ProfileLightningButton(contact: contact.mainContact)
+            ProfileLightningButton(contact: contact.mainContact, zapEtag: zapEtag)
         }
     }
     

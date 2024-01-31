@@ -49,14 +49,16 @@ class PaymentInfo: Identifiable {
     var supportsZap = false
     var nrPost: NRPost?
     var contact: Contact?
+    var zapEtag: String?
     
-    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost:NRPost? = nil, contact:Contact? = nil) {
+    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost: NRPost? = nil, contact: Contact? = nil, zapEtag: String? = nil) {
         self.min = min
         self.max = max
         self.callback = callback
         self.supportsZap = supportsZap
         self.nrPost = nrPost
         self.contact = contact
+        self.zapEtag = zapEtag
     }
 }
 

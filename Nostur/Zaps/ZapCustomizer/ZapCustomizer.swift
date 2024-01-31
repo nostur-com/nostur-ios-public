@@ -256,6 +256,7 @@ struct ZapCustomizerSheetInfo: Identifiable {
     let name: String
     var customZapId: UUID?
     var id: UUID { customZapId ?? UUID() }
+    var zapEtag: String?
 }
 
 struct CustomZap: Identifiable {
