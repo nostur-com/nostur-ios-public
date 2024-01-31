@@ -134,7 +134,7 @@ struct ZappedFrom: View {
                 .lineLimit(2)
                 .layoutPriority(2)
                 .onTapGesture {
-                    navigateTo(pubkey)
+                    navigateTo(ContactPath(key: pubkey))
                 }
             
             if couldBeImposter == 1 {

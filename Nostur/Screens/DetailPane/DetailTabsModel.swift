@@ -31,8 +31,11 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     
     @Published var suspended = false
     
-    init(notePath: NotePath? = nil, contactPath: ContactPath? = nil, nrContactPath: NRContactPath? = nil, event: Event? = nil, nrContact: NRContact? = nil, nrPost: NRPost? = nil, naddr1: Naddr1Path? = nil, articlePath: ArticlePath? = nil, profileTab: String? = nil, galleryVM: GalleryViewModel? = nil) {
+    public let navId: String
+    
+    init(notePath: NotePath? = nil, contactPath: ContactPath? = nil, nrContactPath: NRContactPath? = nil, event: Event? = nil, nrContact: NRContact? = nil, nrPost: NRPost? = nil, naddr1: Naddr1Path? = nil, articlePath: ArticlePath? = nil, profileTab: String? = nil, galleryVM: GalleryViewModel? = nil, navId: String) {
         self.id = UUID()
+        self.navId = navId
         self.notePath = notePath
         self.contactPath = contactPath
         self.nrContactPath = nrContactPath
@@ -166,7 +169,7 @@ class DetailTabsModel: ObservableObject {
             switch si.prefix {
             case "nevent":
                 guard let id = si.id else { continue }
-                let tabModel = TabModel(notePath: NotePath(id: id, navigationTitle: tab.title))
+                let tabModel = TabModel(notePath: NotePath(id: id, navigationTitle: tab.title), navId: id)
                 tabModel.suspended = true
                 self.tabs.append(tabModel)
                 if tab.selected {
@@ -175,7 +178,7 @@ class DetailTabsModel: ObservableObject {
                 }
             case "nprofile":
                 guard let pubkey = si.pubkey else { continue }
-                let tabModel = TabModel(contactPath: ContactPath(key: pubkey, navigationTitle: tab.title))
+                let tabModel = TabModel(contactPath: ContactPath(key: pubkey, navigationTitle: tab.title), navId: pubkey)
                 tabModel.suspended = true
                 self.tabs.append(tabModel)
                 tabModel.suspended = true
@@ -184,7 +187,7 @@ class DetailTabsModel: ObservableObject {
                     self.selected = tabModel
                 }
             case "naddr":
-                let tabModel = TabModel(naddr1: Naddr1Path(naddr1: si.identifier, navigationTitle: tab.title))
+                let tabModel = TabModel(naddr1: Naddr1Path(naddr1: si.identifier, navigationTitle: tab.title), navId: si.identifier)
                 self.tabs.append(tabModel)
                 tabModel.suspended = true
                 if tab.selected {

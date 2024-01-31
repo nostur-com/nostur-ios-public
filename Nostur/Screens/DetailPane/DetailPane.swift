@@ -160,16 +160,24 @@ struct DetailPane: View {
         .background(themes.theme.listBackground)
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
+            let navId = destination.destination.id as! String
+            
+            if let existingTab = tm.tabs.first(where: { $0.navId == navId }) {
+                tm.selected = existingTab
+                tm.selected?.suspended = false
+                return
+            }
+            
             if type(of: destination.destination) == NRPost.self {
                 let p = destination.destination as! NRPost
                 if p.kind == 30023 {
-                    let tab = TabModel(articlePath: ArticlePath(id: p.id))
+                    let tab = TabModel(articlePath: ArticlePath(id: p.id), navId: p.id)
                     tm.tabs.append(tab)
                     tm.selected = tab
                     return
                 }
                 else {
-                    let tab = TabModel(nrPost: p)
+                    let tab = TabModel(nrPost: p, navId: p.id)
                     tm.tabs.append(tab)
                     tm.selected = tab
                     return
@@ -177,49 +185,49 @@ struct DetailPane: View {
             }
             else if type(of: destination.destination) == Event.self {
                 let p = destination.destination as! Event
-                let tab = TabModel(event: p)
+                let tab = TabModel(event: p, navId: p.id)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: destination.destination) == Naddr1Path.self {
                 let p = destination.destination as! Naddr1Path
-                let tab = TabModel(naddr1: p)
+                let tab = TabModel(naddr1: p, navId: p.id)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: destination.destination) == ArticlePath.self {
                 let p = destination.destination as! ArticlePath
-                let tab = TabModel(articlePath: p)
+                let tab = TabModel(articlePath: p, navId: p.id)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: destination.destination) == NotePath.self {
                 let p = destination.destination as! NotePath
-                let tab = TabModel(notePath: p)
+                let tab = TabModel(notePath: p, navId: p.id)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: destination.destination) == ContactPath.self {
                 let c = destination.destination as! ContactPath
-                let tab = TabModel(contactPath: c, profileTab:c.tab)
+                let tab = TabModel(contactPath: c, profileTab:c.tab, navId: c.id)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }     
             else if type(of: destination.destination) == NRContactPath.self {
                 let c = destination.destination as! NRContactPath
-                let tab = TabModel(nrContactPath: c, profileTab:c.tab)
+                let tab = TabModel(nrContactPath: c, profileTab:c.tab, navId: c.id)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: destination.destination) == NRContact.self {
-                let c = destination.destination as! NRContact
-                let tab = TabModel(nrContact: c)
+                let c = destination.destination as! NRContact 
+                let tab = TabModel(nrContact: c, navId: c.pubkey)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
@@ -235,7 +243,7 @@ struct DetailPane: View {
                 switch viewPath {
                     case .Gallery(let galleryVM):
                     
-                    let tab = TabModel(galleryVM: galleryVM)
+                    let tab = TabModel(galleryVM: galleryVM, navId: "Gallery")
                     tm.tabs.append(tab)
                     tm.selected = tab
                     default:
