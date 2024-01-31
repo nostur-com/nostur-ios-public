@@ -11,7 +11,7 @@ import Combine
 public typealias NRPostID = String
 
 // NRPost SHOULD BE CREATED IN BACKGROUND THREAD
-class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
+class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableDestination {
     
     @Published var groupedRepliesSorted: [NRPost] = []
     @Published var groupedRepliesNotWoT: [NRPost] = []

@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import CoreData
 
-class NRContact: ObservableObject, Identifiable, Hashable {
+class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestination {
     
 //    public class ZappableAttributes: ObservableObject {
 //        

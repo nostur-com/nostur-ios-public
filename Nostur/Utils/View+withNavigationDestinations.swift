@@ -9,54 +9,62 @@ import Foundation
 import SwiftUI
 import NavigationBackport
 
-struct NotePath: Hashable {
+struct NotePath: IdentifiableDestination {
     var id: String
     var navigationTitle: String? = nil
 }
 
-struct ContactPath: Hashable {
+struct ContactPath: IdentifiableDestination {
+    var id: String { key }
     var key: String
     var navigationTitle: String? = nil
     var tab: String? = nil
 }
 
-struct NRContactPath: Hashable {
+struct NRContactPath: IdentifiableDestination {
+    var id: String { nrContact.pubkey }
     var nrContact: NRContact
     var navigationTitle: String? = nil
     var tab: String? = nil
 }
 
-struct HashtagPath: Hashable {
+struct HashtagPath: IdentifiableDestination {
+    var id: String { hashTag }
     var hashTag: String
     var navigationTitle: String? = nil
 }
 
-struct Nevent1Path: Hashable {
+struct Nevent1Path: IdentifiableDestination {
+    var id: String { nevent1 }
     var nevent1: String
     var navigationTitle: String? = nil
 }
 
-struct Naddr1Path: Hashable {
+struct Naddr1Path: IdentifiableDestination {
+    var id: String { naddr1 }
     var naddr1: String
     var navigationTitle: String? = nil
 }
 
-struct ArticlePath: Hashable {
+struct ArticlePath: IdentifiableDestination {
     var id: String
     var navigationTitle: String? = nil
 }
 
-struct Nprofile1Path: Hashable {
+struct Nprofile1Path: IdentifiableDestination {
+    var id: String { nprofile1 }
     var nprofile1: String
     var navigationTitle: String? = nil
 }
 
-struct ArticleCommentsPath: Identifiable, Hashable {
+struct ArticleCommentsPath: Identifiable, IdentifiableDestination {
     var id: String { article.id }
     let article: NRPost
 }
 
-enum ViewPath: Hashable {
+enum ViewPath: IdentifiableDestination {
+    var id: String { UUID().uuidString }
+    
     case Post(nrPost: NRPost)
     case Blocklist
     case Bookmarks(account: CloudAccount)
@@ -141,10 +149,14 @@ extension View {
 }
 
 struct NavigationDestination {
-    let destination: any Hashable
+    let destination: any IdentifiableDestination
 }
 
-func navigateTo(_ path:any Hashable) {
+protocol IdentifiableDestination: Hashable, Identifiable {
+    
+}
+
+func navigateTo(_ path: any IdentifiableDestination) {
     sendNotification(.scrollingUp) // this makes the tab bars appear for navigating
     
     if (type(of: path) == NRPost.self) {
@@ -161,10 +173,10 @@ func navigateTo(_ path:any Hashable) {
     }
 }
 
-func navigateToOnMain(_ path: any Hashable) {
+func navigateToOnMain(_ path: any IdentifiableDestination) {
     sendNotification(.navigateToOnMain, NavigationDestination(destination: path))
 }
 
-func navigateOnDetail(_ path: any Hashable) {
+func navigateOnDetail(_ path: any IdentifiableDestination) {
     sendNotification(.navigateToOnDetail, NavigationDestination(destination: path))
 }
