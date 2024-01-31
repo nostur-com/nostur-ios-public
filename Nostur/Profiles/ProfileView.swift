@@ -297,6 +297,9 @@ struct ProfileView: View {
                 case "Replies":
                     ProfilePostsView(pubkey: pubkey, type: .replies)
                         .background(themes.theme.listBackground)
+                case "Articles":
+                    ProfilePostsView(pubkey: pubkey, type: .articles)
+                        .background(themes.theme.listBackground)
                 case "Following":
                     ProfileFollowingList(pubkey: pubkey)
                         .background(themes.theme.listBackground)
@@ -345,6 +348,11 @@ struct ProfileView: View {
                             action: { selectedSubTab = "Replies" },
                             title: String(localized:"Replies", comment:"Tab title"),
                             selected: selectedSubTab == "Replies")
+                        Spacer()
+                        TabButton(
+                            action: { selectedSubTab = "Articles" },
+                            title: String(localized:"Articles", comment:"Tab title"),
+                            selected: selectedSubTab == "Articles")
                         Spacer()
                         TabButton(
                             action: { selectedSubTab = "Following" },
