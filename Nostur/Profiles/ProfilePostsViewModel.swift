@@ -85,7 +85,7 @@ class ProfilePostsViewModel: ObservableObject {
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         let reqTask = ReqTask(
             debounceTime: 0.1,
-            subscriptionId: String("PROFILEPOSTS" + UUID().uuidString.prefix(11)),
+            subscriptionId: String("PROFILEPOSTS" + UUID().uuidString.suffix(11)),
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
                 if let cm = NostrEssentials
@@ -127,7 +127,7 @@ class ProfilePostsViewModel: ObservableObject {
     // STEP 2: FETCH RECEIVED POSTS FROM DB
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         
-        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
+        let cancellationIds: [String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         
         bg().perform { [weak self] in
             guard let self else { return }
@@ -145,7 +145,7 @@ class ProfilePostsViewModel: ObservableObject {
             fr.fetchOffset = 0
             fr.fetchLimit = 10
             
-            var posts:[NRPost] = []
+            var posts: [NRPost] = []
             guard let events = try? bg().fetch(fr) else { return }
 
             for event in events {
@@ -173,7 +173,7 @@ class ProfilePostsViewModel: ObservableObject {
     // Fetch post stats (if enabled)
     // And: after user scrolls we prefetch the next 50 posts
     // We detect this by using .onBecomingVisible on the 6th post
-    public func prefetch(_ post:NRPost) {
+    public func prefetch(_ post: NRPost) {
         guard let index = self.posts.firstIndex(of: post) else { return }
         
         if index == 5 {
@@ -267,7 +267,7 @@ class ProfilePostsViewModel: ObservableObject {
             if self.type == .articles {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND flags != \"is_update\" AND replyToRootId == nil AND replyToId == nil AND created_at <= %i", self.pubkey, ARTICLE_KINDS, Int(firstPostCreatedAt))
             }
-            if self.type == .posts {
+            else if self.type == .posts {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND created_at <= %i", self.pubkey, PROFILE_KINDS, Int(firstPostCreatedAt))
             }
             else {
@@ -277,7 +277,7 @@ class ProfilePostsViewModel: ObservableObject {
             fr.fetchOffset = offset
             fr.fetchLimit = amount
             
-            var posts:[NRPost] = []
+            var posts: [NRPost] = []
             guard let events = try? bg().fetch(fr) else { return }
 
             for event in events {
