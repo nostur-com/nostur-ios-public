@@ -8,13 +8,11 @@
 import SwiftUI
 
 struct FollowersList: View {
-    
-    var pubkey:String // Pubkey of whose followers to view
-    
     @EnvironmentObject private var themes: Themes
     public let pubkey: String // Pubkey of whose followers to view
+
     @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false), animation: .none)
-    var clEvents:FetchedResults<Event>
+    private var clEvents:FetchedResults<Event>
     
     init(pubkey: String) {
         self.pubkey = pubkey
@@ -30,43 +28,51 @@ struct FollowersList: View {
     }
     
     // CLEAN PARSING AND FILTERING OF TAGS, BUT IS SLOW:
-//    var clEventsFollowingPubkey:[Event] {
-//        get {
-//            clEvents.filter { // check for a "p" tag with your public key
-//                ($0.tags() ?? []).filter { $0.type == "p" && $0.otherInformation[0] == pubkey }.count > 0
-//            }
-//        }
-//    }
+    //    var clEventsFollowingPubkey:[Event] {
+    //        get {
+    //            clEvents.filter { // check for a "p" tag with your public key
+    //                ($0.tags() ?? []).filter { $0.type == "p" && $0.otherInformation[0] == pubkey }.count > 0
+    //            }
+    //        }
+    //    }
     
-    var clEventsPerPubkey:[Event] {
+    private var clEventsPerPubkey: [Event] {
         clEvents.uniqued(on: { $0.pubkey })
     }
     
-    var clEventsFollowingPubkeyWithContact:[Event] {
+    private var clEventsFollowingPubkeyWithContact: [Event] {
         get { clEventsPerPubkey
             .filter { $0.contact != nil } }
     }
     
-    var clEventsFollowingPubkeyMissingContact:[Event] {
+    private var clEventsFollowingPubkeyMissingContact: [Event] {
         get { clEventsPerPubkey
             .filter { $0.contact == nil } }
     }
     
-    @State var rechecking = false
+    @State private var rechecking = false
     
     var body: some View {
-        HStack {
-            Spacer()
-            Text("Total: \(clEventsPerPubkey.count)")
-            if !rechecking {
-                Image(systemName:"arrow.clockwise.circle.fill")
-                    .onTapGesture {
-                        req(RM.getFollowers(pubkey: pubkey))
-                        rechecking = true
-                    }
-                    .help("Recheck")
+        VStack {
+            Text("Followers", comment: "Heading")
+                .font(.headline)
+                .fontWeight(.heavy)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 10)
+            
+            HStack {
+                Spacer()
+                Text("Total: \(clEventsPerPubkey.count)")
+                if !rechecking {
+                    Image(systemName:"arrow.clockwise.circle.fill")
+                        .onTapGesture {
+                            req(RM.getFollowers(pubkey: pubkey))
+                            rechecking = true
+                        }
+                        .help("Recheck")
+                }
+                Spacer()
             }
-            Spacer()
         }
         .onAppear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
@@ -90,21 +96,21 @@ struct FollowersList: View {
         ForEach(clEventsFollowingPubkeyWithContact) { event in
             ProfileRow(contact: event.contact!)
                 .frame(height: 120)
-//            Divider()
                 .background(themes.theme.background)
+            //            Divider()
         }
         ForEach(clEventsFollowingPubkeyMissingContact, id:\.self) { event in
             ProfileRowMissing(pubkey: event.pubkey)
                 .frame(height: 120)
-//            Divider()
                 .background(themes.theme.background)
+            //            Divider()
         }
     }
     
 }
 
 struct FollowersList_Previews: PreviewProvider {
-  
+    
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadContacts()
