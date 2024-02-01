@@ -11,20 +11,20 @@ import Combine
 // Experiment with new "Processor" Combine mechanism
 
 struct ZapReceipt: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var dim:DIMENSIONS
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
     
-    public let sats:Double
-    public let receiptPubkey:String
+    public let sats: Double
+    public let receiptPubkey: String
     
-    public var fromPubkey:String
-    public let from:Event
-    private var color:Color { randomColor(seed: fromPubkey) }
+    public var fromPubkey: String
+    public let from: Event
+    private var color: Color { randomColor(seed: fromPubkey) }
 
-    @State private var name:String?
-    @State private var pictureUrl:URL?
+    @State private var name: String?
+    @State private var pictureUrl: URL?
     @State private var subscriptions = Set<AnyCancellable>()
-    @State private var nrZapFrom:NRPost?
+    @State private var nrZapFrom: NRPost?
     
     @State var showMiniProfile = false
     @State private var didStart = false
@@ -166,7 +166,7 @@ struct ReceiptFrom: View {
     
     var body: some View {
         HStack {
-            Text("Receipt from")
+            Text("Zap receipt from")
             InnerPFP(pubkey: pubkey, pictureUrl:pictureUrl, size: 20.0)
                 .frame(width: 20.0, height: 20.0)
             Text(name ?? String(pubkey.prefix(11)))

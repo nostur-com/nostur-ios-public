@@ -205,44 +205,48 @@ struct PostAndParent: View {
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
             if let replyTo = nrPost.replyTo {
                 if replyTo.deletedById == nil {
-                    if replyTo.kind == 443 {
-                        URLView(nrPost: replyTo, theme: themes.theme)
-                            .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
-                        
-                        
-                        if (replyTo.kind == 443) {
-                            Text("Comments on \(replyTo.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
-                                .fontWeightBold()
-                                .padding(.top, 10)
-                                .padding(.bottom, 10)
-                                .frame(maxWidth: .infinity)
-                                .background(themes.theme.listBackground)
-                                .padding(.horizontal, -10)
-                            
-                            HStack(spacing: 0) {
-                                self.replyButton
-                                    .foregroundColor(themes.theme.footerButtons)
-                                    .padding(.leading, 10)
-                                    .padding(.vertical, 5)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        guard let event = nrPost.event else { return }
-                                        sendNotification(.createNewReply, EventNotification(event: event))
-                                    }
-                                Spacer()
-                            }
-                            .padding(.bottom, 15)
-                            .background(themes.theme.listBackground)
-                            .padding(.top, -10)
-                            .padding(.horizontal, -10)
+                    switch replyTo.kind {
+                    case 9735:
+                        if let zap = replyTo.mainEvent, let zapFrom = zap.zapFromRequest {
+                            ZapReceipt(sats: zap.naiveSats, receiptPubkey: zap.pubkey, fromPubkey: zapFrom.pubkey, from: zapFrom)
                         }
-                    }
-                    else if replyTo.kind == 30023 {
+                    case 0,3,4,5,7,1984,9734,30009,8,30008:
+                        KnownKindView(nrPost: replyTo, theme: themes.theme)
+                        
+                    case 30023:
                         ArticleView(replyTo, isParent:true, isDetail: true, fullWidth: true, theme: themes.theme)
                             .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
                             .background(Color(.secondarySystemBackground))
-                    }
-                    else {
+                        
+                    case 443:
+                        URLView(nrPost: replyTo, theme: themes.theme)
+                            .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+                        
+                        Text("Comments on \(replyTo.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+                            .fontWeightBold()
+                            .padding(.top, 10)
+                            .padding(.bottom, 10)
+                            .frame(maxWidth: .infinity)
+                            .background(themes.theme.listBackground)
+                            .padding(.horizontal, -10)
+                        
+                        HStack(spacing: 0) {
+                            self.replyButton
+                                .foregroundColor(themes.theme.footerButtons)
+                                .padding(.leading, 10)
+                                .padding(.vertical, 5)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    guard let event = nrPost.event else { return }
+                                    sendNotification(.createNewReply, EventNotification(event: event))
+                                }
+                            Spacer()
+                        }
+                        .padding(.bottom, 15)
+                        .background(themes.theme.listBackground)
+                        .padding(.top, -10)
+                        .padding(.horizontal, -10)
+                    default:
                         let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
                         PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
 //                            .padding(10)
@@ -288,15 +292,17 @@ struct PostAndParent: View {
             // MARK: DETAIL NOTE
             VStack(alignment: .leading, spacing: 0) {
                 if nrPost.deletedById == nil {
-                    if nrPost.kind == 443 {
+                    switch nrPost.kind {
+                    case 0,3,4,5,7,1984,9734,9735,30009,8,30008:
+                        KnownKindView(nrPost: nrPost, hideFooter: true, theme: themes.theme)
+                        DetailFooterFragment(nrPost: nrPost)
+                            .padding(.top, 10)
+                        CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: themes.theme)
+                            .padding(.vertical, 5)
+                            .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
+                    case 443:
                         URLView(nrPost: nrPost, theme: themes.theme)
-                        
-//                        if (nrPost.kind == 443) {
-//                            Text("Comments & replies on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
-//                                .fontWeightBold()
-//                        }
-                    }
-                    else {
+                    default:
                         if isParent {
                             ParentPost(nrPost: nrPost, connect:connect)
                                 .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts

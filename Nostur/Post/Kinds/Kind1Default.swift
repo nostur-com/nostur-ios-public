@@ -104,7 +104,7 @@ struct Kind1Default: View {
                 }
 
 
-            VStack(alignment:.leading, spacing: 3) { // Post container
+            VStack(alignment: .leading, spacing: 3) { // Post container
                 HStack(alignment: .top) { // name + reply + context menu
                     NoteHeaderView(nrPost: nrPost)
                     Spacer()
