@@ -9,6 +9,8 @@
 import SwiftUI
 
 struct ContactList: View {
+    @EnvironmentObject private var themes: Themes
+    
     @FetchRequest
     private var contacts: FetchedResults<Contact>
     private var pubkeys: [String]
@@ -40,6 +42,7 @@ struct ContactList: View {
         ForEach(contacts) { contact in
             ProfileRow(contact: contact)
                 .frame(height: 120)
+                .background(themes.theme.background)
 //            Divider()
         }
         .onAppear {
