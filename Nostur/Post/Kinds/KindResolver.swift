@@ -25,6 +25,8 @@ struct KindResolver: View {
 //        let _ = Self._printChanges()
 //        #endif
         switch nrPost.kind {
+        case 0,3,4,5,7,1984,9734,9735,30009,8,30008:
+            KnownKindView(nrPost: nrPost, hideFooter: hideFooter, theme: theme)
         case 443:
             URLView(nrPost: nrPost, theme: theme)
         case 9802:

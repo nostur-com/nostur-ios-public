@@ -22,14 +22,30 @@ struct NoteTextRenderView: View {
         if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
             Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme)
         }
-        else if nrPost.kind == 9802 {
-            HighlightRenderer(nrPost: nrPost, theme: theme)
-        }
-        else if ![1,6,30023,99999].contains(nrPost.kind) {
-            UnknownKindView(nrPost: nrPost, theme: theme)
-        }
         else {
-            ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
+            switch nrPost.kind {
+            case 9802:
+                HighlightRenderer(nrPost: nrPost, theme: theme)
+                
+            case 443:
+                URLView(nrPost: nrPost, theme: theme)
+                    .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+                
+            case 9735:
+                if let zap = nrPost.mainEvent, let zapFrom = zap.zapFromRequest {
+                    ZapReceipt(sats: zap.naiveSats, receiptPubkey: zap.pubkey, fromPubkey: zapFrom.pubkey, from: zapFrom)
+                }
+                
+            case 0,3,4,5,7,1984,9734,30009,8,30008:
+                KnownKindView(nrPost: nrPost, theme: theme)
+                
+            case 1,6,30023,99999:
+                ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
+                
+            default:
+                UnknownKindView(nrPost: nrPost, theme: theme)
+            }
+            
         }
     }
 }
