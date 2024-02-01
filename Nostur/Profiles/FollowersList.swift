@@ -11,6 +11,8 @@ struct FollowersList: View {
     
     var pubkey:String // Pubkey of whose followers to view
     
+    @EnvironmentObject private var themes: Themes
+    public let pubkey: String // Pubkey of whose followers to view
     @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false), animation: .none)
     var clEvents:FetchedResults<Event>
     
@@ -89,11 +91,13 @@ struct FollowersList: View {
             ProfileRow(contact: event.contact!)
                 .frame(height: 120)
 //            Divider()
+                .background(themes.theme.background)
         }
         ForEach(clEventsFollowingPubkeyMissingContact, id:\.self) { event in
             ProfileRowMissing(pubkey: event.pubkey)
                 .frame(height: 120)
 //            Divider()
+                .background(themes.theme.background)
         }
     }
     
