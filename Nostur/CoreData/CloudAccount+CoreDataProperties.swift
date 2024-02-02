@@ -256,8 +256,10 @@ extension CloudAccount : Identifiable {
 
         if (account.privateKey == nil || forceOverwrite) { // Don't overwrite non-read-only accounts
             account.objectWillChange.send()
-//            account.display_name = metaData.display_name ?? ""
             account.name = metaData.name ?? ""
+            if account.name == "" { // fallback
+                account.name = metaData.display_name ?? ""
+            }
             account.about = metaData.about ?? ""
             account.picture = metaData.picture ?? ""
             account.banner = metaData.banner ?? ""
@@ -280,8 +282,10 @@ extension CloudAccount : Identifiable {
         if let account = try? context.fetch(fr).first {
             if (account.privateKey == nil || forceOverwrite == true) { // Don't overwrite non-read-only accounts
                 account.objectWillChange.send()
-//                account.display_name = metaData.display_name ?? ""
                 account.name = metaData.name ?? ""
+                if account.name == "" { // fallback
+                    account.name = metaData.display_name ?? ""
+                }
                 account.about = metaData.about ?? ""
                 account.picture = metaData.picture ?? ""
                 account.banner = metaData.banner ?? ""

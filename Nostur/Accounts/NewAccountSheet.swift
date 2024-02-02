@@ -47,6 +47,7 @@ struct NewAccountSheet: View {
                     if (!ns.onBoardingIsShown) {
                         dismiss()
                     }
+                    NRState.shared.onBoardingIsShown = false
                     NRState.shared.loadAccountsState()
                 } label: {
                     Text("Create")

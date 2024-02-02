@@ -205,6 +205,7 @@ struct AddExistingAccountSheet: View {
             existingAccount.flagsSet.insert("full_account")
             NRState.shared.changeAccount(existingAccount)
             NRState.shared.onBoardingIsShown = false
+            NRState.shared.loadAccountsState()
             return
         }
         
@@ -240,6 +241,7 @@ struct AddExistingAccountSheet: View {
 //        NRState.shared.loadAccounts()
         NRState.shared.changeAccount(account)
         NRState.shared.onBoardingIsShown = false
+        NRState.shared.loadAccountsState()
         
         do {
             try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
@@ -253,6 +255,7 @@ struct AddExistingAccountSheet: View {
         if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
             NRState.shared.changeAccount(existingAccount)
             NRState.shared.onBoardingIsShown = false
+            NRState.shared.loadAccountsState()
             return
         }
 
@@ -285,7 +288,7 @@ struct AddExistingAccountSheet: View {
 //        NRState.shared.loadAccounts()
         NRState.shared.changeAccount(account)
         NRState.shared.onBoardingIsShown = false
-        
+        NRState.shared.loadAccountsState()
         do {
             try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
         }
@@ -305,8 +308,11 @@ struct AddExistingAccountSheet: View {
         account.flags = "full_account"
         account.createdAt = Date()
         account.publicKey = pubkey
-//        NRState.shared.loadAccounts()
         bunkerManager.connect(account, token: token)
+        
+        NRState.shared.changeAccount(account)
+        NRState.shared.onBoardingIsShown = false
+        NRState.shared.loadAccountsState()
         return
     }
 }
