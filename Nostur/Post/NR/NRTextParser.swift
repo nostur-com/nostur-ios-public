@@ -20,7 +20,7 @@ class NRTextParser { // TEXT things
     
     private init() { }
 
-    func parseText(_ event:Event, text: String, availableWidth: CGFloat? = nil, primaryColor: Color? = nil) -> AttributedStringWithPs {
+    func parseText(_ event: Event, text: String, availableWidth: CGFloat? = nil, primaryColor: Color? = nil) -> AttributedStringWithPs {
         let fontColor = primaryColor ?? Themes.default.theme.primary
         let availableWidth = availableWidth ??  DIMENSIONS.shared.availableNoteRowImageWidth()
 
@@ -132,7 +132,7 @@ class NRTextParser { // TEXT things
     }
 
     // NIP-08 (deprecated in favor of NIP-27)
-    private func parseTagIndexedMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
+    private func parseTagIndexedMentions(event: Event, text: String, plainText: Bool = false) -> TextWithPs {
         guard !event.fastTags.isEmpty else { return TextWithPs(text: text, pTags: []) }
 
         var pTags = [Ptag]()
@@ -360,8 +360,8 @@ class NRTextParser { // TEXT things
 }
 
 struct TextWithPs: Hashable {
-    var text:String
-    var pTags:[Ptag]
+    var text: String
+    var pTags: [Ptag]
 }
 
 extension String {
