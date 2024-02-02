@@ -22,7 +22,7 @@ public struct RelayData: Identifiable, Hashable, Equatable {
     
     public var url: String
     
-    public var excludedPubkeys:Set<String>
+    public var excludedPubkeys: Set<String>
     
     
     mutating func setRead(_ value: Bool) {
@@ -37,11 +37,11 @@ public struct RelayData: Identifiable, Hashable, Equatable {
         self.search = value
     }
     
-    mutating func setExcludedPubkeys(_ value:Set<String>) {
+    mutating func setExcludedPubkeys(_ value: Set<String>) {
         self.excludedPubkeys = value
     }
     
-    static func new(url:String, read: Bool, write:Bool, search: Bool, excludedPubkeys:Set<String>) -> RelayData {
+    static func new(url: String, read: Bool, write:Bool, search: Bool, excludedPubkeys: Set<String>) -> RelayData {
         let url = normalizeRelayUrl(url)
 
         return RelayData(read: read,
