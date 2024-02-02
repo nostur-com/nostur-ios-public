@@ -27,8 +27,8 @@ struct ProfileFollowingList: View {
                 .onAppear { [weak vm] in
                     let fetchParams: FetchVM.FetchParams = (
                         prio: false, // Can't use prio, different relays can send different event and we need most recent.
-                        req: { _ in
-                            bg().perform { // 1. FIRST CHECK LOCAL DB
+                        req: { [weak vm] _ in
+                            bg().perform { [weak vm] in // 1. FIRST CHECK LOCAL DB
                                 guard let vm else { return }
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     
@@ -45,7 +45,7 @@ struct ProfileFollowingList: View {
                             }
                         },
                         onComplete: { [weak vm] relayMessage, _ in
-                            bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
+                            bg().perform { [weak vm] in // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 guard let vm else { return }
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     let silentFollows:Set<String> = clEvent.pubkey == account()?.publicKey
