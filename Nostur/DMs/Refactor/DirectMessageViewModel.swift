@@ -429,7 +429,13 @@ class DirectMessageViewModel: ObservableObject {
         guard firstP == NRState.shared.activeAccountPublicKey else { return }
         guard event.created_at > lastDMLocalNotifcationAt else { return }
         
+        // Only continue if either limit to follows is not enabled, or if we are following the sender
         guard !SettingsStore.shared.receiveLocalNotificationsLimitToFollows || account.followingPubkeys.contains(event.pubkey) else { return }
+        
+        // Only continue if sender is in WoT, or if WoT is disabled
+        guard (!WOT_FILTER_ENABLED()) || WebOfTrust.shared.isAllowed(event.pubkey) else {
+            return
+        }
                 
         // Show notification on Mac: ALWAYS
         // On iOS: Only if app is in background
