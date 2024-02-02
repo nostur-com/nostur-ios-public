@@ -24,16 +24,19 @@ class NRTextParser { // TEXT things
         let fontColor = primaryColor ?? Themes.default.theme.primary
         let availableWidth = availableWidth ??  DIMENSIONS.shared.availableNoteRowImageWidth()
 
-        // Remove image links
+        // Remove image links + Handle naddr1...
         // because they get rendered as embeds in PostDetail.
         // and NoteRow shows them in ImageViewer
-        var newText = removeImageLinks(event: event, text: text)
+        var newText = Self.replaceNaddrWithMarkdownLinks(
+            in: self.removeImageLinks(
+                event: event,
+                text: text
+            )
+        )
 
         // Handle #hashtags
         newText = Self.replaceHashtagsWithMarkdownLinks(in: newText)
-        // Handle naddr1...
-        newText = Self.replaceNaddrWithMarkdownLinks(in: newText)
-        
+
         // NIP-08, handle #[0] #[1] etc
         let textWithPs = parseTagIndexedMentions(event: event, text: newText)
 
@@ -94,15 +97,13 @@ class NRTextParser { // TEXT things
     }
     
     func parseMD(_ event:Event, text: String) -> MarkdownContentWithPs {
-//        L.og.debug(text)
 
-        // Remove image links
-        // because they get rendered as embeds in PostDetail.
-        // and NoteRow shows them in ImageViewer
-//        let newText = removeImageLinks(event: event, text: text)
-
-        // NIP-08, handle #[0] #[1] etc
-        let textWithPs = parseTagIndexedMentions(event: event, text: text)
+        // 1) Replace naddr
+        // 2) NIP-08, handle #[0] #[1] etc
+        let textWithPs = parseTagIndexedMentions(
+            event: event,
+            text:  Self.replaceNaddrWithMarkdownLinks(in: text)
+        )
 
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
         var newerTextWithPs = parseUserMentions(event: event, text: textWithPs.text)
@@ -111,7 +112,6 @@ class NRTextParser { // TEXT things
         }
 
         newerTextWithPs.text = Self.replaceHashtagsWithMarkdownLinks(in: newerTextWithPs.text)
-        newerTextWithPs.text = Self.replaceNaddrWithMarkdownLinks(in: newerTextWithPs.text)
 //        print(newerTextWithPs.text)
         let finalText = MarkdownContent(newerTextWithPs.text)
         
@@ -141,7 +141,7 @@ class NRTextParser { // TEXT things
         let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
         let matches = NEvent.indexedMentionRegex15.matches(in: text, options: [], range: nsRange)
 
-        for match in matches.prefix(100) { // 100 limit for sanity
+        for match in matches.prefix(100).reversed() { // 100 limit for sanity
             let range = match.range(at: 1)
             guard let swiftRange = Range(range, in: text),
                   let tagIndex = Int(text[swiftRange]),
