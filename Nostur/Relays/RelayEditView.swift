@@ -105,14 +105,17 @@ struct RelayEditView: View {
                         Text("Disconnected", comment: "Relay status when disconnected")
                         Spacer()
                         Button {
-                            if (connection?.url != relayUrl) { // url change?
+                            let correctedRelayUrl = normalizeRelayUrl(relayUrl)
+                            relayUrl = correctedRelayUrl
+                            if (connection?.url != correctedRelayUrl) { // url change?
                                 connection?.disconnect()
                                 
                                 // Replace the connection first
                                 if let oldUrl = relay.url_ {
                                     ConnectionPool.shared.removeConnection(oldUrl.lowercased())
+                                    ConnectionPool.shared.removeConnection(correctedRelayUrl)
                                 }
-                                let newRelayData = RelayData.new(url: relayUrl, read: relay.read, write: relay.write, search: relay.search, excludedPubkeys:  relay.excludedPubkeys)
+                                let newRelayData = RelayData.new(url: correctedRelayUrl, read: relay.read, write: relay.write, search: relay.search, excludedPubkeys:  relay.excludedPubkeys)
                                 
                                 let replacedConnection = ConnectionPool.shared.addConnection(newRelayData)
                                 connection = replacedConnection
@@ -159,7 +162,8 @@ struct RelayEditView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button("Save") {
                     do {
-                        let correctedRelayUrl = (relayUrl.prefix(6) != "wss://" && relayUrl.prefix(5) != "ws://"  ? ("wss://" + relayUrl) : relayUrl).lowercased()
+                        let correctedRelayUrl = normalizeRelayUrl((relayUrl.prefix(6) != "wss://" && relayUrl.prefix(5) != "ws://"  ? ("wss://" + relayUrl) : relayUrl).lowercased())
+                        relayUrl = correctedRelayUrl
                         relay.url_ = correctedRelayUrl
                         relay.excludedPubkeys = excludedPubkeys
                         relay.updatedAt = .now
