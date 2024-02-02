@@ -129,6 +129,7 @@ struct SmoothTable: UIViewControllerRepresentable {
         if (lvm.uuid != context.coordinator.lvm.uuid) {
             // set up new
             if context.coordinator.viewHolder != nil {
+                context.coordinator.initialApply = true
                 configureView(context: context)
             }
         }
@@ -162,7 +163,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                 guard let coordinator = coordinator, let viewHolder = viewHolder else { return }
                 guard let dataSource = viewHolder.dataSource else { return }
                 let currentNumberOfItems = dataSource.snapshot().numberOfItems(inSection: .main)
-                let isInitialApply = coordinator.initialApply
+                let isInitialApply = coordinator.lvm.isInitialApply
                 var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
                 snapshot.appendSections([SingleSection.main])
                 snapshot.appendItems(data.keys.elements, toSection: .main)
@@ -193,11 +194,12 @@ struct SmoothTable: UIViewControllerRepresentable {
                 dataSource.apply(snapshot, animatingDifferences: shouldAnimate) { [weak viewHolder, weak coordinator] in
                     guard let coordinator = coordinator, let viewHolder = viewHolder else { return }
                     if (isInitialApply) {
-                        coordinator.initialApply = false
+                        
                         // Scroll to initial position
                         // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
                         if data.count > 0 {
                             signpost(NRState.shared, "LAUNCH", .end, "SmoothTable: snapshot applied")
+                            coordinator.lvm.isInitialApply = false
                         }
                         if (coordinator.lvm.initialIndex > 4) && coordinator.lvm.initialIndex < viewHolder.tableView.numberOfRows(inSection: 0) {
                             L.sl.debug("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
@@ -207,6 +209,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                         else {
                             DispatchQueue.main.async {
                                 if (viewHolder.tableView.contentOffset.y == 0) {
+                                    coordinator.lvm.isAtTop = true
                                     // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
                                     L.sl.debug("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
                                     if coordinator.lvm.lvmCounter.count != 0 {

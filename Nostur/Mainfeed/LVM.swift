@@ -123,6 +123,7 @@ class LVM: NSObject, ObservableObject {
             guard oldValue != wotEnabled else { return }
             lastAppearedIdSubject.send(nil)
             lvmCounter.count = 0
+            isInitialApply = true
             L.og.debug("COUNTER: \(self.lvmCounter.count) - wotEnabled change")
             instantFinished = false
             posts.send([:])
@@ -142,6 +143,7 @@ class LVM: NSObject, ObservableObject {
         loadHashtags()
         lastAppearedIdSubject.send(nil)
         lvmCounter.count = 0
+        isInitialApply = true
         L.og.debug("COUNTER: \(self.lvmCounter.count) - LVM.reload()")
         instantFinished = false
         posts.send([:])
@@ -517,6 +519,11 @@ class LVM: NSObject, ObservableObject {
     }
     
     public var isAtTop = true // main thread
+    public var isInitialApply = true { // main thread
+        didSet {
+            L.lvm.debug("isInitialApply set to: \(oldValue) -> \(self.isInitialApply) (COUNT)")
+        }
+    }
     
     func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], leafIdsOnScreen:OrderedSet<String>, currentNRPostLeafs:[NRPost], older:Bool = false) {
         #if DEBUG
@@ -541,6 +548,7 @@ class LVM: NSObject, ObservableObject {
         guard !older else { return }
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
+            guard !self.isInitialApply else { return }
             if SettingsStore.shared.autoScroll && self.isAtTop { return }
             let before = self.lvmCounter.count
             self.lvmCounter.count += addedCount
@@ -1215,6 +1223,7 @@ extension LVM {
                 self.pubkeys = newPubkeyInfo.pubkeys
                 lastAppearedIdSubject.send(nil)
                 lvmCounter.count = 0
+                isInitialApply = true
                 L.og.debug("COUNTER: 0 - listPubkeysChanged")
                 instantFinished = false
                 posts.send([:])
@@ -1248,6 +1257,7 @@ extension LVM {
                 if newRelaysInfo.wotEnabled == self.wotEnabled {
                     // if WoT did not change, manual clear:
                     lvmCounter.count = 0
+                    isInitialApply = true
                     L.og.debug("COUNTER: 0 - listRelaysChanged")
                     instantFinished = false
                     posts.send([:])
