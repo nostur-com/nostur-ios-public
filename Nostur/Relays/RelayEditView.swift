@@ -66,7 +66,7 @@ struct RelayEditView: View {
                 }
                 Toggle(isOn: $relay.write) {
                     Text("Publish to this relay", comment: "Label for toggle to publish to this relay") .background(refresh ? Color.clear : Color.clear)
-                    if relay.write {
+                    if relay.write && accounts.count > 1 {
                         ScrollView(.horizontal) {
                             HStack {
                                 ForEach(accounts) { account in
