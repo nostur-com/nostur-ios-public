@@ -141,6 +141,7 @@ struct ProfileRow: View {
                         } label: {
                             FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.isPrivateFollow)
                         }
+                        .buttonStyle(.borderless)
                         .disabled(!fg.didReceiveContactListThisSession)
                     }
                 }
