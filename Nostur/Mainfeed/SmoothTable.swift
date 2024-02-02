@@ -59,7 +59,8 @@ struct SmoothTable: UIViewControllerRepresentable {
         
         // set up 'scroll to'- listener
         receiveNotification(.shouldScrollToFirstUnread)
-            .sink { [weak coordinator = context.coordinator, cvh] _ in
+            .sink { [weak coordinator = context.coordinator, weak cvh] _ in
+                guard let cvh else { return }
                 guard coordinator?.lvm.viewIsVisible ?? false else { return }
                 guard cvh.tableView.numberOfRows(inSection: 0) > 0 else { return }
                 guard context.coordinator.lvm.lvmCounter.count > 0 else {
@@ -90,7 +91,8 @@ struct SmoothTable: UIViewControllerRepresentable {
             .store(in: &context.coordinator.subscriptions)
         
         receiveNotification(.shouldScrollToTop)
-            .sink { [weak coordinator = context.coordinator, cvh] _ in
+            .sink { [weak coordinator = context.coordinator, weak cvh] _ in
+                guard let cvh else { return }
                 guard coordinator?.lvm.viewIsVisible ?? false else { return }
                 guard cvh.tableView.numberOfRows(inSection: 0) > 0 else { return }
                 if !(coordinator?.lvm.posts.value.isEmpty ?? true) {
@@ -102,7 +104,7 @@ struct SmoothTable: UIViewControllerRepresentable {
     
     private func makeViewHolder(parent viewController: UIViewControllerType,
                                           coordinator: Coordinator) -> ViewHolderType {
-        L.sl.info("⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeViewHolder")
+        L.sl.debug("⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeViewHolder")
         let viewHolder = TViewHolder(coordinator: coordinator) { uiView in
             
             viewController.view.addSubview(uiView)
@@ -121,8 +123,8 @@ struct SmoothTable: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        L.sl.info("⭐️ SmoothTable \(context.coordinator.lvm.id): OLD updateUIViewController \(context.coordinator.lvm.uuid)")
-        L.sl.info("⭐️ SmoothTable \(self.lvm.id): NEW updateUIViewController \(self.lvm.uuid)")
+        L.sl.debug("⭐️ SmoothTable \(context.coordinator.lvm.id): OLD updateUIViewController \(context.coordinator.lvm.uuid)")
+        L.sl.debug("⭐️ SmoothTable \(self.lvm.id): NEW updateUIViewController \(self.lvm.uuid)")
         
         if (lvm.uuid != context.coordinator.lvm.uuid) {
             // set up new
@@ -137,8 +139,8 @@ struct SmoothTable: UIViewControllerRepresentable {
         coordinator.subscriptions.removeAll()
     }
     
-    func refresh(_ viewHolder:TViewHolder, coordinator:Coordinator) {
-        L.sl.info("⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): refresh")
+    func refresh(_ viewHolder: TViewHolder, coordinator: Coordinator) {
+        L.sl.debug("⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): refresh")
         if #available(iOS 16, *) {
             viewHolder.tableView.register(PostOrThreadCell.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell")
         }
@@ -165,7 +167,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                 snapshot.appendSections([SingleSection.main])
                 snapshot.appendItems(data.keys.elements, toSection: .main)
                 
-                let restoreToId:String? = viewHolder.tableView.contentOffset.y == 0 
+                let restoreToId: String? = viewHolder.tableView.contentOffset.y == 0
                     ? dataSource.snapshot().itemIdentifiers.first
                     : nil
                 
@@ -183,7 +185,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                 
                 let beforeCount = !isInitialApply ? currentNumberOfItems : 0
                 
-                L.sl.info("⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): \(currentNumberOfItems) → \(data.count)")
+                L.sl.debug("⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): \(currentNumberOfItems) → \(data.count)")
                 
                 if isInitialApply && data.count > 0 {
                     signpost(NRState.shared, "LAUNCH", .event, "SmoothTable: Applying snapshot")
@@ -198,7 +200,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                             signpost(NRState.shared, "LAUNCH", .end, "SmoothTable: snapshot applied")
                         }
                         if (coordinator.lvm.initialIndex > 4) && coordinator.lvm.initialIndex < viewHolder.tableView.numberOfRows(inSection: 0) {
-                            L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
+                            L.sl.debug("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
                             coordinator.lvm.isAtTop = false
                             viewHolder.tableView.scrollToRow(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
                         }
@@ -206,7 +208,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                             DispatchQueue.main.async {
                                 if (viewHolder.tableView.contentOffset.y == 0) {
                                     // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
-                                    L.sl.info("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
+                                    L.sl.debug("⭐️⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
                                     if coordinator.lvm.lvmCounter.count != 0 {
                                         coordinator.lvm.lvmCounter.count = 0
                                     }
@@ -219,7 +221,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                         // KEEP POSITION AFTER INSERT, IF AUTOSCROLL IS DISABLED
                         if !SettingsStore.shared.autoScroll {
                             if let restoreToId, let restoreIndex = data.index(forKey: restoreToId), restoreIndex < viewHolder.tableView.numberOfRows(inSection: 0)  {
-                                L.sl.info("⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(data.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
+                                L.sl.debug("⭐️⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(data.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
 //                                viewHolder.tableView.layoutIfNeeded()
                                 viewHolder.tableView.scrollToRow(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
 //                                viewHolder.tableView.setNeedsLayout()
@@ -283,7 +285,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                 for (id, item) in items {
                     if !item.missingPs.isEmpty {
                         QueuedFetcher.shared.enqueue(pTags: item.missingPs)
-                        L.fetching.info("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(id)")
+                        L.fetching.debug("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(id)")
                     }
                     
                     // Everything below here is image or link preview fetching, skip if low data mode
@@ -331,7 +333,7 @@ struct SmoothTable: UIViewControllerRepresentable {
                             do {
                                 let tags = try result.get()
                                 LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
-                                L.og.info("✓✓ Loaded link preview meta tags from \(url)")
+                                L.og.debug("✓✓ Loaded link preview meta tags from \(url)")
                             }
                             catch { }
                         }
@@ -651,7 +653,7 @@ func pfpImageRequestFor(_ pictureUrl:URL, size:CGFloat) -> ImageRequest {
 
     //    thumbOptions.createThumbnailFromImageAlways = true
     //    thumbOptions.shouldCacheImmediately = true
-    let options:ImageRequest.Options = SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : []
+    let options: ImageRequest.Options = SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : []
 
     if !SettingsStore.shared.animatedPFPenabled || pictureUrl.absoluteString.suffix(4) != ".gif" {
         return ImageRequest(url: pictureUrl,
