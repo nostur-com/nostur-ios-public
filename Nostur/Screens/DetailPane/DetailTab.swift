@@ -99,6 +99,9 @@ struct DetailTab: View {
             guard navId != tm.selected?.navId else { return }
             
             guard type(of: destination.destination) != HashtagPath.self else  { return }
+            guard type(of: destination.destination) != Nevent1Path.self else  { return }
+            guard type(of: destination.destination) != Nprofile1Path.self else  { return }
+            guard type(of: destination.destination) != Naddr1Path.self else  { return }
             
             // if we already have a tab of this same destination open, activate it
             if let existingTab = tm.tabs.first(where: { $0.navId == navId }) {
