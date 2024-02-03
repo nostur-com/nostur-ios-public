@@ -177,7 +177,7 @@ class NRTextParser { // TEXT things
 
     
     // Cached regex
-    static let npubNprofRegex = try! NSRegularExpression(pattern: "(?:nostr:)?@?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b", options: [])
+    static let npubNprofRegex = try! NSRegularExpression(pattern: "nostr:npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(nostr:nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b", options: [])
     
     // NIP-27 handle nostr:npub or nostr:nprofile
     private func parseUserMentions(event: Event, text: String, plainText: Bool = false) -> TextWithPs {
@@ -189,9 +189,9 @@ class NRTextParser { // TEXT things
         for match in Self.npubNprofRegex.matches(in: replacedString, range: nsRange).reversed() {
             if sanityIndex > 200 { break }
             sanityIndex += 1
-            var replacement = (replacedString as NSString).substring(with: match.range).replacingOccurrences(of: "@", with: "")
+            var replacement = (replacedString as NSString).substring(with: match.range)
             
-            let pub1OrProfile1 = replacement.prefix(11) == "nostr:npub1" || replacement.prefix(5) == "npub1"
+            let pub1OrProfile1 = replacement.prefix(11) == "nostr:npub1"
                 ? "npub1"
                 : "nprofile1"
             
