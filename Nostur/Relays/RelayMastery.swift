@@ -126,35 +126,37 @@ struct AccountRelaySettings: View {
             case .initializing, .loading, .altLoading:
                 self.loadingView
             case .ready(let accountRelays):
-                ForEach(accountRelays) { relay in
-                    if (relay.read && relay.write) {
-                        HStack {
-                            Text(relay.url)
-                            Spacer()
-                            Text("read + write")
-                                .foregroundColor(.secondary)
+                Section("Published relays for \(account.anyName)") {
+                    ForEach(accountRelays) { relay in
+                        if (relay.read && relay.write) {
+                            HStack {
+                                Text(relay.url)
+                                Spacer()
+                                Text("read + write")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        else if (relay.read) {
+                            HStack {
+                                Text(relay.url)
+                                Spacer()
+                                Text("read")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        else if (relay.write) {
+                            HStack {
+                                Text(relay.url)
+                                Spacer()
+                                Text("write")
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
-                    else if (relay.read) {
-                        HStack {
-                            Text(relay.url)
-                            Spacer()
-                            Text("read")
-                                .foregroundColor(.secondary)
-                        }
+                    
+                    Button("Reconfigure published relays") {
+                        showWizard = true
                     }
-                    else if (relay.write) {
-                        HStack {
-                            Text(relay.url)
-                            Spacer()
-                            Text("write")
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                
-                Button("Reconfigure published relays") {
-                    showWizard = true
                 }
             case .timeout:
                 self.timeoutView
