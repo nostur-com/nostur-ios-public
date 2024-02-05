@@ -104,10 +104,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             guard let self = self else { return }
             guard self.isDeviceConnected else {
                 L.sockets.debug("\(self.url) - No internet, skipping connect()")
+                self.isSocketConnecting = false
                 return
             }
-            guard !self.isSocketConnecting else {
+            guard !self.isSocketConnecting || forceConnectionAttempt else {
                 L.sockets.debug("\(self.url) - Already connecting, skipping connect()")
+                self.isSocketConnecting = false
                 return
             }
             self.nreqSubscriptions = []
