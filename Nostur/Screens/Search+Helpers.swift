@@ -43,6 +43,9 @@ func typeOfSearch(_ searchInput:String) -> TypeOfSearch {
     else if (searchTrimmed.count == 64) {
         return .hexId(searchTrimmed)
     }
+    else if (searchTrimmed.prefix(8) == "https://") {
+        return .url(searchTrimmed)
+    }
     else if searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true).count == 2 {
         let nip05parts = searchTrimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
         
@@ -53,9 +56,7 @@ func typeOfSearch(_ searchInput:String) -> TypeOfSearch {
         
         return .nip05(Nip05Parts(nip05url: url, domain: domain, name: name))
     }
-    else if (searchTrimmed.prefix(8) == "https://") {
-        return .url(searchTrimmed)
-    }
+    
     
     return .other(searchTrimmed)
 }
@@ -444,7 +445,7 @@ extension Search {
         }
     }
     
-    func urlSearch(_ term:String) {
+    func urlSearch(_ term: String) {
         let blockedPubkeys = blocks()
         searching = true
         contacts.nsPredicate = NSPredicate(value: false)
