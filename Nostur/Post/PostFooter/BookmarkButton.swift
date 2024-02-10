@@ -43,7 +43,7 @@ struct BookmarkButton: View {
         if footerAttributes.bookmarked {
             Bookmark.removeBookmark(nrPost)
             bg().perform {
-                accountCache()?.addBookmark(nrPost.id)
+                accountCache()?.removeBookmark(nrPost.id)
             }
         }
         else {
@@ -51,7 +51,7 @@ struct BookmarkButton: View {
             impactMed.impactOccurred()
             Bookmark.addBookmark(nrPost)
             bg().perform {
-                accountCache()?.removeBookmark(nrPost.id)
+                accountCache()?.addBookmark(nrPost.id)
             }
         }
     }
