@@ -41,7 +41,7 @@ struct PFP: View, Equatable {
 
 struct ContactPFP: View {
     
-    @ObservedObject public var contact:Contact
+    @ObservedObject public var contact: Contact
     private var pubkey:String { contact.pubkey }
     private var pictureUrl:URL? { contact.pictureUrl }
     var size:CGFloat?
@@ -55,7 +55,7 @@ struct ContactPFP: View {
 
 struct NRContactPFP: View {
     
-    @ObservedObject public var nrContact:NRContact
+    @ObservedObject public var nrContact: NRContact
     private var pubkey:String { nrContact.pubkey }
     private var pictureUrl:URL? { nrContact.pictureUrl }
     public var size:CGFloat?

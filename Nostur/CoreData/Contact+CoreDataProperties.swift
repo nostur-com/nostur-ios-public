@@ -306,7 +306,7 @@ extension Contact : Identifiable {
         }
     }
     
-    static func updateRelatedEvents(_ contact:Contact) {
+    static func updateRelatedEvents(_ contact: Contact) {
 //        if contact.nip05 != nil && !contact.nip05veried {
 //            NIP05Verifier.shared.verify(contact)
 //        }
@@ -461,7 +461,7 @@ extension Contact : Identifiable {
     }
     
     
-    static func fetchByPubkey(_ pubkey:String, context:NSManagedObjectContext) -> Contact? {
+    static func fetchByPubkey(_ pubkey: String, context: NSManagedObjectContext) -> Contact? {
         if !Thread.isMainThread { // Try to get from following cache first (bg only for now)
             if let contact = NRState.shared.loggedInAccount?.followingCache[pubkey]?.bgContact {
                 return contact
