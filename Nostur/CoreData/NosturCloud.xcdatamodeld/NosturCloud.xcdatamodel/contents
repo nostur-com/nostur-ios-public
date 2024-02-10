@@ -27,7 +27,6 @@
         <attribute name="publicKey" attributeType="String"/>
         <relationship name="blockedContacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="blockedBy" inverseEntity="Contact"/>
         <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>
-        <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
         <relationship name="privateNotes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PrivateNote" inverseName="by" inverseEntity="PrivateNote"/>
     </entity>
     <entity name="Bookmark" representedClassName="Bookmark" syncable="YES">
@@ -136,7 +135,6 @@
         <attribute name="zapperPubkey" optional="YES" attributeType="String"/>
         <relationship name="blockedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="blockedContacts" inverseEntity="Account"/>
         <relationship name="events" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="contacts" inverseEntity="Event"/>
-        <relationship name="followedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="follows" inverseEntity="Account"/>
         <relationship name="lists" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="NosturList" inverseName="contacts" inverseEntity="NosturList"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
