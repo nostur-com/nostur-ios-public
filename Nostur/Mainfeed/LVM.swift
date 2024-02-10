@@ -853,7 +853,7 @@ class LVM: NSObject, ObservableObject {
         let completeInstantFeed = { [weak self] events in
             guard let self = self else { return }
             
-            let firstRenderedEvents:[Event] = if hideReplies {
+            let firstRenderedEvents:[Event] = if self.hideReplies {
                 events
             }
             else {
@@ -873,7 +873,7 @@ class LVM: NSObject, ObservableObject {
             self.instantFeed = InstantFeed()
             signpost(instantFeed, "InstantFeed", .end, "Completed")
             
-            if type == .relays {
+            if self.type == .relays {
                 DispatchQueue.main.async {
                     self.fetchRelaysRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
                 }

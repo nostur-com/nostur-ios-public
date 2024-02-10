@@ -319,7 +319,7 @@ class Importer {
                     }
                 }
                 if (context.hasChanges) {
-                    try context.save() // This is saving bg context to main, not to disk
+                    try context.save() 
                     if (saved > 0) {
                         L.importing.info("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
                         let mainQueueCount = count
@@ -516,7 +516,7 @@ class Importer {
                     }
                 }
                 if (context.hasChanges) {
-                    try context.save() // This is saving bg context to main, not to disk
+                    try context.save()
                 }
                 else {
                     L.importing.debug("🏎️🏎️ Nothing imported, no changes in new prio message")
