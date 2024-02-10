@@ -975,8 +975,15 @@ struct Maintenance {
                 migrated.display_name_ = account.display_name
                 migrated.flags = account.flags
                 migrated.followingHashtags_ = account.followingHashtags_
-                migrated.followingPubkeys_ = account.follows_.filter { !$0.privateFollow } .map { $0.pubkey }.joined(separator: " ")
-                migrated.privateFollowingPubkeys_ = account.follows_.filter { $0.privateFollow } .map { $0.pubkey }.joined(separator: " ")
+                
+                // Account.follows DB relation is removed, so we fallback to kind 3 now
+                if let followingList = Event.fetchReplacableEvent(3, pubkey: account.publicKey, context: context) {
+                    let followingPubkeys = followingList.fastPs.map { $0.1 }
+                    let followingContacts = Contact.fetchByPubkeys(followingPubkeys, context: context)
+                    migrated.followingPubkeys_ = followingContacts.filter { !$0.privateFollow } .map { $0.pubkey }.joined(separator: " ")
+                    migrated.privateFollowingPubkeys_ = followingContacts.filter { $0.privateFollow } .map { $0.pubkey }.joined(separator: " ")
+                }
+                
                 migrated.isNC = account.isNC
                 migrated.lastFollowerCreatedAt = account.lastFollowerCreatedAt
                 migrated.lastProfileReceivedAt = account.lastProfileReceivedAt

@@ -33,7 +33,6 @@ extension Contact {
     @NSManaged public var zapperPubkey: String? // used to authorize kind 9735 zap notes. fetch from lud16 endpoint
     @NSManaged public var updated_at: Int64
     @NSManaged public var metadata_created_at: Int64
-    @NSManaged public var followedBy: NSSet?
     @NSManaged public var events: Set<Event>?
     @NSManaged public var lists: NSSet?
     @NSManaged public var privateFollow: Bool
@@ -92,24 +91,6 @@ extension Contact {
     @NSManaged public func removeFromEvents(_ values: NSSet)
 
 }
-
-// MARK: Generated accessors for followedBy
-extension Contact {
-
-    @objc(addFollowedByObject:)
-    @NSManaged public func addToFollowedBy(_ value: Account)
-
-    @objc(removeFollowedByObject:)
-    @NSManaged public func removeFromFollowedBy(_ value: Account)
-
-    @objc(addFollowedBy:)
-    @NSManaged public func addToFollowedBy(_ values: NSSet)
-
-    @objc(removeFollowedBy:)
-    @NSManaged public func removeFromFollowedBy(_ values: NSSet)
-
-}
-
 // MARK: Generated accessors for blockedBy
 extension Contact {
 
