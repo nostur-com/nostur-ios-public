@@ -192,6 +192,7 @@ class InstantFeed {
                     }
                 } timeoutCommand: { [weak self] taskId in
                     guard let self else { return }
+                    self.isRunning = false
                     if self.events == nil {
                         L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from globalish relays using \(relayCount) relays. ")
                         self.events = []
