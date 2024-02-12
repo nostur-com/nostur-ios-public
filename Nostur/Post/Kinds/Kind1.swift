@@ -91,7 +91,7 @@ struct Kind1: View {
                             }
                         }
                     }
-                NoteHeaderView(nrPost: nrPost, singleLine: false)
+                NRPostHeaderContainer(nrPost: nrPost, singleLine: false)
                 Spacer()
                 LazyNoteMenuButton(nrPost: nrPost)
             }
