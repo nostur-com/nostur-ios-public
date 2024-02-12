@@ -90,7 +90,7 @@ struct Highlight: View {
             
             VStack(alignment:.leading, spacing: 3) {// Post container
                 HStack { // name + reply + context menu
-                    NoteHeaderView(nrPost: nrPost)
+                    NRPostHeaderContainer(nrPost: nrPost)
                     Spacer()
                     LazyNoteMenuButton(nrPost: nrPost)
                 }

@@ -148,7 +148,7 @@ struct NoteZapRow: View {
                     navigateTo(ContactPath(key: zapFrom.pubkey))
                 }
             VStack(alignment: .leading) {
-                NoteHeaderViewEvent(event: zapFrom)
+                EventHeaderContainer(event: zapFrom)
                 Text("Zapped \(zap.naiveSats.satsFormatted) sats \(fiatPrice)", comment: "Text showing how many sats someone zapped, followed by fiat price")
                 Text(zapFrom.content ?? "")
 //                Text(zap.flags)

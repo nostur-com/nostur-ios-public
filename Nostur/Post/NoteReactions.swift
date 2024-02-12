@@ -59,8 +59,9 @@ struct ReactionRow: View {
                     navigateTo(ContactPath(key: reaction.pubkey))
                 }
             VStack(alignment: .leading) {
-                NoteHeaderViewEvent(event: reaction)
+                EventHeaderContainer(event: reaction)
                 Text(reaction.content == "+" ? "❤️" : reaction.content ?? "")
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding()

@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct HighlightComposer: View {
+    @ObservedObject var settings: SettingsStore = .shared
     @EnvironmentObject private var la:LoggedInAccount
     @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) private var dismiss
@@ -29,7 +30,7 @@ struct HighlightComposer: View {
 
                         VStack(alignment:.leading, spacing: 3) {
                             HStack { // name + reply + context menu
-                                PreviewHeaderView(authorName: account.anyName, accountPubkey: account.publicKey)
+                                PostHeaderView(name: account.anyName, via: "Nostur", createdAt: .now, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: true)
                                 Spacer()
                             }
 

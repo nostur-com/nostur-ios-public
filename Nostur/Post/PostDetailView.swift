@@ -461,7 +461,7 @@ struct ParentPost: View {
                             
                             VStack(alignment:.leading, spacing: 3) {
                                 HStack(alignment: .top) {
-                                    NoteHeaderView(nrPost: nrPost, singleLine: true)
+                                    NRPostHeaderContainer(nrPost: nrPost, singleLine: true)
                                     Spacer()
                                     EventPrivateNoteToggle(nrPost: nrPost)
                                     LazyNoteMenuButton(nrPost: nrPost)
@@ -598,7 +598,7 @@ struct DetailPost: View {
                 
                 VStack(alignment:.leading, spacing: 3) {
                     HStack(alignment: .top) {
-                        NoteHeaderView(nrPost: nrPost, singleLine: false)
+                        NRPostHeaderContainer(nrPost: nrPost, singleLine: false)
                         Spacer()
                         EventPrivateNoteToggle(nrPost: nrPost)
                         LazyNoteMenuButton(nrPost: nrPost)
