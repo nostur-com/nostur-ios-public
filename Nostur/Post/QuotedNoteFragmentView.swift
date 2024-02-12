@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct QuotedNoteFragmentView: View {
-    @ObservedObject private var nrPost:NRPost
-    @ObservedObject private var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
-    private var forceAutoload:Bool
-    private var theme:Theme
+    @ObservedObject private var nrPost: NRPost
+    @ObservedObject private var postRowDeletableAttributes: NRPost.PostRowDeletableAttributes
+    private var forceAutoload: Bool
+    private var theme: Theme
     
-    init(nrPost: NRPost, forceAutoload:Bool = false, theme: Theme) {
+    init(nrPost: NRPost, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.forceAutoload = forceAutoload

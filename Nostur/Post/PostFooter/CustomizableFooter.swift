@@ -10,13 +10,13 @@ import SwiftUI
 import Algorithms
 
 struct CustomizableFooterFragmentView: View {
-    @ObservedObject private var settings:SettingsStore = .shared
-    @ObservedObject private var vmc:ViewModelCache = .shared
+    @ObservedObject private var settings: SettingsStore = .shared
+    @ObservedObject private var vmc: ViewModelCache = .shared
     private var theme:Theme
     
 //    static let gridColumns = Array(repeating: GridItem(.flexible()), count: ViewModelCache.BUTTONS_PER_ROW)
 
-    private let nrPost:NRPost
+    private let nrPost: NRPost
     private var isDetail = false
     
     init(nrPost: NRPost, isDetail: Bool = false, theme: Theme) {
@@ -75,9 +75,9 @@ struct CustomizableFooterFragmentView: View {
 
 struct CustomizablePreviewFooterFragmentView: View {
     
-    @State private var nrPost:NRPost? = nil
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var vmc:ViewModelCache = .shared
+    @State private var nrPost: NRPost? = nil
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var vmc: ViewModelCache = .shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
