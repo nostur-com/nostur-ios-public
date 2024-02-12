@@ -47,10 +47,28 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     class PFPAttributes: ObservableObject {
         @Published var contact: NRContact? = nil
+        private var contactSavedSubscription: AnyCancellable?
         
-        init(contact: NRContact? = nil) {
+        init(contact: NRContact? = nil, pubkey: String) {
             self.contact = contact
+            
+            if contact == nil {
+                contactSavedSubscription = ViewUpdates.shared.contactUpdated
+                    .filter { pubkey == $0.pubkey }
+                    .sink(receiveValue: { [weak self] contact in
+                        let nrContact = NRContact(contact: contact, following: isFollowing(contact.pubkey))
+                        DispatchQueue.main.async { [weak self] in
+                            self?.objectWillChange.send()
+                            self?.contact = nrContact
+                        }
+                        self?.contactSavedSubscription?.cancel()
+                        self?.contactSavedSubscription = nil
+                    })
+            }
         }
+        
+        
+        // Listen here or somewhere in view?
     }
     
     class HighlightAttributes: ObservableObject {
@@ -410,10 +428,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         let referencedContacts = Contact.fetchByPubkeys(event.fastPs.map { $0.1 }).map({ NRContact(contact: $0) })
         
         if let contact = event.contact_ {
-            self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following))
+            self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following), pubkey: pubkey)
         }
         else {
-            self.pfpAttributes = PFPAttributes()
+            self.pfpAttributes = PFPAttributes(pubkey: pubkey)
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.001"); isAwaiting = true
         }
         

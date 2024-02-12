@@ -63,10 +63,6 @@ func contactUsername(fromPubkey pubkey:String, event:Event) -> String {
         PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
         return contact.anyName
     }
-    if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
-        PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
-        return contact.anyName
-    }
     if let contact = event.replyTo?.contact, pubkey == contact.pubkey {
         PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
         return contact.anyName
