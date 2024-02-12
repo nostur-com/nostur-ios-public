@@ -13,10 +13,10 @@ struct NoteReactions: View {
     private let id: String
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
-    private var reactions:FetchedResults<Event>
-    private var reactions_:[Event] { reactions.filter { $0.lastE() == id }  }
+    private var reactions: FetchedResults<Event>
+    private var reactions_: [Event] { reactions.filter { $0.lastE() == id }  }
     
-    init(id:String) {
+    init(id: String) {
         self.id = id
         _reactions = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", serializedE(id)))
     }
@@ -31,7 +31,7 @@ struct NoteReactions: View {
         }
         .background(themes.theme.listBackground)
         .onAppear {
-            var missing:[Event] = []
+            var missing: [Event] = []
             for reaction in reactions_ {
                 if let contact = reaction.contact, contact.metadata_created_at == 0 {
                     missing.append(reaction)
@@ -50,7 +50,7 @@ struct NoteReactions: View {
 }
 
 struct ReactionRow: View {
-    @ObservedObject public var reaction:Event
+    @ObservedObject public var reaction: Event
     
     var body: some View {
         HStack(alignment: .top) {
