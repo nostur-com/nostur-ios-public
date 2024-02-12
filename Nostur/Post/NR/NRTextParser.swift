@@ -187,7 +187,7 @@ class NRTextParser { // TEXT things
 
         var sanityIndex = 0
         for match in Self.npubNprofRegex.matches(in: replacedString, range: nsRange).reversed() {
-            if sanityIndex > 200 { break }
+            if sanityIndex > 175 { break }
             sanityIndex += 1
             var replacement = (replacedString as NSString).substring(with: match.range)
             
@@ -195,13 +195,14 @@ class NRTextParser { // TEXT things
                 ? "npub1"
                 : "nprofile1"
             
-            replacement = replacement.replacingOccurrences(of: "@", with: "")
+            replacement = replacement
+                .replacingOccurrences(of: "@", with: "")
+                .replacingOccurrences(of: "nostr:", with: "")
             
             switch pub1OrProfile1 {
                 case "npub1":
-                    let npub = replacement.replacingOccurrences(of: "nostr:", with: "")
                     do {
-                        let pubkey = try toPubkey(npub)
+                        let pubkey = try toPubkey(replacement)
                         pTags.append(pubkey)
                         if !plainText {
                             replacement = "[@\(contactUsername(fromPubkey: pubkey, event: event).escapeMD())](nostur:p:\(pubkey))"
@@ -214,9 +215,8 @@ class NRTextParser { // TEXT things
                         L.og.debug("problem decoding npub")
                     }
                 case "nprofile1":
-                let nprofile = replacement.replacingOccurrences(of: "nostr:", with: "")
                     do {
-                        let identifier = try ShareableIdentifier(nprofile)
+                        let identifier = try ShareableIdentifier(replacement)
                         if let pubkey = identifier.pubkey {
                             pTags.append(pubkey)
                             if !plainText {
