@@ -60,7 +60,7 @@ struct NRContactPFP: View {
     private var pictureUrl:URL? { nrContact.pictureUrl }
     public var size:CGFloat?
     public var forceFlat = false
-    private var color:Color { randomColor(seed: nrContact.pubkey) }
+    private var color: Color { nrContact.randomColor }
     
     var body: some View {
         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color, forceFlat: forceFlat)

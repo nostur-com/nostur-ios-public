@@ -3,9 +3,9 @@
 //  Nostur
 //
 //  Created by Fabian Lachman on 11/05/2023.
-//
+// 
 
-import Foundation
+import SwiftUI
 import Combine
 import CoreData
 
@@ -74,10 +74,13 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     var zapState: ZapState?
     
     var contact: Contact? // Only touch this in BG context!!!
+    
+    var randomColor: Color
 
     init(contact: Contact, following:Bool? = nil) {
         self.contact = contact
         self.pubkey = contact.pubkey
+        self.randomColor = Nostur.randomColor(seed: contact.pubkey)
         self.anyName = contact.anyName
         self.fixedName = contact.fixedName
         self.display_name = contact.display_name
