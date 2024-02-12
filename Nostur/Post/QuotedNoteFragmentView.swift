@@ -12,12 +12,14 @@ struct QuotedNoteFragmentView: View {
     @ObservedObject private var postRowDeletableAttributes: NRPost.PostRowDeletableAttributes
     private var forceAutoload: Bool
     private var theme: Theme
+    @State private var name: String
     
     init(nrPost: NRPost, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.forceAutoload = forceAutoload
         self.theme = theme
+        self.name = nrPost.anyName
     }
     
     var body: some View {
@@ -43,22 +45,19 @@ struct QuotedNoteFragmentView: View {
                             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20, forceFlat: nrPost.isScreenshot)
                                 .onTapGesture(perform: navigateToContact)
                             
-                            if let contact = nrPost.contact {
-                                Text(contact.anyName) // Name
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.primary)
-                                    .fontWeight(.bold)
-                                    .lineLimit(1)
-                                    .onTapGesture(perform: navigateToContact)
-                            }
-                            else {
-                                Text(verbatim:"Anon")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.primary)
-                                    .fontWeight(.bold)
-                                    .lineLimit(1).redacted(reason: .placeholder)
-                                    .onTapGesture(perform: navigateToContact)
-                            }
+                            Text(name) // Name
+                                .animation(.easeIn, value: name)
+                                .font(.system(size: 14))
+                                .foregroundColor(.primary)
+                                .fontWeightBold()
+                                .lineLimit(1)
+                                .onTapGesture(perform: navigateToContact)
+                                .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
+                                    guard profile.pubkey == nrPost.pubkey else { return }
+                                    withAnimation {
+                                        name = profile.name
+                                    }
+                                }
                             
                             Group {
                                 Text(verbatim: " ·") //
