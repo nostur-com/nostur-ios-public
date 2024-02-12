@@ -19,9 +19,10 @@ struct NRContentTextRenderer: View, Equatable {
     public var isScreenshot = false
     public var isPreview = false
     public var primaryColor: Color? = nil
+    public var accentColor: Color? = nil
     
     var body: some View {
-        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isScreenshot: isScreenshot, isPreview: isPreview, primaryColor: primaryColor)
+        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isScreenshot: isScreenshot, isPreview: isPreview, primaryColor: primaryColor, accentColor: accentColor)
     }
 }
 
@@ -31,13 +32,14 @@ struct NRContentTextRendererInner: View {
     public var isScreenshot = false
     public var isPreview = false
     public var primaryColor: Color? = nil
+    public var accentColor: Color? = nil
     
     @State private var height: CGFloat? = nil
     @State private var text: NSAttributedString? = nil
     
     var body: some View {
         if isPreview {
-            NRTextDynamic(text ?? attributedStringWithPs.output, fontColor: primaryColor ?? Themes.default.theme.primary)
+            NRTextDynamic(text ?? attributedStringWithPs.output, fontColor: primaryColor ?? Themes.default.theme.primary, accentColor: accentColor)
                 .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -50,7 +52,7 @@ struct NRContentTextRendererInner: View {
         }
         else {
             if #available(iOS 16.0, *) { // because 15.0 doesn't have sizeThatFits(_ proposal: ProposedViewSize...
-                NRTextFixed(text ?? attributedStringWithPs.output, height: height ?? attributedStringWithPs.height, fontColor: primaryColor ?? Themes.default.theme.primary)
+                NRTextFixed(text ?? attributedStringWithPs.output, height: height ?? attributedStringWithPs.height, fontColor: primaryColor ?? Themes.default.theme.primary, accentColor: accentColor)
                     .id(text ?? attributedStringWithPs.output)
 //                    .debugDimensions("NRTextFixed")
                     .onReceive(
@@ -78,7 +80,7 @@ struct NRContentTextRendererInner: View {
                     .transaction { t in t.animation = nil }
             }
             else {
-                NRTextDynamic(text ?? attributedStringWithPs.output, fontColor: primaryColor ?? Themes.default.theme.primary)
+                NRTextDynamic(text ?? attributedStringWithPs.output, fontColor: primaryColor ?? Themes.default.theme.primary, accentColor: accentColor)
                     .id(text ?? attributedStringWithPs.output)
                     .onReceive(
                         Importer.shared.contactSaved
