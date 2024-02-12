@@ -51,9 +51,6 @@ extension Event {
     @NSManaged public var zapTally: Int64
     
     @NSManaged public var replies: Set<Event>?
-    
-    @NSManaged public var contacts: Set<Contact>?
-    
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
     
@@ -70,15 +67,6 @@ extension Event {
     // Now we use it for:
     // - "is_update": to not show same article over and over in feed when it gets updates
     @NSManaged public var flags: String
-    
-    var contacts_:[Contact] {
-        get { Array(contacts ?? [])  }
-        set { contacts = Set(newValue) }
-    }
-    
-    var hasMissingContacts:Bool {
-        (contacts?.count ?? 0) < fastTags.filter({ $0.0 == "p" }).count
-    }
     
     var reactionTo_:Event? {
         guard reactionTo == nil else { return reactionTo }
@@ -99,11 +87,9 @@ extension Event {
             if Thread.isMainThread {
                 found.objectWillChange.send()
                 self.contact = found
-                found.addToEvents(self)
             }
             else {
                 self.contact = found
-                found.addToEvents(self)
             }
             return found
         }
@@ -203,23 +189,6 @@ extension Event {
             return bg().object(with: self.objectID) as? Event
         }
     }
-}
-
-// MARK: Generated accessors for contacts
-extension Event {
-    
-    @objc(addContactsObject:)
-    @NSManaged public func addToContacts(_ value: Contact)
-    
-    @objc(removeContactsObject:)
-    @NSManaged public func removeFromContacts(_ value: Contact)
-    
-    @objc(addContacts:)
-    @NSManaged public func addToContacts(_ values: NSSet)
-    
-    @objc(removeContacts:)
-    @NSManaged public func removeFromContacts(_ values: NSSet)
-    
 }
 
 // MARK: Generated accessors for bookmarkedBy
@@ -1070,11 +1039,6 @@ extension Event {
                 }
             }
             
-            // NEw: Save all p's in .contacts
-            // Maybe slow??
-            let contacts = Contact.ensureContactsCreated(event: event, context: context)
-            savedEvent.addToContacts(NSSet(array: contacts))
-            
             if let replyToAtag = event.replyToAtag() { // Comment on article
                 if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
                     savedEvent.replyToId = dbArticle.id
@@ -1164,8 +1128,6 @@ extension Event {
         }
         
         if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
-            let contacts = Contact.ensureContactsCreated(event: event, context: context)
-            savedEvent.addToContacts(NSSet(array: contacts))
             savedEvent.otherPubkey = event.firstP()
             
             if let contactPubkey = savedEvent.otherPubkey { // If we have a DM kind 4, but no p, then something is wrong
@@ -1338,11 +1300,6 @@ extension Event {
                     }
                 }
             }
-        }
-        
-        if (event.kind == .highlight) { // needed to fetch highlight author so put event.firstP in event.contacts
-            let contacts = Contact.ensureContactsCreated(event: event, context: context)
-            savedEvent.addToContacts(NSSet(array: contacts))
         }
         
         // Handle replacable event (NIP-33)

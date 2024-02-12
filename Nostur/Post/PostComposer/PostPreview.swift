@@ -146,8 +146,6 @@ func createPreviewEvent(_ event:NEvent) -> Event {
                 contactsInThisEvent.append(contact)
             }
         }
-        previewEvent.addToContacts(NSSet(array: contactsInThisEvent))
-
     }
 
     // handle REPOST with normal mentions in .kind 1
