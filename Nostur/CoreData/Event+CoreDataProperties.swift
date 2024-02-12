@@ -80,7 +80,7 @@ extension Event {
         return nil
     }
     
-    var contact_:Contact? {
+    var contact_: Contact? {
         guard contact == nil else { return contact }
         guard let ctx = managedObjectContext else { return nil }
         if let found = Contact.fetchByPubkey(pubkey, context: ctx) {

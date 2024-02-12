@@ -234,6 +234,7 @@ extension Contact : Identifiable {
                     contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                     contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
                     ViewUpdates.shared.contactUpdated.send(contact)
+                    // TODO: Should use this more?:
                     Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
                     
                     
