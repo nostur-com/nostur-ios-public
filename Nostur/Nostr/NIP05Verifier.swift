@@ -59,15 +59,13 @@ class NIP05Verifier {
             }
             .filter { (task, data) in data != nil }
             .sink { [weak self] (task, data) in
-                bg().perform {
+                bg().perform { [weak self] in
                     guard let self else { return }
                     if let nostrJson = try? self.decoder.decode(NostrJson.self, from: data!) {
                         if let pubkey = nostrJson.names[task.name] {
                             if pubkey != "" && pubkey == task.contact.pubkey {
-//                                task.contact.objectWillChange.send()
                                 task.contact.nip05verifiedAt = Date.now
                                 ViewUpdates.shared.nip05updated.send((pubkey, true, task.contact.nip05 ?? "", task.name))
-//                                task.contact.nip05updated.send((true, task.contact.nip05 ?? "", task.name))
                                 L.fetching.debug("👍 nip05 verified \(task.contact.nip05 ?? "")")
                             }
                         }

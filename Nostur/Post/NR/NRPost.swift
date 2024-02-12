@@ -407,8 +407,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             }
         }
         
-        let nrContacts = event.contacts_.map { NRContact(contact: $0) }
-        self.referencedContacts = nrContacts
+        let referencedContacts = Contact.fetchByPubkeys(event.fastPs.map { $0.1 }).map({ NRContact(contact: $0) })
         
         if let contact = event.contact_ {
             self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following))
@@ -425,7 +424,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         else if let c = self.pfpAttributes.contact, c.metadata_created_at == 0 {
             missingPs.insert(event.pubkey)
         }
-        let eventContactPs = (nrContacts.compactMap({ contact in
+        let eventContactPs = (referencedContacts.compactMap({ contact in
             if contact.metadata_created_at != 0 {
                 return contact.pubkey
             }
@@ -467,7 +466,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             let highlightUrl = event.fastTags.first(where: { $0.0 == "r" } )?.1
             let highlightAuthorPubkey:String? = event.fastTags.first(where: { $0.0 == "p" } )?.1
             
-            let highlightContact:NRContact? = if let contact = event.contacts?.first(where: { $0.pubkey == highlightAuthorPubkey } ) {
+            let highlightContact: NRContact? = if let highlightAuthorPubkey, let contact = Contact.fetchByPubkey(highlightAuthorPubkey, context: bg()) {
                 NRContact(contact: contact, following: isFollowing(contact.pubkey))
             }
             else {

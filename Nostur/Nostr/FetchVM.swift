@@ -52,7 +52,7 @@ class FetchVM<T: Equatable>: ObservableObject {
                 self?.backlog.clear()
             },
             timeoutCommand: { [weak self] taskId in
-                L.og.info("FetchVM: timeout")
+                L.og.info("FetchVM: timeout (altFetch)")
                 _fetchParams.onComplete(nil, nil)
                 self?.backlog.clear()
             })
@@ -87,7 +87,7 @@ class FetchVM<T: Equatable>: ObservableObject {
                 self?.backlog.clear()
             },
             timeoutCommand: { [weak self] taskId in
-                L.og.info("FetchVM: timeout")
+                L.og.info("FetchVM: timeout (fetch)")
                 _fetchParams.onComplete(nil, nil)
                 self?.backlog.clear()
             })
