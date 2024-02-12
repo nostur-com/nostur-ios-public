@@ -55,12 +55,13 @@ struct NRContentTextRendererInner: View {
 //                    .debugDimensions("NRTextFixed")
                     .onReceive(
                         Importer.shared.contactSaved
+                            .receive(on: RunLoop.main)
                             .filter { pubkey in
                                 guard !attributedStringWithPs.input.isEmpty else { return false }
                                 guard !attributedStringWithPs.pTags.isEmpty else { return false }
                                 return self.attributedStringWithPs.pTags.contains(pubkey)
                             }
-                            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
+//                            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
                     ) { pubkey in
                         bg().perform {
                             guard let event = attributedStringWithPs.event else { return }
@@ -81,12 +82,13 @@ struct NRContentTextRendererInner: View {
                     .id(text ?? attributedStringWithPs.output)
                     .onReceive(
                         Importer.shared.contactSaved
+                            .receive(on: RunLoop.main)
                             .filter { pubkey in
                                 guard !attributedStringWithPs.input.isEmpty else { return false }
                                 guard !attributedStringWithPs.pTags.isEmpty else { return false }
                                 return self.attributedStringWithPs.pTags.contains(pubkey)
                             }
-                            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
+//                            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
                     ) { pubkey in
                         bg().perform {
                             guard let event = attributedStringWithPs.event else { return }
