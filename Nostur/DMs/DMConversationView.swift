@@ -53,10 +53,10 @@ struct DMConversationView: View {
         // contact is in .pubkey or in .firstP (depending on incoming/outgoing DM.
         // if there are multiple P's, we try lastP if firstP is same as pubkey (edge case)
         if rootDM.pubkey == self.pubkey, let firstP = rootDM.firstP(), firstP != self.pubkey  {
-            return rootDM.contacts?.first(where: { $0.pubkey == firstP })
+            return Contact.fetchByPubkey(firstP, context: context())
         }
         else if rootDM.pubkey == self.pubkey, let lastP = rootDM.lastP(), lastP != self.pubkey  {
-            return rootDM.contacts?.first(where: { $0.pubkey == lastP })
+            return Contact.fetchByPubkey(lastP, context: context())
         }
         else {
             return rootDM.contact
@@ -329,24 +329,6 @@ struct DMConversationView: View {
                         DataProvider.shared().save()
                     }
                 }
-                .onAppear {
-                    // fix rootDM contacts missing?
-                    // fix contacts
-                    if let root = allMessagesSorted.first {
-                        guard root.contacts?.count ?? 0 == 0 else { return }
-                        
-                        let vc = DataProvider.shared().viewContext
-                        let cs = Contact.ensureContactsCreated(event: root.toNEvent(), context: vc)
-                        root.objectWillChange.send()
-                        root.addToContacts(NSSet(array: cs))
-                        do {
-                            try vc.save()
-                        }
-                        catch {
-                            L.og.error("DMConversationsView: \(error)")
-                        }
-                    }
-                }
                 .toolbarNavigationBackgroundVisible()
                 .toolbar {
                     ToolbarItem(placement: .principal) {
@@ -361,8 +343,6 @@ struct DMConversationView: View {
                 .background(themes.theme.listBackground)
             }
             .nosturNavBgCompat(themes: themes)
-//            .debugDimensions("ScrollViewReader")
-//            .navigationTitle("\(contact?.authorName ?? String(localized:"DM", comment:"Navigation title for a DM conversation screen (Direct Message)"))")
             .task {
                 // TODO: CHANGE TO REALTIME DM SUBSCRIPTION
                 guard let theirPubkey = self.theirPubkey else {
