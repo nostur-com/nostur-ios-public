@@ -33,7 +33,6 @@ extension Contact {
     @NSManaged public var zapperPubkey: String? // used to authorize kind 9735 zap notes. fetch from lud16 endpoint
     @NSManaged public var updated_at: Int64
     @NSManaged public var metadata_created_at: Int64
-    @NSManaged public var events: Set<Event>?
     @NSManaged public var lists: NSSet?
     @NSManaged public var privateFollow: Bool
     @NSManaged public var couldBeImposter: Int16 // cache (-1 = unchecked, 1/0 = true/false checked)
@@ -72,39 +71,6 @@ extension Contact {
 
     @objc(removeNosturLists:)
     @NSManaged public func removeFromNosturLists(_ values: NSSet)
-
-}
-
-// MARK: Generated accessors for events
-extension Contact {
-
-    @objc(addEventsObject:)
-    @NSManaged public func addToEvents(_ value: Event)
-
-    @objc(removeEventsObject:)
-    @NSManaged public func removeFromEvents(_ value: Event)
-
-    @objc(addEvents:)
-    @NSManaged public func addToEvents(_ values: NSSet)
-
-    @objc(removeEvents:)
-    @NSManaged public func removeFromEvents(_ values: NSSet)
-
-}
-// MARK: Generated accessors for blockedBy
-extension Contact {
-
-    @objc(addBlockedByObject:)
-    @NSManaged public func addToBlockedBy(_ value: Account)
-
-    @objc(removeBlockedByObject:)
-    @NSManaged public func removeFromBlockedBy(_ value: Account)
-
-    @objc(addBlockedBy:)
-    @NSManaged public func addToBlockedBy(_ values: NSSet)
-
-    @objc(removeBlockedBy:)
-    @NSManaged public func removeFromBlockedBy(_ values: NSSet)
 
 }
 
@@ -326,10 +292,10 @@ extension Contact : Identifiable {
             }
             if let tagsSerialized = waitingEvent.tagsSerialized, tagsSerialized.contains(serializedP(contact.pubkey)) {
                 waitingEvent.objectWillChange.send()
-                if !waitingEvent.contacts_.contains(contact) {
-                    waitingEvent.addToContacts(contact)
-//                    waitingEvent.contactsUpdated.send(waitingEvent.contacts_) // TODO: Not used anywhere???
-                }
+//                if !waitingEvent.contacts_.contains(contact) {
+//                    waitingEvent.addToContacts(contact)
+////                    waitingEvent.contactsUpdated.send(waitingEvent.contacts_) // TODO: Not used anywhere???
+//                }
             }
         }
         
