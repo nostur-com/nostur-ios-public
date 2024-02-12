@@ -228,7 +228,7 @@ struct LazyNoteMenuSheet: View {
                     
                     Button {
                         dismiss()
-                        L.og.info("Mute conversation")
+                        L.og.debug("Mute conversation")
                         mute(eventId: nrPost.id, replyToRootId: nrPost.replyToRootId, replyToId: nrPost.replyToId)
                     } label: {
                         Label(String(localized:"Mute conversation", comment: "Post context menu action to mute conversation"), systemImage: "bell.slash.fill")

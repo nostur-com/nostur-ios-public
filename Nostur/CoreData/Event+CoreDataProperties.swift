@@ -578,7 +578,7 @@ extension Event {
     static func updateZapTallyCache(_ zap:Event, context:NSManagedObjectContext) -> Bool {
         guard let zappedContact = zap.zappedContact else { // NO CONTACT
             if let zappedPubkey = zap.otherPubkey {
-                L.fetching.info("⚡️⏳ missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
+                L.fetching.debug("⚡️⏳ missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
                 QueuedFetcher.shared.enqueue(pTag: zappedPubkey)
                 ZapperPubkeyVerificationQueue.shared.addZap(zap)
             }
@@ -586,7 +586,7 @@ extension Event {
         }
         
         if zappedContact.metadata_created_at == 0 {
-            L.fetching.info("⚡️⏳ missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
+            L.fetching.debug("⚡️⏳ missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
             QueuedFetcher.shared.enqueue(pTag: zappedContact.pubkey)
             ZapperPubkeyVerificationQueue.shared.addZap(zap)
         }
@@ -594,7 +594,7 @@ extension Event {
         // Check if contact matches the zapped event contact
         if let otherPubkey = zap.otherPubkey, let zappedEvent = zap.zappedEvent {
             guard otherPubkey == zappedEvent.pubkey else {
-                L.og.info("⚡️🔴🔴 zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
+                L.og.debug("⚡️🔴🔴 zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
                 zap.flags = "zpk_mismatch_event"
                 return false
             }
@@ -603,7 +603,7 @@ extension Event {
         // Check if zapper pubkey matches contacts published zapper pubkey
         if let zappedContact = zap.zappedContact, let zapperPubkey = zappedContact.zapperPubkey {
             guard zap.pubkey == zapperPubkey else {
-                L.og.info("⚡️🔴🔴 zapper pubkey does not match contacts published zapper pubkey. zap: \(zap.id)")
+                L.og.debug("⚡️🔴🔴 zapper pubkey does not match contacts published zapper pubkey. zap: \(zap.id)")
                 zap.flags = "zpk_mismatch"
                 return false
             }

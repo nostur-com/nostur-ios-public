@@ -165,7 +165,7 @@ class Importer {
                         _ = existingIds.removeValue(forKey: event.id)
                         guard let nwcConnection = self.nwcConnection else { continue }
                         guard event.publicKey == nwcConnection.walletPubkey else { continue }
-                        L.og.info("⚡️ Received 13194 info event, saving methods: \(event.content)")
+                        L.og.debug("⚡️ Received 13194 info event, saving methods: \(event.content)")
                         nwcConnection.methods = event.content
                         DispatchQueue.main.async {
                             sendNotification(.nwcInfoReceived, NWCInfoNotification(methods: event.content))
@@ -304,7 +304,7 @@ class Importer {
                         if (context.hasChanges) {
                             do {
                                 try context.save()
-                                L.importing.info("💾💾 Saved \(count)/\(forImportsCount)")
+                                L.importing.debug("💾💾 Saved \(count)/\(forImportsCount)")
                                 let mainQueueCount = count
                                 let mainQueueForImportsCount = forImportsCount
                                 self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
@@ -321,7 +321,7 @@ class Importer {
                 if (context.hasChanges) {
                     try context.save() 
                     if (saved > 0) {
-                        L.importing.info("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.debug("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
                         self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
@@ -330,7 +330,7 @@ class Importer {
                         subscriptionIds.removeAll()
                     }
                     else {
-                        L.importing.info("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.debug("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
                     }
                 }
                 else {
@@ -387,7 +387,7 @@ class Importer {
                         _ = existingIds.removeValue(forKey: event.id)
                         guard let nwcConnection = self.nwcConnection else { continue }
                         guard event.publicKey == nwcConnection.walletPubkey else { continue }
-                        L.og.info("⚡️ Received 13194 info event, saving methods: \(event.content)")
+                        L.og.debug("⚡️ Received 13194 info event, saving methods: \(event.content)")
                         nwcConnection.methods = event.content
                         DispatchQueue.main.async {
                             sendNotification(.nwcInfoReceived, NWCInfoNotification(methods: event.content))

@@ -77,7 +77,7 @@ struct FollowersList: View {
         .onAppear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
             guard !missing.isEmpty else { return }
-            L.og.info("Fetching \(missing.count) missing contacts")
+            L.og.debug("Fetching \(missing.count) missing contacts")
             QueuedFetcher.shared.enqueue(pTags: missing)
             
             if pubkey == NRState.shared.activeAccountPublicKey {

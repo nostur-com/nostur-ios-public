@@ -68,7 +68,7 @@ class NIP05Verifier {
                                 task.contact.nip05verifiedAt = Date.now
                                 ViewUpdates.shared.nip05updated.send((pubkey, true, task.contact.nip05 ?? "", task.name))
 //                                task.contact.nip05updated.send((true, task.contact.nip05 ?? "", task.name))
-                                L.fetching.info("👍 nip05 verified \(task.contact.nip05 ?? "")")
+                                L.fetching.debug("👍 nip05 verified \(task.contact.nip05 ?? "")")
                             }
                         }
                     }
@@ -88,7 +88,7 @@ class NIP05Verifier {
         }
         #endif
 
-        L.fetching.info("nip05: going to verify \(contact.nip05 ?? "") for \(contact.pubkey)")
+        L.fetching.debug("nip05: going to verify \(contact.nip05 ?? "") for \(contact.pubkey)")
         self.verifySubject.send(contact)
     }
     

@@ -332,7 +332,7 @@ struct PostAndParent: View {
             }
             .id(nrPost.id)
             .onAppear {
-                guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
+                guard !nrPost.plainTextOnly else { L.og.debug("plaintext enabled, probably spam") ; return }
                 guard !didLoad else { return }
                 didLoad = true
                 nrPost.loadReplyTo()

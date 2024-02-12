@@ -347,7 +347,7 @@ extension Contact : Identifiable {
                     zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
 //                    zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
                     ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
-                    L.og.info("⚡️👍 zap \(zap.id) verified after fetching contact \(contact.pubkey)")
+                    L.og.debug("⚡️👍 zap \(zap.id) verified after fetching contact \(contact.pubkey)")
                 }
             }
         }
@@ -375,12 +375,12 @@ extension Contact : Identifiable {
         account.lud06 = contact.lud06 ?? ""
         
         bgSave()
-        L.og.info("Updated account from new kind 0 from relay. pubkey: \(contact.pubkey)")
+        L.og.debug("Updated account from new kind 0 from relay. pubkey: \(contact.pubkey)")
     }
 
     // Create dummy Contact if not already exists.
-    static func ensureContactsCreated(event:NEvent, context:NSManagedObjectContext, limit:Int = 25) -> [Contact] {
-        var contactsInThisEvent:[Contact] = []
+    static func ensureContactsCreated(event: NEvent, context: NSManagedObjectContext, limit: Int = 75) -> [Contact] {
+        var contactsInThisEvent: [Contact] = []
         for pTag in event.pTags().prefix(limit) { // sanity... limit 25
             let contact = Contact.fetchByPubkey(pTag, context: context)
             guard contact == nil else {
