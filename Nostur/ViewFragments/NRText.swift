@@ -14,16 +14,18 @@ struct NRTextDynamic: View {
     private let attributedString: NSAttributedString
     private let plain: Bool
     private let fontColor: Color
+    private let accentColor: Color?
     
-    init(_ attributedString: NSAttributedString, plain: Bool = false, fontColor: Color = Themes.default.theme.primary) {
+    init(_ attributedString: NSAttributedString, plain: Bool = false, fontColor: Color = Themes.default.theme.primary, accentColor: Color? = nil) {
         self.attributedString = attributedString
         self.plain = plain
         self.fontColor = fontColor
-        
+        self.accentColor = accentColor
     }
     
-    init(_ text: String, plain: Bool = false, fontColor: Color = Themes.default.theme.primary) {
+    init(_ text: String, plain: Bool = false, fontColor: Color = Themes.default.theme.primary, accentColor: Color? = nil) {
         self.fontColor = fontColor
+        self.accentColor = accentColor
         do {
             let mutableAttributedString = try NSMutableAttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
                         
@@ -73,7 +75,7 @@ struct NRTextDynamic: View {
 //        _ = view.layoutManager
         view.isScrollEnabled = false
         view.textColor = UIColor(self.fontColor)
-        view.tintColor = UIColor(themes.theme.accent)
+        view.tintColor = UIColor(accentColor ?? themes.theme.accent)
         view.isSelectable = true
         view.isEditable = false
         view.dataDetectorTypes = plain ? [] : [.link]
@@ -159,22 +161,25 @@ struct NRTextFixed: UIViewRepresentable {
     private let themes: Themes
     private let height: CGFloat
     private let fontColor: Color
+    private let accentColor: Color?
     
     // Height calculation is expensive, so calculate before in background, then pass as prop.
     // see AttributedStringWithPs.
     // For other situations maybe use GeometryReader
-    init(_ attributedString: NSAttributedString, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default, fontColor: Color? = nil) {
+    init(_ attributedString: NSAttributedString, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil) {
         self.attributedString = attributedString
         self.plain = plain
         self.themes = themes
         self.height = height
-        self.fontColor = Color.red
+        self.fontColor = fontColor ?? themes.theme.primary
+        self.accentColor = accentColor
     }
     
-    init(_ text: String, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default, fontColor: Color? = nil) {
+    init(_ text: String, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil) {
         self.themes = themes
         self.height = height
         self.fontColor = fontColor ?? themes.theme.primary
+        self.accentColor = accentColor ?? themes.theme.accent
         do {
 //            let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             
@@ -220,7 +225,7 @@ struct NRTextFixed: UIViewRepresentable {
 //        _ = view.layoutManager
         view.isScrollEnabled = false
         view.textColor = UIColor(self.fontColor)
-        view.tintColor = UIColor(themes.theme.accent)
+        view.tintColor = UIColor(accentColor ?? themes.theme.accent)
         view.isSelectable = true
         view.isEditable = false
         view.dataDetectorTypes = plain ? [] : [.link]
