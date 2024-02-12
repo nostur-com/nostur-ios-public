@@ -118,7 +118,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             guard self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
                 self.skipped = self.skipped + 1
                 self.isSocketConnecting = false
-                L.sockets.info("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
+                L.sockets.debug("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
                 return
             }
             self.skipped = 0
@@ -163,7 +163,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             if !self.isDeviceConnected {
-                L.sockets.info("🔴🔴 No internet. Did not sendMessage \(self.url)")
+                L.sockets.debug("🔴🔴 No internet. Did not sendMessage \(self.url)")
                 return
             }
             
@@ -171,7 +171,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self.outQueue.append(socketMessage)
             
             if self.webSocketTask == nil || !self.isSocketConnected {
-                L.sockets.info("🔴🔴 Not connected. Did not sendMessage \(self.url)")
+                L.sockets.debug("🔴🔴 Not connected. Did not sendMessage \(self.url)")
                 return
             }
             #if DEBUG
@@ -207,7 +207,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         L.sockets.info("PING: Trying to ping: \(self.url)")
         queue.async { [weak self] in
             if self?.webSocketTask == nil {
-                L.sockets.info("🔴🔴 PING: Not connected. ????? \(self?.url ?? "")")
+                L.sockets.debug("🔴🔴 PING: Not connected. ????? \(self?.url ?? "")")
                 return
             }
             self?.webSocketTask?.sendPing(pongReceiveHandler: { [weak self] error in
@@ -220,7 +220,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                         self?.lastMessageReceivedAt = nil
                         self?.isSocketConnected = false
                     }
-                    L.sockets.info("🔴🔴 PING: No pong \(self?.url ?? ""): \(error)")
+                    L.sockets.debug("🔴🔴 PING: No pong \(self?.url ?? ""): \(error)")
                 }
                 else {
                     self?.didReceivePong()
@@ -276,7 +276,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 }
             }
         }
-        L.sockets.info("🏎️🏎️🔌🔴🔴 Error \(self.url): \(error.localizedDescription)")
+        L.sockets.debug("🏎️🏎️🔌🔴🔴 Error \(self.url): \(error.localizedDescription)")
     }
     
     public func didReceivePong() {
@@ -322,12 +322,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             for out in outQueue {
                 webSocketTask.send(.string(out.text)) { error in
-                    L.sockets.info("🔴🔴 send error \(self.url): \(error?.localizedDescription ?? "")")
+                    L.sockets.debug("🔴🔴 send error \(self.url): \(error?.localizedDescription ?? "")")
                 }
                 self.outQueue.removeAll(where: { $0.id == out.id })
             }
         }
-        L.sockets.info("🏎️🏎️🔌 CONNECTED \(self.url)")
+        L.sockets.debug("🏎️🏎️🔌 CONNECTED \(self.url)")
     }
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
@@ -343,7 +343,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 sendNotification(.socketNotification, "Disconnected: \(self?.url ?? "")")
             }
         }
-        L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url): \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
+        L.sockets.debug("🏎️🏎️🔌 DISCONNECTED \(self.url): \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
     }
     
     private func startReceiving() {

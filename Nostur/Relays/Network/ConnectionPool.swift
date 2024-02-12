@@ -301,7 +301,7 @@ public class ConnectionPool: ObservableObject {
                     if message.type == .REQ {
                         if (!connection.isSocketConnected) {
                             if (!connection.isSocketConnecting) {
-                                L.og.info("⚡️ sendMessage \(subscriptionId ?? ""): not connected yet, connecting to N(W)C relay \(connection.url)")
+                                L.og.debug("⚡️ sendMessage \(subscriptionId ?? ""): not connected yet, connecting to N(W)C relay \(connection.url)")
                                 connection.connect()
                             }
                         }
@@ -312,7 +312,7 @@ public class ConnectionPool: ObservableObject {
                         if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
                             continue
                         }
-                        L.sockets.info("🔚🔚 CLOSE: \(message.message)")
+                        L.sockets.debug("🔚🔚 CLOSE: \(message.message)")
                         connection.sendMessage(message.message)
                     }
                     else if message.type == .EVENT {
@@ -321,13 +321,13 @@ public class ConnectionPool: ObservableObject {
 //                        if message.relayType == .DM && !connection.relayData.shouldDM(for: message.accountPubkey) { continue } // TODO: THIS ONE NEEDS TO BE AT AUTH
                         
                         if let accountPubkey = accountPubkey, connection.relayData.excludedPubkeys.contains(accountPubkey) {
-                            L.sockets.info("sendMessage: \(accountPubkey) excluded from \(connection.url) - not publishing here isNC:\(connection.isNC.description) - isNWC: \(connection.isNWC.description)")
+                            L.sockets.debug("sendMessage: \(accountPubkey) excluded from \(connection.url) - not publishing here isNC:\(connection.isNC.description) - isNWC: \(connection.isNWC.description)")
                             continue
                         }
                         if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
                             connection.connect()
                         }
-                        L.sockets.info("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
+                        L.sockets.debug("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
                         connection.sendMessage(message.message)
                     }
                 }

@@ -48,7 +48,7 @@ class LVM: NSObject, ObservableObject {
             // Don't prefetch again unless the last post on screen has changed (this happens when a page is added during infinite scroll):
             // Don't prefetch again if the posts on screen are less than before (posts get removed from bottom, when new ones are added to top):
             if oldValue.count < nrPostLeafs.count, let oldLastId = oldValue.last?.id, let currentLastId = nrPostLeafs.last?.id, oldLastId != currentLastId {
-                L.lvm.info("📖 \(self.nrPostLeafs.count) posts loaded. prefetching next page")
+                L.lvm.debug("📖 \(self.nrPostLeafs.count) posts loaded. prefetching next page")
                 self.throttledCommand.send {
                     self.fetchNextPage()
                 }

@@ -29,7 +29,7 @@ class MacListState: ObservableObject {
         if let macListState = try? decoder.decode(MacListStateSerialized.self, from: macListstateSerialized.data(using: .utf8)!) {
             columnsCount = macListState.columnsCount
             columns = macListState.columns
-            L.og.info("MacListState: restoring columns: \(self.columnsCount) and list ids: \(self.columns.joined(separator: ", "))")
+            L.og.debug("MacListState: restoring columns: \(self.columnsCount) and list ids: \(self.columns.joined(separator: ", "))")
         }
         else {
             columnsCount = 1

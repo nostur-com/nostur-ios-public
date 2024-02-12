@@ -153,13 +153,13 @@ class DataProvider: ObservableObject {
             
             if bg.hasChanges {
                 try? bg.save()
-                L.og.info("💾💾 🟢🟢 bg saved")
+                L.og.debug("💾💾 🟢🟢 bg saved")
             }
             self.container.viewContext.perform {
                 L.og.debug("💾💾 VIEWCONTEXT: Registered objects: \(self.container.viewContext.registeredObjects.count)")
                 if self.container.viewContext.hasChanges {
                     try? self.container.viewContext.save()
-                    L.og.info("💾💾 🟢🟢 viewContext saved")
+                    L.og.debug("💾💾 🟢🟢 viewContext saved")
                 }
                 completion?()
             }

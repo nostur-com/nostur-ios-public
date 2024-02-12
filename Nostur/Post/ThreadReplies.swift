@@ -43,7 +43,7 @@ struct ThreadReplies: View {
         }
         .background(themes.theme.listBackground)
         .onAppear {
-            guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
+            guard !nrPost.plainTextOnly else { L.og.debug("plaintext enabled, probably spam") ; return }
             nrPost.loadGroupedReplies()
             
             // After many attempts, still some replyTo's are missing, somewhere some observable is not

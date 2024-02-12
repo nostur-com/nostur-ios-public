@@ -49,7 +49,7 @@ struct NProfileView: View {
                                 L.og.debug("\(identifier.bech32string) has no pubkey")
                                 return
                             }
-                            L.og.info("🟢 Fetching for NEventView \(pubkey) / \(identifier.bech32string)")
+                            L.og.debug("🟢 Fetching for NEventView \(pubkey) / \(identifier.bech32string)")
                             req(RM.getUserMetadata(pubkey: pubkey))
                             
                             if !identifier.relays.isEmpty {

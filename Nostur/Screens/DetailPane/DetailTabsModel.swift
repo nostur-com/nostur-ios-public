@@ -25,7 +25,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     }
     @Published var navigationTitle = "" {
         didSet {
-            L.og.info("💄💄 navigationTitle set to \(self.navigationTitle)")
+            L.og.debug("💄💄 navigationTitle set to \(self.navigationTitle)")
         }
     }
     

@@ -47,7 +47,7 @@ struct ContactList: View {
         }
         .onAppear {
             guard !missing.isEmpty else { return }
-            L.og.info("Fetching \(missing.count) missing contacts")
+            L.og.debug("Fetching \(missing.count) missing contacts")
             QueuedFetcher.shared.enqueue(pTags: missing)
         }
         .onDisappear {
