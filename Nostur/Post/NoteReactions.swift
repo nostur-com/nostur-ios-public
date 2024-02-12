@@ -44,6 +44,10 @@ struct NoteReactions: View {
             }
             
             QueuedFetcher.shared.enqueue(pTags: missing.map { $0.pubkey })
+            
+            
+            // Fix wrong count afterwards, not really needed, maybe remove.
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: id, likes: Int64(reactions_.count)))
         }
         .nosturNavBgCompat(themes: themes)
     }
