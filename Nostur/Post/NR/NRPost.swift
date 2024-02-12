@@ -305,6 +305,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var eventUrl: URL?
     var mostRecentId: String?
     
+    var isNSFW: Bool = false
+    
     init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isScreenshot: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil) {
         var isAwaiting = false
         
@@ -557,7 +559,17 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         // Moved from .body to here because String interpolation is expensive (https://developer.apple.com/wwdc23/10160)
         self.repostedHeader = String(localized:"\(contact?.anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
+        
+        self.isNSFW = self.hasNSFWContent()
+        
         setupSubscriptions()
+    }
+    
+    private func hasNSFWContent() -> Bool {
+        // event contains nsfw hashtag?
+        return fastTags.first(where: { $0.0 == "t" && $0.1.lowercased() == "nsfw" }) != nil
+        
+        // TODO: check labels/reports
     }
     
     private static func isBlocked(pubkey:String) -> Bool {

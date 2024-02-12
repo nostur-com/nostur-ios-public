@@ -35,7 +35,7 @@ struct ContentRenderer: View { // VIEW things
     }
     
     private var shouldAutoload: Bool {
-        forceAutoload || SettingsStore.shouldAutodownload(nrPost)
+        return !nrPost.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
     }
     
     var body: some View {
