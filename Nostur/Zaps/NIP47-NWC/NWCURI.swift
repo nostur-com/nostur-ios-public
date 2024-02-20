@@ -27,7 +27,7 @@ struct NWCURI {
         guard walletPubkey != nil else { L.og.error("NWCURI: invalid walletPubkey"); return false }
         guard relay != nil else { L.og.error("NWCURI: invalid relay"); return false }
         guard secret != nil else { L.og.error("NWCURI: invalid secret"); return false }
-        L.og.info("⚡️ Vaid NWCURI")
+        L.og.info("⚡️ Valid NWCURI")
         return true
     }
     

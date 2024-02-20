@@ -353,7 +353,7 @@ public class ConnectionPool: ObservableObject {
                             /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
                             //                        continue
                         }
-                        // skip if we already have an active subcription
+                        // skip if we already have an active subscription
                         if subscriptionId != nil && connection.nreqSubscriptions.contains(subscriptionId!) { continue }
                         if (subscriptionId != nil) {
                             self.queue.async(flags: .barrier) { [weak connection] in

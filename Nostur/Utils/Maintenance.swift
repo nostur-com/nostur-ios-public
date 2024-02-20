@@ -49,7 +49,7 @@ struct Maintenance {
         L.maintenance.info("Starting version based maintenance")
         await context.perform {
             Self.runDeleteEventsWithoutId(context: context)
-            Self.runUseDtagForReplacableEvents(context: context)
+            Self.runUseDtagForReplaceableEvents(context: context)
             Self.runInsertFixedNames(context: context)
             Self.runFixArticleReplies(context: context)
 //            Self.runFixImposterFalsePositives(context: context)
@@ -380,31 +380,31 @@ struct Maintenance {
     }
     
     
-    // Run once to fill dTag and delete old replacable events
-    static func runUseDtagForReplacableEvents(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.useDtagForReplacableEvents, context: context) else { return }
+    // Run once to fill dTag and delete old replaceable events
+    static func runUseDtagForReplaceableEvents(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.useDtagForReplaceableEvents, context: context) else { return }
         
-        // 1. For each replacable event, save the dtag
+        // 1. For each replaceable event, save the dtag
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind >= 30000 AND kind < 40000")
         
-        guard let replacableEvents = try? context.fetch(fr) else {
-            L.maintenance.error("runUseDtagForReplacableEvents: Could not fetch replacable events")
+        guard let replaceableEvents = try? context.fetch(fr) else {
+            L.maintenance.error("runUseDtagForReplaceableEvents: Could not fetch replaceable events")
             return
         }
         
-        L.maintenance.info("runUseDtagForReplacableEvents: Found \(replacableEvents.count) replacable events")
+        L.maintenance.info("runUseDtagForReplaceableEvents: Found \(replaceableEvents.count) replaceable events")
         
-        for event in replacableEvents {
+        for event in replaceableEvents {
             event.dTag = event.fastTags.first(where: { $0.0 == "d" })?.1 ?? ""
             if event.dTag != "" {
-                L.maintenance.info("runUseDtagForReplacableEvents: dTag set to: \(event.dTag) for \(event.id)")
+                L.maintenance.info("runUseDtagForReplaceableEvents: dTag set to: \(event.dTag) for \(event.id)")
             }
         }
         
-        // 2. For each replacable event, find same author + dtag, keep most recent, delete older
-        for event in replacableEvents {
-            let matches = replacableEvents.filter { $0.pubkey == event.pubkey && $0.dTag == event.dTag }
+        // 2. For each replaceable event, find same author + dtag, keep most recent, delete older
+        for event in replaceableEvents {
+            let matches = replaceableEvents.filter { $0.pubkey == event.pubkey && $0.dTag == event.dTag }
             if matches.count <= 1 { continue } // if we have just 1 match, no need to delete older
             
             // only keep the most recent
@@ -417,7 +417,7 @@ struct Maintenance {
         }
         
         let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.useDtagForReplacableEvents.rawValue
+        migration.migrationCode = migrationCode.useDtagForReplaceableEvents.rawValue
     }
     
     // Run once to delete events without id (old bug)
@@ -466,7 +466,7 @@ struct Maintenance {
         migration.migrationCode = migrationCode.insertFixedNames.rawValue
     }
     
-    // Run once to fix replies to existing replacable events
+    // Run once to fix replies to existing replaceable events
     static func runFixArticleReplies(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.fixArticleReplies, context: context) else { return }
         
@@ -481,7 +481,7 @@ struct Maintenance {
                 
                 // The following code is similar as in .saveEvent()
                 if let replyToAtag = event.replyToAtag() { // Comment on article
-                    if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
+                    if let dbArticle = Event.fetchReplaceableEvent(aTag: replyToAtag.value, context: context) {
                         reply.replyToId = dbArticle.id
                         reply.replyTo = dbArticle
                         L.maintenance.info("runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article already in DB)")
@@ -494,7 +494,7 @@ struct Maintenance {
                 }
                 else if let replyToRootAtag = event.replyToRootAtag() {
                     // Comment has article as root, but replying to other comment, not to article.
-                    if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
+                    if let dbArticle = Event.fetchReplaceableEvent(aTag: replyToRootAtag.value, context: context) {
                         reply.replyToRootId = dbArticle.id
                         reply.replyToRoot = dbArticle
                         L.maintenance.info("runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article already in DB)")
@@ -567,7 +567,7 @@ struct Maintenance {
             return newResult
         }
         
-        // Need to do per account, because we can have multiple accounts in Nostur, can message eachother,
+        // Need to do per account, because we can have multiple accounts in Nostur, can message each other,
         // Each account needs its own conversation state.
         
         typealias ConversationKeypair = String // "accountPubkey-contactPubkey"
@@ -833,14 +833,14 @@ struct Maintenance {
                     migratedPN.updatedAt = pn.updatedAt
                     migratedPN.json = post.toNEvent().eventJson()
                 }
-                else if let contact = pn.contact { // Note on contat
+                else if let contact = pn.contact { // Note on contact
                     let migratedPN = CloudPrivateNote(context: context)
                     migratedPN.type = CloudPrivateNote.PrivateNoteType.contact.rawValue
                     migratedPN.pubkey = contact.pubkey
                     migratedPN.content = pn.content
                     migratedPN.createdAt = pn.createdAt
                     migratedPN.updatedAt = pn.updatedAt
-                    migratedPN.json = Event.fetchReplacableEvent(0, pubkey: contact.pubkey, context: context)?.toNEvent().eventJson() // probaby won't have the kind 0 eventd
+                    migratedPN.json = Event.fetchReplaceableEvent(0, pubkey: contact.pubkey, context: context)?.toNEvent().eventJson() // probably won't have the kind 0 eventd
                     
                 }
                 migratedPrivateNotes += 1
@@ -867,7 +867,7 @@ struct Maintenance {
         
         
         // find all custom feeds, migrate to CloudPrivateNote
-        // set same attributes and convert Contacts and Relays to space seperated strings of pubkeys and relay urls
+        // set same attributes and convert Contacts and Relays to space separated strings of pubkeys and relay urls
         let fr = NosturList.fetchRequest()
         fr.predicate = NSPredicate(value: true)
         
@@ -1022,7 +1022,7 @@ struct Maintenance {
         
         
         // find all custom feeds, migrate to CloudPrivateNote
-        // set same attributes and convert Contacts and Relays to space seperated strings of pubkeys and relay urls
+        // set same attributes and convert Contacts and Relays to space separated strings of pubkeys and relay urls
         let fr = DMState.fetchRequest()
         fr.predicate = NSPredicate(value: true)
         
@@ -1152,13 +1152,13 @@ struct Maintenance {
         // Run once to delete events without id (old bug)
         case deleteEventsWithoutId = "deleteEventsWithoutId"
         
-        // Run once to fill dTag and delete old replacable events
-        case useDtagForReplacableEvents = "useDtagForReplacableEvents"
+        // Run once to fill dTag and delete old replaceable events
+        case useDtagForReplaceableEvents = "useDtagForReplaceableEvents"
         
         // Run once to put .anyName in fixedName
         case insertFixedNames = "insertFixedNames"
         
-        // Run once to fix replies to existing replacable events
+        // Run once to fix replies to existing replaceable events
         case fixArticleReplies = "fixArticleReplies"
         
         // Run once to fix false positive results incorrectly cached

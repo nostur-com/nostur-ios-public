@@ -11,7 +11,7 @@ import UIKit
 
 /**
  Publish events after 9 seconds, gives time to undo before sending. (accidental likes etc)
- also immediatly publishes all when app goes to background
+ also immediately publishes all when app goes to background
  
  To publish:
  let cancellationId = up.publish(nEvent)

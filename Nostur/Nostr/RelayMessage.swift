@@ -32,7 +32,7 @@ class RelayMessage {
         case DUPLICATE_UNKNOWN
     }
     
-    var relays:String // space seperated relays
+    var relays:String // space separated relays
     var type:RelayMessage.type?
     var message:String
     var subscriptionId:String?

@@ -274,7 +274,7 @@ func viewContext() -> NSManagedObjectContext {
 }
 
 func bg() -> NSManagedObjectContext {
-    (DataProvider.shared().bgStored ?? DataProvider.shared().bg) // .bg lazy computed, so may have thread contention issues when used alot, try to directly access .bgStored here.
+    (DataProvider.shared().bgStored ?? DataProvider.shared().bg) // .bg lazy computed, so may have thread contention issues when used a lot, try to directly access .bgStored here.
 }
 
 func viewContextSave() {

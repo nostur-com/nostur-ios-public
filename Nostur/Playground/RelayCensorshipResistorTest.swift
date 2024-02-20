@@ -14,8 +14,8 @@
 //A. Query these relays for new following messages
 //    - A1 Create list of toQueryPubkeys, in the beginning it is equal to followingPubkeys
 //    - Select Largest relay not in our relay set
-//    - A2 Query relay, then substract queried pubkeys from toQueryPubkeys
-//    - A3 if toQueryPubkeys is not empty, go to next relay, substract previous relay pubkeys from this one. repeat step A2
+//    - A2 Query relay, then subtract queried pubkeys from toQueryPubkeys
+//    - A3 if toQueryPubkeys is not empty, go to next relay, subtract previous relay pubkeys from this one. repeat step A2
 //
 //B. When opening profile, always query a write relay that is not in our own set
 import SwiftUI

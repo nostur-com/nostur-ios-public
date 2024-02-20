@@ -133,7 +133,7 @@ extension LVM {
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
         // Continue from first (newest) on screen?
-        let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
+        let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not miss out of sync posts)
         let ago = Date(timeIntervalSince1970: Double(since)).agoString
 
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) { [weak self] in

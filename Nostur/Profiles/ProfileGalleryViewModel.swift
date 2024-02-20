@@ -118,7 +118,7 @@ class ProfileGalleryViewModel: ObservableObject {
         self.fetchPostsFromRelays()
     }
     
-    // for after acocunt change
+    // for after account change
     public func reload() {
         self.state = .loading
         self.backlog.clear()

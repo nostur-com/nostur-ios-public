@@ -430,7 +430,7 @@ class LVM: NSObject, ObservableObject {
             L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedIds.count) posts - \(taskId)")
 
             if self.nrPostLeafs.isEmpty {
-                let leafThreads = self.renderLeafs(added, onScreenSeen:self.onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
+                let leafThreads = self.renderLeafs(added, onScreenSeen:self.onScreenSeen) // Transforms separate posts into threads, .id for each thread is leaf.id
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(leafThreads)
                 if !danglers.isEmpty && !self.hideReplies {
@@ -836,7 +836,7 @@ class LVM: NSObject, ObservableObject {
         addSubscriptions()
         
         if self.id == "Following" {
-            signpost(NRState.shared, "LAUNCH", .event, "Initializing Follwing LVM")
+            signpost(NRState.shared, "LAUNCH", .event, "Initializing Following LVM")
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
             if self.viewIsVisible {
@@ -887,7 +887,7 @@ class LVM: NSObject, ObservableObject {
             let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
             // Continue from first (newest) on screen?
-            let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
+            let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not miss out of sync posts)
 
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) { [weak self] in
                 guard let self = self else { return }
@@ -977,7 +977,7 @@ class LVM: NSObject, ObservableObject {
                 let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
                 // Continue from first (newest) on screen?
-                let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
+                let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not miss out of sync posts)
                 
                 if (!self.didCatchup) {
                     if self.id == "Following" {
@@ -1032,7 +1032,7 @@ extension LVM {
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
         // Continue from first (newest) on screen?
-        let since = (self.posts.value.elements.first?.value.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
+        let since = (self.posts.value.elements.first?.value.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not miss out of sync posts)
 
         if (!self.didCatchup) {
             // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
@@ -1406,7 +1406,7 @@ extension LVM {
     
     func loadMoreWhenNearBottom() {
         lastAppearedIdSubject
-//        Throttle needed else we get within miliseconds:
+//        Throttle needed else we get within milliseconds:
 //        2023-10-14 09:22:34.682261+0700
 //        LVM    📖 Appeared: 8/21 - loading more from local
 //        LVM    📖 Appeared: 9/21 - loading more from local

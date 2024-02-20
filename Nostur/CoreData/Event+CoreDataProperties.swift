@@ -986,7 +986,7 @@ extension Event {
         }
         
         if event.kind == .zapNote {
-            // save 9734 seperate
+            // save 9734 separate
             // so later we can do --> event(9735).zappedEvent(9734).contact
             let nZapRequest = Event.extractZapRequest(tags: event.tags)
             if (nZapRequest != nil) {
@@ -1345,7 +1345,7 @@ extension Event {
             savedEvent.addToContacts(NSSet(array: contacts))
         }
         
-        // Handle replacable event (NIP-33)
+        // Handle replaceable event (NIP-33)
         if (event.kind.id >= 30000 && event.kind.id < 40000) {
             savedEvent.dTag = event.tags.first(where: { $0.type == "d" })?.value ?? ""
             // update older events:

@@ -356,7 +356,7 @@
 //                    try Contact.updateMetadata(metaData, event: event, context: bg)
 //                }
 //                catch {
-//                    viewPrint("something wrong with updating conact info cache")
+//                    viewPrint("something wrong with updating contact info cache")
 //                    print(error)
 //                }
 //            }
