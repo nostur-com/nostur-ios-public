@@ -120,18 +120,19 @@ struct EventHeaderContainer: View {
                     }
                 }
                 .onAppear {
+                    let pubkey = event.pubkey
                     guard let contact = event.contact else {
                         bg().perform {
                             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "EventHeaderContainer.001")
-                            QueuedFetcher.shared.enqueue(pTag: event.pubkey)
+                            QueuedFetcher.shared.enqueue(pTag: pubkey)
                         }
                         return
                     }
                     if contact.metadata_created_at == 0 {
                         bg().perform {
                             guard let bgContact = event.contact?.bgContact() else { return }
-                            EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "NoteHeaderView.001")
-                            QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
+                            EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "EventHeaderContainer.002")
+                            QueuedFetcher.shared.enqueue(pTag: pubkey)
                         }
                     }
                 }
