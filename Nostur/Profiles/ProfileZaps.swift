@@ -87,7 +87,6 @@ struct ProfileZaps: View {
         }
         if nrPosts.isEmpty {
             ProgressView()
-                .centered()
         }
         
         Color.clear
