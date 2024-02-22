@@ -313,7 +313,7 @@ struct ProfileView: View {
                 case "Zaps":
                     if #available(iOS 16.0, *), let mainContact = nrContact.mainContact {
                         ProfileZaps(pubkey: pubkey, contact: mainContact)
-                            .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
+                            .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
                             .background(themes.theme.listBackground)
                     }
                     else {
