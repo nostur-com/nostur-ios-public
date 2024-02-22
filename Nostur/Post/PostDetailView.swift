@@ -535,11 +535,11 @@ struct ParentPost: View {
 }
 
 struct DetailPost: View {
-    @ObservedObject public var nrPost:NRPost
+    @ObservedObject public var nrPost: NRPost
     
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var dim:DIMENSIONS
-    @ObservedObject private var settings:SettingsStore = .shared
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject private var settings: SettingsStore = .shared
     @State private var showMiniProfile = false
     @State private var didStart = false
     
