@@ -180,8 +180,10 @@ class FooterAttributes: ObservableObject {
                     switch action.type {
                     case .bookmark:
                         self?.bookmarked = action.bookmarked
-                    case .liked:
+                    case .liked(let uuid):
                         self?.liked = true
+                    case .unliked:
+                        self?.liked = false
                     case .replied:
                         self?.replied = true
                     case .reposted:

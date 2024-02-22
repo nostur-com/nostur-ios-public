@@ -42,6 +42,22 @@ struct LikeButton: View {
             .onTapGesture {
                 tap()
             }
+            .onReceive(receiveNotification(.postAction), perform: { notification in
+                // For updating the like button in multiple views. Example: like in detail, should also update if the event is visible somewhere else in feed.
+                let postAction = notification.object as! PostActionNotification
+                guard postAction.eventId == nrPost.id else { return }
+                
+                switch postAction.type {
+                case .liked(let uuid):
+                    footerAttributes.liked = true
+                    unpublishLikeId = uuid
+                case .unliked:
+                    footerAttributes.liked = false
+                    unpublishLikeId = nil
+                default:
+                    break
+                }
+            })
     }
     
     private func tap() {
@@ -57,8 +73,9 @@ struct LikeButton: View {
             guard let account = account() else { return }
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
+            unpublishLikeId = UUID()
             
-            guard var likeNEvent = nrPost.like() else { return }
+            guard var likeNEvent = nrPost.like(uuid: unpublishLikeId!) else { return }
             bg().perform {
                 accountCache()?.addLike(nrPost.id)
             }
@@ -66,7 +83,6 @@ struct LikeButton: View {
             if account.isNC {
                 likeNEvent.publicKey = account.publicKey
                 likeNEvent = likeNEvent.withId()
-                unpublishLikeId = UUID()
                 NSecBunkerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
                     if let unpublishLikeId = self.unpublishLikeId {
                         self.unpublishLikeId = Unpublisher.shared.publish(signedEvent, cancellationId: unpublishLikeId)
@@ -78,7 +94,7 @@ struct LikeButton: View {
                     L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
                     return
                 }
-                unpublishLikeId = Unpublisher.shared.publish(signedEvent)
+                _ = Unpublisher.shared.publish(signedEvent, cancellationId: unpublishLikeId)
             }
         }
     }

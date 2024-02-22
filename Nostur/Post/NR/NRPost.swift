@@ -1001,10 +1001,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         return DataProvider.shared().viewContext.object(with: event.objectID) as? Event
     }
     
-    @MainActor public func like(_ reactionContent:String = "+") -> NEvent? {
+    @MainActor public func like(_ reactionContent:String = "+", uuid: UUID) -> NEvent? {
         self.footerAttributes.objectWillChange.send()
         if (reactionContent == "+") {
             self.footerAttributes.liked = true
+            sendNotification(.postAction, PostActionNotification(type: .liked(uuid), eventId: self.id))
         }
         bg().perform { [weak self] in
             guard let event = self?.event else { return }
@@ -1027,6 +1028,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.footerAttributes.objectWillChange.send()
         if (reactionContent == "+") {
             self.footerAttributes.liked = false
+            sendNotification(.postAction, PostActionNotification(type: .unliked, eventId: self.id))
         }
         bg().perform { [weak self] in
             guard let event = self?.event else { return }

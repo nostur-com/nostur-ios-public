@@ -71,14 +71,14 @@ struct ReactionButtonInner: View {
             guard !isActivated else { return }
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
+            unpublishLikeId = UUID()
             
-            guard var likeNEvent = nrPost.like(self.reactionContent) else { return }
+            guard var likeNEvent = nrPost.like(self.reactionContent, uuid: unpublishLikeId!) else { return }
             isActivated = true
             
             if account.isNC {
                 likeNEvent.publicKey = account.publicKey
                 likeNEvent = likeNEvent.withId()
-                unpublishLikeId = UUID()
                 NSecBunkerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
                     if let unpublishLikeId = self.unpublishLikeId {
                         self.unpublishLikeId = Unpublisher.shared.publish(signedEvent, cancellationId: unpublishLikeId)
@@ -90,7 +90,7 @@ struct ReactionButtonInner: View {
                     L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
                     return
                 }
-                unpublishLikeId = Unpublisher.shared.publish(signedEvent)
+                _ = Unpublisher.shared.publish(signedEvent, cancellationId: unpublishLikeId)
             }
         }
     }

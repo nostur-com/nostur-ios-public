@@ -16,7 +16,8 @@ struct PostActionNotification {
     
     enum ActionType {
         case bookmark
-        case liked
+        case liked(UUID)
+        case unliked
         case reposted
         case replied
         case privateNote
