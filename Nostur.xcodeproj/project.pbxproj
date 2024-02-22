@@ -660,7 +660,7 @@
 		1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F4C1C272A07AB090010573F /* NEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NEventView.swift; sourceTree = "<group>"; };
 		1F4C1C292A07B21F0010573F /* NProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NProfileView.swift; path = Nostur/Profiles/NProfileView.swift; sourceTree = SOURCE_ROOT; };
-		1F4C76732B779F82009F047D /* PostHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PostHeaderView.swift; path = Nostur/Post/PostHeaderView.swift; sourceTree = "<group>"; };
+		1F4C76732B779F82009F047D /* PostHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHeaderView.swift; sourceTree = "<group>"; };
 		1F527CFC2A98CB3100128AD6 /* NoteReposts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteReposts.swift; sourceTree = "<group>"; };
 		1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountSheet.swift; sourceTree = "<group>"; };
 		1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExistingAccountSheet.swift; sourceTree = "<group>"; };
@@ -1066,6 +1066,7 @@
 				1F71ACF72AAEE2780040EA3B /* OwnPostFooter.swift */,
 				1F8B6A702A20C6020060EDB3 /* PostActionNotification.swift */,
 				1FB130BC29C1930A004AC98D /* PostDetailView.swift */,
+				1F4C76732B779F82009F047D /* PostHeaderView.swift */,
 				1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */,
 				1FD78EF62A0CC365003E7B3E /* PostRowDeletable.swift */,
 				1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */,
@@ -1704,7 +1705,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F4C76732B779F82009F047D /* PostHeaderView.swift */,
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F7483562A67904900CA7026 /* CREDITS.md */,
