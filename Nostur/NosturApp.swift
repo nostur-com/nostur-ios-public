@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct AppScene: Scene {
     private let dataProvider = DataProvider.shared()
@@ -24,6 +25,8 @@ struct AppScene: Scene {
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
     private let lpc: LinkPreviewCache = .shared
+    
+    private let regexes = NostrRegexes.default
     
     @Environment(\.scenePhase) private var phase
     
@@ -84,6 +87,8 @@ struct RefreshingAppScene: Scene {
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
     private let lpc: LinkPreviewCache = .shared
+    
+    private let regexes = NostrRegexes.default
     
     @Environment(\.scenePhase) private var phase
     
@@ -190,6 +195,8 @@ struct SimpleScene: Scene {
     private let viewUpdates: ViewUpdates = .shared
     
     private let cloudSyncManager: CloudSyncManager = .shared
+    
+    private let regexes = NostrRegexes.default
     
     @Environment(\.scenePhase) private var phase
     

@@ -101,7 +101,7 @@ extension CloudAccount {
     var followingPubkeys:Set<String> {
         get {
             guard let followingPubkeys = followingPubkeys_ else { return [] }
-            return Set(followingPubkeys.split(separator: " ").map { String($0) })
+            return Set(followingPubkeys.split(separator: " ").map { String($0) }.filter { isValidPubkey($0) } )
         }
         set {
             followingPubkeys_ = newValue.joined(separator: " ")
@@ -111,7 +111,7 @@ extension CloudAccount {
     var privateFollowingPubkeys:Set<String> {
         get {
             guard let privateFollowingPubkeys = privateFollowingPubkeys_ else { return [] }
-            return Set(privateFollowingPubkeys.split(separator: " ").map { String($0) })
+            return Set(privateFollowingPubkeys.split(separator: " ").map { String($0) }.filter { isValidPubkey($0) })
         }
         set {
             privateFollowingPubkeys_ = newValue.joined(separator: " ")
@@ -186,6 +186,12 @@ extension CloudAccount {
         set { lastLoginAt_ = newValue }
     }
     
+}
+
+import NostrEssentials
+
+func isValidPubkey(_ input: String) -> Bool {
+    return NostrRegexes.default.matchingStrings(input, regex: NostrRegexes.default.cache[.hexId]!).count == 1
 }
 
 extension CloudAccount : Identifiable {
