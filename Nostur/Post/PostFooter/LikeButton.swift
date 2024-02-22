@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct LikeButton: View {
-    private let nrPost:NRPost
-    @ObservedObject private var footerAttributes:FooterAttributes
-    @State private var unpublishLikeId:UUID? = nil
-    private var isFirst:Bool
-    private var isLast:Bool
-    private var theme:Theme
+    private let nrPost: NRPost
+    @ObservedObject private var footerAttributes: FooterAttributes
+    @State private var unpublishLikeId: UUID? = nil
+    private var isFirst: Bool
+    private var isLast: Bool
+    private var theme: Theme
     
     init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost

@@ -86,7 +86,7 @@ class Kind0Processor {
 }
 
 struct Profile {
-    let pubkey:String
-    let name:String
-    var pictureUrl:URL?
+    let pubkey: String
+    let name: String
+    var pictureUrl: URL?
 }
