@@ -51,7 +51,7 @@ In no event shall the Developer be liable for any indirect, incidental, special,
 Privacy Policy
 Nostur does not collect information about you. The app stores information that you provide about your nostr profile, which can be anything you choose to share or not. The posts and content you share from Nostur are sent out to public relays so anyone can view those and Nostur stores this on your device so you can always view it yourself.
 The app uses the following external services:
-Tenor: for inluding animated GIFs in your posts
+Tenor: for including animated GIFs in your posts
 Image upload services: For including images in your posts. You can opt out to using these services by not including images or GIFs in your posts and not uploading a profile picture or banner in the app.
 
 For any questions, please contact feedback@nostur.com.

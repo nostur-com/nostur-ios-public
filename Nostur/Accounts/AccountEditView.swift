@@ -139,7 +139,7 @@ struct AccountEditView: View {
                                     Image(systemName: "doc.on.doc.fill")
                                         .onTapGesture {
                                             UIPasteboard.general.string = account.nsec!
-                                            sendNotification(.anyStatus, (String(localized:"Private key copied to clipboard", comment:"Notifiation shown after user tapped to copy"), "COPYKEYS"))
+                                            sendNotification(.anyStatus, (String(localized:"Private key copied to clipboard", comment:"Notification shown after user tapped to copy"), "COPYKEYS"))
                                         }
                                 }
                             }

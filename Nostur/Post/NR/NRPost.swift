@@ -102,7 +102,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
     }
 
-    // Seperate ObservableObjects for view performance optimization
+    // Separate ObservableObjects for view performance optimization
     var postOrThreadAttributes: PostOrThreadAttributes
     var postRowDeletableAttributes: PostRowDeletableAttributes
     var noteRowAttributes: NoteRowAttributes
@@ -790,7 +790,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             DispatchQueue.main.async { [weak self] in
                 // self.objectWillChange.send() // Not needed? because this is only for things not on screen yet
                 // for on screen we already use .onReceive
-                // if it doens't work we need to change let nrPost:NRPost to @ObserverdObject var nrPost:NRPost on ContentRenderer
+                // if it doesn't work we need to change let nrPost:NRPost to @ObserverdObject var nrPost:NRPost on ContentRenderer
                 // and enable self.objectWillChange.send() here.
                 self?.contentElementsDetail = contentElementsDetail
                 self?.contentElements = contentElements
@@ -1112,7 +1112,7 @@ extension NRPost { // Helpers for grouped replies
                 })
         }
         
-        // With WoT enabeled with add filter nr 5.
+        // With WoT enabled with add filter nr 5.
         return nrPosts
             // 5. People outside WoT last
             .filter { $0.inWoT || NRState.shared.accountPubkeys.contains($0.pubkey) }

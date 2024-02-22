@@ -116,7 +116,7 @@ public class CameraService {
         }
     }
     
-    //        MARK: Checks for user's permisions
+    //        MARK: Checks for user's permissions
     public func checkForPermissions() {
         
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -299,7 +299,7 @@ public class CameraService {
             }
             
             DispatchQueue.main.async {
-                //                MARK: Here enable capture button due to successfull setup
+                //                MARK: Here enable capture button due to successful setup
                 self.isCameraButtonDisabled = false
             }
         }

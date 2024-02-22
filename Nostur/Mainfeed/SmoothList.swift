@@ -568,7 +568,7 @@
 //        //        flowLayout.scrollDirection = .vertical
 //        
 //        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-//        collectionView.backgroundColor = UIColor.clear // This color flashes visible for a milisecond and is then covered by all other things
+//        collectionView.backgroundColor = UIColor.clear // This color flashes visible for a millisecond and is then covered by all other things
 //        collectionView.allowsSelection = false
 //        collectionView.delegate = coordinator
 //        collectionView.prefetchDataSource = coordinator

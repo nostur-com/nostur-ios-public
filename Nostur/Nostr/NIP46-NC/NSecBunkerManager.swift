@@ -197,7 +197,7 @@ class NSecBunkerManager: ObservableObject {
         ncReq.kind = .ncMessage
         ncReq.tags.append(NostrTag(["p", bunkerManagedPublicKey]))
         
-        L.og.debug("🏰 ncReq (unecrypted): \(ncReq.eventJson())")
+        L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
         
         guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: bunkerManagedPublicKey, content: ncReq.content) else {
             L.og.error("🏰 🔴🔴 Could not encrypt content for ncMessage")

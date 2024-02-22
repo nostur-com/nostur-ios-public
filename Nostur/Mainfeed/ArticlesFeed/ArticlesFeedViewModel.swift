@@ -196,7 +196,7 @@ class ArticlesFeedViewModel: ObservableObject {
         self.fetchFromRelays()
     }
     
-    // for after acocunt change
+    // for after account change
     public func reload() {
         self.nothingFound = false
         self.lastFetch = nil

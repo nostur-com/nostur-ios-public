@@ -171,7 +171,7 @@ struct MainView: View {
             navPath.append(destination.destination)
             
             // We need to know which .id is last added the stack (for undo), but we can't get from .navPath (private / internal)
-            // So we track it seperately in .lastPathPostId
+            // So we track it separately in .lastPathPostId
             if (type(of: destination.destination) == NRPost.self) {
                 let lastPath = destination.destination as! NRPost
                 lastPathPostId = lastPath.id
@@ -183,7 +183,7 @@ struct MainView: View {
             
             
             // We need to know which .id is last added the stack (for undo), but we can't get from .navPath (private / internal)
-            // So we track it seperately in .lastPathPostId
+            // So we track it separately in .lastPathPostId
             if (type(of: destination.destination) == NRPost.self) {
                 let lastPath = destination.destination as! NRPost
                 lastPathPostId = lastPath.id

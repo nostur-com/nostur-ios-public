@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Hightlight note
+// Highlight note
 struct Highlight: View {
     @ObservedObject private var pfpAttributes: NRPost.PFPAttributes
     @ObservedObject private var highlightAttributes: NRPost.HighlightAttributes

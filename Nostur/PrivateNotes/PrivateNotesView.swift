@@ -182,7 +182,7 @@ struct LazyPrivateNote: View {
     // Workaround, if we just use Contact, Contact just disappears after viewContext.save()
     // Seems using @State var contact:Contact? or @State var viewState = .readyContact(contact)
     // is not enough to keep the Contact in memory for view, can't figure out why.
-    // So we just keep the contact info here in a seperate struct
+    // So we just keep the contact info here in a separate struct
     struct ContactInfo {
         let pubkey:String
         var pictureUrl:URL?

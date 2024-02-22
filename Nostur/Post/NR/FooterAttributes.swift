@@ -156,7 +156,7 @@ class FooterAttributes: ObservableObject {
 //                    self.relays = relaysCount
 //                }
                 
-                // Also update own like (or slow? disbaled)
+                // Also update own like (or slow? disabled)
 //                if !self.liked && isLiked() { // nope. main bg thread mismatch
 //                    self.liked = true
 //                }

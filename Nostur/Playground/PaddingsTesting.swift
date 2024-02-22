@@ -66,7 +66,7 @@ struct PaddingsTesting_Previews: PreviewProvider {
                 
                 if testMe.contains(3), let p = PreviewFetcher.fetchNRPost("a7c70f513b8b3868d80aebc21027ae715ab033ad835c4274b07781310c2f077a", withReplyTo: true, withParents: true) {
                     // A REPLY TO A HIGHLIGHT
-                    // OR MENTIONING A HIGHLIGHT... AMBIGIOUS
+                    // OR MENTIONING A HIGHLIGHT... AMBIGUOUS
                     PostOrThread(nrPost: p)
                 }
                 

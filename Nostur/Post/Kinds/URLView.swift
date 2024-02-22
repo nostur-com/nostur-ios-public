@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Hightlight note
+// Highlight note
 struct URLView: View {
     @Environment(\.openURL) private var openURL
     @ObservedObject private var settings:SettingsStore = .shared

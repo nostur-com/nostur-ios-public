@@ -10,7 +10,7 @@
 
 import Foundation
 
-// createBadgeDefinition("nostur_og", name:"Nostur OG", description: "Early adoptor of Nostur", image1024:"", thumb50:"")
+// createBadgeDefinition("nostur_og", name:"Nostur OG", description: "Early adopter of Nostur", image1024:"", thumb50:"")
 func createBadgeDefinition(_ code:String, name:String, description:String, image1024:String, thumb256:String) -> NEvent {
     var badgeDef = NEvent(content: "")
     badgeDef.kind = .badgeDefinition
@@ -243,7 +243,7 @@ extension Event {
             }
 
             return badges
-            // NIP-58: Clients SHOULD ignore a without corresponding e tag and viceversa. Badge Awards referenced by the e tags should contain the same a tag.
+            // NIP-58: Clients SHOULD ignore a without corresponding e tag and vice-versa. Badge Awards referenced by the e tags should contain the same a tag.
 //            return badges.compactMap {
 //                $0.badgeAward.toNEvent().badgeAtag?.value == $0.badge.badgeA ? $0 : nil
 //            }

@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 // Buffer up to 50 pending verifications, check as fast as possible
-// while not doing more than 2 simultaniously
+// while not doing more than 2 simultaneously
 // Caches failed request so we don't keep retrying
 class NIP05Verifier {
     static let shared = NIP05Verifier()

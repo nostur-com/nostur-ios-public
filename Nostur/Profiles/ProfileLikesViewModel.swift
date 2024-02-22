@@ -187,7 +187,7 @@ class ProfileLikesViewModel: ObservableObject {
             var nrPosts: [NRPost] = []
             for postId in self.likedIds {
                 if let event = try? Event.fetchEvent(id: postId, context: bg()) {
-                    guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns
+                    guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     nrPosts.append(NRPost(event: event))
                 }
             }
@@ -234,7 +234,7 @@ class ProfileLikesViewModel: ObservableObject {
         self.fetchLikesFromRelays()
     }
     
-    // for after acocunt change
+    // for after account change
     public func reload() {
         self.state = .loading
         self.likedIds = []

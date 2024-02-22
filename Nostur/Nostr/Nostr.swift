@@ -481,7 +481,7 @@ extension NEvent {
     
     
     
-    // ARTICLE/PARAMETERIZED REPLACABLE EVENTS / NIP-33 reply / root
+    // ARTICLE/PARAMETERIZED REPLACEABLE EVENTS / NIP-33 reply / root
 
     func replyToAtag() -> NostrTag? {
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.

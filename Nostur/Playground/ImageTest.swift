@@ -143,7 +143,7 @@ func letsSee() -> UIImage {
     let uiImage = UIImage(named: "ImageTest")!
     let maxDimension: CGFloat = 150.0 * UIScreen.main.scale // maximum width or height
     
-    // Scale to fill, if widht or height is less than maxDimension, scale up
+    // Scale to fill, if width or height is less than maxDimension, scale up
     
     
     // If the least of height/width is bigger than maxDimension, scale down to maxDimension

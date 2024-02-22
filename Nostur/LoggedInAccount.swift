@@ -172,7 +172,7 @@ class LoggedInAccount: ObservableObject {
         let follows = account.getFollowingPublicKeys(includeBlocked: true) // if we do this in bg.perform it loads too late for other views
         self.viewFollowingPublicKeys = follows
         
-        // Remove currectly active "Following" subscriptions from connected sockets
+        // Remove currently active "Following" subscriptions from connected sockets
         ConnectionPool.shared.removeActiveAccountSubscriptions()
         
         self.bg.perform { [weak self] in
@@ -207,7 +207,7 @@ class LoggedInAccount: ObservableObject {
     
     // If CloudAccount is following has 12 pubkeys, but kind 3 in db has 21 pubkeys and is newest, it will not update at login
     // So we need to handle the existing kind 3 as if .newFollowingListFromRelay
-    // Above situaten can happen if we login on other account, then somehow fetch our kind 3, because we are
+    // Above situation can happen if we login on other account, then somehow fetch our kind 3, because we are
     // not logged in we're not updating properly as its not our logged in account. So as work around on account change
     // is to check the kind 3 and handle again if needed
     public func reprocessContactListIfNeeded(_ account: CloudAccount) {

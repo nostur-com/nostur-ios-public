@@ -267,7 +267,7 @@ class HotViewModel: ObservableObject {
                 }
                 if let event = try? Event.fetchEvent(id: postId, context: bg()) {
                     guard Self.HOT_KINDS.contains(event.kind) else { continue } // not DMs or other weird stuff
-                    guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns
+                    guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
                     guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
                     
@@ -317,7 +317,7 @@ class HotViewModel: ObservableObject {
         self.fetchLikesAndRepostsFromRelays()
     }
     
-    // for after acocunt change
+    // for after account change
     public func reload() {
         self.state = .loading
         self.lastFetch = nil
