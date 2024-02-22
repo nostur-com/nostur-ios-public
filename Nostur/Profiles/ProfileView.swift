@@ -375,8 +375,9 @@ struct ProfileView: View {
                             title: "Relays",
                             selected: selectedSubTab == "Relays")
                     }
-                    .frame(width: dim.listWidth)
+                    .frame(minWidth: dim.listWidth)
                 }
+                .frame(width: dim.listWidth)
             })
             .listRowSpacing(10.0)
             .listRowInsets(EdgeInsets())
