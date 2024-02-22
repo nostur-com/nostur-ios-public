@@ -55,7 +55,7 @@ class WebOfTrust: ObservableObject {
     @Published public var updatingWoT = false
     
     // Only accessed from bg thread
-    // Keep seperate lists for faster filtering
+    // Keep separate lists for faster filtering
     
     // follows of follows (NORMAL)
     private var followingFollowingPubkeys:Set<String> = [] {
@@ -105,7 +105,7 @@ class WebOfTrust: ObservableObject {
     // For first time guessing the main account, user can change actual main account in Settings
     public func guessMainAccount() {
         guard _mainAccountWoTpubkey == "" else { return }
-        // in prefered order:
+        // in preferred order:
         // 1. full account with most follows, and >50 follows
         // 2. read-only account currently logged and >50 follows
 

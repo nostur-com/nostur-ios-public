@@ -147,7 +147,7 @@ struct RelayConnectButton: View {
                 connection.connect(forceConnectionAttempt: true)
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    // If connection is succesful, save relay to database
+                    // If connection is successful, save relay to database
                     if cp.isUrlConnected(normalizeRelayUrl(url)) {
                         let relay = CloudRelay(context: context())
                         relay.createdAt = Date()

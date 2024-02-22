@@ -48,7 +48,7 @@ class ZapperPubkeyVerificationQueue {
     }
     
     public func removeZap(_ zap:Event) {
-        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
+        // Don't remove immediately, give a few extra seconds, maybe needs to fetch more than 1 relation
         self.delayedRemove.send(zap)
     }
     

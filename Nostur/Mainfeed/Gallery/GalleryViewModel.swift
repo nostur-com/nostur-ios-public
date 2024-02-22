@@ -271,7 +271,7 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                     L.og.debug("🔝🔝 id:\(postId): \(likesOrReposts.count)")
                 }
                 if let event = try? Event.fetchEvent(id: postId, context: bg()) {
-                    guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accoutns
+                    guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
                     guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
                     guard let content = event.content else { continue }
@@ -302,7 +302,7 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
         self.fetchLikesAndRepostsFromRelays()
     }
     
-    // for after acocunt change
+    // for after account change
     public func reload() {
         self.state = .loading
         self.lastFetch = nil

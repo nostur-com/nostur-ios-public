@@ -79,7 +79,7 @@ extension String {
                     db = j
                 }
 
-                let substition = d[i - 1][j - 1] + cost
+                let substitution = d[i - 1][j - 1] + cost
                 let injection = d[i][j - 1] + 1
                 let deletion = d[i - 1][j] + 1
                 let selfIdx = i - k - 1
@@ -87,7 +87,7 @@ extension String {
                 let transposition = d[k - 1][l - 1] + selfIdx + 1 + targetIdx
 
                 d[i][j] = Swift.min(
-                    substition,
+                    substitution,
                     injection,
                     deletion,
                     transposition
@@ -231,7 +231,7 @@ extension String {
     /// Reference <https://web.archive.org/web/20191117082524/https://en.wikipedia.org/wiki/Most_frequent_k_characters>
     /// - Parameters:
     ///   - target: The target `String`.
-    ///   - K: The number of most frequently occuring characters to use for the similarity comparison.
+    ///   - K: The number of most frequently occurring characters to use for the similarity comparison.
     ///   - maxDistance: The maximum distance limit (defaults to a value of 10 if not provided).
     public func distanceMostFreqK(between target: String, K: Int, maxDistance: Int = 10) -> Int {
         return maxDistance - mostFrequentKSimilarity(characterFrequencyHashOne: self.mostFrequentKHashing(K),
@@ -245,7 +245,7 @@ extension String {
     /// Reference <https://www.semanticscholar.org/paper/A-high-performance-approach-to-string-similarity-K-Valdestilhas-Soru/2ce037c9b5d77972af6892c170396c82d883dab9>
     /// - Parameters:
     ///   - target: The target `String`.
-    ///   - k: The number of most frequently occuring characters to use for the similarity comparison.
+    ///   - k: The number of most frequently occurring characters to use for the similarity comparison.
     /// - Returns: The normalized most frequent K distance between the receiver and `target`.
     public func distanceNormalizedMostFrequentK(between target: String, k: Int) -> Double {
         let selfMostFrequentKHash = self.mostFrequentKHashing(k)

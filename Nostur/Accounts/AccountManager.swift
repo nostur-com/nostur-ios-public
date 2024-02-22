@@ -91,7 +91,7 @@ class AccountManager {
         }
     }
     
-    // Wipes kind 0 and 3, publishes wiped events. Deletes key fron keychain, account from db
+    // Wipes kind 0 and 3, publishes wiped events. Deletes key from keychain, account from db
     @MainActor func wipeAccount(_ account: CloudAccount) {
         guard let pk = account.privateKey else { return }
     

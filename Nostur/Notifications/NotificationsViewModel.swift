@@ -28,7 +28,7 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    public var needsUpdate:Bool = true // Importer or other parts will set this flag to true if anything incoming is part of a notification. Only then the notification querys will run. (instead of before, every 15 sec, even for no reason)
+    public var needsUpdate:Bool = true // Importer or other parts will set this flag to true if anything incoming is part of a notification. Only then the notification queries will run. (instead of before, every 15 sec, even for no reason)
     // is true at start, then false after each notification check
     
     public func checkNeedsUpdate(_ failedZapNotification: PersistentNotification) {
@@ -379,7 +379,7 @@ class NotificationsViewModel: ObservableObject {
         guard let fetchRequest = q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData) else { return }
          
         let unreadMentions = ((try? bg().fetch(fetchRequest)) ?? [])
-            .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notificatios now.
+            .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notifications now.
             
         let unreadMentionsCount = unreadMentions.count
         
@@ -426,7 +426,7 @@ class NotificationsViewModel: ObservableObject {
                  
                 let unreadMentionsWithSpam = ((try? bg().fetch(fetchRequest)) ?? [])
                 let unreadMentions = unreadMentionsWithSpam
-                    .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notificatios now.
+                    .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notifications now.
                     
                 let unreadMentionsCount = unreadMentions.count
                 

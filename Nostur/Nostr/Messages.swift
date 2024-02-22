@@ -189,7 +189,7 @@ public struct RequestMessage {
 """
     }
     
-    // Same as getEventReferences() but for a single Paramaterized Replacable Event
+    // Same as getEventReferences() but for a single Parameterized Replaceable Event
     static func getPREventReferences(aTag:String, limit:Int = 5000, subscriptionId:String? = nil, kinds:[Int]? = nil, since:NTimestamp? = nil) -> String {
         let kindsJsonArr = JSON.shared.toString(kinds ?? [1,6,7,9735])
         if let since {

@@ -285,7 +285,7 @@ extension Account : Identifiable {
 //    
 //    func signEventBg(_ event:NEvent) throws -> NEvent {
 //        guard let account = self.toBG() else {
-//            L.og.error("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴")
+//            L.og.error("🔴🔴🔴🔴🔴 Account missing, could not sign 🔴🔴🔴🔴🔴")
 //            throw "account missing, could not sign"
 //        }
 //        guard let pk = account.privateKey else {

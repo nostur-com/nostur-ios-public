@@ -311,7 +311,7 @@ func deletePFPandBanner(pk: String, pubkey:String) {
             L.og.error("error deleting profile and banner")
             return
         }
-        L.og.info("banner/profile delete request sent succesfully")
+        L.og.info("banner/profile delete request sent successfully")
     }
     task.resume()
 }
