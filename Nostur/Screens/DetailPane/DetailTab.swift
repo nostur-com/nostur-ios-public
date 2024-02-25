@@ -91,6 +91,7 @@ struct DetailTab: View {
                 EmptyView()
             }
         }
+        .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.navigateTo)) { notification in
             guard tm.selected == tab else { return }
             let destination = notification.object as! NavigationDestination

@@ -214,6 +214,7 @@ struct Search: View {
                        }
                    }))
         }
+        .nbUseNavigationStack(.never)
     }
     
     @ViewBuilder

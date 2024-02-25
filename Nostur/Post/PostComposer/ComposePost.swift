@@ -138,6 +138,7 @@ struct ComposePost: View {
                                 PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
                                     .environmentObject(themes)
                             }
+                            .nbUseNavigationStack(.never)
                             .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                     }

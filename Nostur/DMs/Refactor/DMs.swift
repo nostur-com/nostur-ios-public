@@ -229,6 +229,7 @@ struct DMs: View {
                 }
             }
         }
+        .nbUseNavigationStack(.never)
     }
 }
 

@@ -71,6 +71,7 @@ struct BookmarksAndPrivateNotes: View {
                 privateNotesCount = value == "0" ? nil : value
             })
         }
+        .nbUseNavigationStack(.never)
     }
 }
 
