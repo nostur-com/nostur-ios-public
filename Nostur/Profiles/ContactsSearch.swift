@@ -17,18 +17,18 @@ struct ContactsSearch: View, Equatable {
 
     @State private var searchText = ""
 
-    public let followingPubkeys:Set<String>
-    public var prompt:String
-    public var onSelectContacts:((Set<Contact>) -> Void)?
-    public var onSelectContact:((Contact) -> Void)?
+    public let followingPubkeys: Set<String>
+    public var prompt: String
+    public var onSelectContacts: ((Set<Contact>) -> Void)?
+    public var onSelectContact: ((Contact) -> Void)?
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
         predicate: NSPredicate(value: false),
         animation: .none)
-    private var contacts:FetchedResults<Contact>
+    private var contacts: FetchedResults<Contact>
 
-    private var filteredContacts:[Contact] {
+    private var filteredContacts: [Contact] {
         let wot = WebOfTrust.shared
         if WOT_FILTER_ENABLED() {
             return contacts
@@ -53,7 +53,7 @@ struct ContactsSearch: View, Equatable {
     }
     
     @State private var searching = false
-    @State private var selectedContacts:Set<Contact> = []
+    @State private var selectedContacts: Set<Contact> = []
     @State private var contactFilter = "All"
     
     var body: some View {

@@ -8,19 +8,19 @@
 import SwiftUI
 
 struct CustomNWCConnectSheet: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @State var awaitingConnectionId = ""
     @Environment(\.openURL) var openURL
     @Environment(\.dismiss) var dismiss
     @State var nwcConnectSuccess = false
     @State var showDisconnect = false
-    @ObservedObject var ss:SettingsStore = .shared
+    @ObservedObject var ss: SettingsStore = .shared
     @State var nwcUri = ""
     @State var tryingConnection = false
     @State var nwcErrorMessage = ""
     @State var connectionTimeout:Timer? = nil
     
-    var validUri:Bool {
+    var validUri: Bool {
         if let _ = try? NWCURI(string: nwcUri) {
             return true
         }
@@ -197,7 +197,7 @@ struct CustomNWCConnectSheet: View {
     }
     
     func removeExistingNWCsocket() {
-        var removeKey:String?
+        var removeKey: String?
         ConnectionPool.shared.connections.values.forEach { connection in
             if connection.isNWC {
                 connection.disconnect()

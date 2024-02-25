@@ -79,8 +79,8 @@ struct BadgesIssuedView: View {
 }
 
 struct BadgeIssuedRow: View {
-    @EnvironmentObject private var themes:Themes
-    var badge:Event
+    @EnvironmentObject private var themes: Themes
+    var badge: Event
     var nBadge:NEvent { badge.toNEvent() }
     
     var body: some View {

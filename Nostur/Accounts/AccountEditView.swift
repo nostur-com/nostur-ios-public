@@ -17,7 +17,7 @@ struct AccountEditView: View {
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
-    private let up:Unpublisher = .shared
+    private let up: Unpublisher = .shared
     @ObservedObject private var account: CloudAccount
     @State private var newPrivateKey = ""
     @State private var contactsPresented = false
@@ -25,8 +25,8 @@ struct AccountEditView: View {
     @State private var uploading = false
     @State private var uploadError:String?
     @State private var subscriptions = Set<AnyCancellable>()
-    @State private var newPicture:UIImage?
-    @State private var newBanner:UIImage?
+    @State private var newPicture: UIImage?
+    @State private var newBanner: UIImage?
     @State private var anyLud = ""
     
     init(account: CloudAccount) {

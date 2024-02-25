@@ -63,6 +63,7 @@ struct CreateNewBadgeSheet: View {
         .navigationTitle(String(localized:"Create new badge", comment:"Navigation title for Badge creation screen"))
         .onAppear { focusedField = .badgeCode }
     }
+    
     func createBadge() {
         let newBadge = createBadgeDefinition(badgeCode, name: name, description: description, image1024: image1024, thumb256: image256)
         

@@ -9,18 +9,18 @@ import SwiftUI
 import NavigationBackport
 
 struct NewListSheet: View {
-    
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
-    @State private var newList:CloudFeed?
+    @State private var newList: CloudFeed?
     @State private var title = ""
     @State private var wotEnabled = true
     @State private var addContactsSheetShown = false
-    @State private var selectedContacts:Set<Contact> = []
+    @State private var selectedContacts: Set<Contact> = []
     @State private var contactSelectionVisible = false
-    @State private var feedType:LVM.ListType = .pubkeys
-    @State private var selectedRelays:Set<CloudRelay> = []
+    @State private var feedType: LVM.ListType = .pubkeys
+    @State private var selectedRelays: Set<CloudRelay> = []
     
-    private var selectedRelaysData:Set<RelayData> {
+    private var selectedRelaysData: Set<RelayData> {
         Set(selectedRelays.map { $0.toStruct() })
     }
     
@@ -29,7 +29,7 @@ struct NewListSheet: View {
         animation: .default)
     private var relays: FetchedResults<CloudRelay>
     
-    private var formIsValid:Bool {
+    private var formIsValid: Bool {
         guard !title.isEmpty else { return false }
         if feedType == .relays && selectedRelays.isEmpty { return false }
         return true

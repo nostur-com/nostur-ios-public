@@ -9,24 +9,20 @@ import SwiftUI
 import NavigationBackport
 
 struct NewRelayView: View {
-//    @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) private var dismiss
     @State private var url = "wss://"
     
-    var onAdd:((_ url:String) -> Void)? = nil
+    var onAdd:((_ url: String) -> Void)? = nil
     
     var body: some View {
         
         NBNavigationStack {
-//            VStack {
-                Form {
-                    TextField("wss://relay...", text: $url)
-                        .keyboardType(.URL)
-                        .disableAutocorrection(true)
-                        .textInputAutocapitalization(.never)
-                }
-//            }
-//            .padding()
+            Form {
+                TextField("wss://relay...", text: $url)
+                    .keyboardType(.URL)
+                    .disableAutocorrection(true)
+                    .textInputAutocapitalization(.never)
+            }
             .navigationTitle(String(localized:"Add relay", comment:"Navigation title for Add relay screen"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

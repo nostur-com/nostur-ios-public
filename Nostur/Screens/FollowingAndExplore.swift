@@ -10,29 +10,30 @@ import Combine
 import NavigationBackport
 
 struct FollowingAndExplore: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var dim:DIMENSIONS
-    @ObservedObject var account:CloudAccount
-    @Binding var showingOtherContact:NRContact?
-    @ObservedObject private var ss:SettingsStore = .shared
+    @EnvironmentObject private var la: LoggedInAccount
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject var account: CloudAccount
+    @Binding var showingOtherContact: NRContact?
+    @ObservedObject private var ss: SettingsStore = .shared
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @AppStorage("selected_listId") private var selectedListId = ""
     
     @State private var showingNewNote = false
-    @State private var noteCancellationId:UUID?
+    @State private var noteCancellationId: UUID?
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)], predicate: NSPredicate(format: "showAsTab == true"))
     var lists:FetchedResults<CloudFeed>
-    @State private var selectedList:CloudFeed?
-    @StateObject private var exploreVM:LVM = LVMManager.shared.exploreLVM()
+    @State private var selectedList: CloudFeed?
+    @StateObject private var exploreVM: LVM = LVMManager.shared.exploreLVM()
     @StateObject private var hotVM = HotViewModel()
     @StateObject private var articlesVM = ArticlesFeedViewModel()
     @StateObject private var galleryVM = GalleryViewModel()
     
-    @State var tabsOffsetY:CGFloat = 0.0
+    @State var tabsOffsetY: CGFloat = 0.0
     @State var didSend = false
     
-    private var navigationTitle:String {
+    private var navigationTitle: String {
         if selectedSubTab == "List" {
             return (selectedList?.name_ ?? String(localized:"List"))
         }

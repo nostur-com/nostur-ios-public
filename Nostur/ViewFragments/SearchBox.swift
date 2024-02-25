@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SearchBox: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @StateObject var debounceObject = DebounceObject()
     var prompt:String
     @Binding var text:String
