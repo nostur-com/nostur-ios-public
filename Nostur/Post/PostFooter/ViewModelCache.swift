@@ -14,44 +14,32 @@ struct FooterButton: Identifiable {
     var isLast:Bool = false
 }
 
-struct ButtonRow: Identifiable {
-    let id:UUID
-    let buttons:[FooterButton]
-}
-
 class ViewModelCache: ObservableObject {
     
-    static let shared:ViewModelCache = ViewModelCache()
+    static let shared: ViewModelCache = ViewModelCache()
     
     private init() {
         footerButtons = SettingsStore.shared.footerButtons
     }
     
-    static let BUTTONS_PER_ROW:Int = 9 // Max 8 buttons on each row
+    static let MAX_BUTTONS: Int = 9 // Max 8 buttons on each row
     
-    private var rows:Int {
-        Int(ceil(Double(footerButtons.count) / Double(ViewModelCache.BUTTONS_PER_ROW)))
-    }
-    public var footerButtons:String = "" {
+    public var footerButtons: String = "" {
         didSet {
-            self.buttonRows = getButtonRows()
+            self.buttonRow = getButtonRow()
         }
     }
     
-    private func getButtonRows() -> [ButtonRow] {
-        return Array(self.footerButtons) // String to [Character]
-            .chunks(ofCount: ViewModelCache.BUTTONS_PER_ROW).map(Array.init) // to rows of buttons [[Character], [Character], ...]
-            .map({ icons in
-                icons.map({ icon in // for each row, track first + last button for alignment
-                    FooterButton(
-                        id: String(icon),
-                        isFirst: icons.first == icon,
-                        isLast: icons.last == icon
-                    )
-                })
+    private func getButtonRow() -> [FooterButton] {
+        return self.footerButtons
+            .map({ icon in // for each row, track first + last button for alignment
+                FooterButton(
+                    id: String(icon),
+                    isFirst: self.footerButtons.first == icon,
+                    isLast: self.footerButtons.last == icon
+                )
             })
-            .map({ ButtonRow(id: UUID(), buttons: $0) })
     }
     
-    @Published var buttonRows:[ButtonRow] = []
+    @Published var buttonRow: [FooterButton] = []
 }
