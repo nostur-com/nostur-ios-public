@@ -509,12 +509,14 @@ extension Event {
                     request.fetchLimit = 1
                     
                     if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
+                        guard !reactingToEvent.isDeleted else { break }
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
                     }
                     else if let reactingToEvent = try context.fetch(request).first {
+                        guard !reactingToEvent.isDeleted else { break }
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                         event.reactionTo = reactingToEvent
@@ -879,6 +881,7 @@ extension Event {
         let bg = bg()
         bg.perform {
             if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id) {
+                guard !event.isDeleted else { return }
                 let existingRelays = event.relays.split(separator: " ").map { String($0) }
                 let newRelays = relays.split(separator: " ").map { String($0) }
                 let uniqueRelays = Set(existingRelays + newRelays)
@@ -895,6 +898,7 @@ extension Event {
                 }
             }
             else if let event = try? Event.fetchEvent(id: id, context: bg) {
+                guard !event.isDeleted else { return }
                 let existingRelays = event.relays.split(separator: " ").map { String($0) }
                 let newRelays = relays.split(separator: " ").map { String($0) }
                 let uniqueRelays = Set(existingRelays + newRelays)
@@ -987,7 +991,9 @@ extension Event {
                     savedEvent.zappedEventId = firstE
                     
                     if let awaitingEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                        savedEvent.zappedEvent = awaitingEvent
+                        savedEvent.zappedEvent = awaitingEvent // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
+                        // _PFManagedObject_coerceValueForKeyWithDescription
+                        // _sharedIMPL_setvfk_core
                     }
                     else {
                         savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
@@ -1117,7 +1123,7 @@ extension Event {
                 if (savedEvent.replyToId == nil) {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                 }
-                if let root = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (try? Event.fetchEvent(id: replyToRootEtag.id, context: context)) {
+                if let root = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (try? Event.fetchEvent(id: replyToRootEtag.id, context: context)), !root.isDeleted {
                     savedEvent.replyToRoot = root
                     
                     ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: root))
