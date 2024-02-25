@@ -12,9 +12,7 @@ import Algorithms
 struct CustomizableFooterFragmentView: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject private var vmc: ViewModelCache = .shared
-    private var theme:Theme
-    
-//    static let gridColumns = Array(repeating: GridItem(.flexible()), count: ViewModelCache.BUTTONS_PER_ROW)
+    private var theme: Theme
 
     private let nrPost: NRPost
     private var isDetail = false
@@ -30,34 +28,42 @@ struct CustomizableFooterFragmentView: View {
         //        let _ = Self._printChanges()
         //        #endif
         VStack(alignment: .leading, spacing: 5) {
-            ForEach(vmc.buttonRows) { row in
-                HStack(spacing: 0) {
-                    ForEach(row.buttons) { button in
-                        switch button.id {
-                        case "💬":
-                            ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                        case "🔄":
-                            RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                        case "+":
-                            LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                        case "⚡️":
-                            if IS_NOT_APPSTORE { // Only available in non app store version
-                                ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                                    .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
-                                    .disabled(!(nrPost.contact?.anyLud ?? false))
-                            }
-                            else {
-                                EmptyView()
-                            }
-                        case "🔖":
-                            BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                        default:
-                            ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
-                                .equatable()
+            HStack(spacing: 0.0) {
+                ForEach(vmc.buttonRow) { button in
+                    switch button.id {
+                    case "💬":
+                        ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    case "🔄":
+                        RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    case "+":
+                        LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    case "⚡️":
+                        if IS_NOT_APPSTORE { // Only available in non app store version
+                            ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                                .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
+                                .disabled(!(nrPost.contact?.anyLud ?? false))
                         }
-                        if !button.isLast {
-                            Spacer()
+                        else {
+                            EmptyView()
                         }
+                    case "🔖":
+                        BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    default:
+                        ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
+                            .equatable()
+                    }
+                    // Add spacers between every button.
+                    // But if we have too many buttons (>=8) then remove spacers from a few special buttons:
+                    // But only for small screens UIScreen.main.bounds.width < 380.0
+                    
+                    if !button.isLast && UIScreen.main.bounds.width > 380.0 {
+                        Spacer()
+                    }
+                    else if !button.isLast && (vmc.buttonRow.count < 8) {
+                        Spacer()
+                    }
+                    else if !button.isLast && (vmc.buttonRow.count >= 8 && !["💬","🔄","+","⚡️"].contains(button.id)) {
+                        Spacer()
                     }
                 }
             }
@@ -106,6 +112,7 @@ struct CustomizablePreviewFooterFragmentView: View {
 
 #Preview("Customizable Footer") {
     PreviewContainer({ pe in
+        SettingsStore.shared.footerButtons = FOOTER_BUTTONS_PREVIEW
         NRState.shared.loggedInAccount?.followingCache["7ecd3fe6353ec4c53672793e81445c2a319ccf0a298a91d77adcfa386b52f30d"] = FollowCache(anyName: "TBM", pfpURL: URL(string: "https://files.peakd.com/file/peakd-hive/chekohler/AK297i3PX3mZpwVagu4FhZjVLcSW7UpEDv7b4mXRKSQav5vwsWgw46iGUcqSoDi.jpg")!, bgContact: nil)
         NRState.shared.loggedInAccount?.followingCache["738f69184aeda675002b687fe47c8e9e2f7b1a267d6f9145b1193312f97c18ef"] = FollowCache(anyName: "BB", pfpURL: URL(string: "https://pbs.twimg.com/profile_images/1431273817477992452/arsE5HEn_400x400.jpg")!, bgContact: nil)
         NRState.shared.loggedInAccount?.followingCache["79b647ba67c6f434b348e4af011e0984af14a459b6d86fd05e8f2ee8d32ec8c9"] = FollowCache(anyName: "Tony", pfpURL: URL(string: "https://hitony.com/tony.gif")!, bgContact: nil)
@@ -116,9 +123,12 @@ struct CustomizablePreviewFooterFragmentView: View {
             Circle()
                 .foregroundColor(Color.random)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-                .padding(.trailing, 10)
+                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER + 10.0 + 10.0, alignment: .top)
+                .fixedSize()
             VStack(spacing: 10) {
-    
+                
+//                Text(UIScreen.main.bounds.width.description)
+                
                 CustomizablePreviewFooterFragmentView()
                 
                 Divider()
@@ -130,13 +140,18 @@ struct CustomizablePreviewFooterFragmentView: View {
                     ForEach(p.replies) {
                         Text($0.pubkey)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+            .padding(.trailing, 10)
         }
-        .padding(5)
+        
     }
 }
 
 let IS_NOT_APPSTORE = ((Bundle.main.infoDictionary?["NOSTUR_IS_DESKTOP"] as? String) ?? "NO") != "NNO"
 
-let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️😆👍🤔🔖"
+//let FOOTER_BUTTONS_PREVIEW = "💬🔄+🔖"
+let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️💜❤️💜🔖"
+//let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️😆👍🤔🔖"
+//let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️😆👍🤔🔖"

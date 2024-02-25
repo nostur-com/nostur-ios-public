@@ -30,12 +30,11 @@ struct RepostButton: View {
                     .opacity(footerAttributes.repostsCount == 0 ? 0 : 1.0)
                     .frame(width: 28)
                     .offset(x: 20)
-                //                    AnimatedNumber(number: 234)
-                //                        .frame(width: 28)
-                //                        .offset(x: 20)
+//                AnimatedNumber(number: 234)
+//                    .frame(width: 28)
+//                    .offset(x: 20)
             }
             .padding(.trailing, 30)
-        //                .background(.red)
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {

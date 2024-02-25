@@ -18,8 +18,8 @@ struct FooterConfigurator: View {
             Section(content: {
                 TextField("Footer buttons", text: $footerButtons)
                     .onChange(of: footerButtons, perform: { newValue in
-                        if newValue.count > ViewModelCache.BUTTONS_PER_ROW {
-                            footerButtons = filterT(String(newValue.prefix(ViewModelCache.BUTTONS_PER_ROW)))
+                        if newValue.count > ViewModelCache.MAX_BUTTONS {
+                            footerButtons = filterT(String(newValue.prefix(ViewModelCache.MAX_BUTTONS)))
                         }
                         else {
                             let filteredButtons = filterT(footerButtons)

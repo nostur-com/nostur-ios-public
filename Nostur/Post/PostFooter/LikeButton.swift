@@ -31,14 +31,13 @@ struct LikeButton: View {
                     .opacity(footerAttributes.likesCount == 0 ? 0 : 1)
                     .frame(width: 26)
                     .offset(x: 18)
-                //                    AnimatedNumber(number: 547)
-                //                        .frame(width: 26)
-                //                        .offset(x: 18)
+//                AnimatedNumber(number: 547)
+//                    .frame(width: 26)
+//                    .offset(x: 18)
             }
             .padding(.trailing, 30)
             .padding(.vertical, 5)
             .contentShape(Rectangle())
-        //                .background(.green)
             .onTapGesture {
                 tap()
             }
