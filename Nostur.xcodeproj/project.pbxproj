@@ -633,6 +633,7 @@
 		1F365FB82AF2F561003A82CB /* Bookmark+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bookmark+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F365FB92AF2F561003A82CB /* Bookmark+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bookmark+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F3706212ACED99F0077D6CA /* Req.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Req.swift; sourceTree = "<group>"; };
+		1F37C8392B8B71F700B0B78B /* NosturCloud 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 2.xcdatamodel"; sourceTree = "<group>"; };
 		1F3897502AB9822B001A874E /* NRState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRState.swift; sourceTree = "<group>"; };
 		1F3897522ABA92DD001A874E /* LoggedInAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInAccount.swift; sourceTree = "<group>"; };
 		1F38AFF02A27166C0035641E /* VideoHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoHelpers.swift; sourceTree = "<group>"; };
@@ -3193,9 +3194,10 @@
 		1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				1F37C8392B8B71F700B0B78B /* NosturCloud 2.xcdatamodel */,
 				1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */,
 			);
-			currentVersion = 1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */;
+			currentVersion = 1F37C8392B8B71F700B0B78B /* NosturCloud 2.xcdatamodel */;
 			path = NosturCloud.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
