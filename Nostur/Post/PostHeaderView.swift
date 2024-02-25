@@ -31,49 +31,49 @@ struct NRPostHeaderContainer: View {
                     }
                 }
                 .onAppear {
-                    guard let contact = pfpAttributes.contact else {
+                    guard let nrContact = pfpAttributes.contact else {
                         bg().perform {
                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NRPostHeaderContainer.001")
                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                         }
                         return
                     }
-                    if contact.metadata_created_at == 0 {
-                        guard let bgContact = contact.contact else { return }
+                    if nrContact.metadata_created_at == 0 {
+                        guard let bgContact = nrContact.contact else { return }
                         EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "NRPostHeaderContainer.002")
-                        QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
+                        QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
                     }
                 }
                 .task {
-                    guard let contact = pfpAttributes.contact else { return }
+                    guard let nrContact = pfpAttributes.contact else { return }
                     guard !SettingsStore.shared.lowDataMode else { return }
                     guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-                    guard contact.metadata_created_at != 0 else { return }
-                    guard contact.couldBeImposter == -1 else { return }
-                    guard !contact.following else { return }
+                    guard nrContact.metadata_created_at != 0 else { return }
+                    guard nrContact.couldBeImposter == -1 else { return }
+                    guard !nrContact.following else { return }
                     guard !NewOnboardingTracker.shared.isOnboarding else { return }
 
-                    let contactAnyName = contact.anyName.lowercased()
+                    let contactAnyName = nrContact.anyName.lowercased()
                     let currentAccountPubkey = NRState.shared.activeAccountPublicKey
-                    let cPubkey = contact.pubkey
+                    let cPubkey = nrContact.pubkey
 
-                    bg().perform { [weak contact] in
-                        guard let contact else { return }
+                    bg().perform { [weak nrContact] in
+                        guard let nrContact else { return }
                         guard let account = account() else { return }
                         guard account.publicKey == currentAccountPubkey else { return }
                         guard let similarContact = account.follows.first(where: {
                             $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName) // TODO: follows.anyName cache could help, put in same followsPFP dict?
                         }) else { return }
-                        guard let cPic = contact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
+                        guard let cPic = nrContact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
                         Task.detached(priority: .background) {
                             let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                            DispatchQueue.main.async { [weak contact] in
-                                guard let contact else { return }
+                            DispatchQueue.main.async { [weak nrContact] in
+                                guard let nrContact else { return }
                                 guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
-                                contact.couldBeImposter = similarPFP ? 1 : 0
+                                nrContact.couldBeImposter = similarPFP ? 1 : 0
                                 bg().perform {
                                     guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
-                                    contact.contact?.couldBeImposter = similarPFP ? 1 : 0
+                                    nrContact.contact?.couldBeImposter = similarPFP ? 1 : 0
         //                            DataProvider.shared().bgSave()
                                 }
                             }
@@ -81,12 +81,12 @@ struct NRPostHeaderContainer: View {
                     }
                 }
                 .onDisappear {
-                    guard let contact = pfpAttributes.contact else {
+                    guard let nrContact = pfpAttributes.contact else {
                         QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
                         return
                     }
-                    if contact.metadata_created_at == 0 {
-                        QueuedFetcher.shared.dequeue(pTag: contact.pubkey)
+                    if nrContact.metadata_created_at == 0 {
+                        QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
                     }
                 }
         }
