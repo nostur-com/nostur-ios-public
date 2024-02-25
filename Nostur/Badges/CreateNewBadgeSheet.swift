@@ -10,7 +10,7 @@ import NavigationBackport
 
 struct CreateNewBadgeSheet: View {
     
-    @EnvironmentObject private var la:LoggedInAccount
+    @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     

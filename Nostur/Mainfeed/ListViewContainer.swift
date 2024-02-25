@@ -45,7 +45,7 @@ struct IsolatedLVMLoadingView: View {
 import NavigationBackport
 
 struct ListViewContainerTester: View {
-    @EnvironmentObject var la:LoggedInAccount
+    @EnvironmentObject var la: LoggedInAccount
     
     var body: some View {
         NBNavigationStack {

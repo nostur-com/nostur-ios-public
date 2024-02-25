@@ -19,16 +19,16 @@ struct NProfileView: View {
     
     struct NProfileViewInner: View {
         
-        @State var nrPost:NRPost?
-        @State var fetchTask:Task<Void, Never>?
+        @State var nrPost: NRPost?
+        @State var fetchTask: Task<Void, Never>?
         
         private var fetchRequest: FetchRequest<Contact>
         private var contacts: FetchedResults<Contact> {
             fetchRequest.wrappedValue
         }
-        private var identifier:ShareableIdentifier
+        private var identifier: ShareableIdentifier
         
-        init(predicate: NSPredicate, identifier:ShareableIdentifier) {
+        init(predicate: NSPredicate, identifier: ShareableIdentifier) {
             fetchRequest = FetchRequest(
                 sortDescriptors: [NSSortDescriptor(keyPath: \Contact.metadata_created_at, ascending: false)],
                 predicate: predicate

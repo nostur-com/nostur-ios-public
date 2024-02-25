@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct ReadOnlyAccountInformationSheet: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {

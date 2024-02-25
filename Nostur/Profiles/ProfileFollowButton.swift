@@ -9,12 +9,12 @@ import SwiftUI
 import NavigationBackport
 
 struct ProfileFollowButton: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject public var contact:Contact
-    @EnvironmentObject private var la:LoggedInAccount
-    @ObservedObject private var fg:FollowingGuardian = .shared
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject public var contact: Contact
+    @EnvironmentObject private var la: LoggedInAccount
+    @ObservedObject private var fg: FollowingGuardian = .shared
     @State private var isFollowing = false
-    @State private var editingAccount:CloudAccount?
+    @State private var editingAccount: CloudAccount?
     
     var body: some View {
         if (contact.pubkey != la.pubkey) {

@@ -10,27 +10,28 @@ import NukeUI
 import NavigationBackport
 
 struct Badge: Hashable {
-    var badge:Event
+    var badge: Event
     init(_ badge: Event) {
         self.badge = badge
     }
 }
 
 struct BadgesIssuedContainer:View {
-    @EnvironmentObject var la:LoggedInAccount
+    @EnvironmentObject var la: LoggedInAccount
     var body: some View {
         BadgesIssuedView(pubkey: la.account.publicKey)
     }
 }
 
 struct BadgesIssuedView: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject var la: LoggedInAccount
+    @EnvironmentObject private var themes: Themes
     @State var createNewBadgeSheetShown = false
     @FetchRequest
-    var badges:FetchedResults<Event>
-    var pubkey:String
+    var badges: FetchedResults<Event>
+    var pubkey: String
     
-    init(pubkey:String) {
+    init(pubkey: String) {
         self.pubkey = pubkey
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format: "kind == 30009 AND pubkey == %@", pubkey)

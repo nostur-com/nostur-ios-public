@@ -68,9 +68,9 @@ struct ProfileCardByPubkey: View {
 }
 
 struct ProfileRow: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var la:LoggedInAccount
-    @ObservedObject private var fg:FollowingGuardian = .shared
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var la: LoggedInAccount
+    @ObservedObject private var fg: FollowingGuardian = .shared
      
     // Following/Unfollowing tap is slow so update UI and do in background:
     @State private var isFollowing = false
@@ -79,7 +79,7 @@ struct ProfileRow: View {
     
     @State private var similarPFP = false
     
-    private var couldBeImposter:Bool {
+    private var couldBeImposter: Bool {
         guard la.pubkey != contact.pubkey else { return false }
         guard !la.isFollowing(pubkey: contact.pubkey) else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
