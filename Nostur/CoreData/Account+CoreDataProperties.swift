@@ -26,6 +26,10 @@ extension Account {
     @NSManaged public var banner: String
     @NSManaged public var publicKey: String
     @NSManaged public var id: UUID?
+    @NSManaged public var follows: Set<Contact>?
+    var follows_:Set<Contact> {
+        follows ?? Set<Contact>()
+    }
     @NSManaged public var privateNotes: Set<PrivateNote>?
     @NSManaged public var bookmarks: Set<Event>?
     @NSManaged public var mutedRootIds: String? // Serialized
@@ -64,6 +68,23 @@ extension Account {
         request.predicate = NSPredicate(value: true)
         return (try? context.fetch(request)) ?? []
     }
+}
+
+// MARK: Generated accessors for follows
+extension Account {
+
+    @objc(addFollowsObject:)
+    @NSManaged public func addToFollows(_ value: Contact)
+
+    @objc(removeFollowsObject:)
+    @NSManaged public func removeFromFollows(_ value: Contact)
+
+    @objc(addFollows:)
+    @NSManaged public func addToFollows(_ values: NSSet)
+
+    @objc(removeFollows:)
+    @NSManaged public func removeFromFollows(_ values: NSSet)
+
 }
 
 // MARK: Generated accessors for bookmarks
