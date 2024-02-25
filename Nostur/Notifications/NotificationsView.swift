@@ -34,6 +34,7 @@ struct NotificationsContainer: View {
             .background(themes.theme.listBackground)
             .withNavigationDestinations()
         }
+        .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
             guard !IS_IPAD || horizontalSizeClass == .compact else { return }

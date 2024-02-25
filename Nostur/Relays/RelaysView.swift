@@ -112,6 +112,7 @@ struct RelaysView: View {
                 RelayEditView(relay: relay)
                     .environmentObject(themes)
             }
+            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)
         })
         .nosturNavBgCompat(themes: themes)

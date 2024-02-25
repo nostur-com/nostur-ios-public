@@ -149,6 +149,7 @@ struct MainView: View {
                     }
             }
         }
+        .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.showingSomeoneElsesFeed)) { notification in
             let nrContact = notification.object as! NRContact
             showingOtherContact = nrContact
