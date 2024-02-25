@@ -47,7 +47,7 @@ struct BlockListView: View {
 
 struct BlockedAccounts:View {
     @EnvironmentObject private var themes: Themes
-    @EnvironmentObject private var la:LoggedInAccount
+    @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.managedObjectContext) private var viewContext
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt_, order: .reverse)], predicate: NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.contact.rawValue))

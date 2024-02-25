@@ -12,7 +12,7 @@ struct FeedSettings: View {
     @ObservedObject public var lvm: LVM
     public var list: CloudFeed? = nil
     
-    @EnvironmentObject private var la:LoggedInAccount
+    @EnvironmentObject private var la: LoggedInAccount
     
     @State private var needsReload = false
     
@@ -100,7 +100,7 @@ struct FeedSettings: View {
 import NavigationBackport
 
 struct FeedSettingsTester: View {
-    @EnvironmentObject private var la:LoggedInAccount
+    @EnvironmentObject private var la: LoggedInAccount
     
     var body: some View {
         NBNavigationStack {

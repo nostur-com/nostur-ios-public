@@ -10,13 +10,13 @@ import NavigationBackport
 
 struct HighlightComposer: View {
     @ObservedObject var settings: SettingsStore = .shared
-    @EnvironmentObject private var la:LoggedInAccount
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var la: LoggedInAccount
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
-    public var highlight:NewHighlight
-    @State private var selectedAuthor:Contact?
+    public var highlight: NewHighlight
+    @State private var selectedAuthor: Contact?
     @State private var isAuthorSelectionShown = false
-    @State private var activeAccount:CloudAccount? = nil
+    @State private var activeAccount: CloudAccount? = nil
     
     var body: some View {
         VStack(spacing: 0) {

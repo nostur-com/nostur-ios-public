@@ -57,9 +57,9 @@ struct NoteReposts_Previews: PreviewProvider {
 struct ProfileRows: View {
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.metadata_created_at, ascending: false)], predicate: NSPredicate(value: false))
-    var contacts:FetchedResults<Contact>
+    var contacts: FetchedResults<Contact>
     
-    var pubkeys:[String]
+    var pubkeys: [String]
     
     init(_ pubkeys: [String]? = nil) {
         self.pubkeys = pubkeys ?? []

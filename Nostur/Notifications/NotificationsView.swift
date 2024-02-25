@@ -11,7 +11,7 @@ import NavigationBackport
 
 struct NotificationsContainer: View {
     @EnvironmentObject private var themes: Themes
-    @EnvironmentObject var la:LoggedInAccount
+    @EnvironmentObject var la: LoggedInAccount
 
     // Not observed so manual UserDefaults
     private var selectedTab: String {

@@ -9,12 +9,12 @@ import SwiftUI
 
 struct FollowsInfo: Identifiable, Equatable {
     let id = UUID()
-    let follows:[String]
-    let silentFollows:[String]
+    let follows: [String]
+    let silentFollows: [String]
 }
 
 struct ProfileFollowingList: View {
-    let pubkey:String
+    let pubkey: String
     
     @StateObject private var vm = FetchVM<FollowsInfo>() // Array of following pubkeys and array of silent follow pubkeys
 

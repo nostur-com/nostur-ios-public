@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct NewDMComposer: View {
-    @EnvironmentObject private var la:LoggedInAccount
+    @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.dismiss) private var dismiss
-    @Binding var toPubkey:String?
-    @Binding var toContact:Contact?
-    @Binding var message:String
-    @Binding var showingNewDM:Bool
-    @Binding var tab:String
+    @Binding var toPubkey: String?
+    @Binding var toContact: Contact?
+    @Binding var message: String
+    @Binding var showingNewDM: Bool
+    @Binding var tab: String
     public var preloaded = false
     
     var body: some View {

@@ -11,35 +11,35 @@ import NukeUI
 import NavigationBackport
 
 struct BadgesReceivedContainer:View {
-    @EnvironmentObject var la:LoggedInAccount
+    @EnvironmentObject var la: LoggedInAccount
     var body: some View {
         BadgesReceivedView(pubkey: la.account.publicKey)
     }
 }
 
 struct BadgesReceivedView: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) private var viewContext
-    @EnvironmentObject private var la:LoggedInAccount
+    @EnvironmentObject private var la: LoggedInAccount
 
     @State private var createNewBadgeSheetShown = false
-    private var pubkey:String
+    private var pubkey: String
     
     @FetchRequest
-    private var badgeAwards:FetchedResults<Event>
+    private var badgeAwards: FetchedResults<Event>
     @State private var selection = Set<Event>()
     
-    private var badgeAwardsToMe:[Event] { // ANY P's of KIND:8 == PUBKEY
+    private var badgeAwardsToMe: [Event] { // ANY P's of KIND:8 == PUBKEY
         badgeAwards
 //            .filter { $0.pTags().firstIndex(of: pubkey) != nil }
             .filter { ($0.tagsSerialized ?? "").contains(serializedP(pubkey)) } // optimization hack
     }
     
-    private var badgesToMeIds:[String] {
+    private var badgesToMeIds: [String] {
         badgeAwardsToMe.compactMap { $0.toNEvent().badgeAtag?.value }
     }
     
-    init(pubkey:String) {
+    init(pubkey: String) {
         self.pubkey = pubkey
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format: "kind == 8 AND tagsSerialized CONTAINS %@", serializedP(pubkey)) // optimization hack

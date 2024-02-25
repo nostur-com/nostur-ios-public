@@ -38,9 +38,9 @@ struct LazyNoteMenuButton: View {
 }
 
 struct LazyNoteMenuSheet: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var la:LoggedInAccount
-    public let nrPost:NRPost
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var la: LoggedInAccount
+    public let nrPost: NRPost
     @Environment(\.dismiss) private var dismiss
     private let NEXT_SHEET_DELAY = 0.05
     @State private var followToggles = false
