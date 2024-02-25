@@ -8,26 +8,26 @@
 import SwiftUI
 
 struct MultiFollowSheet: View {
-    public let pubkey:String
-    public let name:String
-    public var onDismiss:(() -> Void)?
+    public let pubkey: String
+    public let name: String
+    public var onDismiss: (() -> Void)?
     
     @Environment(\.managedObjectContext) private var viewContext
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     
-    private var accounts:[CloudAccount] { // Only accounts with private key
+    private var accounts: [CloudAccount] { // Only accounts with private key
         NRState.shared.accounts.filter { $0.isFullAccount }
     }
     
-    private var firstRow:ArraySlice<CloudAccount> {
+    private var firstRow: ArraySlice<CloudAccount> {
         accounts.prefix(6)
     }
     
-    private var secondRow:ArraySlice<CloudAccount> {
+    private var secondRow: ArraySlice<CloudAccount> {
         accounts.dropFirst(6).prefix(6)
     }
     
-    private var thirdRow:ArraySlice<CloudAccount> {
+    private var thirdRow: ArraySlice<CloudAccount> {
         accounts.dropFirst(12).prefix(6)
     }
     

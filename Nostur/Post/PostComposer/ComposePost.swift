@@ -30,12 +30,12 @@ struct ComposePostCompat: View {
 
 @available(iOS 16.0, *)
 struct ComposePost: View {
-    public var replyTo:Event? = nil
-    public var quotingEvent:Event? = nil
-    public var directMention:Contact? = nil // For initiating a post from profile view
+    public var replyTo: Event? = nil
+    public var quotingEvent: Event? = nil
+    public var directMention: Contact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     
     @StateObject private var vm = NewPostModel()
     @StateObject private var ipm = ImagePickerModel()
@@ -44,17 +44,17 @@ struct ComposePost: View {
     @State private var cameraSheetShown = false
     
     @Namespace private var textfield
-    @State private var replyToNRPost:NRPost?
-    @State private var quotingNRPost:NRPost?
+    @State private var replyToNRPost: NRPost?
+    @State private var quotingNRPost: NRPost?
     @State private var isTargeted: Bool = false
 //    @State private var textHeight:CGFloat = 0
     
-    private var waitingForReply:Bool {
+    private var waitingForReply: Bool {
         guard replyTo != nil else { return false }
         return replyToNRPost == nil
     }
     
-    private var waitingForQuote:Bool {
+    private var waitingForQuote: Bool {
         guard quotingEvent != nil else { return false }
         return quotingNRPost == nil
     }

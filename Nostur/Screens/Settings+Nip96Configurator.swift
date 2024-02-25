@@ -11,10 +11,10 @@ import Combine
 
 struct Nip96Configurator: View {
     @AppStorage("nip96_api_url") private var nip96apiUrl = ""
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     @State private var state:ConfiguratorState = .initialized
-    @State private var tosUrl:String?
+    @State private var tosUrl: String?
     @State private var address = ""
     @State private var errorMessage = ""
     @State private var subscriptions = Set<AnyCancellable>()

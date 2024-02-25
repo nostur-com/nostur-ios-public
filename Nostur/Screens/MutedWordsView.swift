@@ -50,8 +50,8 @@ struct MutedWordsView: View {
     
     struct EditWordSheet: View {
         @Environment(\.dismiss) var dismiss
-        @ObservedObject var mutedWords:MutedWords
-        @State var text:String
+        @ObservedObject var mutedWords: MutedWords
+        @State var text: String
         init(mutedWords: MutedWords) {
             self.mutedWords = mutedWords
             _text = State(initialValue: mutedWords.words ?? "")

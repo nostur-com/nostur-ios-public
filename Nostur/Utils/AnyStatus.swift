@@ -10,10 +10,10 @@ import SwiftUI
 typealias AnyStatusMessage = (String, String?)
 
 struct AnyStatus: View {
-    @EnvironmentObject private var themes:Themes
-    var filter:String?
-    @State var message:AnyStatusMessage? = nil
-    @State var dismissTask:Task<Void, Never>? = nil
+    @EnvironmentObject private var themes: Themes
+    var filter: String?
+    @State var message: AnyStatusMessage? = nil
+    @State var dismissTask: Task<Void, Never>? = nil
     
     var body: some View {
         VStack {

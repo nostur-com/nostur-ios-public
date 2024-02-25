@@ -10,12 +10,12 @@ import NavigationBackport
 
 struct ContactsToggleSheet: View {
     @Environment(\.dismiss) private var dismiss
-    public var requiredP:String? = nil
-    public var available:Set<Contact>
-    @Binding public var selected:Set<Contact>
-    @Binding public var unselected:Set<Contact>
+    public var requiredP: String? = nil
+    public var available: Set<Contact>
+    @Binding public var selected: Set<Contact>
+    @Binding public var unselected: Set<Contact>
     
-    private var contactList:[Contact] {
+    private var contactList: [Contact] {
         Array(available)
             .sorted(by: { $0.pubkey == requiredP && $1.pubkey != requiredP })
     }

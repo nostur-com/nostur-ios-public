@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct ContactSearchResultRow: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @ObservedObject var contact: Contact
-    var onSelect:(() -> Void)?
+    var onSelect: (() -> Void)?
     
     @State var similarPFP = false
     @State var isFollowing = false
     
-    var couldBeImposter:Bool {
+    var couldBeImposter: Bool {
         guard let account = account() else { return false }
         guard account.publicKey != contact.pubkey else { return false }
         guard !Nostur.isFollowing(contact.pubkey) else { return false }

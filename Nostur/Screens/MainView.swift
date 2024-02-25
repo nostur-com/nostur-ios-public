@@ -10,8 +10,8 @@ import NavigationBackport
 
 struct MainView: View {
     @EnvironmentObject private var themes: Themes
-    @State private var fg:FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
-    @State private var fn:FollowerNotifier = .shared
+    @State private var fg: FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
+    @State private var fn: FollowerNotifier = .shared
     @State private var newPost: NRPost? // Setting this will show shortcut to open a new just posted post in toolbar
     
     private var selectedTab: String {
@@ -27,8 +27,8 @@ struct MainView: View {
     @State private var lastPathPostId: String? = nil // Need to track .id of last added to navigation stack so we can remove on undo send if needed
     @State private var account: CloudAccount? = nil
     @State private var showingNewNote = false
-    @ObservedObject private var settings:SettingsStore = .shared
-    @State private var showingOtherContact:NRContact? = nil
+    @ObservedObject private var settings: SettingsStore = .shared
+    @State private var showingOtherContact: NRContact? = nil
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     

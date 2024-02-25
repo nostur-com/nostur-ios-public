@@ -9,14 +9,14 @@ import SwiftUI
 import BackgroundTasks
 
 struct NotificationSettings: View {
-    @ObservedObject private var ss:SettingsStore = .shared
+    @ObservedObject private var ss: SettingsStore = .shared
     
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("notifications_mute_follows") var muteFollows:Bool = false
-    @AppStorage("notifications_mute_reactions") var muteReactions:Bool = false
-    @AppStorage("notifications_mute_zaps") var muteZaps:Bool = false
-    @AppStorage("notifications_mute_reposts") var muteReposts:Bool = false
-    @AppStorage("notifications_mute_new_posts") var muteNewPosts:Bool = false
+    @AppStorage("notifications_mute_follows") var muteFollows: Bool = false
+    @AppStorage("notifications_mute_reactions") var muteReactions: Bool = false
+    @AppStorage("notifications_mute_zaps") var muteZaps: Bool = false
+    @AppStorage("notifications_mute_reposts") var muteReposts: Bool = false
+    @AppStorage("notifications_mute_new_posts") var muteNewPosts: Bool = false
     
     var body: some View {
         Form {

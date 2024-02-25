@@ -12,7 +12,7 @@ struct Kind10002ConfigurationWizard: View {
     @ObservedObject public var account: CloudAccount
     public var onDismiss: () -> Void
     
-    @State private var step:Step = .intro
+    @State private var step: Step = .intro
     @State private var isBack = false
     @State private var publishing = false
     
@@ -21,22 +21,22 @@ struct Kind10002ConfigurationWizard: View {
         animation: .default)
     private var relays: FetchedResults<CloudRelay>
     
-    private var allRelays:[CloudRelay] {
+    private var allRelays: [CloudRelay] {
         Array(relays)
     }
     
-    private var writeRelays:[CloudRelay] {
+    private var writeRelays: [CloudRelay] {
         relays.filter { $0.write && !$0.excludedPubkeys.contains(account.publicKey) }
     }
     
-    private var readRelays:[CloudRelay] {
+    private var readRelays: [CloudRelay] {
         relays.filter { $0.read }
     }
     
-    @State private var selectedReadRelays:Set<CloudRelay> = []
-    @State private var selectedWriteRelays:Set<CloudRelay> = []
+    @State private var selectedReadRelays: Set<CloudRelay> = []
+    @State private var selectedWriteRelays: Set<CloudRelay> = []
     
-    private var allSelectedRelays:[CloudRelay] {
+    private var allSelectedRelays: [CloudRelay] {
         Array(selectedReadRelays.union(selectedWriteRelays))
     }
     

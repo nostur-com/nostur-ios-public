@@ -9,24 +9,24 @@ import SwiftUI
 import NavigationBackport
 
 struct AccountsSheet: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     @State private var newAccountSheetShown = false
     @State private var addExistingAccountSheetShown = false
     
-    public var withDismissButton:Bool = true
+    public var withDismissButton: Bool = true
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CloudAccount.createdAt, ascending: false)],
         animation: .default)
     private var accounts: FetchedResults<CloudAccount>
-    private var accountsSorted:[CloudAccount] {
+    private var accountsSorted: [CloudAccount] {
         accounts
             .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
             .sorted(by: { $0.privateKey != nil && $1.privateKey == nil })
     }
     
-    @State private var logoutAccount:CloudAccount? = nil
+    @State private var logoutAccount: CloudAccount? = nil
     
     var body: some View {
 //        let _ = Self._printChanges()

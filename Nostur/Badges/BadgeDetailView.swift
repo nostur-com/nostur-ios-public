@@ -11,21 +11,21 @@ import NukeUI
 import NavigationBackport
 
 struct BadgeDetailView: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var la:LoggedInAccount
+    @EnvironmentObject var la: LoggedInAccount
     
     @State var awardToPeopleIsShown = false
     
     var badge:Event
-    var nBadge:NEvent { badge.toNEvent() }
+    var nBadge: NEvent { badge.toNEvent() }
     
     @FetchRequest
-    var badgeAwards:FetchedResults<Event>
+    var badgeAwards: FetchedResults<Event>
     //    var nBadgeAwards:[NEvent] { badgeAwards.map { $0.toNEvent() }.filter { $0.badgeDescription != nil && $0.badgeDefinition!.value == nBadge.badgeDefinition!.value } }
     
-    init(badge:Event) {
+    init(badge: Event) {
         self.badge = badge
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format: "kind == 8 AND tagsSerialized CONTAINS %@", "[\"a\",\"\(badge.toNEvent().badgeCode!.value)") // OPTIMISATION HACK

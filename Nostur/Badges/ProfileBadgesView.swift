@@ -101,9 +101,9 @@ struct ProfileBadgesContainer: View {
 }
 
 struct ProfileBadgesView: View {
-    @EnvironmentObject private var themes:Themes
-    var verifiedBadges:[ProfileBadge]
-    @State var selectedBadge:Event? = nil
+    @EnvironmentObject private var themes: Themes
+    var verifiedBadges: [ProfileBadge]
+    @State var selectedBadge: Event? = nil
     @State var badgeInfoIsShown = false
     @State var refreshHack = false
     

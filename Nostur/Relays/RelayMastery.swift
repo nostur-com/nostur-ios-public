@@ -79,9 +79,9 @@ struct RelayMastery: View {
 
 
 struct SharedRelaySettings: View {
-    @EnvironmentObject private var themes:Themes
-    public var relays:[CloudRelay] = []
-    @State var editRelay:CloudRelay?
+    @EnvironmentObject private var themes: Themes
+    public var relays: [CloudRelay] = []
+    @State var editRelay: CloudRelay?
     
     var body: some View {
         Form {

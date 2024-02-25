@@ -15,7 +15,7 @@ struct AppDetail: View {
     private var appDescription: String? { app.description }
     private var appLogoUrl: URL? { app.logoUrl }
     private var appOpenURL: URL { app.openUrl }
-    private var recommendedByPFPs:[(Pubkey, URL)] { app.recommendedBy }
+    private var recommendedByPFPs: [(Pubkey, URL)] { app.recommendedBy }
     
     public var theme: Theme
     public var onDismiss: () -> Void

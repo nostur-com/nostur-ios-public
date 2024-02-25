@@ -361,11 +361,11 @@ struct LazyNoteMenuSheet_Previews: PreviewProvider {
 }
 
 struct BlockOptions: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     
-    public let pubkey:String
-    public let name:String
-    public var onDismiss:(() -> Void)?
+    public let pubkey: String
+    public let name: String
+    public var onDismiss: (() -> Void)?
 
     var body: some View {
         Form {

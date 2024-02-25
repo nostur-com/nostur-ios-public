@@ -9,11 +9,11 @@ import SwiftUI
 
 struct NewDM: View {
     
-    @Binding var showingNewDM:Bool
-    @State private  var toPubkey:String?
-    @State private  var toContact:Contact?
-    @State private  var message:String = ""
-    @Binding var tab:String
+    @Binding var showingNewDM: Bool
+    @State private  var toPubkey: String?
+    @State private  var toContact: Contact?
+    @State private  var message: String = ""
+    @Binding var tab: String
     @State private var preloaded = false
     
     var body: some View {
