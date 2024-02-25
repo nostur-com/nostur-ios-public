@@ -163,6 +163,7 @@ struct DMs: View {
                             conv.dmState.markedReadAt_ = Date.now
                             conv.dmState.didUpdate.send()
                         }
+                        .environmentObject(themes)
                 }
             }
             .sheet(isPresented: $showingNewDM) {
@@ -176,6 +177,7 @@ struct DMs: View {
                                 }
                             }
                         }
+                        .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.listBackground)

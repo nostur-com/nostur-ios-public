@@ -133,6 +133,7 @@ struct BadgeDetailView: View {
                 })
                 .navigationTitle(String(localized:"Award to", comment: "Navigation title of screen where you choose who to award badge to"))
                 .navigationBarTitleDisplayMode(.inline)
+                .environmentObject(themes)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") {

@@ -110,6 +110,7 @@ struct RelaysView: View {
         .sheet(item: $editRelay, content: { relay in
             NBNavigationStack {
                 RelayEditView(relay: relay)
+                    .environmentObject(themes)
             }
             .presentationBackgroundCompat(themes.theme.listBackground)
         })

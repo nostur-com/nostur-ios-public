@@ -78,6 +78,7 @@ struct EditNosturList: View {
                     sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
                 })
                 .equatable()
+                .environmentObject(themes)
                 .navigationTitle(String(localized:"Add contacts", comment:"Navigation title of sheet to add contacts to feed"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {

@@ -147,6 +147,7 @@ struct ProfileView: View {
                             .sheet(item: $editingAccount) { account in
                                 NBNavigationStack {
                                     AccountEditView(account: account)
+                                        .environmentObject(themes)
                                 }
                                 .nbUseNavigationStack(.never)
                                 .presentationBackgroundCompat(themes.theme.listBackground)
@@ -407,10 +408,12 @@ struct ProfileView: View {
                     if account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePostCompat(directMention: nrContact.mainContact, onDismiss: { showingNewNote = false })
+                                .environmentObject(themes)
                         }
                     }
                     else {
                         ComposePostCompat(directMention: nrContact.mainContact, onDismiss: { showingNewNote = false })
+                            .environmentObject(themes)
                     }
                 }
             }
@@ -650,6 +653,7 @@ struct ProfileToolbar: View {
                     .sheet(item: $editingAccount) { account in
                         NBNavigationStack {
                             AccountEditView(account: account)
+                                .environmentObject(themes)
                         }
                         .nbUseNavigationStack(.never)
                         .presentationBackgroundCompat(themes.theme.listBackground)

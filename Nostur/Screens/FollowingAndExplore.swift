@@ -209,12 +209,15 @@ struct FollowingAndExplore: View {
                 switch selectedSubTab {
                 case "Following":
                     FeedSettings(lvm: LVMManager.shared.followingLVM(forAccount: account))
+                        .environmentObject(la)
                 case "List":
                     if let list = selectedList {
                         FeedSettings(lvm: LVMManager.shared.listLVM(forList: list), list:list)
+                            .environmentObject(la)
                     }
                 case "Explore":
                     FeedSettings(lvm: exploreVM)
+                        .environmentObject(la)
                 case "Hot":
                     HotFeedSettings(hotVM: hotVM)
                 case "Articles":
