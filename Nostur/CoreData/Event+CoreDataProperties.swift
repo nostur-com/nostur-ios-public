@@ -51,6 +51,9 @@ extension Event {
     @NSManaged public var zapTally: Int64
     
     @NSManaged public var replies: Set<Event>?
+    
+    @NSManaged public var contacts: Set<Contact>?
+    
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
     
@@ -190,6 +193,24 @@ extension Event {
         }
     }
 }
+
+// MARK: Generated accessors for contacts
+extension Event {
+    
+    @objc(addContactsObject:)
+    @NSManaged public func addToContacts(_ value: Contact)
+    
+    @objc(removeContactsObject:)
+    @NSManaged public func removeFromContacts(_ value: Contact)
+    
+    @objc(addContacts:)
+    @NSManaged public func addToContacts(_ values: NSSet)
+    
+    @objc(removeContacts:)
+    @NSManaged public func removeFromContacts(_ values: NSSet)
+    
+}
+
 
 // MARK: Generated accessors for bookmarkedBy
 // Old bookmark relations, no longer needed, but can't remove yet because needed for
