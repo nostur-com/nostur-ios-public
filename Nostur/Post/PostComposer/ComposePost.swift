@@ -129,6 +129,7 @@ struct ComposePost: View {
                         if #available(iOS 16, *) {
                             NavigationStack {
                                 PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                                    .environmentObject(themes)
                             }
                             .presentationBackgroundCompat(themes.theme.listBackground)
                         }

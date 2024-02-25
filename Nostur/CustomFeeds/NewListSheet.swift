@@ -96,6 +96,7 @@ struct NewListSheet: View {
                 dismiss()
             })
             .equatable()
+            .environmentObject(themes)
             .navigationTitle(String(localized:"Add contacts to feed", comment:"Navigation title for screen where you can add contacts to a feed"))
         }
         .toolbar {

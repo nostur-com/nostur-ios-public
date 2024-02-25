@@ -103,6 +103,7 @@ struct SharedRelaySettings: View {
         .sheet(item: $editRelay, content: { relay in
             NBNavigationStack {
                 RelayEditView(relay: relay)
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)
@@ -169,6 +170,7 @@ struct AccountRelaySettings: View {
                 Kind10002ConfigurationWizard(account: account, onDismiss: onDismiss)
                     .navigationTitle("Published relays")
                     .navigationBarTitleDisplayMode(.inline)
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
         })

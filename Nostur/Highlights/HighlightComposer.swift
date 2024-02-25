@@ -105,6 +105,7 @@ struct HighlightComposer: View {
                             isAuthorSelectionShown = false
                         })
                         .equatable()
+                        .environmentObject(themes)
                         .navigationTitle(String(localized:"Find author", comment:"Navigation title of Find author screen"))
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {

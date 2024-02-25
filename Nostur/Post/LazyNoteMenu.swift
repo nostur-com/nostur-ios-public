@@ -320,9 +320,11 @@ struct LazyNoteMenuSheet: View {
             }
             .nbNavigationDestination(isPresented: $followToggles) {
                 MultiFollowSheet(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
+                    .environmentObject(themes)
             }
             .nbNavigationDestination(isPresented: $blockOptions) {
                 BlockOptions(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
+                    .environmentObject(themes)
             }
             .onAppear {
                 signpost(NRState.shared, "Post Context Menu", .begin, "onAppear")
