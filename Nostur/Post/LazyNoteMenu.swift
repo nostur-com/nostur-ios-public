@@ -61,7 +61,7 @@ struct LazyNoteMenuSheet: View {
                                 .padding(.trailing, 5)
                         }
                         .buttonStyle(.plain)
-                        if #available(iOS 16, *) {
+                        if #available(iOS 16, *), nrPost.kind != 30023 {
                             Divider()
                             Button {
                                 dismiss()
