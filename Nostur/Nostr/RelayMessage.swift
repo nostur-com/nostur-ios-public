@@ -16,6 +16,7 @@ class RelayMessage {
         case EOSE
         case OK
         case AUTH
+        case CLOSED
     }
     
     enum error:Error {
@@ -84,6 +85,14 @@ class RelayMessage {
                 throw error.FAILED_TO_PARSE
             }
             return RelayMessage(relays:relay, type: .OK, message: text, id:result.id, success:result.success)
+        }
+        
+        guard text.prefix(9) != ###"["CLOSED""### else {
+            let decoder = JSONDecoder()
+            guard let result = try? decoder.decode(ClosedMessage.self, from: dataFromString) else {
+                throw error.FAILED_TO_PARSE
+            }
+            return RelayMessage(relays:relay, type: .CLOSED, message: result.message ?? "", id: result.id)
         }
         
         guard text.prefix(8) == ###"["EVENT""### else {
