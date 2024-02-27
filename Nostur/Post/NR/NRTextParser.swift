@@ -177,7 +177,7 @@ class NRTextParser { // TEXT things
 
     
     // Cached regex
-    static let npubNprofRegex = try! NSRegularExpression(pattern: "(?:nostr:)?@?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(nostr:nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b", options: [])
+    static let npubNprofRegex = try! NSRegularExpression(pattern: "(@npub1[023456789acdefghjklmnpqrstuvwxyz]{58})|(nostr:npub1[023456789acdefghjklmnpqrstuvwxyz]{58})|(nostr:nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b", options: [])
     
     // NIP-27 handle nostr:npub or nostr:nprofile
     private func parseUserMentions(event: Event, text: String, plainText: Bool = false) -> TextWithPs {
