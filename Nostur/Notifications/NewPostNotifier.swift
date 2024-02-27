@@ -20,13 +20,13 @@ class NewPostNotifier: ObservableObject {
     
     static let shared = NewPostNotifier()
     
-    @Published var enabledPubkeys:Set<String> = []
+    @Published var enabledPubkeys: Set<String> = []
     
     // Needed as fallback if account() doesn't resolve yet
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
 
     private var backlog = Backlog(timeout: 10.0, auto: true)
-    private var lastCheck:Date? = nil
+    private var lastCheck: Date? = nil
     
     private init() {
         

@@ -12,7 +12,7 @@ struct NewRelayView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var url = "wss://"
     
-    var onAdd:((_ url: String) -> Void)? = nil
+    var onAdd: ((_ url: String) -> Void)? = nil
     
     var body: some View {
         

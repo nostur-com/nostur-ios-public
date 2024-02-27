@@ -32,7 +32,7 @@ struct ClientMessage {
         return "[\"CLOSE\", \"\(subscriptionId)\"]"
     }
     
-    static func event(event:NEvent) -> String {
+    static func event(event: NEvent) -> String {
         return "[\"EVENT\",\(event.eventJson())]"
     }
     
