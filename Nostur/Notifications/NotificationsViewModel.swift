@@ -245,10 +245,13 @@ class NotificationsViewModel: ObservableObject {
     
     public func addNotificationSubscriptions() {
         // Check relays for newest messages NOW+NEWER ("Notifications") realtime
-        self.relayCheckNewestNotifications()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            self.relayCheckNewestNotifications()
+        }
         
         // Check relays for since... later
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
             self.relayCheckSinceNotifications()
         }
     }
@@ -305,7 +308,11 @@ class NotificationsViewModel: ObservableObject {
                     self?.checkForUnreadMentions()
                 }
                 else {
-                    self?.checkForEverything()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { // Give time for AUTH / "auth-required:"
+                        bg().perform { [weak self] in
+                            self?.checkForEverything()
+                        }
+                    }
                 }
             }
         }
