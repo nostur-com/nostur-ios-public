@@ -101,6 +101,7 @@
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
     <entity name="CloudRelay" representedClassName="CloudRelay" syncable="YES">
+        <attribute name="auth" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="createdAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="excludedPubkeys_" optional="YES" attributeType="String"/>
         <attribute name="read" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>

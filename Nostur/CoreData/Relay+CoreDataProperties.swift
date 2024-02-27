@@ -43,7 +43,7 @@ extension Relay {
     }
     
     public func toStruct() -> RelayData {
-        return RelayData.new(url: (url ?? ""), read: read, write: write, search: false, excludedPubkeys: excludedPubkeys)
+        return RelayData.new(url: (url ?? ""), read: read, write: write, search: false, auth: false, excludedPubkeys: excludedPubkeys)
     }
 }
 

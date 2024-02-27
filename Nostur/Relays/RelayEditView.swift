@@ -58,6 +58,10 @@ struct RelayEditView: View {
             .listRowBackground(themes.theme.background)
             
             Section(header: Text("Relay settings", comment: "Relay settings header") ) {
+                Toggle(isOn: $relay.auth) {
+                    Text("Enable authentication", comment: "Label for toggle to enable AUTH on this relay")
+                    Text("May be required to access special features on this relay")
+                }
                 Toggle(isOn: $relay.search) {
                     Text("Use relay for Search", comment: "Label for toggle to search on this relay")
                 }
@@ -115,7 +119,7 @@ struct RelayEditView: View {
                                     ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                                     ConnectionPool.shared.removeConnection(correctedRelayUrl)
                                 }
-                                let newRelayData = RelayData.new(url: correctedRelayUrl, read: relay.read, write: relay.write, search: relay.search, excludedPubkeys:  relay.excludedPubkeys)
+                                let newRelayData = RelayData.new(url: correctedRelayUrl, read: relay.read, write: relay.write, search: relay.search, auth: relay.auth, excludedPubkeys:  relay.excludedPubkeys)
                                 
                                 let replacedConnection = ConnectionPool.shared.addConnection(newRelayData)
                                 connection = replacedConnection
@@ -175,7 +179,7 @@ struct RelayEditView: View {
                             if let oldUrl = connection?.url {
                                 ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                             }
-                            let newRelayData = RelayData.new(url: correctedRelayUrl, read: relay.read, write: relay.write, search: relay.search, excludedPubkeys: relay.excludedPubkeys)
+                            let newRelayData = RelayData.new(url: correctedRelayUrl, read: relay.read, write: relay.write, search: relay.search, auth: relay.auth, excludedPubkeys: relay.excludedPubkeys)
                             let relayConnection = ConnectionPool.shared.addConnection(newRelayData)
                             if relay.read {
                                 relayConnection.connect()
@@ -186,6 +190,7 @@ struct RelayEditView: View {
                             // read/write/exclude change?
                             connection?.relayData.setRead(relay.read)
                             connection?.relayData.setWrite(relay.write)
+                            connection?.relayData.setAuth(relay.auth)
                             connection?.relayData.setExcludedPubkeys(relay.excludedPubkeys)
                         }
                     }
@@ -204,6 +209,11 @@ struct RelayEditView: View {
         .onChange(of: relay.write) { newValue in
             if let connection = connection, connection.relayData.write != newValue {
                 connection.relayData.setWrite(newValue)
+            }
+        }
+        .onChange(of: relay.auth) { newValue in
+            if let connection = connection, connection.relayData.auth != newValue {
+                connection.relayData.setAuth(newValue)
             }
         }
         .onAppear {
@@ -226,6 +236,7 @@ struct RelayEditView_Previews: PreviewProvider {
         relay.url_ = "ws://localhost:3000"
         relay.read = true
         relay.write = false
+        relay.auth = false
         relay.createdAt = Date()
         
         return NBNavigationStack {

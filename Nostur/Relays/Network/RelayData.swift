@@ -15,6 +15,7 @@ public struct RelayData: Identifiable, Hashable, Equatable {
     public var read: Bool
     public var write: Bool
     public var search: Bool
+    public var auth: Bool // Allow AUTH response to this relay
     
     public var shouldConnect: Bool {
         return (read || write || search)
@@ -37,16 +38,21 @@ public struct RelayData: Identifiable, Hashable, Equatable {
         self.search = value
     }
     
+    mutating func setAuth(_ value: Bool) {
+        self.auth = value
+    }
+    
     mutating func setExcludedPubkeys(_ value: Set<String>) {
         self.excludedPubkeys = value
     }
     
-    static func new(url: String, read: Bool, write:Bool, search: Bool, excludedPubkeys: Set<String>) -> RelayData {
+    static func new(url: String, read: Bool, write: Bool, search: Bool, auth: Bool, excludedPubkeys: Set<String>) -> RelayData {
         let url = normalizeRelayUrl(url)
 
         return RelayData(read: read,
                          write: write,
                          search: search,
+                         auth: auth,
                          url: url,
                          excludedPubkeys: excludedPubkeys
         )

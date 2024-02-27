@@ -143,7 +143,7 @@ struct RelayConnectButton: View {
         else {
             Button("Connect") {
                 // Connect to relay
-                let connection = cp.addConnection(RelayData(read: true, write: true, search: false, url: normalizeRelayUrl(url), excludedPubkeys: []))
+                let connection = cp.addConnection(RelayData(read: true, write: true, search: false, auth: false, url: normalizeRelayUrl(url), excludedPubkeys: []))
                 connection.connect(forceConnectionAttempt: true)
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -154,6 +154,7 @@ struct RelayConnectButton: View {
                         relay.url_ = url
                         relay.read = true
                         relay.write = true
+                        relay.auth = false
                     }
                 }
             }

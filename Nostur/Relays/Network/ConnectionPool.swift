@@ -59,7 +59,7 @@ public class ConnectionPool: ObservableObject {
             return existingConnection
         }
         else {
-            let relayData = RelayData.new(url: url, read: true, write: true, search: false, excludedPubkeys: [])
+            let relayData = RelayData.new(url: url, read: true, write: true, search: false, auth: false, excludedPubkeys: [])
             let newConnection = RelayConnection(relayData, isNWC: true, queue: queue)
             connections[connectionId] = newConnection
             return newConnection
@@ -72,7 +72,7 @@ public class ConnectionPool: ObservableObject {
             return existingConnection
         }
         else {
-            let relayData = RelayData.new(url: url, read: true, write: true, search: false, excludedPubkeys: [])
+            let relayData = RelayData.new(url: url, read: true, write: true, search: false, auth: false, excludedPubkeys: [])
             let newConnection = RelayConnection(relayData, isNC: true, queue: queue)
             queue.async(flags: .barrier) { [weak self] in
                 self?.connections[connectionId] = newConnection
@@ -393,7 +393,7 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func sendEphemeralMessage(_ message:String, relay:String) {
-        let connection = addEphemeralConnection(RelayData.new(url: relay, read: true, write: false, search: true, excludedPubkeys: []))
+        let connection = addEphemeralConnection(RelayData.new(url: relay, read: true, write: false, search: true, auth: false, excludedPubkeys: []))
         connection.connect(andSend: message)
     }
 }
