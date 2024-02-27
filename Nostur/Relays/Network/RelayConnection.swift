@@ -62,6 +62,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             Task { @MainActor in
                 self.objectWillChange.send()
                 self.isConnected = isSocketConnected
+                self.recentAuthAttempts = 0
+                self.didAuth = false
             }
         }
     }
@@ -148,7 +150,15 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
             
-            for out in outQueue {
+            if self.relayData.auth {
+                L.sockets.debug("relayData.auth == true")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    self.sendAfterAuth()
+                }
+                return
+            }
+            
+            for out in self.outQueue {
                 webSocketTask.send(.string(out.text)) { error in
                     if let error {
                         self.didReceiveError(error)
@@ -159,11 +169,39 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
-    public func sendMessage(_ text: String) {
+    public func sendAfterAuth() {
+        L.sockets.debug("sendAfterAuth()")
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
+            for out in self.outQueue {
+                webSocketTask.send(.string(out.text)) { error in
+                    if let error {
+                        self.didReceiveError(error)
+                    }
+                }
+                self.outQueue.removeAll(where: { $0.id == out.id })
+            }
+        }
+    }
+    
+    public func sendMessage(_ text: String, bypassQueue: Bool = false) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             if !self.isDeviceConnected {
                 L.sockets.debug("🔴🔴 No internet. Did not sendMessage \(self.url)")
+                return
+            }
+            
+            if bypassQueue {
+                #if DEBUG
+                L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
+                #endif
+                webSocketTask?.send(.string(text)) { error in
+                    if let error {
+                        self.didReceiveError(error)
+                    }
+                }
                 return
             }
             
@@ -174,6 +212,16 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 L.sockets.debug("🔴🔴 Not connected. Did not sendMessage \(self.url)")
                 return
             }
+            
+            if self.relayData.auth && !self.didAuth {
+                L.sockets.debug("relayData.auth == true \(text)")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    self.sendAfterAuth()
+                }
+                return
+            }
+            
+            
             #if DEBUG
             L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
             #endif
@@ -310,8 +358,16 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             else { // restore subscriptions
                 DispatchQueue.main.async { [weak self] in
                     if IS_CATALYST || !NRState.shared.appIsInBackground {
-                        LVMManager.shared.restoreSubscriptions()
-                        NotificationsViewModel.shared.restoreSubscriptions()
+                        if self?.relayData.auth ?? false {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                LVMManager.shared.restoreSubscriptions()
+                                NotificationsViewModel.shared.restoreSubscriptions()
+                            }
+                        }
+                        else {
+                            LVMManager.shared.restoreSubscriptions()
+                            NotificationsViewModel.shared.restoreSubscriptions()
+                        }
                     }
                     sendNotification(.socketConnected, "Connected: \(self?.url ?? "?")")
                 }
@@ -320,9 +376,17 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
             
+            if self.relayData.auth && !self.didAuth {
+                L.sockets.debug("relayData.auth == true but did not auth yet, waiting 0.25 secs")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    self.sendAfterAuth()
+                }
+                return
+            }
+            
             for out in outQueue {
                 webSocketTask.send(.string(out.text)) { error in
-                    L.sockets.debug("🔴🔴 send error \(self.url): \(error?.localizedDescription ?? "")")
+                    L.sockets.debug("🔴🔴 send error \(self.url): \(error?.localizedDescription ?? "") -- \(out.text)")
                 }
                 self.outQueue.removeAll(where: { $0.id == out.id })
             }
@@ -363,6 +427,58 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 case .failure(let error):
                     self.didReceiveError(error)
                 }
+        }
+    }
+    
+    private var lastAuthChallenge: String?
+    private var recentAuthAttempts: Int = 0
+    private var didAuth: Bool = false
+    
+    public func handleAuth(_ message: String) {
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            guard relayData.auth else { return }
+            guard let messageData = message.data(using: .utf8) else { return }
+
+            let decoder = JSONDecoder()
+            guard let authMessage: [String] = try? decoder.decode([String].self, from: messageData),
+                  authMessage.count >= 2,
+                  authMessage[0] == "AUTH"
+            else { return }
+
+            self.lastAuthChallenge = authMessage[1]
+            self.sendAuthResponse()
+        }
+    }
+
+    public func sendAuthResponse() {
+        DispatchQueue.main.async {
+            guard let account = Nostur.account(), account.isFullAccount else { return }
+            guard !self.relayData.excludedPubkeys.contains(account.publicKey) else { return }
+            
+            self.queue.async { [weak self] in
+                guard let self else { return }
+                
+                guard let challenge = self.lastAuthChallenge else { return }
+                guard self.recentAuthAttempts < 5 else { return }
+                
+                
+                var authResponse = NEvent(content: "")
+                authResponse.kind = .auth
+                authResponse.tags.append(NostrTag(["relay", relayData.url]))
+                authResponse.tags.append(NostrTag(["challenge", challenge]))
+
+                DispatchQueue.main.async {
+                    guard let signedAuthResponse = try? account.signEvent(authResponse) else { return }
+                    self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
+                    
+                    self.queue.async(flags: .barrier) { [weak self] in
+                        guard let self else { return }
+                        self.recentAuthAttempts = self.recentAuthAttempts + 1
+                        self.didAuth = true
+                    }
+                }
+            }
         }
     }
     

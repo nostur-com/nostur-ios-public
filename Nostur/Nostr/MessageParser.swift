@@ -52,12 +52,18 @@ class MessageParser {
                 switch message.type {
                 case .AUTH:
                     L.sockets.info("🟢🟢 \(relayUrl): \(message.message)")
+                    client.handleAuth(message.message)
                 case .OK:
                     L.sockets.debug("\(relayUrl): \(message.message)")
                     if message.success ?? false {
                         if let id = message.id {
                             Event.updateRelays(id, relays: message.relays)
                         }
+                    }
+                case .CLOSED:
+                    L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED)")
+                    if message.message.prefix(14) == "auth-required:" {
+                        client.sendAuthResponse()
                     }
                 case .NOTICE:
                     L.sockets.notice("\(relayUrl): \(message.message)")
