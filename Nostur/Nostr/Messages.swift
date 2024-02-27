@@ -35,6 +35,10 @@ struct ClientMessage {
     static func event(event:NEvent) -> String {
         return "[\"EVENT\",\(event.eventJson())]"
     }
+    
+    static func auth(event: NEvent) -> String {
+        return "[\"AUTH\",\(event.eventJson())]"
+    }
 }
 
 /// REQ messages for requesting with filters
