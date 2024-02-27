@@ -32,6 +32,25 @@ struct CommandResult: Decodable {
     var message:String? { values[safe: 2] as? String }
 }
 
+struct ClosedMessage: Decodable {
+    let values: [Any]
+
+    init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        let _ = try container.decode(String.self) // CLOSED
+        let id = try container.decode(String.self) // subscription id
+        if let message = try? container.decode(String.self) { // message
+            values = [id, message]
+        }
+        else {
+            values = [id]
+        }
+    }
+    
+    var id: String { values[safe: 0] as? String ?? "NOSTUR.ERROR" }
+    var message: String? { values[safe: 2] as? String }
+}
+
 struct NMessage: Decodable {
     var container:UnkeyedDecodingContainer
     let values: [Any]
