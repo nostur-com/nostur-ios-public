@@ -217,11 +217,14 @@ public class ConnectionPool: ObservableObject {
     @MainActor
     func removeActiveAccountSubscriptions() {
         for (_, connection) in connections {
-            let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"), relayType: .READ)
-            connection.sendMessage(closeFollowing.message)
-            let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"), relayType: .READ)
-            connection.sendMessage(closeNotifications.message)
-            
+            if connection.nreqSubscriptions.contains("Following") {
+                let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"), relayType: .READ)
+                connection.sendMessage(closeFollowing.message)
+            }
+            if connection.nreqSubscriptions.contains("Notifications") {
+                let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"), relayType: .READ)
+                connection.sendMessage(closeNotifications.message)
+            }
             queue.async { [weak self, weak connection] in
                 guard let connection, let self else { return }
                 if !connection.nreqSubscriptions.isDisjoint(with: Set(["Following", "Notifications"])) {
