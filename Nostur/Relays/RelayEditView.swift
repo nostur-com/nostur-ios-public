@@ -16,7 +16,7 @@ struct RelayEditView: View {
     @State private var connection: RelayConnection?
     @State private var refresh: Bool = false
     @State private var confirmRemoveShown = false
-    @State private var relayUrl =  ""
+    @State private var relayUrl = ""
     
     @State private var excludedPubkeys: Set<String> = []
     private var accounts: [CloudAccount] {
