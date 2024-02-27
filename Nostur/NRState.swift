@@ -194,6 +194,7 @@ class NRState: ObservableObject {
     public var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
     
     let agoTimer = Timer.publish(every: 60, tolerance: 15.0, on: .main, in: .default).autoconnect()
+        .delay(for: .seconds(5), scheduler: RunLoop.main)
     
     // task timers
     private var taskTimers:[Timer] = []
