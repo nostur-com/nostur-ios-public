@@ -22,6 +22,7 @@ extension CloudRelay {
     @NSManaged public var read: Bool
     @NSManaged public var write: Bool
     @NSManaged public var search: Bool
+    @NSManaged public var auth: Bool
     @NSManaged public var url_: String?
     
     public var createdAt:Date {
@@ -58,7 +59,7 @@ extension CloudRelay {
                       read: read,
                       write: write,
                       search: search,
-
+                      auth: auth,
                       excludedPubkeys: excludedPubkeys)
     }
 
