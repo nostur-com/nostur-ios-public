@@ -362,7 +362,7 @@ public class ConnectionPool: ObservableObject {
                             self.queue.async(flags: .barrier) { [weak connection] in
                                 connection?.nreqSubscriptions.insert(subscriptionId!)
                             }
-                            L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(connection.url): \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
+                            L.sockets.debug("⬇️⬇️ ADDED SUBSCRIPTION  \(connection.url): \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
                         }
                         connection.sendMessage(message.message)
                     }
