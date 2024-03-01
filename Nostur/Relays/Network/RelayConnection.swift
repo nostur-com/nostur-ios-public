@@ -252,7 +252,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     public func ping() {
-        L.sockets.info("PING: Trying to ping: \(self.url)")
+        L.sockets.debug("PING: Trying to ping: \(self.url)")
         queue.async { [weak self] in
             if self?.webSocketTask == nil {
                 L.sockets.debug("🔴🔴 PING: Not connected. ????? \(self?.url ?? "")")
