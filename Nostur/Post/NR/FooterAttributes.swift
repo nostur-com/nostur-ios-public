@@ -79,7 +79,7 @@ class FooterAttributes: ObservableObject {
 //            let zapsCount = self.event.zapsCount
 //            let zapTally = self.event.zapTally
             
-            self.zapState = Self.hasZapReceipt(self.event) ? .zapReceiptConfirmed : self.event.zapState
+            let zapState = Self.hasZapReceipt(self.event) ? .zapReceiptConfirmed : self.event.zapState
 //            let isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
             
             DispatchQueue.main.async { [weak self] in
@@ -89,6 +89,7 @@ class FooterAttributes: ObservableObject {
                 self?.liked = isLikes
                 self?.bookmarked = isBookmarked
                 self?.hasPrivateNote = hasPrivateNote
+                self?.zapState = zapState
 //                self?.zapped = isZapped
 //                self.zapsCount = zapsCount
 //                self.zapTally = zapTally

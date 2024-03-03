@@ -62,8 +62,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             Task { @MainActor in
                 self.objectWillChange.send()
                 self.isConnected = isSocketConnected
-                self.recentAuthAttempts = 0
-                self.didAuth = false
+            }
+            self.queue.async(flags: .barrier) { [weak self] in
+                self?.recentAuthAttempts = 0
+                self?.didAuth = false
             }
         }
     }
