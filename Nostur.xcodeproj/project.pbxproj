@@ -121,7 +121,6 @@
 		1F3897532ABA92DD001A874E /* LoggedInAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3897522ABA92DD001A874E /* LoggedInAccount.swift */; };
 		1F38AFF12A27166C0035641E /* VideoHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF02A27166C0035641E /* VideoHelpers.swift */; };
 		1F38AFF42A2789C80035641E /* MacListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF32A2789C70035641E /* MacListsView.swift */; };
-		1F39756D2AB5A229004F9D77 /* NIP42.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F39756C2AB5A229004F9D77 /* NIP42.swift */; };
 		1F39756F2AB622C1004F9D77 /* MultiFollowSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */; };
 		1F3A26C42B19392100DF54F9 /* NotificationsNewPosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3A26C32B19392100DF54F9 /* NotificationsNewPosts.swift */; };
 		1F3D4BB72A25CC140084F939 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3D4BB62A25CC140084F939 /* AppView.swift */; };
@@ -638,7 +637,6 @@
 		1F3897522ABA92DD001A874E /* LoggedInAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInAccount.swift; sourceTree = "<group>"; };
 		1F38AFF02A27166C0035641E /* VideoHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoHelpers.swift; sourceTree = "<group>"; };
 		1F38AFF32A2789C70035641E /* MacListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacListsView.swift; sourceTree = "<group>"; };
-		1F39756C2AB5A229004F9D77 /* NIP42.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP42.swift; sourceTree = "<group>"; };
 		1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiFollowSheet.swift; sourceTree = "<group>"; };
 		1F3A26C32B19392100DF54F9 /* NotificationsNewPosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsNewPosts.swift; sourceTree = "<group>"; };
 		1F3D4BB62A25CC140084F939 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
@@ -1344,14 +1342,6 @@
 			path = Mac;
 			sourceTree = "<group>";
 		};
-		1F39756B2AB5A20D004F9D77 /* NIP42-AUTH */ = {
-			isa = PBXGroup;
-			children = (
-				1F39756C2AB5A229004F9D77 /* NIP42.swift */,
-			);
-			path = "NIP42-AUTH";
-			sourceTree = "<group>";
-		};
 		1F45C7EE29EF998D00F58772 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -1482,7 +1472,6 @@
 			isa = PBXGroup;
 			children = (
 				1F37571429672AB6007D210A /* DummyData */,
-				1F39756B2AB5A20D004F9D77 /* NIP42-AUTH */,
 				1F995EF12A4DDFE5002227B3 /* NIP46-NC */,
 				1F8B1348297B34D7002EB8CF /* Bech32.swift */,
 				1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */,
@@ -2606,7 +2595,6 @@
 				1FB130B529C0E8D8004AC98D /* ReplyingToFragmentView.swift in Sources */,
 				1F45C7E829EE8FF100F58772 /* BannerPicPicker.swift in Sources */,
 				1FEFD07F2B5A02A500ACE366 /* EventView.swift in Sources */,
-				1F39756D2AB5A229004F9D77 /* NIP42.swift in Sources */,
 				1F1F13052AA9BE8C00DDED82 /* Hot+FeedSettings.swift in Sources */,
 				1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */,
 				1FC85CA62B0C1BC500789615 /* RelayMastery.swift in Sources */,

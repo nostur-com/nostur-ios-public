@@ -12,13 +12,13 @@ struct PostAccountSwitcher: View, Equatable {
         lhs.activeAccount == rhs.activeAccount //&& lhs.accounts.count == rhs.accounts.count
     }
     
-    public var activeAccount:CloudAccount
-    public var onChange:(CloudAccount) -> ()
+    public var activeAccount: CloudAccount
+    public var onChange: (CloudAccount) -> ()
     @State private var expanded = false
     
-    @State private var accounts:[CloudAccount] = []
+    @State private var accounts: [CloudAccount] = []
     
-    private var accountsSorted:[CloudAccount] {
+    private var accountsSorted: [CloudAccount] {
         accounts
             .sorted(by: {
                 $0.lastLoginAt > $1.lastLoginAt

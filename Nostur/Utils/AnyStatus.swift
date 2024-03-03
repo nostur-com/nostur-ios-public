@@ -41,7 +41,7 @@ struct AnyStatus: View {
         }
     }
     
-    func setTemporaryMessage(_ message:AnyStatusMessage) {
+    func setTemporaryMessage(_ message: AnyStatusMessage) {
         self.message = message
         self.dismissTask?.cancel()
         self.dismissTask = Task {

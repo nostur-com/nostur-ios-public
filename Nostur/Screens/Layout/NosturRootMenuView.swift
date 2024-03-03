@@ -10,9 +10,9 @@ import SwiftUI
 let NOSTUR_SIDEBAR_WIDTH = 310.0
 
 struct NosturRootMenu: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var loggedInAccount:LoggedInAccount
-    @State private var sm:SideBarModel = .shared
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var loggedInAccount: LoggedInAccount
+    @State private var sm: SideBarModel = .shared
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
