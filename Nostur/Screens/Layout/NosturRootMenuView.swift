@@ -232,7 +232,7 @@ struct NosturRootMenu: View {
 }
 
 struct NosturMainView: View {
-    @ObservedObject private var ss:SettingsStore = .shared
+    @ObservedObject private var ss: SettingsStore = .shared
     var body: some View {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             Color.random
