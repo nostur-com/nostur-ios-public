@@ -158,6 +158,7 @@ struct MainView: View {
             let account = notification.object as! CloudAccount
             guard self.account != account else { return }
             self.account = account
+            self.newPost = nil
             if selectedSubTab != "Following" {
                 UserDefaults.standard.setValue("Following", forKey: "selected_subtab")
             }
