@@ -50,6 +50,7 @@ struct ProfileBadgesContainer: View {
                         .forEach {
                             let a = BadgeATag($0)
                             let filter = (a.kind, a.badgeCode, a.pubkey)
+                            if a.pubkey == "NONE" { return }
                             filters.append(filter)
                         }
                     
