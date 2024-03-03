@@ -34,7 +34,7 @@ struct AnimatedNumber: View {
                 currentNumber = number
             }
             .onChange(of: number) { newNumber in
-                guard currentNumber != newNumber else { return }
+                guard currentNumber != newNumber, nextNumber != newNumber else { return }
                 nextNumber = newNumber
                 
                 // Cancel previous timer
@@ -83,7 +83,7 @@ struct AnimatedNumberString: View {
                 currentNumber = number
             }
             .onChange(of: number) { newNumber in
-                guard currentNumber != newNumber else { return }
+                guard currentNumber != newNumber, nextNumber != newNumber else { return }
                 nextNumber = newNumber
                 
                 timer?.invalidate()

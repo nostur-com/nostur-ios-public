@@ -60,6 +60,7 @@ struct DetailFooterFragment: View {
             loadTally(footerAttributes.zapTally)
         }
         .onChange(of: footerAttributes.zapTally) { newTally in
+            guard newTally != footerAttributes.zapTally else { return }
             loadTally(newTally)
         }
         .buttonStyle(.plain)
