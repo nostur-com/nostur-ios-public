@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 let NOSTUR_SIDEBAR_WIDTH = 310.0
 
@@ -13,6 +14,7 @@ struct NosturRootMenu: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
     @State private var sm: SideBarModel = .shared
+    @State private var askLoginInfo: AskLoginInfo? = nil
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -30,6 +32,16 @@ struct NosturRootMenu: View {
             .onOpenURL { url in
                 self.handleUrl(url)
             }
+            .sheet(item: $askLoginInfo, content: { askLoginInfo in
+                NBNavigationStack {
+                    AskLoginSheet(askLoginInfo: askLoginInfo, account: loggedInAccount.account)
+                        .environmentObject(NRState.shared)
+                        .environmentObject(themes)
+                }
+                .nbUseNavigationStack(.never)
+                .presentationBackgroundCompat(themes.theme.background)
+                .presentationDetents250medium()
+            })
             .overlay {
                 SideBarOverlay()
             }
@@ -52,6 +64,37 @@ struct NosturRootMenu: View {
     
     private func handleUrl(_ url:URL) {
         L.og.info("handleUrl: \(url.absoluteString)")
+        
+        let nostrlogin = url.absoluteString.matchingStrings(regex: "^nostr\\+login:(.*):([a-zA-Z0-9\\-_\\.]+)$")
+        if nostrlogin.count == 1 && nostrlogin[0].count >= 3 {
+            
+            // can login even?
+            if self.loggedInAccount.account.isFullAccount || (NRState.shared.fullAccountPubkeys.count > 0) {
+                
+                let domainString = nostrlogin[0][1]
+                let challenge = nostrlogin[0][2]
+                if let domain = URL(string: "https://" + domainString), let host = domain.host {
+                    L.og.debug("Login to: \(host)?")
+                    self.askLoginInfo = AskLoginInfo(domain: host, challenge: challenge)
+                    return
+                }
+            }
+            else {
+                let domainString = nostrlogin[0][1]
+                if let domain = URL(string: "https://" + domainString), let host = domain.host {
+                    sendNotification(.anyStatus, ("Login requested on \(host) but no keys.", "APP_NOTICE"))
+                }
+            }
+            return
+        }
+        
+        if let regex = try? NSRegularExpression(pattern: "^nostr+login:(.*):([a-zA-Z0-9\\-_\\.]+)$", options: .caseInsensitive) {
+            let nsRange = NSRange(url.absoluteString.startIndex..<url.absoluteString.endIndex, in: url.absoluteString)
+            if regex.firstMatch(in: url.absoluteString, options: [], range: nsRange) != nil {
+                L.og.info("Handle nostr login")
+                return
+            }
+        }
         
         // CALLBACK FROM NWC
         if #available(iOS 16.0, *) {
