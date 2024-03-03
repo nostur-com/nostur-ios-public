@@ -121,11 +121,11 @@ public final class NewPostModel: ObservableObject {
             
             if !nip96apiUrl.isEmpty { // new nip96 media services
                 guard let nip96apiURL = URL(string: nip96apiUrl) else {
-                    sendNotification(.anyStatus, "Problem with Custom File Storage Server")
+                    sendNotification(.anyStatus, ("Problem with Custom File Storage Server", "NewPost"))
                     return
                 }
                 guard let pk = activeAccount?.privateKey, let keys = try? Keys(privateKeyHex: pk) else {
-                    sendNotification(.anyStatus, "Problem with account")
+                    sendNotification(.anyStatus, ("Problem with account", "NewPost"))
                     return
                 }
                 
