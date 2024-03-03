@@ -129,6 +129,8 @@
 		1F3E135B29C8B21200D076EA /* Contact+PrivateNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3E135A29C8B21200D076EA /* Contact+PrivateNotes.swift */; };
 		1F41527F2A95B12800EC63B2 /* PostAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F41527E2A95B12800EC63B2 /* PostAccountSwitcher.swift */; };
 		1F4186122A7CCF7000626DF3 /* WithNSecBunkerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4186112A7CCECE00626DF3 /* WithNSecBunkerConnection.swift */; };
+		1F43CC4E2B949C73004EDE3B /* AskLoginSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F43CC4D2B949C73004EDE3B /* AskLoginSheet.swift */; };
+		1F43CC502B949C94004EDE3B /* Nip97LoginModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F43CC4F2B949C94004EDE3B /* Nip97LoginModel.swift */; };
 		1F45C7E829EE8FF100F58772 /* BannerPicPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */; };
 		1F45C7EA29EF930F00F58772 /* ImageUploading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7E929EF930F00F58772 /* ImageUploading.swift */; };
 		1F45C7ED29EF997200F58772 /* ImgurMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7EC29EF997200F58772 /* ImgurMediaUploadService.swift */; };
@@ -644,6 +646,8 @@
 		1F3E135A29C8B21200D076EA /* Contact+PrivateNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+PrivateNotes.swift"; sourceTree = "<group>"; };
 		1F41527E2A95B12800EC63B2 /* PostAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostAccountSwitcher.swift; sourceTree = "<group>"; };
 		1F4186112A7CCECE00626DF3 /* WithNSecBunkerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithNSecBunkerConnection.swift; sourceTree = "<group>"; };
+		1F43CC4D2B949C73004EDE3B /* AskLoginSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskLoginSheet.swift; sourceTree = "<group>"; };
+		1F43CC4F2B949C94004EDE3B /* Nip97LoginModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nip97LoginModel.swift; sourceTree = "<group>"; };
 		1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerPicPicker.swift; sourceTree = "<group>"; };
 		1F45C7E929EF930F00F58772 /* ImageUploading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUploading.swift; sourceTree = "<group>"; };
 		1F45C7EC29EF997200F58772 /* ImgurMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImgurMediaUploadService.swift; sourceTree = "<group>"; };
@@ -1342,6 +1346,15 @@
 			path = Mac;
 			sourceTree = "<group>";
 		};
+		1F43CC4C2B949C59004EDE3B /* NIP97-Login */ = {
+			isa = PBXGroup;
+			children = (
+				1F43CC4D2B949C73004EDE3B /* AskLoginSheet.swift */,
+				1F43CC4F2B949C94004EDE3B /* Nip97LoginModel.swift */,
+			);
+			path = "NIP97-Login";
+			sourceTree = "<group>";
+		};
 		1F45C7EE29EF998D00F58772 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -1471,6 +1484,7 @@
 		1F71037B296BD98D006245CC /* Nostr */ = {
 			isa = PBXGroup;
 			children = (
+				1F43CC4C2B949C59004EDE3B /* NIP97-Login */,
 				1F37571429672AB6007D210A /* DummyData */,
 				1F995EF12A4DDFE5002227B3 /* NIP46-NC */,
 				1F8B1348297B34D7002EB8CF /* Bech32.swift */,
@@ -2252,6 +2266,7 @@
 				1FA1CA3D2AF6D7B6000E529B /* PrivateNotesView.swift in Sources */,
 				1F88491329B537B400145340 /* NSFont.swift in Sources */,
 				1F8B6A6F2A20C5DE0060EDB3 /* PreviewWeights.swift in Sources */,
+				1F43CC502B949C94004EDE3B /* Nip97LoginModel.swift in Sources */,
 				1F2245B82AA46C6F00C06342 /* NostrAddress.swift in Sources */,
 				1F6943B52A2A45C000064DBA /* NWCZapQueue.swift in Sources */,
 				1F33EC3729B613F800615FB9 /* FullImageViewer.swift in Sources */,
@@ -2630,6 +2645,7 @@
 				1FD6C4F82ACC41DB00885125 /* NWCWalletBalance.swift in Sources */,
 				1F7525842997B21D00477AF2 /* NotificationsView.swift in Sources */,
 				1F45C7F329EF9C8400F58772 /* VoidCatMediaUploadService.swift in Sources */,
+				1F43CC4E2B949C73004EDE3B /* AskLoginSheet.swift in Sources */,
 				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,
 				1FD281582B16B26700978A9D /* CameraService.swift in Sources */,
 				1F7261532A13F7A900146B1F /* Tenor.swift in Sources */,

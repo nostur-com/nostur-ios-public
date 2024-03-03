@@ -29,6 +29,16 @@
 				<string>nostr</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>nostur-login</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nostr+login</string>
+			</array>
+		</dict>
 	</array>
 	<key>IMGUR_CLIENT_ID</key>
 	<string>$(IMGUR_CLIENT_ID)</string>
