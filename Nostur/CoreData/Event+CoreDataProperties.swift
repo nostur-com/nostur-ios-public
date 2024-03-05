@@ -994,6 +994,7 @@ extension Event {
                         savedEvent.zappedEvent = awaitingEvent // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
                         // _PFManagedObject_coerceValueForKeyWithDescription
                         // _sharedIMPL_setvfk_core
+                        // TODO: Maybe wrong main context event added somewhere?
                     }
                     else {
                         savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
