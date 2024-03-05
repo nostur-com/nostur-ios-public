@@ -69,6 +69,7 @@ struct BlockedAccounts:View {
                                         .map { $0.pubkey }
                                     
                                     viewContext.delete(blockedPubkey)
+                                    viewContextSave()
                                     sendNotification(.blockListUpdated, Set(updatedList))
                                 }
                                 .overlay(alignment: .topTrailing) {
@@ -195,6 +196,7 @@ struct MutedConversations: View {
                         .id(mutedRootId.eventId)
                         .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
                             viewContext.delete(mutedRootId)
+                            viewContextSave()
                             NRState.shared.mutedRootIds.remove(mutedRootId.eventId)
                             sendNotification(.muteListUpdated)
                         }
