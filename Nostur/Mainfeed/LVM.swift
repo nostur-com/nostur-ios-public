@@ -951,6 +951,7 @@ class LVM: NSObject, ObservableObject {
             }
             return
         }
+        let didCatchUp = self.didCatchup
         bg().perform { [weak self] in
             guard let self else { return }
             guard !Importer.shared.isImporting else {
@@ -979,7 +980,7 @@ class LVM: NSObject, ObservableObject {
                 // Continue from first (newest) on screen?
                 let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not miss out of sync posts)
                 
-                if (!self.didCatchup) {
+                if (!didCatchup) {
                     if self.id == "Following" {
                         L.lvm.debug("fetchFeedTimerNextTick: catching up after 8 sec, since: \( Date(timeIntervalSince1970: Double(since)).agoString ) ")
                     }
@@ -994,7 +995,9 @@ class LVM: NSObject, ObservableObject {
                             fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
                         }
                     }
-                    self.didCatchup = true
+                    DispatchQueue.main.async { [weak self] in
+                        self?.didCatchup = true
+                    }
                 }
             }
         }
