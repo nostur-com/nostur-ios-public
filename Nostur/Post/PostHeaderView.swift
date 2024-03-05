@@ -99,7 +99,7 @@ struct NRPostHeaderContainer: View {
 }
 
 struct EventHeaderContainer: View {
-    private let event: Event
+    private let event: Event // Main context 
     @ObservedObject var settings: SettingsStore = .shared
     private var singleLine: Bool = true
     @State private var name: String
@@ -129,11 +129,8 @@ struct EventHeaderContainer: View {
                         return
                     }
                     if contact.metadata_created_at == 0 {
-                        bg().perform {
-                            guard let bgContact = event.contact?.bgContact() else { return }
-                            EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "EventHeaderContainer.002")
-                            QueuedFetcher.shared.enqueue(pTag: pubkey)
-                        }
+                        EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "EventHeaderContainer.002")
+                        QueuedFetcher.shared.enqueue(pTag: pubkey)
                     }
                 }
                 .task {
