@@ -68,6 +68,7 @@ struct Maintenance {
             Self.runMigrateRelays(context: context)
             Self.runUpdateKeychainInfo(context: context)
             Self.runSaveFullAccountFlag(context: context)
+            Self.runFixMissingDMStates(context: context)
             
             do {
                 if context.hasChanges {
@@ -1120,6 +1121,70 @@ struct Maintenance {
         migration.migrationCode = migrationCode.saveFullAccountFlag.rawValue
     }
     
+    // Fix missing Cloud DM States: A received DM could be saved under a read-only alt account (as sender), if that account is the sender.
+    // Here we create the missing DM state for the receiver
+    static func runFixMissingDMStates(context: NSManagedObjectContext, firstRun: Bool = true) {
+        
+        // Run at one time at startup, or again if firstRun is false
+        guard !firstRun || !Self.didRun(migrationCode: migrationCode.fixMissingDMStates, context: context) else { return }
+        
+        // Find all DMs sent to full accounts as receiver
+        
+        // Our full account pubkeys
+        let accounts = CloudAccount.fetchAccounts(context: context)
+            .filter { $0.flagsSet.contains("full_account") }
+        let fullAccountPubkeys = accounts.map { $0.publicKey }
+        
+        guard fullAccountPubkeys.count > 0 else { return }
+        
+        // Find DMs sent to our full account pubkeys
+        let fr1 = Event.fetchRequest()
+        fr1.predicate = NSPredicate(format: "kind == 4 AND NOT otherPubkey == nil AND otherPubkey IN %@", fullAccountPubkeys)
+        guard let dmsReceived = try? context.fetch(fr1) else { return }
+        
+        // Which DM states do we already have?
+        let fr2 = CloudDMState.fetchRequest()
+        fr2.predicate = NSPredicate(format: "NOT accountPubkey_ == nil AND accountPubkey_ IN %@", fullAccountPubkeys)
+        guard let dmStates = try? context.fetch(fr2) else { return }
+        
+        var createdPairs: Set<String> = [] // Keep track of accountPubkey + otherPubkey pairs we create here so we don't create duplicates
+        
+        // Create the missing DM states. (our account + other pubkey)
+        for dmReceived in dmsReceived {
+            guard let dmReceivedOtherPubkey = dmReceived.otherPubkey else { continue }
+            
+            // Skip if we already have DM state for this
+            guard !dmStates.contains(where: { dmState in
+                guard let accountPubkey = dmState.accountPubkey_, let otherPubkey = dmState.contactPubkey_ else {
+                    return false
+                }
+                if dmReceived.pubkey == otherPubkey && dmReceivedOtherPubkey == accountPubkey {
+                    return true
+                }
+                return false
+            })
+            else { // Skip
+                continue
+            }
+            
+            let pairId = dmReceivedOtherPubkey + dmReceived.pubkey
+            
+            // Skip if we already created a new DMState for this pair
+            guard !createdPairs.contains(pairId) else { continue }
+            
+            // We don't have it, so create it
+            let newDMState = CloudDMState(context: context)
+            newDMState.accepted = false
+            newDMState.accountPubkey_ = dmReceivedOtherPubkey
+            newDMState.contactPubkey_ = dmReceived.pubkey
+            createdPairs.insert(pairId)
+            L.maintenance.info("runFixMissingDMStates: Create new DM state for \(dmReceivedOtherPubkey) - \(dmReceived.pubkey)")
+        }
+        
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.fixMissingDMStates.rawValue
+    }
+    
     // Update Keychain info. Change from .whenUnlocked to .afterFirstUnlock and store name
     static func runUpdateKeychainInfo(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.updateKeychainInfo, context: context) else { return }
@@ -1214,6 +1279,9 @@ struct Maintenance {
         case updateKeychainInfo = "updateKeychainInfo"
         
         // Add "full_account" flag
-        case saveFullAccountFlag = "saveFullAccountFlag4"
+        case saveFullAccountFlag = "saveFullAccountFlag4"        
+
+        // Fix missing DM States
+        case fixMissingDMStates = "fixMissingDMStates"
     }
 }
