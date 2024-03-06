@@ -113,7 +113,7 @@ struct AccountsSheet: View {
             }
             .background(themes.theme.background)
         }
-        .nbUseNavigationStack(.never)
+//        .nbUseNavigationStack(.never)
     }
 }
 
