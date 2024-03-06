@@ -1185,9 +1185,8 @@ extension Event {
                     DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                 }
                 else {
-                    
-                    // if we are sender
-                    if NRState.shared.accountPubkeys.contains(event.publicKey) {
+                    // if we are sender with full account
+                    if NRState.shared.fullAccountPubkeys.contains(event.publicKey) {
                         let dmState = CloudDMState(context: context)
                         dmState.accountPubkey_ = event.publicKey
                         dmState.contactPubkey_ = contactPubkey
@@ -1198,7 +1197,30 @@ extension Event {
                         DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                     }
                     
-                    // if we are receiver
+                    // if we are receiver with full account
+                    else if NRState.shared.fullAccountPubkeys.contains(contactPubkey) {
+                        let dmState = CloudDMState(context: context)
+                        dmState.accountPubkey_ = contactPubkey
+                        dmState.contactPubkey_ = event.publicKey
+                        dmState.accepted = false
+                        // Let DirectMessageViewModel handle view updates
+                        DirectMessageViewModel.default.newMessage(dmState)
+                        DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
+                    }
+                    
+                    // if we are sender with read only account
+                    else if NRState.shared.accountPubkeys.contains(event.publicKey) {
+                        let dmState = CloudDMState(context: context)
+                        dmState.accountPubkey_ = event.publicKey
+                        dmState.contactPubkey_ = contactPubkey
+                        dmState.accepted = true
+                        dmState.markedReadAt_ = savedEvent.date
+                        // Let DirectMessageViewModel handle view updates
+                        DirectMessageViewModel.default.newMessage(dmState)
+                        DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
+                    }
+                    
+                    // if we are receiver with read only account
                     else if NRState.shared.accountPubkeys.contains(contactPubkey) {
                         let dmState = CloudDMState(context: context)
                         dmState.accountPubkey_ = contactPubkey
