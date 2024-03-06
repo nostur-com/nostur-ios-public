@@ -10,6 +10,7 @@ import Combine
 import CoreData
 import Nuke
 import AVFoundation
+import NavigationBackport
 
 /// The main app view
 ///
@@ -106,12 +107,14 @@ struct AppView: View {
                 else {
                     if let loggedInAccount = ns.loggedInAccount { // 74 MB -> 175MB
                         NosturRootMenu()
-                            .nbUseNavigationStack(.never)
                             .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
-                                ReadOnlyAccountInformationSheet()
-                                    .presentationDetentsLarge()
-                                    .environmentObject(ns)
-                                    .environmentObject(themes)
+                                NBNavigationStack {
+                                    ReadOnlyAccountInformationSheet()
+                                        .presentationDetentsLarge()
+                                        .environmentObject(ns)
+                                        .environmentObject(themes)
+                                }
+                                .nbUseNavigationStack(.never)
                             }
                             .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                             .environmentObject(ns)
