@@ -1028,9 +1028,6 @@ struct Maintenance {
 //            }
 //        }
         
-        
-        // find all custom feeds, migrate to CloudPrivateNote
-        // set same attributes and convert Contacts and Relays to space seperated strings of pubkeys and relay urls
         let fr = DMState.fetchRequest()
         fr.predicate = NSPredicate(value: true)
         
