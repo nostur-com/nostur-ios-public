@@ -115,8 +115,8 @@ struct AccountsSheet: View {
 }
 
 struct AccountRow: View {
-    @ObservedObject public var account:CloudAccount
-    @EnvironmentObject private var ns:NRState
+    @ObservedObject public var account: CloudAccount
+    @EnvironmentObject private var ns: NRState
     
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
