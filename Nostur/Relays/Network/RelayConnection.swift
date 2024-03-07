@@ -281,28 +281,34 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public func didReceiveMessage(string: String) {
         // Respond to a WebSocket connection receiving a `String` message
-        if self.isSocketConnecting {
-            self.isSocketConnecting = false
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            if self.isSocketConnecting {
+                self.isSocketConnecting = false
+            }
+            if !self.isSocketConnected {
+                self.isSocketConnected = true
+            }
+            #if DEBUG
+            L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(string)")
+            #endif
+            MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url, client: self)
+            self.lastMessageReceivedAt = .now
         }
-        if !self.isSocketConnected {
-            self.isSocketConnected = true
-        }
-        #if DEBUG
-        L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(string)")
-        #endif
-        MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url, client: self)
-        self.lastMessageReceivedAt = .now
     }
     
     public func didReceiveMessage(data: Data) {
         // Respond to a WebSocket connection receiving a binary `Data` message
-        if self.isSocketConnecting {
-            self.isSocketConnecting = false
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            if self.isSocketConnecting {
+                self.isSocketConnecting = false
+            }
+            if !self.isSocketConnected {
+                self.isSocketConnected = true
+            }
+            self.lastMessageReceivedAt = .now
         }
-        if !self.isSocketConnected {
-            self.isSocketConnected = true
-        }
-        self.lastMessageReceivedAt = .now
     }
     
     public func didReceiveError(_ error: Error) {
