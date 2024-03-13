@@ -253,7 +253,7 @@ extension Search {
         }
     }
     
-    func npubSearch(_ term:String) {
+    func npubSearch(_ term: String) {
         searching = true
         guard NostrRegexes.default.matchingStrings(term, regex: NostrRegexes.default.cache[.npub]!).count == 1
         else { return }

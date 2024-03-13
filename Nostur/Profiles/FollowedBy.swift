@@ -6,20 +6,19 @@
 //
 
 import SwiftUI
-import Collections
 
 struct FollowedBy: View {
     
-    public var pubkey:Pubkey? = nil
+    public var pubkey: Pubkey? = nil
     public var alignment: HorizontalAlignment = .leading
     
-    @State private var commonFollowerPFPs:[(Pubkey, URL)] = []
+    @State private var commonFollowerPFPs: [(Pubkey, URL)] = []
     
-    private var firstRow:ArraySlice<(Pubkey, URL)> {
+    private var firstRow: ArraySlice<(Pubkey, URL)> {
         commonFollowerPFPs.prefix(15)
     }
     
-    private var secondRow:ArraySlice<(Pubkey, URL)> {
+    private var secondRow: ArraySlice<(Pubkey, URL)> {
         commonFollowerPFPs.dropFirst(15).prefix(15)
     }
     
@@ -79,8 +78,3 @@ func commonFollowers(for pubkey: Pubkey) -> [Pubkey] {
         })
         .compactMap({ $0.pubkey })
 }
-
-
-//#Preview {
-//    FollowedBy()
-//}

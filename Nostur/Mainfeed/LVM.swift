@@ -11,9 +11,10 @@ import CoreData
 import Combine
 import Collections
 
-let LVM_MAX_VISIBLE:Int = 20
+let LVM_MAX_VISIBLE: Int = 20
+
 class Deduplicator {
-    public var onScreenSeen:Set<String> = []
+    public var onScreenSeen: Set<String> = []
     static let shared = Deduplicator()
     private init() { }
 }
@@ -30,12 +31,12 @@ typealias Posts = OrderedDictionary<PostID, NRPost>
 
 class LVM: NSObject, ObservableObject {
         
-    var feed:NosturList?
+    var feed: NosturList?
     
 //    @Published var state:LVM.LIST_STATE = .INIT
     
     // BG?
-    var nrPostLeafs:[NRPost] = [] {
+    var nrPostLeafs: [NRPost] = [] {
         didSet {
             var posts:Posts = [:]
             for nrPost in nrPostLeafs {
