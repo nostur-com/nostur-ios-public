@@ -172,6 +172,7 @@ struct Maintenance {
     static func databaseCleanUp(_ context: NSManagedObjectContext) {
         let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
         let fiveDaysAgo = Date.now.addingTimeInterval(-5 * 86400)
+        let monthsAgo = Date.now.addingTimeInterval(-2 * 31 * 86400) // 2 months
         pfr.predicate = NSPredicate(format: "createdAt < %@ AND NOT readAt = nil", fiveDaysAgo as NSDate)
         
         let pfrBatchDelete = NSBatchDeleteRequest(fetchRequest: pfr)
@@ -367,6 +368,48 @@ struct Maintenance {
         }
         if olderKind3DeletedCount > 0 {
             L.maintenance.info("🧹🧹 Deleted \(olderKind3DeletedCount) older kind 3,10002 events")
+        }
+        
+        // ALL OTHER UNKNOWN KINDS
+        // OLDER THAN X DAYS
+        // PUBKEY NOT IN OWN ACCOUNTS
+        // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
+        //            context.perform {
+        let frOther = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+        
+        frOther.predicate = NSPredicate(format: "created_at < %i AND NOT kind IN {0,1,3,4,5,6,7,8,9734,9735,9802,10002,30023,34235} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+        
+        let frOtherbatchDelete = NSBatchDeleteRequest(fetchRequest: frOther)
+        frOtherbatchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(frOtherbatchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) unknown kind events")
+            }
+        } catch {
+            L.maintenance.info("🔴🔴 Failed to delete unknown kind data")
+        }
+        
+        
+        // Posts, Reactions, Zaps where our account is mentioned in tag
+        // OLDER THAN 2 MONTHS
+        // PUBKEY NOT IN OWN ACCOUNTS
+        //            context.perform {
+        let frTagsSerialized = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+        
+        frTagsSerialized.predicate = NSPredicate(format: "(created_at < %i AND kind IN {1,7,9734,9735} AND NOT pubkey IN %@) AND tagsSerialized MATCHES %@", Int64(monthsAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+        
+        let frTagsSerializedbatchDelete = NSBatchDeleteRequest(fetchRequest: frTagsSerialized)
+        frTagsSerializedbatchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(frTagsSerializedbatchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) replies/reactions/zaps to our accounts")
+            }
+        } catch {
+            L.maintenance.info("🔴🔴 Failed to delete replies/reactions/zaps to our accounts")
         }
     }
     
