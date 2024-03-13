@@ -460,7 +460,6 @@
 		1FEA59172B1D28D800A88DCD /* SmoothTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA59162B1D28D800A88DCD /* SmoothTable.swift */; };
 		1FEA5FE229D60D2800A90F7E /* DeleteAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA5FE129D60D2800A90F7E /* DeleteAccountSheet.swift */; };
 		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
-		1FEA8D4B29E967B5004A83D3 /* InlineThings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */; };
 		1FEC81A32A8FCB8B006FA50C /* DiscoverNostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEC81A22A8FCB7C006FA50C /* DiscoverNostr.swift */; };
 		1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FECAC4629A08255006FEE72 /* Collection+subscript.swift */; };
 		1FED0D852ACAF5F1002DAC02 /* CustomizableFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FED0D842ACAF5F1002DAC02 /* CustomizableFooter.swift */; };
@@ -973,7 +972,6 @@
 		1FEA59162B1D28D800A88DCD /* SmoothTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothTable.swift; sourceTree = "<group>"; };
 		1FEA5FE129D60D2800A90F7E /* DeleteAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountSheet.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
-		1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineThings.swift; sourceTree = "<group>"; };
 		1FEC81A22A8FCB7C006FA50C /* DiscoverNostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverNostr.swift; sourceTree = "<group>"; };
 		1FECAC4629A08255006FEE72 /* Collection+subscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+subscript.swift"; sourceTree = "<group>"; };
 		1FED0D842ACAF5F1002DAC02 /* CustomizableFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomizableFooter.swift; sourceTree = "<group>"; };
@@ -1054,7 +1052,6 @@
 				1F33EC3629B613F800615FB9 /* FullImageViewer.swift */,
 				1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */,
 				1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */,
-				1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */,
 				1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */,
 				1F1DCB8C2999290E0085223E /* LightningInvoice.swift */,
 				1FB6E6ED29E308E2008BE8A6 /* LinkPreviewThings.swift */,
@@ -2299,7 +2296,6 @@
 				1FED0D892ACB1D42002DAC02 /* FooterConfigurator.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1F41527F2A95B12800EC63B2 /* PostAccountSwitcher.swift in Sources */,
-				1FEA8D4B29E967B5004A83D3 /* InlineThings.swift in Sources */,
 				1FB8BD5C2AAB8D9600FBC15F /* NotificationSettings.swift in Sources */,
 				1FC0A9552A1094BD00F9ABF6 /* AccountSwitcher.swift in Sources */,
 				1FD2815E2B16B32C00978A9D /* CameraPreview.swift in Sources */,
