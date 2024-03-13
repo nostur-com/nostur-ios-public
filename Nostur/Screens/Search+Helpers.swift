@@ -258,7 +258,7 @@ extension Search {
         guard NostrRegexes.default.matchingStrings(term, regex: NostrRegexes.default.cache[.npub]!).count == 1
         else { return }
         
-        let pubkey = Keys.hex(npub: term)
+        guard let pubkey = Keys.hex(npub: term) else { return }
         contacts.nsPredicate = NSPredicate(format: "pubkey = %@", pubkey)
         nrPosts = []
         req(RM.getUserMetadata(pubkey: pubkey), relayType: .SEARCH)
