@@ -1,13 +1,6 @@
 {
+  "originHash" : "8fbe3af3c4008a5df68510729e089539a60187a6343058d697fd234073a56211",
   "pins" : [
-    {
-      "identity" : "combinewebsocket",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/fabianfabian/CombineWebSocket",
-      "state" : {
-        "revision" : "aca69f455cf9cc27d1ecaa5c5b5dc9f54f496d7b"
-      }
-    },
     {
       "identity" : "gifu",
       "kind" : "remoteSourceControl",
@@ -48,7 +41,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nostur-com/nostr-essentials",
       "state" : {
-        "revision" : "292c71d6462ae1319f4c9919078d29df78a4f687"
+        "revision" : "a17ff095363b1db62e5781ed56d3867cd05e9645"
       }
     },
     {
@@ -124,5 +117,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

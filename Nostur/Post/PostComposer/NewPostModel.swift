@@ -253,11 +253,11 @@ public final class NewPostModel: ObservableObject {
         // Pasted @npubs to nostr:npub and return pTags
         let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
         nEvent.content = content
-        let atPtags = atNpubs.map { Keys.hex(npub: $0) }
+        let atPtags = atNpubs.compactMap { Keys.hex(npub: $0) }
         
         // Scan for any nostr:npub and return pTags
         let npubs = getNostrNpubs(nEvent.content)
-        let nostrNpubTags = npubs.map { Keys.hex(npub: $0) }
+        let nostrNpubTags = npubs.compactMap { Keys.hex(npub: $0) }
         
         // Scan for any nostr:note1 or nevent1 and return q tags
         let qTags = Set(getQuoteTags(nEvent.content))
@@ -405,11 +405,11 @@ public final class NewPostModel: ObservableObject {
         // @npubs to nostr:npub and return pTags
         let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
         nEvent.content = content
-        let atPtags = atNpubs.map { Keys.hex(npub: $0) }
+        let atPtags = atNpubs.compactMap { Keys.hex(npub: $0) }
         
         // Scan for any nostr:npub and return pTags
         let npubs = getNostrNpubs(nEvent.content)
-        let nostrNpubTags = npubs.map { Keys.hex(npub: $0) }
+        let nostrNpubTags = npubs.compactMap { Keys.hex(npub: $0) }
 
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
