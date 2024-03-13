@@ -44,7 +44,7 @@ class MessageParser {
         }
     }
     
-    func socketReceivedMessage(text:String, relayUrl:String, client: RelayConnection) {
+    func socketReceivedMessage(text: String, relayUrl: String, client: RelayConnection) {
         bgQueue.perform { [unowned self] in
             do {
                 let message = try RelayMessage.parseRelayMessage(text: text, relay: relayUrl)
