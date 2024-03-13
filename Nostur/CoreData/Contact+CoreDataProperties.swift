@@ -331,8 +331,8 @@ extension Contact : Identifiable {
 //            NIP05Verifier.shared.verify(contact)
 //        }
         
-        let name = (contact.display_name ?? "") != "" ? contact.display_name : contact.name
-        PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: name)
+//        let name = (contact.display_name ?? "") != "" ? contact.display_name : contact.name
+        PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: contact.anyName)
         
         let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
         
