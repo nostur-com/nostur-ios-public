@@ -270,7 +270,7 @@ class NRTextParser { // TEXT things
 
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
         return string
-            .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)([^\s#\]\[]\S{2,})\b"###,
+            .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)([^\s#\]\[]\S{1,})\b"###,
                                   with: "[$0](nostur:t:$2)",
                                   options: .regularExpression)
     }
