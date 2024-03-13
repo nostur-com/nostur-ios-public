@@ -241,7 +241,7 @@ extension Contact : Identifiable {
             }
             
             let awaitingContacts = EventRelationsQueue.shared.getAwaitingBgContacts()
-            var contact:Contact?
+            var contact: Contact?
             
             contact = awaitingContacts.first(where: { $0.pubkey == event.publicKey })
             
