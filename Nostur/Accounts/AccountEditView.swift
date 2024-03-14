@@ -39,13 +39,13 @@ struct AccountEditView: View {
             VStack {
                 ZStack {
                     if #available(iOS 16.0, *) {
-                        BannerPicPicker($account.banner, newPicture:$newBanner, width: geo.size.width)
+                        BannerPicPicker($account.banner, newPicture: $newBanner, width: geo.size.width)
                             .frame(height: 150)
                             .clipped()
                     }
                     HStack {
                         if #available(iOS 16.0, *) {
-                            ProfilePicPicker($account.picture, newPicture:$newPicture)
+                            ProfilePicPicker($account.picture, newPicture: $newPicture)
                                 .offset(x: 20, y: 60)
                         }
                         else {
