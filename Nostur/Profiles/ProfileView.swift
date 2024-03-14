@@ -144,14 +144,6 @@ struct ProfileView: View {
                                 Text("Edit profile", comment: "Button to edit own profile")
                             }
                             .buttonStyle(NosturButton())
-                            .sheet(item: $editingAccount) { account in
-                                NBNavigationStack {
-                                    AccountEditView(account: account)
-                                        .environmentObject(themes)
-                                }
-                                .nbUseNavigationStack(.never)
-                                .presentationBackgroundCompat(themes.theme.listBackground)
-                            }
                         }
                         else {
                             Button {
@@ -402,6 +394,14 @@ struct ProfileView: View {
                 .padding([.top, .leading, .bottom], 10)
                 .padding([.trailing], 25)
         }
+        .sheet(item: $editingAccount) { account in
+            NBNavigationStack {
+                AccountEditView(account: account)
+                    .environmentObject(themes)
+            }
+            .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(themes.theme.listBackground)
+        }
         .sheet(isPresented: $showingNewNote) {
             NBNavigationStack {
                 if let account = Nostur.account() {
@@ -650,14 +650,6 @@ struct ProfileToolbar: View {
                         Text("Edit profile", comment: "Button to edit own profile")
                     }
                     .buttonStyle(NosturButton())
-                    .sheet(item: $editingAccount) { account in
-                        NBNavigationStack {
-                            AccountEditView(account: account)
-                                .environmentObject(themes)
-                        }
-                        .nbUseNavigationStack(.never)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
-                    }
                     .layoutPriority(2)
                     //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
                 }
