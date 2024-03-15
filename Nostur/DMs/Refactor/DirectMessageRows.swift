@@ -19,6 +19,7 @@ struct DirectMessageRows: View {
             ForEach(conversationRows) { conv in
                 NBNavigationLink(value: conv) {
                     ConversationRowView(conv)
+                        .environmentObject(themes)
                 }
                 .swipeActions {
                     Button(role: .destructive) {

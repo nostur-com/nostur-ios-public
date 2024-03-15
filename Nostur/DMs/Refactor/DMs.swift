@@ -126,6 +126,7 @@ struct DMs: View {
                 case "Accepted":
                     if !vm.conversationRows.isEmpty {
                         DirectMessageRows(pubkey: pubkey, conversationRows: $vm.conversationRows)
+                            .environmentObject(themes)
                     }
                     else {
                         Text("You have not received any messages", comment: "Shown on the DM view when there aren't any direct messages to show")
@@ -135,6 +136,7 @@ struct DMs: View {
                     if !vm.requestRows.isEmpty || vm.showNotWoT {
                         VStack {
                             DirectMessageRows(pubkey: pubkey, conversationRows: $vm.requestRows)
+                                .environmentObject(themes)
                         }
                     }
                     else {
