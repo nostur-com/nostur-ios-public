@@ -30,8 +30,8 @@ struct ContactPrivateNoteToggle: View {
 }
 
 struct EventPrivateNoteToggle: View {
-    private let nrPost:NRPost
-    @ObservedObject private var footerAttributes:FooterAttributes
+    private let nrPost: NRPost
+    @ObservedObject private var footerAttributes: FooterAttributes
     
     init(nrPost: NRPost) {
         self.nrPost = nrPost

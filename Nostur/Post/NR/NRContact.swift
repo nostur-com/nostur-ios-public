@@ -11,32 +11,6 @@ import CoreData
 
 class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestination {
     
-//    public class ZappableAttributes: ObservableObject {
-//        
-//        @Published var isZapped = false
-//        
-//        var zapState: ZapState? = nil {
-//            didSet {
-//                guard zapState != nil else {
-//                    DispatchQueue.main.async { [weak self] in
-//                        self?.isZapped = false
-//                    }
-//                    return
-//                }
-//                DispatchQueue.main.async { [weak self] in
-//                    guard let self else { return }
-//                    self.isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
-//                }
-//            }
-//        }
-//        
-//        init(zapState: ZapState? = nil) {
-//            self.zapState = zapState
-//        }
-//    }
-    
-//    var zappableAttributes: ZappableAttributes
-    
     static func == (lhs: NRContact, rhs: NRContact) -> Bool {
         lhs.pubkey == rhs.pubkey
     }
