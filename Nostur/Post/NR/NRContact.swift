@@ -70,7 +70,6 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     var following:Bool = false
     var privateFollow:Bool = false
     var zapperPubkey: String?
-    var hasPrivateNote = false
     var zapState: ZapState?
     
     var contact: Contact? // Only touch this in BG context!!!
@@ -110,15 +109,9 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         self.privateFollow = contact.isPrivateFollow
         self.zapState = contact.zapState
         
-        self.hasPrivateNote = _hasPrivateNote()
-        
         listenForChanges()
         isFollowingListener()
         listenForNip05()
-    }
-    
-    private func _hasPrivateNote() -> Bool {
-        return contact?.privateNote != nil
     }
     
     private func isFollowingListener() {
