@@ -9,9 +9,9 @@ import SwiftUI
 import NavigationBackport
 
 struct DirectMessageRows: View {
-    @EnvironmentObject private var themes:Themes
-    let pubkey:String
-    @Binding var conversationRows:[Conversation]
+    @EnvironmentObject private var themes: Themes
+    let pubkey: String
+    @Binding var conversationRows: [Conversation]
     
     
     var body: some View {
