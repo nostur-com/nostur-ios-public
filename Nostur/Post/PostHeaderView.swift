@@ -147,13 +147,13 @@ struct EventHeaderContainer: View {
                     let cPubkey = contact.pubkey
 
                     bg().perform { [weak contact] in
-                        guard let contact else { return }
+                        guard let contact, let bgContact = bg().object(with: contact.objectID) as? Contact else { return }
                         guard let account = account() else { return }
                         guard account.publicKey == currentAccountPubkey else { return }
                         guard let similarContact = account.follows.first(where: {
                             $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName) // TODO: follows.anyName cache could help, put in same followsPFP dict?
                         }) else { return }
-                        guard let cPic = contact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
+                        guard let cPic = bgContact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
                         Task.detached(priority: .background) {
                             let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
                             DispatchQueue.main.async { [weak contact] in
@@ -162,7 +162,7 @@ struct EventHeaderContainer: View {
                                 contact.couldBeImposter = similarPFP ? 1 : 0
                                 bg().perform {
                                     guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
-                                    contact.couldBeImposter = similarPFP ? 1 : 0
+                                    bgContact.couldBeImposter = similarPFP ? 1 : 0
                                 }
                             }
                         }
