@@ -102,10 +102,12 @@ class NRTextParser { // TEXT things
         // 2) NIP-08, handle #[0] #[1] etc
         let textWithPs = parseTagIndexedMentions(
             event: event,
-            text:  Self.replaceNaddrWithMarkdownLinks(in: text)
+            // Replace [..](nostr:....) with interal [..](nostur:...)
+            text:  Self.replaceNaddrWithMarkdownLinksMD(in: text)
         )
-
+        
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
+        // Does not match [..](nostr:....) because it has already been replaced with [..](nostur:...) above
         var newerTextWithPs = parseUserMentions(event: event, text: textWithPs.text)
         if newerTextWithPs.text.suffix(1) == "\n" {
             newerTextWithPs.text = String(newerTextWithPs.text.dropLast(1))
@@ -266,6 +268,12 @@ class NRTextParser { // TEXT things
             .replacingOccurrences(of: ###"(?:nostr:)?(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###,
                                   with: "[naddr1...](nostur:nostr:$1)",
                                   options: .regularExpression)
+    }
+    
+    // Special version for markdown, replace [..](nostr:...) with [..](nostur:..)
+    static func replaceNaddrWithMarkdownLinksMD(in string: String) -> String {
+        return string
+            .replacingOccurrences(of: ###"](nostr:"###, with: ###"](nostur:"###)
     }
 
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
