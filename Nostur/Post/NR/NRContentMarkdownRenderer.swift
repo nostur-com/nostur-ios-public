@@ -11,11 +11,11 @@ import NukeUI
 
 // Same as NRContentTextRenderer, but with Markdown instead of AttributedString
 struct NRContentMarkdownRenderer: View {
-    public let markdownContentWithPs:MarkdownContentWithPs
+    public let markdownContentWithPs: MarkdownContentWithPs
     public let fullWidth = false
-    public var theme:Theme
+    public var theme: Theme
     public var maxWidth: CGFloat
-    @State var text:MarkdownContent? = nil
+    @State var text: MarkdownContent? = nil
     
     var body: some View {
         Markdown(text ?? markdownContentWithPs.output)

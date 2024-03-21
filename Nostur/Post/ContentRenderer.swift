@@ -12,17 +12,17 @@ import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
-    private var theme:Theme
-    private let nrPost:NRPost
-    private let isDetail:Bool
-    private let fullWidth:Bool
-    private let availableWidth:CGFloat
-    private let contentElements:[ContentElement]
-    private let forceAutoload:Bool
-    @Binding var didStart:Bool
+    private var theme: Theme
+    private let nrPost: NRPost
+    private let isDetail: Bool
+    private let fullWidth: Bool
+    private let availableWidth: CGFloat
+    private let contentElements: [ContentElement]
+    private let forceAutoload: Bool
+    @Binding var didStart: Bool
     @StateObject private var childDIM: DIMENSIONS
     
-    init(nrPost: NRPost, isDetail:Bool = false, fullWidth:Bool = false, availableWidth:CGFloat, forceAutoload: Bool = false, theme:Theme, didStart: Binding<Bool> = .constant(false)) {
+    init(nrPost: NRPost, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false)) {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth

@@ -13,14 +13,14 @@ struct ArticleView: View {
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var article:NRPost
     private var isParent = false
-    private var isDetail:Bool = false
-    private var fullWidth:Bool = false
-    private var hideFooter:Bool = false
-    private var navTitleHidden:Bool = false
-    private var forceAutoload:Bool
-    private var theme:Theme
+    private var isDetail: Bool = false
+    private var fullWidth: Bool = false
+    private var hideFooter: Bool = false
+    private var navTitleHidden: Bool = false
+    private var forceAutoload: Bool
+    private var theme: Theme
     
-    init(_ article:NRPost, isParent:Bool = false, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false, navTitleHidden:Bool = false, forceAutoload: Bool = false, theme: Theme = Themes.default.theme) {
+    init(_ article: NRPost, isParent: Bool = false, isDetail: Bool = false, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false, theme: Theme = Themes.default.theme) {
         self.article = article
         self.isParent = isParent
         self.isDetail = isDetail
@@ -31,9 +31,9 @@ struct ArticleView: View {
         self.theme = theme
     }
     
-    private let WORDS_PER_MINUTE:Double = 200.0
+    private let WORDS_PER_MINUTE: Double = 200.0
     
-    private var minutesToRead:Int {
+    private var minutesToRead: Int {
         let wordCount = (article.content ?? "").split(separator: " ").count
         return Int(ceil(Double(wordCount) / WORDS_PER_MINUTE))
     }
@@ -42,7 +42,7 @@ struct ArticleView: View {
     @State private var didLoad = false
     @State private var didStart = false
     
-    private var shouldAutoload:Bool { // Only for non-detail view. On detail we force show images.
+    private var shouldAutoload: Bool { // Only for non-detail view. On detail we force show images.
         forceAutoload || SettingsStore.shouldAutodownload(article)
     }
     
