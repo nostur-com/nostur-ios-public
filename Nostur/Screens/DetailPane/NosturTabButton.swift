@@ -8,20 +8,21 @@
 import SwiftUI
 import NavigationBackport
 
+// Tabs for DetailPane, not main feeds
 struct NosturTabButton: View {
-    @EnvironmentObject private var themes:Themes
-    var isSelected:Bool = false
-    var onSelect:() -> Void
-    var onClose:() -> Void
-    @ObservedObject var tab:TabModel
-    var isArticle:Bool { tab.isArticle }
+    @EnvironmentObject private var themes: Themes
+    public var isSelected: Bool = false
+    public var onSelect: () -> Void
+    public var onClose: () -> Void
+    @ObservedObject public var tab: TabModel
+    private var isArticle: Bool { tab.isArticle }
     
-    @State var isHoveringCloseButton = false
-    @State var isHoveringTab = false
-    @State var showGallerySettings = false
+    @State private var isHoveringCloseButton = false
+    @State private var isHoveringTab = false
+    @State private var showGallerySettings = false
     
     var body: some View {
-        HStack(spacing:5) {
+        HStack(spacing: 5) {
             if IS_CATALYST {
                 Image(systemName: "xmark")
                     .foregroundColor(isHoveringTab ? .gray : .clear)

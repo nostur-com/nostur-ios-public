@@ -9,8 +9,8 @@ import SwiftUI
 import NavigationBackport
 
 struct BookmarksAndPrivateNotes: View {
-    @EnvironmentObject private var fa:LoggedInAccount
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var fa: LoggedInAccount
+    @EnvironmentObject private var themes: Themes
     @State private var navPath = NBNavigationPath()
 
     private var selectedTab: String {
@@ -23,8 +23,8 @@ struct BookmarksAndPrivateNotes: View {
 
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var bookmarksCount:String?
-    @State private var privateNotesCount:String?
+    @State private var bookmarksCount: String?
+    @State private var privateNotesCount: String?
     
     var body: some View {
         #if DEBUG
