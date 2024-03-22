@@ -62,12 +62,18 @@ class CloudSyncManager {
     func handleBookmarkInsert(_ bookmark: Bookmark) {
         guard let eventId = bookmark.eventId else { return }
         viewUpdates.bookmarkUpdates.send(BookmarkUpdate(id: eventId, isBookmarked: true))
+        Task { @MainActor in
+            NRState.shared.loggedInAccount?.accountCache?.addBookmark(eventId)
+        }
     }
 
     func handleBookmarkDelete(_ bookmark: Bookmark) {
         // Handle Bookmark delete
         guard let eventId = bookmark.eventId else { return }
         viewUpdates.bookmarkUpdates.send(BookmarkUpdate(id: eventId, isBookmarked: false))
+        Task { @MainActor in
+            NRState.shared.loggedInAccount?.accountCache?.removeBookmark(eventId)
+        }
     }
 
     // -- MARK: CloudAccount
