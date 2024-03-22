@@ -11,22 +11,22 @@ import CoreData
 import NavigationBackport
 
 struct BookmarksView: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var ns:NRState
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var ns: NRState
     
     private var selectedSubTab: String {
         get { UserDefaults.standard.string(forKey: "selected_bookmarkssubtab") ?? "Bookmarks" }
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_bookmarkssubtab") }
     }
     
-    @Binding var navPath: NBNavigationPath
-    @ObservedObject private var settings:SettingsStore = .shared
+    @Binding public var navPath: NBNavigationPath
+    @ObservedObject private var settings: SettingsStore = .shared
     @Namespace private var top
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt, order: .reverse)])
     private var bookmarks: FetchedResults<Bookmark>
     
-    @State private var events:[Event] = []
+    @State private var events: [Event] = []
     @State private var bookmarkSnapshot: Int = 0
     @State private var noEvents = false
     
@@ -142,14 +142,14 @@ struct BookmarksView: View {
 }
 
 struct LazyBookmark: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var settings:SettingsStore = .shared
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var settings: SettingsStore = .shared
     
-    private var bookmark:Bookmark
-    private var events:[Event]
+    private var bookmark: Bookmark
+    private var events: [Event]
     
-    @State private var viewState:ViewState = .loading
-    @State private var nrPost:NRPost?
+    @State private var viewState: ViewState = .loading
+    @State private var nrPost: NRPost?
     
     enum ViewState {
         case loading
@@ -157,7 +157,7 @@ struct LazyBookmark: View {
         case error(String)
     }
     
-    init(_ bookmark:Bookmark, events:[Event]) {
+    init(_ bookmark: Bookmark, events: [Event]) {
         self.bookmark = bookmark
         self.events = events
     }

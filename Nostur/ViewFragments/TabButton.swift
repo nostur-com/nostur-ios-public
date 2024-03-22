@@ -8,14 +8,15 @@
 import SwiftUI
 
 struct TabButton: View {
-    @EnvironmentObject private var themes:Themes
-    var action:() -> Void
-    var icon:String? = nil
-    var title:String = ""
-    var secondaryText:String? = nil
-    var selected:Bool = false
-    var unread:Int?
-    var muted:Bool = false
+// Tabs for main feeds, not for DetailPane
+    @EnvironmentObject private var themes: Themes
+    public var action: () -> Void
+    public var icon: String? = nil
+    public var title: String = ""
+    public var secondaryText: String? = nil
+    public var selected: Bool = false
+    public var unread: Int?
+    public var muted: Bool = false
     
     var body: some View {
         Button { action() } label: {
