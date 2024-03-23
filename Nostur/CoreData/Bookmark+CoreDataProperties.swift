@@ -6,9 +6,8 @@
 //
 //
 
-import Foundation
+import SwiftUI
 import CoreData
-
 
 extension Bookmark {
 
@@ -20,6 +19,45 @@ extension Bookmark {
     @NSManaged public var eventId: String?
     @NSManaged public var json: String?
     @NSManaged public var createdAt: Date?
+    @NSManaged public var color_: String?
+    
+    // Default is orange.
+    // "orange", "red", "blue", "purple", "green"
+    public var color: Color {
+        get {
+            return switch color_ {
+                case "red":
+                    .red
+                case "blue":
+                    .blue
+                case "purple":
+                    .purple
+                case "green":
+                    .green
+                case "orange":
+                    .orange
+                default:
+                    .orange
+                
+            }
+        }
+        set {
+            color_ = switch newValue {
+            case .orange:
+                "orange"
+            case .red:
+                "red"
+            case .blue:
+                "blue"
+            case .purple:
+                "purple"
+            case .green:
+                "green"
+            default:
+                "orange"
+            }
+        }
+    }
 
 }
 
