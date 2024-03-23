@@ -153,7 +153,7 @@ import NavigationBackport
         pe.loadPrivateNotes()
     }) {
         VStack {
-            BookmarksView(navPath: .constant(NBNavigationPath()))
+            BookmarksView(navPath: .constant(NBNavigationPath()), bookmarkFilters: [.orange])
         }
     }
 }

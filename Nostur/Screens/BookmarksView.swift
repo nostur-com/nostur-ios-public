@@ -20,11 +20,20 @@ struct BookmarksView: View {
     }
     
     @Binding public var navPath: NBNavigationPath
+    public var bookmarkFilters: Set<Color>
+    
     @ObservedObject private var settings: SettingsStore = .shared
     @Namespace private var top
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt, order: .reverse)])
     private var bookmarks: FetchedResults<Bookmark>
+    
+    private var filteredBookmarks: [Bookmark] {
+        bookmarks
+            .filter {
+                bookmarkFilters.contains($0.color)
+            }
+    }
     
     @State private var events: [Event] = []
     @State private var bookmarkSnapshot: Int = 0
@@ -37,9 +46,9 @@ struct BookmarksView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                if !bookmarks.isEmpty && (!events.isEmpty || noEvents) {
+                if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
                     LazyVStack(spacing: 10) {
-                        ForEach(bookmarks) { bookmark in
+                        ForEach(filteredBookmarks) { bookmark in
                             LazyBookmark(bookmark, events: events)
                             .onDelete {
                                 guard let eventId = bookmark.eventId else { return }
@@ -54,7 +63,7 @@ struct BookmarksView: View {
                         Spacer()
                     }
                     .background(themes.theme.listBackground)
-                    .preference(key: BookmarksCountPreferenceKey.self, value: bookmarks.count.description)
+                    .preference(key: BookmarksCountPreferenceKey.self, value: filteredBookmarks.count.description)
                 }
                 else {
                     Text("When you bookmark a post it will show up here.")
@@ -136,7 +145,7 @@ struct BookmarksView: View {
         pe.loadBookmarks()
     }) {
         VStack {
-            BookmarksView(navPath: .constant(NBNavigationPath()))
+            BookmarksView(navPath: .constant(NBNavigationPath()), bookmarkFilters: [.orange])
         }
     }
 }
