@@ -6,7 +6,7 @@
 //
 //
 
-import Foundation
+import SwiftUI
 import CoreData
 
 @objc(Bookmark)
@@ -26,6 +26,16 @@ extension Bookmark {
         return (try? context.fetch(fr)) ?? []
     }
     
+    static func fetchColor(eventId: String, context: NSManagedObjectContext) -> Color {
+        let fr = Bookmark.fetchRequest()
+        fr.predicate = NSPredicate(format: "eventId == %@", eventId)
+        
+        if let bookmark = try? context.fetch(fr).first {
+            return bookmark.color
+        }
+        return .yellow
+    }
+    
     static func removeBookmark(eventId: String, context: NSManagedObjectContext) {
         let fr = Bookmark.fetchRequest()
         fr.predicate = NSPredicate(format: "eventId == %@", eventId)
@@ -36,26 +46,39 @@ extension Bookmark {
     }
     
     // MARK: UI functions
-    @MainActor static func addBookmark(_ nrPost:NRPost) {
-        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: nrPost.id, bookmarked: true))
+    @MainActor static func addBookmark(_ nrPost: NRPost, color: Color = .yellow) {
+        sendNotification(.postAction, PostActionNotification(type: .bookmark(color), eventId: nrPost.id, bookmarked: true))
         bg().perform {
             let bookmark = Bookmark(context: bg())
             bookmark.eventId = nrPost.id
             bookmark.json = nrPost.event?.toNEvent().eventJson()
             bookmark.createdAt = .now
+            bookmark.color = color
             bg().transactionAuthor = "addBookmark"
             DataProvider.shared().save()
             bg().transactionAuthor = nil
         }
     }
     
-    @MainActor static func removeBookmark(_ nrPost:NRPost) {
-        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: nrPost.id, bookmarked: false))
+    @MainActor static func removeBookmark(_ nrPost: NRPost) {
+        sendNotification(.postAction, PostActionNotification(type: .bookmark(.yellow), eventId: nrPost.id, bookmarked: false))
         bg().perform {
             Bookmark.removeBookmark(eventId: nrPost.id, context: bg())
             bg().transactionAuthor = "removeBookmark"
             DataProvider.shared().save()
             bg().transactionAuthor = nil
+        }
+    }
+    
+    @MainActor static func updateColor(_ eventId: String, color: Color = .yellow) {
+        sendNotification(.postAction, PostActionNotification(type: .bookmark(color), eventId: eventId, bookmarked: true))
+        bg().perform {
+            let fr = Bookmark.fetchRequest()
+            fr.predicate = NSPredicate(format: "eventId == %@", eventId)
+            
+            if let bookmark = try? bg().fetch(fr).first {
+                bookmark.color = color
+            }
         }
     }
 }
