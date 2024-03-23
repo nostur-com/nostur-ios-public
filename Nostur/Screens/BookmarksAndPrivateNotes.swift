@@ -27,6 +27,8 @@ struct BookmarksAndPrivateNotes: View {
     @State private var privateNotesCount: String?
     
     @State private var bookmarkFilters: Set<Color> = [.red, .blue, .purple, .green, .orange]
+    @State private var showBookmarkFilterOptions = false
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -34,9 +36,20 @@ struct BookmarksAndPrivateNotes: View {
         NBNavigationStack(path: $navPath) {
             VStack(spacing: 0) {
                 HStack {
-                    TabButton(action: {
-                        selectedSubTab = "Bookmarks"
-                    }, title: String(localized: "Bookmarks", comment: "Tab to switch to bookmarks"), secondaryText: bookmarksCount, selected: selectedSubTab == "Bookmarks")
+                    TabButton(
+                        action: { selectedSubTab = "Bookmarks" },
+                        title: String(localized: "Bookmarks", comment: "Tab to switch to bookmarks"),
+                        secondaryText: bookmarksCount,
+                        selected: selectedSubTab == "Bookmarks",
+                        tools: {
+                            Image(systemName: bookmarkFilters.count < 5 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                                .padding(.leading, 8)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    showBookmarkFilterOptions = true
+                                }
+                        }
+                    )
                     
                     TabButton(action: {
                         selectedSubTab = "Private Notes"
@@ -114,6 +127,15 @@ struct BookmarksAndPrivateNotes: View {
             })
             .onPreferenceChange(PrivateNotesCountPreferenceKey.self, perform: { value in
                 privateNotesCount = value == "0" ? nil : value
+            })
+            .sheet(isPresented: $showBookmarkFilterOptions, onDismiss: {
+                showBookmarkFilterOptions = false
+            }, content: {
+                NBNavigationStack {
+                    BookmarkFilters(onlyShow: $bookmarkFilters)
+                        .environmentObject(themes)
+                }
+                .nbUseNavigationStack(.never)
             })
         }
         .nbUseNavigationStack(.never)
