@@ -7,16 +7,37 @@
 
 import SwiftUI
 
-struct TabButton: View {
 // Tabs for main feeds, not for DetailPane
+struct TabButton<Content: View>: View {
     @EnvironmentObject private var themes: Themes
     public var action: () -> Void
-    public var icon: String? = nil
-    public var title: String = ""
-    public var secondaryText: String? = nil
-    public var selected: Bool = false
+    public var icon: String?
+    public var title: String
+    public var secondaryText: String?
+    public var selected: Bool
     public var unread: Int?
-    public var muted: Bool = false
+    public var muted: Bool
+    
+    private let tools: () -> Content?
+    
+    init(action: @escaping () -> Void,
+         icon: String? = nil,
+         title: String = "",
+         secondaryText: String? = nil,
+         selected: Bool = false,
+         unread: Int? = nil,
+         muted: Bool = false,
+         @ViewBuilder tools: @escaping () -> Content? = { EmptyView() }
+    ) {
+        self.action = action
+        self.icon = icon
+        self.title = title
+        self.secondaryText = secondaryText
+        self.selected = selected
+        self.unread = unread
+        self.muted = muted
+        self.tools = tools
+    }
     
     var body: some View {
         Button { action() } label: {
@@ -38,6 +59,7 @@ struct TabButton: View {
                             .font(.caption)
                             .foregroundColor(themes.theme.accent.opacity(0.5))
                     }
+                    self.tools()
                     if let unread, unread > 0 {
                         Text("\(unread)")
                             .font(.footnote)
