@@ -63,7 +63,11 @@ class CloudSyncManager {
         guard let eventId = bookmark.eventId else { return }
         viewUpdates.bookmarkUpdates.send(BookmarkUpdate(id: eventId, isBookmarked: true))
         Task { @MainActor in
-            NRState.shared.loggedInAccount?.accountCache?.addBookmark(eventId)
+            if let accountCache = NRState.shared.loggedInAccount?.accountCache {
+                bg().perform {
+                    accountCache.addBookmark(eventId)
+                }
+            }
         }
     }
 
@@ -72,7 +76,11 @@ class CloudSyncManager {
         guard let eventId = bookmark.eventId else { return }
         viewUpdates.bookmarkUpdates.send(BookmarkUpdate(id: eventId, isBookmarked: false))
         Task { @MainActor in
-            NRState.shared.loggedInAccount?.accountCache?.removeBookmark(eventId)
+            if let accountCache = NRState.shared.loggedInAccount?.accountCache {
+                bg().perform {
+                    accountCache.removeBookmark(eventId)
+                }
+            }
         }
     }
 
