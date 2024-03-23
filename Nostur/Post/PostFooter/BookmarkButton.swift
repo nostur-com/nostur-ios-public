@@ -28,7 +28,7 @@ struct BookmarkButton: View {
             .padding(.leading, isFirst ? 0 : 10)
             .padding(.vertical, 5)
             .padding(.trailing, isLast ? 10: 0)
-            .foregroundColor(footerAttributes.bookmarked ? .orange : theme.footerButtons)
+            .foregroundColor(footerAttributes.bookmarked ? footerAttributes.bookmarkColor : theme.footerButtons)
             .contentShape(Rectangle())
             .padding(.trailing, isLast ? -10 : 0)
             .highPriorityGesture(
@@ -41,18 +41,35 @@ struct BookmarkButton: View {
     
     private func tap() {
         if footerAttributes.bookmarked {
-            Bookmark.removeBookmark(nrPost)
-            bg().perform {
-                accountCache()?.removeBookmark(nrPost.id)
-            }
+            self.removeBookmark()
         }
         else {
-            let impactMed = UIImpactFeedbackGenerator(style: .medium)
-            impactMed.impactOccurred()
-            Bookmark.addBookmark(nrPost)
-            bg().perform {
-                accountCache()?.addBookmark(nrPost.id)
-            }
+            self.addBookmark()
+        }
+    }
+    
+    private func addBookmark(_ color: Color = .orange) {
+        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+        impactMed.impactOccurred()
+
+        // If already bookmarked, just change color
+        if footerAttributes.bookmarked {
+            Bookmark.updateColor(nrPost.id, color: color)
+            return
+        }
+        
+        // Otherwise, normal add bookamrk
+        Bookmark.addBookmark(nrPost, color: color)
+        self.footerAttributes.bookmarkColor = color
+        bg().perform {
+            accountCache()?.addBookmark(nrPost.id)
+        }
+    }
+    
+    private func removeBookmark() {
+        Bookmark.removeBookmark(nrPost)
+        bg().perform {
+            accountCache()?.removeBookmark(nrPost.id)
         }
     }
 }

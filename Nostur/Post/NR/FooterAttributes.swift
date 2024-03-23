@@ -26,6 +26,7 @@ class FooterAttributes: ObservableObject {
     @Published var zapTally: Int64
     
     @Published var bookmarked: Bool
+    @Published var bookmarkColor: Color
     @Published var hasPrivateNote: Bool
     
     public var zapState: ZapState?
@@ -55,7 +56,15 @@ class FooterAttributes: ObservableObject {
         self.zapsCount = event.zapsCount
         self.zapTally = event.zapTally
         
-        self.bookmarked = withFooter && Self.isBookmarked(event)
+        if withFooter && Self.isBookmarked(event) {
+            self.bookmarked = true
+            self.bookmarkColor = Bookmark.fetchColor(eventId: event.id, context: bg())
+        }
+        else {
+            self.bookmarked = false
+            self.bookmarkColor = .yellow
+        }
+        
         self.hasPrivateNote = withFooter && Self.hasPrivateNote(event)
         
         
@@ -74,8 +83,16 @@ class FooterAttributes: ObservableObject {
             let isReplied = Self.isReplied(self.event)
             let isReposted = Self.isReposted(self.event)
             let isLikes = Self.isLiked(self.event)
-            let isBookmarked = Self.isBookmarked(self.event)
             let hasPrivateNote = Self.hasPrivateNote(self.event)
+            
+            var isBookmarked = false
+            var bookmarkColor: Color = .yellow
+            
+            if Self.isBookmarked(event) {
+                isBookmarked = true
+                bookmarkColor = Bookmark.fetchColor(eventId: event.id, context: bg())
+            }
+            
 //            let zapsCount = self.event.zapsCount
 //            let zapTally = self.event.zapTally
             
@@ -88,6 +105,7 @@ class FooterAttributes: ObservableObject {
                 self?.reposted = isReposted
                 self?.liked = isLikes
                 self?.bookmarked = isBookmarked
+                self?.bookmarkColor = bookmarkColor
                 self?.hasPrivateNote = hasPrivateNote
                 self?.zapState = zapState
 //                self?.zapped = isZapped
@@ -179,8 +197,9 @@ class FooterAttributes: ObservableObject {
                 DispatchQueue.main.async { [weak self] in
                     self?.objectWillChange.send()
                     switch action.type {
-                    case .bookmark:
+                    case .bookmark(let color):
                         self?.bookmarked = action.bookmarked
+                        self?.bookmarkColor = color
                     case .liked(let uuid):
                         self?.liked = true
                     case .unliked:
@@ -196,7 +215,7 @@ class FooterAttributes: ObservableObject {
             }
     }
     
-    static private func isBookmarked(_ event:Event) -> Bool {
+    static private func isBookmarked(_ event: Event) -> Bool {
         if let accountCache = accountCache() {
             return accountCache.isBookmarked(event.id)
         }

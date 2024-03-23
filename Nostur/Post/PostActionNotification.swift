@@ -5,7 +5,7 @@
 //  Created by Fabian Lachman on 26/05/2023.
 //
 
-import Foundation
+import SwiftUI
 
 struct PostActionNotification {
     let type: ActionType
@@ -15,7 +15,7 @@ struct PostActionNotification {
     var hasPrivateNote: Bool = false
     
     enum ActionType {
-        case bookmark
+        case bookmark(Color) // "yellow", "red", "blue", "purple", "green"
         case liked(UUID)
         case unliked
         case reposted
