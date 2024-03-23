@@ -284,6 +284,7 @@
 		1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */; };
 		1F96792D29BF611800E78173 /* EditPrivateNoteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F96792C29BF611800E78173 /* EditPrivateNoteSheet.swift */; };
 		1F96792F29BF613C00E78173 /* NewPrivateNoteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F96792E29BF613C00E78173 /* NewPrivateNoteSheet.swift */; };
+		1F9822F72BAE30D100E9593E /* BookmarksAndPrivateNotes+BookmarkFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9822F62BAE30D100E9593E /* BookmarksAndPrivateNotes+BookmarkFilters.swift */; };
 		1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB229805F33001E352E /* String+matchingStrings.swift */; };
 		1F995EF32A4DE046002227B3 /* NIP46.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F995EF22A4DE046002227B3 /* NIP46.swift */; };
 		1F995EF52A4DE349002227B3 /* NIP46TesterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F995EF42A4DE349002227B3 /* NIP46TesterView.swift */; };
@@ -794,6 +795,7 @@
 		1F96792C29BF611800E78173 /* EditPrivateNoteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPrivateNoteSheet.swift; sourceTree = "<group>"; };
 		1F96792E29BF613C00E78173 /* NewPrivateNoteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPrivateNoteSheet.swift; sourceTree = "<group>"; };
 		1F9822F52BADFC2400E9593E /* NosturCloud 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 3.xcdatamodel"; sourceTree = "<group>"; };
+		1F9822F62BAE30D100E9593E /* BookmarksAndPrivateNotes+BookmarkFilters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookmarksAndPrivateNotes+BookmarkFilters.swift"; sourceTree = "<group>"; };
 		1F987EB229805F33001E352E /* String+matchingStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+matchingStrings.swift"; sourceTree = "<group>"; };
 		1F995EF22A4DE046002227B3 /* NIP46.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46.swift; sourceTree = "<group>"; };
 		1F995EF42A4DE349002227B3 /* NIP46TesterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46TesterView.swift; sourceTree = "<group>"; };
@@ -1213,6 +1215,7 @@
 				1FAE9B452A304D9000439A63 /* Layout */,
 				1F7E38ED2A2DDE7300ABAA85 /* AnySigner.swift */,
 				1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */,
+				1F9822F62BAE30D100E9593E /* BookmarksAndPrivateNotes+BookmarkFilters.swift */,
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
 				1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */,
 				1FED0D882ACB1D42002DAC02 /* FooterConfigurator.swift */,
@@ -2608,6 +2611,7 @@
 				1F45C7E829EE8FF100F58772 /* BannerPicPicker.swift in Sources */,
 				1FEFD07F2B5A02A500ACE366 /* EventView.swift in Sources */,
 				1F1F13052AA9BE8C00DDED82 /* Hot+FeedSettings.swift in Sources */,
+				1F9822F72BAE30D100E9593E /* BookmarksAndPrivateNotes+BookmarkFilters.swift in Sources */,
 				1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */,
 				1FC85CA62B0C1BC500789615 /* RelayMastery.swift in Sources */,
 				1FC0F5A52A4AEB2E004E4DAA /* ArticleByNaddr.swift in Sources */,
