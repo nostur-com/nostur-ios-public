@@ -34,7 +34,7 @@ struct PaymentAmountSelector: View {
                 if isNC {
                     NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedZapRequestNote in
                         Task {
-                            let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
+                            let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount: UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                             
                             if response.pr != nil {
                                 await MainActor.run {
@@ -61,7 +61,7 @@ struct PaymentAmountSelector: View {
                     let signedZapRequestNote = try account.signEvent(zapRequestNote)
                     
                     Task {
-                        let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
+                        let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount: UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                         
                         if response.pr != nil {
                             await MainActor.run {
@@ -96,7 +96,7 @@ struct PaymentAmountSelector: View {
         else {
             Task {
                 do {
-                    let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000))
+                    let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount: UInt64(amount * 1000))
                     
                     if response.pr != nil {
                         await MainActor.run {

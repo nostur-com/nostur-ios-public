@@ -276,7 +276,7 @@ class Zap {
             Task { [weak self] in
                 guard let self else { return }
                 do {
-                    let response = try await LUD16.getInvoice(url:callbackUrl, amount:UInt64(amount * 1000))
+                    let response = try await LUD16.getInvoice(url:callbackUrl, amount: UInt64(amount * 1000))
                     
                     if let pr = response.pr {
                         self.pr = pr
