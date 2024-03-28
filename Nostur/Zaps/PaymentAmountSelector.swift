@@ -17,7 +17,17 @@ struct PaymentAmountSelector: View {
         self.paymentInfo = paymentInfo
     }
     
-    private func amountSelected(amount:Double, zapMessage:String) {
+    private func amountSelected(amount: Double, zapMessage: String) {
+        
+        // Fix: #0    (null) in Swift runtime failure: Double value cannot be converted to UInt64 because the result would be greater than UInt64.max ()
+        guard (amount * 1000) <= Double(UInt64.max) else {
+            L.og.error("🔴🔴 amount too large \(amount)")
+            DispatchQueue.main.async {
+                sendNotification(.anyStatus, ("Problem with amount", "APP_NOTICE"))
+            }
+            return
+        }
+        
         guard let account = account() else { return }
         guard let anyLud = paymentInfo.contact?.anyLud, anyLud == true else { return }
         let pubkey = paymentInfo.contact!.pubkey
