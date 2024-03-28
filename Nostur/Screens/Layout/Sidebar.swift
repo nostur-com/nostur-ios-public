@@ -15,6 +15,10 @@ final class SideBarModel: ObservableObject {
 }
 
 struct SideBar: View {
+    @Environment(\.openURL) private var openURL
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var sm: SideBarModel = .shared
+    @ObservedObject public var account: CloudAccount
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -273,10 +277,19 @@ struct SideBar: View {
             .zIndex(20)
             .padding(.top, 45)
             Spacer()
-            Text("Nostur \(APP_VERSION) (Build: \(CI_BUILD_NUMBER))")
-                .font(.footnote)
-                .opacity(0.5)
-                .padding(10)
+            VStack(alignment: .leading) {
+                Text("Nostur \(APP_VERSION) (Build: \(CI_BUILD_NUMBER))")
+                    .font(.footnote)
+                    .opacity(0.5)
+                Text("__Source code__")
+                    .foregroundColor(themes.theme.accent)
+                    .font(.footnote)
+                    .onTapGesture {
+                        guard let url = URL(string: "https://github.com/nostur-com/nostur-ios-public") else { return }
+                        openURL(url)
+                    }
+            }
+            .padding(10)
         }
         .edgesIgnoringSafeArea(.all)
         .onReceive(receiveNotification(.hideSideBar), perform: { _ in
