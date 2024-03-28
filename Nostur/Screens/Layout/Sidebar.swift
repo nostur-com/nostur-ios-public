@@ -15,18 +15,15 @@ final class SideBarModel: ObservableObject {
 }
 
 struct SideBar: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var sm:SideBarModel = .shared
-    @ObservedObject public var account:CloudAccount
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
     }
     
     @State private var accountsSheetIsShown = false
-    @State private var logoutAccount:CloudAccount? = nil
+    @State private var logoutAccount: CloudAccount? = nil
     @State private var showAnySigner = false
-    @State private var sidebarOffset:CGFloat = -NOSTUR_SIDEBAR_WIDTH
+    @State private var sidebarOffset: CGFloat = -NOSTUR_SIDEBAR_WIDTH
     
     static let ICON_WIDTH = 30.0
     static let MENU_TEXT_WIDTH = NOSTUR_SIDEBAR_WIDTH - 70.0
