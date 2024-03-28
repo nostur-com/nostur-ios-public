@@ -33,7 +33,7 @@ extension Bookmark {
         if let bookmark = try? context.fetch(fr).first {
             return bookmark.color
         }
-        return .yellow
+        return .orange
     }
     
     static func removeBookmark(eventId: String, context: NSManagedObjectContext) {
@@ -46,7 +46,7 @@ extension Bookmark {
     }
     
     // MARK: UI functions
-    @MainActor static func addBookmark(_ nrPost: NRPost, color: Color = .yellow) {
+    @MainActor static func addBookmark(_ nrPost: NRPost, color: Color = .orange) {
         sendNotification(.postAction, PostActionNotification(type: .bookmark(color), eventId: nrPost.id, bookmarked: true))
         bg().perform {
             let bookmark = Bookmark(context: bg())
@@ -61,7 +61,7 @@ extension Bookmark {
     }
     
     @MainActor static func removeBookmark(_ nrPost: NRPost) {
-        sendNotification(.postAction, PostActionNotification(type: .bookmark(.yellow), eventId: nrPost.id, bookmarked: false))
+        sendNotification(.postAction, PostActionNotification(type: .bookmark(.orange), eventId: nrPost.id, bookmarked: false))
         bg().perform {
             Bookmark.removeBookmark(eventId: nrPost.id, context: bg())
             bg().transactionAuthor = "removeBookmark"
@@ -70,7 +70,7 @@ extension Bookmark {
         }
     }
     
-    @MainActor static func updateColor(_ eventId: String, color: Color = .yellow) {
+    @MainActor static func updateColor(_ eventId: String, color: Color = .orange) {
         sendNotification(.postAction, PostActionNotification(type: .bookmark(color), eventId: eventId, bookmarked: true))
         bg().perform {
             let fr = Bookmark.fetchRequest()

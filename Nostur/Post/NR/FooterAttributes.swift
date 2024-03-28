@@ -62,7 +62,7 @@ class FooterAttributes: ObservableObject {
         }
         else {
             self.bookmarked = false
-            self.bookmarkColor = .yellow
+            self.bookmarkColor = .orange
         }
         
         self.hasPrivateNote = withFooter && Self.hasPrivateNote(event)
@@ -86,7 +86,7 @@ class FooterAttributes: ObservableObject {
             let hasPrivateNote = Self.hasPrivateNote(self.event)
             
             var isBookmarked = false
-            var bookmarkColor: Color = .yellow
+            var bookmarkColor: Color = .orange
             
             if Self.isBookmarked(event) {
                 isBookmarked = true
