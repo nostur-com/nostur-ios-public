@@ -283,7 +283,7 @@ struct LazyNoteMenuSheet: View {
                 .foregroundColor(themes.theme.accent)
                 .listRowBackground(themes.theme.background)
                 
-                if nrPost.relays != "" {
+                if nrPost.footerAttributes.relays != "" {
                     VStack(alignment: .leading) {
                         if let via = nrPost.via {
                             Text("Posted via \(via)", comment: "Showing from which app this post was posted")
@@ -295,7 +295,7 @@ struct LazyNoteMenuSheet: View {
                         else {
                             Text("Received from:", comment:"Heading for list of relays received from")
                         }
-                        ForEach(nrPost.relays.split(separator: " "), id:\.self) { relay in
+                        ForEach(nrPost.footerAttributes.relays.split(separator: " "), id:\.self) { relay in
                             Text(String(relay)).lineLimit(1)
                         }
                     }

@@ -258,7 +258,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     var fileMetadata:KindFileMetadata?
     
-    var relays:String
     var following = false
     var blocked: Bool {
         get { postRowDeletableAttributes.blocked }
@@ -402,8 +401,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
 //        self.mentionsCount = event.mentionsCount
         
-        
-        self.relays = event.relays
         self.fastTags = event.fastTags
         self.plainText = NRTextParser.shared.copyPasteText(event, text: event.content ?? "").text
         self.withParents = withParents
@@ -650,7 +647,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             .sink { [weak self] event in
                 guard let self else { return }
                 
-                self.relays = event.relays
+                let relays = event.relays
                 let relaysCount = event.relays.split(separator: " ").count
                 let flags = event.flags
                 let cancellationId = event.cancellationId
@@ -661,6 +658,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     self.ownPostAttributes.relaysCount = relaysCount
                     self.ownPostAttributes.flags = flags
                     self.ownPostAttributes.cancellationId = cancellationId
+                    
+                    self.footerAttributes.objectWillChange.send()
+                    self.footerAttributes.relays = relays
                 }
             }
     }
