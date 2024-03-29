@@ -10,7 +10,7 @@ import NavigationBackport
 
 struct LazyNoteMenuButton: View {
     @EnvironmentObject private var themes:Themes
-    var nrPost:NRPost
+    var nrPost: NRPost
     
     var body: some View {
         Image(systemName: "ellipsis")
