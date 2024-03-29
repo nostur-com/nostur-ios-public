@@ -54,10 +54,10 @@ class OwnPostAttributes: ObservableObject {
 
 struct OwnPostFooter: View {
 
-    let nrPost:NRPost
-    @ObservedObject var own:OwnPostAttributes
+    let nrPost: NRPost
+    @ObservedObject var own: OwnPostAttributes
     @State private var unpublishing = false
-    private var theme:Theme
+    private var theme: Theme
     
     init(nrPost: NRPost, theme: Theme) {
         self.nrPost = nrPost
