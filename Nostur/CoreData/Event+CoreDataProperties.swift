@@ -888,7 +888,11 @@ extension Event {
                 if uniqueRelays.count > existingRelays.count {
                     event.relays = uniqueRelays.joined(separator: " ")
 //                    event.relaysUpdated.send(event.relays)
-                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: event.id, relaysCount: event.relays.split(separator: " ").count))
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(
+                        id: event.id,
+                        relaysCount: event.relays.split(separator: " ").count,
+                        relays: event.relays
+                    ))
                     do {
                         try bg.save()
                     }
@@ -904,8 +908,11 @@ extension Event {
                 let uniqueRelays = Set(existingRelays + newRelays)
                 if uniqueRelays.count > existingRelays.count {
                     event.relays = uniqueRelays.joined(separator: " ")
-//                    event.relaysUpdated.send(event.relays)
-                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: event.id, relaysCount: event.relays.split(separator: " ").count))
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(
+                        id: event.id,
+                        relaysCount: event.relays.split(separator: " ").count,
+                        relays: event.relays
+                    ))
                     do {
                         try bg.save()
                     }

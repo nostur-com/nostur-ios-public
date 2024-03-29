@@ -25,6 +25,8 @@ class FooterAttributes: ObservableObject {
     @Published var zapsCount: Int64
     @Published var zapTally: Int64
     
+    @Published var relays: String
+    
     @Published var bookmarked: Bool
     @Published var bookmarkColor: Color
     @Published var hasPrivateNote: Bool
@@ -55,6 +57,8 @@ class FooterAttributes: ObservableObject {
         
         self.zapsCount = event.zapsCount
         self.zapTally = event.zapTally
+        
+        self.relays = event.relays
         
         if withFooter && Self.isBookmarked(event) {
             self.bookmarked = true
@@ -171,9 +175,9 @@ class FooterAttributes: ObservableObject {
                 if let zapTally = change.zapTally, zapTally != self.zapTally {
                     self.zapTally = zapTally
                 }
-//                if let relaysCount = change.relaysCount {
-//                    self.relays = relaysCount
-//                }
+                if let relays = change.relays {
+                    self.relays = relays
+                }
                 
                 // Also update own like (or slow? disabled)
 //                if !self.liked && isLiked() { // nope. main bg thread mismatch
