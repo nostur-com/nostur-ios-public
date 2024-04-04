@@ -176,22 +176,22 @@ let THREAD_LINE_OFFSET = 24.0
 // the parent is another PostAndParent
 // so it recursively renders up to the root
 struct PostAndParent: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var nrPost:NRPost
-    @EnvironmentObject private var dim:DIMENSIONS
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var nrPost: NRPost
+    @EnvironmentObject private var dim: DIMENSIONS
     
-    private var navTitleHidden:Bool = false
+    private var navTitleHidden: Bool = false
     
     private var isParent = false
-    private var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+    private var connect: ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     private let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     
-    @ObservedObject private var settings:SettingsStore = .shared
+    @ObservedObject private var settings: SettingsStore = .shared
     @State private var timerTask: Task<Void, Never>?
     @State private var didLoad = false
     @State private var didFetchParent = false
     
-    init(nrPost: NRPost, isParent:Bool = false, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
+    init(nrPost: NRPost, isParent: Bool = false, navTitleHidden: Bool = false, connect: ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
         self.isParent = isParent
         self.navTitleHidden = navTitleHidden
