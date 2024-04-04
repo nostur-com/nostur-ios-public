@@ -138,35 +138,35 @@ struct Entry: View {
                             Image(systemName: "camera")
                         }
                         .buttonStyle(.borderless)
-                        .disabled(vm.typingTextModel.uploading)
+                        .disabled(typingTextModel.uploading)
                         
                         if #available(iOS 16, *) {
                             Button { photoPickerShown = true } label: {
                                 Image(systemName: "photo")
                             }
                             .buttonStyle(.borderless)
-                            .disabled(vm.typingTextModel.uploading)
+                            .disabled(typingTextModel.uploading)
                         }
                         
                         Button { gifSheetShown = true } label: {
                             Image("GifButton")
                         }
                         .buttonStyle(.borderless)
-                        .disabled(vm.typingTextModel.uploading)
+                        .disabled(typingTextModel.uploading)
                     }
                     
                     Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
                         vm.showPreview(quotingEvent: quotingEvent)
                     }
-                    .disabled(vm.typingTextModel.uploading)
+                    .disabled(typingTextModel.uploading)
                     
                     Button {
-                        vm.typingTextModel.sending = true
+                        typingTextModel.sending = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                             self.vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: { onDismiss() })
                         }
                     } label: {
-                        if (vm.typingTextModel.uploading || vm.typingTextModel.sending) {
+                        if (typingTextModel.uploading || typingTextModel.sending) {
                             ProgressView().colorInvert()
                         }
                         else {
