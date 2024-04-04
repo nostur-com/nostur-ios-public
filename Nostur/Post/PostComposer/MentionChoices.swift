@@ -12,17 +12,28 @@ struct MentionChoices: View {
     
     var body: some View {
         if vm.showMentioning {
-            ScrollView {
-                LazyVStack {
-                    ForEach(vm.filteredContactSearchResults) { contact in
-                        ContactSearchResultRow(contact: contact, onSelect: {
-                            vm.selectContactSearchResult(contact)
-                        })
-                        Divider()
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Choose to tag:")
+                        .font(.caption)
+                    Spacer()
+                    Button("Cancel") {
+                        vm.showMentioning = false
                     }
                 }
+                .padding(10)
+                ScrollView {
+                    LazyVStack {
+                        ForEach(vm.filteredContactSearchResults) { contact in
+                            ContactSearchResultRow(contact: contact, onSelect: {
+                                vm.selectContactSearchResult(contact)
+                            })
+                            Divider()
+                        }
+                    }
+                }
+                .padding([.top,.leading,.trailing])
             }
-            .padding([.top,.leading,.trailing])
         }
     }
 }
