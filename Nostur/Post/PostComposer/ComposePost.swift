@@ -115,6 +115,7 @@ struct ComposePost: View {
                             }
                         }
                     }
+                    .offset(y: vm.showMentioning ? geo.size.height * -0.60 : 0)
                     .overlay(alignment: .bottom) {
                         MediaUploadProgress(uploader: vm.uploader)
                             .frame(height: geo.size.height * 0.60)
