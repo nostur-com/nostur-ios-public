@@ -41,7 +41,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     private var isDeviceConnected = false {
         didSet {
-            print("connection.isDeviceConnected = \(self.isDeviceConnected) - \(self.url)")
+            L.sockets.debug("connection.isDeviceConnected = \(self.isDeviceConnected) - \(self.url)")
             if !isDeviceConnected {
                 isSocketConnecting = false
                 isSocketConnected = false
