@@ -143,7 +143,7 @@ class NRTextParser { // TEXT things
         let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
         let matches = NEvent.indexedMentionRegex15.matches(in: text, options: [], range: nsRange)
 
-        for match in matches.prefix(100).reversed() { // 100 limit for sanity
+        for match in matches.prefix(150).reversed() { // 100 limit for sanity
             let range = match.range(at: 1)
             guard let swiftRange = Range(range, in: text),
                   let tagIndex = Int(text[swiftRange]),
@@ -189,7 +189,7 @@ class NRTextParser { // TEXT things
 
         var sanityIndex = 0
         for match in Self.npubNprofRegex.matches(in: replacedString, range: nsRange).reversed() {
-            if sanityIndex > 175 { break }
+            if sanityIndex > 225 { break }
             sanityIndex += 1
             var replacement = (replacedString as NSString).substring(with: match.range)
             
