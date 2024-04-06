@@ -23,6 +23,16 @@ struct ProfileByPubkey: View {
             ProgressView()
                 .frame(alignment: .center)
                 .onAppear { [weak vm] in
+                    
+                    if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
+                        bg().perform {
+                            guard let vm else { return }
+                            vm.ready(cachedNRContact)
+                        }
+                        return
+                    }
+                    
+                    
                     vm?.setFetchParams((
                         prio: false,
                         req: { _ in
@@ -31,6 +41,7 @@ struct ProfileByPubkey: View {
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
                                     let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))
                                     vm.ready(nrContact) // 2A. DONE
+                                    NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                 }
                                 else { req(RM.getUserMetadata(pubkey: pubkey)) } // 2B. FETCH IF WE DONT HAVE
                             }
@@ -41,6 +52,7 @@ struct ProfileByPubkey: View {
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
                                     let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))
                                     vm.ready(nrContact)
+                                    NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                 }
                                 else { // 4. OR ELSE WE TIMEOUT
                                     vm.timeout()

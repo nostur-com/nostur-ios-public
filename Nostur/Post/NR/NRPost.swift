@@ -422,9 +422,24 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             }
         }
         
-        let referencedContacts = Contact.fetchByPubkeys(event.fastPs.map { $0.1 }).map({ NRContact(contact: $0) })
+        let pTags = event.fastPs.map { $0.1 }
+        let cachedContacts = pTags.compactMap { NRContactCache.shared.retrieveObject(at: $0) }
+        let cachedContactPubkeys = Set(cachedContacts.map { $0.pubkey })
+        let uncachedPtags = pTags.filter { !cachedContactPubkeys.contains($0)  }
         
-        if let contact = event.contact_ {
+        let contactsFromDb = Contact.fetchByPubkeys(uncachedPtags).map { contact in
+            let nrContact = NRContact(contact: contact)
+            NRContactCache.shared.setObject(for: contact.pubkey, value: nrContact)
+//            L.og.debug("🧮🧮 NRContact cache: \(NRContactCache.shared.count)")
+            return nrContact
+        }
+        
+        let referencedContacts = cachedContacts + contactsFromDb
+        
+        if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
+            self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: pubkey)
+        }
+        else if let contact = event.contact_ {
             self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following), pubkey: pubkey)
         }
         else {
@@ -1133,6 +1148,7 @@ extension NRPost { // Helpers for grouped replies
             })
     }
     
+    @MainActor
     func sortGroupedRepliesNotWoT(_ nrPosts:[NRPost]) -> [NRPost] { // Read from bottom to top.
         return nrPosts
             .filter { !$0.inWoT && !NRState.shared.accountPubkeys.contains($0.pubkey)}

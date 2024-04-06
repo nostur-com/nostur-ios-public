@@ -29,12 +29,18 @@ struct ProfileOverlayCardContainer: View {
             else {
                 ProgressView()
                     .onAppear {
+                        if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
+                            self.contact = cachedNRContact
+                            return
+                        }
                         bg().perform {
                             if let bgContact = Contact.fetchByPubkey(pubkey, context: bg()) {
                                 let isFollowing = isFollowing(pubkey)
                                 let nrContact = NRContact(contact: bgContact, following: isFollowing)
+                                
                                 DispatchQueue.main.async {
                                     self.contact = nrContact
+                                    NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                 }
                             }
                             else {
@@ -49,6 +55,7 @@ struct ProfileOverlayCardContainer: View {
                                                 let nrContact = NRContact(contact: bgContact, following: isFollowing(pubkey))
                                                 DispatchQueue.main.async {
                                                     self.contact = nrContact
+                                                    NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                                 }
                                                 self.backlog.clear()
                                             }
