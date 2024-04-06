@@ -50,7 +50,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     
     var randomColor: Color
 
-    init(contact: Contact, following:Bool? = nil) {
+    init(contact: Contact, following: Bool? = nil) {
         self.contact = contact
         self.pubkey = contact.pubkey
         self.randomColor = Nostur.randomColor(seed: contact.pubkey)
@@ -268,15 +268,22 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         }
     }
     
-    static func fetch(_ pubkey: String, context:NSManagedObjectContext) -> NRContact? {
-        #if DEBUG
-            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                fatalError("Should only be called from bg()")
-            }
-        #endif
-        guard let contact = Contact.fetchByPubkey(pubkey, context: context) else {
-            return nil
-        }
-        return NRContact(contact: contact, following: isFollowing(pubkey))
-    }
+//    static func fetch(_ pubkey: String, context:NSManagedObjectContext) -> NRContact? {
+//        #if DEBUG
+//            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+//                fatalError("Should only be called from bg()")
+//            }
+//        #endif
+//        
+//        if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
+//            return cachedNRContact
+//        }
+//        guard let contact = Contact.fetchByPubkey(pubkey, context: context) else {
+//            return nil
+//        }
+//        
+//        let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))
+//        NRContactCache.shared.setObject(for: pubkey, value: nrContact)
+//        return nrContact
+//    }
 }

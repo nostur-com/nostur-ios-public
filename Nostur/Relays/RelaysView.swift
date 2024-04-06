@@ -75,12 +75,12 @@ struct RelayRowView: View {
         .task {
             let relayUrl = relay.url_ ?? ""
             connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
-            print("connection is now \(connection?.url ?? "")")
+            L.sockets.debug("connection is now \(connection?.url ?? "")")
         }
         .onReceive(cp.objectWillChange, perform: { _ in
             let relayUrl = relay.url_ ?? ""
             connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
-            print("connection is now \(connection?.url ?? "")")
+            L.sockets.debug("connection is now \(connection?.url ?? "")")
         })
     }
 }
