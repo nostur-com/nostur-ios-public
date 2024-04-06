@@ -24,6 +24,7 @@ struct AppScene: Scene {
     
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
+    private let nrcc: LRUCache2<String, NRContact> = NRContactCache.shared
     private let lpc: LinkPreviewCache = .shared
     
     private let regexes = NostrRegexes.default
@@ -86,6 +87,7 @@ struct RefreshingAppScene: Scene {
     
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
+    private let nrcc: LRUCache2<String, NRContact> = NRContactCache.shared
     private let lpc: LinkPreviewCache = .shared
     
     private let regexes = NostrRegexes.default
@@ -168,6 +170,7 @@ struct SimpleScene: Scene {
     private let importer: Importer = .shared
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
+    private let nrcc: LRUCache2<String, NRContact> = NRContactCache.shared
     private let lpc: LinkPreviewCache = .shared
     // ^ 37,4 MB
     

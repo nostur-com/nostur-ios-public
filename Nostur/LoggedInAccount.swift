@@ -159,6 +159,7 @@ class LoggedInAccount: ObservableObject {
     }
     
     @MainActor private func setupAccount(_ account: CloudAccount) {
+        NRContactCache.shared.clear()
         self.pubkey = pubkey
         
         // Set to true only if it is a brand new account, otherwise set to false and wait for kind 3 from relay
