@@ -11,6 +11,7 @@ struct FollowedBy: View {
     
     public var pubkey: Pubkey? = nil
     public var alignment: HorizontalAlignment = .leading
+    public var minimal: Bool = false
     
     @State private var commonFollowerPFPs: [(Pubkey, URL)] = []
     
@@ -25,7 +26,9 @@ struct FollowedBy: View {
     var body: some View {
         VStack(alignment: alignment) {
             if !commonFollowerPFPs.isEmpty {
-                Text("Followers you know").font(.caption)
+                if !minimal {
+                    Text("Followers you know").font(.caption)
+                }
                 HStack(spacing: 2) {
                     ForEach(firstRow.indices, id:\.self) { index in
                         MiniPFP(pictureUrl: commonFollowerPFPs[index].1)
@@ -36,17 +39,22 @@ struct FollowedBy: View {
                     }
                 }
                 
-                HStack(spacing: 2) {
-                    ForEach(secondRow.indices, id:\.self) { index in
-                        MiniPFP(pictureUrl: commonFollowerPFPs[index].1)
-                            .onTapGesture {
-                                navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
-                            }
-                            .id(index)
+                if !minimal {
+                    HStack(spacing: 2) {
+                        ForEach(secondRow.indices, id:\.self) { index in
+                            MiniPFP(pictureUrl: commonFollowerPFPs[index].1)
+                                .onTapGesture {
+                                    navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
+                                }
+                                .id(index)
+                        }
                     }
                 }
             }
-            if commonFollowerPFPs.count > 31 {
+            if minimal && commonFollowerPFPs.count > 16 {
+                Text("+\(commonFollowerPFPs.count - 15) others").font(.caption)
+            }
+            else if commonFollowerPFPs.count > 31 {
                 Text("and \(commonFollowerPFPs.count - 30) others you follow.").font(.caption)
             }
             else if commonFollowerPFPs.count > 30 {
@@ -54,13 +62,27 @@ struct FollowedBy: View {
             }
         }
         .task {
-            guard let pubkey else { return }
-            commonFollowerPFPs = commonFollowers(for: pubkey).compactMap({ pubkey in
-                if let url = followingPFP(pubkey) {
-                    return (pubkey, url)
+            guard let pubkey, let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+            
+            bg().perform {
+                let commonFollowerPubkeys = commonFollowers(for: pubkey)
+                let commonFollowerPFPs = commonFollowerPubkeys.compactMap({ pubkey in
+                    if let url = followingCache[pubkey]?.pfpURL {
+                        return (pubkey, url)
+                    }
+                    return nil
+                })
+               
+                DispatchQueue.main.async {
+                    self.commonFollowerPFPs = commonFollowerPubkeys.compactMap({ pubkey in
+                        if let url = followingPFP(pubkey) {
+                            return (pubkey, url)
+                        }
+                        return nil
+                    })
                 }
-                return nil
-            })
+            }
+            
         }
     }
 }
