@@ -102,7 +102,7 @@ class RelayMessage {
         let decoder = JSONDecoder()
         
         // Try to get just the ID so if it is duplicate we don't parse whole event for nothing
-        if let mMessage = try? decoder.decode(MinimalMessage.self, from: dataFromString) {
+        if let mMessage = try? decoder.decode(MinimalMessage.self, from: dataFromString) { // Thread 3: EXC_BAD_ACCESS (code=1, address=0x1178fc000)
             
             // These subscriptions: "Following", "CATCHUP-", "RESUME-", "PAGE-"
             // also can include hashtags, if WoT spam filter is enabled we filter these messages out

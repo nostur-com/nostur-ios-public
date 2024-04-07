@@ -29,6 +29,14 @@ struct NRPostHeaderContainer: View {
                     withAnimation {
                         name = profile.name
                     }
+                    
+                    // If post is on feed without kind-0 info, and then updated here,
+                    // opening detail will still have old nrPost without updated name
+                    // so update nrPost here
+                    // Before this wasn't necessary because we were listening from nrPost
+                    // now we are only listening on view, so update here
+                    // Maybe we should check for update on loading detail instead....
+                    nrPost.contact?.anyName = profile.name
                 }
                 .onAppear {
                     guard let nrContact = pfpAttributes.contact else {
