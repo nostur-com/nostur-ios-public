@@ -74,12 +74,7 @@ struct FollowedBy: View {
                 })
                
                 DispatchQueue.main.async {
-                    self.commonFollowerPFPs = commonFollowerPubkeys.compactMap({ pubkey in
-                        if let url = followingPFP(pubkey) {
-                            return (pubkey, url)
-                        }
-                        return nil
-                    })
+                    self.commonFollowerPFPs = commonFollowerPFPs
                 }
             }
             

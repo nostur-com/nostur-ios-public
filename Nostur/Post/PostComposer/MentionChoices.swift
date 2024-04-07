@@ -28,6 +28,10 @@ struct MentionChoices: View {
                             ContactSearchResultRow(contact: contact, onSelect: {
                                 vm.selectContactSearchResult(contact)
                             })
+                            HStack {
+                                Spacer()
+                                LazyFollowedBy(pubkey: contact.pubkey, alignment: .trailing, minimal: true)
+                            }
                             Divider()
                         }
                     }
@@ -35,5 +39,46 @@ struct MentionChoices: View {
                 .padding([.top,.leading,.trailing])
             }
         }
+    }
+}
+
+
+struct LazyFollowedBy: View {
+    
+    public var pubkey: Pubkey? = nil
+    public var alignment: HorizontalAlignment = .leading
+    public var minimal: Bool = false
+    
+    @State private var didLoad = false
+    @State private var timer: Timer?
+    
+    var body: some View {
+        VStack {
+            if didLoad {
+                FollowedBy(pubkey: pubkey, alignment: alignment, minimal: minimal)
+            }
+            else {
+                EmptyView()
+            }
+        }
+        .onAppear {
+            self.load()
+        }
+        .onDisappear {
+            self.cancel()
+        }
+    }
+    
+    private func load() {
+        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
+            withAnimation {
+                didLoad = true
+            }
+        }
+    }
+    
+    private func cancel() {
+        timer?.invalidate()
+        timer = nil
     }
 }
