@@ -288,6 +288,7 @@ struct SideBar: View {
                         guard let url = URL(string: "https://github.com/nostur-com/nostur-ios-public") else { return }
                         openURL(url)
                     }
+                    .padding(.bottom, 20)
             }
             .padding(10)
         }
