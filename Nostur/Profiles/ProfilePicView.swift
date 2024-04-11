@@ -15,12 +15,12 @@ struct PFP: View, Equatable {
         lhs.pubkey == rhs.pubkey
     }
     
-    public var pubkey:String
+    public var pubkey: String
     
-    public var contact:Contact?
-    public var nrContact:NRContact?
-    public var account:CloudAccount?
-    public var size:CGFloat? = 50.0
+    public var contact: Contact?
+    public var nrContact: NRContact?
+    public var account: CloudAccount?
+    public var size: CGFloat? = 50.0
     public var forceFlat = false
 
     var body: some View {
@@ -69,12 +69,12 @@ struct NRContactPFP: View {
 
 struct AccountPFP: View {
     
-    @ObservedObject public var account:CloudAccount
-    private var pubkey:String { account.publicKey }
-    private var pictureUrl:URL? { account.pictureUrl }
-    public var size:CGFloat? = 50.0
+    @ObservedObject public var account: CloudAccount
+    private var pubkey: String { account.publicKey }
+    private var pictureUrl: URL? { account.pictureUrl }
+    public var size: CGFloat? = 50.0
     public var forceFlat = false
-    private var color:Color { randomColor(seed: account.publicKey) }
+    private var color: Color { randomColor(seed: account.publicKey) }
     
     var body: some View {
          InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color, forceFlat: forceFlat)
