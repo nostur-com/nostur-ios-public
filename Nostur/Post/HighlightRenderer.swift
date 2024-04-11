@@ -59,7 +59,7 @@ struct HighlightRenderer: View {
         .padding(10)
         .overlay(
             RoundedRectangle(cornerRadius: 15)
-                .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
+                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
         )
     }
 }

@@ -70,7 +70,7 @@ class Themes: ObservableObject {
             secondaryBackground: Color(.secondarySystemBackground),
             listBackground: Color("greenListBackground"),
             badge: Color.red,
-            lineColor: Color("greenAccentColor"),
+            lineColor: Color("greenLineColor"),
             footerButtons: Color("greenAccentColor")
         )
     }
@@ -86,7 +86,7 @@ class Themes: ObservableObject {
             secondaryBackground: Color(.secondarySystemBackground),
             listBackground: Color("pinkListBackground"),
             badge: Color.red,
-            lineColor: Color("pinkAccentColor"),
+            lineColor: Color("pinkLineColor"),
             footerButtons: Color(red: 255/255, green: 50/255, blue: 221/255)
         )
     }
@@ -101,7 +101,7 @@ class Themes: ObservableObject {
             secondaryBackground: Color(.secondarySystemBackground),
             listBackground: Color("orangeListBackground"),
             badge: Color.red,
-            lineColor: Color("orangeAccentColor"),
+            lineColor: Color("orangeLineColor"),
             footerButtons: Color("orangeAccentColor")
         )
     }
@@ -117,7 +117,7 @@ class Themes: ObservableObject {
             secondaryBackground: Color(.secondarySystemBackground),
             listBackground: Color("purpleListBackground"),
             badge: Color.red,
-            lineColor: Color("purpleAccentColor"),
+            lineColor: Color("purpleLineColor"),
             footerButtons: Color("purpleAccentColor")
         )
     }
@@ -132,7 +132,7 @@ class Themes: ObservableObject {
             secondaryBackground: Color(.secondarySystemBackground),
             listBackground: Color("redListBackground"),
             badge: Color.red,
-            lineColor: Color("redAccentColor"),
+            lineColor: Color("redLineColor"),
             footerButtons: Color("redAccentColor")
         )
     }
@@ -147,7 +147,7 @@ class Themes: ObservableObject {
             secondaryBackground: Color(.secondarySystemBackground),
             listBackground: Color("blueListBackground"),
             badge: Color.red,
-            lineColor: Color("blueAccentColor"),
+            lineColor: Color("blueLineColor"),
             footerButtons: Color("blueAccentColor")
         )
     }

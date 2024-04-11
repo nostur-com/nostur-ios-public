@@ -515,12 +515,12 @@ struct ParentPost: View {
                 }
                 .background(alignment:.topLeading) {
                     ZStack(alignment: .topLeading) {
-                        themes.theme.lineColor.opacity(0.2)
-                            .frame(width: 2, height: 20)
+                        themes.theme.lineColor
+                            .frame(width: 1, height: 20)
                             .offset(x: THREAD_LINE_OFFSET, y: -10)
                             .opacity(connect == .top || connect == .both ? 1 : 0)
-                        themes.theme.lineColor.opacity(0.2)
-                            .frame(width: 2)
+                        themes.theme.lineColor
+                            .frame(width: 1)
                             .offset(x: THREAD_LINE_OFFSET)
                             .opacity(connect == .bottom || connect == .both ? 1 : 0)
                     }
@@ -590,9 +590,8 @@ struct DetailPost: View {
                     .background(alignment: .top) {
                         if nrPost.replyToId != nil {
                             themes.theme.lineColor
-                                .opacity(0.2)
-                                .frame(width: 2, height: 30)
-                                .offset(y: -20)
+                                .frame(width: 1, height: 30)
+                                .offset(x: -0.5, y: -20)
                         }
                     }
                 

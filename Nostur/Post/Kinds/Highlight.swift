@@ -44,7 +44,7 @@ struct Highlight: View {
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
                         theme.lineColor
-                            .frame(width: 2, height: 20)
+                            .frame(width: 1, height: 20)
                             .offset(x:0, y: -10)
                     }
                 }
@@ -146,7 +146,7 @@ struct Highlight: View {
                 .padding(10)
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
-                        .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
+                        .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
                 )
                 .padding(.vertical, 10)
                 .contentShape(Rectangle())
@@ -163,8 +163,8 @@ struct Highlight: View {
         .background(alignment: .leading) {
             if connect == .bottom || connect == .both {
                 theme.lineColor
-                    .frame(width: 2)
-                    .opacity(0.2)
+                    .frame(width: 1)
+//                    .opacity(0.2)
                     .offset(x: THREAD_LINE_OFFSET, y: 20)
 //                    .transaction { t in
 //                        t.animation = nil

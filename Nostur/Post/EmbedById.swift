@@ -60,7 +60,7 @@ struct EmbedById: View {
         }
         .overlay(
             RoundedRectangle(cornerRadius: 15)
-                .stroke(theme.lineColor.opacity(0.2), lineWidth: 1)
+                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
         )
     }
     
