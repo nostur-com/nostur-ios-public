@@ -41,7 +41,7 @@ struct SideBar: View {
             ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH)
                 .overlay(alignment: .bottomLeading, content: {
                     PFP(pubkey: account.publicKey, account: account, size: 75)
-                        .equatable()
+//                        .equatable() // BUG: this causes PFP not to update after account switch
                         .overlay(
                             Circle()
                                 .strokeBorder(themes.theme.background, lineWidth: 3)
