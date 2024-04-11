@@ -451,7 +451,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         if self.pfpAttributes.contact == nil {
             missingPs.insert(event.pubkey)
         }
-        else if let c = self.pfpAttributes.contact, c.metadata_created_at == 0 {
+        else if let c = self.pfpAttributes.contact?.contact, c.metadata_created_at == 0 {
             missingPs.insert(event.pubkey)
         }
         let eventContactPs = (referencedContacts.compactMap({ contact in
