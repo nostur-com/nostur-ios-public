@@ -64,9 +64,8 @@ struct Kind1Default: View {
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
                         theme.lineColor
-                            .opacity(0.2)
-                            .frame(width: 2, height: 20)
-                            .offset(x:0, y: -10)
+                            .frame(width: 1, height: 20)
+                            .offset(x: -0.5, y: -10)
 //                            .transaction { t in
 //                                t.animation = nil
 //                            }
@@ -180,8 +179,8 @@ struct Kind1Default: View {
         .background(alignment: .leading) {
             if connect == .bottom || connect == .both {
                 theme.lineColor
-                    .frame(width: 2)
-                    .opacity(0.2)
+                    .frame(width: 1)
+//                    .opacity(0.2)
                     .offset(x: THREAD_LINE_OFFSET, y: 20)
 //                    .withoutAnimation()
 //                    .transaction { t in

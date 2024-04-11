@@ -113,7 +113,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor.opacity(0.2)
+                            themes.theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -135,7 +135,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor.opacity(0.2)
+                            themes.theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -154,7 +154,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor.opacity(0.2)
+                            themes.theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -185,7 +185,7 @@ struct SideBar: View {
                             .padding(.vertical, Self.BUTTON_VPADDING)
                             .contentShape(Rectangle())
                             .overlay(alignment: .bottom) {
-                                themes.theme.lineColor.opacity(0.2)
+                                themes.theme.lineColor
                                     .frame(height: 1)
                             }
                         }
@@ -208,7 +208,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor.opacity(0.2)
+                            themes.theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -230,7 +230,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor.opacity(0.2)
+                            themes.theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -249,7 +249,7 @@ struct SideBar: View {
                             .padding(.vertical, Self.BUTTON_VPADDING)
                             .contentShape(Rectangle())
                             .overlay(alignment: .bottom) {
-                                themes.theme.lineColor.opacity(0.2)
+                                themes.theme.lineColor
                                     .frame(height: 1)
                             }
                         }

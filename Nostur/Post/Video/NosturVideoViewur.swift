@@ -50,7 +50,7 @@ struct NosturVideoViewur: View {
                 }
                .centered()
                .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
-               .background(theme.lineColor.opacity(0.2))
+               .background(theme.lineColor.opacity(0.5))
             }
             else if isStream {
                 if SettingsStore.shared.lowDataMode {
@@ -68,7 +68,7 @@ struct NosturVideoViewur: View {
             }
             else if videoShown {
                 if let scaledDimensions = cachedVideo?.scaledDimensions, let videoLength = cachedVideo?.videoLength {
-                    theme.lineColor.opacity(0.2)
+                    theme.lineColor.opacity(0.5)
                         .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                         .overlay {
                             if let firstFrame = cachedVideo?.firstFrame {
@@ -148,7 +148,7 @@ struct NosturVideoViewur: View {
                     }
 //                    .centered()
                     .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
-                    .background(theme.lineColor.opacity(0.2))
+                    .background(theme.lineColor.opacity(0.5))
                 }
                 else {
                     if videoState == .cancelled {
@@ -161,7 +161,7 @@ struct NosturVideoViewur: View {
                         Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
                             .centered()
                             .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
-                            .background(theme.lineColor.opacity(0.2))
+                            .background(theme.lineColor.opacity(0.5))
                     }
                 }
             }
@@ -169,7 +169,7 @@ struct NosturVideoViewur: View {
                 Text("Tap to load video", comment:"Button to load a video in a post")
                     .centered()
                     .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
-                    .background(theme.lineColor.opacity(0.2))
+                    .background(theme.lineColor.opacity(0.5))
                     .highPriorityGesture(
                         TapGesture()
                             .onEnded { _ in
