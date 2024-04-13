@@ -464,7 +464,7 @@ struct ProfileView: View {
             bg().perform { [weak contact] in
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
-                guard let (similarPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                guard let (_, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
                     pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
                 
