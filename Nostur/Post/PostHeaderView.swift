@@ -60,6 +60,7 @@ struct NRPostHeaderContainer: View {
                     guard nrContact.couldBeImposter == -1 else { return }
                     guard !nrContact.following else { return }
                     guard !NewOnboardingTracker.shared.isOnboarding else { return }
+                    guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
 
                     let contactAnyName = nrContact.anyName.lowercased()
                     let currentAccountPubkey = NRState.shared.activeAccountPublicKey
@@ -69,10 +70,11 @@ struct NRPostHeaderContainer: View {
                         guard let nrContact else { return }
                         guard let account = account() else { return }
                         guard account.publicKey == currentAccountPubkey else { return }
-                        guard let similarContact = account.follows.first(where: {
-                            $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName) // TODO: follows.anyName cache could help, put in same followsPFP dict?
+                        guard let (similarPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                            pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                         }) else { return }
-                        guard let cPic = nrContact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
+                        
+                        guard let cPic = nrContact.pictureUrl, similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
                         Task.detached(priority: .background) {
                             let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
                             DispatchQueue.main.async { [weak nrContact] in
@@ -149,6 +151,7 @@ struct EventHeaderContainer: View {
                     guard contact.couldBeImposter == -1 else { return }
                     guard !isFollowing(contact.pubkey) else { return }
                     guard !NewOnboardingTracker.shared.isOnboarding else { return }
+                    guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
 
                     let contactAnyName = contact.anyName.lowercased()
                     let currentAccountPubkey = NRState.shared.activeAccountPublicKey
@@ -158,10 +161,11 @@ struct EventHeaderContainer: View {
                         guard let contact, let bgContact = bg().object(with: contact.objectID) as? Contact else { return }
                         guard let account = account() else { return }
                         guard account.publicKey == currentAccountPubkey else { return }
-                        guard let similarContact = account.follows.first(where: {
-                            $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName) // TODO: follows.anyName cache could help, put in same followsPFP dict?
+                        guard let (similarPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                            pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                         }) else { return }
-                        guard let cPic = bgContact.pictureUrl, similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
+                        
+                        guard let cPic = bgContact.pictureUrl, similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
                         Task.detached(priority: .background) {
                             let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
                             DispatchQueue.main.async { [weak contact] in
