@@ -976,6 +976,7 @@
 		1FEA5FE129D60D2800A90F7E /* DeleteAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountSheet.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
 		1FEA81B62BCAB0D30059D569 /* NosturCloud 4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 4.xcdatamodel"; sourceTree = "<group>"; };
+		1FEA81B72BCB52040059D569 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1FEC81A22A8FCB7C006FA50C /* DiscoverNostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverNostr.swift; sourceTree = "<group>"; };
 		1FECAC4629A08255006FEE72 /* Collection+subscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+subscript.swift"; sourceTree = "<group>"; };
 		1FED0D842ACAF5F1002DAC02 /* CustomizableFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomizableFooter.swift; sourceTree = "<group>"; };
@@ -1718,6 +1719,7 @@
 				1F06D2D92A584318007B9373 /* README.md */,
 				1F313DED296980D8004C7366 /* Info.plist */,
 				1F0F356A2A31C76900AA9C41 /* Localizable.strings */,
+				1FEA81B72BCB52040059D569 /* PrivacyInfo.xcprivacy */,
 				1F9D69D82A3077F400628460 /* Config.xcconfig */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
