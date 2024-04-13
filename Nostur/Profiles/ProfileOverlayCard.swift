@@ -308,6 +308,7 @@ struct ProfileOverlayCard: View {
             guard contact.couldBeImposter == -1 else { return }
             guard let cPic = contact.pictureUrl else { return }
             guard !NewOnboardingTracker.shared.isOnboarding else { return }
+            guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
             
             let contactAnyName = contact.anyName.lowercased()
             let cPubkey = contact.pubkey
@@ -316,12 +317,13 @@ struct ProfileOverlayCard: View {
             bg().perform { [weak contact] in
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
-                guard let similarContact = account.follows.first(where: {
-                    $0.pubkey != cPubkey && isSimilar(string1: $0.anyName.lowercased(), string2: contactAnyName)
+                guard let (similarPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                    pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
-                guard similarContact.picture != nil, let wotPic = similarContact.pictureUrl else { return }
                 
-                L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarContact.anyName)")
+                guard similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
+                
+                L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarFollow.anyName)")
                 
                 Task.detached(priority: .background) {
                     let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
