@@ -48,8 +48,8 @@ class Nip97LoginModel: ObservableObject {
         nEvent.kind = .custom(27235)
         nEvent.tags.append(NostrTag(["u", urlString]))
         nEvent.tags.append(NostrTag(["method", "POST"]))
-        nEvent.tags.append(NostrTag(["i", askLoginInfo.challenge]))
-        if let signedEvent = try? account.signEvent(nEvent), let url = URL(string: urlString) {
+//        nEvent.tags.append(NostrTag(["i", askLoginInfo.challenge]))
+        if let signedEvent = try? account.signEvent(nEvent), let url = URL(string: urlString + "?i=\(askLoginInfo.challenge)") {
             
             let jsonString = signedEvent.eventJson()
             guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else { return Fail(error: URLError(.cannotParseResponse)).eraseToAnyPublisher() }
