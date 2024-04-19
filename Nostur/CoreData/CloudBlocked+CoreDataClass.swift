@@ -42,7 +42,7 @@ func block(pubkey: String, name:String? = "", context: NSManagedObjectContext = 
         
     CloudBlocked.addBlock(pubkey: pubkey, fixedName: name)
     NRState.shared.blockedPubkeys.insert(pubkey)
-//    viewContextSave()
+    viewContextSave()
     sendNotification(.blockListUpdated, NRState.shared.blockedPubkeys)
 }
 
@@ -50,6 +50,6 @@ func block(pubkey: String, name:String? = "", context: NSManagedObjectContext = 
 func mute(eventId: String, replyToRootId: String?, replyToId: String?) {
     CloudBlocked.addBlock(eventId: eventId, replyToRootId: replyToRootId, replyToId: replyToId)
     NRState.shared.mutedRootIds.formUnion(Set([eventId, replyToRootId ?? eventId, replyToId ?? eventId]))
-//    viewContextSave()
+    viewContextSave()
     sendNotification(.muteListUpdated, NRState.shared.mutedRootIds)
 }
