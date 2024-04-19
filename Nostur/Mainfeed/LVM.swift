@@ -72,7 +72,7 @@ class LVM: NSObject, ObservableObject {
     // Ordered Dictionary so SmoothList can work with O(1)
     var posts = CurrentValueSubject<Posts, Never>([:])
     
-    var performingLocalOlderFetch = false
+    var performingLocalOlderFetch = false // bg?
     var leafsAndParentIdsOnScreen:Set<String> = [] // Should always be in sync with nrPostLeafs
     var leafIdsOnScreen:OrderedSet<String> = []
     var onScreenSeen:Set<NRPostID> {
@@ -423,9 +423,7 @@ class LVM: NSObject, ObservableObject {
 
             guard !transformedIds.isEmpty else {
                 L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Nothing transformed (all were duplicates or seen) - \(taskId)")
-                DispatchQueue.main.async { [weak self] in
-                    self?.performingLocalOlderFetch = false
-                }
+                performingLocalOlderFetch = false
                 return
             }
             L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedIds.count) posts - \(taskId)")
@@ -478,7 +476,7 @@ class LVM: NSObject, ObservableObject {
         
         if older {
             // ADD TO THE END (OLDER POSTS, NEXT PAGE)
-            performingLocalOlderFetch = false
+            performingLocalOlderFetch = false // Write of size 1 by thread 82
             self.nrPostLeafs = self.nrPostLeafs + onlyNew
             self.onScreenSeen = self.onScreenSeen.union(self.getAllObjectIds(self.nrPostLeafs))
         }
@@ -1536,8 +1534,11 @@ extension LVM {
             L.lvm.debug("Already performingLocalOlderFetch, cancelled")
             // reset in 2 seconds just in case
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                if self.performingLocalOlderFetch {
-                    self.performingLocalOlderFetch = false
+                bg().perform { [weak self] in
+                    guard let self else { return }
+                    if self.performingLocalOlderFetch { // Read of size 1 by thread 1
+                        self.performingLocalOlderFetch = false
+                    }
                 }
             }
             return
@@ -1558,9 +1559,7 @@ extension LVM {
                 ? Event.postsByRelays(self.relays, until: oldestEvent, hideReplies: self.hideReplies)
                 : Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies, hashtagRegex: hashtagRegex)
             guard let posts = try? bg().fetch(fr) else {
-                DispatchQueue.main.async {
-                    self.performingLocalOlderFetch = false
-                }
+                self.performingLocalOlderFetch = false
                 return
             }
             self.setOlderEvents(events: self.filterMutedWords(posts))
@@ -1636,9 +1635,7 @@ extension LVM {
             self.startRenderingOlderSubject.send(newUnrenderedEvents)
         }
         else {
-            DispatchQueue.main.async { [weak self] in
-                self?.performingLocalOlderFetch = false
-            }
+            self.performingLocalOlderFetch = false
         }
     }
 }
