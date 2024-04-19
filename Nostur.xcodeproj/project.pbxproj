@@ -1363,6 +1363,7 @@
 			children = (
 				1F45C7EF29EF99A600F58772 /* MediaUploads */,
 				1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */,
+				1FE882872B47726800A903F0 /* AvailableWidthContainer.swift */,
 				1FA477222A780C0E00A4CCD3 /* Binding+not.swift */,
 				1F1ABC4A29819CAC00D03FA9 /* Cache.swift */,
 				1F33EC3829B6849800615FB9 /* Centered.swift */,
@@ -1388,7 +1389,6 @@
 				1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */,
 				1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */,
 				1F00337029BEF141007CE040 /* View+withSheets.swift */,
-				1FE882872B47726800A903F0 /* AvailableWidthContainer.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
