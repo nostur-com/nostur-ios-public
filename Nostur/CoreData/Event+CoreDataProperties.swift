@@ -796,7 +796,7 @@ extension Event {
         // notify any related profile badge
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "kind == 30008 AND tagsSerialized CONTAINS %@", badgeA)
+        fr.predicate = NSPredicate(format: "kind == 30008 AND mostRecentId == nil AND tagsSerialized CONTAINS %@", badgeA)
         return (try? context.fetch(fr)) ?? []
     }
     
