@@ -30,7 +30,8 @@ struct ListViewContainer: View {
 }
 
 struct IsolatedLVMLoadingView: View {
-    @ObservedObject var vm:LVM
+    @ObservedObject var vm: LVM
+    @State private var retryTimer: Timer? = nil
     
     var body: some View {
         #if DEBUG
@@ -38,7 +39,22 @@ struct IsolatedLVMLoadingView: View {
         #endif
         if vm.posts.value.isEmpty {
             CenteredProgressView()
+                .onAppear {
+                    retryAfterDelay(seconds: 15)
+                }
+                .onDisappear {
+                    retryTimer?.invalidate()
+                    retryTimer = nil
+                }
         }
+    }
+    
+    private func retryAfterDelay(seconds: Int = 15) {
+        retryTimer = Timer.scheduledTimer(withTimeInterval: Double(seconds), repeats: false, block: { _ in
+            vm.instantFinished = false
+            vm.instantFeed.isRunning = false
+            vm.reload()
+        })
     }
 }
 
