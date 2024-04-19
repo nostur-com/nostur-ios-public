@@ -11,21 +11,21 @@ typealias EventId = String
 
 struct FailedURLCache {
     static let shared: LRUCache2<String, Date> = {
-        let cache = LRUCache2<String, Date>(countLimit: 2000)
+        let cache = LRUCache2<String, Date>(countLimit: 500)
         return cache
     }()
 }
 
 struct PubkeyUsernameCache {
     static let shared: LRUCache2<String, String> = {
-        let cache = LRUCache2<String, String>(countLimit: 5000)
+        let cache = LRUCache2<String, String>(countLimit: 2500)
         return cache
     }()
 }
 
 struct NRContactCache {
     static let shared: LRUCache2<String, NRContact> = {
-        let cache = LRUCache2<String, NRContact>(countLimit: 1000)
+        let cache = LRUCache2<String, NRContact>(countLimit: 500)
         return cache
     }()
 }
@@ -33,7 +33,7 @@ struct NRContactCache {
 
 class LinkPreviewCache {
     
-    public let cache = LRUCache2<URL, [String: String]>(countLimit: 2000)
+    public let cache = LRUCache2<URL, [String: String]>(countLimit: 500)
     
     public let metaTagsRegex = try! NSRegularExpression(pattern: #"<meta\s+(?:property=|name=)"(?:og|twitter):(.*?)"\s+content="([^"]+)(?:"\s|"[^>]*?\/?>)"#, options: .caseInsensitive)
     
