@@ -10,7 +10,7 @@ import SwiftUI
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ZapButton: View, Equatable {
     static func == (lhs: ZapButton, rhs: ZapButton) -> Bool {
-        true
+        lhs.nrPost.id == rhs.nrPost.id
     }
     
     private let nrPost: NRPost
@@ -117,7 +117,8 @@ struct ZapButtonInner: View {
                 }
             }
             .onAppear {
-                isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(footerAttributes.zapState)
+                guard [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(footerAttributes.zapState) else { return }
+                isZapped = true
             }
             .onReceive(ViewUpdates.shared.zapStateChanged.receive(on: RunLoop.main)) { zapStateChange in
                 guard nrPost.id == zapStateChange.eTag else { return }
