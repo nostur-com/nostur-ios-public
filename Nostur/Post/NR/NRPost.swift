@@ -436,11 +436,15 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         let referencedContacts = cachedContacts + contactsFromDb
         
+        var anyName: String?
+        
         if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
             self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: pubkey)
+            anyName = cachedNRContact.anyName
         }
         else if let contact = event.contact_ {
             self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following), pubkey: pubkey)
+            anyName = contact.anyName
         }
         else {
             self.pfpAttributes = PFPAttributes(pubkey: pubkey)
@@ -587,7 +591,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
         
         // Moved from .body to here because String interpolation is expensive (https://developer.apple.com/wwdc23/10160)
-        self.repostedHeader = String(localized:"\(contact?.anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
+        self.repostedHeader = String(localized:"\(anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
         
         self.isNSFW = self.hasNSFWContent()
         
