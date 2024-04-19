@@ -28,7 +28,7 @@ struct ProfileBadgesContainer: View {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "kind == 30008 AND pubkey == %@", pubkey)
+        fr.predicate = NSPredicate(format: "kind == 30008 AND pubkey == %@ AND mostRecentId == nil", pubkey)
         
         _profileBadges = FetchRequest(fetchRequest: fr)
     }

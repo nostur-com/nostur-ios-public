@@ -34,7 +34,7 @@ struct BadgesIssuedView: View {
     init(pubkey: String) {
         self.pubkey = pubkey
         let r = Event.fetchRequest()
-        r.predicate = NSPredicate(format: "kind == 30009 AND pubkey == %@", pubkey)
+        r.predicate = NSPredicate(format: "kind == 30009 AND pubkey == %@ AND mostRecentId == nil", pubkey)
         r.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _badges = FetchRequest(fetchRequest: r)
     }

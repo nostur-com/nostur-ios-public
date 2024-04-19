@@ -125,7 +125,7 @@ class UnknownKindModel: ObservableObject {
     private func fetchApps(kind: Int64, context: NSManagedObjectContext = context()) -> [Event] {
         let kindString = "\(kind)"
         let request = NSFetchRequest<Event>(entityName: "Event")
-        request.predicate = NSPredicate(format: "kind == 31990")
+        request.predicate = NSPredicate(format: "kind == 31990 AND mostRecentId == nil")
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let apps = (try? context.fetch(request)) ?? []
         
@@ -139,7 +139,7 @@ class UnknownKindModel: ObservableObject {
     private func fetchRecommendations(kind: Int64, context: NSManagedObjectContext = context()) -> [Event] {
         let kindString = "\(kind)"
         let request = NSFetchRequest<Event>(entityName: "Event")
-        request.predicate = NSPredicate(format: "kind == 31989 AND pubkey IN %@", self.follows!)
+        request.predicate = NSPredicate(format: "kind == 31989 AND pubkey IN %@ AND mostRecentId == nil", self.follows!)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let apps = (try? context.fetch(request)) ?? []
         
