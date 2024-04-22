@@ -273,11 +273,6 @@ class Importer {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
                     }
-//                    if event.kind == .repost {
-//                        do { try _ = Event.updateRepostCountCache(savedEvent, content:event.content, context: context) } catch {
-//                            L.importing.error("🦋🦋🔴🔴🔴 problem updating Repost Count Cache .id \(event.id)")
-//                        }
-//                    }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .zapNote {
@@ -290,13 +285,6 @@ class Importer {
                         do { try _ = Event.updateMentionsCountCache(event.tags, context: context) } catch {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
                         }
-                        
-                        // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-                        // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-                        // DISABLED BECAUSE ALREADY DONE IN saveEvent.
-                        //                        do { try _ = Event.updateRepliesCountCache(event.tags, context: context) } catch {
-                        //                            print("🦋🦋🔴🔴🔴 problem updateRepliesCountCache .id \(event.id)")
-                        //                        }
                     }
                     
                     // batch save every 100
@@ -489,11 +477,6 @@ class Importer {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
                     }
-//                    if event.kind == .repost {
-//                        do { try _ = Event.updateRepostCountCache(savedEvent, content:event.content, context: context) } catch {
-//                            L.importing.error("🦋🦋🔴🔴🔴 problem updating Repost Count Cache .id \(event.id)")
-//                        }
-//                    }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .zapNote {
@@ -506,13 +489,6 @@ class Importer {
                         do { try _ = Event.updateMentionsCountCache(event.tags, context: context) } catch {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
                         }
-                        
-                        // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-                        // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-                        // DISABLED BECAUSE ALREADY DONE IN saveEvent.
-                        //                        do { try _ = Event.updateRepliesCountCache(event.tags, context: context) } catch {
-                        //                            print("🦋🦋🔴🔴🔴 problem updateRepliesCountCache .id \(event.id)")
-                        //                        }
                     }
                 }
                 if (context.hasChanges) {
