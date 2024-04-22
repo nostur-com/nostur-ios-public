@@ -227,7 +227,7 @@ struct PostHeaderView: View {
     public let singleLine: Bool
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 5) {
+        HStack(alignment: .center, spacing: 5) {
             Group {
                 Text(name)
                     .animation(.easeIn, value: name)
@@ -243,7 +243,6 @@ struct PostHeaderView: View {
                         .background(.red)
                         .foregroundColor(.white)
                         .cornerRadius(8)
-                        .padding(.top, 3)
                         .layoutPriority(2)
                 }
 
