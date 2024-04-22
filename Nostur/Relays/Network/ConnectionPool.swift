@@ -237,7 +237,7 @@ public class ConnectionPool: ObservableObject {
     func allowNewFollowingSubscriptions() {
         // removes "Following" from the active subscriptions so when we try a new one when following keys has changed, it would be ignored because didn't pass !contains..
         for (_, connection) in self.connections {
-            connection.queue.async {
+            connection.queue.async(flags: .barrier) {
                 if connection.nreqSubscriptions.contains("Following") {
                     connection.nreqSubscriptions.remove("Following")
                 }
@@ -248,7 +248,7 @@ public class ConnectionPool: ObservableObject {
     @MainActor
     func closeSubscription(_ subscriptionId:String) {
         for (_, connection) in self.connections {
-            connection.queue.async {
+            connection.queue.async(flags: .barrier) {
                 if connection.nreqSubscriptions.contains(subscriptionId) {
                     L.lvm.info("Closing subscriptions for .relays - subscriptionId: \(subscriptionId)");
                     let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
