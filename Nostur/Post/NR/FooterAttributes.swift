@@ -136,30 +136,26 @@ class FooterAttributes: ObservableObject {
         let id = self.id
         eventStatChangeSubscription = ViewUpdates.shared.eventStatChanged
             .filter { $0.id == id }
-//            .debounce(for: .seconds(1), scheduler: DispatchQueue.main) // Adjust the debounce time as needed
-//                .scan(nil) { (accumulated: EventStatChange?, change: EventStatChange) -> EventStatChange? in
-//                    if let acc = accumulated, acc.id == change.id {
-//                        var mergedChange = acc
-//                        mergedChange.replies = change.replies ?? acc.replies
-//                        mergedChange.replies = change.replies ?? acc.replies
-//                        mergedChange.likes = change.likes ?? acc.likes
-//                        mergedChange.zaps = change.zaps ?? acc.zaps
-//                        mergedChange.zapTally = change.zapTally ?? acc.zapTally
-//                        return mergedChange
-//                    }
-//                    return change
-//                }
-//                .compactMap { $0 } // Filter out nil values
-//                .sink { combinedChange in
-//                    // Handle the single combined change here
-//                }
-//                .store(in: &subscriptions) // Assuming you have a subscriptions array
-//            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .scan(nil) { (accumulated: EventStatChange?, change: EventStatChange) -> EventStatChange? in
+                if let acc = accumulated {
+                    var mergedChange = acc
+                    
+                    mergedChange.relays = change.relays ?? acc.relays
+                    mergedChange.reposts = max(change.reposts ?? 0, acc.reposts ?? 0)
+                    mergedChange.replies = max(change.replies ?? 0, acc.replies ?? 0)
+                    mergedChange.likes = max(change.likes ?? 0, acc.likes ?? 0)
+                    mergedChange.zaps = max(change.zaps ?? 0, acc.zaps ?? 0)
+                    mergedChange.zapTally = max(change.zapTally ?? 0, acc.zapTally ?? 0)
+                    return mergedChange
+                }
+                return change
+            }
+            .compactMap { $0 } // Filter out nil values
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .receive(on: RunLoop.main)
             .sink { [weak self] change in
                 guard let self else { return }
                 
-                self.objectWillChange.send()
                 if let likes = change.likes, likes != self.likesCount {
                     self.likesCount = likes
                 }

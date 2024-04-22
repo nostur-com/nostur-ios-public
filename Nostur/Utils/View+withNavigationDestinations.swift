@@ -87,6 +87,7 @@ extension View {
                     ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
                 default:
                     PostDetailView(nrPost: nrPost)
+                        .equatable()
                 }
             }
             .nbNavigationDestination(for: Naddr1Path.self) { path in
@@ -125,6 +126,7 @@ extension View {
                 switch (path) {
                     case .Post(let post):
                         PostDetailView(nrPost: post)
+                            .equatable()
                     case .Blocklist:
                         BlockListView()
                     case .NoteReactions(let id):

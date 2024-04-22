@@ -12,39 +12,47 @@ struct ThreadReplies: View {
     @ObservedObject public var nrPost: NRPost
     @State private var timer:Timer? = nil
     @State private var showNotWoT = false
+    @State private var didLoad = false
     
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         VStack(spacing: 10) {
-            ForEach(nrPost.groupedRepliesSorted) { reply in
-                PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
-                    .id(reply.id)
-                    .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
-            }
-            if !nrPost.groupedRepliesNotWoT.isEmpty {
-                Divider()
-                if WOT_FILTER_ENABLED() && !showNotWoT {
-                    Button("Show more") {
-                        showNotWoT = true
+            if didLoad {
+                ForEach(nrPost.groupedRepliesSorted) { reply in
+                    PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
+                        .id(reply.id)
+                        .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
+                }
+                if !nrPost.groupedRepliesNotWoT.isEmpty {
+                    Divider()
+                    if WOT_FILTER_ENABLED() && !showNotWoT {
+                        Button("Show more") {
+                            showNotWoT = true
+                        }
+                    }
+                    if showNotWoT {
+                        ForEach(nrPost.groupedRepliesNotWoT) { reply in
+                            PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
+                                .id(reply.id)
+                        }
+                        .animation(Animation.spring(), value: nrPost.groupedRepliesNotWoT)
                     }
                 }
-                if showNotWoT {
-                    ForEach(nrPost.groupedRepliesNotWoT) { reply in
-                        PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
-                            .id(reply.id)
-                    }
-                    .animation(Animation.spring(), value: nrPost.groupedRepliesNotWoT)
-                }
+                // If there are less than 5 replies, put some empty space so our detail note is at top of screen
+    //            if (nrPost.replies.count < 5) {
+    //                themes.theme.listBackground.frame(height: 400)
+    //            }
+    //            Spacer()
             }
-            // If there are less than 5 replies, put some empty space so our detail note is at top of screen
-//            if (nrPost.replies.count < 5) {
-//                themes.theme.listBackground.frame(height: 400)
-//            }
-//            Spacer()
         }
         .background(themes.theme.listBackground)
         .onAppear {
+            guard !didLoad else { return }
             guard !nrPost.plainTextOnly else { L.og.debug("plaintext enabled, probably spam") ; return }
             nrPost.loadGroupedReplies()
+            didLoad = true
             
             // After many attempts, still some replyTo's are missing, somewhere some observable is not
             // triggering, cant find out where. So use this workaround...
