@@ -217,20 +217,17 @@ public class ConnectionPool: ObservableObject {
     @MainActor
     func removeActiveAccountSubscriptions() {
         for (_, connection) in connections {
-            if connection.nreqSubscriptions.contains("Following") {
-                let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"), relayType: .READ)
-                connection.sendMessage(closeFollowing.message)
-            }
-            if connection.nreqSubscriptions.contains("Notifications") {
-                let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"), relayType: .READ)
-                connection.sendMessage(closeNotifications.message)
-            }
-            queue.async { [weak self, weak connection] in
-                guard let connection, let self else { return }
+            connection.queue.async {
+                if connection.nreqSubscriptions.contains("Following") {
+                    let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"), relayType: .READ)
+                    connection.sendMessage(closeFollowing.message)
+                }
+                if connection.nreqSubscriptions.contains("Notifications") {
+                    let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"), relayType: .READ)
+                    connection.sendMessage(closeNotifications.message)
+                }
                 if !connection.nreqSubscriptions.isDisjoint(with: Set(["Following", "Notifications"])) {
-                    self.queue.async(flags: .barrier) { [weak connection] in
-                        connection?.nreqSubscriptions.subtract(Set(["Following", "Notifications"]))
-                    }
+                    connection.nreqSubscriptions.subtract(Set(["Following", "Notifications"]))
                 }
             }
         }
@@ -240,12 +237,9 @@ public class ConnectionPool: ObservableObject {
     func allowNewFollowingSubscriptions() {
         // removes "Following" from the active subscriptions so when we try a new one when following keys has changed, it would be ignored because didn't pass !contains..
         for (_, connection) in self.connections {
-            self.queue.async { [weak self, weak connection] in
-                guard let connection else { return }
+            connection.queue.async {
                 if connection.nreqSubscriptions.contains("Following") {
-                    self?.queue.async(flags: .barrier) { [weak connection] in
-                        connection?.nreqSubscriptions.remove("Following")
-                    }
+                    connection.nreqSubscriptions.remove("Following")
                 }
             }
         }
@@ -253,18 +247,13 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func closeSubscription(_ subscriptionId:String) {
-        queue.async { [weak self] in
-            guard let self else { return }
-            for (_, connection) in self.connections {
-                guard connection.isSocketConnected else { continue }
-                
+        for (_, connection) in self.connections {
+            connection.queue.async {
                 if connection.nreqSubscriptions.contains(subscriptionId) {
                     L.lvm.info("Closing subscriptions for .relays - subscriptionId: \(subscriptionId)");
                     let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
                     connection.sendMessage(closeSubscription.message)
-                    self.queue.async(flags: .barrier) { [weak connection] in
-                        connection?.nreqSubscriptions.remove(subscriptionId)
-                    }
+                    connection.nreqSubscriptions.remove(subscriptionId)
                 }
             }
         }
@@ -286,109 +275,120 @@ public class ConnectionPool: ObservableObject {
     }
     
     
-    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<RelayData> = [], accountPubkey:String? = nil) {
-        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-            print("Canvas.sendMessage: \(message.type) \(message.message)")
-            return
-        }
-
-        let limitToRelayIds = relays.map({ $0.id })
+    func sendMessage(_ message: ClientMessage, subscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey:String? = nil) {
+        #if DEBUG
+            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+                print("Canvas.sendMessage: \(message.type) \(message.message)")
+                return
+            }
+        #endif
         
         queue.async { [weak self] in
-            guard let self = self else { return }
-            for (_, connection) in self.connections {
-                if connection.isNWC || connection.isNC { // Logic for N(W)C relay is a bit different, no read/write difference
-                    if connection.isNWC && !message.onlyForNWCRelay { continue }
-                    if connection.isNC && !message.onlyForNCRelay { continue }
-                    
-                    if message.type == .REQ {
-                        if (!connection.isSocketConnected) {
-                            if (!connection.isSocketConnecting) {
-                                L.og.debug("⚡️ sendMessage \(subscriptionId ?? ""): not connected yet, connecting to N(W)C relay \(connection.url)")
-                                connection.connect()
-                            }
-                        }
-                        // For NWC we just replace active subscriptions, else doesn't work
-                        connection.sendMessage(message.message)
-                    }
-                    else if message.type == .CLOSE {
-                        if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
-                            continue
-                        }
-                        L.sockets.debug("🔚🔚 CLOSE: \(message.message)")
-                        connection.sendMessage(message.message)
-                    }
-                    else if message.type == .EVENT {
-                        
-                        if message.relayType == .WRITE && !connection.relayData.write { continue }
-//                        if message.relayType == .DM && !connection.relayData.shouldDM(for: message.accountPubkey) { continue } // TODO: THIS ONE NEEDS TO BE AT AUTH
-                        
-                        if let accountPubkey = accountPubkey, connection.relayData.excludedPubkeys.contains(accountPubkey) {
-                            L.sockets.debug("sendMessage: \(accountPubkey) excluded from \(connection.url) - not publishing here isNC:\(connection.isNC.description) - isNWC: \(connection.isNWC.description)")
-                            continue
-                        }
-                        if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
+            self?.sendMessageAlreadyInQueue(message, subscriptionId: subscriptionId, relays: relays, accountPubkey: accountPubkey)
+        }
+    }
+    
+    private func sendMessageAlreadyInQueue(_ message: ClientMessage, subscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil) {
+        #if DEBUG
+        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            fatalError("Should only be called from inside queue.async { }")
+        }
+        #endif
+        
+        let limitToRelayIds = relays.map({ $0.id })
+        
+        for (_, connection) in self.connections {
+            if connection.isNWC || connection.isNC { // Logic for N(W)C relay is a bit different, no read/write difference
+                if connection.isNWC && !message.onlyForNWCRelay { continue }
+                if connection.isNC && !message.onlyForNCRelay { continue }
+                
+                if message.type == .REQ {
+                    if (!connection.isSocketConnected) {
+                        if (!connection.isSocketConnecting) {
+                            L.og.debug("⚡️ sendMessage \(subscriptionId ?? ""): not connected yet, connecting to N(W)C relay \(connection.url)")
                             connection.connect()
                         }
-                        L.sockets.debug("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
-                        connection.sendMessage(message.message)
                     }
+                    // For NWC we just replace active subscriptions, else doesn't work
+                    connection.sendMessage(message.message)
                 }
-                
-                else {
-                    if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
-                    guard limitToRelayIds.isEmpty || limitToRelayIds.contains(connection.url) else { continue }
-                    
-                    guard connection.relayData.read || connection.relayData.write || limitToRelayIds.contains(connection.url) else {
-                        // Skip if relay is not selected for reading or writing events
+                else if message.type == .CLOSE {
+                    if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
                         continue
                     }
+                    L.sockets.debug("🔚🔚 CLOSE: \(message.message)")
+                    connection.sendMessage(message.message)
+                }
+                else if message.type == .EVENT {
                     
-                    if message.type == .REQ { // REQ FOR ALL READ RELAYS
-                        
-                        if message.relayType == .READ && !limitToRelayIds.contains(connection.url) && !connection.relayData.read { continue }
-                        if message.relayType == .SEARCH && !connection.relayData.search { continue }
-                        
-                        if (!connection.isSocketConnected) {
-                            if (!connection.isSocketConnecting) {
-                                connection.connect()
-                            }
-                            /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
-                            //                        continue
-                        }
-                        // skip if we already have an active subscription
-                        if subscriptionId != nil && connection.nreqSubscriptions.contains(subscriptionId!) { continue }
-                        if (subscriptionId != nil) {
-                            self.queue.async(flags: .barrier) { [weak connection] in
-                                connection?.nreqSubscriptions.insert(subscriptionId!)
-                            }
-                            L.sockets.debug("⬇️⬇️ ADDED SUBSCRIPTION  \(connection.url): \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
-                        }
-                        connection.sendMessage(message.message)
+                    if message.relayType == .WRITE && !connection.relayData.write { continue }
+//                        if message.relayType == .DM && !connection.relayData.shouldDM(for: message.accountPubkey) { continue } // TODO: THIS ONE NEEDS TO BE AT AUTH
+                    
+                    if let accountPubkey = accountPubkey, connection.relayData.excludedPubkeys.contains(accountPubkey) {
+                        L.sockets.debug("sendMessage: \(accountPubkey) excluded from \(connection.url) - not publishing here isNC:\(connection.isNC.description) - isNWC: \(connection.isNWC.description)")
+                        continue
                     }
-                    else if message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-                        if (!connection.relayData.read && !limitToRelayIds.contains(connection.url)) { continue }
-                        if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
-                            // Already closed? no need to connect and send CLOSE message
-                            continue
-                            //                        managedClient.connect()
-                        }
-                        L.sockets.info("🔚🔚 CLOSE: \(message.message)")
-                        connection.sendMessage(message.message)
+                    if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
+                        connection.connect()
                     }
-                    else if message.type == .EVENT {
-                        if message.relayType == .WRITE && !connection.relayData.write { continue }
-                        
-                        if let accountPubkey = accountPubkey, connection.relayData.excludedPubkeys.contains(accountPubkey) {
-                            L.sockets.info("sendMessage: \(accountPubkey) excluded from \(connection.url) - not publishing here isNC:\(connection.isNC.description) - isNWC: \(connection.isNWC.description) ")
-                            continue
-                        }
-                        if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
+                    L.sockets.debug("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
+                    connection.sendMessage(message.message)
+                }
+            }
+            
+            else {
+                if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
+                guard limitToRelayIds.isEmpty || limitToRelayIds.contains(connection.url) else { continue }
+                
+                guard connection.relayData.read || connection.relayData.write || limitToRelayIds.contains(connection.url) else {
+                    // Skip if relay is not selected for reading or writing events
+                    continue
+                }
+                
+                if message.type == .REQ { // REQ FOR ALL READ RELAYS
+                    
+                    if message.relayType == .READ && !limitToRelayIds.contains(connection.url) && !connection.relayData.read { continue }
+                    if message.relayType == .SEARCH && !connection.relayData.search { continue }
+                    
+                    if (!connection.isSocketConnected) {
+                        if (!connection.isSocketConnecting) {
                             connection.connect()
                         }
-                        L.sockets.info("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
-                        connection.sendMessage(message.message)
+                        /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
+                        //                        continue
                     }
+                    // skip if we already have an active subscription
+                    if subscriptionId != nil && connection.nreqSubscriptions.contains(subscriptionId!) { continue }
+                    if (subscriptionId != nil) {
+                        self.queue.async(flags: .barrier) { [weak connection] in
+                            connection?.nreqSubscriptions.insert(subscriptionId!)
+                        }
+                        L.sockets.debug("⬇️⬇️ ADDED SUBSCRIPTION  \(connection.url): \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
+                    }
+                    connection.sendMessage(message.message)
+                }
+                else if message.type == .CLOSE { // CLOSE FOR ALL RELAYS
+                    if (!connection.relayData.read && !limitToRelayIds.contains(connection.url)) { continue }
+                    if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
+                        // Already closed? no need to connect and send CLOSE message
+                        continue
+                        //                        managedClient.connect()
+                    }
+                    L.sockets.info("🔚🔚 CLOSE: \(message.message)")
+                    connection.sendMessage(message.message)
+                }
+                else if message.type == .EVENT {
+                    if message.relayType == .WRITE && !connection.relayData.write { continue }
+                    
+                    if let accountPubkey = accountPubkey, connection.relayData.excludedPubkeys.contains(accountPubkey) {
+                        L.sockets.info("sendMessage: \(accountPubkey) excluded from \(connection.url) - not publishing here isNC:\(connection.isNC.description) - isNWC: \(connection.isNWC.description) ")
+                        continue
+                    }
+                    if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
+                        connection.connect()
+                    }
+                    L.sockets.info("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
+                    connection.sendMessage(message.message)
                 }
             }
         }
