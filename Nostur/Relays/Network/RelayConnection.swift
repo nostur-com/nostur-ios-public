@@ -32,7 +32,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     
     public var relayData: RelayData
-    private var queue: DispatchQueue
+    public var queue: DispatchQueue
     private var session: URLSession?
     private var webSocketTask: URLSessionWebSocketTask?
     private var subscriptions = Set<AnyCancellable>()
