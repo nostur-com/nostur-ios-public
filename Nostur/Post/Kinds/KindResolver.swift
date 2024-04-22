@@ -9,16 +9,16 @@ import SwiftUI
 
 struct KindResolver: View {
     
-    public let nrPost:NRPost
-    public var fullWidth:Bool = false
-    public var hideFooter:Bool = false // For rendering in NewReply
-    public var missingReplyTo:Bool = false // For rendering in thread
-    public var isReply:Bool = false
-    public var isDetail:Bool = false
-    public var connect:ThreadConnectDirection? = nil
-    public var grouped:Bool = false
-    public var forceAutoload:Bool = false // To override auto downloaded of reposted post using pubkey of reposter
-    public var theme:Theme
+    public let nrPost: NRPost
+    public var fullWidth: Bool = false
+    public var hideFooter: Bool = false // For rendering in NewReply
+    public var missingReplyTo: Bool = false // For rendering in thread
+    public var isReply: Bool = false
+    public var isDetail: Bool = false
+    public var connect: ThreadConnectDirection? = nil
+    public var grouped: Bool = false
+    public var forceAutoload: Bool = false // To override auto downloaded of reposted post using pubkey of reposter
+    public var theme: Theme
     
     var body: some View {
 //        #if DEBUG
