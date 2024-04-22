@@ -925,7 +925,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     }
     
     // Same as repliesListener but only for counts
-    // NO NEED? ALREADY PART OF ViewUpdates.shared.eventStatChanged ??
+    // TODO: NO NEED? ALREADY PART OF ViewUpdates.shared.eventStatChanged ??
     private func repliesCountListener() {
         guard repliesSubscription == nil else { return } // Skip if we already have repliesListener, which makes repliesCountListener not needed
         guard repliesCountSubscription == nil else { return }
@@ -967,10 +967,17 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 .map { NRPost(event: $0, cancellationId: cancellationIds[$0.id]) }
             self.event?.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
             DispatchQueue.main.async { [weak self] in
-                self?.objectWillChange.send()
-                self?.replies = nrReplies
-                self?.footerAttributes.objectWillChange.send()
-                self?.footerAttributes.repliesCount = Int64(nrReplies.count)
+                guard let self else { return }
+                
+                if self.replies.count != nrReplies.count  {
+                    self.objectWillChange.send()
+                    self.replies = nrReplies
+                }
+                    
+                if self.footerAttributes.repliesCount != Int64(nrReplies.count) {
+                    self.footerAttributes.objectWillChange.send()
+                    self.footerAttributes.repliesCount = Int64(nrReplies.count)
+                }
             }
         }
     }

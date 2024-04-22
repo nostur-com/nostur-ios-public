@@ -1004,6 +1004,7 @@ extension Event {
                     dbArticle.repliesCount += 1
 //                    dbArticle.repliesUpdated.send(dbArticle.replies_)
                     ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: dbArticle.id, replies: dbArticle.replies_))
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: dbArticle.id, replies: dbArticle.repliesCount))
                 }
                 else {
                     // we don't have the article yet, store aTag in replyToId
@@ -1039,6 +1040,7 @@ extension Event {
                     parent.repliesCount += 1
 //                    replyTo.repliesUpdated.send(replyTo.replies_)
                     ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: parent.id, replies: parent.repliesCount))
                 }
             }
             
@@ -1063,6 +1065,7 @@ extension Event {
                         root.repliesCount += 1
                         ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: root.id, replies: root.replies_))
                         ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyTo, id: savedEvent.id, event: root))
+                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: root.id, replies: root.repliesCount))
                     }
                 }
             }
@@ -1078,6 +1081,7 @@ extension Event {
                     parent.repliesCount += 1
 //                    replyTo.repliesUpdated.send(replyTo.replies_)
                     ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: parent.id, replies: parent.repliesCount))
                 }
             }
             
