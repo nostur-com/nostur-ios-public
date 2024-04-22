@@ -9,21 +9,21 @@ import SwiftUI
 
 struct NRPostHeaderContainer: View {
     private let nrPost: NRPost
-    @ObservedObject private var pfpAttributes: NRPost.PFPAttributes
     @ObservedObject var settings: SettingsStore = .shared
     private var singleLine: Bool = true
     @State private var name: String
+    @State private var couldBeImposter: Int16
 
     init(nrPost: NRPost, singleLine: Bool = true) {
         self.nrPost = nrPost
-        self.pfpAttributes = nrPost.pfpAttributes
         self.singleLine = singleLine
         self.name = nrPost.pfpAttributes.contact?.anyName ?? String(nrPost.pubkey.suffix(11))
+        self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(name:  name, onTap: nameTapped, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
+            PostHeaderView(name:  name, onTap: nameTapped, couldBeImposter: couldBeImposter, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
                     guard profile.pubkey == nrPost.pubkey else { return }
                     withAnimation {
@@ -39,7 +39,7 @@ struct NRPostHeaderContainer: View {
                     nrPost.contact?.anyName = profile.name
                 }
                 .onAppear {
-                    guard let nrContact = pfpAttributes.contact else {
+                    guard let nrContact = nrPost.contact else {
                         bg().perform {
                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NRPostHeaderContainer.001")
                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
@@ -53,7 +53,7 @@ struct NRPostHeaderContainer: View {
                     }
                 }
                 .task {
-                    guard let nrContact = pfpAttributes.contact else { return }
+                    guard let nrContact = nrPost.contact else { return }
                     guard !SettingsStore.shared.lowDataMode else { return }
                     guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
                     guard nrContact.metadata_created_at != 0 else { return }
@@ -80,7 +80,8 @@ struct NRPostHeaderContainer: View {
                             DispatchQueue.main.async { [weak nrContact] in
                                 guard let nrContact else { return }
                                 guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
-                                nrContact.couldBeImposter = similarPFP ? 1 : 0
+                                couldBeImposter = similarPFP ? 1 : 0
+                                nrContact.couldBeImposter = couldBeImposter
                                 bg().perform {
                                     guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
                                     nrContact.contact?.couldBeImposter = similarPFP ? 1 : 0
@@ -91,7 +92,7 @@ struct NRPostHeaderContainer: View {
                     }
                 }
                 .onDisappear {
-                    guard let nrContact = pfpAttributes.contact else {
+                    guard let nrContact = nrPost.contact else {
                         QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
                         return
                     }
@@ -109,20 +110,22 @@ struct NRPostHeaderContainer: View {
 }
 
 struct EventHeaderContainer: View {
-    private let event: Event // Main context 
+    private let event: Event // Main context
     @ObservedObject var settings: SettingsStore = .shared
     private var singleLine: Bool = true
     @State private var name: String
+    @State private var couldBeImposter: Int16
 
     init(event: Event, singleLine: Bool = true) {
         self.event = event
         self.singleLine = singleLine
         self.name = event.contact?.anyName ?? String(event.pubkey.suffix(11))
+        self.couldBeImposter = event.contact?.couldBeImposter ?? -1
     }
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(name: name, onTap: nameTapped, via: event.via, createdAt: Date(timeIntervalSince1970: TimeInterval(event.created_at)), displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
+            PostHeaderView(name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, via: event.via, createdAt: Date(timeIntervalSince1970: TimeInterval(event.created_at)), displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
                     guard profile.pubkey == event.pubkey else { return }
                     withAnimation {
@@ -161,7 +164,7 @@ struct EventHeaderContainer: View {
                         guard let contact, let bgContact = bg().object(with: contact.objectID) as? Contact else { return }
                         guard let account = account() else { return }
                         guard account.publicKey == currentAccountPubkey else { return }
-                        guard let (similarPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                        guard let (_, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
                             pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                         }) else { return }
                         
@@ -172,6 +175,7 @@ struct EventHeaderContainer: View {
                                 guard let contact else { return }
                                 guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                                 contact.couldBeImposter = similarPFP ? 1 : 0
+                                couldBeImposter = similarPFP ? 1 : 0
                                 bg().perform {
                                     guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
                                     bgContact.couldBeImposter = similarPFP ? 1 : 0
@@ -215,7 +219,7 @@ struct EventHeaderContainer: View {
 struct PostHeaderView: View {
     public let name: String
     public var onTap: (() -> Void)? = nil
-    public let couldBeImposter: Int = -1
+    public var couldBeImposter: Int16 = -1
     public var via: String? = nil
     public let createdAt: Date
     public var agoText: String? = nil

@@ -29,7 +29,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     var pictureUrl:URL?
     var banner:String?
     var about:String?
-    @Published var couldBeImposter:Int16 = -1 // -1: unchecked, 0:false 1:true
+    @Published var couldBeImposter: Int16 = -1 // -1: unchecked, 0:false 1:true
     
     var nip05verified:Bool
     var nip05:String?
