@@ -20,7 +20,9 @@ func compareImages(image1: UIImage, image2: UIImage) -> CGFloat {
 
     var mae: CGFloat = 0.0
     
-    for i in stride(from: 0, to: min(pixelCount * 4, pixelData2.count), by: 4) {
+    for i in stride(from: 0, to: pixelCount * 4, by: 4) {
+        guard i+2 < pixelData1.count, i+2 < pixelData2.count else { continue }
+        
         let r1 = CGFloat(pixelData1[i])
         let g1 = CGFloat(pixelData1[i + 1])
         let b1 = CGFloat(pixelData1[i + 2])
