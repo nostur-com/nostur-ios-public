@@ -271,7 +271,7 @@ class NSecBunkerManager: ObservableObject {
         }
         
         // Make sure "NC" subscription is active
-        reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
+        req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
         ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey)
@@ -309,7 +309,7 @@ class NSecBunkerManager: ObservableObject {
         L.og.debug("🏰 ncReqSigned (encrypted): \(signedReq.wrappedEventJson())")
         
         // Make sure "NC" subscription is active
-        reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
+        req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
         ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey)

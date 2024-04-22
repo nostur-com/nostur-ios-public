@@ -44,8 +44,8 @@ class FollowingGuardian: ObservableObject {
     func checkForUpdatedContactList() {
         guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
         L.og.info("FollowingGuardian: Checking for updated contact list")
-        reqP(RM.getAuthorContactsList(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getAuthorContactsList"))
-        reqP(RM.getUserMetadata(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
+        req(RM.getAuthorContactsList(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getAuthorContactsList"))
+        req(RM.getUserMetadata(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
     }
     
     func listenForAccountChanged() {
@@ -54,8 +54,8 @@ class FollowingGuardian: ObservableObject {
             .sink { notification in
                 let account = notification.object as! CloudAccount
                 guard account.isFullAccount else { return }
-                reqP(RM.getAuthorContactsList(pubkey: account.publicKey, subscriptionId: "RM.getAuthorContactsList"))
-                reqP(RM.getUserMetadata(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
+                req(RM.getAuthorContactsList(pubkey: account.publicKey, subscriptionId: "RM.getAuthorContactsList"))
+                req(RM.getUserMetadata(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
             }
             .store(in: &subscriptions)
     }

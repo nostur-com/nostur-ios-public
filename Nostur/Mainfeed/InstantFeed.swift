@@ -93,7 +93,7 @@ class InstantFeed {
                 else {
                     let getContactListTask = ReqTask(subscriptionId: "RM.getAuthorContactsList") { taskId in
                         L.og.notice("🟪 Fetching clEvent from relays")
-                        reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
+                        req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
                     } processResponseCommand: { [weak self] taskId, _, _ in
                         bg().perform {
                             guard let self = self else { return }
@@ -134,7 +134,7 @@ class InstantFeed {
             
             let getFollowingEventsTask = ReqTask(prefix: "GFET-") { taskId in
                 L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
-                reqP(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
+                req(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
             } processResponseCommand: { [weak self] taskId, _, _ in
                 bg().perform {
                     guard let self = self else { return }
@@ -174,7 +174,7 @@ class InstantFeed {
                 guard let self = self else { return }
                 let getGlobalEventsTask = ReqTask(subscriptionId: "RM.getGlobalFeedEvents-" + UUID().uuidString) { taskId in
                     L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
-                    reqP(RM.getGlobalFeedEvents(limit: 200, subscriptionId: taskId), relays: self.relays)
+                    req(RM.getGlobalFeedEvents(limit: 200, subscriptionId: taskId), relays: self.relays)
                 } processResponseCommand: { [weak self] taskId, _, _ in
                     bg().perform {
                         guard let self = self else { return }

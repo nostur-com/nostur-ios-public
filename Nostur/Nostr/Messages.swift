@@ -538,19 +538,6 @@ func req(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> 
     )
 }
 
-func reqP(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> = [], accountPubkey:String? = nil, relayType:ClientMessage.RelayType = .READ) {
-    #if DEBUG
-    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-        return
-    }
-    #endif
-    ConnectionPool.shared.sendMessage(
-        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm, relayType: relayType, accountPubkey: (accountPubkey ?? NRState.shared.activeAccountPublicKey)),
-        subscriptionId: activeSubscriptionId,
-        relays: relays
-    )
-}
-
 public typealias RM = RequestMessage
 
 

@@ -39,7 +39,7 @@ extension LVM {
             prio: true,
             reqCommand: { taskId in
                 L.og.notice("🟪 Fetching clEvent from relays")
-                reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
+                req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] taskId, _, clEvent in
                 bg().perform {
@@ -89,7 +89,7 @@ extension LVM {
             prefix: "GFETOTHER-",
             reqCommand: { taskId in
                 L.og.notice("🟪 Fetching posts from relays using \(self.pubkeys.count) pubkeys")
-                reqP(RM.getFollowingEvents(pubkeys: Array(self.pubkeys), limit: 400, subscriptionId: taskId))
+                req(RM.getFollowingEvents(pubkeys: Array(self.pubkeys), limit: 400, subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] taskId, _, _  in
                 bg().perform {
