@@ -441,59 +441,6 @@ extension Event {
         return events
     }
     
-    // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-    // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-    static func updateRepliesCountCache(_ tags:[NostrTag], context:NSManagedObjectContext) throws -> Bool {
-        // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-        
-        
-        // TODO: USE AWAITING EVENTS HERE. OR NOT, IT IS NO LONGER USED. ONLY IN SETTINGS DEV MODE FIXER
-        let replyEtag = TagsHelpers(tags).replyToEtag()
-        
-        if (replyEtag != nil) {
-            let request = NSFetchRequest<Event>(entityName: "Event")
-            request.entity = Event.entity()
-            request.predicate = NSPredicate(format: "id == %@", replyEtag!.id)
-            request.fetchLimit = 1
-            
-            if let reactingToEvent = try context.fetch(request).first {
-                //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
-//                reactingToEvent.objectWillChange.send()
-                reactingToEvent.repliesCount = (reactingToEvent.repliesCount + 1)
-            }
-        }
-        let replyToRootEtag = TagsHelpers(tags).replyToRootEtag()
-        
-        // There is already a replyToRoot and not a replyToId, then replyToRootId should be counted
-        if (replyToRootEtag != nil && replyEtag == nil) {
-            let request = NSFetchRequest<Event>(entityName: "Event")
-            request.entity = Event.entity()
-            request.predicate = NSPredicate(format: "id == %@", replyToRootEtag!.id)
-            request.fetchLimit = 1
-            
-            if let reactingToEvent = try context.fetch(request).first {
-                //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
-//                reactingToEvent.objectWillChange.send()
-                reactingToEvent.repliesCount = (reactingToEvent.repliesCount + 1)
-            }
-        }
-        
-        // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-        //        if let rootEtag = TagsHelpers(tags).replyToRootEtag() {
-        //            if rootEtag.id != TagsHelpers(tags).replyToEtag()?.id { // dont increase counter if root reply id is same as reply id
-        //                let request = NSFetchRequest<Event>()
-        //                request.entity = Event.entity()
-        //                request.predicate = NSPredicate(format: "id == %@", rootEtag.id)
-        //
-        //                if let reactingToEvent = try context.fetch(request).first {
-        ////                    print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
-        //                    reactingToEvent.replies = reactingToEvent.replies + 1
-        //                }
-        //            }
-        //        }
-        return true
-    }
-    
     // NIP-25: The generic reaction, represented by the content set to a + string, SHOULD be interpreted as a "like" or "upvote".
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
     static func updateLikeCountCache(_ event:Event, content:String, context:NSManagedObjectContext) throws -> Bool {
@@ -521,28 +468,6 @@ extension Event {
                         event.reactionToId = reactingToEvent.id
                     }
                 }
-        }
-        return true
-    }
-    
-    static func updateRepostCountCache(_ event:Event, content:String, context:NSManagedObjectContext) throws -> Bool {
-        
-        if let firstE = event.firstE() {
-            let request = NSFetchRequest<Event>(entityName: "Event")
-            request.entity = Event.entity()
-            request.predicate = NSPredicate(format: "id == %@", firstE)
-            request.fetchLimit = 1
-            
-            if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-//                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
-            }
-            else if let repostedEvent = try context.fetch(request).first {
-                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-//                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
-            }
         }
         return true
     }
