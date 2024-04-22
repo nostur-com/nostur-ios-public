@@ -39,6 +39,7 @@ struct MainView: View {
         NBNavigationStack(path: $navPath) {
             if let account = account {
                 FollowingAndExplore(account: account, showingOtherContact: $showingOtherContact)
+                    .equatable()
 //                    .transaction { t in t.animation = nil }
                     .background(themes.theme.listBackground)
                     .withNavigationDestinations()

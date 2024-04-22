@@ -78,7 +78,12 @@ struct NoteById: View {
     }
 }
 
-struct PostDetailView: View {
+struct PostDetailView: View, Equatable {
+    
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.nrPost.id == rhs.nrPost.id && lhs.didLoad == rhs.didLoad
+    }
+    
     @EnvironmentObject private var themes: Themes
     private let nrPost: NRPost
     private var navTitleHidden: Bool = false
@@ -113,7 +118,7 @@ struct PostDetailView: View {
                             // SPECIAL HANDLING FOR WEBSITE COMMENTS
                             WebsiteComments(nrPost: nrPost)
                         }
-                        else {
+                        else if didLoad {
                             // NORMAL REPLIES TO A POST
                             ThreadReplies(nrPost: nrPost)
                         }

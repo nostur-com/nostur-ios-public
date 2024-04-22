@@ -9,7 +9,12 @@ import SwiftUI
 import Combine
 import NavigationBackport
 
-struct FollowingAndExplore: View {
+struct FollowingAndExplore: View, Equatable {
+    
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.account == rhs.account && lhs.showingOtherContact == rhs.showingOtherContact
+    }
+    
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
