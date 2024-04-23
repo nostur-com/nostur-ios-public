@@ -531,11 +531,25 @@ func req(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> 
         return
     }
     #endif
-    ConnectionPool.shared.sendMessage(
-        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm, relayType: relayType, accountPubkey: (accountPubkey ?? NRState.shared.activeAccountPublicKey)),
-        subscriptionId: activeSubscriptionId,
-        relays: relays
-    )
+    
+    let pubkey = (accountPubkey ?? NRState.shared.activeAccountPublicKey)
+    
+    if Thread.isMainThread {
+        DispatchQueue.global().async {
+            ConnectionPool.shared.sendMessage(
+                ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm, relayType: relayType, accountPubkey: pubkey),
+                subscriptionId: activeSubscriptionId,
+                relays: relays
+            )
+        }
+    }
+    else {
+        ConnectionPool.shared.sendMessage(
+            ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm, relayType: relayType, accountPubkey: pubkey),
+            subscriptionId: activeSubscriptionId,
+            relays: relays
+        )
+    }
 }
 
 public typealias RM = RequestMessage
