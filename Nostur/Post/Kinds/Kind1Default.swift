@@ -9,22 +9,22 @@ import SwiftUI
 
 // Note 1 default (not full-width)
 struct Kind1Default: View {
-    private var theme:Theme
-    @EnvironmentObject private var dim:DIMENSIONS
-    @ObservedObject private var settings:SettingsStore = .shared
-    private let nrPost:NRPost
+    private var theme: Theme
+    @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject private var settings: SettingsStore = .shared
+    private let nrPost: NRPost
     @ObservedObject private var pfpAttributes: NRPost.PFPAttributes
     
-    private let hideFooter:Bool // For rendering in NewReply
-    private let missingReplyTo:Bool // For rendering in thread
-    private var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+    private let hideFooter: Bool // For rendering in NewReply
+    private let missingReplyTo: Bool // For rendering in thread
+    private var connect: ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     private let isReply:Bool // is reply on PostDetail
     private let isDetail:Bool
     private let grouped:Bool
     private let forceAutoload:Bool
     @State private var didStart = false
     
-    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, forceAutoload:Bool = false, theme:Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -39,7 +39,7 @@ struct Kind1Default: View {
     
     private let THREAD_LINE_OFFSET = 24.0
     
-    private var imageWidth:CGFloat {
+    private var imageWidth: CGFloat {
         // FULL WIDTH IS OFF
         
         // LIST OR LIST PARENT
