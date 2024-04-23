@@ -26,7 +26,7 @@ struct NRPostHeaderContainer: View {
             PostHeaderView(name:  name, onTap: nameTapped, couldBeImposter: couldBeImposter, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
                     guard profile.pubkey == nrPost.pubkey else { return }
-                    withAnimation {
+                    withAnimation(.easeIn) {
                         name = profile.name
                     }
                     
@@ -128,7 +128,7 @@ struct EventHeaderContainer: View {
             PostHeaderView(name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, via: event.via, createdAt: Date(timeIntervalSince1970: TimeInterval(event.created_at)), displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
                     guard profile.pubkey == event.pubkey else { return }
-                    withAnimation {
+                    withAnimation(.easeIn) {
                         name = profile.name
                     }
                 }
@@ -227,40 +227,40 @@ struct PostHeaderView: View {
     public let singleLine: Bool
 
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         HStack(alignment: .center, spacing: 5) {
-            Group {
-                Text(name)
-                    .animation(.easeIn, value: name)
-                    .foregroundColor(.primary)
-                    .fontWeightBold()
-                    .lineLimit(1)
+            Text(name)
+                .foregroundColor(.primary)
+                .fontWeightBold()
+                .lineLimit(1)
+                .layoutPriority(2)
+                .onTapGesture { onTap?() }
+
+            if couldBeImposter == 1 {
+                Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                    .padding(.horizontal, 8)
+                    .background(.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
                     .layoutPriority(2)
-                    .onTapGesture { onTap?() }
+            }
 
-                if couldBeImposter == 1 {
-                    Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
-                        .padding(.horizontal, 8)
-                        .background(.red)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                        .layoutPriority(2)
-                }
+            if (singleLine) {
+                Ago(createdAt, agoText: agoText)
+                    .equatable()
+                    .layoutPriority(2)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
 
-                if (singleLine) {
-                    Ago(createdAt, agoText: agoText)
-                        .equatable()
-                        .layoutPriority(2)
+                if displayUserAgentEnabled, let via = via {
+                    Text(String(format: "via %@", via))
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
                         .lineLimit(1)
-
-                    if displayUserAgentEnabled, let via = via {
-                        Text(String(format: "via %@", via))
-                            .font(.subheadline)
-                            .lineLimit(1)
-                            .layoutPriority(3)
-                            .foregroundColor(.secondary)
-                    }
+                        .layoutPriority(3)
+                        .foregroundColor(.secondary)
                 }
             }
         }
