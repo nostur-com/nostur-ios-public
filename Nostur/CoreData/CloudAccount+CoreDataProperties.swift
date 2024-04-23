@@ -190,8 +190,23 @@ extension CloudAccount {
 
 import NostrEssentials
 
-func isValidPubkey(_ input: String) -> Bool {
-    return NostrRegexes.default.matchingStrings(input, regex: NostrRegexes.default.cache[.hexId]!).count == 1
+func isValidPubkey(_ input: String) -> Bool { // This used to be a simple regex but ChatGPT says this is faster. Lets try and measure.
+    // Ensure the string is exactly 64 characters long
+    if input.count != 64 {
+        return false
+    }
+
+    // Check each character is a valid lowercase hexadecimal
+    for character in input {
+        switch character {
+        case "0"..."9", "a"..."f":
+            continue
+        default:
+            return false
+        }
+    }
+
+    return true
 }
 
 extension CloudAccount : Identifiable {
