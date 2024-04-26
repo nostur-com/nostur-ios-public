@@ -1,0 +1,6473 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "\n%@" : {
+
+    },
+    "\nThis will **wipe** your:\n - Public nostr profile\n - Public nostr following list\n" : {
+      "comment" : "Confirmation text when you want to delete your account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het volgende wordt **gewist**:\n- Je openbare nostr profiel\n- Je openbare nostr volglijst"
+          }
+        }
+      }
+    },
+    " · %@" : {
+
+    },
+    " · via %@" : {
+
+    },
+    "__Source code__" : {
+
+    },
+    "_Post deleted by %@_" : {
+      "comment" : "Message shown when a post is deleted by (name)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "_Bericht verwijderd door %@_"
+          }
+        }
+      }
+    },
+    "_Post deleted by author_" : {
+      "comment" : "Message shown when a post is deleted",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "_Bericht verwijderd door verzender_"
+          }
+        }
+      }
+    },
+    "_Post from blocked account hidden_" : {
+      "comment" : "Message shown when a post is from a blocked account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "_Geblokkeerd bericht verborgen_"
+          }
+        }
+      }
+    },
+    "·" : {
+
+    },
+    "[#asknostr](nostur:t:asknostr)" : {
+
+    },
+    "[#beerstr](nostur:t:beerstr)" : {
+
+    },
+    "[#bitcoin](nostur:t:bitcoin)" : {
+
+    },
+    "[#coffeechain](nostur:t:coffeechain)" : {
+
+    },
+    "[#foodstr](nostur:t:foodstr)" : {
+
+    },
+    "[#footstr](nostur:t:footstr)" : {
+
+    },
+    "[#grownostr](nostur:t:grownostr)" : {
+
+    },
+    "[#memes](nostur:t:memes)" : {
+
+    },
+    "[#music](nostur:t:music)" : {
+
+    },
+    "[#nostr](nostur:t:nostr)" : {
+
+    },
+    "[#winestr](nostur:t:winestr)" : {
+
+    },
+    "[#zapathon](nostur:t:zapathon)" : {
+
+    },
+    "[%@](%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "[%1$@](%2$@)"
+          }
+        }
+      }
+    },
+    "[Zap](nostur:e:%@) failed.\n%@" : {
+      "comment" : "Error message. don't translate the (nostur:e:...) part",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[Zap](nostur:e:%@) mislukt.\n%@"
+          }
+        }
+      }
+    },
+    "@%@" : {
+
+    },
+    "**%@** and %lld others are now following you" : {
+      "comment" : "Message when (name) and X others are now following yoru",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%@** en %lld anderen volgen je nu"
+          }
+        }
+      }
+    },
+    "**%@** and %lld others reacted on your post" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%@** en %lld anderen hebben gereageerd op je bericht"
+          }
+        }
+      }
+    },
+    "**%@** and %lld others zapped your post" : {
+      "comment" : "Message when (name) and X others zapped your post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%@** en %lld anderen hebben je bericht gezapt"
+          }
+        }
+      }
+    },
+    "**%@** is now following you" : {
+      "comment" : "Message when (name) is now following you",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%@** volgt je nu"
+          }
+        }
+      }
+    },
+    "**%@** reacted on your post" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%@** heeft op je bericht gereageerd"
+          }
+        }
+      }
+    },
+    "**%@** zapped your post" : {
+      "comment" : "Message when (name) zapped your post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%@** heeft je bericht gezapt"
+          }
+        }
+      }
+    },
+    "**%@** zapped your profile" : {
+      "comment" : "Message when someone zapped your profile",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%@** heeft je profiel gezapt"
+          }
+        }
+      }
+    },
+    "**%lld**  Following" : {
+      "comment" : "Number of people following",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%lld**  Volgend"
+          }
+        }
+      }
+    },
+    "**♾️** Followers" : {
+      "comment" : "Label for followers count",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**♾️** Volgers"
+          }
+        }
+      }
+    },
+    "**Login error**" : {
+
+    },
+    "**Login timeout**" : {
+
+    },
+    "**PRIVATE KEY:** %@∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗" : {
+      "comment" : "Field that shows a partial private key",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**PRIVÉ SLEUTEL:** %@∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗"
+          }
+        }
+      }
+    },
+    "**PUBLIC KEY:** %@" : {
+      "comment" : "Field that shows a public key",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**PUBLIEKE SLEUTEL:** %@"
+          }
+        }
+      }
+    },
+    "**Send now**" : {
+
+    },
+    "**Sending post...**" : {
+
+    },
+    "**Signing post...**" : {
+
+    },
+    "**Terms and Conditions**\n" : {
+      "comment" : "Terms and conditions heading",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Voorwaarden**"
+          }
+        }
+      }
+    },
+    "%@" : {
+
+    },
+    "%@ " : {
+
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%@ Checking relays..." : {
+
+    },
+    "%@ Following" : {
+      "comment" : "Label for Following count"
+    },
+    "%@ has not published preferred relays or is using an older configuration." : {
+
+    },
+    "%@ kind %@ type not (yet) supported" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ kind %2$@ type not (yet) supported"
+          }
+        }
+      }
+    },
+    "%@ No internet connection" : {
+
+    },
+    "%@ reads posts from" : {
+
+    },
+    "%@ reposted" : {
+      "comment" : "Heading for reposted post: '(Name) reposted'",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ heeft opnieuw gepost"
+          }
+        }
+      }
+    },
+    "%@ sats %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ sats %2$@"
+          }
+        }
+      }
+    },
+    "%@ settings" : {
+
+    },
+    "%@'s posts can be found at" : {
+
+    },
+    "%lld" : {
+
+    },
+    "%lld conversation(s) hidden by you" : {
+
+    },
+    "%lld Following" : {
+      "comment" : "Label for Following count"
+    },
+    "%lld min read" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min leestijd"
+          }
+        }
+      }
+    },
+    "%lld requests outside Web of Trust" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld verzoeken buiten Web of Trust"
+          }
+        }
+      }
+    },
+    "+%lld" : {
+
+    },
+    "+%lld others" : {
+
+    },
+    "+1" : {
+
+    },
+    "+15" : {
+
+    },
+    "⚠️" : {
+
+    },
+    "🤫 Following" : {
+      "comment" : "Follow/Unfollow button when the state is 'Following silent'",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🤫 Volgend"
+          }
+        }
+      }
+    },
+    "🥪" : {
+
+    },
+    "🧨" : {
+
+    },
+    "0" : {
+
+    },
+    "1) Send screenshot of this error and wait for an update with fix" : {
+
+    },
+    "1d" : {
+      "comment" : "Short for 1 day (time frame)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1d"
+          }
+        }
+      }
+    },
+    "1m" : {
+      "comment" : "Short for 1 month (time frame)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1m"
+          }
+        }
+      }
+    },
+    "1w" : {
+      "comment" : "Short for 1 week (time frame)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1w"
+          }
+        }
+      }
+    },
+    "1y" : {
+      "comment" : "Short for 1 year (time frame)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1j"
+          }
+        }
+      }
+    },
+    "2) Reinstall the app and start fresh" : {
+
+    },
+    "2h" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2u"
+          }
+        }
+      }
+    },
+    "4h" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4u"
+          }
+        }
+      }
+    },
+    "8h" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "8u"
+          }
+        }
+      }
+    },
+    "12h" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12u"
+          }
+        }
+      }
+    },
+    "24h" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24u"
+          }
+        }
+      }
+    },
+    "48h" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "48u"
+          }
+        }
+      }
+    },
+    "A nostr client for iOS & macOS - nostur.com" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een nostr client voor iOS & macOS - nostur.com"
+          }
+        }
+      }
+    },
+    "Accept" : {
+      "comment" : "Button to accept terms and conditions",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepteer"
+          }
+        }
+      }
+    },
+    "Accept message request" : {
+      "comment" : "Button to accept a Direct Message request",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepteer verzoek"
+          }
+        }
+      }
+    },
+    "Accepted" : {
+      "comment" : "Tab title for accepted DMs (Direct Messages)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geaccepteerd"
+          }
+        }
+      }
+    },
+    "Account" : {
+      "comment" : "Heading for section to delete account"
+    },
+    "Account has no private key" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account heeft geen privé sleutel"
+          }
+        }
+      }
+    },
+    "Account menu" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account menu"
+          }
+        }
+      }
+    },
+    "Account: @%@ / %@" : {
+      "comment" : "Informational text during logout action, showing Account name/handle\ninformational message showing account name(s)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Account: @%1$@ / %2$@"
+          }
+        }
+      }
+    },
+    "Accounts" : {
+      "comment" : "Navigation title for Accounts screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accounts"
+          }
+        }
+      }
+    },
+    "Activate" : {
+      "comment" : "Button to check if a file storage server is compatible"
+    },
+    "Activate this filter" : {
+      "comment" : "Toggle to activate filter",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activeer filter"
+          }
+        }
+      }
+    },
+    "Add" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg toe"
+          }
+        }
+      }
+    },
+    "Add (%lld)" : {
+      "comment" : "Button to 'Add (amount)' contacts",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg toe (%lld)"
+          }
+        }
+      }
+    },
+    "Add (nsecBunker)" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg toe (nsecBunker)"
+          }
+        }
+      }
+    },
+    "Add +7" : {
+
+    },
+    "Add comment" : {
+
+    },
+    "Add contacts" : {
+      "comment" : "Navigation title of sheet to add contacts to feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg contacten toe"
+          }
+        }
+      }
+    },
+    "Add contacts to feed" : {
+      "comment" : "Navigation title for screen where you can add contacts to a feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg contacten toe"
+          }
+        }
+      }
+    },
+    "Add existing account" : {
+      "comment" : "Button to add an existing account\nNavigation title for Add Existing Account screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg bestaand account toe"
+          }
+        }
+      }
+    },
+    "Add private note" : {
+      "comment" : "Post context menu button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg privé notitie toe"
+          }
+        }
+      }
+    },
+    "Add public note (optional)" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Openbare notitie (optioneel)"
+          }
+        }
+      }
+    },
+    "Add relay" : {
+      "comment" : "Navigation title for Add relay screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg relay toe"
+          }
+        }
+      }
+    },
+    "Add/Remove %@ from custom feed" : {
+      "comment" : "Post context menu button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg toe/Verwijder %@ van feeds"
+          }
+        }
+      }
+    },
+    "Add/Remove from feed" : {
+      "comment" : "Navigation title for screen to add or remove contacts to a feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toevoegen/Verwijderen van feed"
+          }
+        }
+      }
+    },
+    "Add/Remove from feeds" : {
+      "comment" : "Menu action",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toevoegen/Verwijderen van feeds"
+          }
+        }
+      }
+    },
+    "All" : {
+      "comment" : "Menu choice to filter by All",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles"
+          }
+        }
+      }
+    },
+    "All accounts" : {
+      "comment" : "Menu item to select All accounts",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle accounts"
+          }
+        }
+      }
+    },
+    "Amount (satoshis)" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedrag (in satoshis)"
+          }
+        }
+      }
+    },
+    "and %lld others you follow." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "en %lld anderen die je volgt."
+          }
+        }
+      }
+    },
+    "and 1 other person you follow." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "en nog iemand die je volgt."
+          }
+        }
+      }
+    },
+    "App theme" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App thema"
+          }
+        }
+      }
+    },
+    "Approve" : {
+
+    },
+    "Approve login on %@?" : {
+
+    },
+    "Are you sure you want to delete your account?\n" : {
+      "comment" : "Confirmation text when you want to delete your account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weet je zeker dat je je account wilt verwijderen?"
+          }
+        }
+      }
+    },
+    "Article feed settings" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artikel-feed instellingen"
+          }
+        }
+      }
+    },
+    "Article feed time frame" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artikel-feed tijdsvak"
+          }
+        }
+      }
+    },
+    "Articles" : {
+      "comment" : "Tab title\nTab title for the Articles feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artikelen"
+          }
+        }
+      }
+    },
+    "Auto scroll to new posts" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll automatisch naar nieuwe berichten"
+          }
+        }
+      }
+    },
+    "AUTODOWNLOAD_ALL" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unrestricted"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onbeperkt"
+          }
+        }
+      }
+    },
+    "AUTODOWNLOAD_WOT_NORMAL" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust only"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen Web-of-Trust"
+          }
+        }
+      }
+    },
+    "AUTODOWNLOAD_WOT_STRICT" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Following only"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen volgend"
+          }
+        }
+      }
+    },
+    "Award to" : {
+      "comment" : "Navigation title of screen where you choose who to award badge to",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitreiken"
+          }
+        }
+      }
+    },
+    "Award to people" : {
+      "comment" : "Button to award a badge to people",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reik uit aan"
+          }
+        }
+      }
+    },
+    "Awarded to %lld people" : {
+      "comment" : "Text showing how many badges have been awarded",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitgereikt aan %lld personen"
+          }
+        }
+      }
+    },
+    "Awarded to %lld people on %@" : {
+      "comment" : "Showing how many people received this badge on which date",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitgereikt aan %lld personen op %@"
+          }
+        }
+      }
+    },
+    "Back" : {
+      "comment" : "Button to go back",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terug"
+          }
+        }
+      }
+    },
+    "Badges" : {
+      "comment" : "Navigation title of Bagdes screen\nSide bar navigation button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medailles"
+          }
+        }
+      }
+    },
+    "Badges received" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvangen medailles"
+          }
+        }
+      }
+    },
+    "Badges: %@" : {
+      "comment" : "Message showing size of badges cache",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medailles: %@"
+          }
+        }
+      }
+    },
+    "Based on your selection, the following relay set will be published so others can reach account: %@." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Op basis van je selectie worden de volgende relays gepubliceerd zodat anderen berichten kunnen vinden van account: %@"
+          }
+        }
+      }
+    },
+    "Bio" : {
+      "comment" : "Label for entering a bio about yourself on Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bio"
+          }
+        }
+      }
+    },
+    "Bitcoin Lightning Invoice ⚡️" : {
+      "comment" : "Title of a card that displays a lightning invoice",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitcoin Lightning Factuur ⚡️"
+          }
+        }
+      }
+    },
+    "Block %@" : {
+      "comment" : "Menu action\nPost context menu action to Block (name)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokkeer %@"
+          }
+        }
+      }
+    },
+    "Block for 1 day" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokkeer voor 1 dag"
+          }
+        }
+      }
+    },
+    "Block for 1 hour" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokkeer voor 1 uur"
+          }
+        }
+      }
+    },
+    "Block for 1 month" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokkeer voor 1 maand"
+          }
+        }
+      }
+    },
+    "Block for 1 week" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokkeer voor 1 week"
+          }
+        }
+      }
+    },
+    "Block for 4 hours" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokkeer voor 4 uur"
+          }
+        }
+      }
+    },
+    "Block for 8 hours" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blokkeer voor 8 uur"
+          }
+        }
+      }
+    },
+    "Block list" : {
+      "comment" : "Side bar navigation button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloklijst"
+          }
+        }
+      }
+    },
+    "Blocked" : {
+      "comment" : "Title of tab where Blocked users are listed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geblokkeerd"
+          }
+        }
+      }
+    },
+    "blocked until %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "geblokkeerd tot %@"
+          }
+        }
+      }
+    },
+    "Blue" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blauw"
+          }
+        }
+      }
+    },
+    "Bookmarks" : {
+      "comment" : "Navigation title for Bookmarks screen\nSide bar navigation button\nTab to switch to bookmarks",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bladwijzers"
+          }
+        }
+      }
+    },
+    "Button configurator" : {
+      "comment" : "Heading when entering Report details",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Knoppen configurator"
+          }
+        }
+      }
+    },
+    "Caches" : {
+      "comment" : "Settings heading",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caches"
+          }
+        }
+      }
+    },
+    "Calculating..." : {
+      "comment" : "Shown when calculating disk space",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berekenen..."
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuleer"
+          }
+        }
+      }
+    },
+    "Cancelled" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geannuleerd"
+          }
+        }
+      }
+    },
+    "Cashu (Bitcoin) 🥜" : {
+      "comment" : "Title of cashu redeem card"
+    },
+    "Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies een populaire relay iedereen je berichten makkelijk kan vinden, en kies een alternatieve relay (bij voorkeur je eigen) waar mensen altijd je berichten kunnen vinden als de populaire relay problemen heeft."
+          }
+        }
+      }
+    },
+    "Choose account" : {
+
+    },
+    "Choose content for this column" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies inhoud voor kolom"
+          }
+        }
+      }
+    },
+    "Choose feed" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies feed"
+          }
+        }
+      }
+    },
+    "Choose one or more public relays you read from so you can receive notifications when others mention you." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies 1 of meer publieke relays om berichten binnen te halen zodat je notificaties kan ontvangen wanneer iemand jou tagt in een bericht."
+          }
+        }
+      }
+    },
+    "Choose to tag:" : {
+
+    },
+    "Clear" : {
+      "comment" : "Button to clear cache",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wissen"
+          }
+        }
+      }
+    },
+    "Clear cache" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wis cache"
+          }
+        }
+      }
+    },
+    "Clearing..." : {
+      "comment" : "Message shown when clearing cache",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezig..."
+          }
+        }
+      }
+    },
+    "Close" : {
+      "comment" : "Button to close this screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sluiten"
+          }
+        }
+      }
+    },
+    "Code (bravery, verified_human, early_adoptor)" : {
+      "comment" : "Label for input field for badge code on Badge creation screen"
+    },
+    "Color Blue" : {
+
+    },
+    "Commenting on %@" : {
+      "comment" : "Shown when adding a comment to a website"
+    },
+    "Commenting on website" : {
+
+    },
+    "Comments" : {
+
+    },
+    "Comments on %@" : {
+
+    },
+    "Communities" : {
+      "comment" : "Navigation title for Communities view"
+    },
+    "Configure contacts..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stel contacten in..."
+          }
+        }
+      }
+    },
+    "Configure published relays" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerde relays instellen"
+          }
+        }
+      }
+    },
+    "Configure relays..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stel relays in..."
+          }
+        }
+      }
+    },
+    "Configure the reaction buttons for each post. You can also change the position or remove buttons you don't need." : {
+      "comment" : "Informational message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stel de reactie knoppen in, je kan ook de positie veranderen of knoppen verwijderen."
+          }
+        }
+      }
+    },
+    "Confirm log out" : {
+      "comment" : "Action sheet title\nTitle of sheet that asks the user to confirm logout action",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitloggen bevestigen"
+          }
+        }
+      }
+    },
+    "Connect" : {
+      "comment" : "Button to connect to relay",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind"
+          }
+        }
+      }
+    },
+    "Connect Alby wallet" : {
+      "comment" : "Button to connect to Alby wallet",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind met Alby portemonnee"
+          }
+        }
+      }
+    },
+    "Connect wallet" : {
+      "comment" : "Button to connect a wallet to Nostur",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind portemonnee"
+          }
+        }
+      }
+    },
+    "Connect your **Alby** wallet with **Nostur** for a seamless zapping experience" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind je **Alby** portemonnee met **Nostur** en zap met gemak"
+          }
+        }
+      }
+    },
+    "Connect your NWC compatible wallet with **Nostur** for a seamless zapping experience" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind een NWC ondersteunende portemonnee met **Nostur** en zap met gemak"
+          }
+        }
+      }
+    },
+    "Connected" : {
+      "comment" : "Relay status when connected",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbonden"
+          }
+        }
+      }
+    },
+    "contact" : {
+      "comment" : "The word \"contact\" when used as contact #1, contact #2 and contact #3.",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "contact"
+          }
+        }
+      }
+    },
+    "Contacts:" : {
+
+    },
+    "Continue" : {
+
+    },
+    "Copy npub" : {
+      "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer npub"
+          }
+        }
+      }
+    },
+    "Copy post text" : {
+      "comment" : "Post context menu button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer bericht"
+          }
+        }
+      }
+    },
+    "Copy private key" : {
+      "comment" : "Button to copy your private key to clipboard",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer privé sleutel"
+          }
+        }
+      }
+    },
+    "Copy private key (nsec) to clipboard" : {
+      "comment" : "Button to copy private key to clipboard",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer privé sleutel (nsec) naar klembord"
+          }
+        }
+      }
+    },
+    "Copy profile source" : {
+      "comment" : "Menu action",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer profile bron"
+          }
+        }
+      }
+    },
+    "Copy public key hex" : {
+      "comment" : "Menu action to copy to a contacts public key in hex format to clipboard",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer publieke sleutel (hex)"
+          }
+        }
+      }
+    },
+    "Could not convert data" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon data niet converteren"
+          }
+        }
+      }
+    },
+    "Could not fetch invoice" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon factuur niet binnenhalen"
+          }
+        }
+      }
+    },
+    "Could not fetch NWC info event from %@" : {
+      "comment" : "Error message during NWC setup",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon NWC info event niet binnenhalen van %@"
+          }
+        }
+      }
+    },
+    "Could not parse JSON" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon JSON niet verwerken"
+          }
+        }
+      }
+    },
+    "Could not parse secret from NWC connection URI" : {
+      "comment" : "Error message during NWC setup",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon geheim niet verwerken in NWC connection URI"
+          }
+        }
+      }
+    },
+    "Could not send NWC request" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon NWC verzoek niet verzenden"
+          }
+        }
+      }
+    },
+    "Could not sign event" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon bericht niet ondertekenen"
+          }
+        }
+      }
+    },
+    "Counters for replies, likes, zaps etc." : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tellers voor antwoorden, vind-ik-leuks, zaps etc."
+          }
+        }
+      }
+    },
+    "Create" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak aan"
+          }
+        }
+      }
+    },
+    "Create new account" : {
+      "comment" : "Button to create a new account\nButton to start creating a new account\nNavigation title of create new account screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw account"
+          }
+        }
+      }
+    },
+    "Create new badge" : {
+      "comment" : "Button to create a new badge\nNavigation title for Badge creation screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw medialle"
+          }
+        }
+      }
+    },
+    "Create new feed" : {
+      "comment" : "Button to create a new feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw Feed"
+          }
+        }
+      }
+    },
+    "Create test keys" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe test sleutels"
+          }
+        }
+      }
+    },
+    "Currently allowed by the filter: %lld contacts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu toegestaan door de filter: %lld contacten"
+          }
+        }
+      }
+    },
+    "Currently allowed by the filter: Everyone" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu toegestaan door de filter: iedereen"
+          }
+        }
+      }
+    },
+    "Custom" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangepast"
+          }
+        }
+      }
+    },
+    "Custom Feed" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangepaste Feed"
+          }
+        }
+      }
+    },
+    "Custom File Storage" : {
+      "comment" : "Navigation title for setting up a custom File Storage Server",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangepaste opslag"
+          }
+        }
+      }
+    },
+    "d" : {
+      "comment" : "short for days (ago), appended to number. Example: 2d",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "d"
+          }
+        }
+      }
+    },
+    "Data export" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data exporteren"
+          }
+        }
+      }
+    },
+    "Data usage" : {
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data gebruik"
+          }
+        }
+      }
+    },
+    "Database status" : {
+      "comment" : "Settings heading"
+    },
+    "Day" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dag"
+          }
+        }
+      }
+    },
+    "decode ack" : {
+
+    },
+    "decode test" : {
+
+    },
+    "decode test 2" : {
+
+    },
+    "decode test 3" : {
+
+    },
+    "Default" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standaard"
+          }
+        }
+      }
+    },
+    "Default zap amount" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standaard zap bedrag"
+          }
+        }
+      }
+    },
+    "Default zap amount:" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standaard zap bedrag:"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "comment" : "Button to delete\nPost context menu action to Delete a post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijderen"
+          }
+        }
+      }
+    },
+    "Delete account" : {
+      "comment" : "Button to delete account\nNavigation title of Delete account screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account verwijderen"
+          }
+        }
+      }
+    },
+    "Delete feed %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder feed %@"
+          }
+        }
+      }
+    },
+    "Delete private note" : {
+      "comment" : "Sheet title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder privé notitie"
+          }
+        }
+      }
+    },
+    "Deleting in %lld seconds" : {
+      "comment" : "Text that is counting down when you are deleting your account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijderen over %lld seconden"
+          }
+        }
+      }
+    },
+    "describe" : {
+
+    },
+    "Description" : {
+      "comment" : "Label for input field for badge description on Badge creation screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omschrijving"
+          }
+        }
+      }
+    },
+    "Direct Messages using a nsecBunker login are not available yet" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privéberichten met een nsecBunker login zijn nog niet beschikbaar"
+          }
+        }
+      }
+    },
+    "Disable to improve scrolling performance" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet uit voor soepeler scrollen"
+          }
+        }
+      }
+    },
+    "Disconnect" : {
+      "comment" : "Button to disconnect NWC (Nostr Wallet Connection)\nButton to disconnect from relay",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinding verbreken"
+          }
+        }
+      }
+    },
+    "Disconnected" : {
+      "comment" : "Relay status when disconnected",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen verbinding"
+          }
+        }
+      }
+    },
+    "Discover Communities" : {
+      "comment" : "Heading above list of communities"
+    },
+    "Discover Nostr" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontdek Nostr"
+          }
+        }
+      }
+    },
+    "Display" : {
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weergave"
+          }
+        }
+      }
+    },
+    "DM" : {
+      "comment" : "Navigation title for a DM conversation screen (Direct Message)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PB"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klaar"
+          }
+        }
+      }
+    },
+    "Drop image..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeelding invoegen"
+          }
+        }
+      }
+    },
+    "Duration" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duur"
+          }
+        }
+      }
+    },
+    "Edit muted word" : {
+      "comment" : "Navigation title for screen to edit muted word",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewerk gedempte woorden"
+          }
+        }
+      }
+    },
+    "Edit private note" : {
+      "comment" : "Navigation title for private note edit screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewerk privé notitie"
+          }
+        }
+      }
+    },
+    "Edit profile" : {
+      "comment" : "Button to edit own profile\nNavigation title for Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewerk profiel"
+          }
+        }
+      }
+    },
+    "Edit relay" : {
+      "comment" : "Navigation title for Edit relay screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewerk relay"
+          }
+        }
+      }
+    },
+    "Edit relays feed" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays feed aanpassen"
+          }
+        }
+      }
+    },
+    "Edit title" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewerk titel"
+          }
+        }
+      }
+    },
+    "eeuh" : {
+
+    },
+    "Enable animated profile pics" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geanimeerde profielfoto's inschakelen"
+          }
+        }
+      }
+    },
+    "Enable authentication" : {
+      "comment" : "Label for toggle to enable AUTH on this relay"
+    },
+    "Enable full width pictures" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schermvullende foto's inschakelen"
+          }
+        }
+      }
+    },
+    "Enable Web of Trust filter" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust filter ingeschakeld"
+          }
+        }
+      }
+    },
+    "Enter a NIP-96 compatible media server address to host your images" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voor een NIP-96 compatibel media server adres in"
+          }
+        }
+      }
+    },
+    "Enter JSON" : {
+      "comment" : "Label for field to enter a nostr json event",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer JSON in"
+          }
+        }
+      }
+    },
+    "Enter nsecBunker relay address" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nsecBunker relay adres"
+          }
+        }
+      }
+    },
+    "Enter private note about %@ for yourself" : {
+      "comment" : "Placeholder for entering note about (name)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer privé notitie in over %@ voor jezelf"
+          }
+        }
+      }
+    },
+    "Enter private note about this post for yourself" : {
+      "comment" : "Placeholder for entering private note",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer privé notitie in over dit bericht voor jezelf"
+          }
+        }
+      }
+    },
+    "Enter private note about this user for yourself" : {
+      "comment" : "Placeholder for entering private note",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer privé notitie in over dit persoon voor jezelf"
+          }
+        }
+      }
+    },
+    "Enter private note for yourself" : {
+      "comment" : "Placeholder in text field",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer privé notitie in voor jezelf"
+          }
+        }
+      }
+    },
+    "Enter your name" : {
+      "comment" : "Placeholder on input field on Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voer je naam in"
+          }
+        }
+      }
+    },
+    "Error: 00" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "Error: could not find contact pubkey" : {
+      "comment" : "Error shown on DM conversation screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon contact pubkey niet vinden"
+          }
+        }
+      }
+    },
+    "eventId: %@" : {
+
+    },
+    "Example" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorbeeld"
+          }
+        }
+      }
+    },
+    "Expired" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verlopen"
+          }
+        }
+      }
+    },
+    "Explore" : {
+      "comment" : "Tab title for the Explore feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verkennen"
+          }
+        }
+      }
+    },
+    "Extra information" : {
+      "comment" : "Label for report field to give extra information",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra infromatie"
+          }
+        }
+      }
+    },
+    "Failed to load image" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon afbeelding niet laden"
+          }
+        }
+      }
+    },
+    "Failed to load video" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon video niet laden"
+          }
+        }
+      }
+    },
+    "failed zaps" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mislukte zaps"
+          }
+        }
+      }
+    },
+    "Feed" : {
+      "comment" : "Tab title for a feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed"
+          }
+        }
+      }
+    },
+    "Feed content" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed inhoud"
+          }
+        }
+      }
+    },
+    "Feed settings" : {
+      "comment" : "Header for a feed setting",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed instellingen"
+          }
+        }
+      }
+    },
+    "Feeds" : {
+      "comment" : "Navigation title for Feeds screen\nSide bar navigation button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feeds"
+          }
+        }
+      }
+    },
+    "Fetch counts on timeline" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tellers op tijdlijn"
+          }
+        }
+      }
+    },
+    "Fetches like/zaps/replies counts as posts appear" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update tellers op tijdlijn tijdens scrollen"
+          }
+        }
+      }
+    },
+    "fetchRelays" : {
+
+    },
+    "File Storage Server address" : {
+      "comment" : "File Storage Server address",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server adres voor bestandsopslag"
+          }
+        }
+      }
+    },
+    "File Storage server configured successfully!" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestandsopslag server ingesteld!"
+          }
+        }
+      }
+    },
+    "Filter by your follows only (strict), or also your follows follows (normal)" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter volgend (strict), of ook volgend van volgend (normaal)"
+          }
+        }
+      }
+    },
+    "Filter contacts" : {
+      "comment" : "Label to filter contacts",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contacten filteren"
+          }
+        }
+      }
+    },
+    "Find author" : {
+      "comment" : "Navigation title of Find author screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek auteur"
+          }
+        }
+      }
+    },
+    "Follow" : {
+      "comment" : "Button to follow someone",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volg"
+          }
+        }
+      }
+    },
+    "Follow %@" : {
+      "comment" : "Post context menu button to Follow (name)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volg %@"
+          }
+        }
+      }
+    },
+    "Follow %@ on" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volg %@ op"
+          }
+        }
+      }
+    },
+    "Followers" : {
+      "comment" : "Heading",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volgers"
+          }
+        }
+      }
+    },
+    "Followers you know" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volgers die je kent"
+          }
+        }
+      }
+    },
+    "Following" : {
+      "comment" : "Follow/Unfollow button when the state is 'Following'\nMenu choice to filter by Following\nShown when you follow someone in the multi follow sheet\nTab title\nTab title for feed of people you follow",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volgend"
+          }
+        }
+      }
+    },
+    "Follows you" : {
+      "comment" : "Label shown when someone follows you\nLabel that shows if someone is following you",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volgt jou"
+          }
+        }
+      }
+    },
+    "Footer buttons" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Footer knoppen"
+          }
+        }
+      }
+    },
+    "Gallery" : {
+      "comment" : "Tab title for the Gallery feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gallerij"
+          }
+        }
+      }
+    },
+    "Gallery feed time frame" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gallerij-feed tijdsvak"
+          }
+        }
+      }
+    },
+    "get_public_key" : {
+
+    },
+    "gmmm broken %@" : {
+
+    },
+    "Green" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groen"
+          }
+        }
+      }
+    },
+    "h" : {
+      "comment" : "short for hours (ago), appended to number. Example: 7h",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "u"
+          }
+        }
+      }
+    },
+    "Hashtag" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hashtag"
+          }
+        }
+      }
+    },
+    "Hello, World! Hello World! Hello World! Hello World! Hello World! Hello World" : {
+
+    },
+    "hex" : {
+      "comment" : "Short label for the word 'hexadecimal'",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hex"
+          }
+        }
+      }
+    },
+    "Hide" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg"
+          }
+        }
+      }
+    },
+    "Hide posts you have already seen (beta)" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg berichten die je al hebt gezien (beta)"
+          }
+        }
+      }
+    },
+    "Hide tab bars when scrolling" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg balken tijdens scrollen"
+          }
+        }
+      }
+    },
+    "Hides badges from profiles and feeds" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg medailles van profielen en feeds"
+          }
+        }
+      }
+    },
+    "Home/Lock screen notifications" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begin-/Toegangsscherm notificaties"
+          }
+        }
+      }
+    },
+    "Home/Lock screen notifications are only active for the currently logged in account and can be a bit delayed" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begin-/Toegangsscherm notificaties zijn alleen actief voor de huidig ingelogde gebruiker"
+          }
+        }
+      }
+    },
+    "Hot" : {
+      "comment" : "Tab title for the Hot feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hot"
+          }
+        }
+      }
+    },
+    "Hot feed time frame" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hot-feed tijdsvak"
+          }
+        }
+      }
+    },
+    "ID" : {
+      "comment" : "Label for post identifier (ID)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID"
+          }
+        }
+      }
+    },
+    "Ignore" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Negeer"
+          }
+        }
+      }
+    },
+    "Illegal content" : {
+      "comment" : "Menu item in choice list",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Illegale inhoud"
+          }
+        }
+      }
+    },
+    "Image uploading" : {
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeeldingen upload"
+          }
+        }
+      }
+    },
+    "Image URL (1024x1024)" : {
+      "comment" : "Label for input field for badge image on Badge creation screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afbeelding URL (1024x1024)"
+          }
+        }
+      }
+    },
+    "Impersonation" : {
+      "comment" : "Menu item in choice list",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nabootsing van identiteit"
+          }
+        }
+      }
+    },
+    "Import private key" : {
+      "comment" : "Label for importing your private key on Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importeer privé sleutel"
+          }
+        }
+      }
+    },
+    "Include author" : {
+      "comment" : "Button to include author in Highlight",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg auteur toe"
+          }
+        }
+      }
+    },
+    "Include Nostur caption when sharing posts" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur voetnoot bijsluiten bij delen bericht"
+          }
+        }
+      }
+    },
+    "Include Nostur in post metadata" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaats Nostur in metadata van berichten"
+          }
+        }
+      }
+    },
+    "Included hashtags" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volg hashtags"
+          }
+        }
+      }
+    },
+    "Internet connection unavailable" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen internet"
+          }
+        }
+      }
+    },
+    "Invalid key" : {
+      "comment" : "Message shown when user has entered an invalid key",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige sleutel"
+          }
+        }
+      }
+    },
+    "Invalid private key" : {
+      "comment" : "Message shown after user entered an invalid private key",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige privé sleutel"
+          }
+        }
+      }
+    },
+    "Is bookmarked: %@" : {
+
+    },
+    "Issued" : {
+      "comment" : "Tab title of Issues badges",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitgegeven"
+          }
+        }
+      }
+    },
+    "It looks like %lld contacts were removed from your following list, perhaps from another nostr app%@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het lijkt er op dat %lld contacten zijn verwijderd van je volglijst, misschien vanuit aan andere nostr app %@"
+          }
+        }
+      }
+    },
+    "It's up to relays and other apps to honor your request" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het is aan de relays om je verzoek te honoreren"
+          }
+        }
+      }
+    },
+    "Keeps track across all feeds posts you have already seen, don't show them again" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houdt bij welke berichten je al hebt gezien (incl. meerdere feeds), toon deze niet opnieuw"
+          }
+        }
+      }
+    },
+    "Keys" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleutels"
+          }
+        }
+      }
+    },
+    "kind %@ type not (yet) supported" : {
+      "comment" : "Message shown when a 'kind X' post is not yet supported",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kind %@ type (nog) niet ondersteund"
+          }
+        }
+      }
+    },
+    "kind: %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kind: %2"
+          }
+        }
+      }
+    },
+    "Last optimize: %@" : {
+      "comment" : "Last run: (date) of maintanace"
+    },
+    "Last seen: %@ ago" : {
+      "comment" : "Label on profile showing when last seen, example: Last seen: 10m ago",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatst gezien: %@ geleden"
+          }
+        }
+      }
+    },
+    "Last updated %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatst bijgewerkt %@"
+          }
+        }
+      }
+    },
+    "Last updated: %@" : {
+      "comment" : "Last updated date of WoT in Settings",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatst bijgewerkt: %@"
+          }
+        }
+      }
+    },
+    "Last updated: May 27th, 2023\n    \nYour access to and use of the App is conditioned upon your acceptance of and compliance with these Terms. These Terms apply to all users of the App.\n\nBy accessing or using the App, you agree to be bound by these Terms. If you disagree with any part of the terms, then you do not have permission to access the App.\n\nAccounts\nWhen you create an account with the App, you are responsible for maintaining the confidentiality of your account keys, as well as restricting access to your device. You agree to accept responsibility for any and all activities or actions that occur under your account.\n\nContent\nThe App allows you to access, read, and post content through connecting to relays. You are responsible for the content that you post or access through the App, including its legality, reliability, and appropriateness.\n\nBy posting content through the App, you represent and warrant that the content is yours (you own it) and/or you have the right to use it, and that the posting of your content through the App does not violate the privacy rights, publicity rights, copyrights, contract rights, or any other rights of any person or entity.\n\nProhibited Activities\nYou agree not to use the App for any illegal, harmful, or offensive activities, including but not limited to:\n\nEngaging in harassment, bullying, or any form of intimidation\nDistributing or promoting sexually explicit or pornographic material\nPromoting hate speech, racism, or discrimination of any kind\nInfringing upon the intellectual property rights of others\nEngaging in any form of fraud, phishing, or unauthorized data collection\nIntellectual Property\nThe App and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of the Developer. The App is protected by copyright, trademark, and other laws of the United States and foreign countries. Any trademarks and trade dress may not be used in connection with any product or service without the prior written consent of the Developer.\n\nLimitation of Liability\nIn no event shall the Developer be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the App; (ii) any conduct or content of any third party on the App; (iii) any content obtained from the App; and (iv) unauthorized access, use, or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not the Developer has been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.\n\nPrivacy Policy\nNostur does not collect information about you. The app stores information that you provide about your nostr profile, which can be anything you choose to share or not. The posts and content you share from Nostur are sent out to public relays so anyone can view those and Nostur stores this on your device so you can always view it yourself.\nThe app uses the following external services:\nTenor: for including animated GIFs in your posts\nImage upload services: For including images in your posts. You can opt out to using these services by not including images or GIFs in your posts and not uploading a profile picture or banner in the app.\n\nFor any questions, please contact feedback@nostur.com." : {
+      "comment" : "Terms and conditions"
+    },
+    "Let's go!" : {
+      "comment" : "Button to start using Nostur, during onboarding",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laten we beginnen!"
+          }
+        }
+      }
+    },
+    "Lets others know you are posting from Nostur" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laat anderen weten dat je vanuit Nostur verstuurd"
+          }
+        }
+      }
+    },
+    "Lightning Address (LUD-06/16)" : {
+      "comment" : "Label for entering a Lightning Address on Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightningadres (LUD-06/15)"
+          }
+        }
+      }
+    },
+    "Lightning sound effect" : {
+      "comment" : "Setting on settings screen"
+    },
+    "Lightning wallet" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightning-portemonnee"
+          }
+        }
+      }
+    },
+    "Likes" : {
+      "comment" : "Tab title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vind-ik-leuks"
+          }
+        }
+      }
+    },
+    "Limit Home/Lock screen notifications to only from people you follow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon Begin-/Toegangsscherm notificaties alleen van mensen die je volgt"
+          }
+        }
+      }
+    },
+    "List" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lijst"
+          }
+        }
+      }
+    },
+    "Load default" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laad standaard"
+          }
+        }
+      }
+    },
+    "Load preset 1" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laad preset 1"
+          }
+        }
+      }
+    },
+    "Load preset 2" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laad preset 2"
+          }
+        }
+      }
+    },
+    "Load preset 3" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laad preset 3"
+          }
+        }
+      }
+    },
+    "Load preset 4" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laad preset 4"
+          }
+        }
+      }
+    },
+    "Loading indicator" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laadindicator"
+          }
+        }
+      }
+    },
+    "Log out" : {
+      "comment" : "Log out button\nSide bar navigation button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afmelden"
+          }
+        }
+      }
+    },
+    "Login request" : {
+
+    },
+    "Low Data mode" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beperkte data modus"
+          }
+        }
+      }
+    },
+    "m" : {
+      "comment" : "short for minutes (ago), appended to number. Example: 3m",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "m"
+          }
+        }
+      }
+    },
+    "Main account" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoofdaccount"
+          }
+        }
+      }
+    },
+    "Main WoT" : {
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoofd WoT"
+          }
+        }
+      }
+    },
+    "Make sure you have a back-up of your private key (nsec)\nNostur cannot recover your account without it" : {
+      "comment" : "Informational text during logout action\ninformational message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorg ervoor dat je een back-up van je privé sleutel (nsec) hebt.\nZonder dit kan Nostur je account niet herstellen."
+          }
+        }
+      }
+    },
+    "Mark all as read" : {
+      "comment" : "Menu action to mark all messages as read",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markeer alles als gezelen"
+          }
+        }
+      }
+    },
+    "May be required to access special features on this relay" : {
+
+    },
+    "Media" : {
+      "comment" : "Tab title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media"
+          }
+        }
+      }
+    },
+    "Media upload service" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media upload dienst"
+          }
+        }
+      }
+    },
+    "mentions" : {
+
+    },
+    "Mentions, replies, or DMs" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags, antwoorden, of PBs"
+          }
+        }
+      }
+    },
+    "Message verification" : {
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificatie van berichten"
+          }
+        }
+      }
+    },
+    "Messages" : {
+      "comment" : "Navigation title for DMs (Direct Messages)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé berichten"
+          }
+        }
+      }
+    },
+    "Missing mesages?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontbrekende berichten?"
+          }
+        }
+      }
+    },
+    "Missing messages?" : {
+
+    },
+    "Mock Bookmark update" : {
+
+    },
+    "Mock Profile update" : {
+
+    },
+    "Month" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maand"
+          }
+        }
+      }
+    },
+    "Most received recently on" : {
+      "comment" : "Heading above posts which received the most zaps",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent meest ontvangen op"
+          }
+        }
+      }
+    },
+    "Multi-columns and more" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multi-kolom en meer"
+          }
+        }
+      }
+    },
+    "Mute conversation" : {
+      "comment" : "Post context menu action to mute conversation",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conversatie dempen"
+          }
+        }
+      }
+    },
+    "Muted conversations" : {
+      "comment" : "Title of tab where Muted conversations are listed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedempte conversaties"
+          }
+        }
+      }
+    },
+    "Name" : {
+      "comment" : "Label for input field for badge name on Badge creation screen\nLabel of Name text field on Create new account screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naam"
+          }
+        }
+      }
+    },
+    "NC" : {
+
+    },
+    "New direct message" : {
+      "comment" : "Navigation title for a new Direct Message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw privé bericht"
+          }
+        }
+      }
+    },
+    "New feed" : {
+      "comment" : "Navigation title for screen to create a new feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw feed"
+          }
+        }
+      }
+    },
+    "new followers" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nieuwe volgers"
+          }
+        }
+      }
+    },
+    "New followers" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe volgers"
+          }
+        }
+      }
+    },
+    "New message" : {
+      "comment" : "Navigation title for a new Direct Message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw privé bericht"
+          }
+        }
+      }
+    },
+    "New post" : {
+      "comment" : "Button to create a new post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw bericht"
+          }
+        }
+      }
+    },
+    "New Post" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw bericht"
+          }
+        }
+      }
+    },
+    "new posts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nieuwe berichten"
+          }
+        }
+      }
+    },
+    "New posts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe berichten"
+          }
+        }
+      }
+    },
+    "New Posts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe berichten"
+          }
+        }
+      }
+    },
+    "New posts by %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe berichten van %@"
+          }
+        }
+      }
+    },
+    "New private note" : {
+      "comment" : "Navigation title for new private note screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw privé notitie"
+          }
+        }
+      }
+    },
+    "New reactions" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe reacties"
+          }
+        }
+      }
+    },
+    "New reposts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe herplaatsingen"
+          }
+        }
+      }
+    },
+    "New zaps" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe zaps"
+          }
+        }
+      }
+    },
+    "Next" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volgende"
+          }
+        }
+      }
+    },
+    "No articles found from your follow list in selected time frame." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen artikelen gevonden in je volglijst voor het gekozen tijdsvak"
+          }
+        }
+      }
+    },
+    "No comments found." : {
+
+    },
+    "no image" : {
+
+    },
+    "No message requests" : {
+      "comment" : "Shown on the DM requests view when there aren't any message requests to show",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen berichtverzoeken"
+          }
+        }
+      }
+    },
+    "non-https media blocked" : {
+      "comment" : "Displayed when an image in a post is blocked",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "niet-https media geblokkeerd"
+          }
+        }
+      }
+    },
+    "Nostr address (NIP-05)" : {
+      "comment" : "Label for entering a NIP-05 username on Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostr-adres (NIP-05)"
+          }
+        }
+      }
+    },
+    "Nostr event" : {
+
+    },
+    "Nostr events:" : {
+
+    },
+    "Nostr Wallet Connect" : {
+      "comment" : "Navigation title for setting up Nostr Wallet Connect (NWC)"
+    },
+    "Nostr Wallet Connect URI" : {
+      "comment" : "Label for entering Nostr Wallet Connect URI"
+    },
+    "Nostur %@ (Build: %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nostur %1$@ (Build: %2$@)"
+          }
+        }
+      }
+    },
+    "Nostur Pro" : {
+      "comment" : "Setting on settings screen"
+    },
+    "Not yet" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet niet"
+          }
+        }
+      }
+    },
+    "Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public." : {
+      "comment" : "Informational message on the DM screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten zijn versleuteld maar de metadata niet. Wanneer en aan wie je een bericht stuurt is openbaar."
+          }
+        }
+      }
+    },
+    "Note: You can also add someone elses public key to try out Nostur from their perspective." : {
+      "comment" : "Informational message on Add Existing Account screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notitie: Je kan ook iemand anders publieke sleutel gebruiken om Nostur te proberen vanuit zijn/haar perspectief."
+          }
+        }
+      }
+    },
+    "Nothing" : {
+
+    },
+    "Notification settings" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notificatie instellingen"
+          }
+        }
+      }
+    },
+    "Notifications" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notificaties"
+          }
+        }
+      }
+    },
+    "Notify selection (%lld)" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecteer (%lld)"
+          }
+        }
+      }
+    },
+    "Now using:" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingesteld:"
+          }
+        }
+      }
+    },
+    "nsecBunker appears offline, post will be saved but not published" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nsecBunker lijkt offline, bericht wordt opgeslagen maar niet verstuurd"
+          }
+        }
+      }
+    },
+    "Nudity" : {
+      "comment" : "Menu item in choice list",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naaktheid"
+          }
+        }
+      }
+    },
+    "NWC" : {
+
+    },
+    "OK" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "Only for people where you have activated the notification bell" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen bij wie je de notificatiebel hebt geactiveerd"
+          }
+        }
+      }
+    },
+    "Only from follows" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen van volgend"
+          }
+        }
+      }
+    },
+    "Only show content from your follows or follows-follows" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon alleen berichten van volgend en volgend-van-volgend"
+          }
+        }
+      }
+    },
+    "Open in %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open in: %@"
+          }
+        }
+      }
+    },
+    "Open latest" : {
+      "comment" : "Button go to latest version of article",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open nieuwste"
+          }
+        }
+      }
+    },
+    "Open with" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Openen met"
+          }
+        }
+      }
+    },
+    "Optimize now" : {
+      "comment" : "Button to run database clean up now"
+    },
+    "Orange" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oranje"
+          }
+        }
+      }
+    },
+    "P" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "Pay" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betalen"
+          }
+        }
+      }
+    },
+    "Payment attempted" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betaling geprobeerd"
+          }
+        }
+      }
+    },
+    "PFP's here (max 10)" : {
+
+    },
+    "Pin" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin vast"
+          }
+        }
+      }
+    },
+    "Pin on tab bar" : {
+      "comment" : "Toggle to pin/unpin a feed on tab bar",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin vast als tab"
+          }
+        }
+      }
+    },
+    "Pink" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roze"
+          }
+        }
+      }
+    },
+    "Please read these Terms and Conditions (\"Terms\", \"Terms and Conditions\") carefully before using Nostur (the \"App\") operated by the independent developer (\"Developer\")." : {
+      "comment" : "Terms and conditions paragraph"
+    },
+    "Please try again when there is a connection" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probeer opnieuw wanneer er een verbinding is"
+          }
+        }
+      }
+    },
+    "possible imposter" : {
+      "comment" : "Label shown on a profile",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mogelijke bedrieger"
+          }
+        }
+      }
+    },
+    "post" : {
+      "comment" : "The word \"post\" when used as post #1, post #2 and post #3.",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bericht"
+          }
+        }
+      }
+    },
+    "Post actions" : {
+      "comment" : "Title of sheet showing actions to perform on post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht acties"
+          }
+        }
+      }
+    },
+    "Post content: %@" : {
+      "comment" : "Message showing size of Post content cache",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht inhoud: %@"
+          }
+        }
+      }
+    },
+    "Post preview" : {
+      "comment" : "Navigation title for Post Preview screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorbeeld"
+          }
+        }
+      }
+    },
+    "Post.noun" : {
+      "comment" : "Navigation title when viewing a Post",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Post"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht"
+          }
+        }
+      }
+    },
+    "Post.verb" : {
+      "comment" : "Button to post (publish) a post\nButton to post a highlight",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Post"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur"
+          }
+        }
+      }
+    },
+    "Posted on %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geplaatst op %@"
+          }
+        }
+      }
+    },
+    "Posted via %@" : {
+      "comment" : "Showing from which app this post was posted",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verstuurd via %@"
+          }
+        }
+      }
+    },
+    "Posting" : {
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versturen"
+          }
+        }
+      }
+    },
+    "Posts" : {
+      "comment" : "Tab title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten"
+          }
+        }
+      }
+    },
+    "Posts containing this will be filtered from your feed" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten met dit worden gefilterd van je feed"
+          }
+        }
+      }
+    },
+    "Posts from contacts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van contacten"
+          }
+        }
+      }
+    },
+    "Posts from relays" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van relays"
+          }
+        }
+      }
+    },
+    "prefix: %@" : {
+
+    },
+    "Preview" : {
+      "comment" : "Heading when entering Report details\nPreview button when creating a new post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorbeeld"
+          }
+        }
+      }
+    },
+    "Previously known as: %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorheen: %@"
+          }
+        }
+      }
+    },
+    "Private key copied to clipboard" : {
+      "comment" : "Notification shown after user tapped to copy",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé sleutel gekopieerd naar klembord"
+          }
+        }
+      }
+    },
+    "Private note" : {
+      "comment" : "Label for private note edit field",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé notitie"
+          }
+        }
+      }
+    },
+    "Private notes" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé notities"
+          }
+        }
+      }
+    },
+    "Private Notes" : {
+      "comment" : "Tab to switch to private notes",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé notities"
+          }
+        }
+      }
+    },
+    "Problem parsing NWC connection URI" : {
+      "comment" : "Error message during NWC setup",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probleem met verwerken NWC connection URI"
+          }
+        }
+      }
+    },
+    "Profanity" : {
+      "comment" : "Menu item in choice list",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vulgair taalgebruik"
+          }
+        }
+      }
+    },
+    "Profile" : {
+      "comment" : "Side bar navigation button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiel"
+          }
+        }
+      }
+    },
+    "Profile banner URL" : {
+      "comment" : "Label for entering an URL to profile banner on Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiel banner URL"
+          }
+        }
+      }
+    },
+    "Profile banners: %@" : {
+      "comment" : "Message showing size of Profile banners cache",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiel banners: %@"
+          }
+        }
+      }
+    },
+    "Profile picture URL" : {
+      "comment" : "Label for entering an URL to profile picture on Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profielfoto URL"
+          }
+        }
+      }
+    },
+    "Profile pictures: %@" : {
+      "comment" : "Message showing size of Profile pictures cache",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profielfoto's: %@"
+          }
+        }
+      }
+    },
+    "pubkey: %@" : {
+
+    },
+    "pubkeysByWriteRelays" : {
+
+    },
+    "Public key" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publieke sleutel"
+          }
+        }
+      }
+    },
+    "Public key copied to clipboard" : {
+      "comment" : "Notification shown after user tapped to copy",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publieke sleutel gekopieerd naar klembord"
+          }
+        }
+      }
+    },
+    "Public or private key (npub or nsec)" : {
+      "comment" : "Input field to enter public or private key on Add Existing Account screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publieke- of privé sleutel (npub of nsec)"
+          }
+        }
+      }
+    },
+    "Publish" : {
+      "comment" : "Button to publish",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaats"
+          }
+        }
+      }
+    },
+    "Publish selected badges on profile" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaats gekozen medailles op profiel"
+          }
+        }
+      }
+    },
+    "Publish to this relay" : {
+      "comment" : "Label for toggle to publish to this relay",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publiceer naar deze relay"
+          }
+        }
+      }
+    },
+    "Published relays" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerde relays"
+          }
+        }
+      }
+    },
+    "Published relays for %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerde relays voor %@"
+          }
+        }
+      }
+    },
+    "Purple" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paars"
+          }
+        }
+      }
+    },
+    "Quote post" : {
+      "comment" : "Button to Quote a post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citeer bericht"
+          }
+        }
+      }
+    },
+    "Reaction buttons" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reactieknoppen"
+          }
+        }
+      }
+    },
+    "reactions" : {
+      "comment" : "Label for reactions count, example: (7) reactions",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reacties"
+          }
+        }
+      }
+    },
+    "read" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ontvangen"
+          }
+        }
+      }
+    },
+    "read + write" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ontvangen + versturen"
+          }
+        }
+      }
+    },
+    "Read only" : {
+      "comment" : "Label to indicate this a Read Only account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen-lezen"
+          }
+        }
+      }
+    },
+    "Read-only mode\n" : {
+      "comment" : "Heading for message read-only mode",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen-lezen modus"
+          }
+        }
+      }
+    },
+    "Reason" : {
+      "comment" : "Label for the reason of a report",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reden"
+          }
+        }
+      }
+    },
+    "Rebroadcast" : {
+      "comment" : "Button to rebroadcast a post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herpubliceer"
+          }
+        }
+      }
+    },
+    "Rebroadcast (again)" : {
+      "comment" : "Button to broadcast own post again",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publiceer (opnieuw)"
+          }
+        }
+      }
+    },
+    "Receipt from" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bonnetje van"
+          }
+        }
+      }
+    },
+    "Receive from this relay" : {
+      "comment" : "Label for toggle to receive from this relay",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvang vanaf deze relay"
+          }
+        }
+      }
+    },
+    "Receive notifications when Nostur is in background" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvang notificaties als Nostur op de achtergrond is"
+          }
+        }
+      }
+    },
+    "Received" : {
+      "comment" : "Tab title of Received badges",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvangen"
+          }
+        }
+      }
+    },
+    "Received from:" : {
+      "comment" : "Heading for list of relays received from",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvangen vanuit:"
+          }
+        }
+      }
+    },
+    "Recheck" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer opnieuw"
+          }
+        }
+      }
+    },
+    "Recommended by" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangeraden door"
+          }
+        }
+      }
+    },
+    "Reconfigure published relays" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerde relays opnieuw instellen"
+          }
+        }
+      }
+    },
+    "Red" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rood"
+          }
+        }
+      }
+    },
+    "Redeem" : {
+      "comment" : "Button to redeem a Cashu token",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzilver"
+          }
+        }
+      }
+    },
+    "Refresh" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ververs"
+          }
+        }
+      }
+    },
+    "Relay" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay"
+          }
+        }
+      }
+    },
+    "Relay Mastery" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay Beheer"
+          }
+        }
+      }
+    },
+    "Relay selection" : {
+      "comment" : "Header for a feed setting",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay keuze"
+          }
+        }
+      }
+    },
+    "Relay settings" : {
+      "comment" : "Relay settings header",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay instellingen"
+          }
+        }
+      }
+    },
+    "Relay URL" : {
+      "comment" : "Relay URL header",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay URL"
+          }
+        }
+      }
+    },
+    "Relays" : {
+      "comment" : "Relay settings heading\nTab title for relay mastery",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays"
+          }
+        }
+      }
+    },
+    "Relays you post to" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays voor versturen"
+          }
+        }
+      }
+    },
+    "Relays you read from" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays voor ontvangen/lezen"
+          }
+        }
+      }
+    },
+    "Relays:" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays:"
+          }
+        }
+      }
+    },
+    "Remember this amount for all zaps" : {
+      "comment" : "Toggle on zap screen to set selected amount as default for all zaps",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onthoud dit bedrag voor alle zaps"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder"
+          }
+        }
+      }
+    },
+    "Remove %lld contacts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder %lld contacten"
+          }
+        }
+      }
+    },
+    "Remove author" : {
+      "comment" : "Button to Remove author from Highlight",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder auteur"
+          }
+        }
+      }
+    },
+    "Remove this relay: %@?" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze relay verwijderen: %@?"
+          }
+        }
+      }
+    },
+    "Replies" : {
+      "comment" : "Tab title"
+    },
+    "Replying to " : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord op"
+          }
+        }
+      }
+    },
+    "Replying to %lld people" : {
+      "comment" : "Shown in a post, Replying to (X) people ",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord op %lld personen"
+          }
+        }
+      }
+    },
+    "Replying to: %@" : {
+      "comment" : "Shown when replying to an article (Replying to: (article title)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord op: %@"
+          }
+        }
+      }
+    },
+    "Replying to: %@ and %lld others" : {
+      "comment" : "Shown in a post, Replying: (names) and (x) others",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord op: %@ en %lld anderen"
+          }
+        }
+      }
+    },
+    "Replying to..." : {
+      "comment" : "Shown in a post when replying but the name is missing",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord op..."
+          }
+        }
+      }
+    },
+    "Report %@" : {
+      "comment" : "Menu action",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melden maken voor %@"
+          }
+        }
+      }
+    },
+    "Report for" : {
+      "comment" : "Label for choice of what to report",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melding voor"
+          }
+        }
+      }
+    },
+    "Report Information" : {
+      "comment" : "Heading when entering Report details",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melding-gegevens"
+          }
+        }
+      }
+    },
+    "Report person" : {
+      "comment" : "Navigation title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Persoon melden"
+          }
+        }
+      }
+    },
+    "Report post" : {
+      "comment" : "Navigation title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht melden"
+          }
+        }
+      }
+    },
+    "Report.verb" : {
+      "comment" : "Button to publish report\nPost context menu action to Report a post or user",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melding maken"
+          }
+        }
+      }
+    },
+    "Repost" : {
+      "comment" : "Button to Repost a post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herplaatsen"
+          }
+        }
+      }
+    },
+    "reposts" : {
+      "comment" : "Label for reposts count, example: (7) reposts",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "herplaatsingen"
+          }
+        }
+      }
+    },
+    "Request delete" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijderverzoek"
+          }
+        }
+      }
+    },
+    "Requests" : {
+      "comment" : "Tab title for DM (Direct Message) requests",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzoeken"
+          }
+        }
+      }
+    },
+    "required" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "verplicht"
+          }
+        }
+      }
+    },
+    "Rescan" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan opnieuw"
+          }
+        }
+      }
+    },
+    "Restore %lld contacts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herstel %lld contacten"
+          }
+        }
+      }
+    },
+    "Restrict auto-downloading of media posted by others" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beperk automatisch downloaden van media van anderen"
+          }
+        }
+      }
+    },
+    "Restrict media downloading" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beperk media downloads"
+          }
+        }
+      }
+    },
+    "Retake" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw"
+          }
+        }
+      }
+    },
+    "Retry" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw"
+          }
+        }
+      }
+    },
+    "Reveal" : {
+      "comment" : "Button to reveal a blocked a post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon"
+          }
+        }
+      }
+    },
+    "s" : {
+      "comment" : "short for seconds (ago), appended to number. Example: 15s",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "s"
+          }
+        }
+      }
+    },
+    "Sats" : {
+      "comment" : "Heading (short for Satoshis)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sats"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "comment" : "Save button on the Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opslaan"
+          }
+        }
+      }
+    },
+    "Save to file..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opslaan als..."
+          }
+        }
+      }
+    },
+    "Scanning relays for messages %lld/12 months ago..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezig met scannen voor berichten op relays %lld/12 maanden geleden..."
+          }
+        }
+      }
+    },
+    "screenshot" : {
+      "comment" : "Post context menu button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "schermafdruk"
+          }
+        }
+      }
+    },
+    "Search" : {
+      "comment" : "Navigation title for Search screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoeken"
+          }
+        }
+      }
+    },
+    "Search contact" : {
+      "comment" : "Placeholder in contact search field",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek contact"
+          }
+        }
+      }
+    },
+    "Search contacts" : {
+      "comment" : "Placeholder in search contacts input field",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoeken contacten"
+          }
+        }
+      }
+    },
+    "Search GIF" : {
+      "comment" : "Placeholder in GIF search field",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek GIF"
+          }
+        }
+      }
+    },
+    "Search..." : {
+      "comment" : "Placeholder text in a search input box",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoeken..."
+          }
+        }
+      }
+    },
+    "See what's happening on nostr right now" : {
+      "comment" : "Nostur intro text",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontdek wat er nu op nostr gebeurd"
+          }
+        }
+      }
+    },
+    "Self-hosted nsecBunker" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zelfgehoste nsecBunker"
+          }
+        }
+      }
+    },
+    "Send %@ sats %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur %@ sats %@"
+          }
+        }
+      }
+    },
+    "Send %@ sats to %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur %@ sats naar %@"
+          }
+        }
+      }
+    },
+    "Send DM to" : {
+      "comment" : "Navigation title for screen to select a contact to send a Direct Message to",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur PB naar"
+          }
+        }
+      }
+    },
+    "Send payment test" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur betaling test"
+          }
+        }
+      }
+    },
+    "Send sats" : {
+      "comment" : "Title of sheet showing zap options when sending sats (satoshis)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur sats"
+          }
+        }
+      }
+    },
+    "Send to: %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur naar: %@"
+          }
+        }
+      }
+    },
+    "Sending to: %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versturen naar: %@"
+          }
+        }
+      }
+    },
+    "Sent to %lld relays" : {
+      "comment" : "Message shown in footer of sent post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verstuurd naar %lld relays"
+          }
+        }
+      }
+    },
+    "Sent to:" : {
+      "comment" : "Heading for list of relays sent to",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verstuurd naar:"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "comment" : "Side bar navigation button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instellingen"
+          }
+        }
+      }
+    },
+    "Share highlight" : {
+      "comment" : "Navigation title for screen to Share a Highlighted Text",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markering delen"
+          }
+        }
+      }
+    },
+    "Share link" : {
+      "comment" : "Post context menu button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel link"
+          }
+        }
+      }
+    },
+    "Shared from **Nostur**" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedeeld vanuit **Nostur**"
+          }
+        }
+      }
+    },
+    "Show" : {
+      "comment" : "Button to show more items in a post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon"
+          }
+        }
+      }
+    },
+    "Show %@'s feed" : {
+      "comment" : "Post context menu button to show someone's feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon %@'s feed"
+          }
+        }
+      }
+    },
+    "Show anyway" : {
+      "comment" : "Button to show the blocked content anyway",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon alsnog"
+          }
+        }
+      }
+    },
+    "Show bookmarks" : {
+
+    },
+    "Show feed" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon feed"
+          }
+        }
+      }
+    },
+    "Show from which app someone posted" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon van welke app iemand verstuurd heeft"
+          }
+        }
+      }
+    },
+    "Show more" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon meer"
+          }
+        }
+      }
+    },
+    "Show post stats on timeline" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon bericht statistieken in feed"
+          }
+        }
+      }
+    },
+    "Show replies" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon reacties"
+          }
+        }
+      }
+    },
+    "Show unread count badge" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon ongelezen badge"
+          }
+        }
+      }
+    },
+    "Show wallet balance" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon portemonnee saldo"
+          }
+        }
+      }
+    },
+    "Shows 'Shared from Nostur' caption when sharing post screenshots" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon 'Gedeeld vanuit Nostur' bij delen bericht"
+          }
+        }
+      }
+    },
+    "Shows when items are being processed" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon wanneer dingen geladen worden op de achtergrond"
+          }
+        }
+      }
+    },
+    "Sign any nostr event" : {
+      "comment" : "Navigation title for screen to sign any nostr event",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onderteken nostr event"
+          }
+        }
+      }
+    },
+    "Sign event" : {
+      "comment" : "Button to sign a nostr JSON event",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onderteken"
+          }
+        }
+      }
+    },
+    "sign_event" : {
+
+    },
+    "Signer" : {
+      "comment" : "Side bar navigation button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ondertekenen"
+          }
+        }
+      }
+    },
+    "Signing as" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ondertekend als"
+          }
+        }
+      }
+    },
+    "Skip and try as guest first" : {
+      "comment" : "Button to skip adding account and use the guest account instead\nButton to skip creating account and login as guest",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overslaan en als gast proberen"
+          }
+        }
+      }
+    },
+    "Something about yourself" : {
+      "comment" : "Placeholder on input field for Bio on Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iets over jezelf"
+          }
+        }
+      }
+    },
+    "Something about yourself (bio)" : {
+      "comment" : "Label of bio/about text field on Create new account screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iets over jezelf (bio)"
+          }
+        }
+      }
+    },
+    "Something went wrong" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er is iets misgegaan"
+          }
+        }
+      }
+    },
+    "Sorry, this was not supposed to happen." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorry, dit was niet de bedoeling."
+          }
+        }
+      }
+    },
+    "source" : {
+      "comment" : "The word 'source' as in source code",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bron"
+          }
+        }
+      }
+    },
+    "Spam" : {
+      "comment" : "Menu item in choice list",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spam"
+          }
+        }
+      }
+    },
+    "Spam filter" : {
+      "comment" : "Header for a feed setting",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spamfilter"
+          }
+        }
+      }
+    },
+    "Spam filtering" : {
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spamfilter"
+          }
+        }
+      }
+    },
+    "Specific word or sentence" : {
+      "comment" : "Heading for entering a word or sentence to mute",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specifiek woord of zin"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "comment" : "Connection status header",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        }
+      }
+    },
+    "Swipe to unblock/unmute" : {
+      "comment" : "Informational text",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veeg om te deblokkeren/ontdempen"
+          }
+        }
+      }
+    },
+    "Tap account to exclude" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik account om uit te sluiten"
+          }
+        }
+      }
+    },
+    "Tap the notification bell when viewing someone's profile to receive a notification when they post." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik de notificatiebel op iemands profiel om een notificatie te ontvangen bij nieuwe bericht"
+          }
+        }
+      }
+    },
+    "Tap to load media" : {
+      "comment" : "An image placeholder the user can tap to load media (usually an image or gif)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Druk om afbeelding te laden"
+          }
+        }
+      }
+    },
+    "Tap to load video" : {
+      "comment" : "Button to load a video in a post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Druk om video te laden"
+          }
+        }
+      }
+    },
+    "Tap to toggle" : {
+
+    },
+    "Terms of Service" : {
+
+    },
+    "test" : {
+
+    },
+    "Test" : {
+
+    },
+    "Test Toggle" : {
+
+    },
+    "test1" : {
+
+    },
+    "The article feed shows articles from people you follow in the selected time frame" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze feed toont artikelen uit het gekozen tijdsvak van personen die jij volgt"
+          }
+        }
+      }
+    },
+    "The database could not be loaded." : {
+
+    },
+    "The Gallery feed shows pictures most liked or reposted by people you follow in the last %lld hours" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Gallerij-feed toont fotos met de meeste Vind-ik-leuks of herplaatsingen van mensen die je volgt in de laatste %lld uur"
+          }
+        }
+      }
+    },
+    "The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself" : {
+      "comment" : "Message during onboarding about the Guest Account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het gast account volgt al een aantal mensen. Je kan berichten lezen en profielen bekijken maar je kan niks plaatsen totdat je zelf een account aanmaakt"
+          }
+        }
+      }
+    },
+    "The Hot feed shows posts most liked or reposted by people you follow in the last %lld hours" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Hot-feed toont berichten met de meeste Vind-ik-leuks of herplaatsingen van mensen die je volgt in de laatste %lld uur"
+          }
+        }
+      }
+    },
+    "There are %lld new communities" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er zijn %lld nieuwe communities"
+          }
+        }
+      }
+    },
+    "There are 2 solutions:" : {
+
+    },
+    "There was a problem, could not send sats" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er was een probleem, sats konden niet verzonden worden"
+          }
+        }
+      }
+    },
+    "These relays are used for all accounts, and are not published unless configured on the account specific tabs." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze relays worden gebruikt voor alle accounts en worden niet gepubliceerd tenzij zo ingesteld op de account-specifieke tabs."
+          }
+        }
+      }
+    },
+    "These steps help you let others know on which relays they can find %@'s posts and which relays others should use to reach %@." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze stappen helpen je om anderen te laten weten op welke relays ze de berichten van %@ kunnen vinden en welke ze moeten gebruiken om %@ te bereiken."
+          }
+        }
+      }
+    },
+    "This article has been updated" : {
+      "comment" : "Message shown when there is a newer version available of an article",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artikel is bijgewerkt"
+          }
+        }
+      }
+    },
+    "This can be caused by the receiver switching to a different lightning address" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit kan worden veroorzaakt door een gewijzigd lightning-adres van de ontvanger"
+          }
+        }
+      }
+    },
+    "This gives more screen space when scrolling" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer ruimte tijdens scrollen"
+          }
+        }
+      }
+    },
+    "This NWC connection does not support payments" : {
+      "comment" : "Error message during NWC setup",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze NWC verbinding ondersteund geen betalingen"
+          }
+        }
+      }
+    },
+    "This post" : {
+      "comment" : "Menu choice",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit bericht"
+          }
+        }
+      }
+    },
+    "This post & user" : {
+      "comment" : "Menu choice",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit bericht en persoon"
+          }
+        }
+      }
+    },
+    "This post has %lld more items" : {
+      "comment" : "Message shown when there are more items in a post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit bericht heeft nog %lld items"
+          }
+        }
+      }
+    },
+    "This post has 1 more item" : {
+      "comment" : "Message shown when a post has 1 more item",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit bericht heeft nog een item"
+          }
+        }
+      }
+    },
+    "This will **delete** your:\n - Account from Nostur\n - Private key (nsec) from Apple Keychain" : {
+      "comment" : "Confirmation text when you want to delete your account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit zal **verwijderen**:\n - je account van Nostur\n - je privé sleutel (nsec) van Apple Keychain"
+          }
+        }
+      }
+    },
+    "Thread" : {
+      "comment" : "Navigation title when viewing a Thread",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draadje"
+          }
+        }
+      }
+    },
+    "Thumbnail URL (256x256)" : {
+      "comment" : "Label for input field for badge image on Badge creation screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miniatuur URL (256x256)"
+          }
+        }
+      }
+    },
+    "THUNDERZAP_LOW" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Low"
+          }
+        }
+      }
+    },
+    "THUNDERZAP_NORMAL" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "THUNDERZAP_OFF" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "Time frame" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijdsvak"
+          }
+        }
+      }
+    },
+    "Time out" : {
+
+    },
+    "Time-out" : {
+
+    },
+    "Time-out while loading gallery" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timeout tijdens laden galerij feed"
+          }
+        }
+      }
+    },
+    "Time-out while loading hot feed" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timeout tijdens laden Hot feed"
+          }
+        }
+      }
+    },
+    "Time-out while loading posts" : {
+
+    },
+    "Tip" : {
+
+    },
+    "Title" : {
+      "comment" : "Header for entering title of a feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titel"
+          }
+        }
+      }
+    },
+    "Title of your feed" : {
+      "comment" : "Placeholder for input field to enter title of a List\nPlaceholder for input field to enter title of a feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titel van je feed"
+          }
+        }
+      }
+    },
+    "To log in with other accounts, but keep filtering using the main Web of Trust account" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Om in te loggen met een ander account maar blijven filteren met het hoofd Web of Trust account"
+          }
+        }
+      }
+    },
+    "toggle red" : {
+
+    },
+    "Total: %lld" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Totaal: %lld"
+          }
+        }
+      }
+    },
+    "Try again" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probeer opnieuw"
+          }
+        }
+      }
+    },
+    "Try guest account" : {
+      "comment" : "Button to try the guest account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probeer gast account"
+          }
+        }
+      }
+    },
+    "Try Nostur as guest" : {
+      "comment" : "Heading for message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probeer Nostur as gast"
+          }
+        }
+      }
+    },
+    "Try to use anyway" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probeer toch te gebruiken"
+          }
+        }
+      }
+    },
+    "Turn off to save battery life and trust the relays for the authenticity of messages" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schakel uit om je batterijlading te besparen en vertrouw de relays voor het valideren van berichten"
+          }
+        }
+      }
+    },
+    "Type your message..." : {
+      "comment" : "Placeholder for input field for new direct message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typ je bericht..."
+          }
+        }
+      }
+    },
+    "Unable to decode Cashu token" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan Cashu token niet lezen"
+          }
+        }
+      }
+    },
+    "Unable to decode lightning invoice" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon lightning factuur niet verwerken"
+          }
+        }
+      }
+    },
+    "Unable to fetch" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ophalen lukt niet"
+          }
+        }
+      }
+    },
+    "Unable to fetch contacts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contacten ophalen lukt niet"
+          }
+        }
+      }
+    },
+    "Unable to fetch content" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inhoud ophalen lukt niet"
+          }
+        }
+      }
+    },
+    "Unable to fetch posts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten ophalen lukt niet"
+          }
+        }
+      }
+    },
+    "Unable to fetch profile" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile ophalen lukt niet"
+          }
+        }
+      }
+    },
+    "Unable to load stream" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stream kan niet worden geladen"
+          }
+        }
+      }
+    },
+    "Undo" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongedaan maken"
+          }
+        }
+      }
+    },
+    "Unfollow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontvolg"
+          }
+        }
+      }
+    },
+    "Unhide" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon"
+          }
+        }
+      }
+    },
+    "Unpin" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak los"
+          }
+        }
+      }
+    },
+    "Unverified zaps" : {
+      "comment" : "List of unverified zaps",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet-geverifiëerde zaps"
+          }
+        }
+      }
+    },
+    "Update" : {
+      "comment" : "Button to update WoT",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bijwerken"
+          }
+        }
+      }
+    },
+    "Use existing account" : {
+      "comment" : "Button to start using an existing account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik bestaand account"
+          }
+        }
+      }
+    },
+    "Use photo" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik foto"
+          }
+        }
+      }
+    },
+    "Use relay for Search" : {
+      "comment" : "Label for toggle to search on this relay",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik relay voor zoeken"
+          }
+        }
+      }
+    },
+    "Verify message signatures" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifieer bericht handtekeningen"
+          }
+        }
+      }
+    },
+    "We Don't Need No Stinkin' Badges" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Weg Met Medailles!\""
+          }
+        }
+      }
+    },
+    "Web App" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web App"
+          }
+        }
+      }
+    },
+    "Web of Trust filter" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web-of-Trust filter"
+          }
+        }
+      }
+    },
+    "Week" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week"
+          }
+        }
+      }
+    },
+    "Welcome to **Nostur**" : {
+      "comment" : "Welcoming the user to the app",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welkom bij **Nostur**"
+          }
+        }
+      }
+    },
+    "What" : {
+
+    },
+    "What's happening?" : {
+      "comment" : "Placeholder text for typing a new post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat is er nieuw?"
+          }
+        }
+      }
+    },
+    "When at top, auto scroll if there are new posts" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch naar nieuwe berichten scrollen wanneer je al bovenaan het scherm bent"
+          }
+        }
+      }
+    },
+    "When you bookmark a post it will show up here." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als je een bladwijzer bij een bericht aan zet zal deze hier verschijnen"
+          }
+        }
+      }
+    },
+    "Which relays should others use to find posts for account: %@? (choose 3 max)" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welke relays zouden anderen moeten gebruiken om berichten te vinden van %@? (kies max 3)"
+          }
+        }
+      }
+    },
+    "Which relays should others use to reach account: %@? (choose 3 max)" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welke relays zouden anderen moeten gebruiken om %@ te bereiken? (kies 3 max)"
+          }
+        }
+      }
+    },
+    "Will not download media and previews" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen media en voorbeelden downloaden"
+          }
+        }
+      }
+    },
+    "Will show balance in side bar" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon saldo in zijbalk"
+          }
+        }
+      }
+    },
+    "Will show from which app/client something was posted, if available" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon vanuit welke app iemand verstuurd heeft (wanneer beschikbaar)"
+          }
+        }
+      }
+    },
+    "WOT_NORMAL" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normaal"
+          }
+        }
+      }
+    },
+    "WOT_OFF" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uit"
+          }
+        }
+      }
+    },
+    "WOT_STRICT" : {
+      "extractionState" : "migrated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strict"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strict"
+          }
+        }
+      }
+    },
+    "write" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "versturen"
+          }
+        }
+      }
+    },
+    "wss://nostr.relay.url.here" : {
+      "comment" : "Placeholder for entering a relay URL",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wss://nostr.relay.url.hier"
+          }
+        }
+      }
+    },
+    "wss://relay..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wss://relay"
+          }
+        }
+      }
+    },
+    "y" : {
+      "comment" : "short for year (ago), appended to number. Example: 1y",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "j"
+          }
+        }
+      }
+    },
+    "Year" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaar"
+          }
+        }
+      }
+    },
+    "You are not following anyone yet, visit the explore tab and follow some people" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je volgt nog niemand, bekijk de Ontdek tab en volg een aantal mensen"
+          }
+        }
+      }
+    },
+    "You are using a read-only account.\n\nSwitch to another account or add the private key to fully use this account." : {
+      "comment" : "Message about read-only mode",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je gebruikt een alleen-lezen account.\n\nSchakel naar een ander account of voeg de privé sleutel toe aan dit account om volledig gebruik te maken van dit account."
+          }
+        }
+      }
+    },
+    "You have not received any messages" : {
+      "comment" : "Shown on the DM view when there aren't any direct messages to show",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hebt nog geen berichten ontvangen"
+          }
+        }
+      }
+    },
+    "Your **Alby** wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je **Alby** portemonnee is nu verbonden met **Nostur**, je kan nu zappen met gemak!"
+          }
+        }
+      }
+    },
+    "Your address for receiving zaps has been set to: %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je adres om zaps te ontvangen is ingesteld op: %@"
+          }
+        }
+      }
+    },
+    "Your balance:" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jouw saldo:"
+          }
+        }
+      }
+    },
+    "Your name" : {
+      "comment" : "Label for entering your name on Edit Profile screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je naam"
+          }
+        }
+      }
+    },
+    "Your report is public, other users can use your report to improve the network" : {
+      "comment" : "Informational message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je melding is openbaar, andere gebruikers kunnen je melding gebruiken om het netwerk te verbeteren"
+          }
+        }
+      }
+    },
+    "Your wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je portemonnee is nu verbonden met **Nostur**, je kan nu zappen met gemak!"
+          }
+        }
+      }
+    },
+    "Zap custom amount" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zap aangepast bedrag"
+          }
+        }
+      }
+    },
+    "Zap failed for [contact](nostur:p:%@).\n%@" : {
+      "comment" : "Error message. Only translate the 'Zap failed for' part, don't change between brackets",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zap niet gelukt voor [contact](nostur:p:%@).\n%@"
+          }
+        }
+      }
+    },
+    "Zap receipt from" : {
+
+    },
+    "Zapped %@" : {
+      "comment" : "Text in zap button after zapping",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gezapt %@"
+          }
+        }
+      }
+    },
+    "Zapped %@ sats %@" : {
+      "comment" : "Text showing how many sats someone zapped, followed by fiat price",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gezapt: %@ sats %@"
+          }
+        }
+      }
+    },
+    "Zapping" : {
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zappen"
+          }
+        }
+      }
+    },
+    "zaps" : {
+      "comment" : "Label for zaps count, example: (4) zaps",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zaps"
+          }
+        }
+      }
+    },
+    "Zaps" : {
+      "comment" : "Heading\nTab title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaps"
+          }
+        }
+      }
+    },
+    "Zaps failed on: %@ (Timeout)." : {
+      "comment" : "Message for failed zaps on: (contact #1, contact #2, contact #3...) because time out.",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaps niet gelukt bij: %@ (Timeout)."
+          }
+        }
+      }
+    },
+    "Zaps may have failed on: %@." : {
+      "comment" : "Message for possibly failed zaps on: (post 1, post 2, post 3...)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaps mogelijk mislukt bij: %@"
+          }
+        }
+      }
+    },
+    "Zaps received recently" : {
+      "comment" : "Heading",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaps recent onvangen"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
