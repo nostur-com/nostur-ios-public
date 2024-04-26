@@ -450,22 +450,24 @@ extension Event {
             default:
                 // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
                 if let lastEtag = event.lastE() {
-                    let request = NSFetchRequest<Event>(entityName: "Event")
-                    request.entity = Event.entity()
-                    request.predicate = NSPredicate(format: "id == %@", lastEtag)
-                    request.fetchLimit = 1
-                    
                     if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
                     }
-                    else if let reactingToEvent = try context.fetch(request).first {
-                        reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-                        event.reactionTo = reactingToEvent
-                        event.reactionToId = reactingToEvent.id
+                    else {
+                        let request = NSFetchRequest<Event>(entityName: "Event")
+                        request.entity = Event.entity()
+                        request.predicate = NSPredicate(format: "id == %@", lastEtag)
+                        request.fetchLimit = 1
+                        if let reactingToEvent = try context.fetch(request).first {
+                            guard !reactingToEvent.isDeleted else { break }
+                            reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
+                            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
+                            event.reactionTo = reactingToEvent
+                            event.reactionToId = reactingToEvent.id
+                        }
                     }
                 }
         }
@@ -657,7 +659,7 @@ extension Event {
         return try? context.fetch(request).first
     }
     
-    static func fetchEvent(id:String, context:NSManagedObjectContext) throws -> Event? {
+    static func fetchEvent(id: String, context: NSManagedObjectContext) throws -> Event? {
         if !Thread.isMainThread {
             guard Importer.shared.existingIds[id]?.status == .SAVED else { return nil }
         }
@@ -970,6 +972,8 @@ extension Event {
         if (event.kind == .textNote) {
             
             EventCache.shared.setObject(for: event.id, value: savedEvent)
+            L.og.debug("Saved \(event.id) in cache")
+            
             if event.content == "#[0]", let firstE = event.firstE() {
                 savedEvent.isRepost = true
                 
