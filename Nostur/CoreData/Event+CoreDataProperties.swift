@@ -661,6 +661,12 @@ extension Event {
         if !Thread.isMainThread {
             guard Importer.shared.existingIds[id]?.status == .SAVED else { return nil }
         }
+        
+        if !Thread.isMainThread {
+            if let eventfromCache = EventCache.shared.retrieveObject(at: id) {
+                return eventfromCache
+            }
+        }
                 
         let request = NSFetchRequest<Event>(entityName: "Event")
         //        request.entity = Event.entity()
@@ -963,6 +969,7 @@ extension Event {
         
         if (event.kind == .textNote) {
             
+            EventCache.shared.setObject(for: event.id, value: savedEvent)
             if event.content == "#[0]", let firstE = event.firstE() {
                 savedEvent.isRepost = true
                 

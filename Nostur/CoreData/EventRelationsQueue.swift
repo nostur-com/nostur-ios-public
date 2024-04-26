@@ -106,7 +106,7 @@ class EventRelationsQueue {
     }
     
     public func getAwaitingBgEvent(byId id:EventId) -> Event? {
-        return self.waitingEvents[id]?.event
+        return self.waitingEvents[id]?.event ?? EventCache.shared.retrieveObject(at: id)
     }
     
     public func removeAll() {

@@ -30,6 +30,13 @@ struct NRContactCache {
     }()
 }
 
+struct EventCache {
+    static let shared: LRUCache2<String, Event> = {
+        let cache = LRUCache2<String, Event>(countLimit: 500)
+        return cache
+    }()
+}
+
 
 class LinkPreviewCache {
     
