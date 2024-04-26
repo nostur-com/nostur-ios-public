@@ -46,8 +46,6 @@
 		1F0CA5DE2AA6914900DC10CD /* DirectMessageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0CA5DD2AA6914900DC10CD /* DirectMessageViewModel.swift */; };
 		1F0F0F622A9CC75300E23BA7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0F0F612A9CC75300E23BA7 /* Theme.swift */; };
 		1F0F0F642A9D220E00E23BA7 /* Themes.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */; };
-		1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F35672A31C76900AA9C41 /* InfoPlist.strings */; };
-		1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F356A2A31C76900AA9C41 /* Localizable.strings */; };
 		1F12422A2A1CB0BC003AC591 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1242292A1CB0BC003AC591 /* Logger.swift */; };
 		1F13BF9D2B4F7C4000607D98 /* URLView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F13BF9C2B4F7C4000607D98 /* URLView.swift */; };
 		1F13BF9F2B4F870D00607D98 /* BigLinkPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F13BF9E2B4F870D00607D98 /* BigLinkPreview.swift */; };
@@ -311,6 +309,8 @@
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
 		1FA70F932B053C9500BB636F /* CloudDMState+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA70F912B053C9500BB636F /* CloudDMState+CoreDataClass.swift */; };
 		1FA70F942B053C9500BB636F /* CloudDMState+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA70F922B053C9500BB636F /* CloudDMState+CoreDataProperties.swift */; };
+		1FA7B57C2BDBBC03008A78A8 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1FA7B57B2BDBBC03008A78A8 /* Localizable.xcstrings */; };
+		1FA7B57E2BDBBC03008A78A8 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1FA7B57D2BDBBC03008A78A8 /* InfoPlist.xcstrings */; };
 		1FAC3F3B2AD049D7009BA810 /* ComposePost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */; };
 		1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
 		1FAE1FCE2A2361CC0044E141 /* LazyNoteMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */; };
@@ -561,9 +561,6 @@
 		1F0CA5DD2AA6914900DC10CD /* DirectMessageViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectMessageViewModel.swift; sourceTree = "<group>"; };
 		1F0F0F612A9CC75300E23BA7 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Themes.xcassets; sourceTree = "<group>"; };
-		1F0F35682A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		1F0F356B2A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
-		1F0F356D2A31DFB700AA9C41 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1F0F356F2A31E54900AA9C41 /* ci_post_clone.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ci_post_clone.sh; sourceTree = "<group>"; };
 		1F1242292A1CB0BC003AC591 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		1F13BF9C2B4F7C4000607D98 /* URLView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLView.swift; sourceTree = "<group>"; };
@@ -823,6 +820,8 @@
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FA70F912B053C9500BB636F /* CloudDMState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudDMState+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA70F922B053C9500BB636F /* CloudDMState+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudDMState+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1FA7B57B2BDBBC03008A78A8 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = Nostur/Localizable.xcstrings; sourceTree = "<group>"; };
+		1FA7B57D2BDBBC03008A78A8 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposePost.swift; sourceTree = "<group>"; };
 		1FAC67AF29F5527800798661 /* DisabledAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DisabledAssets.xcassets; sourceTree = "<group>"; };
 		1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyNoteMenu.swift; sourceTree = "<group>"; };
@@ -1718,7 +1717,7 @@
 				1F7483572A6797F600CA7026 /* MISSION.md */,
 				1F06D2D92A584318007B9373 /* README.md */,
 				1F313DED296980D8004C7366 /* Info.plist */,
-				1F0F356A2A31C76900AA9C41 /* Localizable.strings */,
+				1FA7B57B2BDBBC03008A78A8 /* Localizable.xcstrings */,
 				1FEA81B72BCB52040059D569 /* PrivacyInfo.xcprivacy */,
 				1F9D69D82A3077F400628460 /* Config.xcconfig */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
@@ -1902,7 +1901,7 @@
 				1FC7A54929FA46F000645FEF /* ActionRequestHandler.swift */,
 				1FC7A54B29FA46F000645FEF /* Action.js */,
 				1FC7A54D29FA46F000645FEF /* Info.plist */,
-				1F0F35672A31C76900AA9C41 /* InfoPlist.strings */,
+				1FA7B57D2BDBBC03008A78A8 /* InfoPlist.xcstrings */,
 			);
 			path = "Highlight with Nostur";
 			sourceTree = "<group>";
@@ -2188,8 +2187,8 @@
 			files = (
 				1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */,
 				1FBAA6192B53E694007C7535 /* Thunderzap71.m4a in Resources */,
+				1FA7B57C2BDBBC03008A78A8 /* Localizable.xcstrings in Resources */,
 				1F0F0F642A9D220E00E23BA7 /* Themes.xcassets in Resources */,
-				1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */,
 				1FBAA6182B53E694007C7535 /* Thunderzap16.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2199,7 +2198,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FC7A54C29FA46F000645FEF /* Action.js in Resources */,
-				1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */,
+				1FA7B57E2BDBBC03008A78A8 /* InfoPlist.xcstrings in Resources */,
 				1FC7A54829FA46F000645FEF /* Media.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2686,27 +2685,6 @@
 		};
 /* End PBXTargetDependency section */
 
-/* Begin PBXVariantGroup section */
-		1F0F35672A31C76900AA9C41 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1F0F35682A31C76900AA9C41 /* nl */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		1F0F356A2A31C76900AA9C41 /* Localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1F0F356B2A31C76900AA9C41 /* nl */,
-				1F0F356D2A31DFB700AA9C41 /* en */,
-			);
-			name = Localizable.strings;
-			path = Nostur;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
-
 /* Begin XCBuildConfiguration section */
 		1FB448CC2965F3D200038671 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -2766,6 +2744,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -2830,6 +2809,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -2876,6 +2856,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MARKETING_VERSION = 1.14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nostur.com.Nostur;
@@ -2925,6 +2906,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MARKETING_VERSION = 1.14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nostur.com.Nostur;
@@ -2958,6 +2940,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2989,6 +2972,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
