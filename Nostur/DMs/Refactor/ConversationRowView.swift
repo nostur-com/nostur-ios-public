@@ -49,13 +49,7 @@ struct ConversationRowView: View {
                                 .lineLimit(1)
                             
                             if contact.couldBeImposter == 1 {
-                                Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
-                                    .padding(.horizontal, 8)
-                                    .background(.red)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(8)
-                                    .padding(.top, 3)
-                                    .layoutPriority(2)
+                                PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: contact.similarToPubkey)
                             }
                         }
                     }

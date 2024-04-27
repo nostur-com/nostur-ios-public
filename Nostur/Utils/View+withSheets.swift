@@ -34,6 +34,7 @@ private struct WithSheets: ViewModifier {
     @State private var reportPost: ReportPost? = nil
     @State private var reportContact: ReportContact? = nil
     @State private var addRemoveContactFromList: Contact? = nil
+    @State private var imposterDetails: ImposterDetails? = nil
     
     // Confirmation dialogs
     @State private var restoreContactSheet = false
@@ -129,6 +130,20 @@ private struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(dim)
+                        .environmentObject(NRState.shared)
+                        .environmentObject(themes)
+                }
+                .nbUseNavigationStack(.never)
+                .presentationBackgroundCompat(themes.theme.listBackground)
+            })
+        
+            .onReceive(receiveNotification(.showImposterDetails), perform: { notification in
+                let imposterDetails = notification.object as! ImposterDetails
+                self.imposterDetails = imposterDetails
+            })
+            .sheet(item: $imposterDetails, content: { imposterDetails in
+                NBNavigationStack {
+                    PossibleImposterDetail(possibleImposterPubkey: imposterDetails.pubkey, followingPubkey: imposterDetails.similarToPubkey)
                         .environmentObject(NRState.shared)
                         .environmentObject(themes)
                 }
@@ -563,6 +578,13 @@ struct ReportContact: Identifiable {
     let id = UUID()
     let contact:Contact
 }
+
+struct ImposterDetails: Identifiable {
+    var id: String { pubkey }
+    public let pubkey: String
+    public var similarToPubkey: String?
+}
+
 
 
 struct DeletePost: Identifiable {
