@@ -121,10 +121,10 @@ struct ZapReceipt: View {
 }
 
 struct ZappedFrom: View {
-    let pubkey:String
-    var name:String?
-    var couldBeImposter:Int = 0
-    var createdAt:Date
+    let pubkey: String
+    var name: String?
+    var couldBeImposter: Int = 0
+    var createdAt: Date
     
     var body: some View {
         VStack(alignment: .leading) {
