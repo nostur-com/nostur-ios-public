@@ -1160,7 +1160,6 @@ extension NRPost { // Helpers for grouped replies
             })
     }
     
-    @MainActor
     func sortGroupedRepliesNotWoT(_ nrPosts:[NRPost]) -> [NRPost] { // Read from bottom to top.
         return nrPosts
             .filter { !$0.inWoT && !NRState.shared.accountPubkeys.contains($0.pubkey)}
