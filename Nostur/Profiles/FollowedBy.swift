@@ -12,6 +12,7 @@ struct FollowedBy: View {
     public var pubkey: Pubkey? = nil
     public var alignment: HorizontalAlignment = .leading
     public var minimal: Bool = false
+    public var showZero: Bool = false
     
     @State private var commonFollowerPFPs: [(Pubkey, URL)] = []
     
@@ -25,9 +26,17 @@ struct FollowedBy: View {
     
     var body: some View {
         VStack(alignment: alignment) {
-            if !commonFollowerPFPs.isEmpty {
+            Color.clear
+                .frame(height: 1)
+                .frame(maxWidth: .infinity)
+            if !commonFollowerPFPs.isEmpty || showZero {
                 if !minimal {
-                    Text("Followers you know").font(.caption)
+                    if commonFollowerPFPs.isEmpty {
+                        Text("Followed by 0 others you follow").font(.caption)
+                    }
+                    else {
+                        Text("Followed by").font(.caption)
+                    }
                 }
                 HStack(spacing: 2) {
                     ForEach(firstRow.indices, id:\.self) { index in
@@ -55,10 +64,10 @@ struct FollowedBy: View {
                 Text("+\(commonFollowerPFPs.count - 15) others").font(.caption)
             }
             else if commonFollowerPFPs.count > 31 {
-                Text("and \(commonFollowerPFPs.count - 30) others you follow.").font(.caption)
+                Text("and \(commonFollowerPFPs.count - 30) others you follow").font(.caption)
             }
             else if commonFollowerPFPs.count > 30 {
-                Text("and 1 other person you follow.").font(.caption)
+                Text("and 1 other person you follow").font(.caption)
             }
         }
         .task {
