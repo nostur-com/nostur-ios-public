@@ -239,12 +239,7 @@ struct PostHeaderView: View {
                 .onTapGesture { onTap?() }
 
             if couldBeImposter == 1 {
-                Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
-                    .padding(.horizontal, 8)
-                    .background(.red)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-                    .layoutPriority(2)
+                PossibleImposterLabel(possibleImposterPubkey: pubkey, followingPubkey: similarToPubkey)
             }
 
             if (singleLine) {

@@ -169,12 +169,7 @@ struct ProfileView: View {
                     HStack(spacing: 0) {
                         Text("\(nrContact.anyName) ").font(.system(size: 24, weight:.bold))
                         if couldBeImposter {
-                            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
-                                .padding(.horizontal, 8)
-                                .background(.red)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                                .layoutPriority(2)
+                            PossibleImposterLabel(possibleImposterPubkey: nrContact.pubkey, followingPubkey: nrContact.similarToPubkey)
                         }
                         else if nrContact.nip05verified, let nip05 = nrContact.nip05 {
                             NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())

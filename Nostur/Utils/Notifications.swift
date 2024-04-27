@@ -348,8 +348,13 @@ extension Notification.Name {
     
     static var triggerDM: Notification.Name {
         return Notification.Name("triggerDM")
-    }    
+    } 
+    
     static var preloadNewDMInfo: Notification.Name {
         return Notification.Name("preloadNewDMInfo")
+    }
+    
+    static var showImposterDetails: Notification.Name {
+        return Notification.Name("showImposterDetails")
     }
 }
