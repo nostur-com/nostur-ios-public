@@ -443,29 +443,30 @@ struct ProfileView: View {
         .task { [weak nrContact] in
             guard let nrContact else { return }
             guard !SettingsStore.shared.lowDataMode else { return }
-            let contact = nrContact
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-            guard !contact.following else { return }
-            guard contact.metadata_created_at != 0 else { return }
-            guard contact.couldBeImposter == -1 else { return }
-            guard let cPic = contact.pictureUrl else { return }
+            guard !nrContact.following else { return }
+            guard nrContact.metadata_created_at != 0 else { return }
+            guard nrContact.couldBeImposter == -1 else { return }
+            guard let cPic = nrContact.pictureUrl else { return }
             guard !NewOnboardingTracker.shared.isOnboarding else { return }
             guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
             
-            let contactAnyName = contact.anyName.lowercased()
-            let cPubkey = contact.pubkey
+            let contactAnyName = nrContact.anyName.lowercased()
+            let cPubkey = nrContact.pubkey
             let currentAccountPubkey = NRState.shared.activeAccountPublicKey
             
-            bg().perform { [weak contact] in
+            bg().perform { [weak nrContact] in
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
-                guard let (_, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
                     pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
                 
                 guard similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
                 
                 L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarFollow.anyName)")
+                nrContact?.contact?.couldBeImposter = similarPFP ? 1 : 0
+                nrContact?.contact?.similarToPubkey = similarPFP ? followingPubkey : nil
                 
                 Task.detached(priority: .background) {
                     let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
@@ -474,10 +475,11 @@ struct ProfileView: View {
                     }
                     
                     DispatchQueue.main.async {
-                        guard let contact else { return }
+                        guard let nrContact else { return }
                         guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                         self.similarPFP = similarPFP
-                        contact.couldBeImposter = similarPFP ? 1 : 0
+                        nrContact.couldBeImposter = similarPFP ? 1 : 0
+                        nrContact.similarToPubkey = similarPFP ? followingPubkey : nil
                     }
                 }
             }
