@@ -645,6 +645,7 @@
 		1F4186112A7CCECE00626DF3 /* WithNSecBunkerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithNSecBunkerConnection.swift; sourceTree = "<group>"; };
 		1F43CC4D2B949C73004EDE3B /* AskLoginSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskLoginSheet.swift; sourceTree = "<group>"; };
 		1F43CC4F2B949C94004EDE3B /* Nip97LoginModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nip97LoginModel.swift; sourceTree = "<group>"; };
+		1F44A1F12BDD1EEF00C1D3DB /* NosturCloud 5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 5.xcdatamodel"; sourceTree = "<group>"; };
 		1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerPicPicker.swift; sourceTree = "<group>"; };
 		1F45C7E929EF930F00F58772 /* ImageUploading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUploading.swift; sourceTree = "<group>"; };
 		1F45C7EC29EF997200F58772 /* ImgurMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImgurMediaUploadService.swift; sourceTree = "<group>"; };
@@ -3186,12 +3187,13 @@
 		1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				1F44A1F12BDD1EEF00C1D3DB /* NosturCloud 5.xcdatamodel */,
 				1FEA81B62BCAB0D30059D569 /* NosturCloud 4.xcdatamodel */,
 				1F9822F52BADFC2400E9593E /* NosturCloud 3.xcdatamodel */,
 				1F37C8392B8B71F700B0B78B /* NosturCloud 2.xcdatamodel */,
 				1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */,
 			);
-			currentVersion = 1FEA81B62BCAB0D30059D569 /* NosturCloud 4.xcdatamodel */;
+			currentVersion = 1F44A1F12BDD1EEF00C1D3DB /* NosturCloud 5.xcdatamodel */;
 			path = NosturCloud.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
