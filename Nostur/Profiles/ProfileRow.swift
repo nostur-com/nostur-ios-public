@@ -64,6 +64,7 @@ struct ProfileCardByPubkey: View {
             RoundedRectangle(cornerRadius: 15)
                 .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
         )
+        .clipped()
     }
 }
 
@@ -75,6 +76,7 @@ struct ProfileRow: View {
     // Following/Unfollowing tap is slow so update UI and do in background:
     @State private var isFollowing = false
     public var withoutFollowButton = false
+    public var tapEnabled: Bool = true
     public var showNpub: Bool = false
     @ObservedObject public var contact:Contact
     
@@ -161,6 +163,7 @@ struct ProfileRow: View {
         .padding()
         .contentShape(Rectangle())
         .onTapGesture {
+            guard tapEnabled else { return }
             navigateTo(ContactPath(key: contact.pubkey))
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in
