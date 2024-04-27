@@ -389,11 +389,11 @@ struct FullImageViewer_Previews: PreviewProvider {
                     FullImageViewer(fullImageURL: first, galleryItem: galleryItem, mediaPostPreview: .constant(true))
                 }
                 else {
-                    Text("no image")
+                    Text(verbatim: "no image")
                 }
             }
             else {
-                Text("eeuh")
+                Text(verbatim: "eeuh")
             }
         }
     }

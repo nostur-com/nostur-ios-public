@@ -17,24 +17,24 @@ struct DiscoverNostr: View {
                     
                 Group {
                     HStack {
-                        Text("[#coffeechain](nostur:t:coffeechain)")
-                        Text("[#nostr](nostur:t:nostr)")
-                        Text("[#foodstr](nostur:t:foodstr)")
+                        Text(verbatim: "[#coffeechain](nostur:t:coffeechain)")
+                        Text(verbatim: "[#nostr](nostur:t:nostr)")
+                        Text(verbatim: "[#foodstr](nostur:t:foodstr)")
                     }
                     HStack {
-                        Text("[#footstr](nostur:t:footstr)")
-                        Text("[#zapathon](nostur:t:zapathon)")
-                        Text("[#music](nostur:t:music)")
+                        Text(verbatim: "[#footstr](nostur:t:footstr)")
+                        Text(verbatim: "[#zapathon](nostur:t:zapathon)")
+                        Text(verbatim: "[#music](nostur:t:music)")
                     }
                     HStack {
-                        Text("[#asknostr](nostur:t:asknostr)")
-                        Text("[#beerstr](nostur:t:beerstr)")
-                        Text("[#winestr](nostur:t:winestr)")
+                        Text(verbatim: "[#asknostr](nostur:t:asknostr)")
+                        Text(verbatim: "[#beerstr](nostur:t:beerstr)")
+                        Text(verbatim: "[#winestr](nostur:t:winestr)")
                     }
                     HStack {
-                        Text("[#bitcoin](nostur:t:bitcoin)")
-                        Text("[#grownostr](nostur:t:grownostr)")
-                        Text("[#memes](nostur:t:memes)")
+                        Text(verbatim: "[#bitcoin](nostur:t:bitcoin)")
+                        Text(verbatim: "[#grownostr](nostur:t:grownostr)")
+                        Text(verbatim: "[#memes](nostur:t:memes)")
                     }
                 }
                 .lineLimit(1)

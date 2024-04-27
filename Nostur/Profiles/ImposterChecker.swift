@@ -81,7 +81,7 @@ func pfpsAreSimilar(imposter:URL, real:URL, threshold:Double = 0.1) async -> Boo
 
 struct ImposterTesterView: View {
     var body: some View {
-        Text("test1")
+        Text(verbatim: "test1")
             .task {
                 let imposter = "https://cdn.nostr.build/i/eb8d33b383e103c1143a040dda69729d19e8e3115735c3ef3a283b08723b0a6c.jpg"
                 let real = "https://nostr.build/i/p/nostr.build_6b9909bccf0f4fdaf7aacd9bc01e4ce70dab86f7d90395f2ce925e6ea06ed7cd.jpeg"
