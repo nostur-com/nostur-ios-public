@@ -164,7 +164,7 @@ struct EventHeaderContainer: View {
                         guard let contact, let bgContact = bg().object(with: contact.objectID) as? Contact else { return }
                         guard let account = account() else { return }
                         guard account.publicKey == currentAccountPubkey else { return }
-                        guard let (_, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                        guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
                             pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                         }) else { return }
                         
@@ -176,9 +176,11 @@ struct EventHeaderContainer: View {
                                 guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                                 contact.couldBeImposter = similarPFP ? 1 : 0
                                 couldBeImposter = similarPFP ? 1 : 0
+                                similarToPubkey = similarPFP ? followingPubkey : nil
                                 bg().perform {
                                     guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
                                     bgContact.couldBeImposter = similarPFP ? 1 : 0
+                                    bgContact.similarToPubkey = similarPFP ? followingPubkey : nil
                                 }
                             }
                         }

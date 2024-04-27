@@ -312,7 +312,7 @@ struct ProfileOverlayCard: View {
             bg().perform { [weak contact] in
                 guard let account = account() else { return }
                 guard account.publicKey == currentAccountPubkey else { return }
-                guard let (_, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
                     pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                 }) else { return }
                 
@@ -330,7 +330,9 @@ struct ProfileOverlayCard: View {
                         guard let contact else { return }
                         guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
                         self.similarPFP = similarPFP
+                        self.similarToPubkey = followingPubkey
                         contact.couldBeImposter = similarPFP ? 1 : 0
+                        contact.similarToPubkey = similarPFP ? followingPubkey : nil
                     }
                 }
             }

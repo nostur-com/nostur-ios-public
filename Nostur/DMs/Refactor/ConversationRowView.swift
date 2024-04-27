@@ -77,7 +77,7 @@ struct ConversationRowView: View {
                             guard let conv else { return }
                             guard let account = account() else { return }
                             guard account.publicKey == currentAccountPubkey else { return }
-                            guard let (_, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                            guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
                                 pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                             }) else { return }
                             
@@ -91,10 +91,12 @@ struct ConversationRowView: View {
                                         conv.objectWillChange.send() // need to rerender
                                     }
                                     contact.couldBeImposter = similarPFP ? 1 : 0
+                                    contact.similarToPubkey = similarPFP ? followingPubkey : nil
                                     bg().perform { [weak contact] in
                                         guard let contact else { return }
                                         guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
                                         contact.contact?.couldBeImposter = similarPFP ? 1 : 0
+                                        contact.contact?.similarToPubkey = similarPFP ? followingPubkey : nil
             //                            DataProvider.shared().bgSave()
                                     }
                                 }
