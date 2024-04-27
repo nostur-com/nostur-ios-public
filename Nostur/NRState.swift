@@ -21,7 +21,7 @@ class NRState: ObservableObject {
     }
     
     @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
-    @MainActor public static let shared = NRState()
+    public static let shared = NRState()
     
     // view context
     public var accounts: [CloudAccount] = []
@@ -91,7 +91,7 @@ class NRState: ObservableObject {
     public var blockedPubkeys:Set<String> = []
     public var mutedRootIds:Set<String> = []
     
-    @MainActor private init() {
+    private init() {
         self._activeAccountPublicKey = UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? ""
         self.wot = WebOfTrust.shared
         self.nsecBunker = NSecBunkerManager.shared
