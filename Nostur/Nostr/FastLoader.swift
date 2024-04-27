@@ -289,6 +289,7 @@ class Backlog {
     // With auto: true we don't need receiveNotification(.importedMessagesFromSubscriptionIds) on a View's .onReceive
     // the Backlog itself will listen for .importedMessagesFromSubscriptionIds notifications and
     // trigger the task.process() commands
+    // TODO: 25.00 ms    0.2%    0 s           closure #1 in Backlog.init(timeout:auto:)
     init(timeout:Double = 60.0, auto:Bool = false) {
         self.timeout = timeout
         timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in

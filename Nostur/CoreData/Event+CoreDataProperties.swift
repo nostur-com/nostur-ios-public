@@ -443,6 +443,7 @@ extension Event {
     
     // NIP-25: The generic reaction, represented by the content set to a + string, SHOULD be interpreted as a "like" or "upvote".
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
+    // TODO: 167.00 ms    1.5%    0 s          specialized static Event.updateLikeCountCache(_:content:context:)
     static func updateLikeCountCache(_ event:Event, content:String, context:NSManagedObjectContext) throws -> Bool {
         switch content {
             case "-": // (down vote)
@@ -808,6 +809,7 @@ extension Event {
         return zapRequest
     }
     
+    // TODO: 115.00 ms    1.0%    0 s          closure #1 in static Event.updateRelays(_:relays:)
     static func updateRelays(_ id:String, relays: String) {
         let bg = bg()
         bg.perform {

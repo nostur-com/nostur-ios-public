@@ -941,6 +941,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             }
     }
     
+    // TODO: 103.00 ms    0.9%    0 s          closure #2 in NRPost.loadReplies()
     private func loadReplies() {
         if (!self.withReplies) {
             self.withReplies = true
@@ -1166,6 +1167,7 @@ extension NRPost { // Helpers for grouped replies
             .sorted(by: { $0.created_at < $1.created_at })
     }
     
+    // TODO: 79.00 ms    0.7%    0 s          closure #2 in NRPost.loadGroupedReplies()
     public func loadGroupedReplies() {
         self.loadReplies()
         if (!self.withGroupedReplies) {
