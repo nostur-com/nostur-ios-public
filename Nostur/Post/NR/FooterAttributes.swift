@@ -200,7 +200,7 @@ class FooterAttributes: ObservableObject {
                     case .bookmark(let color):
                         self?.bookmarked = action.bookmarked
                         self?.bookmarkColor = color
-                    case .liked(let uuid):
+                    case .liked(_):
                         self?.liked = true
                     case .unliked:
                         self?.liked = false

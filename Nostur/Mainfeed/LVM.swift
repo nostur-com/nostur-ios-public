@@ -301,7 +301,7 @@ class LVM: NSObject, ObservableObject {
     var postsAppearedSubject = PassthroughSubject<[NRPostID], Never>()
     var startRenderingSubject = PassthroughSubject<[Event], Never>()
     var startRenderingOlderSubject = PassthroughSubject<[Event], Never>()
-    var didCatchup = false
+    var didCatchup = false // Main thread
     var backlog = Backlog(auto: true)
     
     var hashtags: Set<String> = []
@@ -950,7 +950,7 @@ class LVM: NSObject, ObservableObject {
             }
             return
         }
-        let didCatchUp = self.didCatchup
+
         bg().perform { [weak self] in
             guard let self else { return }
             guard !Importer.shared.isImporting else {
