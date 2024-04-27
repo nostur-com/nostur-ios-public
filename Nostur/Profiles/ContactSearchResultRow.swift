@@ -13,6 +13,7 @@ struct ContactSearchResultRow: View {
     var onSelect: (() -> Void)?
     
     @State var similarPFP = false
+    @State var similarToPubkey: String? = nil
     @State var isFollowing = false
     
     var couldBeImposter: Bool {

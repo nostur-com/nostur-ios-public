@@ -89,6 +89,7 @@ struct ProfileOverlayCard: View {
     @ObservedObject private var fg: FollowingGuardian = .shared
     
     @State private var similarPFP = false
+    @State private var similarToPubkey: String? = nil
     @State private var backlog = Backlog(timeout: 5.0, auto: true)
     @State private var lastSeen: String? = nil
     @State private var isFollowingYou = false

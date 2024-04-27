@@ -78,6 +78,7 @@ struct ProfileRow: View {
     @ObservedObject public var contact:Contact
     
     @State private var similarPFP = false
+    @State private var similarToPubkey: String? = nil
     
     private var couldBeImposter: Bool {
         guard la.pubkey != contact.pubkey else { return false }

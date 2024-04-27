@@ -23,7 +23,7 @@ struct NRPostHeaderContainer: View {
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(name:  name, onTap: nameTapped, couldBeImposter: couldBeImposter, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
+            PostHeaderView(pubkey: nrPost.pubkey, name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: nrPost.contact?.similarToPubkey , via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
                     guard profile.pubkey == nrPost.pubkey else { return }
                     withAnimation(.easeIn) {
@@ -115,6 +115,7 @@ struct EventHeaderContainer: View {
     private var singleLine: Bool = true
     @State private var name: String
     @State private var couldBeImposter: Int16
+    @State private var similarToPubkey: String? = nil
 
     init(event: Event, singleLine: Bool = true) {
         self.event = event
@@ -125,7 +126,7 @@ struct EventHeaderContainer: View {
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, via: event.via, createdAt: Date(timeIntervalSince1970: TimeInterval(event.created_at)), displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
+            PostHeaderView(pubkey: event.pubkey, name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: similarToPubkey, via: event.via, createdAt: Date(timeIntervalSince1970: TimeInterval(event.created_at)), displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
                     guard profile.pubkey == event.pubkey else { return }
                     withAnimation(.easeIn) {
@@ -219,9 +220,11 @@ struct EventHeaderContainer: View {
 }
 
 struct PostHeaderView: View {
+    public let pubkey: String
     public let name: String
     public var onTap: (() -> Void)? = nil
     public var couldBeImposter: Int16 = -1
+    public var similarToPubkey: String? = nil
     public var via: String? = nil
     public let createdAt: Date
     public var agoText: String? = nil
