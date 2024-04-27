@@ -30,7 +30,7 @@ struct HighlightComposer: View {
 
                         VStack(alignment:.leading, spacing: 3) {
                             HStack { // name + reply + context menu
-                                PostHeaderView(name: account.anyName, via: "Nostur", createdAt: .now, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: true)
+                                PostHeaderView(pubkey: account.publicKey, name: account.anyName, via: "Nostur", createdAt: .now, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: true)
                                 Spacer()
                             }
 
