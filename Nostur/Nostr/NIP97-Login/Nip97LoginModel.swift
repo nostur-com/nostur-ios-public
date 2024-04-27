@@ -26,7 +26,7 @@ class Nip97LoginModel: ObservableObject {
     public func login() {
         loginPublisher().sink(receiveCompletion: { result in
             switch result {
-            case .failure(let error):
+            case .failure(_):
                 DispatchQueue.main.async {
                     self.state = .error
                 }

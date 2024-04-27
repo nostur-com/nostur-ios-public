@@ -60,7 +60,7 @@ class ArticlesFeedViewModel: ObservableObject {
     
     @Published var nothingFound = false
     
-    var agoText:String {
+    var agoText: String {
         switch ago {
         case 1:
             return String(localized: "1d", comment: "Short for 1 day (time frame)")

@@ -598,7 +598,7 @@ struct ProfileView: View {
                 req(RM.getUserProfileKinds(pubkey: contactPubkey, subscriptionId: taskId, kinds: [30023]) )
             }, processResponseCommand: { taskId, _, _ in
                 bg().perform {
-                    if let last = Event.fetchMostRecentEventBy(pubkey: contactPubkey, andKind: 30023, context: bg()) {
+                    if Event.fetchMostRecentEventBy(pubkey: contactPubkey, andKind: 30023, context: bg()) != nil {
                         DispatchQueue.main.async {
                             withAnimation {
                                 self.showArticlesTab = true
@@ -608,7 +608,7 @@ struct ProfileView: View {
                 }
             }, timeoutCommand: { taskId in
                 bg().perform {
-                    if let last = Event.fetchMostRecentEventBy(pubkey: contactPubkey, andKind: 30023, context: bg()) {
+                    if Event.fetchMostRecentEventBy(pubkey: contactPubkey, andKind: 30023, context: bg()) != nil {
                         DispatchQueue.main.async {
                             withAnimation {
                                 self.showArticlesTab = true
