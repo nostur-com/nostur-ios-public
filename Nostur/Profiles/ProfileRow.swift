@@ -75,6 +75,7 @@ struct ProfileRow: View {
     // Following/Unfollowing tap is slow so update UI and do in background:
     @State private var isFollowing = false
     public var withoutFollowButton = false
+    public var showNpub: Bool = false
     @ObservedObject public var contact:Contact
     
     @State private var similarPFP = false
@@ -98,10 +99,23 @@ struct ProfileRow: View {
                         
                         if couldBeImposter {
                             PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: similarToPubkey ?? contact.similarToPubkey)
+                            Text(contact.npub)
+                                .lineLimit(1)
+                                .textSelection(.enabled)
+                                .font(.caption)
+                                .foregroundColor(.gray)
                         }
                         else if contact.nip05veried, let nip05 = contact.nip05 {
                             NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
                                 .layoutPriority(3)
+                        }
+                        
+                        if !couldBeImposter && showNpub {
+                            Text(contact.npub)
+                                .lineLimit(1)
+                                .textSelection(.enabled)
+                                .font(.caption)
+                                .foregroundColor(.gray)
                         }
                         
                         if let fixedName = contact.fixedName, fixedName != contact.anyName {
