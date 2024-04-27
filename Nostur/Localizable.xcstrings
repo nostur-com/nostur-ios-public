@@ -991,6 +991,17 @@
         }
       }
     },
+    "Add back" : {
+      "comment" : "Button to add back 'possible imposter' label from a contact (only visible right after removing)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet terug"
+          }
+        }
+      }
+    },
     "Add comment" : {
       "localizations" : {
         "nl" : {
@@ -1131,22 +1142,22 @@
         }
       }
     },
-    "and %lld others you follow." : {
+    "and %lld others you follow" : {
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "en %lld anderen die je volgt."
+            "value" : "en %lld anderen"
           }
         }
       }
     },
-    "and 1 other person you follow." : {
+    "and 1 other person you follow" : {
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "en nog iemand die je volgt."
+            "value" : "en 1 iemand anders"
           }
         }
       }
@@ -2943,6 +2954,26 @@
         }
       }
     },
+    "Followed by" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gevolgd door"
+          }
+        }
+      }
+    },
+    "Followed by 0 others you follow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gevolgd door niemand die jij volgt"
+          }
+        }
+      }
+    },
     "Followers" : {
       "comment" : "Heading",
       "localizations" : {
@@ -2950,16 +2981,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Volgers"
-          }
-        }
-      }
-    },
-    "Followers you know" : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Volgers die je kent"
           }
         }
       }
@@ -4488,6 +4509,17 @@
         }
       }
     },
+    "Possible imposter" : {
+      "comment" : "Navigation title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mogelijke bedrieger"
+          }
+        }
+      }
+    },
     "post" : {
       "comment" : "The word \"post\" when used as post #1, post #2 and post #3.",
       "localizations" : {
@@ -5258,6 +5290,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verwijder auteur"
+          }
+        }
+      }
+    },
+    "Remove imposter label" : {
+      "comment" : "Button to remove 'possible imposter' label from a contact",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijder bedrieger label"
           }
         }
       }
@@ -6271,6 +6314,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "De Hot-feed toont berichten met de meeste Vind-ik-leuks of herplaatsingen van mensen die je volgt in de laatste %lld uur"
+          }
+        }
+      }
+    },
+    "The profile above was found to be similar to one below that you are already following:" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het profile hierboven lijkt op die hier beneden die je al volgt:"
           }
         }
       }
