@@ -2,10 +2,24 @@
   "sourceLanguage" : "en",
   "strings" : {
     "" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "\n%@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "\nThis will **wipe** your:\n - Public nostr profile\n - Public nostr following list\n" : {
       "comment" : "Confirmation text when you want to delete your account",
@@ -19,13 +33,34 @@
       }
     },
     " · %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · %@"
+          }
+        }
+      }
     },
     " · via %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · via %@"
+          }
+        }
+      }
     },
     "__Source code__" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "__Broncode__"
+          }
+        }
+      }
     },
     "_Post deleted by %@_" : {
       "comment" : "Message shown when a post is deleted by (name)",
@@ -61,43 +96,24 @@
       }
     },
     "·" : {
-
-    },
-    "[#asknostr](nostur:t:asknostr)" : {
-
-    },
-    "[#beerstr](nostur:t:beerstr)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "[#bitcoin](nostur:t:bitcoin)" : {
-
-    },
-    "[#coffeechain](nostur:t:coffeechain)" : {
-
-    },
-    "[#foodstr](nostur:t:foodstr)" : {
-
-    },
-    "[#footstr](nostur:t:footstr)" : {
-
-    },
-    "[#grownostr](nostur:t:grownostr)" : {
-
-    },
-    "[#memes](nostur:t:memes)" : {
-
-    },
-    "[#music](nostur:t:music)" : {
-
-    },
-    "[#nostr](nostur:t:nostr)" : {
-
-    },
-    "[#winestr](nostur:t:winestr)" : {
-
-    },
-    "[#zapathon](nostur:t:zapathon)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "[%@](%@)" : {
       "localizations" : {
@@ -105,6 +121,12 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "[%1$@](%2$@)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
           }
         }
       }
@@ -121,7 +143,14 @@
       }
     },
     "@%@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "**%@** and %lld others are now following you" : {
       "comment" : "Message when (name) and X others are now following yoru",
@@ -221,10 +250,24 @@
       }
     },
     "**Login error**" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Inlogfout**"
+          }
+        }
+      }
     },
     "**Login timeout**" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Inlog time-out**"
+          }
+        }
+      }
     },
     "**PRIVATE KEY:** %@∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗" : {
       "comment" : "Field that shows a partial private key",
@@ -249,13 +292,34 @@
       }
     },
     "**Send now**" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Stuur nu**"
+          }
+        }
+      }
     },
     "**Sending post...**" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Wordt verstuurd...**"
+          }
+        }
+      }
     },
     "**Signing post...**" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Bezig...**"
+          }
+        }
+      }
     },
     "**Terms and Conditions**\n" : {
       "comment" : "Terms and conditions heading",
@@ -269,10 +333,24 @@
       }
     },
     "%@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "%@ " : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "%@ %@" : {
       "localizations" : {
@@ -280,6 +358,12 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ %2$@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
           }
         }
       }
@@ -291,17 +375,45 @@
             "state" : "new",
             "value" : "%1$@ %2$@ %3$@"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
         }
       }
     },
     "%@ Checking relays..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Relays checken..."
+          }
+        }
+      }
     },
     "%@ Following" : {
-      "comment" : "Label for Following count"
+      "comment" : "Label for Following count",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Volgend"
+          }
+        }
+      }
     },
     "%@ has not published preferred relays or is using an older configuration." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ heeft geen relayvoorkeuren gepubliceerd of gebruikt een oudere configuratie."
+          }
+        }
+      }
     },
     "%@ kind %@ type not (yet) supported" : {
       "localizations" : {
@@ -310,14 +422,34 @@
             "state" : "new",
             "value" : "%1$@ kind %2$@ type not (yet) supported"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ soort %2$@ type nog niet ondersteund"
+          }
         }
       }
     },
     "%@ No internet connection" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@  Geen internet"
+          }
+        }
+      }
     },
     "%@ reads posts from" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ leest berichten van"
+          }
+        }
+      }
     },
     "%@ reposted" : {
       "comment" : "Heading for reposted post: '(Name) reposted'",
@@ -337,23 +469,95 @@
             "state" : "new",
             "value" : "%1$@ sats %2$@"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ sats %2$@"
+          }
         }
       }
     },
     "%@ settings" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ instellingen"
+          }
+        }
+      }
     },
     "%@'s posts can be found at" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s berichten zijn te vinden op"
+          }
+        }
+      }
     },
     "%lld" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "%lld conversation(s) hidden by you" : {
-
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld conversation hidden by you"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld conversations hidden by you"
+                }
+              }
+            }
+          }
+        },
+        "nl" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld gesprek verborgen door jou"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld gesprekken verborgen door jou"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "%lld Following" : {
-      "comment" : "Label for Following count"
+      "comment" : "Label for Following count",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Volgend"
+          }
+        }
+      }
     },
     "%lld min read" : {
       "localizations" : {
@@ -367,28 +571,93 @@
     },
     "%lld requests outside Web of Trust" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld request outside Web of Trust"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld requests outside Web of Trust"
+                }
+              }
+            }
+          }
+        },
         "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld verzoeken buiten Web of Trust"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld verzoek buiten Web of Trust"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld verzoeken buiten Web of Trust"
+                }
+              }
+            }
           }
         }
       }
     },
     "+%lld" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld"
+          }
+        }
+      }
     },
     "+%lld others" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld anderen"
+          }
+        }
+      }
     },
     "+1" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "+15" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "⚠️" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "🤫 Following" : {
       "comment" : "Follow/Unfollow button when the state is 'Following silent'",
@@ -402,16 +671,45 @@
       }
     },
     "🥪" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "🧨" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "0" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "1) Send screenshot of this error and wait for an update with fix" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1) Stuur een screenshot van deze foutmelding en wacht op een update met oplossing"
+          }
+        }
+      }
     },
     "1d" : {
       "comment" : "Short for 1 day (time frame)",
@@ -458,7 +756,14 @@
       }
     },
     "2) Reinstall the app and start fresh" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2) Verwijderen en installeer de app opnieuw om schoon te beginnen"
+          }
+        }
+      }
     },
     "2h" : {
       "localizations" : {
@@ -564,7 +869,15 @@
       }
     },
     "Account" : {
-      "comment" : "Heading for section to delete account"
+      "comment" : "Heading for section to delete account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account"
+          }
+        }
+      }
     },
     "Account has no private key" : {
       "comment" : "Error message",
@@ -595,6 +908,12 @@
             "state" : "new",
             "value" : "Account: @%1$@ / %2$@"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account: @%1$@ / %2$@"
+          }
         }
       }
     },
@@ -610,7 +929,15 @@
       }
     },
     "Activate" : {
-      "comment" : "Button to check if a file storage server is compatible"
+      "comment" : "Button to check if a file storage server is compatible",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activeer"
+          }
+        }
+      }
     },
     "Activate this filter" : {
       "comment" : "Toggle to activate filter",
@@ -655,10 +982,24 @@
       }
     },
     "Add +7" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Add comment" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opmerking toevoegen"
+          }
+        }
+      }
     },
     "Add contacts" : {
       "comment" : "Navigation title of sheet to add contacts to feed",
@@ -821,10 +1162,24 @@
       }
     },
     "Approve" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toestaan"
+          }
+        }
+      }
     },
     "Approve login on %@?" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inloggen op %@ toestaan?"
+          }
+        }
+      }
     },
     "Are you sure you want to delete your account?\n" : {
       "comment" : "Confirmation text when you want to delete your account",
@@ -1227,7 +1582,15 @@
       }
     },
     "Cashu (Bitcoin) 🥜" : {
-      "comment" : "Title of cashu redeem card"
+      "comment" : "Title of cashu redeem card",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cashu (Bitcoin) 🥜"
+          }
+        }
+      }
     },
     "Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues." : {
       "localizations" : {
@@ -1240,7 +1603,14 @@
       }
     },
     "Choose account" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies account"
+          }
+        }
+      }
     },
     "Choose content for this column" : {
       "localizations" : {
@@ -1273,7 +1643,14 @@
       }
     },
     "Choose to tag:" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taggen in bericht:"
+          }
+        }
+      }
     },
     "Clear" : {
       "comment" : "Button to clear cache",
@@ -1319,25 +1696,77 @@
       }
     },
     "Code (bravery, verified_human, early_adoptor)" : {
-      "comment" : "Label for input field for badge code on Badge creation screen"
+      "comment" : "Label for input field for badge code on Badge creation screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code (bravery, verified_human, early_adoptor)"
+          }
+        }
+      }
     },
     "Color Blue" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Commenting on %@" : {
-      "comment" : "Shown when adding a comment to a website"
+      "comment" : "Shown when adding a comment to a website",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reageer op %@"
+          }
+        }
+      }
     },
     "Commenting on website" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reageer op site"
+          }
+        }
+      }
     },
     "Comments" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opmerkingen"
+          }
+        }
+      }
     },
     "Comments on %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opmerkingen op %@"
+          }
+        }
+      }
     },
     "Communities" : {
-      "comment" : "Navigation title for Communities view"
+      "comment" : "Navigation title for Communities view",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groepen"
+          }
+        }
+      }
     },
     "Configure contacts..." : {
       "localizations" : {
@@ -1467,10 +1896,24 @@
       }
     },
     "Contacts:" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contacten:"
+          }
+        }
+      }
     },
     "Continue" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verder"
+          }
+        }
+      }
     },
     "Copy npub" : {
       "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
@@ -1763,7 +2206,15 @@
       }
     },
     "Database status" : {
-      "comment" : "Settings heading"
+      "comment" : "Settings heading",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Database status"
+          }
+        }
+      }
     },
     "Day" : {
       "localizations" : {
@@ -1776,16 +2227,44 @@
       }
     },
     "decode ack" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "decode test" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "decode test 2" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "decode test 3" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Default" : {
       "localizations" : {
@@ -1872,7 +2351,14 @@
       }
     },
     "describe" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Description" : {
       "comment" : "Label for input field for badge description on Badge creation screen",
@@ -1929,7 +2415,15 @@
       }
     },
     "Discover Communities" : {
-      "comment" : "Heading above list of communities"
+      "comment" : "Heading above list of communities",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontdek groepen"
+          }
+        }
+      }
     },
     "Discover Nostr" : {
       "localizations" : {
@@ -2057,9 +2551,6 @@
         }
       }
     },
-    "eeuh" : {
-
-    },
     "Enable animated profile pics" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -2072,7 +2563,15 @@
       }
     },
     "Enable authentication" : {
-      "comment" : "Label for toggle to enable AUTH on this relay"
+      "comment" : "Label for toggle to enable AUTH on this relay",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activeer authenticatie"
+          }
+        }
+      }
     },
     "Enable full width pictures" : {
       "comment" : "Setting on settings screen",
@@ -2203,7 +2702,14 @@
       }
     },
     "eventId: %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Example" : {
       "localizations" : {
@@ -2343,7 +2849,14 @@
       }
     },
     "fetchRelays" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "File Storage Server address" : {
       "comment" : "File Storage Server address",
@@ -2505,10 +3018,24 @@
       }
     },
     "get_public_key" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "gmmm broken %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Green" : {
       "localizations" : {
@@ -2542,7 +3069,14 @@
       }
     },
     "Hello, World! Hello World! Hello World! Hello World! Hello World! Hello World" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "hex" : {
       "comment" : "Short label for the word 'hexadecimal'",
@@ -2791,7 +3325,14 @@
       }
     },
     "Is bookmarked: %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Issued" : {
       "comment" : "Tab title of Issues badges",
@@ -2867,7 +3408,15 @@
       }
     },
     "Last optimize: %@" : {
-      "comment" : "Last run: (date) of maintanace"
+      "comment" : "Last run: (date) of maintanace",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatste optimalisatie: %@"
+          }
+        }
+      }
     },
     "Last seen: %@ ago" : {
       "comment" : "Label on profile showing when last seen, example: Last seen: 10m ago",
@@ -2902,7 +3451,15 @@
       }
     },
     "Last updated: May 27th, 2023\n    \nYour access to and use of the App is conditioned upon your acceptance of and compliance with these Terms. These Terms apply to all users of the App.\n\nBy accessing or using the App, you agree to be bound by these Terms. If you disagree with any part of the terms, then you do not have permission to access the App.\n\nAccounts\nWhen you create an account with the App, you are responsible for maintaining the confidentiality of your account keys, as well as restricting access to your device. You agree to accept responsibility for any and all activities or actions that occur under your account.\n\nContent\nThe App allows you to access, read, and post content through connecting to relays. You are responsible for the content that you post or access through the App, including its legality, reliability, and appropriateness.\n\nBy posting content through the App, you represent and warrant that the content is yours (you own it) and/or you have the right to use it, and that the posting of your content through the App does not violate the privacy rights, publicity rights, copyrights, contract rights, or any other rights of any person or entity.\n\nProhibited Activities\nYou agree not to use the App for any illegal, harmful, or offensive activities, including but not limited to:\n\nEngaging in harassment, bullying, or any form of intimidation\nDistributing or promoting sexually explicit or pornographic material\nPromoting hate speech, racism, or discrimination of any kind\nInfringing upon the intellectual property rights of others\nEngaging in any form of fraud, phishing, or unauthorized data collection\nIntellectual Property\nThe App and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of the Developer. The App is protected by copyright, trademark, and other laws of the United States and foreign countries. Any trademarks and trade dress may not be used in connection with any product or service without the prior written consent of the Developer.\n\nLimitation of Liability\nIn no event shall the Developer be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the App; (ii) any conduct or content of any third party on the App; (iii) any content obtained from the App; and (iv) unauthorized access, use, or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not the Developer has been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.\n\nPrivacy Policy\nNostur does not collect information about you. The app stores information that you provide about your nostr profile, which can be anything you choose to share or not. The posts and content you share from Nostur are sent out to public relays so anyone can view those and Nostur stores this on your device so you can always view it yourself.\nThe app uses the following external services:\nTenor: for including animated GIFs in your posts\nImage upload services: For including images in your posts. You can opt out to using these services by not including images or GIFs in your posts and not uploading a profile picture or banner in the app.\n\nFor any questions, please contact feedback@nostur.com." : {
-      "comment" : "Terms and conditions"
+      "comment" : "Terms and conditions",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Let's go!" : {
       "comment" : "Button to start using Nostur, during onboarding",
@@ -2938,7 +3495,15 @@
       }
     },
     "Lightning sound effect" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donder geluidseffect"
+          }
+        }
+      }
     },
     "Lightning wallet" : {
       "comment" : "Setting on settings screen",
@@ -3055,7 +3620,14 @@
       }
     },
     "Login request" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inlogverzoek"
+          }
+        }
+      }
     },
     "Low Data mode" : {
       "comment" : "Setting on settings screen",
@@ -3123,7 +3695,14 @@
       }
     },
     "May be required to access special features on this relay" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan nodig zijn voor speciale functies op deze relay"
+          }
+        }
+      }
     },
     "Media" : {
       "comment" : "Tab title",
@@ -3148,7 +3727,14 @@
       }
     },
     "mentions" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Mentions, replies, or DMs" : {
       "localizations" : {
@@ -3194,13 +3780,34 @@
       }
     },
     "Missing messages?" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten zoek?"
+          }
+        }
+      }
     },
     "Mock Bookmark update" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Mock Profile update" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Month" : {
       "localizations" : {
@@ -3267,7 +3874,14 @@
       }
     },
     "NC" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "New direct message" : {
       "comment" : "Navigation title for a new Direct Message",
@@ -3445,10 +4059,24 @@
       }
     },
     "No comments found." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen opmerkingen gevonden."
+          }
+        }
+      }
     },
     "no image" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "No message requests" : {
       "comment" : "Shown on the DM requests view when there aren't any message requests to show",
@@ -3484,16 +4112,46 @@
       }
     },
     "Nostr event" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Nostr events:" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Nostr Wallet Connect" : {
-      "comment" : "Navigation title for setting up Nostr Wallet Connect (NWC)"
+      "comment" : "Navigation title for setting up Nostr Wallet Connect (NWC)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Nostr Wallet Connect URI" : {
-      "comment" : "Label for entering Nostr Wallet Connect URI"
+      "comment" : "Label for entering Nostr Wallet Connect URI",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Nostur %@ (Build: %@)" : {
       "localizations" : {
@@ -3502,11 +4160,25 @@
             "state" : "new",
             "value" : "Nostur %1$@ (Build: %2$@)"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
         }
       }
     },
     "Nostur Pro" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur Pro"
+          }
+        }
+      }
     },
     "Not yet" : {
       "localizations" : {
@@ -3541,7 +4213,14 @@
       }
     },
     "Nothing" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Notification settings" : {
       "localizations" : {
@@ -3605,7 +4284,14 @@
       }
     },
     "NWC" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "OK" : {
       "localizations" : {
@@ -3679,7 +4365,15 @@
       }
     },
     "Optimize now" : {
-      "comment" : "Button to run database clean up now"
+      "comment" : "Button to run database clean up now",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu optimalizeren"
+          }
+        }
+      }
     },
     "Orange" : {
       "localizations" : {
@@ -3722,7 +4416,14 @@
       }
     },
     "PFP's here (max 10)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Pin" : {
       "localizations" : {
@@ -3756,7 +4457,15 @@
       }
     },
     "Please read these Terms and Conditions (\"Terms\", \"Terms and Conditions\") carefully before using Nostur (the \"App\") operated by the independent developer (\"Developer\")." : {
-      "comment" : "Terms and conditions paragraph"
+      "comment" : "Terms and conditions paragraph",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Please try again when there is a connection" : {
       "localizations" : {
@@ -3931,7 +4640,14 @@
       }
     },
     "prefix: %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Preview" : {
       "comment" : "Heading when entering Report details\nPreview button when creating a new post",
@@ -4075,10 +4791,24 @@
       }
     },
     "pubkey: %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "pubkeysByWriteRelays" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Public key" : {
       "localizations" : {
@@ -4543,7 +5273,15 @@
       }
     },
     "Replies" : {
-      "comment" : "Tab title"
+      "comment" : "Tab title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoorden"
+          }
+        }
+      }
     },
     "Replying to " : {
       "localizations" : {
@@ -5107,7 +5845,14 @@
       }
     },
     "Show bookmarks" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon bladwijzers"
+          }
+        }
+      }
     },
     "Show feed" : {
       "localizations" : {
@@ -5227,7 +5972,14 @@
       }
     },
     "sign_event" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Signer" : {
       "comment" : "Side bar navigation button",
@@ -5423,22 +6175,54 @@
       }
     },
     "Tap to toggle" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Druk aan/uit om te filteren"
+          }
+        }
+      }
     },
     "Terms of Service" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruiksvoorwaarden"
+          }
+        }
+      }
     },
     "test" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Test" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Test Toggle" : {
-
-    },
-    "test1" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "The article feed shows articles from people you follow in the selected time frame" : {
       "localizations" : {
@@ -5451,7 +6235,14 @@
       }
     },
     "The database could not be loaded." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "The Gallery feed shows pictures most liked or reposted by people you follow in the last %lld hours" : {
       "localizations" : {
@@ -5495,7 +6286,14 @@
       }
     },
     "There are 2 solutions:" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "There was a problem, could not send sats" : {
       "comment" : "Error message",
@@ -5655,6 +6453,12 @@
             "state" : "translated",
             "value" : "Low"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachtjes"
+          }
         }
       }
     },
@@ -5666,6 +6470,12 @@
             "state" : "translated",
             "value" : "Normal"
           }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normaal"
+          }
         }
       }
     },
@@ -5676,6 +6486,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Off"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uit"
           }
         }
       }
@@ -5691,10 +6507,24 @@
       }
     },
     "Time out" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time out"
+          }
+        }
+      }
     },
     "Time-out" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time-out"
+          }
+        }
+      }
     },
     "Time-out while loading gallery" : {
       "localizations" : {
@@ -5717,10 +6547,24 @@
       }
     },
     "Time-out while loading posts" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time-out"
+          }
+        }
+      }
     },
     "Tip" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tip"
+          }
+        }
+      }
     },
     "Title" : {
       "comment" : "Header for entering title of a feed",
@@ -5755,7 +6599,14 @@
       }
     },
     "toggle red" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
     },
     "Total: %lld" : {
       "localizations" : {
@@ -6072,7 +6923,14 @@
       }
     },
     "What" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat"
+          }
+        }
+      }
     },
     "What's happening?" : {
       "comment" : "Placeholder text for typing a new post",
@@ -6378,7 +7236,14 @@
       }
     },
     "Zap receipt from" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapbonnetje van"
+          }
+        }
+      }
     },
     "Zapped %@" : {
       "comment" : "Text in zap button after zapping",

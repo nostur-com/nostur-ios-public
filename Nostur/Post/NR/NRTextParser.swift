@@ -233,7 +233,7 @@ class NRTextParser { // TEXT things
                         L.og.debug("problem decoding nprofile")
                     }
                 default:
-                    L.og.debug("eeuh")
+                    break
             }
             
           
