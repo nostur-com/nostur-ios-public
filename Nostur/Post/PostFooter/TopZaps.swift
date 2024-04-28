@@ -22,6 +22,8 @@ struct TopZaps: View {
     
     @State private var verifiedZaps: [ZapAndZapFrom] = []
     @State var actualSize: CGSize? = nil
+    @Namespace private var animation
+    @State private var animateUpdate = UUID()
   
     
     init(id: String) {
@@ -35,9 +37,11 @@ struct TopZaps: View {
                 ForEach(verifiedZaps.indices, id: \.self) { index in
                     ZapPill(zap: verifiedZaps[index], index: index, availableWidth: actualSize.width)
                         .id(verifiedZaps[index].id)
+                        .matchedGeometryEffect(id: verifiedZaps[index].id, in: animation)
                 }
             }
         }
+        .animation(.easeIn, value: animateUpdate)
         .readSize { size in
             actualSize = size
         }
@@ -95,6 +99,7 @@ struct TopZaps: View {
                 guard let zapFrom = zap.zapFromRequest else { return nil }
                 return ZapAndZapFrom(zap: zap, zapFrom: zapFrom)
             })
+        animateUpdate = UUID()
     }
 }
 
