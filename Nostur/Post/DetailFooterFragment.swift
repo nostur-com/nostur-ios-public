@@ -21,6 +21,7 @@ struct DetailFooterFragment: View {
     
     var body: some View {
         Divider()
+        TopZaps(id: nrPost.id)
         HStack {
             NBNavigationLink(value: ViewPath.NoteReactions(id: nrPost.id)) {
                 HStack(spacing: 3) {
