@@ -811,45 +811,49 @@ extension Event {
     
     // TODO: 115.00 ms    1.0%    0 s          closure #1 in static Event.updateRelays(_:relays:)
     static func updateRelays(_ id:String, relays: String) {
-        let bg = bg()
-        bg.perform {
-            if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id) {
-                let existingRelays = event.relays.split(separator: " ").map { String($0) }
-                let newRelays = relays.split(separator: " ").map { String($0) }
-                let uniqueRelays = Set(existingRelays + newRelays)
-                if uniqueRelays.count > existingRelays.count {
-                    event.relays = uniqueRelays.joined(separator: " ")
+        #if DEBUG
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
+            }
+        #endif
+        if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id) {
+            guard !event.isDeleted else { return }
+            let existingRelays = event.relays.split(separator: " ").map { String($0) }
+            let newRelays = relays.split(separator: " ").map { String($0) }
+            let uniqueRelays = Set(existingRelays + newRelays)
+            if uniqueRelays.count > existingRelays.count {
+                event.relays = uniqueRelays.joined(separator: " ")
 //                    event.relaysUpdated.send(event.relays)
-                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(
-                        id: event.id,
-                        relaysCount: event.relays.split(separator: " ").count,
-                        relays: event.relays
-                    ))
-                    do {
-                        try bg.save()
-                    }
-                    catch {
-                        L.og.error("🔴🔴 error updateRelays \(error)")
-                    }
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(
+                    id: event.id,
+                    relaysCount: event.relays.split(separator: " ").count,
+                    relays: event.relays
+                ))
+                do {
+                    try bg().save()
+                }
+                catch {
+                    L.og.error("🔴🔴 error updateRelays \(error)")
                 }
             }
-            else if let event = try? Event.fetchEvent(id: id, context: bg) {
-                let existingRelays = event.relays.split(separator: " ").map { String($0) }
-                let newRelays = relays.split(separator: " ").map { String($0) }
-                let uniqueRelays = Set(existingRelays + newRelays)
-                if uniqueRelays.count > existingRelays.count {
-                    event.relays = uniqueRelays.joined(separator: " ")
-                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(
-                        id: event.id,
-                        relaysCount: event.relays.split(separator: " ").count,
-                        relays: event.relays
-                    ))
-                    do {
-                        try bg.save()
-                    }
-                    catch {
-                        L.og.error("🔴🔴 error updateRelays \(error)")
-                    }
+        }
+        else if let event = try? Event.fetchEvent(id: id, context: bg()) {
+            guard !event.isDeleted else { return }
+            let existingRelays = event.relays.split(separator: " ").map { String($0) }
+            let newRelays = relays.split(separator: " ").map { String($0) }
+            let uniqueRelays = Set(existingRelays + newRelays)
+            if uniqueRelays.count > existingRelays.count {
+                event.relays = uniqueRelays.joined(separator: " ")
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(
+                    id: event.id,
+                    relaysCount: event.relays.split(separator: " ").count,
+                    relays: event.relays
+                ))
+                do {
+                    try bg().save()
+                }
+                catch {
+                    L.og.error("🔴🔴 error updateRelays \(error)")
                 }
             }
         }
