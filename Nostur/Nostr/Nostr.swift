@@ -449,7 +449,7 @@ extension NEvent {
         }
         // PREFERRED NEW METHOD
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-        let replyEtags = threadETags.filter { $0.tag.count == 4 && $0.tag[safe: 3] == "reply" }
+        let replyEtags = threadETags.filter { $0.tag.count >= 4 && $0.tag[safe: 3] == "reply" }
         if (!replyEtags.isEmpty) {
             return replyEtags.first
         }
@@ -473,7 +473,7 @@ extension NEvent {
         if threadETags.isEmpty {
             return nil
         }
-        let rootEtag = threadETags.filter { $0.tag.count == 4 && $0.tag[safe: 3] == "root" }.first
+        let rootEtag = threadETags.filter { $0.tag.count >= 4 && $0.tag[safe: 3] == "root" }.first
         // PREFERRED NEW METHOD
         if (rootEtag != nil) {
             return rootEtag
@@ -577,7 +577,7 @@ struct TagsHelpers {
         }
         // PREFERRED NEW METHOD
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-        let replyEtags = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "reply" }
+        let replyEtags = tags.filter { $0.type == "e" && $0.tag.count >= 4 && $0.tag[3] == "reply" }
         if (!replyEtags.isEmpty) {
             return replyEtags.first
         }
@@ -601,7 +601,7 @@ struct TagsHelpers {
         if noEtags() {
             return nil
         }
-        let rootEtag = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "root" }.first
+        let rootEtag = tags.filter { $0.type == "e" && $0.tag.count >= 4 && $0.tag[3] == "root" }.first
         // PREFERRED NEW METHOD
         if (rootEtag != nil) {
             return rootEtag
@@ -624,7 +624,7 @@ struct TagsHelpers {
             return nil
         }
         // PREFERRED NEW METHOD
-        let mentionEtags = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "mention" }
+        let mentionEtags = tags.filter { $0.type == "e" && $0.tag.count >= 4 && $0.tag[3] == "mention" }
         if !mentionEtags.isEmpty {
             return mentionEtags
         }
@@ -641,7 +641,7 @@ struct TagsHelpers {
             return nil
         }
         // PREFERRED NEW METHOD
-        let mentionEtags = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "mention" }
+        let mentionEtags = tags.filter { $0.type == "e" && $0.tag.count >= 4 && $0.tag[3] == "mention" }
         if !mentionEtags.isEmpty {
             return mentionEtags
         }
