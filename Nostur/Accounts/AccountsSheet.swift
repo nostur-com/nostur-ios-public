@@ -30,96 +30,93 @@ struct AccountsSheet: View {
     
     var body: some View {
 //        let _ = Self._printChanges()
-        NBNavigationStack {
-            VStack(spacing: 15) {
-                List {
-                    ForEach(accountsSorted) { account in
-                        AccountRow(account: account)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                NRState.shared.changeAccount(account)
-                                sendNotification(.hideSideBar)
-                                dismiss()
+        VStack(spacing: 15) {
+            List {
+                ForEach(accountsSorted) { account in
+                    AccountRow(account: account)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            NRState.shared.changeAccount(account)
+                            sendNotification(.hideSideBar)
+                            dismiss()
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button(String(localized:"Log out", comment:"Log out button"), role: .destructive) {
+                                logoutAccount = account
                             }
-                            .swipeActions(edge: .trailing) {
-                                Button(String(localized:"Log out", comment:"Log out button"), role: .destructive) {
-                                    logoutAccount = account
-                                }
-                            }
-                    }
-                    .listRowBackground(themes.theme.background)
+                        }
                 }
-                .scrollContentBackgroundHidden()
-                .listStyle(.plain)
-                
-                NavigationLink {
-                    NewAccountSheet()
-                } label: { Text("Create new account", comment:"Button to create a new account") }
-                
-                NavigationLink {
-                    AddExistingAccountSheet()
-                } label: { Text("Add existing account", comment:"Button to add an existing account") }
-                Spacer()
+                .listRowBackground(themes.theme.background)
             }
-            .padding(20)
-            .navigationTitle(String(localized:"Accounts", comment:"Navigation title for Accounts screen"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar(content: {
-                ToolbarItem(placement: .cancellationAction) {
-                    if (withDismissButton) {
-                        Button(String(localized: "Close", comment: "Button to close this screen")) { dismiss() }
-                    }
-                }
-            })
-            .actionSheet(item: $logoutAccount) { account in
-                ActionSheet(
-                    title: Text("Confirm log out", comment: "Title of sheet that asks the user to confirm logout action"),
-                    message: !account.isNC && account.privateKey != nil
-                    ? Text("""
-                                     Make sure you have a back-up of your private key (nsec)
-                                     Nostur cannot recover your account without it
-                                     """, comment: "Informational text during logout action")
-                    : Text("""
-                                     Account: @\(account.name) / \(account.display_name)
-                                     """, comment: "Informational text during logout action, showing Account name/handle")
-                    ,
-                    buttons: !account.isNC && account.privateKey != nil
-                    ? [
-                        .destructive(Text("Log out", comment: "Button to log out"), action: {
-                            NRState.shared.logout(account)
-                            
-//                            if (NRState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
-//                                sendNotification(.hideSideBar)
-//                            }
-                            
-                        }),
-                        .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
-                            if let pk = account.privateKey {
-                                UIPasteboard.general.string = nsec(pk)
-                            }
-                        }),
-                        .cancel(Text("Cancel"))
-                    ] : [
-                        .destructive(Text("Log out", comment: "Button to log out"), action: {
-                            NRState.shared.logout(account)
-                            
-//                            if (NRState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
-//                                sendNotification(.hideSideBar)
-//                            }
-                            
-                        }),
-                        .cancel(Text("Cancel"))
-                    ])
-            }
-            .background(themes.theme.background)
+            .scrollContentBackgroundHidden()
+            .listStyle(.plain)
+            
+            NavigationLink {
+                NewAccountSheet()
+            } label: { Text("Create new account", comment:"Button to create a new account") }
+            
+            NavigationLink {
+                AddExistingAccountSheet()
+            } label: { Text("Add existing account", comment:"Button to add an existing account") }
+            Spacer()
         }
-//        .nbUseNavigationStack(.never)
+        .padding(20)
+        .navigationTitle(String(localized:"Accounts", comment:"Navigation title for Accounts screen"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(content: {
+            ToolbarItem(placement: .cancellationAction) {
+                if (withDismissButton) {
+                    Button(String(localized: "Close", comment: "Button to close this screen")) { dismiss() }
+                }
+            }
+        })
+        .actionSheet(item: $logoutAccount) { account in
+            ActionSheet(
+                title: Text("Confirm log out", comment: "Title of sheet that asks the user to confirm logout action"),
+                message: !account.isNC && account.privateKey != nil
+                ? Text("""
+                                 Make sure you have a back-up of your private key (nsec)
+                                 Nostur cannot recover your account without it
+                                 """, comment: "Informational text during logout action")
+                : Text("""
+                                 Account: @\(account.name) / \(account.display_name)
+                                 """, comment: "Informational text during logout action, showing Account name/handle")
+                ,
+                buttons: !account.isNC && account.privateKey != nil
+                ? [
+                    .destructive(Text("Log out", comment: "Button to log out"), action: {
+                        NRState.shared.logout(account)
+                        
+//                            if (NRState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
+//                                sendNotification(.hideSideBar)
+//                            }
+                        
+                    }),
+                    .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
+                        if let pk = account.privateKey {
+                            UIPasteboard.general.string = nsec(pk)
+                        }
+                    }),
+                    .cancel(Text("Cancel"))
+                ] : [
+                    .destructive(Text("Log out", comment: "Button to log out"), action: {
+                        NRState.shared.logout(account)
+                        
+//                            if (NRState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
+//                                sendNotification(.hideSideBar)
+//                            }
+                        
+                    }),
+                    .cancel(Text("Cancel"))
+                ])
+        }
+        .background(themes.theme.background)
     }
 }
 
 struct AccountRow: View {
-    @ObservedObject public var account:CloudAccount
-    @EnvironmentObject private var ns:NRState
+    @ObservedObject public var account: CloudAccount
+    @EnvironmentObject private var ns: NRState
     
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -162,7 +159,9 @@ struct AccountRow: View {
 struct AccountSheet_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
-            AccountsSheet()
+            NBNavigationStack {
+                AccountsSheet()
+            }
         }
     }
 }

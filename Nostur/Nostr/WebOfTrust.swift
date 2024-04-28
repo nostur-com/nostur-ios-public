@@ -20,7 +20,7 @@
 // We can create a Web of Trust setting, strict, normal or off.
 
 // In the future we could have more data points (badges, nip05, post counts, interactions with followers, etc
-// Could also add quality check, don't use follows from people who follow too many people, what is the nostr-dunbar number?
+// Could also add quality check, don't use follows from people who follow too many people
 
 import SwiftUI
 import FileProvider

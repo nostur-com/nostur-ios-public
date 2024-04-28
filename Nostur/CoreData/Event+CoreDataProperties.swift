@@ -452,6 +452,7 @@ extension Event {
                 // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
                 if let lastEtag = event.lastE() {
                     if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
+                        guard !reactingToEvent.isDeleted else { break }
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                         event.reactionTo = reactingToEvent
@@ -1071,7 +1072,7 @@ extension Event {
                 if (savedEvent.replyToId == nil) {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                 }
-                if let root = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (try? Event.fetchEvent(id: replyToRootEtag.id, context: context)) {
+                if let root = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (try? Event.fetchEvent(id: replyToRootEtag.id, context: context)), !root.isDeleted {
                     savedEvent.replyToRoot = root
                     
                     ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: root))
