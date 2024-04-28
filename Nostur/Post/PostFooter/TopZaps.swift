@@ -42,6 +42,8 @@ struct TopZaps: View {
             }
         }
         .animation(.easeIn, value: animateUpdate)
+        .frame(maxHeight: 75, alignment: .topLeading) // Max 3 rows 
+        .clipped()
         .readSize { size in
             actualSize = size
         }
@@ -94,7 +96,7 @@ struct TopZaps: View {
     private func loadZaps(_ zaps: [Event]) {
         verifiedZaps = zaps
             .filter { $0.flags == "zpk_verified" }
-            .prefix(25)
+            .prefix(17)
             .compactMap({ zap in
                 guard let zapFrom = zap.zapFromRequest else { return nil }
                 return ZapAndZapFrom(zap: zap, zapFrom: zapFrom)

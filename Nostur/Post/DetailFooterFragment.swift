@@ -28,6 +28,7 @@ struct DetailFooterFragment: View {
                     AnimatedNumber(number: footerAttributes.likesCount)
 //                        .fontWeight(.bold)
                     Text("reactions", comment: "Label for reactions count, example: (7) reactions")
+                        .lineLimit(1)
                 }
             }
             NBNavigationLink(value: ViewPath.NoteReposts(id: nrPost.id)) {
@@ -35,6 +36,7 @@ struct DetailFooterFragment: View {
                     AnimatedNumber(number: footerAttributes.repostsCount)
 //                        .fontWeight(.bold)
                     Text("reposts", comment: "Label for reposts count, example: (7) reposts")
+                        .lineLimit(1)
                 }
             }
             NBNavigationLink(value: ViewPath.NoteZaps(id: nrPost.id)) {
@@ -42,6 +44,7 @@ struct DetailFooterFragment: View {
                     AnimatedNumber(number: footerAttributes.zapsCount)
 //                        .fontWeight(.bold)
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
+                        .lineLimit(1)
                     
                     AnimatedNumberString(number: tallyString)
 //                        .fontWeight(.bold)
@@ -52,10 +55,12 @@ struct DetailFooterFragment: View {
             Spacer()
             
             Text(nrPost.createdAt.formatted(date: .omitted, time: .shortened))
+                .lineLimit(1)
             Text(nrPost.createdAt.formatted(
                 .dateTime
                     .day().month(.defaultDigits)
             ))
+            .lineLimit(1)
         }
         .onAppear {
             loadTally(footerAttributes.zapTally)
