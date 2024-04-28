@@ -368,6 +368,7 @@
 		1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4D4072997E126004E88CD /* AccountManager.swift */; };
 		1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC4D40A2997E58E004E88CD /* KeychainAccess */; };
 		1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4D40C2998ED0E004E88CD /* FollowersList.swift */; };
+		1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC5834E2BDDBA5B000C3588 /* SwiftUIFlow */; };
 		1FC6807A29DB0BF7003EE054 /* ReportPostSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC6807929DB0BF7003EE054 /* ReportPostSheet.swift */; };
 		1FC705BA2B5B149100FED57B /* ViewUpdates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC705B92B5B149100FED57B /* ViewUpdates.swift */; };
 		1FC705BC2B5B14D300FED57B /* CloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC705BB2B5B14D300FED57B /* CloudSyncManager.swift */; };
@@ -1014,6 +1015,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
+				1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
 				1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
@@ -2111,6 +2113,7 @@
 				1F7B21902AE3D6C000CE972E /* NostrEssentials */,
 				1F747A0F2B3F1E9D0020F4A5 /* RepresentableKit */,
 				1FE8828A2B48E9DC00A903F0 /* NavigationBackport */,
+				1FC5834E2BDDBA5B000C3588 /* SwiftUIFlow */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -2173,6 +2176,7 @@
 				1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */,
 				1F747A0E2B3F1E9C0020F4A5 /* XCRemoteSwiftPackageReference "RepresentableKit" */,
 				1FE882892B48E9DC00A903F0 /* XCRemoteSwiftPackageReference "NavigationBackport" */,
+				1FC5834D2BDDB98A000C3588 /* XCRemoteSwiftPackageReference "SwiftUIFlow" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -3104,6 +3108,14 @@
 				revision = ecb18d8ce4d88277cc4fb103973352d91e18c535;
 			};
 		};
+		1FC5834D2BDDB98A000C3588 /* XCRemoteSwiftPackageReference "SwiftUIFlow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ciaranrobrien/SwiftUIFlow";
+			requirement = {
+				kind = revision;
+				revision = b300d3c0110116f3520066dfb8dcf3006cf593c3;
+			};
+		};
 		1FE882892B48E9DC00A903F0 /* XCRemoteSwiftPackageReference "NavigationBackport" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/johnpatrickmorgan/NavigationBackport";
@@ -3179,6 +3191,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */;
 			productName = KeychainAccess;
+		};
+		1FC5834E2BDDBA5B000C3588 /* SwiftUIFlow */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FC5834D2BDDB98A000C3588 /* XCRemoteSwiftPackageReference "SwiftUIFlow" */;
+			productName = SwiftUIFlow;
 		};
 		1FE8828A2B48E9DC00A903F0 /* NavigationBackport */ = {
 			isa = XCSwiftPackageProductDependency;

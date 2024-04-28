@@ -1,5 +1,5 @@
 {
-  "originHash" : "8fbe3af3c4008a5df68510729e089539a60187a6343058d697fd234073a56211",
+  "originHash" : "eb3e4a41cc7c847e198d2ee9ed3fb61597ad905f576282d17af72f7c794d3b88",
   "pins" : [
     {
       "identity" : "gifu",
@@ -114,6 +114,14 @@
       "state" : {
         "revision" : "0a5bc04095a675662cf24757cc0640aa2204253b",
         "version" : "1.0.2"
+      }
+    },
+    {
+      "identity" : "swiftuiflow",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ciaranrobrien/SwiftUIFlow",
+      "state" : {
+        "revision" : "b300d3c0110116f3520066dfb8dcf3006cf593c3"
       }
     }
   ],
