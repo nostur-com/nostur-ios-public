@@ -266,8 +266,8 @@ struct ProfilePicView_Previews: PreviewProvider {
 
 
 struct MiniPFP: View {
-    public var pictureUrl:URL
-    public var size:CGFloat = 20.0
+    public var pictureUrl: URL
+    public var size: CGFloat = 20.0
     
     var body: some View {
         LazyImage(request: pfpImageRequestFor(pictureUrl, size: size)) { state in

@@ -1356,7 +1356,7 @@
       }
     },
     "AUTODOWNLOAD_ALL" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1373,7 +1373,7 @@
       }
     },
     "AUTODOWNLOAD_WOT_NORMAL" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1390,7 +1390,7 @@
       }
     },
     "AUTODOWNLOAD_WOT_STRICT" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3962,14 +3962,7 @@
       }
     },
     "Multi-columns and more" : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Multi-kolom en meer"
-          }
-        }
-      }
+
     },
     "Mute conversation" : {
       "comment" : "Post context menu action to mute conversation",
@@ -4199,16 +4192,6 @@
         }
       }
     },
-    "no image" : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        }
-      }
-    },
     "No message requests" : {
       "comment" : "Shown on the DM requests view when there aren't any message requests to show",
       "localizations" : {
@@ -4301,15 +4284,7 @@
       }
     },
     "Nostur Pro" : {
-      "comment" : "Setting on settings screen",
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nostur Pro"
-          }
-        }
-      }
+      "comment" : "Setting on settings screen"
     },
     "Not yet" : {
       "localizations" : {
@@ -6368,14 +6343,7 @@
       }
     },
     "Test Toggle" : {
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        }
-      }
+
     },
     "The article feed shows articles from people you follow in the selected time frame" : {
       "localizations" : {
@@ -6609,7 +6577,7 @@
       }
     },
     "THUNDERZAP_LOW" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6626,7 +6594,7 @@
       }
     },
     "THUNDERZAP_NORMAL" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6643,7 +6611,7 @@
       }
     },
     "THUNDERZAP_OFF" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7181,7 +7149,7 @@
       }
     },
     "WOT_NORMAL" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7198,7 +7166,7 @@
       }
     },
     "WOT_OFF" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7215,7 +7183,7 @@
       }
     },
     "WOT_STRICT" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
