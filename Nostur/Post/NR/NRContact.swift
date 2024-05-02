@@ -24,6 +24,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
 
     var anyName:String
     var fixedName:String?
+    var fixedPfp:String?
     var display_name:String?
     var name:String?
     var pictureUrl:URL?
@@ -57,6 +58,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         self.randomColor = Nostur.randomColor(seed: contact.pubkey)
         self.anyName = contact.anyName
         self.fixedName = contact.fixedName
+        self.fixedPfp = contact.fixedPfp
         self.display_name = contact.display_name
         self.name = contact.name
         self.pictureUrl = if let picture = contact.picture {
@@ -158,6 +160,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                     guard let self = self else { return }
                     let anyName = contact.anyName
                     let fixedName = contact.fixedName
+                    let fixedPfp = contact.fixedPfp
                     let display_name = contact.display_name
                     let name = contact.name
                     let pictureUrl:URL? = if let picture = contact.picture {
@@ -189,6 +192,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                         
                         self.anyName = anyName
                         self.fixedName = fixedName
+                        self.fixedPfp = fixedPfp
                         self.display_name = display_name
                         self.name = name
                         self.pictureUrl = pictureUrl
@@ -224,6 +228,15 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         self.fixedName = name
         bg().perform { [weak self] in
             self?.contact?.fixedName = name
+        }
+    }
+    
+    @MainActor public func setFixedPfp(_ url:String) {
+        guard url != self.fixedPfp else { return }
+        self.objectWillChange.send()
+        self.fixedPfp = url
+        bg().perform { [weak self] in
+            self?.contact?.fixedPfp = url
         }
     }
     
