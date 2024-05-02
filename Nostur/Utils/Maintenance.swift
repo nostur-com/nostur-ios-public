@@ -69,6 +69,7 @@ struct Maintenance {
             Self.runUpdateKeychainInfo(context: context)
             Self.runSaveFullAccountFlag(context: context)
             Self.runFixMissingDMStates(context: context)
+            Self.runInsertFixedPfps(context: context)
             
             do {
                 if context.hasChanges {
@@ -508,6 +509,28 @@ struct Maintenance {
         
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.insertFixedNames.rawValue
+    }
+    
+    // Run once to put .picture in fixedPfp
+    static func runInsertFixedPfps(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.insertFixedPfps, context: context) else { return }
+        
+        let fr = Contact.fetchRequest()
+        fr.predicate = NSPredicate(format: "fixedPfp == nil")
+        
+        guard let contacts = try? context.fetch(fr) else {
+            L.maintenance.error("runInsertFixedPfps: Could not fetch")
+            return
+        }
+        
+        L.maintenance.info("runInsertFixedPfps: Found \(contacts.count) contacts")
+        
+        for contact in contacts {
+            contact.fixedPfp = contact.picture
+        }
+        
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.insertFixedPfps.rawValue
     }
     
     // Run once to fix replies to existing replacable events
@@ -1269,6 +1292,9 @@ struct Maintenance {
         
         // Run once to put .anyName in fixedName
         case insertFixedNames = "insertFixedNames"
+        
+        // Run once to put .picture in fixedPfp
+        case insertFixedPfps = "insertFixedPfps"
         
         // Run once to fix replies to existing replacable events
         case fixArticleReplies = "fixArticleReplies"
