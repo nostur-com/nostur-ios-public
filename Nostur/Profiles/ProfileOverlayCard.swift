@@ -93,6 +93,7 @@ struct ProfileOverlayCard: View {
     @State private var backlog = Backlog(timeout: 5.0, auto: true)
     @State private var lastSeen: String? = nil
     @State private var isFollowingYou = false
+    @State var fixedPfp: URL?
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
@@ -113,6 +114,11 @@ struct ProfileOverlayCard: View {
                             dismiss()
                             navigateTo(contact)
                             sendNotification(.dismissMiniProfile)
+                        }
+                        .overlay(alignment: .bottomTrailing) {
+                            if let fixedPfp {
+                                FixedPFP(picture: fixedPfp)
+                            }
                         }
                     
                     Spacer()
@@ -297,6 +303,20 @@ struct ProfileOverlayCard: View {
         }
         .task { [weak contact] in
             guard let contact else { return }
+            
+            bg().perform {
+                if let fixedPfp = contact.fixedPfp,
+                   let contactPicture = contact.contact?.picture,
+                   fixedPfp != contactPicture,
+                   let fixedPfpUrl = URL(string: fixedPfp),
+                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+                {
+                    DispatchQueue.main.async {
+                        self.fixedPfp = fixedPfpUrl
+                    }
+                }
+            }
+            
             guard !SettingsStore.shared.lowDataMode else { return }
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard !contact.following else { return }

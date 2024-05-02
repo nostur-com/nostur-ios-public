@@ -29,6 +29,7 @@ struct ProfileView: View {
     @State private var editingAccount: CloudAccount?
     @State private var similarPFP = false
     @State private var showingNewNote = false
+    @State var fixedPfp: URL?
     
     @State private var showArticlesTab = false
     
@@ -77,6 +78,11 @@ struct ProfileView: View {
                                     self.scrollPosition.position = position
                                 }
                             //                            .scaleEffect(min(1,max(0.5,geoBanner.frame(in:.global).minY / 70 + 1.3)), anchor:.bottom)
+                                .overlay(alignment: .bottomTrailing) {
+                                    if let fixedPfp {
+                                        FixedPFP(picture: fixedPfp)
+                                    }
+                                }
                                 .offset(x: 10, y: DIMENSIONS.PFP_BIG/2)
                         })
                     HStack(alignment: .top) {
@@ -442,6 +448,21 @@ struct ProfileView: View {
         }
         .task { [weak nrContact] in
             guard let nrContact else { return }
+            
+            
+            bg().perform {
+                if let fixedPfp = nrContact.fixedPfp,
+                   let contactPicture = nrContact.contact?.picture,
+                   fixedPfp != contactPicture,
+                   let fixedPfpUrl = URL(string: fixedPfp),
+                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+                {
+                    DispatchQueue.main.async {
+                        self.fixedPfp = fixedPfpUrl
+                    }
+                }
+            }
+            
             guard !SettingsStore.shared.lowDataMode else { return }
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard !nrContact.following else { return }
