@@ -281,6 +281,10 @@ extension Contact : Identifiable {
                 if (contact.fixedName ?? "").isEmpty && contact.anyName != contact.authorKey { // Store previous name
                     contact.fixedName = contact.anyName
                 }
+                
+                if (contact.fixedPfp ?? "").isEmpty { // Store previous name
+                    contact.fixedPfp = contact.picture
+                }
                 // update contact
 //                    contact.objectWillChange.send()
                 contact.name = metaData.name
@@ -325,6 +329,7 @@ extension Contact : Identifiable {
             if contact.anyName != contact.authorKey { // For showing "Previously known as"
                 contact.fixedName = contact.anyName
             }
+            contact.fixedPfp = contact.picture // For showing "Previously known as"
             Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
             EventRelationsQueue.shared.addAwaitingContact(contact)
             updateRelatedEvents(contact)
