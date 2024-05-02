@@ -333,6 +333,7 @@ struct LazyPrivateNote: View {
                     if contact.anyName != contact.authorKey { // For showing "Previously known as"
                         contact.fixedName = contact.anyName
                     }
+                    contact.fixedPfp = contact.picture
 //                    Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
 //                    EventRelationsQueue.shared.addAwaitingContact(contact)
 //                    Contact.updateRelatedEvents(contact)
