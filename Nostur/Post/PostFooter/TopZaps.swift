@@ -10,7 +10,7 @@ import SwiftUIFlow
 
 struct TopZaps: View {
     @EnvironmentObject private var themes: Themes
-    private let id: String
+    public let id: String
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
     private var zaps: FetchedResults<Event>
