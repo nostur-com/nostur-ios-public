@@ -42,9 +42,11 @@ struct TopZaps: View {
             }
         }
         .animation(.easeIn, value: animateUpdate)
-        .frame(maxHeight: 75, alignment: .topLeading) // Max 3 rows 
+        .frame(maxHeight: 75, alignment: .topLeading) // Max 3 rows
         .clipped()
+        .drawingGroup()
         .readSize { size in
+            guard actualSize == nil else { return }
             actualSize = size
         }
         .nosturNavBgCompat(themes: themes)
@@ -53,43 +55,6 @@ struct TopZaps: View {
         }
         .onChange(of: zapsSorted) { newZapsSorted in
             loadZaps(newZapsSorted)
-        }
-        .task {
-            // Fix zaps afterwards??
-            // (0, 0) = (tally, count)
-            let tally = zaps
-                .filter { $0.flags == "zpk_verified" }
-                .reduce((0, 0)) { partialResult, zap in
-                return (partialResult.0 + Int64(zap.naiveSats), partialResult.1 + Int64(1))
-            }
-            if let event = try? DataProvider.shared().fetchEvent(id: id) {
-                if event.zapsCount != tally.1 {
-//                    event.objectWillChange.send()
-                    event.zapsCount = tally.1
-                    event.zapTally = tally.0
-//                    event.zapsDidChange.send((tally.1, tally.0))
-                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: event.id, zaps: tally.1, zapTally: tally.0))
-                }
-            }
-            
-            var missing: [Event] = []
-            for zap in zaps {
-                if let zapFrom = zap.zapFromRequest {
-                    if let contact = zapFrom.contact, contact.metadata_created_at == 0 {
-                        missing.append(zapFrom)
-                        EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "TopZaps.001")
-                    }
-                    else if zapFrom.contact == nil {
-                        missing.append(zapFrom)
-                        EventRelationsQueue.shared.addAwaitingEvent(zapFrom, debugInfo: "TopZaps.002")
-                    }
-                    if zapFrom.contact == nil || zapFrom.contact?.metadata_created_at == 0 {
-                        
-                    }
-                }
-            }
-            
-            QueuedFetcher.shared.enqueue(pTags: missing.map { $0.pubkey })
         }
     }
     
@@ -122,10 +87,8 @@ struct ZapPill: View {
     var body: some View {
         HStack(spacing: 5) {
             Circle()
-                .strokeBorder(.regularMaterial, lineWidth: 2)
-                .background(randomColor(seed: zap.zapFrom.pubkey))
+                .foregroundColor(randomColor(seed: zap.zapFrom.pubkey))
                 .frame(width: 20.0, height: 20.0)
-                .cornerRadius(20.0/2)
                 .overlay {
                     if let pfpURL {
                         MiniPFP(pictureUrl: pfpURL, size: 20.0)
@@ -147,11 +110,11 @@ struct ZapPill: View {
         .clipShape(Capsule())
         .frame(maxWidth: index == 0 ? availableWidth : ((availableWidth-20) / 2))
         .onAppear {
-            guard let pfpURL = zap.zapFrom.contact?.pictureUrl else { return }
+            guard let pfpURL = zap.zapFrom.contact?.pictureUrl, self.pfpURL != pfpURL else { return }
             self.pfpURL = pfpURL
         }
         .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-            guard profile.pubkey == zap.zapFrom.pubkey else { return }
+            guard profile.pubkey == zap.zapFrom.pubkey, pfpURL != profile.pictureUrl else { return }
             withAnimation {
                 pfpURL = profile.pictureUrl
             }
