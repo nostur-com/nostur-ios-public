@@ -11,6 +11,7 @@ struct ProfileCardByPubkey: View {
     public let pubkey: String
     public var theme: Theme = Themes.default.theme
     @StateObject private var vm = FetchVM<Contact>(timeout: 2.5, debounceTime: 0.05)
+    @State var fixedPfp: URL?
     
     var body: some View {
         Group {
@@ -82,6 +83,7 @@ struct ProfileRow: View {
     
     @State private var similarPFP = false
     @State private var similarToPubkey: String? = nil
+    @State var fixedPfp: URL?
     
     private var couldBeImposter: Bool {
         guard la.pubkey != contact.pubkey else { return false }
@@ -93,6 +95,11 @@ struct ProfileRow: View {
     var body: some View {
         HStack(alignment: .top) {
             PFP(pubkey: contact.pubkey, contact: contact)
+                .overlay(alignment: .bottomTrailing) {
+                    if let fixedPfp {
+                        FixedPFP(picture: fixedPfp)
+                    }
+                }
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
@@ -175,6 +182,16 @@ struct ProfileRow: View {
         }
         .task { [weak contact] in
             guard let contact else { return }
+            
+            if let fixedPfp = contact.fixedPfp,
+               let contactPicture = contact.picture,
+               fixedPfp != contactPicture,
+               let fixedPfpUrl = URL(string: fixedPfp),
+                hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+            {
+                self.fixedPfp = fixedPfpUrl
+            }
+            
             if la.isFollowing(pubkey: contact.pubkey) {
                 isFollowing = true
             }
@@ -219,6 +236,12 @@ struct ProfileRow: View {
                         }
                     }
                 }
+            }
+            
+            if let fixedPfp = contact.fixedPfp,
+                fixedPfp != contact.picture,
+               let fixedPfpUrl = URL(string: fixedPfp) {
+                self.fixedPfp = fixedPfpUrl
             }
         }
     }

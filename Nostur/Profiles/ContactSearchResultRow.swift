@@ -15,6 +15,7 @@ struct ContactSearchResultRow: View {
     @State var similarPFP = false
     @State var similarToPubkey: String? = nil
     @State var isFollowing = false
+    @State var fixedPfp: URL?
     
     var couldBeImposter: Bool {
         guard let account = account() else { return false }
@@ -27,6 +28,11 @@ struct ContactSearchResultRow: View {
     var body: some View {
         HStack(alignment: .top) {
             PFP(pubkey: contact.pubkey, contact: contact)
+                .overlay(alignment: .bottomTrailing) {
+                    if let fixedPfp {
+                        FixedPFP(picture: fixedPfp)
+                    }
+                }
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
@@ -116,6 +122,14 @@ struct ContactSearchResultRow: View {
                         }
                     }
                 }
+            }
+            
+            if let fixedPfp = contact.fixedPfp,
+                fixedPfp != contact.picture,
+               let fixedPfpUrl = URL(string: fixedPfp),
+               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+            {
+                self.fixedPfp = fixedPfpUrl
             }
         }
     }
