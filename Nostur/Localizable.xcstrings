@@ -3345,6 +3345,16 @@
         }
       }
     },
+    "If a post can't be found on receiving relays, try to find the post on this relay" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als een bericht niet gevonden kan worden op ontvangende relays, probeer dan deze relay"
+          }
+        }
+      }
+    },
     "Ignore" : {
       "localizations" : {
         "nl" : {
@@ -7070,13 +7080,13 @@
         }
       }
     },
-    "Use relay for Search" : {
-      "comment" : "Label for toggle to search on this relay",
+    "Use relay for looking up posts" : {
+      "comment" : "Label for toggle to look up posts on this relay",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gebruik relay voor zoeken"
+            "value" : "Gebruik relay om berichten te vinden"
           }
         }
       }
