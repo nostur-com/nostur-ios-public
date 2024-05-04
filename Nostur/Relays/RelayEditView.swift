@@ -63,7 +63,8 @@ struct RelayEditView: View {
                     Text("May be required to access special features on this relay")
                 }
                 Toggle(isOn: $relay.search) {
-                    Text("Use relay for Search", comment: "Label for toggle to search on this relay")
+                    Text("Use relay for looking up posts", comment: "Label for toggle to look up posts on this relay")
+                    Text("If a post can't be found on receiving relays, try to find the post on this relay")
                 }
                 Toggle(isOn: $relay.read) {
                     Text("Receive from this relay", comment: "Label for toggle to receive from this relay")
