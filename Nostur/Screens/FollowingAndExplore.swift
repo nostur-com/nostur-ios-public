@@ -24,6 +24,11 @@ struct FollowingAndExplore: View, Equatable {
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @AppStorage("selected_listId") private var selectedListId = ""
     
+    @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
+    @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
+    @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
+    @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
+    
     @State private var showingNewNote = false
     @State private var noteCancellationId: UUID?
     
@@ -87,7 +92,7 @@ struct FollowingAndExplore: View, Equatable {
                         Spacer()
                     }
                     
-                    if account.followingPubkeys.count > 10 {
+                    if account.followingPubkeys.count > 10 && enableHotFeed {
                         TabButton(
                             action: { selectedSubTab = "Hot" },
                             title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
@@ -96,7 +101,7 @@ struct FollowingAndExplore: View, Equatable {
                         Spacer()
                     }
                     
-                    if account.followingPubkeys.count > 10 {
+                    if account.followingPubkeys.count > 10 && enableGalleryFeed {
                         TabButton(
                             action: {
                                 if IS_CATALYST { // On macOS we open the Gallery in the detail pane
@@ -112,12 +117,14 @@ struct FollowingAndExplore: View, Equatable {
                         Spacer()
                     }
                     
-                    TabButton(
-                        action: { selectedSubTab = "Explore" },
-                        title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
-                        selected: selectedSubTab == "Explore")
+                    if enableExploreFeed {
+                        TabButton(
+                            action: { selectedSubTab = "Explore" },
+                            title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
+                            selected: selectedSubTab == "Explore")
+                    }
                     
-                    if account.followingPubkeys.count > 10 {
+                    if account.followingPubkeys.count > 10 && enableArticleFeed {
                         Spacer()
                         TabButton(
                             action: { selectedSubTab = "Articles" },
@@ -183,9 +190,11 @@ struct FollowingAndExplore: View, Equatable {
                 }
                 
                 // EXPLORE
-                ListViewContainer(vm: exploreVM)
-                    .opacity(selectedSubTab == "Explore" ? 1 : 0)
-//                    .withoutAnimation()
+                if enableExploreFeed {
+                    ListViewContainer(vm: exploreVM)
+                        .opacity(selectedSubTab == "Explore" ? 1 : 0)
+    //                    .withoutAnimation()
+                }
                 
                 
                 // HOT/ARTICLES/GALLERY

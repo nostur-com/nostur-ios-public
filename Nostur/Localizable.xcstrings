@@ -2283,6 +2283,16 @@
         }
       }
     },
+    "Custom Feeds" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangepaste feeds"
+          }
+        }
+      }
+    },
     "Custom File Storage" : {
       "comment" : "Navigation title for setting up a custom File Storage Server",
       "localizations" : {
@@ -2393,6 +2403,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Standaard"
+          }
+        }
+      }
+    },
+    "Default feeds" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standaard feeds"
           }
         }
       }
@@ -3304,6 +3324,16 @@
         }
       }
     },
+    "Hot, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hot, Gallerij en Artikelen zijn alleen zichtbaar als je meer dan 10 mensen volgt"
+          }
+        }
+      }
+    },
     "ID" : {
       "comment" : "Label for post identifier (ID)",
       "localizations" : {
@@ -3760,6 +3790,16 @@
         }
       }
     },
+    "Long-form articles from people you follow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langere artikelen uit jouw volglijst"
+          }
+        }
+      }
+    },
     "Low Data mode" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -3842,6 +3882,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Media"
+          }
+        }
+      }
+    },
+    "Media from posts most liked or reposted by people you follow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media van berichten met de meeste reacties of reposts door mensen die je volgt"
           }
         }
       }
@@ -3962,7 +4012,14 @@
       }
     },
     "Multi-columns and more" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multi-kolommen en meer"
+          }
+        }
+      }
     },
     "Mute conversation" : {
       "comment" : "Post context menu action to mute conversation",
@@ -4284,7 +4341,15 @@
       }
     },
     "Nostur Pro" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur Pro"
+          }
+        }
+      }
     },
     "Not yet" : {
       "localizations" : {
@@ -4746,12 +4811,32 @@
         }
       }
     },
+    "Posts from people followed by the [Explore Feed](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van mensen gevolgd door het (nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account"
+          }
+        }
+      }
+    },
     "Posts from relays" : {
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichten van relays"
+          }
+        }
+      }
+    },
+    "Posts most liked or reposted by people you follow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten met de meeste reacties of reposts van mensen die je volgt"
           }
         }
       }
@@ -6343,7 +6428,14 @@
       }
     },
     "Test Toggle" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Toggle"
+          }
+        }
+      }
     },
     "The article feed shows articles from people you follow in the selected time frame" : {
       "localizations" : {
