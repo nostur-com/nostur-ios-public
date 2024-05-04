@@ -75,8 +75,10 @@ class Kind0Processor {
             .sink { [weak self] profile in
                 self?.setProfile(profile)
                 if let cachedNRContact = NRContactCache.shared.retrieveObject(at: profile.pubkey) {
-                    cachedNRContact.anyName = profile.name
-                    cachedNRContact.pictureUrl = profile.pictureUrl
+                    DispatchQueue.main.async {
+                        cachedNRContact.anyName = profile.name
+                        cachedNRContact.pictureUrl = profile.pictureUrl
+                    }
                 }
             }
             .store(in: &subscriptions)
