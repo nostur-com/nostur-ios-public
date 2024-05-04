@@ -19,31 +19,59 @@ struct NosturListsView: View {
     @State var listToDelete: CloudFeed? = nil
     @State var newListSheet = false
     @State private var didRemoveDuplicates = false
+    
+    @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
+    @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
+    @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
+    @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
         
     var body: some View {
         VStack {
-            if !lists.isEmpty {
-                List(lists) { list in
-                    NBNavigationLink(value: list) {
-                        ListRow(list: list)
-                    }
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            listToDelete = list
-                            confirmDeleteShown = true
-                        } label: {
-                            Label("Delete", systemImage: "trash")
+            
+            List {
+                if !lists.isEmpty {
+                    Section {
+                        ForEach(lists) { list in
+                            NBNavigationLink(value: list) {
+                                ListRow(list: list)
+                            }
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    listToDelete = list
+                                    confirmDeleteShown = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                                
+                            }
+                            .listRowBackground(themes.theme.background)
                         }
-                        
+                    } header: {
+                        Text("Custom Feeds")
                     }
-                    .listRowBackground(themes.theme.background)
                 }
-                .scrollContentBackgroundCompat(.hidden)
-                .background(themes.theme.listBackground)
-                .onReceive(lists.publisher.collect()) { lists in
-                    if !didRemoveDuplicates {
-                        removeDuplicateLists()
-                    }
+                
+                Section {
+                    Toggle(isOn: $enableHotFeed, label: {
+                        Text("Hot")
+                        Text("Posts most liked or reposted by people you follow")
+                    })
+                    Toggle(isOn: $enableGalleryFeed, label: {
+                        Text("Gallery")
+                        Text("Media from posts most liked or reposted by people you follow")
+                    })
+                    Toggle(isOn: $enableArticleFeed, label: {
+                        Text("Articles")
+                        Text("Long-form articles from people you follow")
+                    })
+                    Toggle(isOn: $enableExploreFeed, label: {
+                        Text("Explore")
+                        Text("Posts from people followed by the [Explore Feed](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account")
+                    })
+                } header: {
+                    Text("Default feeds")
+                } footer: {
+                    Text("Hot, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
                 }
             }
         }
