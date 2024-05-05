@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct DirectMessageRows: View {
+    @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     let pubkey: String
     @Binding var conversationRows: [Conversation]
@@ -20,7 +21,10 @@ struct DirectMessageRows: View {
                 NBNavigationLink(value: conv) {
                     ConversationRowView(conv)
                         .environmentObject(themes)
+                        .environmentObject(dim)
+                        .environmentObject(NRState.shared)
                 }
+                .nbUseNavigationStack(.never)
                 .swipeActions {
                     Button(role: .destructive) {
                         conv.dmState.isHidden.toggle()
