@@ -458,26 +458,18 @@ struct EventMessageBuilder {
         return repost
     }
     
-    static func makeReactionEvent(reactingTo: Event, reactionContent:String = "+") -> NEvent {
-        var tags = reactingTo.tags().filter { $0.type == "e" || $0.type == "p" } // The reaction event SHOULD include e and p tags from the note the user is reacting to. This allows users to be notified of reactions to posts they were mentioned in. Including the e tags enables clients to pull all the reactions associated with individual posts or all the posts in a thread.
-        tags.append(NostrTag(["e", reactingTo.id]))
-        tags.append(NostrTag(["p", reactingTo.pubkey]))
-        
+    static func makeReactionEvent(reactingTo: Event, reactionContent: String = "+") -> NEvent {        
         var reactionEvent = NEvent(content: reactionContent)
         reactionEvent.kind = .reaction
-        reactionEvent.tags = tags
+        reactionEvent.tags = [NostrTag(["e", reactingTo.id]), NostrTag(["p", reactingTo.pubkey])]
         
         return reactionEvent
     }
     
     static func makeReactionEvent(reactingTo: NEvent) -> NEvent {
-        var tags = reactingTo.tags.filter { $0.type == "e" || $0.type == "p" } // The reaction event SHOULD include e and p tags from the note the user is reacting to. This allows users to be notified of reactions to posts they were mentioned in. Including the e tags enables clients to pull all the reactions associated with individual posts or all the posts in a thread.
-        tags.append(NostrTag(["e", reactingTo.id]))
-        tags.append(NostrTag(["p", reactingTo.publicKey]))
-        
         var reactionEvent = NEvent(content: "+")
         reactionEvent.kind = .reaction
-        reactionEvent.tags = tags
+        reactionEvent.tags = [NostrTag(["e", reactingTo.id]), NostrTag(["p", reactingTo.publicKey])]
         
         return reactionEvent
     }
