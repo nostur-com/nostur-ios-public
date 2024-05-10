@@ -67,90 +67,103 @@ struct FollowingAndExplore: View, Equatable {
     
     @State var showFeedSettings = false
     
+    // If only the Following feed is enabled and all other feeds are disabled, we can hide the entire tab bar
+    private var shouldHideTabBar: Bool {
+        if (account.followingPubkeys.count > 10 && enableHotFeed) { return false }
+        if (account.followingPubkeys.count > 10 && enableGalleryFeed) { return false }
+        if enableExploreFeed { return false }
+        if (account.followingPubkeys.count > 10 && enableArticleFeed) { return false }
+        if lists.count > 0 { return false }
+            
+        return true
+    }
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
         VStack(spacing:0) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing:0) {
-                    TabButton(
-                        action: { selectedSubTab = "Following" },
-                        title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
-                        selected: selectedSubTab == "Following")
-                    Spacer()
-                    
-                    ForEach(lists) { list in
+            if !shouldHideTabBar {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing:0) {
                         TabButton(
-                            action: {
-                                selectedSubTab = "List"
-                                selectedList = list
-                                selectedListId = list.subscriptionId
-                            },
-                            title: list.name_,
-                            selected: selectedSubTab == "List" && selectedList == list )
+                            action: { selectedSubTab = "Following" },
+                            title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
+                            selected: selectedSubTab == "Following")
                         Spacer()
+                        
+                        ForEach(lists) { list in
+                            TabButton(
+                                action: {
+                                    selectedSubTab = "List"
+                                    selectedList = list
+                                    selectedListId = list.subscriptionId
+                                },
+                                title: list.name_,
+                                selected: selectedSubTab == "List" && selectedList == list )
+                            Spacer()
+                        }
+                        
+                        if account.followingPubkeys.count > 10 && enableHotFeed {
+                            TabButton(
+                                action: { selectedSubTab = "Hot" },
+                                title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
+                                secondaryText: String(format: "%ih", hotVM.ago),
+                                selected: selectedSubTab == "Hot")
+                            Spacer()
+                        }
+                        
+                        if account.followingPubkeys.count > 10 && enableGalleryFeed {
+                            TabButton(
+                                action: {
+                                    if IS_CATALYST { // On macOS we open the Gallery in the detail pane
+                                        navigateOnDetail(ViewPath.Gallery(vm: galleryVM))
+                                    }
+                                    else {
+                                        selectedSubTab = "Gallery"
+                                    }
+                                },
+                                title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
+                                secondaryText: String(format: "%ih", galleryVM.ago),
+                                selected: selectedSubTab == "Gallery")
+                            Spacer()
+                        }
+                        
+                        if enableExploreFeed {
+                            TabButton(
+                                action: { selectedSubTab = "Explore" },
+                                title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
+                                selected: selectedSubTab == "Explore")
+                        }
+                        
+                        if account.followingPubkeys.count > 10 && enableArticleFeed {
+                            Spacer()
+                            TabButton(
+                                action: { selectedSubTab = "Articles" },
+                                title: String(localized:"Articles", comment:"Tab title for feed of articles"),
+    //                            secondaryText: articlesVM.agoText,
+                                selected: selectedSubTab == "Articles")
+                        }
                     }
-                    
-                    if account.followingPubkeys.count > 10 && enableHotFeed {
-                        TabButton(
-                            action: { selectedSubTab = "Hot" },
-                            title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
-                            secondaryText: String(format: "%ih", hotVM.ago),
-                            selected: selectedSubTab == "Hot")
-                        Spacer()
+    //                .padding(.horizontal, 10)
+                    .frame(minWidth: dim.listWidth)
+                    .offset(y: tabsOffsetY)
+                    .onReceive(receiveNotification(.scrollingUp)) { _ in
+                        guard !IS_CATALYST && ss.autoHideBars else { return }
+                        withAnimation {
+                            tabsOffsetY = 0.0
+                        }
                     }
-                    
-                    if account.followingPubkeys.count > 10 && enableGalleryFeed {
-                        TabButton(
-                            action: {
-                                if IS_CATALYST { // On macOS we open the Gallery in the detail pane
-                                    navigateOnDetail(ViewPath.Gallery(vm: galleryVM))
-                                }
-                                else {
-                                    selectedSubTab = "Gallery"
-                                }
-                            },
-                            title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
-                            secondaryText: String(format: "%ih", galleryVM.ago),
-                            selected: selectedSubTab == "Gallery")
-                        Spacer()
+                    .onReceive(receiveNotification(.scrollingDown)) { _ in
+                        guard !IS_CATALYST  && ss.autoHideBars else { return }
+                        withAnimation {
+                            tabsOffsetY = -36.0
+                        }
                     }
-                    
-                    if enableExploreFeed {
-                        TabButton(
-                            action: { selectedSubTab = "Explore" },
-                            title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
-                            selected: selectedSubTab == "Explore")
-                    }
-                    
-                    if account.followingPubkeys.count > 10 && enableArticleFeed {
-                        Spacer()
-                        TabButton(
-                            action: { selectedSubTab = "Articles" },
-                            title: String(localized:"Articles", comment:"Tab title for feed of articles"),
-//                            secondaryText: articlesVM.agoText,
-                            selected: selectedSubTab == "Articles")
-                    }
+                    .toolbarVisibleCompat(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
                 }
-//                .padding(.horizontal, 10)
-                .frame(minWidth: dim.listWidth)
-                .offset(y: tabsOffsetY)
-                .onReceive(receiveNotification(.scrollingUp)) { _ in
-                    guard !IS_CATALYST && ss.autoHideBars else { return }
-                    withAnimation {
-                        tabsOffsetY = 0.0
-                    }
-                }
-                .onReceive(receiveNotification(.scrollingDown)) { _ in
-                    guard !IS_CATALYST  && ss.autoHideBars else { return }
-                    withAnimation {
-                        tabsOffsetY = -36.0
-                    }
-                }
-                .toolbarVisibleCompat(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
+                .frame(width: dim.listWidth, height: max(44.0 + tabsOffsetY,0))
             }
-            .frame(width: dim.listWidth, height: max(44.0 + tabsOffsetY,0))
             
             ZStack {
                 themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
@@ -276,6 +289,12 @@ struct FollowingAndExplore: View, Equatable {
         .onReceive(lists.publisher.collect()) { lists in
             if !lists.isEmpty && self.lists.count != lists.count {
                 removeDuplicateLists()
+            }
+        }
+        .onChange(of: shouldHideTabBar) { newValue in
+            // We we disable all feeds, the tab bar disappears but does not auto switch to the Following feed, leaving an empty screen, this fixes that:
+            if newValue && selectedSubTab != "Following"  {
+                selectedSubTab = "Following"
             }
         }
     }
