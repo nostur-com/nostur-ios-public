@@ -93,7 +93,7 @@ struct ProfileOverlayCard: View {
     @State private var backlog = Backlog(timeout: 5.0, auto: true)
     @State private var lastSeen: String? = nil
     @State private var isFollowingYou = false
-    @State var fixedPfp: URL?
+    @State private var fixedPfp: URL?
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
@@ -300,6 +300,17 @@ struct ProfileOverlayCard: View {
         .background {
             themes.theme.background
                 .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
+        }
+        .onChange(of: contact.pictureUrl) { newPictureUrl in
+            guard let oldFixedPfp = contact.fixedPfp,
+                  let newPicture = newPictureUrl,
+                  oldFixedPfp != newPicture.absoluteString,
+                  let fixedPfpUrl = URL(string: oldFixedPfp),
+                  hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+            else { return }
+            DispatchQueue.main.async {
+                self.fixedPfp = fixedPfpUrl
+            }
         }
         .task { [weak contact] in
             guard let contact else { return }
