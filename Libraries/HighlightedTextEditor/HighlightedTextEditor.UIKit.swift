@@ -187,7 +187,10 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         }
         updateTextViewModifiers(uiView)
         runIntrospect(uiView)
-        uiView.selectedTextRange = context.coordinator.selectedTextRange
+        
+        if uiView.text != text {
+            uiView.selectedTextRange = context.coordinator.selectedTextRange
+        }
         context.coordinator.updatingUIView = false
     }
     
@@ -241,7 +244,9 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             guard textView.markedTextRange == nil else { return }
             
             parent.text = textView.text
-            selectedTextRange = textView.selectedTextRange
+            if parent.text != textView.text {
+                selectedTextRange = textView.selectedTextRange
+            }
             
 //            let size = CGSize(width: textView.frame.size.width, height: .infinity)
 //            let estimatedSize = textView.sizeThatFits(size)
