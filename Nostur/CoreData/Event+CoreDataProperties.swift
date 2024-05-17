@@ -445,7 +445,7 @@ extension Event {
     // NIP-25: The generic reaction, represented by the content set to a + string, SHOULD be interpreted as a "like" or "upvote".
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
     // TODO: 167.00 ms    1.5%    0 s          specialized static Event.updateLikeCountCache(_:content:context:)
-    static func updateLikeCountCache(_ event:Event, content:String, context:NSManagedObjectContext) throws -> Bool {
+    static func updateLikeCountCache(_ event: Event, content: String, context: NSManagedObjectContext) throws -> Bool {
         switch content {
             case "-": // (down vote)
                 break
@@ -495,7 +495,7 @@ extension Event {
     }
     
     
-    static func updateZapTallyCache(_ zap:Event, context:NSManagedObjectContext) -> Bool {
+    static func updateZapTallyCache(_ zap: Event, context: NSManagedObjectContext) -> Bool {
         guard let zappedContact = zap.zappedContact else { // NO CONTACT
             if let zappedPubkey = zap.otherPubkey {
                 L.fetching.debug("⚡️⏳ missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
@@ -544,7 +544,7 @@ extension Event {
     }
     
     // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-    static func updateMentionsCountCache(_ tags:[NostrTag], context:NSManagedObjectContext) throws -> Bool {
+    static func updateMentionsCountCache(_ tags:[NostrTag], context: NSManagedObjectContext) throws -> Bool {
         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
         if let mentionEtags = TagsHelpers(tags).newerMentionEtags() {
             for etag in mentionEtags {
@@ -718,7 +718,7 @@ extension Event {
         return Self.fetchReplacableEvent(kind, pubkey: String(pubkey), definition: String(definition), context: context)
     }
     
-    static func fetchReplacableEvent(_ kind:Int64, pubkey:String, context:NSManagedObjectContext) -> Event? {
+    static func fetchReplacableEvent(_ kind: Int64, pubkey: String, context: NSManagedObjectContext) -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@", kind, pubkey)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -737,7 +737,7 @@ extension Event {
     }
     
     
-    static func eventExists(id:String, context:NSManagedObjectContext) -> Bool {
+    static func eventExists(id: String, context: NSManagedObjectContext) -> Bool {
         if Thread.isMainThread {
             L.og.info("☠️☠️☠️☠️ eventExists")
         }
