@@ -255,8 +255,9 @@ func publishMetadataEvent(_ account: CloudAccount) throws {
             
             NSecBunkerManager.shared.requestSignature(forEvent: newKind0Event, usingAccount: account, whenSigned: { signedEvent in
                 L.og.debug("Going to publish \(signedEvent.wrappedEventJson())")
-                bg().perform {
-                    _ = Event.saveEvent(event: signedEvent)
+                let bgContext = bg()
+                bgContext.perform {
+                    _ = Event.saveEvent(event: signedEvent, context: bgContext)
                     Contact.saveOrUpdateContact(event: signedEvent)
                     DataProvider.shared().bgSave()
                 }
@@ -270,8 +271,9 @@ func publishMetadataEvent(_ account: CloudAccount) throws {
                 return
             }
             L.og.debug("Going to publish \(signedEvent.wrappedEventJson())")
-            bg().perform {
-                _ = Event.saveEvent(event: signedEvent)
+            let bgContext = bg()
+            bgContext.perform {
+                _ = Event.saveEvent(event: signedEvent, context: bgContext)
                 Contact.saveOrUpdateContact(event: signedEvent)
                 DataProvider.shared().bgSave()
             }

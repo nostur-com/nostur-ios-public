@@ -115,8 +115,8 @@ class Importer {
     }
     
     public func importEvents() {
-        let context = bg()
-        context.perform { [unowned self] in
+        let bgContext = bg()
+        bgContext.perform { [unowned self] in
             if (self.isImporting) {
                 let itemsCount = MessageParser.shared.messageBucket.count
                 self.needsImport = true
@@ -184,7 +184,7 @@ class Importer {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
                         }
-                        Event.updateRelays(event.id, relays: message.relays)
+                        Event.updateRelays(event.id, relays: message.relays, context: bgContext)
                         var alreadySavedSubs = Set<String>()
                         if let subscriptionId = message.subscriptionId {
                             alreadySavedSubs.insert(subscriptionId)
@@ -195,7 +195,7 @@ class Importer {
                     
                     // Skip if we already have a newer kind 3
                     if  event.kind == .contactList,
-                        let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: context),
+                        let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: bgContext),
                         existingKind3.created_at > Int64(event.createdAt.timestamp)
                     {
                         if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
@@ -211,12 +211,12 @@ class Importer {
                         if event.content == "" {
                             if let firstE = event.firstE() {
                                 // TODO: Should be able to use existingIds here...
-                                kind6firstQuote = try? Event.fetchEvent(id: firstE, context: context)
+                                kind6firstQuote = try? Event.fetchEvent(id: firstE, context: bgContext)
                             }
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            if !Event.eventExists(id: noteInNote.id, context: context) { // TODO: check existingIds instead of .eventExists
-                                kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays)
+                            if !Event.eventExists(id: noteInNote.id, context: bgContext) { // TODO: check existingIds instead of .eventExists
+                                kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays, context: bgContext)
                                 
                                 if let kind6firstQuote = kind6firstQuote {
 //                                    kind6firstQuote.repostsCount = 1
@@ -224,7 +224,7 @@ class Importer {
                                 }
                             }
                             else {
-                                Event.updateRelays(noteInNote.id, relays: message.relays)
+                                Event.updateRelays(noteInNote.id, relays: message.relays, context: bgContext)
                             }
                         }
                     }
@@ -253,7 +253,7 @@ class Importer {
                         }
                     }
                     
-                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote)
+                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote, context: bgContext) // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
                     NotificationsViewModel.shared.checkNeedsUpdate(savedEvent)
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
@@ -269,29 +269,29 @@ class Importer {
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .reaction {
-                        do { try _ = Event.updateLikeCountCache(savedEvent, content:event.content, context: context) } catch {
+                        do { try _ = Event.updateLikeCountCache(savedEvent, content: event.content, context: bgContext) } catch {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .zapNote {
-                        let _ = Event.updateZapTallyCache(savedEvent, context: context)
+                        let _ = Event.updateZapTallyCache(savedEvent, context: bgContext)
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
                     if event.kind == .textNote || event.kind == .repost {
                         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-                        do { try _ = Event.updateMentionsCountCache(event.tags, context: context) } catch {
+                        do { try _ = Event.updateMentionsCountCache(event.tags, context: bgContext) } catch {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
                         }
                     }
                     
                     // batch save every 100
                     if count % 100 == 0 {
-                        if (context.hasChanges) {
+                        if (bgContext.hasChanges) {
                             do {
-                                try context.save()
+                                try bgContext.save()
                                 L.importing.debug("💾💾 Saved \(count)/\(forImportsCount)")
                                 let mainQueueCount = count
                                 let mainQueueForImportsCount = forImportsCount
@@ -306,8 +306,8 @@ class Importer {
                         }
                     }
                 }
-                if (context.hasChanges) {
-                    try context.save() 
+                if (bgContext.hasChanges) {
+                    try bgContext.save()
                     if (saved > 0) {
                         L.importing.debug("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
                         let mainQueueCount = count
@@ -344,8 +344,8 @@ class Importer {
     }
     
     public func importPrioEvents() {
-        let context = bg()
-        context.perform { [unowned self] in
+        let bgContext = bg()
+        bgContext.perform { [unowned self] in
             let forImportsCount = MessageParser.shared.priorityBucket.count
             guard forImportsCount != 0 else {
                 L.importing.debug("🏎️🏎️ importPrioEvents() nothing to import.")
@@ -390,15 +390,15 @@ class Importer {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
                         }
-                        Event.updateRelays(event.id, relays: message.relays)
-                        if let subscriptionId = message.subscriptionId, let savedEvent = try? Event.fetchEvent(id: event.id, context: context) {
+                        Event.updateRelays(event.id, relays: message.relays, context: bgContext)
+                        if let subscriptionId = message.subscriptionId, let savedEvent = try? Event.fetchEvent(id: event.id, context: bgContext) {
                             importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
                         }
                         continue
                     }
                     // Skip if we already have a newer kind 3
                     if  event.kind == .contactList,
-                        let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: context),
+                        let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: bgContext),
                         existingKind3.created_at > Int64(event.createdAt.timestamp)
                     {
                         if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
@@ -414,12 +414,12 @@ class Importer {
                         if event.content == "" {
                             if let firstE = event.firstE() {
                                 // TODO: Should be able to use existingIds here...
-                                kind6firstQuote = try? Event.fetchEvent(id: firstE, context: context)
+                                kind6firstQuote = try? Event.fetchEvent(id: firstE, context: bgContext)
                             }
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            if !Event.eventExists(id: noteInNote.id, context: context) { // TODO: check existingIds instead of .eventExists
-                                kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays)
+                            if !Event.eventExists(id: noteInNote.id, context: bgContext) { // TODO: check existingIds instead of .eventExists
+                                kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays, context: bgContext)
                                 
                                 if let kind6firstQuote = kind6firstQuote {
 //                                    kind6firstQuote.repostsCount = 1 
@@ -427,7 +427,7 @@ class Importer {
                                 }
                             }
                             else {
-                                Event.updateRelays(noteInNote.id, relays: message.relays)
+                                Event.updateRelays(noteInNote.id, relays: message.relays, context: bgContext)
                             }
                         }
                     }
@@ -456,7 +456,7 @@ class Importer {
                         }
                     }
                     
-                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote)
+                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote, context: bgContext)
                     saved = saved + 1
                     NotificationsViewModel.shared.checkNeedsUpdate(savedEvent)
                     
@@ -473,26 +473,26 @@ class Importer {
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .reaction {
-                        do { try _ = Event.updateLikeCountCache(savedEvent, content:event.content, context: context) } catch {
+                        do { try _ = Event.updateLikeCountCache(savedEvent, content:event.content, context: bgContext) } catch {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .zapNote {
-                        let _ = Event.updateZapTallyCache(savedEvent, context: context)
+                        let _ = Event.updateZapTallyCache(savedEvent, context: bgContext)
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
                     if event.kind == .textNote || event.kind == .repost {
                         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-                        do { try _ = Event.updateMentionsCountCache(event.tags, context: context) } catch {
+                        do { try _ = Event.updateMentionsCountCache(event.tags, context: bgContext) } catch {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
                         }
                     }
                 }
-                if (context.hasChanges) {
-                    try context.save()
+                if (bgContext.hasChanges) {
+                    try bgContext.save()
                 }
                 else {
                     L.importing.debug("🏎️🏎️ Nothing imported, no changes in new prio message")

@@ -315,8 +315,9 @@ public final class NewPostModel: ObservableObject {
             nEvent = nEvent.withId()
             
             // Save unsigned event:
-            bg().perform {
-                let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
+            let bgContext = bg()
+            bgContext.perform {
+                let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned", context: bgContext)
                 savedEvent.cancellationId = cancellationId
                 DispatchQueue.main.async {
                     sendNotification(.newPostSaved, savedEvent)
@@ -340,8 +341,9 @@ public final class NewPostModel: ObservableObject {
             }
         }
         else if let signedEvent = try? account.signEvent(nEvent) {
-            bg().perform {
-                let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
+            let bgContext = bg()
+            bgContext.perform {
+                let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
                 savedEvent.cancellationId = cancellationId
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                 if nEvent.kind == .reaction {

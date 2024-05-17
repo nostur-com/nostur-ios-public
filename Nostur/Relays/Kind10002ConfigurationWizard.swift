@@ -218,14 +218,15 @@ struct Kind10002ConfigurationWizard: View {
             kind10002 = kind10002.withId()
             
             // Save unsigned event:
-            bg().perform {
-                let savedEvent = Event.saveEvent(event: kind10002, flags: "nsecbunker_unsigned")
+            let bgContext = bg()
+            bgContext.perform {
+                let savedEvent = Event.saveEvent(event: kind10002, flags: "nsecbunker_unsigned", context: bgContext)
                 DataProvider.shared().bgSave()
                 onDismiss()
                 dismiss()
                 DispatchQueue.main.async {
                     NSecBunkerManager.shared.requestSignature(forEvent: kind10002, usingAccount: account, whenSigned: { signedEvent in
-                        bg().perform {
+                        bgContext.perform {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = ""
                             DispatchQueue.main.async {
@@ -237,8 +238,9 @@ struct Kind10002ConfigurationWizard: View {
             }
         }
         else if let signedEvent = try? account.signEvent(kind10002) {
-            bg().perform {
-                _ = Event.saveEvent(event: signedEvent)
+            let bgContext = bg()
+            bgContext.perform {
+                _ = Event.saveEvent(event: signedEvent, context: bgContext)
                 DataProvider.shared().bgSave()
                 onDismiss()
                 dismiss()

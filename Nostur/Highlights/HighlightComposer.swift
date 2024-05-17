@@ -148,8 +148,9 @@ struct HighlightComposer: View {
             nEvent = nEvent.withId()
             
             // Save unsigned event:
-            bg().perform {
-                let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
+            let bgContext = bg()
+            bgContext.perform {
+                let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned", context: bgContext)
                 savedEvent.cancellationId = cancellationId
                 DispatchQueue.main.async {
                     sendNotification(.newPostSaved, savedEvent)
@@ -159,7 +160,7 @@ struct HighlightComposer: View {
                 DispatchQueue.main.async {
                     NSecBunkerManager.shared.setAccount(account)
                     NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
-                        bg().perform {
+                        bgContext.perform {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"
                             savedEvent.cancellationId = cancellationId
@@ -174,8 +175,9 @@ struct HighlightComposer: View {
             }
         }
         else if let signedEvent = try? account.signEvent(nEvent) {
-            bg().perform {
-                let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
+            let bgContext = bg()
+            bgContext.perform {
+                let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
                 savedEvent.cancellationId = cancellationId
                 DataProvider.shared().bgSave()
                 dismiss()

@@ -809,7 +809,7 @@ extension Event {
     }
     
     // TODO: 115.00 ms    1.0%    0 s          closure #1 in static Event.updateRelays(_:relays:)
-    static func updateRelays(_ id:String, relays: String) {
+    static func updateRelays(_ id: String, relays: String, context: NSManagedObjectContext) {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -829,14 +829,14 @@ extension Event {
                     relays: event.relays
                 ))
                 do {
-                    try bg().save()
+                    try context.save()
                 }
                 catch {
                     L.og.error("🔴🔴 error updateRelays \(error)")
                 }
             }
         }
-        else if let event = try? Event.fetchEvent(id: id, context: bg()) {
+        else if let event = try? Event.fetchEvent(id: id, context: context) {
             guard !event.isDeleted else { return }
             let existingRelays = event.relays.split(separator: " ").map { String($0) }
             let newRelays = relays.split(separator: " ").map { String($0) }
@@ -849,7 +849,7 @@ extension Event {
                     relays: event.relays
                 ))
                 do {
-                    try bg().save()
+                    try context.save()
                 }
                 catch {
                     L.og.error("🔴🔴 error updateRelays \(error)")
@@ -859,13 +859,12 @@ extension Event {
     }
     
     // TODO: .saveEvent() and .importEvents() needs a refactor, to cleanly handle each kind in a reusable/maintainable way, this long list of if statements is becoming a mess.
-    static func saveEvent(event:NEvent, relays:String? = nil, flags:String = "", kind6firstQuote:Event? = nil) -> Event {
+    static func saveEvent(event: NEvent, relays: String? = nil, flags: String = "", kind6firstQuote: Event? = nil, context: NSManagedObjectContext) -> Event {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
         #endif
-        let context = bg()
         
         let savedEvent = Event(context: context)
         savedEvent.insertedAt = Date.now
@@ -964,7 +963,7 @@ extension Event {
         if event.kind == .reaction {
             if let lastE = event.lastE() {
                 savedEvent.reactionToId = lastE
-                savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
+                savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context) // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
                 if let otherPubkey =  savedEvent.reactionTo?.pubkey {
                     savedEvent.otherPubkey = otherPubkey
                 }

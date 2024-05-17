@@ -96,8 +96,9 @@ struct BadgesReceivedView: View {
 
         do {
             guard let newProfileBadgesSigned = try? la.account.signEvent(newProfileBadges) else { throw "could not create newProfileBadgesSigned " }
-            bg().perform {
-                _ = Event.saveEvent(event: newProfileBadgesSigned)
+            let bgContext = bg()
+            bgContext.perform {
+                _ = Event.saveEvent(event: newProfileBadgesSigned, context: bgContext)
                 DataProvider.shared().bgSave()
             }
             Unpublisher.shared.publishNow(newProfileBadgesSigned)
