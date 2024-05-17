@@ -10,7 +10,7 @@ import Foundation
 // Messages received from relay EVENT/EOSE/NOTICE
 class RelayMessage {
     
-    enum type:String {
+    enum type: String {
         case EVENT
         case NOTICE
         case EOSE
@@ -19,7 +19,7 @@ class RelayMessage {
         case CLOSED
     }
     
-    enum error:Error {
+    enum error: Error {
         case FAILED_TO_PARSE // Failed to parse raw websocket
         case UNKNOWN_MESSAGE_TYPE // NOT EVENT, NOTICE or EOSE
         case FAILED_TO_PARSE_EVENT // Could parse raw websocket but not event
@@ -33,17 +33,17 @@ class RelayMessage {
         case DUPLICATE_UNKNOWN
     }
     
-    var relays:String // space separated relays
-    var type:RelayMessage.type?
-    var message:String
-    var subscriptionId:String?
-    var event:NEvent?
+    var relays: String // space separated relays
+    var type: RelayMessage.type?
+    var message: String
+    var subscriptionId: String?
+    var event: NEvent?
     
-    var id:String?
-    var success:Bool?
+    var id: String?
+    var success: Bool?
     
-    init(relays:String, type: RelayMessage.type? = nil, message: String, subscriptionId: String? = nil,
-         id:String? = nil, success:Bool? = nil, event:NEvent? = nil) {
+    init(relays: String, type: RelayMessage.type? = nil, message: String, subscriptionId: String? = nil,
+         id: String? = nil, success: Bool? = nil, event: NEvent? = nil) {
         self.relays = relays
         self.type = type
         self.message = message
@@ -54,7 +54,7 @@ class RelayMessage {
         self.success = success
     }
     
-    static func parseRelayMessage(text:String, relay:String) throws -> RelayMessage {
+    static func parseRelayMessage(text: String, relay: String) throws -> RelayMessage {
         guard let dataFromString = text.data(using: .utf8, allowLossyConversion: false) else {
             throw error.FAILED_TO_PARSE
         }
@@ -64,11 +64,11 @@ class RelayMessage {
             guard let eose = try? decoder.decode(NMessage.self, from: dataFromString) else {
                 throw error.FAILED_TO_PARSE
             }
-            return RelayMessage(relays:relay, type: .EOSE, message: text, subscriptionId: eose.subscription)
+            return RelayMessage(relays: relay, type: .EOSE, message: text, subscriptionId: eose.subscription)
         }
         
         guard text.prefix(7) != ###"["AUTH""### else {
-            return RelayMessage(relays:relay, type: .AUTH, message: text)
+            return RelayMessage(relays: relay, type: .AUTH, message: text)
         }
         
         guard text.prefix(9) != ###"["NOTICE""### else {
@@ -76,7 +76,7 @@ class RelayMessage {
             guard let notice = try? decoder.decode(NMessage.self, from: dataFromString) else {
                 throw error.FAILED_TO_PARSE
             } // same format as eose, but instead of subscription id it will be the notice text. do proper later
-            return RelayMessage(relays:relay, type: .NOTICE, message: notice.subscription)
+            return RelayMessage(relays: relay, type: .NOTICE, message: notice.subscription)
         }
         
         guard text.prefix(5) != ###"["OK""### else {
@@ -84,7 +84,7 @@ class RelayMessage {
             guard let result = try? decoder.decode(CommandResult.self, from: dataFromString) else {
                 throw error.FAILED_TO_PARSE
             }
-            return RelayMessage(relays:relay, type: .OK, message: text, id:result.id, success:result.success)
+            return RelayMessage(relays: relay, type: .OK, message: text, id:result.id, success:result.success)
         }
         
         guard text.prefix(9) != ###"["CLOSED""### else {
@@ -92,7 +92,7 @@ class RelayMessage {
             guard let result = try? decoder.decode(ClosedMessage.self, from: dataFromString) else {
                 throw error.FAILED_TO_PARSE
             }
-            return RelayMessage(relays:relay, type: .CLOSED, message: result.message ?? "", id: result.id)
+            return RelayMessage(relays: relay, type: .CLOSED, message: result.message ?? "", id: result.id)
         }
         
         guard text.prefix(8) == ###"["EVENT""### else {
@@ -182,7 +182,7 @@ class RelayMessage {
             throw error.MISSING_EVENT
         }
         
-        return RelayMessage(relays:relay, type: .EVENT, message: text, subscriptionId: relayMessage.subscription, event: nEvent)
+        return RelayMessage(relays: relay, type: .EVENT, message: text, subscriptionId: relayMessage.subscription, event: nEvent)
     }
 }
 

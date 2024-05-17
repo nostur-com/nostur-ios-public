@@ -206,7 +206,7 @@ class Importer {
                         continue
                     }
                     
-                    var kind6firstQuote:Event?
+                    var kind6firstQuote: Event?
                     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
                         if event.content == "" {
                             if let firstE = event.firstE() {
@@ -409,7 +409,7 @@ class Importer {
                         continue
                     }
                     
-                    var kind6firstQuote:Event?
+                    var kind6firstQuote: Event?
                     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
                         if event.content == "" {
                             if let firstE = event.firstE() {
