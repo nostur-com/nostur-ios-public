@@ -278,7 +278,8 @@ struct LazyPrivateNote: View {
     private func loadPost() {
         guard let eventId = pn.eventId else { viewState = .error("Cannot find post"); return }
         let json = pn.json
-        bg().perform {
+        let bgContext = bg()
+        bgContext.perform {
             if let event = events.first(where: { $0.id == eventId }) {
                 let nrPost = NRPost(event: event)
                 DispatchQueue.main.async {
@@ -290,7 +291,7 @@ struct LazyPrivateNote: View {
                 let decoder = JSONDecoder()
                 if let json = json, let jsonData = json.data(using: .utf8, allowLossyConversion: false) {
                     if let nEvent = try? decoder.decode(NEvent.self, from: jsonData) {
-                        let savedEvent = Event.saveEvent(event: nEvent, relays: "iCloud")
+                        let savedEvent = Event.saveEvent(event: nEvent, relays: "iCloud", context: bgContext)
                         let nrPost = NRPost(event: savedEvent)
                         L.cloud.debug("Decoded and saved from iCloud: \(nEvent.id) ")
                         DispatchQueue.main.async {

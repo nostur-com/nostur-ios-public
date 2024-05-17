@@ -57,7 +57,7 @@ public class PreviewEnvironment {
                 // FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
                 if event.kind == .repost && event.content.prefix(2) == #"{""# {
                     if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                        _ = Event.saveEvent(event: noteInNote)
+                        _ = Event.saveEvent(event: noteInNote, context: context)
                         event.content = "#[0]"
                         if let firstTag = event.tags.first {
                             if firstTag.type == "e" {
@@ -67,7 +67,7 @@ public class PreviewEnvironment {
                     }
                 }
                 
-                let savedEvent = Event.saveEvent(event: event)
+                let savedEvent = Event.saveEvent(event: event, context: context)
                 
                 if event.kind == .setMetadata {
                     Contact.saveOrUpdateContact(event: event)

@@ -81,9 +81,9 @@ struct NewAccountSheet: View {
         do {
             
             guard let newKind0EventSigned = try AccountManager.createMetadataEvent(account: newAccount) else { throw "could not create newKind0EventSigned " }
-            
-            bg().perform {
-                _ = Event.saveEvent(event: newKind0EventSigned)
+            let bgContext = bg()
+            bgContext.perform {
+                _ = Event.saveEvent(event: newKind0EventSigned, context: bgContext)
                 Contact.saveOrUpdateContact(event: newKind0EventSigned)
                 
                 DataProvider.shared().bgSave()

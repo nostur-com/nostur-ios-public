@@ -506,7 +506,8 @@ extension Search {
             },
             timeoutCommand: { taskId in
                 guard let account = account(), let pk = account.privateKey else { return  }
-                bg().perform {
+                let bgContext = bg()
+                bgContext.perform {
                     var kind443 = NEvent(content: "Comments on \(term)")
                     kind443.publicKey = account.publicKey
                     kind443.kind = .custom(443)
@@ -519,8 +520,8 @@ extension Search {
                     
                     do {
                         let signedKind443 = try kind443.sign(NKeys(privateKeyHex: pk))
-                        let unpublishedKind443 = Event.saveEvent(event: signedKind443)
-                        try? bg().save() 
+                        let unpublishedKind443 = Event.saveEvent(event: signedKind443, context: bgContext)
+                        try? bgContext.save() 
                         let nrPost = NRPost(event: unpublishedKind443)
                         DispatchQueue.main.async {
                             self.nrPosts = [nrPost]

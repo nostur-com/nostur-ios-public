@@ -29,8 +29,9 @@ struct QuoteOrRepostChoiceSheet: View {
                     repost = repost.withId()
                     
                     // Save unsigned event:
-                    bg().perform {
-                        let savedEvent = Event.saveEvent(event: repost, flags: "nsecbunker_unsigned")
+                    let bgContext = bg()
+                    bgContext.perform {
+                        let savedEvent = Event.saveEvent(event: repost, flags: "nsecbunker_unsigned", context: bgContext)
                         savedEvent.cancellationId = cancellationId
                         DispatchQueue.main.async {
                             sendNotification(.newPostSaved, savedEvent)
@@ -57,8 +58,9 @@ struct QuoteOrRepostChoiceSheet: View {
                     }
                 }
                 else if let signedEvent = try? account.signEvent(repost) {
-                    bg().perform {
-                        let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send")
+                    let bgContext = bg()
+                    bgContext.perform {
+                        let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
                         savedEvent.cancellationId = cancellationId
                         
                         DataProvider.shared().bgSave()

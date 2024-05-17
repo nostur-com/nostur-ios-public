@@ -69,8 +69,9 @@ struct CreateNewBadgeSheet: View {
         
         do {    
             guard let newBadgeSigned = try? la.account.signEvent(newBadge) else { throw "could not create newBadgeSigned " }
-            bg().perform {
-                _ = Event.saveEvent(event: newBadgeSigned)
+            let bgContext = bg()
+            bgContext.perform {
+                _ = Event.saveEvent(event: newBadgeSigned, context: bgContext)
                 DataProvider.shared().bgSave()
             }
             Unpublisher.shared.publishNow(newBadgeSigned)

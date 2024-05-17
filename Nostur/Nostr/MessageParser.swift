@@ -57,7 +57,7 @@ class MessageParser {
                     L.sockets.debug("\(relayUrl): \(message.message)")
                     if message.success ?? false {
                         if let id = message.id {
-                            Event.updateRelays(id, relays: message.relays)
+                            Event.updateRelays(id, relays: message.relays, context: bgQueue)
                         }
                     }
                 case .CLOSED:

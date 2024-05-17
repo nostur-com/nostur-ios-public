@@ -149,7 +149,7 @@ class Unpublisher {
             }
             else {
                 // Event not in db yet
-                let savedEvent = Event.saveEvent(event: nEvent)
+                let savedEvent = Event.saveEvent(event: nEvent, context: bgContext)
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                 if nEvent.kind == .reaction {
                     do {
