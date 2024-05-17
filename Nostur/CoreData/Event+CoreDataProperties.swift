@@ -548,16 +548,19 @@ extension Event {
         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
         if let mentionEtags = TagsHelpers(tags).newerMentionEtags() {
             for etag in mentionEtags {
-                let request = NSFetchRequest<Event>(entityName: "Event")
-                request.entity = Event.entity()
-                request.predicate = NSPredicate(format: "id == %@", etag.id)
-                request.fetchLimit = 1
-                
-                if let reactingToEvent = try context.fetch(request).first {
-//                    reactingToEvent.objectWillChange.send()
-                    //                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
-                    reactingToEvent.mentionsCount = (reactingToEvent.mentionsCount + 1)
+                if let mentioningEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: etag.id) {
+                    guard !mentioningEvent.isDeleted else { continue }
+                    mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
+                }
+                else {
+                    let request = NSFetchRequest<Event>(entityName: "Event")
+                    request.entity = Event.entity()
+                    request.predicate = NSPredicate(format: "id == %@", etag.id)
+                    request.fetchLimit = 1
                     
+                    if let mentioningEvent = try context.fetch(request).first {
+                        mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
+                    }
                 }
             }
         }
