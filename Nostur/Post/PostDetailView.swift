@@ -341,6 +341,7 @@ struct PostAndParent: View {
                 guard !didLoad else { return }
                 didLoad = true
                 nrPost.loadReplyTo()
+                nrPost.footerAttributes.loadFooter()
                 
                 bg().perform {
                     EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")
