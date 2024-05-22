@@ -50,6 +50,8 @@ struct Settings: View {
     @State private var dbNumberOfEvents = "-"
     @State private var dbNumberOfContacts = "-"
     
+    
+    @AppStorage("wotDunbarNumber") private var wotDunbarNumber: Int = 1000
 
     var body: some View {
         Form {
@@ -197,6 +199,30 @@ struct Settings: View {
                                 .lineLimit(2)
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    if (settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.normal.rawValue) {
+                        VStack(alignment: .leading) {
+                            Text("Nostr Dunbar Number")
+                            Picker("Dunbar number", selection: $wotDunbarNumber) {
+                                Text("250").tag(250)
+                                Text("500").tag(500)
+                                Text("1000").tag(1000)
+                                Text("2000").tag(2000)
+                                Text("♾️").tag(0)
+                            }
+                            .pickerStyle(SegmentedPickerStyle())
+                            Text("Follow lists with a size higher than this threshold will be considered low quality and not included in your Web of Trust")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+                        .onChange(of: wotDunbarNumber) { newValue in
+                            bg().perform {
+                                guard let account = account() else { return }
+                                let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.privateFollowingPubkeys) // We don't include silent follows in WoT
+                                wot.localReload(wotFollowingPubkeys: wotFollowingPubkeys)
+                            }
                         }
                     }
                     

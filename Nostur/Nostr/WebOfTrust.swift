@@ -37,6 +37,8 @@ class WebOfTrust: ObservableObject {
         allowedKeysCount >= ENABLE_THRESHOLD
     }
     
+    @AppStorage("wotDunbarNumber") private var wotDunbarNumber: Int = 1000
+    
     // UserDefaults can be slow and its called every .isAllowed() so cache the value in .mainAccountWoTpubkey
     @AppStorage("main_wot_account_pubkey") private var _mainAccountWoTpubkey = "" {
         didSet {
@@ -236,6 +238,7 @@ class WebOfTrust: ObservableObject {
             if let list = try? bg().fetch(fr).first {
                 followsOfPubkey = followsOfPubkey.union( Set(list.fastPs.map { $0.1 }) )
             }
+            guard wotDunbarNumber == 0 || followsOfPubkey.count <= wotDunbarNumber else { return }
             self.followingFollowingPubkeys = self.followingFollowingPubkeys.union(followsOfPubkey)
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
             self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
@@ -323,6 +326,20 @@ class WebOfTrust: ObservableObject {
         task.fetch()
     }
     
+    public func localReload(wotFollowingPubkeys: Set<String>) {
+        guard mainAccountWoTpubkey != "" else {
+            sendNotification(.WoTReady)
+            return
+        }
+        // Load from disk
+        self.followingFollowingPubkeys = self.loadData(mainAccountWoTpubkey)
+
+        var pubkeys = wotFollowingPubkeys
+        pubkeys.remove(mainAccountWoTpubkey)
+
+        generateWoT()
+    }
+    
     private func generateWoT() {
         guard mainAccountWoTpubkey != "" else {
             sendNotification(.WoTReady)
@@ -337,6 +354,7 @@ class WebOfTrust: ObservableObject {
             if let contactLists = try? bg().fetch(fr) {
                 for list in contactLists {
                     let pubkeys = Set(list.fastPs.map { $0.1 })
+                    guard wotDunbarNumber == 0 || pubkeys.count <= wotDunbarNumber else { continue }
                     followFollows = followFollows.union(pubkeys)
                 }
             }

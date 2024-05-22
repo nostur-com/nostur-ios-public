@@ -759,6 +759,16 @@
         }
       }
     },
+    "♾️" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "♾️"
+          }
+        }
+      }
+    },
     "⚠️" : {
       "localizations" : {
         "nl" : {
@@ -931,6 +941,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "48u"
+          }
+        }
+      }
+    },
+    "250" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "250"
+          }
+        }
+      }
+    },
+    "500" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "500"
+          }
+        }
+      }
+    },
+    "1000" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1000"
+          }
+        }
+      }
+    },
+    "2000" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2000"
           }
         }
       }
@@ -2618,6 +2668,16 @@
         }
       }
     },
+    "Dunbar number" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dunbar getal"
+          }
+        }
+      }
+    },
     "Duration" : {
       "localizations" : {
         "nl" : {
@@ -3080,6 +3140,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Volg %@ op"
+          }
+        }
+      }
+    },
+    "Follow lists with a size higher than this threshold will be considered low quality and not included in your Web of Trust" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volglijsten groter dan dit getal worden als lage kwaliteit beschouwd en worden niet opgenomen in jouw Web of Trust"
           }
         }
       }
@@ -4288,6 +4358,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nostr-adres (NIP-05)"
+          }
+        }
+      }
+    },
+    "Nostr Dunbar Number" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostr Dunbar getal"
           }
         }
       }
