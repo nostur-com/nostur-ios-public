@@ -536,7 +536,7 @@ final class PostOrThreadCell: UITableViewCell {
 
 final class PostOrThreadCell15: UITableViewCell {
 
-    private var hostingController = UIHostingController<PostOrThread?>(rootView: nil)
+    private var hostingController = UIHostingController<PostOrThread15?>(rootView: nil)
     
     override func prepareForReuse() {
         super.prepareForReuse()
@@ -555,7 +555,8 @@ final class PostOrThreadCell15: UITableViewCell {
                 .margins(.all, 0)
             } else {
                 // Fallback on earlier versions
-                let view = PostOrThread(nrPost: nrPost)
+                let view = PostOrThread15(nrPost: nrPost, themes: themes, dim: dim)
+                
                 self.hostingController.rootView = view
                 self.hostingController.view.invalidateIntrinsicContentSize()
                 

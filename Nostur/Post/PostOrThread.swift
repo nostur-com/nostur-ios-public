@@ -120,6 +120,28 @@ struct PostOrThread: View {
     }
 }
 
+struct PostOrThread15: View {
+    private var themes: Themes
+    private var dim: DIMENSIONS
+    private let nrPost: NRPost
+    private var grouped = false
+    private var rootId: String? = nil
+    
+    init(nrPost: NRPost, grouped: Bool = false, rootId: String? = nil, themes: Themes, dim: DIMENSIONS) {
+        self.nrPost = nrPost
+        self.grouped = grouped
+        self.rootId = rootId
+        self.themes = themes
+        self.dim = dim
+    }
+    
+    var body: some View {
+        PostOrThread(nrPost: nrPost, grouped: grouped, rootId: rootId)
+            .environmentObject(themes)
+            .environmentObject(dim)
+    }
+}
+
 func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
     if let replyToPubkey = event.replyTo?.pubkey {
         if isFollowing(replyToPubkey) {
