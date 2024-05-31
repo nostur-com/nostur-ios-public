@@ -76,7 +76,7 @@ struct ComposePost: View {
                                 }
                                 
                                 HStack(alignment: .top) {
-                                    PostAccountSwitcher(activeAccount: account, onChange: { account in
+                                    InlineAccountSwitcher(activeAccount: account, onChange: { account in
                                         vm.activeAccount = account
                                     }).equatable()
                                     
