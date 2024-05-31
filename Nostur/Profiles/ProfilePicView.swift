@@ -16,7 +16,7 @@ struct PFP: View, Equatable {
     }
     
     public var pubkey: String
-    
+    public var pictureUrl: URL?
     public var contact: Contact?
     public var nrContact: NRContact?
     public var account: CloudAccount?
@@ -34,7 +34,7 @@ struct PFP: View, Equatable {
             AccountPFP(account: account, size: size, forceFlat: forceFlat)
         }
         else {
-            InnerPFP(pubkey: pubkey, size: size!, color: randomColor(seed: pubkey), forceFlat: forceFlat)
+            InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: randomColor(seed: pubkey), forceFlat: forceFlat)
         }
     }
 }

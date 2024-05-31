@@ -7,13 +7,15 @@
 
 import SwiftUI
 
-struct PostAccountSwitcher: View, Equatable {
-    static func == (lhs: PostAccountSwitcher, rhs: PostAccountSwitcher) -> Bool {
+struct InlineAccountSwitcher: View, Equatable {
+    static func == (lhs: InlineAccountSwitcher, rhs: InlineAccountSwitcher) -> Bool {
         lhs.activeAccount == rhs.activeAccount //&& lhs.accounts.count == rhs.accounts.count
     }
     
     public var activeAccount: CloudAccount
     public var onChange: (CloudAccount) -> ()
+    public var size: CGFloat = 50.0
+    
     @State private var expanded = false
     
     @State private var accounts: [CloudAccount] = []
@@ -33,17 +35,17 @@ struct PostAccountSwitcher: View, Equatable {
         let _ = Self._printChanges()
         #endif
         Color.clear
-            .frame(width: 50, height: 50)
+            .frame(width: size, height: size)
             .overlay(alignment: .topLeading) {
                 VStack(spacing: 2) {
                     ForEach(accountsSorted.indices, id:\.self) { index in
-                        PFP(pubkey: accountsSorted[index].publicKey, account: accountsSorted[index])
+                        PFP(pubkey: accountsSorted[index].publicKey, account: accountsSorted[index], size: size)
                             .onTapGesture {
                                 accountTapped(accountsSorted[index])
                             }
                             .opacity(index == 0 || expanded ? 1.0 : 0.2)
                             .zIndex(-Double(index))
-                            .offset(y: expanded || (index == 0) ? 0 : (Double(index) * -48.0))
+                            .offset(y: expanded || (index == 0) ? 0 : (Double(index) * -(size - 2)))
                             .animation(.easeOut(duration: 0.2), value: expanded)
                             .id(accountsSorted[index].publicKey) // sorting index and view identity (publicKey) is different!
                     }
@@ -74,21 +76,21 @@ struct PostAccountSwitcher: View, Equatable {
     }
 }
 
-struct PostAccountSwitcherPreviewWrap: View {
+struct InlineAccountSwitcherPreviewWrap: View {
     @State var activeAccount = NRState.shared.loggedInAccount!.account
     
     var body: some View {
-        PostAccountSwitcher(activeAccount: activeAccount, onChange: { account in
+        InlineAccountSwitcher(activeAccount: activeAccount, onChange: { account in
             activeAccount = account
-        })
+        }, size: 20.0)
     }
 }
 
-struct PostAccountSwitcher_Previews: PreviewProvider {
+struct InlineAccountSwitcher_Previews: PreviewProvider {
 
     static var previews: some View {
         PreviewContainer({ pe in pe.loadAccounts() }) {
-            PostAccountSwitcherPreviewWrap()
+            InlineAccountSwitcherPreviewWrap()
         }
     }
 }

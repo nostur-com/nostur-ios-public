@@ -24,7 +24,7 @@ struct HighlightComposer: View {
                 VStack {
                     Divider()
                     HStack(alignment: .top, spacing: 10) {
-                        PostAccountSwitcher(activeAccount: account, onChange: { account in
+                        InlineAccountSwitcher(activeAccount: account, onChange: { account in
                             activeAccount = account
                         }).equatable()
 
