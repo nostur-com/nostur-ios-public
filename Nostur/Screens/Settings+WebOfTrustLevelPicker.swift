@@ -47,5 +47,7 @@ import NavigationBackport
         Form {
             WebOfTrustLevelPicker()
         }
+        .environmentObject(Themes.default)
+        .environmentObject(NRState.shared)
     }
 }
