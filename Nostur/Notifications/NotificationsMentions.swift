@@ -11,8 +11,8 @@ import NavigationBackport
 
 struct NotificationsMentions: View {
     @Binding public var navPath: NBNavigationPath
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var settings:SettingsStore = .shared
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var settings: SettingsStore = .shared
     @StateObject private var fl = FastLoader()
     @State private var backlog = Backlog()
     @State private var didLoad = false

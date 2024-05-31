@@ -197,7 +197,7 @@ class NRState: ObservableObject {
         .delay(for: .seconds(5), scheduler: RunLoop.main)
     
     // task timers
-    private var taskTimers:[Timer] = []
+    private var taskTimers: [Timer] = []
     
     public func startTaskTimers() {
         // We (re)create all timers, so invalidate and remove any existing

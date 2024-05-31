@@ -18,10 +18,10 @@ struct ZapInfo: Identifiable {
 }
 
 struct NotificationsZaps: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
     @State private var didLoad = false
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var settings: SettingsStore = .shared
     @State private var backlog = Backlog()
     @Binding private var navPath: NBNavigationPath
     

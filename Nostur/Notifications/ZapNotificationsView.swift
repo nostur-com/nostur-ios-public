@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct ZapNotificationView: View {
-    var notification:PersistentNotification
+    var notification: PersistentNotification
     
-    func createLinks(_ fails:FailedZaps) -> String {
+    func createLinks(_ fails: FailedZaps) -> String {
         var links = [String]()
         for index in fails.failedZaps.indices {
             if let eventId = fails.failedZaps[index].eventId {
@@ -23,7 +23,7 @@ struct ZapNotificationView: View {
         return links.formatted(.list(type: .and))
     }
     
-    func createErrorLinks(_ fails:FailedZaps) -> String {
+    func createErrorLinks(_ fails: FailedZaps) -> String {
         let postKey = String(localized: "post", comment: "The word \"post\" when used as post #1, post #2 and post #3.")
         let contactKey = String(localized: "contact", comment: "The word \"contact\" when used as contact #1, contact #2 and contact #3.")
         var links = [String]()

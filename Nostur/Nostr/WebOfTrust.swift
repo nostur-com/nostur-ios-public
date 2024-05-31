@@ -135,7 +135,7 @@ class WebOfTrust: ObservableObject {
         }
     }
     
-    public func loadWoT(force:Bool = false) {
+    public func loadWoT(force: Bool = false) {
         guard mainAccountWoTpubkey != "" else { return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
         guard let account = NRState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) ?? (try? CloudAccount.fetchAccount(publicKey: mainAccountWoTpubkey, context: context())) else { return }

@@ -12,11 +12,11 @@ import NavigationBackport
 
 struct NotificationsReactions: View {
     @Binding public var navPath: NBNavigationPath
-    @EnvironmentObject private var themes:Themes
     @StateObject private var fl = FastLoader()
     @State private var didLoad = false
+    @EnvironmentObject private var themes: Themes
     @State private var backlog = Backlog()
-    @ObservedObject private var settings:SettingsStore = .shared
+    @ObservedObject private var settings: SettingsStore = .shared
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }

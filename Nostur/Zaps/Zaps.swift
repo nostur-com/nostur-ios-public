@@ -29,7 +29,7 @@ func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, withM
 extension Event {
     // Homegrown bolt11 amount decoder because LightningDevKit is slow and don't know why
     // Also Homegrown parsing of serializedTags because EventTags.init slow...
-    var naiveSats:Double {
+    var naiveSats: Double {
         guard let bolt11 = naiveBolt11() else { return 0.0 }
         return naiveBolt11AmountDecoder(bolt11)
     }
