@@ -785,8 +785,7 @@ extension Event {
     }
     
     static func saveZapRequest(event:NEvent, context:NSManagedObjectContext) -> Event? {
-        if let existingZapReq = try! Event.fetchEvent(id: event.id, context: context) {
-            //                print("🔴🔴 zap req already in db");
+        if let existingZapReq = try? Event.fetchEvent(id: event.id, context: context) {
             return existingZapReq
         }
         

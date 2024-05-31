@@ -48,22 +48,22 @@ struct NotificationsContainer: View {
 }
 
 struct NotificationsView: View {
-    @ObservedObject public var account:CloudAccount
+    @ObservedObject public var account: CloudAccount
     
     @AppStorage("selected_notifications_tab") private var tab = "Mentions"
 
     @Binding public var navPath: NBNavigationPath
     
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject var dim:DIMENSIONS
-    @ObservedObject private var nvm:NotificationsViewModel = .shared
-    @ObservedObject private var settings:SettingsStore = .shared
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject var dim: DIMENSIONS
+    @ObservedObject private var nvm: NotificationsViewModel = .shared
+    @ObservedObject private var settings: SettingsStore = .shared
     
-    @State private var markAsReadDelayer:Timer?
+    @State private var markAsReadDelayer: Timer?
     @State private var showNotificationSettings = false
     
-    @AppStorage("notifications_mute_reactions") private var muteReactions:Bool = false
-    @AppStorage("notifications_mute_zaps") private var muteZaps:Bool = false
+    @AppStorage("notifications_mute_reactions") private var muteReactions: Bool = false
+    @AppStorage("notifications_mute_zaps") private var muteZaps: Bool = false
     
     var body: some View {
         #if DEBUG
