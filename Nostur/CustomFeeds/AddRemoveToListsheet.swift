@@ -17,7 +17,7 @@ struct AddRemoveToListsheet: View {
     // only contact lists, not relay lists
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CloudFeed.createdAt, ascending: false)],
-        predicate: NSPredicate(format: "type != %@ OR type == nil", LVM.ListType.relays.rawValue),
+        predicate: NSPredicate(format: "type == %@ OR type == nil", LVM.ListType.pubkeys.rawValue),
         animation: .none)
     var lists:FetchedResults<CloudFeed>
     

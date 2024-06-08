@@ -121,6 +121,7 @@ struct NewListSheet: View {
                     }
                     else {
                         contactSelectionVisible = true
+                        newList?.type = feedType.rawValue
                     }
                 }
                 .disabled(!formIsValid)
