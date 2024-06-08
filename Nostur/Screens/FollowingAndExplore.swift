@@ -239,7 +239,7 @@ struct FollowingAndExplore: View, Equatable {
                         .environmentObject(la)
                 case "List":
                     if let list = selectedList {
-                        FeedSettings(lvm: LVMManager.shared.listLVM(forList: list), list:list)
+                        FeedSettings(lvm: LVMManager.shared.listLVM(forList: list), list: list)
                             .environmentObject(la)
                     }
                 case "Explore":

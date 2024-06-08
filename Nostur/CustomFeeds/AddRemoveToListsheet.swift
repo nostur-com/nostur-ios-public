@@ -12,7 +12,7 @@ import NavigationBackport
 struct AddRemoveToListsheet: View {
     
     @Environment(\.dismiss) var dismiss
-    @ObservedObject var contact:Contact
+    @ObservedObject var contact: Contact
     
     // only contact lists, not relay lists
     @FetchRequest(

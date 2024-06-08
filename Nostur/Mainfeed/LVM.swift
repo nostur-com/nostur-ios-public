@@ -73,9 +73,9 @@ class LVM: NSObject, ObservableObject {
     var posts = CurrentValueSubject<Posts, Never>([:])
     
     var performingLocalOlderFetch = false // bg?
-    var leafsAndParentIdsOnScreen:Set<String> = [] // Should always be in sync with nrPostLeafs
-    var leafIdsOnScreen:OrderedSet<String> = []
-    var onScreenSeen:Set<NRPostID> {
+    var leafsAndParentIdsOnScreen: Set<String> = [] // Should always be in sync with nrPostLeafs
+    var leafIdsOnScreen: OrderedSet<String> = []
+    var onScreenSeen: Set<NRPostID> {
         get { SettingsStore.shared.appWideSeenTracker ? Deduplicator.shared.onScreenSeen : _onScreenSeen }
         set {
             if SettingsStore.shared.appWideSeenTracker {
@@ -86,37 +86,37 @@ class LVM: NSObject, ObservableObject {
             }
         }
     }
-    var _onScreenSeen:Set<NRPostID> = [] // other .id trackers are in sync with nrPostLeafs. This one keeps track even after nrPostLeafs changed
+    var _onScreenSeen: Set<NRPostID> = [] // other .id trackers are in sync with nrPostLeafs. This one keeps track even after nrPostLeafs changed
     var alreadySkipped = false
-    var danglingIds:Set<NRPostID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
+    var danglingIds: Set<NRPostID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
     
-    let ot:NewOnboardingTracker = .shared
+    let ot: NewOnboardingTracker = .shared
     
     let FETCH_FEED_INTERVAL = 9.0
-    var id:String // "Following", "Explore", "List-0xb893daf22106244b"
+    var id: String // "Following", "Explore", "List-0xb893daf22106244b"
     var uuid = UUID().uuidString
-    var name:String = "" // for debugging
+    var name: String = "" // for debugging
     
-    enum ListType:String, Identifiable, Hashable {
+    enum ListType: String, Identifiable, Hashable {
         case pubkeys = "pubkeys"
         case relays = "relays"
         
-        var id:String {
+        var id: String {
             String(self.rawValue)
         }
     }
     
-    let type:ListType
-    var listStateObjectId:NSManagedObjectID?
-    var pubkey:String?
-    var pubkeys:Set<String> {
+    let type: ListType
+    var listStateObjectId: NSManagedObjectID?
+    var pubkey: String?
+    var pubkeys: Set<String> {
         didSet {
             L.lvm.info("\(self.id) \(self.name) - pubkeys.count \(oldValue.count) -> \(self.pubkeys.count)")
         }
     }
     
     // TODO: Switch entire SocketPool .sockets to bg context, so we don't have to deal with viewContext relays
-    var relays:Set<RelayData> = []
+    var relays: Set<RelayData> = []
     
     // for Relay feeds
     @Published var wotEnabled = true {
@@ -176,7 +176,7 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    var viewIsVisible:Bool {
+    var viewIsVisible: Bool {
         if isDeck { return true }
         if id.prefix(5) == "List-" {
             return selectedSubTab == "List" && selectedListId == id
@@ -224,8 +224,8 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    var restoreScrollToId:String? = nil
-    var initialIndex:Int = 0 // derived from restoreScrollToId's index
+    var restoreScrollToId: String? = nil
+    var initialIndex: Int = 0 // derived from restoreScrollToId's index
     
     @MainActor
     func didDisappear() {
@@ -269,7 +269,7 @@ class LVM: NSObject, ObservableObject {
         fetchFeedTimerNextTick()
     }
     
-    enum LIST_STATE:String {
+    enum LIST_STATE: String {
         case INIT = "INIT"
         case READY = "READY"
     }
@@ -289,8 +289,8 @@ class LVM: NSObject, ObservableObject {
         ? posts.value.index(forKey: self.lastAppearedIdSubject.value!)
         : nil
     }
-    var lastReadId:String? // so we dont have to fetch from different context by objectId if we want to save ListState in background
-    var lastReadIdIndex:Int? { lastReadId != nil ? posts.value.index(forKey: self.lastReadId!) : nil }
+    var lastReadId: String? // so we dont have to fetch from different context by objectId if we want to save ListState in background
+    var lastReadIdIndex: Int? { lastReadId != nil ? posts.value.index(forKey: self.lastReadId!) : nil }
     
     private var subscriptions = Set<AnyCancellable>()
     public func cleanUp() {
@@ -316,7 +316,7 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    private func getAllObjectIds(_ nrPosts:[NRPost]) -> Set<NRPostID> { // called from main thread?
+    private func getAllObjectIds(_ nrPosts: [NRPost]) -> Set<NRPostID> { // called from main thread?
         #if DEBUG
             if Thread.isMainThread {
                 fatalError("Should be bg")
@@ -332,7 +332,7 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    private func getAllEventIds(_ events:[Event]) -> Set<String> {
+    private func getAllEventIds(_ events: [Event]) -> Set<String> {
         return events.reduce(Set<String>()) { partialResult, event in
             if event.isRepost, let firstQuote = event.firstQuote_ {
                 // for repost add post + reposted post
@@ -344,7 +344,7 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    func getRestoreScrollIndex(_ nrPostLeafs:[NRPost], lastAppearedId:String? = nil) -> Int? {
+    func getRestoreScrollIndex(_ nrPostLeafs: [NRPost], lastAppearedId:String? = nil) -> Int? {
         if let lastAppearedId {
             if let index = nrPostLeafs.firstIndex(where: { $0.id == lastAppearedId }) {
                 L.lvm.info("🟢🟢🟢 \(self.id) \(self.pubkey?.short ?? "") should scroll to leaf index: \(index)")
@@ -383,7 +383,7 @@ class LVM: NSObject, ObservableObject {
     }
     
     // MARK: FROM DB TO SCREEN STEP 3:
-    private func processPostsInBackground(_ events:[Event], older:Bool = false) { // events are from viewContext
+    private func processPostsInBackground(_ events: [Event], older:Bool = false) { // events are from viewContext
         if self.id == "Following" {
             signpost(NRState.shared, "LAUNCH", .event, "Processing posts for rendering")
         }
@@ -463,7 +463,7 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    func safeInsert(_ nrPosts:[NRPost], older:Bool = false) -> [NRPost] {
+    func safeInsert(_ nrPosts: [NRPost], older: Bool = false) -> [NRPost] {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should be bg")
@@ -524,7 +524,7 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], leafIdsOnScreen:OrderedSet<String>, currentNRPostLeafs:[NRPost], older:Bool = false) {
+    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates: [NRPost], leafIdsOnScreen: OrderedSet<String>, currentNRPostLeafs: [NRPost], older: Bool = false) {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -556,7 +556,7 @@ class LVM: NSObject, ObservableObject {
         
     }
     
-    func fetchAllMissingPs(_ posts:[NRPost]) {
+    func fetchAllMissingPs(_ posts: [NRPost]) {
         DispatchQueue.global().async {
             let missingPs = posts.reduce([Ptag]()) { partialResult, nrPost in
                 return partialResult + nrPost.missingPs
@@ -565,7 +565,7 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    func fetchParents(_ danglers:[NRPost], older:Bool = false) {
+    func fetchParents(_ danglers: [NRPost], older: Bool = false) {
         for nrPost in danglers {
             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "LVM.001")
         }
@@ -636,7 +636,7 @@ class LVM: NSObject, ObservableObject {
     }
     
     // onlyNew flag so very old replies don't appear as new events on top
-    func extractDanglingReplies(_ newLeafThreads:[NRPost], onlyNew:Bool = true) -> (danglers:[NRPost], threads:[NRPost]) {
+    func extractDanglingReplies(_ newLeafThreads: [NRPost], onlyNew: Bool = true) -> (danglers: [NRPost], threads: [NRPost]) {
         // is called from bg thread only?
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
@@ -657,7 +657,7 @@ class LVM: NSObject, ObservableObject {
         return (danglers:danglers, threads:threads)
     }
     
-    func fetchRelated(_ recentNRPosts:ArraySlice<NRPost>) {
+    func fetchRelated(_ recentNRPosts: ArraySlice<NRPost>) {
         let ids = recentNRPosts.map { $0.id }.compactMap { $0 }
         recentNRPosts.map { $0.event }.forEach { event in
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.002")
@@ -666,7 +666,7 @@ class LVM: NSObject, ObservableObject {
         L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Skip render and fetch related of \(ids.joined(separator: ",")) first.")
     }
     
-    func renderLeafs(_ nrPosts:[NRPost], onScreenSeen:Set<String>) -> [NRPost] {
+    func renderLeafs(_ nrPosts: [NRPost], onScreenSeen: Set<String>) -> [NRPost] {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -733,7 +733,7 @@ class LVM: NSObject, ObservableObject {
 //            .sorted(by: { $0.parentPosts.first?.created_at ?? $0.created_at > $1.parentPosts.first?.created_at ?? $1.created_at })
     }
     
-    func renderNewLeafs(_ nrPosts:[NRPost], onScreen:[NRPost], onScreenSeen:Set<String>) -> [NRPost] {
+    func renderNewLeafs(_ nrPosts: [NRPost], onScreen: [NRPost], onScreenSeen: Set<String>) -> [NRPost] {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -770,12 +770,12 @@ class LVM: NSObject, ObservableObject {
     }
     
     var lvmCounter = LVMCounter()
-    var restoreLeafs:String?
+    var restoreLeafs: String?
     
     var instantFeed = InstantFeed()
     var isDeck = false
     
-    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<CloudRelay> = [], wotEnabled:Bool = true, isDeck:Bool = false, feed:NosturList? = nil) {
+    init(type: ListType, pubkey: String? = nil, pubkeys: Set<String>, listId: String, name: String = "", relays: Set<CloudRelay> = [], wotEnabled: Bool = true, isDeck: Bool = false, feed: NosturList? = nil) {
         self.feed = feed
         self.type = type
         self.name = name
@@ -795,7 +795,7 @@ class LVM: NSObject, ObservableObject {
                 ConnectionPool.shared.connectFeedRelays(relays: self.relays)
             }
         }
-        var ls:ListState?
+        var ls: ListState?
         if let pubkey {
             ls = ListState.fetchListState(pubkey, listId: listId, context: DataProvider.shared().viewContext)
         }
