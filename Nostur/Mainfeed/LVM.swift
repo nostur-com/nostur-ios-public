@@ -371,9 +371,11 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    private func applyWoTifNeeded(_ events:[Event]) -> [Event] {
+    private func applyWoTifNeeded(_ events: [Event]) -> [Event] {
+        if self.type == .pubkeys { return events } // if pubkeys feed, always show all the pubkeys
         guard WOT_FILTER_ENABLED() else { return events }  // Return all if globally disabled
-        guard self.type == .relays else { return events.filter { $0.inWoT } } // Return inWoT if following/pubkeys list
+        
+//        guard self.type == .relays else { return events.filter { $0.inWoT } } // Return inWoT if following/pubkeys list
         
         // if we are here, type is .relays, only filter if the feed specific WoT filter is enabled
         
