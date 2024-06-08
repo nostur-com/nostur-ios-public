@@ -10,9 +10,9 @@ import Combine
 
 class LVMManager {
     static let shared = LVMManager()
-    var listVMs:[LVM] = []
+    var listVMs: [LVM] = []
     
-    var subscriptions:Set<AnyCancellable> = []
+    var subscriptions: Set<AnyCancellable> = []
     
     init() {
         restoreSubscriptionsSubject
@@ -38,7 +38,7 @@ class LVMManager {
             .store(in: &subscriptions)
     }
     
-    func followingLVM(forAccount account:CloudAccount, isDeck:Bool = false) -> LVM {
+    func followingLVM(forAccount account: CloudAccount, isDeck: Bool = false) -> LVM {
         if let lvm = listVMs.first(where: { $0.pubkey == account.publicKey && $0.id == "Following" }) {
             return lvm
         }
@@ -47,12 +47,12 @@ class LVMManager {
         listVMs.append(lvm)
         return lvm
     }
-    func exploreLVM(isDeck:Bool = false) -> LVM {
+    func exploreLVM(isDeck: Bool = false) -> LVM {
         if let lvm = listVMs.first(where: { $0.id == "Explore" }) {
             return lvm
         }
         
-        let explorePubkeys:Set<String> =
+        let explorePubkeys: Set<String> =
             if let account = NRState.shared.loggedInAccount?.account {
                 Set([account.publicKey] + NRState.shared.rawExplorePubkeys).subtracting(NRState.shared.blockedPubkeys)
             }
@@ -64,7 +64,7 @@ class LVMManager {
         listVMs.append(lvm)
         return lvm
     }
-    func listLVM(forList list:CloudFeed, isDeck:Bool = false) -> LVM {
+    func listLVM(forList list: CloudFeed, isDeck: Bool = false) -> LVM {
         if let lvm = listVMs.first(where: { $0.id == list.subscriptionId }) {
             return lvm
         }

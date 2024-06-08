@@ -11,18 +11,18 @@ import NostrEssentials
 
 typealias CM = NostrEssentials.ClientMessage
 
-let FETCH_FOLLOWING_KINDS:Set<Int> = [0,1,5,6,9802,30023,34235]
-let QUERY_FOLLOWING_KINDS:Set<Int> = [1,6,9802,30023,34235]
+let FETCH_FOLLOWING_KINDS: Set<Int> = [0,1,5,6,9802,30023,34235]
+let QUERY_FOLLOWING_KINDS: Set<Int> = [1,6,9802,30023,34235]
 let QUERY_FETCH_LIMIT = 50 // Was 25 before, but seems we are missing posts, maybe too much non WoT-hashtag coming back. Increase limit or split query? or could be the time cutoff is too short/strict
 
 // LVM things related to feeds of pubkeys
 extension LVM {
     // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
-    func fetchRealtimeSinceNow(subscriptionId:String) {
+    func fetchRealtimeSinceNow(subscriptionId: String) {
         guard !pubkeys.isEmpty else { return }
         let now = NTimestamp(date: Date.now)
         
-        var filters:[Filters] = []
+        var filters: [Filters] = []
         
         let followingContactsFilter = Filters(
             authors: Set(self.pubkeys), // seems prefixes are no longer in NIP-01
@@ -45,12 +45,12 @@ extension LVM {
     }
     
     // FETCHES ALL NEW, UNTIL NOW
-    func fetchNewestUntilNow(subscriptionId:String) {
+    func fetchNewestUntilNow(subscriptionId: String) {
         let now = NTimestamp(date: Date.now)
         guard !pubkeys.isEmpty else { return }
         
         
-        var filters:[Filters] = []
+        var filters: [Filters] = []
         
         let followingContactsFilter = Filters(
             authors: Set(self.pubkeys), // seems prefixes are no longer in NIP-01
@@ -72,10 +72,10 @@ extension LVM {
         }
     }
     
-    func fetchNewerSince(subscriptionId:String, since: NTimestamp) {
+    func fetchNewerSince(subscriptionId: String, since: NTimestamp) {
         guard !pubkeys.isEmpty else { return }
         
-        var filters:[Filters] = []
+        var filters: [Filters] = []
         
         let followingContactsFilter = Filters(
             authors: Set(self.pubkeys), // seems prefixes are no longer in NIP-01
@@ -102,7 +102,7 @@ extension LVM {
         guard let last = self.nrPostLeafs.last else { return }
         let until = NTimestamp(date: last.createdAt)
         
-        var filters:[Filters] = []
+        var filters: [Filters] = []
         
         let followingContactsFilter = Filters(
             authors: Set(self.pubkeys), // seems prefixes are no longer in NIP-01
@@ -124,7 +124,7 @@ extension LVM {
         }
     }
     
-    var hashtagRegex:String? {
+    var hashtagRegex: String? {
         if !hashtags.isEmpty {
             let regex = ".*(" + hashtags.map {
                 NSRegularExpression.escapedPattern(for: serializedT($0))
@@ -140,7 +140,7 @@ extension LVM {
 extension Event {
     
     // TODO: Optimize tagsSerialized / hashtags matching
-    static func postsByPubkeys(_ pubkeys:Set<String>, mostRecent:Event, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys: Set<String>, mostRecent: Event, hideReplies: Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let cutOffPoint = mostRecent.created_at - (15 * 60)
         
@@ -167,7 +167,7 @@ extension Event {
     }
     
     
-    static func postsByPubkeys(_ pubkeys:Set<String>, until:Event, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys: Set<String>, until: Event, hideReplies: Bool = false, hashtagRegex: String? = nil) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let cutOffPoint = until.created_at + (1 * 60)
         
@@ -196,7 +196,7 @@ extension Event {
         return fr
     }
     
-    static func postsByPubkeys(_ pubkeys:Set<String>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys: Set<String>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, hashtagRegex: String? = nil) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
         

@@ -42,7 +42,7 @@ extension CloudFeed : Identifiable {
         return (try? context.fetch(fr)) ?? []
     }
     
-    var followingHashtags:Set<String> {
+    var followingHashtags: Set<String> {
         get {
             guard let followingHashtags_ else { return [] }
             return Set(followingHashtags_.split(separator: " ").map { String($0) })
@@ -52,7 +52,7 @@ extension CloudFeed : Identifiable {
         }
     }
     
-    var contacts_:[Contact] {
+    var contacts_: [Contact] {
         get {
             guard let pubkeys = self.pubkeys?.components(separatedBy: " ") else { return [] }
             let context = Thread.isMainThread ? DataProvider.shared().viewContext : bg()
@@ -61,7 +61,7 @@ extension CloudFeed : Identifiable {
         set { self.pubkeys = newValue.map { $0.pubkey }.joined(separator: " ") }
     }
     
-    var contactPubkeys:Set<String> {
+    var contactPubkeys: Set<String> {
         get {
             guard let pubkeys else { return [] }
             return Set(pubkeys.split(separator: " ").map { String($0) })
@@ -71,7 +71,7 @@ extension CloudFeed : Identifiable {
         }
     }
     
-    var relays_:Set<CloudRelay> {
+    var relays_: Set<CloudRelay> {
         get {
             let context = Thread.isMainThread ? DataProvider.shared().viewContext : bg()
             let relayUrls = Set(self.relays?.components(separatedBy: " ") ?? [])
@@ -102,12 +102,12 @@ extension CloudFeed : Identifiable {
         set { self.relays = newValue.compactMap { $0.url_ }.joined(separator: " ") }
     }
     
-    var name_:String {
+    var name_: String {
         get { name ?? "" }
         set { name = newValue }
     }
     
-    var subscriptionId:String {
+    var subscriptionId: String {
         let id = id?.uuidString ?? "UNKNOWN"
         let idLength = id.count
         return ("List-" + String(id.prefix(min(idLength,18))))

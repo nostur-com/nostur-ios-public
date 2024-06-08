@@ -135,10 +135,10 @@ struct NosturListsView: View {
 }
 
 struct ListRow: View {
-    @ObservedObject var list:CloudFeed
-    let showPin:Bool
+    @ObservedObject var list: CloudFeed
+    let showPin: Bool
     
-    init(list: CloudFeed, showPin:Bool = true) {
+    init(list: CloudFeed, showPin: Bool = true) {
         self.list = list
         self.showPin = showPin
     }
