@@ -148,11 +148,11 @@ struct Kind1Default: View {
                         AnyKind(nrPost, hideFooter: hideFooter, theme: theme)
                     }
                     else if (isDetail) {
-                        ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
+                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                             .frame(maxWidth: .infinity, alignment:.leading)
                     }
                     else {
-                        ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
+                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                             .frame(maxWidth: .infinity, alignment:.leading)
                             .frame(maxHeight: didStart ? 750 : 450, alignment: .top)
                             .clipped()
