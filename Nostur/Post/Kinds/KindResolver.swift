@@ -35,10 +35,10 @@ struct KindResolver: View {
             ArticleView(nrPost, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
         default:
             if fullWidth {
-                Kind1(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
+                Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
             }
             else {
-                Kind1Default(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
+                Kind1Default(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }

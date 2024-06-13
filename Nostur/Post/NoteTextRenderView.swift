@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+// Was before for just rendering embedded (text) posts, but does other kinds too now, should rename.
 struct NoteTextRenderView: View {
     @EnvironmentObject private var dim:DIMENSIONS
     public let nrPost:NRPost
@@ -37,7 +38,7 @@ struct NoteTextRenderView: View {
                 }
                 
             case 0,3,4,5,7,1984,9734,30009,8,30008:
-                KnownKindView(nrPost: nrPost, theme: theme)
+                KnownKindView(nrPost: nrPost, hideFooter: true, theme: theme)
                 
             case 1,6,30023,99999:
                 ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
