@@ -113,7 +113,7 @@ struct Kind1: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                     else if (nrPost.kind != 1) && (nrPost.kind != 6) {
-                        AnyKind(nrPost, theme: theme)
+                        AnyKind(nrPost, hideFooter: hideFooter, theme: theme)
                     }                    
                     else if (isDetail) {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
