@@ -1425,7 +1425,7 @@ extension LVM {
                 guard !self.posts.value.isEmpty else { return }
                 
                 if lastAppeareadIndex > (self.posts.value.count-15) {
-                    L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
+                    L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/X - loading more from local")
                     self.performLocalOlderFetch()
                 }
             }
