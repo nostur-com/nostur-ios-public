@@ -15,7 +15,6 @@ final class SideBarModel: ObservableObject {
 }
 
 struct SideBar: View {
-    @Environment(\.openURL) private var openURL
     @EnvironmentObject private var themes: Themes
     @ObservedObject private var sm: SideBarModel = .shared
     @ObservedObject public var account: CloudAccount
@@ -281,13 +280,9 @@ struct SideBar: View {
                 Text("Nostur \(APP_VERSION) (Build: \(CI_BUILD_NUMBER))")
                     .font(.footnote)
                     .opacity(0.5)
-                Text("__Source code__")
+                Text("[__Source code__](https://github.com/nostur-com/nostur-ios-public)")
                     .foregroundColor(themes.theme.accent)
                     .font(.footnote)
-                    .onTapGesture {
-                        guard let url = URL(string: "https://github.com/nostur-com/nostur-ios-public") else { return }
-                        openURL(url)
-                    }
                     .padding(.bottom, 20)
             }
             .padding(10)
