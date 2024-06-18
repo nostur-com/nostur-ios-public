@@ -10,24 +10,25 @@ import CoreData
 import Combine
 
 class FastLoader: ObservableObject {
-    private var viewContext:NSManagedObjectContext
-    private var bgContext:NSManagedObjectContext
+    
+    private var bgContext: NSManagedObjectContext
+    
     private var loadNewerSubject = PassthroughSubject<(Int?, String, Bool), Never>()
     private var loadNewerEventsSubject = PassthroughSubject<(Int?, String, Bool), Never>()
     private var loadOlderEventsSubject = PassthroughSubject<(Int?, String, Bool), Never>()
+    
     private var subscriptions = Set<AnyCancellable>()
     
     public var subscriptionId = UUID().uuidString
-    public var offset:Int = 0
-    public var limit:Int = 10
-    public var nrPostTransform = true
-    public var onComplete:(() -> Void)?
+    public var offset: Int = 0
+    public var limit: Int = 10
+    public var onComplete: (() -> Void)?
+    public var accountPubkey: String?
+    public var didLoad = false
     
-    @Published var nrPosts:[NRPost] = []
-    @Published var events:[Event] = []
-    
+    @Published var nrPosts: [NRPost] = []
+
     init() {
-        viewContext = DataProvider.shared().viewContext
         bgContext = bg()
         loadNewerSubject
             .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
@@ -38,46 +39,42 @@ class FastLoader: ObservableObject {
             }
             .store(in: &subscriptions)
         
-        loadNewerEventsSubject
-            .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
-            .sink { [weak self] parameters in
+        receiveNotification(.muteListUpdated)
+            .sink { [weak self] _ in
                 guard let self = self else { return }
-                let (limit, taskId, includeSpam) = parameters
-                self._loadNewerEvents(limit, taskId: taskId, includeSpam: includeSpam)
+                self.nrPosts = self.nrPosts.filter(notMuted)
             }
             .store(in: &subscriptions)
         
-        loadOlderEventsSubject
-            .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
-            .sink { [weak self] parameters in
+        receiveNotification(.blockListUpdated)
+            .sink { [weak self] notification in
                 guard let self = self else { return }
-                let (limit, taskId, includeSpam) = parameters
-                self._loadOlderEvents(limit, taskId: taskId, includeSpam: includeSpam)
+                let blockedPubkeys = notification.object as! Set<String>
+                self.nrPosts = self.nrPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
             }
             .store(in: &subscriptions)
     }
     
     public func reset() {
         self.nrPosts = []
-        self.events = []
     }
     
     // What to load
-    var predicate:NSPredicate?
-    var sortDescriptors:[NSSortDescriptor]?
+    var predicate: NSPredicate?
+    var sortDescriptors: [NSSortDescriptor]?
     
     // How to fetch new
-    var fetchNewer:(() -> Void)?
+    var fetchNewer: (() -> Void)?
     
     // How to transform (eg from Event to NRPost)
-    var transformer:(_ event:Event) -> NRPost? = { event in
+    var transformer: (_ event: Event) -> NRPost? = { event in
         var nrPost = NRPost(event: event, cancellationId: event.cancellationId)
         return nrPost
     }
     
     // load first set of [limit] posts
     // loads from local, transforms in bg, does not fetch from relays
-    public func loadMore(_ limit:Int? = nil, includeSpam:Bool = false) {
+    public func loadMore(_ limit: Int? = nil, includeSpam: Bool = false) {
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
@@ -86,64 +83,42 @@ class FastLoader: ObservableObject {
         
         let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         
-        if nrPostTransform {
-            next.fetchOffset = max(0, self.nrPosts.count - 1)
-            bgContext.perform { [weak self] in
-                guard let self = self else { return }
-                let dbEvents:[Event] = (try? self.bgContext.fetch(next)) ?? [Event]()
-                    .map { event in
-                        event.cancellationId = cancellationIds[event.id]
-                        return event
-                    }
-                let currentNRPostIds = Set(self.nrPosts.map { item in
-                    item.id
-                })
-                let onlyUnrendered = dbEvents.filter { item in
-                    !currentNRPostIds.contains(item.id)
-                }
-                let nextItems: [NRPost] = onlyUnrendered
-                    .filter { includeSpam || !$0.isSpam }
-                    .compactMap { [weak self] in
-                        guard let self else { return nil }
-                        return self.transformer($0)
-                    }
-                
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-                    self.nrPosts = self.nrPosts + nextItems
-                    self.onComplete?()
-                }
-            }
-        }
-        else {
-            next.fetchOffset = max(0, self.events.count - 1)
-            let dbEvents:[Event] = (try? viewContext.fetch(next)) ?? [Event]()
+        next.fetchOffset = max(0, self.nrPosts.count - 1)
+        bgContext.perform { [weak self] in
+            guard let self = self else { return }
+            let dbEvents:[Event] = (try? self.bgContext.fetch(next)) ?? [Event]()
                 .map { event in
                     event.cancellationId = cancellationIds[event.id]
                     return event
                 }
-            
-            let currentEventIds = Set(self.events.map { event in
-                event.id
+            let currentNRPostIds = Set(self.nrPosts.map { item in
+                item.id
             })
             let onlyUnrendered = dbEvents.filter { item in
-                !currentEventIds.contains(item.id)
+                !currentNRPostIds.contains(item.id)
             }
-            let nextItems = onlyUnrendered
+            let nextItems: [NRPost] = onlyUnrendered
                 .filter { includeSpam || !$0.isSpam }
+                .compactMap { [weak self] in
+                    guard let self else { return nil }
+                    return self.transformer($0)
+                }
             
-            events = events + nextItems
-            self.onComplete?()
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.nrPosts = self.nrPosts + nextItems
+                self.onComplete?()
+            }
         }
     }
     
     // Only for .nrPosts, not .events
-    public func loadNewer(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
+    public func loadNewer(_ limit: Int? = nil, taskId: String, includeSpam: Bool = false) {
         self.loadNewerSubject.send((limit, taskId, includeSpam))
     }
     
     // Only for .nrPosts, not .events
-    private func _loadNewer(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
+    private func _loadNewer(_ limit: Int? = nil, taskId: String, includeSpam: Bool = false) {
         L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewer()")
         let cancellationIds:[String: UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         
@@ -178,78 +153,6 @@ class FastLoader: ObservableObject {
                 self.nrPosts = nextItems + self.nrPosts
                 self.onComplete?()
             }
-        }
-    }
-    
-    
-    // Only for .events, not .nrPosts, on main
-    public func loadNewerEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
-        self.loadNewerEventsSubject.send((limit, taskId, includeSpam))
-    }
-    
-    // Only for .events, not .nrPosts, on main
-    private func _loadNewerEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
-        L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewerEvents()")
-        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
-        
-        let next = Event.fetchRequest()
-        next.predicate = predicate
-        next.sortDescriptors = sortDescriptors
-        next.fetchLimit = limit ?? 1000
-        next.fetchOffset = 0
-        let dbEvents:[Event] = (try? self.viewContext.fetch(next)) ?? [Event]()
-            .map { event in
-                event.cancellationId = cancellationIds[event.id]
-                return event
-            }
-        let currentEventIds = Set(self.events.map { item in
-            item.id
-        })
-        let nextItems = dbEvents
-            .filter { includeSpam || !$0.isSpam }
-            .filter { item in
-                !currentEventIds.contains(item.id)
-            }
-        Task { @MainActor in
-            L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.events = nextItems (\(nextItems.count)) + self.events ")
-            self.events = nextItems + self.events
-            self.onComplete?()
-        }
-    }
-    
-
-    // Only for .events, not .nrPosts, on main
-    public func loadOlderEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
-        self.loadOlderEventsSubject.send((limit, taskId, includeSpam))
-    }
-    
-    // Only for .events, not .nrPosts, on main
-    private func _loadOlderEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
-        L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadOlderEvents()")
-        let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
-        
-        let next = Event.fetchRequest()
-        next.predicate = predicate
-        next.sortDescriptors = sortDescriptors
-        next.fetchLimit = limit ?? 1000
-        next.fetchOffset = max(0, self.events.count - 1)
-        let dbEvents:[Event] = (try? self.viewContext.fetch(next)) ?? [Event]()
-            .map { event in
-                event.cancellationId = cancellationIds[event.id]
-                return event
-            }
-        let currentEventIds = Set(self.events.map { item in
-            item.id
-        })
-        let nextItems = dbEvents
-            .filter { includeSpam || !$0.isSpam }
-            .filter { item in
-                !currentEventIds.contains(item.id)
-            }
-        Task { @MainActor in
-            L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.events = self.events + nextItems (\(nextItems.count)) ")
-            self.events = self.events + nextItems
-            self.onComplete?()
         }
     }
 }
