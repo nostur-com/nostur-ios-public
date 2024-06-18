@@ -85,7 +85,7 @@ class Importer {
             .throttle(for: 0.25, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
-                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.25 seconds), but sends first after debounce (0.05)")
+                L.importing.debug("🏎️🏎️ importEvents() (PRIO) after relay message received (throttle = 0.25 seconds), but sends first after debounce (0.05)")
                 self?.importPrioEvents()
             }
             .store(in: &subscriptions)
@@ -272,11 +272,20 @@ class Importer {
                         do { try _ = Event.updateLikeCountCache(savedEvent, content: event.content, context: bgContext) } catch {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
+                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
+                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
+                        }
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .zapNote {
                         let _ = Event.updateZapTallyCache(savedEvent, context: bgContext)
+                        
+                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
+                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Zaps, accountPubkey: otherPubkey))
+                        }
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
@@ -357,6 +366,9 @@ class Importer {
                 var alreadyInDBskipped = 0
                 var saved = 0
                 
+                // We send a notification every .save with the saved subscriptionIds
+                // so other parts of the system can start fetching from local db
+                var subscriptionIds = Set<String>()
                 while let message = MessageParser.shared.priorityBucket.popFirst() {
                     count = count + 1
                     guard let event = message.event else {
@@ -391,8 +403,9 @@ class Importer {
                             }
                         }
                         Event.updateRelays(event.id, relays: message.relays, context: bgContext)
-                        if let subscriptionId = message.subscriptionId, let savedEvent = try? Event.fetchEvent(id: event.id, context: bgContext) {
-                            importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
+                        var alreadySavedSubs = Set<String>()
+                        if let subscriptionId = message.subscriptionId {
+                            alreadySavedSubs.insert(subscriptionId)
                         }
                         continue
                     }
@@ -457,9 +470,8 @@ class Importer {
                     }
                     
                     let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote, context: bgContext)
-                    saved = saved + 1
                     NotificationsViewModel.shared.checkNeedsUpdate(savedEvent)
-                    
+                    saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
                         importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
                     }
@@ -476,11 +488,20 @@ class Importer {
                         do { try _ = Event.updateLikeCountCache(savedEvent, content:event.content, context: bgContext) } catch {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
+                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
+                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
+                        }
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .zapNote {
                         let _ = Event.updateZapTallyCache(savedEvent, context: bgContext)
+                        
+                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
+                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Zaps, accountPubkey: otherPubkey))
+                        }
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
