@@ -18,7 +18,15 @@ struct NEventView: View {
         Group {
             switch vm.state {
             case .initializing, .loading, .altLoading:
-                ProgressView()
+                HStack(spacing: 5) {
+                    ProgressView()
+                    if vm.state == .initializing || vm.state == .loading {
+                        Text("Fetching...")
+                    }
+                    else if vm.state == .altLoading {
+                        Text("Trying more relays...")
+                    }
+                }
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .onAppear { [weak vm, weak dim] in
@@ -65,6 +73,7 @@ struct NEventView: View {
                                 req(RM.getEvent(id: eventId, subscriptionId: taskId), relayType: .SEARCH)
                                 guard let relay = identifier.relays.first else { return }
                                 
+                                L.og.debug("FetchVM.3 HINT \(eventId)")
                                 ConnectionPool.shared.sendEphemeralMessage(
                                     RM.getEvent(id: eventId, subscriptionId: taskId),
                                     relay: relay
