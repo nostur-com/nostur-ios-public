@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ReactionButton: View, Equatable {
     static func == (lhs: ReactionButton, rhs: ReactionButton) -> Bool {
-        true
+        lhs.nrPost.id == rhs.nrPost.id && lhs.reactionContent == rhs.reactionContent
     }
     private let nrPost:NRPost
     private let reactionContent:String
