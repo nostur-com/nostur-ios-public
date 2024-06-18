@@ -88,8 +88,8 @@ class FetchVM<T: Equatable>: ObservableObject {
             },
             timeoutCommand: { [weak self] taskId in
                 L.og.info("FetchVM: timeout (fetch)")
-                _fetchParams.onComplete(nil, nil)
                 self?.backlog.clear()
+                _fetchParams.onComplete(nil, nil)
             })
 
         self.backlog.add(reqTask)
