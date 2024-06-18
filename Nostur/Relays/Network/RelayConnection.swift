@@ -114,6 +114,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             guard !self.isSocketConnecting || forceConnectionAttempt else {
                 L.sockets.debug("\(self.url) - Already connecting, skipping connect()")
                 self.isSocketConnecting = false
+                if let andSend {
+                    self.sendMessage(andSend)
+                }
                 return
             }
             self.nreqSubscriptions = []
@@ -236,6 +239,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 webSocketTask.send(.string(out.text)) { error in
                     if let error {
                         self.didReceiveError(error)
+                        self.connect(andSend: out.text)
                     }
                 }
                 self.outQueue.removeAll(where: { $0.id == out.id })
@@ -243,6 +247,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
+    // (Planned) disconnect, so exponetional backoff and skipped is reset
     public func disconnect() {
         queue.async(flags: .barrier) { [weak self] in
             self?.webSocketTask?.cancel()
@@ -268,8 +273,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     self?.queue.async(flags: .barrier) { [weak self] in
                         self?.session?.invalidateAndCancel()
                         self?.nreqSubscriptions = []
-                        self?.exponentialReconnectBackOff = 0
-                        self?.skipped = 0
+//                        self?.exponentialReconnectBackOff = 0
+//                        self?.skipped = 0
                         self?.lastMessageReceivedAt = nil
                         self?.isSocketConnected = false
                     }
@@ -322,6 +327,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             #endif
             MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url, client: self)
             self.lastMessageReceivedAt = .now
+            self.exponentialReconnectBackOff = 0
+            self.skipped = 0
         }
     }
     
@@ -336,6 +343,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 self.isSocketConnected = true
             }
             self.lastMessageReceivedAt = .now
+            self.exponentialReconnectBackOff = 0
+            self.skipped = 0
         }
     }
     
@@ -375,6 +384,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 self.isSocketConnected = true
             }
             self.lastMessageReceivedAt = .now
+            self.exponentialReconnectBackOff = 0
+            self.skipped = 0
         }
     }
     
@@ -440,8 +451,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         queue.async(flags: .barrier) { [weak self] in
             self?.session?.invalidateAndCancel()
             self?.nreqSubscriptions = []
-            self?.exponentialReconnectBackOff = 0
-            self?.skipped = 0
+//            self?.exponentialReconnectBackOff = 0
+//            self?.skipped = 0
             self?.lastMessageReceivedAt = nil
             self?.isSocketConnected = false
             DispatchQueue.main.async {
