@@ -587,7 +587,7 @@ class LVM: NSObject, ObservableObject {
                 L.lvm.info("😈😈 reqCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) - dng: \(danglers.count)")
                 let danglerIds = danglers.compactMap { $0.replyToId }
                     .filter { postId in
-                        Importer.shared.existingIds[postId] == nil
+                        Importer.shared.existingIds[postId] == nil && postId.range(of: ":") == nil // @TODO: <-- Workaround for aTag instead of e here, need to handle some other way
                     }
                 
                 if !danglerIds.isEmpty {
