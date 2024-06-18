@@ -7,7 +7,6 @@
 
 import Foundation
 import Combine
-//import CombineWebSocket
 import CoreData
 
 public typealias CanonicalRelayUrl = String // lowercased, without trailing slash on root domain
@@ -43,12 +42,14 @@ public class ConnectionPool: ObservableObject {
     @MainActor
     public func addEphemeralConnection(_ relayData: RelayData) -> RelayConnection {
         if let existingConnection = ephemeralConnections[relayData.id] {
+            L.og.debug("addEphemeralConnection: reusing existing \(relayData.id)")
             return existingConnection
         }
         else {
             let newConnection = RelayConnection(relayData, queue: queue)
             ephemeralConnections[relayData.id] = newConnection
             removeAfterDelay(relayData.id)
+            L.og.debug("addEphemeralConnection: adding new connection \(relayData.id)")
             return newConnection
         }
     }
@@ -196,21 +197,6 @@ public class ConnectionPool: ObservableObject {
         
         for (_, connection) in connections {
             connection.disconnect()
-        }
-    }
-    
-    @MainActor
-    func ping() {
-        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-            print("ping")
-            return
-        }
-        
-        for (_, connection) in connections {
-            queue.async { [weak connection] in
-                guard connection?.relayData.shouldConnect ?? false else { return }
-                connection?.ping()
-            }
         }
     }
     

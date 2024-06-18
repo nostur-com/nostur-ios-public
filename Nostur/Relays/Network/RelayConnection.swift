@@ -148,6 +148,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             else {
                 self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
             }
+//            else if !self.isSocketConnecting  {
+//                self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+//            }
             
             
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
@@ -211,7 +214,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self.outQueue.append(socketMessage)
             
             if self.webSocketTask == nil || !self.isSocketConnected {
-                L.sockets.debug("🔴🔴 Not connected. Did not sendMessage \(self.url)")
+                L.sockets.debug("🔴🔴 Not connected. Did not sendMessage \(self.url). (Message queued)")
                 return
             }
             
@@ -361,6 +364,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     public func didReceivePong() {
+        L.sockets.debug("PING: Did receive PONG: \(self.url)")
         // Respond to a WebSocket connection receiving a Pong from the peer
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
