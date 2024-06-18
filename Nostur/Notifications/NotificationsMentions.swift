@@ -10,12 +10,13 @@ import CoreData
 import NavigationBackport
 
 struct NotificationsMentions: View {
+    public let pubkey: String
     @Binding public var navPath: NBNavigationPath
     @EnvironmentObject private var themes: Themes
+    @StateObject private var model = MentionsFeedModel()
     @ObservedObject private var settings: SettingsStore = .shared
-    @StateObject private var fl = FastLoader()
+
     @State private var backlog = Backlog()
-    @State private var didLoad = false
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
@@ -37,16 +38,16 @@ struct NotificationsMentions: View {
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
                 LazyVStack(spacing: 10) {
-                    ForEach(fl.nrPosts) { nrPost in
+                    ForEach(model.mentions) { nrPost in
                         Box(nrPost: nrPost) {
                             PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                         }
                         .id(nrPost.id)
                     }
                     VStack {
-                        if !fl.nrPosts.isEmpty {
+                        if !model.mentions.isEmpty {
                             Button("Show more") {
-                                loadMore()
+                                model.showMore()
                             }
                             .padding(.bottom, 40)
                             .buttonStyle(.bordered)
@@ -70,27 +71,20 @@ struct NotificationsMentions: View {
         }
         .background(themes.theme.listBackground)
         .onAppear {
-            guard !didLoad else { return }
-            load()
+            model.setup(pubkey: pubkey)
+            model.load(limit: 50)
+            fetchNewer()
         }
-        .onReceive(receiveNotification(.newMentions)) { [weak fl] _ in
-            guard let fl else { return }
-            guard let account = account() else { return }
-            let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
-            fl.onComplete = {
-                saveLastSeenPostCreatedAt() // onComplete from local database
+        .onChange(of: pubkey) { newPubkey in
+            model.setup(pubkey: newPubkey)
+            model.load(limit: 50)
+            fetchNewer()
+        }
+        .onReceive(receiveNotification(.newMentions)) { _ in
+            // Receive here for logged in account (from NotificationsViewModel). In multi-column we don't track .newReposts for other accounts (unread badge)
+            model.load(limit: 50) { mostRecentCreatedAt in
+                saveLastSeenMentionCreatedAt(mostCreatedAt: mostRecentCreatedAt)
             }
-            fl.predicate = NSPredicate(
-                format:
-                    "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
-                    currentNewestCreatedAt,
-                NRState.shared.blockedPubkeys + [account.publicKey],
-                serializedP(account.publicKey),
-                NRState.shared.mutedRootIds,
-                NRState.shared.mutedRootIds,
-                NRState.shared.mutedRootIds
-            )
-            fl.loadNewer(250, taskId:"newMentions")
         }
         .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
             bg().perform {
@@ -101,26 +95,19 @@ struct NotificationsMentions: View {
                 }
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { [weak fl, weak backlog] _ in
-            guard let fl, let backlog else { return }
-            fl.nrPosts = []
-            backlog.clear()
-            load()
+        .onChange(of: settings.webOfTrustLevel) { _ in
+            model.setup(pubkey: pubkey)
+            model.load(limit: 50)
+            fetchNewer()
         }
-        .onChange(of: settings.webOfTrustLevel) { [weak fl, weak backlog] _ in
-            guard let fl, let backlog else { return }
-            fl.nrPosts = []
-            backlog.clear()
-            load()
-        }
-        .onReceive(receiveNotification(.blockListUpdated)) { [weak fl] notification in
-            guard let fl else { return }
-            let blockedPubkeys = notification.object as! Set<String>
-            fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
-        }
-        .onReceive(receiveNotification(.muteListUpdated)) { [weak fl] _ in
-            guard let fl else { return }
-            fl.nrPosts = fl.nrPosts.filter(notMuted)
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
+            bg().perform {
+                guard let backlog else { return }
+                let reqTasks = backlog.tasks(with: subscriptionIds)
+                reqTasks.forEach { task in
+                    task.process()
+                }
+            }
         }
         .simultaneousGesture(
                DragGesture().onChanged({
@@ -133,115 +120,40 @@ struct NotificationsMentions: View {
                }))
     }
     
-    private func load() {
-        guard let account = account() else { return }
-        didLoad = true
-        fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
-            (NRState.shared.blockedPubkeys + [account.publicKey]),
-            serializedP(account.publicKey),
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds)
-        
-        
-        fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fl.onComplete = {
-            saveLastSeenPostCreatedAt() // onComplete from local database
-            self.fetchNewer()
-            fl.onComplete = {
-                saveLastSeenPostCreatedAt() // onComplete from local database
-            }
-        }
-        fl.loadMore(25)
-    }
-    
     private func fetchNewer() {
-        guard let account = account() else { return }
+        L.og.debug("🥎🥎 fetchNewer() (MENTIONS)")
         let fetchNewerTask = ReqTask(
-            reqCommand: { [weak fl] (taskId) in
-                guard let fl else { return }
-                req(RM.getMentions(
-                    pubkeys: [account.publicKey],
-                    kinds: [1,9802,30023,34235],
-                    limit: 500,
-                    subscriptionId: taskId,
-                    since: NTimestamp(timestamp: Int(fl.nrPosts.first?.created_at ?? 0))
-                ))
+            reqCommand: { taskId in
+                bg().perform {
+                    req(RM.getMentions(
+                        pubkeys: [pubkey],
+                        kinds: [1,9802,30023,34235],
+                        limit: 500,
+                        subscriptionId: taskId,
+                        since: NTimestamp(timestamp: Int(model.mostRecentMentionCreatedAt))
+                    ))
+                }
             },
-            processResponseCommand: { [weak fl] (taskId, _, _) in
-                guard let fl else { return }
-                let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
-                fl.predicate = NSPredicate(
-                    format:
-                        "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
-                        currentNewestCreatedAt,
-                    (NRState.shared.blockedPubkeys + [account.publicKey]),
-                    serializedP(account.publicKey),
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds
-                  )
-                fl.loadNewer(taskId: taskId)
+            processResponseCommand: { (taskId, _, _) in
+                model.load(limit: 500)
             },
-            timeoutCommand: { [weak fl] taskId in
-                fl?.loadNewer(taskId: taskId)
+            timeoutCommand: { taskId in
+                model.load(limit: 500)
             })
-
+        
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
     }
     
-    private func saveLastSeenPostCreatedAt() {
+    private func saveLastSeenMentionCreatedAt(mostCreatedAt: Int64) {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Mentions" else { return }
-        if let first = fl.nrPosts.first {
-            let firstCreatedAt = first.created_at
-            bg().perform {
-                if let account = account() {
-                    if account.lastSeenPostCreatedAt < firstCreatedAt {
-                        account.lastSeenPostCreatedAt = firstCreatedAt
-                    }
-                }
-                DataProvider.shared().bgSave()
+        guard mostCreatedAt != 0 else { return }
+        if let account = account() {
+            if account.lastSeenPostCreatedAt < mostCreatedAt {
+                account.lastSeenPostCreatedAt = mostCreatedAt
+                viewContextSave() // Account is from main context
             }
         }
-    }
-    
-    private func loadMore() {
-        guard let account = account() else { return }
-        fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"",
-            (NRState.shared.blockedPubkeys + [account.publicKey]),
-            serializedP(account.publicKey),
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds)
-        fl.loadMore(25)
-        let fetchMoreTask = ReqTask(
-            reqCommand: { [weak fl] (taskId) in
-                guard let fl else { return }
-                req(RM.getMentions(
-                    pubkeys: [account.publicKey],
-                    kinds: [1,9802,30023,34235],
-                    limit: 50,
-                    subscriptionId: taskId,
-                    until: NTimestamp(timestamp: Int(fl.nrPosts.last?.created_at ?? Int64(Date.now.timeIntervalSince1970)))
-                ))
-            },
-            processResponseCommand: { [weak fl] (taskId, _, _) in
-                guard let fl else { return }
-                fl.predicate = NSPredicate(
-                    format: "NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"",
-                    (NRState.shared.blockedPubkeys + [account.publicKey]),
-                    serializedP(account.publicKey),
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds)
-                fl.loadMore(25)
-            })
-
-        backlog.add(fetchMoreTask)
-        fetchMoreTask.fetch()
     }
 }
 
@@ -251,7 +163,7 @@ struct NotificationsMentions: View {
         pe.loadPosts()
     }) {
         VStack {
-            NotificationsMentions(navPath: .constant(NBNavigationPath()))
+            NotificationsMentions(pubkey: NRState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
         }
     }
 }
