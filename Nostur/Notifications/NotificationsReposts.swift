@@ -11,12 +11,13 @@ import NavigationBackport
 
 // Copy pasta from NotificationsMentions, which was copy pasta from NotificationsPosts
 struct NotificationsReposts: View {
+    public let pubkey: String
     @Binding public var navPath: NBNavigationPath
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var settings:SettingsStore = .shared
-    @StateObject private var fl = FastLoader()
+    @EnvironmentObject private var themes: Themes
+    @StateObject private var model = RepostsFeedModel()
+    @ObservedObject private var settings: SettingsStore = .shared
+
     @State private var backlog = Backlog()
-    @State private var didLoad = false
     @Namespace private var top
     
     private var selectedTab: String {
@@ -37,7 +38,7 @@ struct NotificationsReposts: View {
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
                 LazyVStack(spacing: 10) {
-                    ForEach(fl.nrPosts) { nrPost in
+                    ForEach(model.reposts) { nrPost in
                         Box(nrPost: nrPost) {
                             VStack(alignment: .leading, spacing: 0) {
                                 RepostHeader(repostedHeader: nrPost.repostedHeader, pubkey: nrPost.pubkey)
@@ -58,9 +59,9 @@ struct NotificationsReposts: View {
                         .id(nrPost.id)
                     }
                     VStack {
-                        if !fl.nrPosts.isEmpty {
+                        if !model.reposts.isEmpty {
                             Button("Show more") {
-                                loadMore()
+                                model.showMore()
                             }
                             .padding(.bottom, 40)
                             .buttonStyle(.bordered)
@@ -84,27 +85,20 @@ struct NotificationsReposts: View {
         }
         .background(themes.theme.listBackground)
         .onAppear {
-            guard !didLoad else { return }
-            load()
+            model.setup(pubkey: pubkey)
+            model.load(limit: 500)
+            fetchNewer()
         }
-        .onReceive(receiveNotification(.newReposts)) { [weak fl] _ in
-            guard let fl else { return }
-            guard let account = account() else { return }
-            let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
-            fl.onComplete = {
-                saveLastSeenRepostCreatedAt() // onComplete from local database
+        .onChange(of: pubkey) { newPubkey in
+            model.setup(pubkey: newPubkey)
+            model.load(limit: 500)
+            fetchNewer()
+        }
+        .onReceive(receiveNotification(.newReposts)) { _ in
+            // Receive here for logged in account (from NotificationsViewModel). In multi-column we don't track .newReposts for other accounts (unread badge)
+            model.load(limit: 500) { mostRecentCreatedAt in
+                saveLastSeenRepostCreatedAt(mostCreatedAt: mostRecentCreatedAt)
             }
-            fl.predicate = NSPredicate(
-                format:
-                    "created_at >= %i AND otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
-                currentNewestCreatedAt,
-                account.publicKey,
-                NRState.shared.blockedPubkeys + [account.publicKey],
-                NRState.shared.mutedRootIds,
-                NRState.shared.mutedRootIds,
-                NRState.shared.mutedRootIds
-            )
-            fl.loadNewer(250, taskId: "newReposts")
         }
         .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
             bg().perform {
@@ -115,26 +109,10 @@ struct NotificationsReposts: View {
                 }
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { [weak fl, weak backlog] _ in
-            guard let fl, let backlog else { return }
-            fl.nrPosts = []
-            backlog.clear()
-            load()
-        }
-        .onChange(of: settings.webOfTrustLevel) { [weak fl, weak backlog] _ in
-            guard let fl, let backlog else { return }
-            fl.nrPosts = []
-            backlog.clear()
-            load()
-        }
-        .onReceive(receiveNotification(.blockListUpdated)) { [weak fl] notification in
-            guard let fl else { return }
-            let blockedPubkeys = notification.object as! Set<String>
-            fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
-        }
-        .onReceive(receiveNotification(.muteListUpdated)) { [weak fl] _ in
-            guard let fl else { return }
-            fl.nrPosts = fl.nrPosts.filter(notMuted)
+        .onChange(of: settings.webOfTrustLevel) { _ in
+            model.setup(pubkey: pubkey)
+            model.load(limit: 500)
+            fetchNewer()
         }
         .simultaneousGesture(
                DragGesture().onChanged({
@@ -147,117 +125,40 @@ struct NotificationsReposts: View {
                }))
     }
     
-    private func load() {
-        guard let account = account() else { return }
-        didLoad = true
-        fl.predicate = NSPredicate(
-            format: "otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
-            account.publicKey,
-            (NRState.shared.blockedPubkeys + [account.publicKey]),
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds)
-        
-        
-        fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fl.onComplete = { [weak fl] in
-            guard let fl else { return }
-            saveLastSeenRepostCreatedAt() // onComplete from local database
-            self.fetchNewer()
-            fl.onComplete = {
-                saveLastSeenRepostCreatedAt() // onComplete from local database
-            }
-        }
-        fl.loadMore(25)
-    }
-    
     private func fetchNewer() {
-        guard let account = account() else { return }
+        L.og.debug("🥎🥎 fetchNewer() (REPOSTS)")
         let fetchNewerTask = ReqTask(
-            reqCommand: { [weak fl] (taskId) in
-                guard let fl else { return }
-                req(RM.getMentions(
-                    pubkeys: [account.publicKey],
-                    kinds: [6],
-                    limit: 500,
-                    subscriptionId: taskId,
-                    since: NTimestamp(timestamp: Int(fl.nrPosts.first?.created_at ?? 0))
-                ))
+            reqCommand: { taskId in
+                bg().perform {
+                    req(RM.getMentions(
+                        pubkeys: [pubkey],
+                        kinds: [6],
+                        limit: 500,
+                        subscriptionId: taskId,
+                        since: NTimestamp(timestamp: Int(model.mostRecentRepostCreatedAt))
+                    ))
+                }
             },
-            processResponseCommand: { [weak fl] (taskId, _, _) in
-                guard let fl else { return }
-                let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
-                fl.predicate = NSPredicate(
-                    format:
-                        "created_at >= %i AND otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
-                    currentNewestCreatedAt,
-                    account.publicKey,
-                    (NRState.shared.blockedPubkeys + [account.publicKey]),
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds
-                  )
-                fl.loadNewer(taskId: taskId)
+            processResponseCommand: { (taskId, _, _) in
+                model.load(limit: 5000)
             },
-            timeoutCommand: { [weak fl] taskId in
-                guard let fl else { return }
-                fl.loadNewer(taskId: taskId)
+            timeoutCommand: { taskId in
+                model.load(limit: 5000)
             })
-
+        
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
     }
     
-    private func saveLastSeenRepostCreatedAt() {
+    private func saveLastSeenRepostCreatedAt(mostCreatedAt: Int64) {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Reposts" else { return }
-        if let first = fl.nrPosts.first {
-            let firstCreatedAt = first.created_at
-            bg().perform {
-                if let account = account() {
-                    if account.lastSeenRepostCreatedAt < firstCreatedAt {
-                        account.lastSeenRepostCreatedAt = firstCreatedAt
-                    }
-                }
-                DataProvider.shared().bgSave()
+        guard mostCreatedAt != 0 else { return }
+        if let account = account() {
+            if account.lastSeenRepostCreatedAt < mostCreatedAt {
+                account.lastSeenRepostCreatedAt = mostCreatedAt
+                viewContextSave() // Account is from main context
             }
         }
-    }
-    
-    private func loadMore() {
-        guard let account = account() else { return }
-        fl.predicate = NSPredicate(
-            format: "otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
-            account.publicKey,
-            (NRState.shared.blockedPubkeys + [account.publicKey]),
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds)
-        fl.loadMore(25)
-        let fetchMoreTask = ReqTask(
-            reqCommand: { [weak fl] (taskId) in
-                guard let fl else { return }
-                req(RM.getMentions(
-                    pubkeys: [account.publicKey],
-                    kinds: [6],
-                    limit: 50,
-                    subscriptionId: taskId,
-                    until: NTimestamp(timestamp: Int(fl.nrPosts.last?.created_at ?? Int64(Date.now.timeIntervalSince1970)))
-                ))
-            },
-            processResponseCommand: { [weak fl] (taskId, _, _) in
-                guard let fl else { return }
-                fl.predicate = NSPredicate(
-                    format: "otherPubkey == %@ AND kind == 6 AND NOT pubkey IN %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
-                    account.publicKey,
-                    (NRState.shared.blockedPubkeys + [account.publicKey]),
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds)
-                fl.loadMore(25)
-            })
-
-        backlog.add(fetchMoreTask)
-        fetchMoreTask.fetch()
     }
 }
 
@@ -269,7 +170,7 @@ import NavigationBackport
         pe.loadPosts()
     }) {
         VStack {
-            NotificationsReposts(navPath: .constant(NBNavigationPath()))
+            NotificationsReposts(pubkey: NRState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
         }
     }
 }
