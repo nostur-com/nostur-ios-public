@@ -75,18 +75,17 @@ struct NotificationsReactions: View {
         .background(themes.theme.listBackground)
         .onAppear {
             model.setup(pubkey: pubkey)
-            model.load(limit: 500)
+            model.load(limit: 150)
             fetchNewer()
         }
         .onChange(of: pubkey) { newPubkey in
             model.setup(pubkey: newPubkey)
-            model.load(limit: 500)
+            model.load(limit: 150)
             fetchNewer()
         }
         .onReceive(receiveNotification(.newReactions)) { _ in
             // Receive here for logged in account (from NotificationsViewModel). In multi-column we don't track .newReactions for other accounts (unread badge)
-            let currentNewestCreatedAt = model.mostRecentReactionCreatedAt
-            model.load(limit: 5000) { mostRecentCreatedAt in
+            model.load(limit: 150) { mostRecentCreatedAt in
                 saveLastSeenReactionCreatedAt(mostCreatedAt: mostRecentCreatedAt)
             }
         }
@@ -101,7 +100,7 @@ struct NotificationsReactions: View {
         }
         .onChange(of: settings.webOfTrustLevel) { _ in
             model.setup(pubkey: pubkey)
-            model.load(limit: 500)
+            model.load(limit: 150)
             fetchNewer()
         }
         .simultaneousGesture(
@@ -123,17 +122,17 @@ struct NotificationsReactions: View {
                     req(RM.getMentions(
                         pubkeys: [pubkey],
                         kinds: [7],
-                        limit: 5000,
+                        limit: 500,
                         subscriptionId: taskId,
                         since: NTimestamp(timestamp: Int(model.mostRecentReactionCreatedAt))
                     ))
                 }
             },
             processResponseCommand: { (taskId, _, _) in
-                model.load(limit: 5000)
+                model.load(limit: 500)
             },
             timeoutCommand: { taskId in
-                model.load(limit: 5000)
+                model.load(limit: 500)
             })
         
         backlog.add(fetchNewerTask)
