@@ -314,6 +314,7 @@
 		1FA7B57E2BDBBC03008A78A8 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1FA7B57D2BDBBC03008A78A8 /* InfoPlist.xcstrings */; };
 		1FAC3F3B2AD049D7009BA810 /* ComposePost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */; };
 		1FAC42B52C03CB3900362997 /* ReactionsFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC42B42C03CB3900362997 /* ReactionsFeedModel.swift */; };
+		1FAC42B92C048EDB00362997 /* ZapsFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */; };
 		1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
 		1FAE1FCE2A2361CC0044E141 /* LazyNoteMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */; };
 		1FAE9B442A2F0ADB00439A63 /* ProfileImagesHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAE9B432A2F0ADB00439A63 /* ProfileImagesHelpers.swift */; };
@@ -832,6 +833,7 @@
 		1FA7B57D2BDBBC03008A78A8 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposePost.swift; sourceTree = "<group>"; };
 		1FAC42B42C03CB3900362997 /* ReactionsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionsFeedModel.swift; sourceTree = "<group>"; };
+		1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapsFeedModel.swift; sourceTree = "<group>"; };
 		1FAC67AF29F5527800798661 /* DisabledAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DisabledAssets.xcassets; sourceTree = "<group>"; };
 		1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyNoteMenu.swift; sourceTree = "<group>"; };
 		1FAE9B432A2F0ADB00439A63 /* ProfileImagesHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImagesHelpers.swift; sourceTree = "<group>"; };
@@ -1713,6 +1715,7 @@
 			isa = PBXGroup;
 			children = (
 				1FAC42B42C03CB3900362997 /* ReactionsFeedModel.swift */,
+				1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */,
 			);
 			path = MultiFeeds;
 			sourceTree = "<group>";
@@ -2621,6 +2624,7 @@
 				1FA1CA3B2AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift in Sources */,
 				1F72FB362A2BA30E001370A1 /* NWCURI.swift in Sources */,
 				1F2AC5412B12F00E00F70662 /* DebugWindow.swift in Sources */,
+				1FAC42B92C048EDB00362997 /* ZapsFeedModel.swift in Sources */,
 				1FC0F5A32A4AEB00004E4DAA /* ArticleById.swift in Sources */,
 				1FDB74582BD6B71700649E0A /* PossibleImposterLabel.swift in Sources */,
 				1FD2815A2B16B2A600978A9D /* ImageResizer.swift in Sources */,
