@@ -314,6 +314,7 @@
 		1FA7B57E2BDBBC03008A78A8 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1FA7B57D2BDBBC03008A78A8 /* InfoPlist.xcstrings */; };
 		1FAC3F3B2AD049D7009BA810 /* ComposePost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */; };
 		1FAC42B52C03CB3900362997 /* ReactionsFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC42B42C03CB3900362997 /* ReactionsFeedModel.swift */; };
+		1FAC42B72C03D1C300362997 /* RepostsFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC42B62C03D1C300362997 /* RepostsFeedModel.swift */; };
 		1FAC42B92C048EDB00362997 /* ZapsFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */; };
 		1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
 		1FAE1FCE2A2361CC0044E141 /* LazyNoteMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */; };
@@ -833,6 +834,7 @@
 		1FA7B57D2BDBBC03008A78A8 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposePost.swift; sourceTree = "<group>"; };
 		1FAC42B42C03CB3900362997 /* ReactionsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionsFeedModel.swift; sourceTree = "<group>"; };
+		1FAC42B62C03D1C300362997 /* RepostsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepostsFeedModel.swift; sourceTree = "<group>"; };
 		1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapsFeedModel.swift; sourceTree = "<group>"; };
 		1FAC67AF29F5527800798661 /* DisabledAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DisabledAssets.xcassets; sourceTree = "<group>"; };
 		1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyNoteMenu.swift; sourceTree = "<group>"; };
@@ -1715,6 +1717,7 @@
 			isa = PBXGroup;
 			children = (
 				1FAC42B42C03CB3900362997 /* ReactionsFeedModel.swift */,
+				1FAC42B62C03D1C300362997 /* RepostsFeedModel.swift */,
 				1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */,
 			);
 			path = MultiFeeds;
@@ -2329,6 +2332,7 @@
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FFED7FF2A3970A800A0B1E8 /* PhotosPicker.swift in Sources */,
 				1FED0D892ACB1D42002DAC02 /* FooterConfigurator.swift in Sources */,
+				1FAC42B72C03D1C300362997 /* RepostsFeedModel.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1F41527F2A95B12800EC63B2 /* PostAccountSwitcher.swift in Sources */,
 				1FB8BD5C2AAB8D9600FBC15F /* NotificationSettings.swift in Sources */,

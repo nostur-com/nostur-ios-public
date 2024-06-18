@@ -127,7 +127,7 @@ struct NotificationsView: View {
                 case "Reactions":
                     NotificationsReactions(pubkey: account.publicKey, navPath: $navPath)
                 case "Reposts":
-                    NotificationsReposts(navPath: $navPath)
+                    NotificationsReposts(pubkey: account.publicKey, navPath: $navPath)
                 case "Zaps":
                     NotificationsZaps(pubkey: account.publicKey, navPath: $navPath)
                 case "Followers":
