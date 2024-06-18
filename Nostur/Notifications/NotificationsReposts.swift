@@ -86,17 +86,17 @@ struct NotificationsReposts: View {
         .background(themes.theme.listBackground)
         .onAppear {
             model.setup(pubkey: pubkey)
-            model.load(limit: 500)
+            model.load(limit: 50)
             fetchNewer()
         }
         .onChange(of: pubkey) { newPubkey in
             model.setup(pubkey: newPubkey)
-            model.load(limit: 500)
+            model.load(limit: 50)
             fetchNewer()
         }
         .onReceive(receiveNotification(.newReposts)) { _ in
             // Receive here for logged in account (from NotificationsViewModel). In multi-column we don't track .newReposts for other accounts (unread badge)
-            model.load(limit: 500) { mostRecentCreatedAt in
+            model.load(limit: 50) { mostRecentCreatedAt in
                 saveLastSeenRepostCreatedAt(mostCreatedAt: mostRecentCreatedAt)
             }
         }
@@ -111,7 +111,7 @@ struct NotificationsReposts: View {
         }
         .onChange(of: settings.webOfTrustLevel) { _ in
             model.setup(pubkey: pubkey)
-            model.load(limit: 500)
+            model.load(limit: 50)
             fetchNewer()
         }
         .simultaneousGesture(
@@ -140,10 +140,10 @@ struct NotificationsReposts: View {
                 }
             },
             processResponseCommand: { (taskId, _, _) in
-                model.load(limit: 5000)
+                model.load(limit: 500)
             },
             timeoutCommand: { taskId in
-                model.load(limit: 5000)
+                model.load(limit: 500)
             })
         
         backlog.add(fetchNewerTask)
