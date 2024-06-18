@@ -397,7 +397,10 @@ public class ConnectionPool: ObservableObject {
     @MainActor
     func sendEphemeralMessage(_ message:String, relay:String) {
         let connection = addEphemeralConnection(RelayData.new(url: relay, read: true, write: false, search: true, auth: false, excludedPubkeys: []))
-        connection.connect(andSend: message)
+        if !connection.isConnected {
+            connection.connect()
+        }
+        connection.sendMessage(message)
     }
 }
 

@@ -279,6 +279,31 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
+    // didBecomeInvalidWithError
+    public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: (any Error)?) {
+    #if DEBUG
+        L.sockets.debug("🔴🔴 didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
+    #endif
+        if let error {
+            self.didReceiveError(error)
+        }
+    }
+    
+    // didReceiveInformationalResponse
+    @available(iOS 17.0, *)
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didReceiveInformationalResponse response: HTTPURLResponse) {
+#if DEBUG
+        L.sockets.debug("🔴🔴 didReceiveInformationalResponse: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(response.statusCode.description)")
+#endif
+    }
+    
+    // didCompleteWithError
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
+#if DEBUG
+    L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
+#endif
+    }
+    
     public func didReceiveMessage(string: String) {
         // Respond to a WebSocket connection receiving a `String` message
         queue.async(flags: .barrier) { [weak self] in
@@ -349,6 +374,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
+    // didOpenWithProtocol
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
@@ -394,7 +420,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             for out in outQueue {
                 webSocketTask.send(.string(out.text)) { error in
-                    L.sockets.debug("🔴🔴 send error \(self.url): \(error?.localizedDescription ?? "") -- \(out.text)")
+                    if let error {
+                        self.didReceiveError(error)
+                    }
                 }
                 self.outQueue.removeAll(where: { $0.id == out.id })
             }
@@ -402,6 +430,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         L.sockets.debug("🏎️🏎️🔌 CONNECTED \(self.url)")
     }
     
+    // didCloseWith
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         
         queue.async(flags: .barrier) { [weak self] in

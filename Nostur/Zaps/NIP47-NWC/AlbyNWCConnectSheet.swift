@@ -146,7 +146,9 @@ struct AlbyNWCConnectSheet: View {
                 
                 L.og.info("⚡️ Adding NWC connection")
                 let newConnection = ConnectionPool.shared.addNWCConnection(connectionId: connectionId, url: relay)
-                newConnection.connect()
+                if !newConnection.isConnected {
+                    newConnection.connect()
+                }
                 NWCRequestQueue.shared.nwcConnection = nwcConnection
                 Importer.shared.nwcConnection = nwcConnection
                 
