@@ -11,10 +11,10 @@ import Combine
 import NavigationBackport
 
 struct NotificationsReactions: View {
+    public let pubkey: String
     @Binding public var navPath: NBNavigationPath
-    @StateObject private var fl = FastLoader()
-    @State private var didLoad = false
     @EnvironmentObject private var themes: Themes
+    @StateObject private var model = ReactionsFeedModel()
     @State private var backlog = Backlog()
     @ObservedObject private var settings: SettingsStore = .shared
     
@@ -30,30 +30,6 @@ struct NotificationsReactions: View {
     
     @Namespace private var top
     
-    private func myNotesReactedTo(_ events:[Event]) -> [Event] {
-        
-        var sortingDict:[Event: Int64] = [:] // Event and most recent reaction created_At
-        
-        for reaction in events {
-            guard let reactionTo = reaction.reactionTo else { continue }
-            if (sortingDict.keys.contains(reactionTo)) {
-                if reaction.created_at > sortingDict[reactionTo]! {
-                    sortingDict[reactionTo] = reaction.created_at
-                }
-            }
-            else {
-                sortingDict[reactionTo] = reaction.created_at
-            }
-        }
-        return sortingDict.keys.sorted(by: { (sortingDict[$0] ?? 0) > (sortingDict[$1] ?? 0) } )
-    }
-    
-    @State private var myNotesReactedToAsNRPosts:[NRPost] = []
-    
-    private func reactionsForNote(_ id:String) -> [Event] {
-        fl.events.compactMap {  $0.reactionToId == id ? $0 : nil }
-    }
-    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -62,40 +38,22 @@ struct NotificationsReactions: View {
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
                 LazyVStack(alignment:.leading, spacing: 10) {
-                    ForEach(myNotesReactedToAsNRPosts) { nrPost in
-                        Box(nrPost: nrPost, navMode: .view) {
+                    ForEach(model.groupedReactions) { groupedReactions in
+                        Box(nrPost: groupedReactions.nrPost, navMode: .view) {
                             VStack(alignment:.leading, spacing: 3) {
-                                ReactionsForThisNote(reactions:reactionsForNote(nrPost.id))
-                                NoteMinimalContentView(nrPost: nrPost)
+                                ReactionsForThisNote(reactions: groupedReactions.reactions)
+                                NoteMinimalContentView(nrPost: groupedReactions.nrPost)
                             }
                         }
-                        .id(nrPost.id)
+                        .id(groupedReactions.nrPost.id)
                     }
                     VStack {
-                        if !myNotesReactedToAsNRPosts.isEmpty {
+                        if !model.groupedReactions.isEmpty {
                             Button("Show more") {
-                                guard let account = account() else { return }
-                                fl.predicate = NSPredicate(
-                                    format: "otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
-                                    account.publicKey,
-                                    NRState.shared.blockedPubkeys)
-            //                    fl.offset = (fl.events.count - 1)
-                                fl.loadMore(500)
-                                if let until = fl.events.last?.created_at {
-                                    req(RM.getMentions(
-                                        pubkeys: [account.publicKey],
-                                        kinds: [7],
-                                        limit: 500,
-                                        until: NTimestamp(timestamp: Int(until))
-                                    ))
-                                }
-                                else {
-                                    req(RM.getMentions(pubkeys: [account.publicKey], kinds: [7], limit:500))
-                                }
+                                model.showMore()
                             }
                             .padding(.bottom, 40)
                             .buttonStyle(.bordered)
-    //                        .tint(.accentColor)
                         }
                         else {
                             ProgressView()
@@ -116,24 +74,21 @@ struct NotificationsReactions: View {
         }
         .background(themes.theme.listBackground)
         .onAppear {
-            guard !didLoad else { return }
-            load()
+            model.setup(pubkey: pubkey)
+            model.load(limit: 500)
+            fetchNewer()
         }
-        .onReceive(receiveNotification(.newReactions)) { [weak fl] _ in
-            guard let fl else { return }
-            guard let account = account() else { return }
-            let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
-            fl.onComplete = {
-                saveLastSeenReactionCreatedAt() // onComplete from local database
+        .onChange(of: pubkey) { newPubkey in
+            model.setup(pubkey: newPubkey)
+            model.load(limit: 500)
+            fetchNewer()
+        }
+        .onReceive(receiveNotification(.newReactions)) { _ in
+            // Receive here for logged in account (from NotificationsViewModel). In multi-column we don't track .newReactions for other accounts (unread badge)
+            let currentNewestCreatedAt = model.mostRecentReactionCreatedAt
+            model.load(limit: 5000) { mostRecentCreatedAt in
+                saveLastSeenReactionCreatedAt(mostCreatedAt: mostRecentCreatedAt)
             }
-            fl.predicate = NSPredicate(
-                format:
-                    "created_at >= %i AND otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
-                    currentNewestCreatedAt,
-                account.publicKey,
-                NRState.shared.blockedPubkeys
-            )
-            fl.loadNewerEvents(5000, taskId:"newReactions")
         }
         .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
             bg().perform {
@@ -144,17 +99,10 @@ struct NotificationsReactions: View {
                 }
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { [weak fl, weak backlog] _ in
-            guard let fl, let backlog else { return }
-            fl.events = []
-            backlog.clear()
-            load()
-        }
-        .onChange(of: settings.webOfTrustLevel) { [weak fl, weak backlog] _ in
-            guard let fl, let backlog else { return }
-            fl.events = []
-            backlog.clear()
-            load()
+        .onChange(of: settings.webOfTrustLevel) { _ in
+            model.setup(pubkey: pubkey)
+            model.load(limit: 500)
+            fetchNewer()
         }
         .simultaneousGesture(
                DragGesture().onChanged({
@@ -167,131 +115,56 @@ struct NotificationsReactions: View {
                }))
     }
     
-    @State var subscriptions = Set<AnyCancellable>()
-    
-    func load() {
-        guard let account = account() else { return }
-        didLoad = true
-        fl.$events
-            .sink { events in
-                let myNotesReactedTo = self.myNotesReactedTo(events)
-                bg().perform {
-                    let transformed = myNotesReactedTo
-                        .compactMap { $0.toBG() }
-                        .map { NRPost(event: $0) }
-                    
-                    DispatchQueue.main.async { 
-                        self.myNotesReactedToAsNRPosts = transformed
-                    }
-                }
-            }
-            .store(in: &subscriptions)
-        
-        fl.reset()
-        fl.nrPostTransform = false
-        fl.predicate = NSPredicate(
-            format: "otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
-            account.publicKey,
-            NRState.shared.blockedPubkeys
-        )
-        fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fl.onComplete = { [weak fl] in
-            saveLastSeenReactionCreatedAt() // onComplete from local database
-            self.fetchNewer()
-            fl?.onComplete = { // set onComplete again because self.fetchNewer() should only run once
-                saveLastSeenReactionCreatedAt() // onComplete from local database
-            }
-        }
-        fl.loadMore(500)
-        
-        fixReactionsWithMissingRelation()
-    }
-    
     func fetchNewer() {
-        guard let account = account() else { return }
+        L.og.debug("🥎🥎 fetchNewer()")
         let fetchNewerTask = ReqTask(
-            reqCommand: { [weak fl] (taskId) in
-                guard let fl else { return }
-                req(RM.getMentions(
-                    pubkeys: [account.publicKey],
-                    kinds: [7],
-                    limit: 5000,
-                    subscriptionId: taskId,
-                    since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
-                ))
+            reqCommand: { taskId in
+                bg().perform {
+                    req(RM.getMentions(
+                        pubkeys: [pubkey],
+                        kinds: [7],
+                        limit: 5000,
+                        subscriptionId: taskId,
+                        since: NTimestamp(timestamp: Int(model.mostRecentReactionCreatedAt))
+                    ))
+                }
             },
-            processResponseCommand: { [weak fl] (taskId, _, _) in
-                guard let fl else { return }
-//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
-                let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
-                fl.predicate = NSPredicate(
-                    format: "created_at >= %i AND otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
-                    currentNewestCreatedAt,
-                    account.publicKey,
-                    NRState.shared.blockedPubkeys
-                )
-                fl.loadNewerEvents(5000, taskId: taskId)
+            processResponseCommand: { (taskId, _, _) in
+                model.load(limit: 5000)
             },
-            timeoutCommand: { [weak fl] taskId in
-                guard let fl else { return }
-                fl.loadNewerEvents(5000, taskId: taskId)
+            timeoutCommand: { taskId in
+                model.load(limit: 5000)
             })
         
         backlog.add(fetchNewerTask)
         fetchNewerTask.fetch()
     }
     
-    func saveLastSeenReactionCreatedAt() {
+    func saveLastSeenReactionCreatedAt(mostCreatedAt: Int64) {
         guard selectedTab == "Notifications" && selectedNotificationsTab == "Reactions" else { return }
-        if let first = fl.events.first {
-            let firstCreatedAt = first.created_at
-            bg().perform {
-                if let account = account() {
-                    if account.lastSeenReactionCreatedAt < firstCreatedAt {
-                        account.lastSeenReactionCreatedAt = firstCreatedAt
-                    }
-                }
-                DataProvider.shared().bgSave()
+        guard mostCreatedAt != 0 else { return }
+        if let account = account() {
+            if account.lastSeenReactionCreatedAt < mostCreatedAt {
+                account.lastSeenReactionCreatedAt = mostCreatedAt
+                viewContextSave() // Account is from main context
             }
-        }
-    }
-    
-    func fixReactionsWithMissingRelation() {
-        guard let account = account() else { return }
-        let mr = Event.fetchRequest()
-        mr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        mr.predicate = NSPredicate(format: "otherPubkey == %@ AND kind == 7 AND reactionTo == nil", account.publicKey)
-
-        Task.detached(priority: .medium) {
-            bg().perform {
-                if let danglingReactions = try? bg().fetch(mr) {
-                    danglingReactions
-                        .forEach { reaction in
-                            _ = reaction.reactionTo_ // this lazy load fixes the relation
-                        }
-                }
-            }
-
         }
     }
 }
 
+
+
+
 struct ReactionsForThisNote: View {
-    public var reactions:[Event]
     
-    private var withoutDuplicates:[Event] { // Author may accidentally like multiple times
-        reactions
-            .reduce(into: [String: Event]()) { result, event in
-                result[event.pubkey] = event
-            }.values.sorted(by: { $0.created_at > $1.created_at })
-    }
+    public var reactions: [Reaction]
     
     var body: some View {
         VStack(alignment:.leading) {
             ZStack(alignment:.leading) {
-                ForEach(withoutDuplicates.prefix(10).indices, id:\.self) { index in
+                ForEach(reactions.prefix(10).indices, id:\.self) { index in
                     ZStack(alignment:.leading) {
-                        PFP(pubkey: reactions[index].pubkey, contact: reactions[index].contact, forceFlat: true)
+                        PFP(pubkey: reactions[index].pubkey, pictureUrl: reactions[index].pictureUrl, forceFlat: true)
                             .id(reactions[index].id)
                             .zIndex(-Double(index))
                         Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")
@@ -303,43 +176,47 @@ struct ReactionsForThisNote: View {
                     .id(reactions[index].id)
                 }
             }
-            if (withoutDuplicates.count > 1) {
-                Text("**\(withoutDuplicates.first(where: { $0.contact?.authorName != nil })?.contact?.authorName ?? "???")** and \(withoutDuplicates.count - 1) others reacted on your post")
+            if (reactions.count > 1) {
+                Text("**\(reactions.first(where: { $0.authorName != nil })?.authorName ?? "???")** and \(reactions.count - 1) others reacted on your post")
                     
             }
             else {
-                Text("**\(withoutDuplicates.first(where: { $0.contact?.authorName != nil })?.contact?.authorName ?? "???")** reacted on your post")
+                Text("**\(reactions.first(where: { $0.authorName != nil })?.authorName ?? "???")** reacted on your post")
             }
         }
         .frame(maxWidth:.infinity, alignment:.leading)
         .overlay(alignment: .topTrailing) {
-            if let first = withoutDuplicates.first {
-                Ago(first.created_at).layoutPriority(2)
+            if let first = reactions.first {
+                Ago(first.createdAt).layoutPriority(2)
                     .foregroundColor(.gray)
             }
         }
         .drawingGroup()
         .onAppear {
-            self.fetchMissingEventContacts(events:Array(withoutDuplicates.prefix(10)))
+            self.fetchMissingEventContacts(events:Array(reactions.prefix(10)))
         }
     }
     
-    private func fetchMissingEventContacts(events:[Event]) {
-        let pubkeys = pubkeys(events)
-        let contacts = Contact.fetchByPubkeys(pubkeys, context: DataProvider.shared().viewContext)
-        let missingPubkeys = pubkeys.filter {
-            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
-        }
-        let emptyContactPubkeys = pubkeys
-            .compactMap { pubkey in
-                contacts.first(where: { $0.pubkey == pubkey })
+    private func fetchMissingEventContacts(reactions: [Reaction]) {
+        let bgContext = bg()
+        bgContext.perform {
+            let pubkeys = reactions.map { $0.pubkey }
+            let contacts = Contact.fetchByPubkeys(pubkeys, context: bgContext)
+            let missingPubkeys = pubkeys.filter {
+                contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
             }
-            .filter { $0.metadata_created_at == 0 }
-            .map { $0.pubkey }
+            let emptyContactPubkeys = pubkeys
+                .compactMap { pubkey in
+                    contacts.first(where: { $0.pubkey == pubkey })
+                }
+                .filter { $0.metadata_created_at == 0 }
+                .map { $0.pubkey }
+            
+            guard !(missingPubkeys + emptyContactPubkeys).isEmpty else { return }
+            L.og.debug("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
+            QueuedFetcher.shared.enqueue(pTags: (missingPubkeys + emptyContactPubkeys))
+        }
         
-        guard !(missingPubkeys + emptyContactPubkeys).isEmpty else { return }
-        L.og.debug("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
-        QueuedFetcher.shared.enqueue(pTags: (missingPubkeys + emptyContactPubkeys))
     }
 }
 
@@ -350,7 +227,7 @@ struct NotificationsV_Previews: PreviewProvider {
             pe.loadRepliesAndReactions()
         }) {
             VStack {
-                NotificationsReactions(navPath: .constant(NBNavigationPath()))
+                NotificationsReactions(pubkey: NRState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
             }
         }
     }
