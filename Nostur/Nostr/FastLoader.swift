@@ -255,10 +255,10 @@ class FastLoader: ObservableObject {
 }
 
 struct RelayFetchResult {
-    let id:String
-    let age:RelayFetchResult.age
+    let id: String
+    let age: RelayFetchResult.age
     
-    let events:[Event]
+    let events: [Event]
 
     enum age {
         case newer

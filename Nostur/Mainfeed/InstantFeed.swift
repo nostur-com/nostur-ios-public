@@ -39,7 +39,6 @@ class InstantFeed {
         self.isRunning = true
         self.pubkey = pubkey
         self.onComplete = onComplete
-//        SocketPool.shared.ping()
         fetchContactListPubkeys(pubkey: pubkey)
     }
     
@@ -47,7 +46,6 @@ class InstantFeed {
         L.og.notice("🟪 InstantFeed.start(\(pubkeys.count) pubkeys)")
         self.isRunning = true
         self.onComplete = onComplete
-//        SocketPool.shared.ping()
         self.pubkeys = pubkeys
 //        fetchPostsFromRelays() <-- No need, already done on .pubkeys { didSet }
     }
@@ -59,16 +57,6 @@ class InstantFeed {
         self.relays = relays
         fetchPostsFromGlobalishRelays()
     }
-    
-//    func checkConnection() {
-//        L.og.notice("🟪 Checking connection (PING) ")
-//        pongReceiver = receiveNotification(.pong)
-//            .sink { [weak self] _ in
-//                guard let self = self else { return }
-//                self.pongReceived = true
-//            }
-//        SocketPool.shared.ping()
-//    }
     
     private var kind3listener:AnyCancellable?
 
