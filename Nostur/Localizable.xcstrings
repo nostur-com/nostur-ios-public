@@ -53,6 +53,7 @@
       }
     },
     "__Source code__" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -104,6 +105,9 @@
           }
         }
       }
+    },
+    "[__Source code__](https://github.com/nostur-com/nostur-ios-public)" : {
+
     },
     "[#asknostr](nostur:t:asknostr)" : {
       "localizations" : {
@@ -820,6 +824,9 @@
           }
         }
       }
+    },
+    "1" : {
+
     },
     "1) Send screenshot of this error and wait for an update with fix" : {
       "localizations" : {
@@ -1939,6 +1946,9 @@
         }
       }
     },
+    "Compress and Upload Video" : {
+
+    },
     "Configure contacts..." : {
       "localizations" : {
         "nl" : {
@@ -3049,6 +3059,16 @@
         }
       }
     },
+    "Fetching..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ophalen..."
+          }
+        }
+      }
+    },
     "fetchRelays" : {
       "localizations" : {
         "nl" : {
@@ -4144,6 +4164,9 @@
         }
       }
     },
+    "NColumnFeedView" : {
+
+    },
     "New direct message" : {
       "comment" : "Navigation title for a new Direct Message",
       "localizations" : {
@@ -4308,6 +4331,9 @@
           }
         }
       }
+    },
+    "Niks" : {
+
     },
     "No articles found from your follow list in selected time frame." : {
       "localizations" : {
@@ -5967,6 +5993,12 @@
         }
       }
     },
+    "Select Video" : {
+
+    },
+    "Selected Video: %@" : {
+
+    },
     "Self-hosted nsecBunker" : {
       "localizations" : {
         "nl" : {
@@ -6973,6 +7005,16 @@
         }
       }
     },
+    "Trying more relays..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoeken..."
+          }
+        }
+      }
+    },
     "Turn off to save battery life and trust the relays for the authenticity of messages" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -7138,6 +7180,9 @@
           }
         }
       }
+    },
+    "Uploading..." : {
+
     },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",

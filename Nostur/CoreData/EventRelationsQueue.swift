@@ -61,7 +61,7 @@ class EventRelationsQueue {
     /// - Parameter event: Event should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingEvent(_ event: Event? = nil, debugInfo:String? = "") {
         guard let event = event else { return }
-        let isBGevent = event.managedObjectContext == ctx
+        let isBGevent = event.managedObjectContext == ctx || event.managedObjectContext == nil
         if Thread.isMainThread {
             if isBGevent {
                 ctx.perform { [unowned self] in

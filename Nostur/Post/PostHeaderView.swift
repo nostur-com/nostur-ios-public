@@ -136,7 +136,7 @@ struct EventHeaderContainer: View {
                 .onAppear {
                     let pubkey = event.pubkey
                     guard let contact = event.contact else {
-                        bg().perform {
+                        bg().perform { // TODO: event is from main context, should move away from that
                             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "EventHeaderContainer.001")
                             QueuedFetcher.shared.enqueue(pTag: pubkey)
                         }
