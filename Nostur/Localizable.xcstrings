@@ -1946,9 +1946,6 @@
         }
       }
     },
-    "Compress and Upload Video" : {
-
-    },
     "Configure contacts..." : {
       "localizations" : {
         "nl" : {
@@ -2804,6 +2801,9 @@
           }
         }
       }
+    },
+    "End test" : {
+
     },
     "Enter a NIP-96 compatible media server address to host your images" : {
       "localizations" : {
@@ -4164,9 +4164,6 @@
         }
       }
     },
-    "NColumnFeedView" : {
-
-    },
     "New direct message" : {
       "comment" : "Navigation title for a new Direct Message",
       "localizations" : {
@@ -4331,9 +4328,6 @@
           }
         }
       }
-    },
-    "Niks" : {
-
     },
     "No articles found from your follow list in selected time frame." : {
       "localizations" : {
@@ -5993,12 +5987,6 @@
         }
       }
     },
-    "Select Video" : {
-
-    },
-    "Selected Video: %@" : {
-
-    },
     "Self-hosted nsecBunker" : {
       "localizations" : {
         "nl" : {
@@ -7180,9 +7168,6 @@
           }
         }
       }
-    },
-    "Uploading..." : {
-
     },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",
