@@ -114,6 +114,7 @@ class Importer {
         }
     }
     
+    // 876.00 ms    5.3%    0 s                   closure #1 in Importer.importEvents()
     public func importEvents() {
         let bgContext = bg()
         bgContext.perform { [unowned self] in
@@ -253,6 +254,7 @@ class Importer {
                         }
                     }
                     
+                    // 493.00 ms    3.0%    1.00 ms specialized static Event.saveEvent(event:relays:flags:kind6firstQuote:context:)
                     let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote, context: bgContext) // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
                     NotificationsViewModel.shared.checkNeedsUpdate(savedEvent)
                     saved = saved + 1
@@ -266,6 +268,8 @@ class Importer {
                     if event.kind == .setMetadata {
                         Contact.saveOrUpdateContact(event: event)
                     }
+                    
+                    
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .reaction {
@@ -469,6 +473,7 @@ class Importer {
                         }
                     }
                     
+                    // 493.00 ms    3.0%    1.00 ms specialized static Event.saveEvent(event:relays:flags:kind6firstQuote:context:)
                     let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote, context: bgContext)
                     NotificationsViewModel.shared.checkNeedsUpdate(savedEvent)
                     saved = saved + 1

@@ -271,7 +271,7 @@ class NotificationsViewModel: ObservableObject {
             activeSubscriptionId: "Notifications")
     }
     
-    public var requestSince:Int64 { // TODO: If event .created_at, is in the future don't save date
+    public var requestSince: Int64 { // TODO: If event .created_at, is in the future don't save date
         let oneWeekAgo = (Int64(Date.now.timeIntervalSince1970) - (7 * 3600 * 24))
         guard let account = account() else { return oneWeekAgo }
         return [
