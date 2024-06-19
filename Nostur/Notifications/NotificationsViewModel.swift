@@ -44,7 +44,11 @@ class NotificationsViewModel: ObservableObject {
         guard let account = account() else { return }
         switch event.kind {
         case 1,4,9802,30023,34235: // TODO: Should check if not muted or blocked
+            let before = needsUpdate
             needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == account.publicKey })
+            if needsUpdate && needsUpdate != before {
+                self.checkForUnreadMentions()
+            }
         case 6:
             needsUpdate = (event.otherPubkey == account.publicKey) // TODO: Should ignore blocked or muted
         case 7:
