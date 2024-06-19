@@ -149,7 +149,25 @@ extension PreviewEnvironment {
             account5.name = "Alt"
             account5.about = "5th account, with private kay"
             
-            NRState.shared.accounts = [account, account2, account3, account4, account5]
+            let account6keys = NKeys.newKeys()
+            let account6 = CloudAccount(context: self.context)
+            account6.flags = "full_account"
+            account6.createdAt = Date()
+            account6.publicKey = account6keys.publicKeyHex()
+            account6.privateKey = account6keys.privateKeyHex()
+            account6.name = "Alt"
+            account6.about = "6th account, with private kay"
+            
+            let account7keys = NKeys.newKeys()
+            let account7 = CloudAccount(context: self.context)
+            account7.flags = "full_account"
+            account7.createdAt = Date()
+            account7.publicKey = account7keys.publicKeyHex()
+            account7.privateKey = account7keys.privateKeyHex()
+            account7.name = "Alt"
+            account7.about = "5th account, with private kay"
+            
+            NRState.shared.accounts = [account, account2, account3, account4, account5, account6, account7]
         }
 //        NRState.shared.loadAccounts()
         

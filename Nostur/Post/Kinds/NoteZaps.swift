@@ -99,6 +99,7 @@ struct NoteZaps: View {
                     }
                     else if zapFrom.contact == nil {
                         missing.append(zapFrom)
+                        // TODO: this is from main now, need to change all zap events to bg context.
                         EventRelationsQueue.shared.addAwaitingEvent(zapFrom, debugInfo: "NoteZaps.002")
                     }
                     if zapFrom.contact == nil || zapFrom.contact?.metadata_created_at == 0 {

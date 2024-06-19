@@ -115,7 +115,7 @@ struct NotificationsReactions: View {
     }
     
     func fetchNewer() {
-        L.og.debug("🥎🥎 fetchNewer()")
+        L.og.debug("🥎🥎 fetchNewer() (REACTIONS")
         let fetchNewerTask = ReqTask(
             reqCommand: { taskId in
                 bg().perform {
@@ -192,7 +192,7 @@ struct ReactionsForThisNote: View {
         }
         .drawingGroup()
         .onAppear {
-            self.fetchMissingEventContacts(events:Array(reactions.prefix(10)))
+            self.fetchMissingEventContacts(reactions: Array(reactions.prefix(10)))
         }
     }
     
