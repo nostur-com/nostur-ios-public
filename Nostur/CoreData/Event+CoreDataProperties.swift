@@ -883,6 +883,7 @@ extension Event {
             savedEvent.contact = contact
         }
         else {
+            // 100.00 ms    0.6%    0 s                     static Contact.fetchByPubkey(_:context:)
             savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
         }
         savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags) // TODO: why encode again, need to just store what we received before (performance)
