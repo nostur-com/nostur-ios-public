@@ -233,7 +233,7 @@ class NotificationsViewModel: ObservableObject {
             guard let self else { return }
             if error == nil {
                 // Provisional authorization granted.
-                self.objectWillChange
+                self.unreadPublisher // TODO: Also do .unreadPublisher for DMs to fix badge/unread mismatch
                     .sink { [weak self] _ in
                         guard let self else { return }
                         let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
