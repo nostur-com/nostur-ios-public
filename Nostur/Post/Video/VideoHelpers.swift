@@ -49,7 +49,7 @@ func getVideoLength(asset:AVAsset) async -> String? {
     return "\(minutesText):\(secondsText)"
 }
 
-func getVideoFirstFrame(asset:AVAsset) async -> UIImage? {
+func getVideoFirstFrame(asset: AVAsset) async -> UIImage? {
     let imageGenerator = AVAssetImageGenerator(asset: asset)
     imageGenerator.appliesPreferredTrackTransform = true
     

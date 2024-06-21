@@ -34,9 +34,9 @@ public final class TypingTextModel: ObservableObject {
             draft = text
         }
     }
-    @Published var pastedImages:[PostedImageMeta] = []
-    @Published var selectedMentions:Set<Contact> = [] // will become p-tags in the final post
-    @Published var unselectedMentions:Set<Contact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
+    @Published var pastedImages: [PostedImageMeta] = []
+    @Published var selectedMentions: Set<Contact> = [] // will become p-tags in the final post
+    @Published var unselectedMentions: Set<Contact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
     @Published var sending = false
     @Published var uploading = false
     private var subscriptions = Set<AnyCancellable>()
@@ -129,8 +129,8 @@ public final class NewPostModel: ObservableObject {
                     return
                 }
                 
-                let maxWidth:CGFloat = 2800.0
-                let mediaRequestBags = typingTextModel.pastedImages
+                let maxWidth: CGFloat = 2800.0
+                let mediaRequestBags: [MediaRequestBag] = typingTextModel.pastedImages
                     .compactMap { imageMeta in // Resize images
                         let scale = imageMeta.imageData.size.width > maxWidth ? imageMeta.imageData.size.width / maxWidth : 1
                         let size = CGSize(width: imageMeta.imageData.size.width / scale, height: imageMeta.imageData.size.height / scale)
@@ -153,7 +153,7 @@ public final class NewPostModel: ObservableObject {
                 
                 uploader.queued = mediaRequestBags
                 uploader.onFinish = {
-                    let imetas:[Nostur.Imeta] = mediaRequestBags
+                    let imetas: [Nostur.Imeta] = mediaRequestBags
                         .compactMap {
                             guard let url = $0.downloadUrl else { return nil }
                             return Imeta(url: url, dim: $0.dim, hash: $0.sha256)
@@ -231,7 +231,7 @@ public final class NewPostModel: ObservableObject {
             for imeta in imetas {
                 nEvent.content += "\n\(imeta.url)"
                 
-                var imetaParts:[String] = ["imeta", "url \(imeta.url)"]
+                var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
                 if let dim = imeta.dim {
                     imetaParts.append("dim \(dim)")
                 }
@@ -582,7 +582,7 @@ public final class NewPostModel: ObservableObject {
         nEvent = newReply
     }
     
-    public func directMention(_ contact:Contact) {
+    public func directMention(_ contact: Contact) {
         guard textView != nil else { return }
         let mentionName = contact.handle
         typingTextModel.text = "@\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} "
@@ -597,7 +597,7 @@ public final class NewPostModel: ObservableObject {
     }
 }
 
-func mentionTerm(_ text:String) -> String? {
+func mentionTerm(_ text: String) -> String? {
     if let rangeStart = text.lastIndex(of: Character("@")) {
         let extractedString = String(text[rangeStart..<text.endIndex].dropFirst(1))
         return extractedString
@@ -606,7 +606,7 @@ func mentionTerm(_ text:String) -> String? {
 }
 
 struct Imeta {
-    let url:String
-    var dim:String?
-    var hash:String?
+    let url: String
+    var dim: String?
+    var hash: String?
 }
