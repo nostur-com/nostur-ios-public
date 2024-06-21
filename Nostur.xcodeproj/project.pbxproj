@@ -119,6 +119,8 @@
 		1F3897532ABA92DD001A874E /* LoggedInAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3897522ABA92DD001A874E /* LoggedInAccount.swift */; };
 		1F38AFF12A27166C0035641E /* VideoHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF02A27166C0035641E /* VideoHelpers.swift */; };
 		1F38AFF42A2789C80035641E /* MacListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF32A2789C70035641E /* MacListsView.swift */; };
+		1F3917062C23A02700A4B5AB /* PostedVideoMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3917052C23A02700A4B5AB /* PostedVideoMeta.swift */; };
+		1F3917082C23A07000A4B5AB /* VideoPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3917072C23A07000A4B5AB /* VideoPreviews.swift */; };
 		1F39756F2AB622C1004F9D77 /* MultiFollowSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */; };
 		1F3A26C42B19392100DF54F9 /* NotificationsNewPosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3A26C32B19392100DF54F9 /* NotificationsNewPosts.swift */; };
 		1F3D4BB72A25CC140084F939 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3D4BB62A25CC140084F939 /* AppView.swift */; };
@@ -410,6 +412,7 @@
 		1FCCAC9E2AB747CF00B3F00A /* ProfileFollowingCount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC9D2AB747CF00B3F00A /* ProfileFollowingCount.swift */; };
 		1FCCACA02AB7562500B3F00A /* ProfileFollowingList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCAC9F2AB7562500B3F00A /* ProfileFollowingList.swift */; };
 		1FCCACA22AB764D300B3F00A /* ProfileLikesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCACA12AB764D300B3F00A /* ProfileLikesViewModel.swift */; };
+		1FCD6C9D2C1EE19500C82E21 /* VideoPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCD6C9C2C1EE19500C82E21 /* VideoPickerView.swift */; };
 		1FCD6C9F2C224ADA00C82E21 /* MentionsFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCD6C9E2C224ADA00C82E21 /* MentionsFeedModel.swift */; };
 		1FCDDEBC2A480AA2002EDEEC /* SettingsDevTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */; };
 		1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */; };
@@ -644,6 +647,8 @@
 		1F3897522ABA92DD001A874E /* LoggedInAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInAccount.swift; sourceTree = "<group>"; };
 		1F38AFF02A27166C0035641E /* VideoHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoHelpers.swift; sourceTree = "<group>"; };
 		1F38AFF32A2789C70035641E /* MacListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacListsView.swift; sourceTree = "<group>"; };
+		1F3917052C23A02700A4B5AB /* PostedVideoMeta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostedVideoMeta.swift; sourceTree = "<group>"; };
+		1F3917072C23A07000A4B5AB /* VideoPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviews.swift; sourceTree = "<group>"; };
 		1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiFollowSheet.swift; sourceTree = "<group>"; };
 		1F3A26C32B19392100DF54F9 /* NotificationsNewPosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsNewPosts.swift; sourceTree = "<group>"; };
 		1F3D4BB62A25CC140084F939 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
@@ -934,6 +939,7 @@
 		1FCCAC9D2AB747CF00B3F00A /* ProfileFollowingCount.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileFollowingCount.swift; sourceTree = "<group>"; };
 		1FCCAC9F2AB7562500B3F00A /* ProfileFollowingList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileFollowingList.swift; sourceTree = "<group>"; };
 		1FCCACA12AB764D300B3F00A /* ProfileLikesViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ProfileLikesViewModel.swift; path = Nostur/Profiles/ProfileLikesViewModel.swift; sourceTree = SOURCE_ROOT; };
+		1FCD6C9C2C1EE19500C82E21 /* VideoPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPickerView.swift; sourceTree = "<group>"; };
 		1FCD6C9E2C224ADA00C82E21 /* MentionsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentionsFeedModel.swift; sourceTree = "<group>"; };
 		1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDevTools.swift; sourceTree = "<group>"; };
 		1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayCensorshipResistorTest.swift; sourceTree = "<group>"; };
@@ -1065,6 +1071,7 @@
 				1FFED7FD2A39706B00A0B1E8 /* PostComposer */,
 				1F15F09A2AAF2FBB0004E706 /* PostFooter */,
 				1F38AFED2A2715250035641E /* Video */,
+				1F13BF9E2B4F870D00607D98 /* BigLinkPreview.swift */,
 				1F922FDD2A9775EB00C84867 /* Box.swift */,
 				1F0088EA29D735080016F111 /* ContentRenderer.swift */,
 				1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */,
@@ -1098,7 +1105,7 @@
 				1F7C4CAE2AB1DDD400145D83 /* Repost.swift */,
 				1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */,
 				1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */,
-				1F13BF9E2B4F870D00607D98 /* BigLinkPreview.swift */,
+				1F3917072C23A07000A4B5AB /* VideoPreviews.swift */,
 				1F0ACD162B50113500155F94 /* WebsiteComments.swift */,
 			);
 			path = Post;
@@ -1414,6 +1421,7 @@
 		1F45C7EF29EF99A600F58772 /* MediaUploads */ = {
 			isa = PBXGroup;
 			children = (
+				1FCD6C9B2C1EE17B00C82E21 /* Video */,
 				1F45C7E929EF930F00F58772 /* ImageUploading.swift */,
 				1F45C7EC29EF997200F58772 /* ImgurMediaUploadService.swift */,
 				1F45C7F029EF9A2C00F58772 /* NostrimgMediaUploadService.swift */,
@@ -1969,6 +1977,15 @@
 			path = ImportHandling;
 			sourceTree = "<group>";
 		};
+		1FCD6C9B2C1EE17B00C82E21 /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				1FCD6C9C2C1EE19500C82E21 /* VideoPickerView.swift */,
+				1F3917052C23A02700A4B5AB /* PostedVideoMeta.swift */,
+			);
+			path = Video;
+			sourceTree = "<group>";
+		};
 		1FD281502B16AEB500978A9D /* Camera */ = {
 			isa = PBXGroup;
 			children = (
@@ -2423,6 +2440,7 @@
 				1FF209162AB0A92800876DB2 /* ProfileGalleryViewModel.swift in Sources */,
 				1FB6E70329E52EF3008BE8A6 /* SmoothList.swift in Sources */,
 				1F099DA62ADC29710069F2DF /* Settings+AutodownloadLevelPicker.swift in Sources */,
+				1F3917082C23A07000A4B5AB /* VideoPreviews.swift in Sources */,
 				1FA70F942B053C9500BB636F /* CloudDMState+CoreDataProperties.swift in Sources */,
 				1F00E8C329C2FE7800797B78 /* LVM.swift in Sources */,
 				1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */,
@@ -2448,6 +2466,7 @@
 				1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */,
 				1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */,
 				1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */,
+				1F3917062C23A02700A4B5AB /* PostedVideoMeta.swift in Sources */,
 				1FF8BD1229D41BBD00C8C96A /* SingleMediaViewer.swift in Sources */,
 				1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */,
 				1F6629122B0D429D00508988 /* RelayConnection.swift in Sources */,
@@ -2632,6 +2651,7 @@
 				1FA1CA3B2AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift in Sources */,
 				1F72FB362A2BA30E001370A1 /* NWCURI.swift in Sources */,
 				1F2AC5412B12F00E00F70662 /* DebugWindow.swift in Sources */,
+				1FCD6C9D2C1EE19500C82E21 /* VideoPickerView.swift in Sources */,
 				1FAC42B92C048EDB00362997 /* ZapsFeedModel.swift in Sources */,
 				1FC0F5A32A4AEB00004E4DAA /* ArticleById.swift in Sources */,
 				1FDB74582BD6B71700649E0A /* PossibleImposterLabel.swift in Sources */,
