@@ -14,6 +14,7 @@ struct Entry: View {
     private var vm: NewPostModel
     @ObservedObject var typingTextModel: TypingTextModel
     @Binding var photoPickerShown: Bool
+    @Binding var videoPickerShown: Bool
     @Binding var gifSheetShown: Bool
     @Binding var cameraSheetShown: Bool
     private var replyTo: Event?
@@ -24,10 +25,10 @@ struct Entry: View {
     static let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
     
     private var shouldDisablePostButton: Bool {
-        typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty)
+        typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty)
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?) {
         self.replyTo = replyTo
         self.quotingEvent = quotingEvent
         self.directMention = directMention
@@ -36,6 +37,7 @@ struct Entry: View {
         self.onDismiss = onDismiss
         self.replyToKind = replyToKind
         _photoPickerShown = photoPickerShown
+        _videoPickerShown = videoPickerShown
         _gifSheetShown = gifSheetShown
         _cameraSheetShown = cameraSheetShown
     }
@@ -62,10 +64,14 @@ struct Entry: View {
             HighlightedTextEditor(
                 text: $typingTextModel.text,
                 pastedImages: $typingTextModel.pastedImages,
+                pastedVideos: $typingTextModel.pastedVideos,
                 shouldBecomeFirstResponder: true,
                 highlightRules: NewPostModel.rules,
                 photoPickerTapped: {
                     photoPickerShown = true
+                },              
+                videoPickerTapped: {
+                    videoPickerShown = true
                 },
                 gifsTapped: {
                     gifSheetShown = true
@@ -113,7 +119,11 @@ struct Entry: View {
                 HStack(spacing: 5) {
                     ImagePreviews(pastedImages: $typingTextModel.pastedImages)
                 }
-                //                .id(images)
+            }
+            if !typingTextModel.pastedVideos.isEmpty {
+                HStack(spacing: 5) {
+                    VideoPreviews(pastedVideos: $typingTextModel.pastedVideos)
+                }
             }
         }
         //        .onChange(of: typingTextModel.pastedImages) { newImages in
@@ -143,6 +153,12 @@ struct Entry: View {
                         if #available(iOS 16, *) {
                             Button { photoPickerShown = true } label: {
                                 Image(systemName: "photo")
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(typingTextModel.uploading)
+                            
+                            Button { videoPickerShown = true } label: {
+                                Image(systemName: "video")
                             }
                             .buttonStyle(.borderless)
                             .disabled(typingTextModel.uploading)

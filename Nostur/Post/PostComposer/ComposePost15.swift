@@ -21,7 +21,10 @@ struct ComposePost15: View {
     @StateObject private var vm = NewPostModel()
     @State private var gifSheetShown = false
     @State private var photoPickerShown = false
+    @State private var videoPickerShown = false
     @State private var cameraSheetShown = false
+    
+    @State private var selectedVideoURL: URL?
     
     @Namespace private var textfield
     @State private var replyToNRPost:NRPost?
@@ -61,7 +64,7 @@ struct ComposePost15: View {
                                         vm.activeAccount = account
                                     }).equatable()
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
                                         .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
                                         .id(textfield)
                                 }
@@ -75,6 +78,15 @@ struct ComposePost15: View {
                             }
 //                            .padding(.bottom, 100) // Need some extra space for expanding account switcher
                             .padding(.horizontal, 10)
+                            .sheet(isPresented: $videoPickerShown) {
+                                VideoPickerView(selectedVideoURL: $selectedVideoURL)
+                            }
+                            .onChange(of: selectedVideoURL, perform: { newValue in
+                                if let video = newValue {
+                                    vm.typingTextModel.pastedVideos.append(PostedVideoMeta(index: vm.typingTextModel.pastedVideos.count, videoURL: video))
+                                    selectedVideoURL = nil
+                                }
+                            })
 //                            .toolbar {
 //                                
 //                            }

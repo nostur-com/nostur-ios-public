@@ -41,7 +41,10 @@ struct ComposePost: View {
     @StateObject private var ipm = ImagePickerModel()
     @State private var gifSheetShown = false
     @State private var photoPickerShown = false
+    @State private var videoPickerShown = false
     @State private var cameraSheetShown = false
+    
+    @State private var selectedVideoURL: URL?
     
     @Namespace private var textfield
     @State private var replyToNRPost: NRPost?
@@ -80,7 +83,7 @@ struct ComposePost: View {
                                         vm.activeAccount = account
                                     }).equatable()
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
                                         .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
                                         .id(textfield)
                                 }
@@ -94,8 +97,24 @@ struct ComposePost: View {
 //                            .padding(.bottom, 100) // Need some extra space for expanding account switcher
                             .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
                             .onChange(of: ipm.newImage) { newImage in
-                                if let newImage { vm.typingTextModel.pastedImages.append(PostedImageMeta(index: vm.typingTextModel.pastedImages.count, imageData: newImage, type: .jpeg)) }
+                                if let newImage {
+                                    vm.typingTextModel.pastedImages.append(
+                                        PostedImageMeta(index: vm.typingTextModel.pastedImages.count, imageData: newImage, type: .jpeg)
+                                    )
+                                    ipm.newImage = nil
+                                }
                             }
+                            
+                            .sheet(isPresented: $videoPickerShown) {
+                                VideoPickerView(selectedVideoURL: $selectedVideoURL)
+                            }
+                            .onChange(of: selectedVideoURL, perform: { newValue in
+                                if let video = newValue {
+                                    vm.typingTextModel.pastedVideos.append(PostedVideoMeta(index: vm.typingTextModel.pastedVideos.count, videoURL: video))
+                                    selectedVideoURL = nil
+                                }
+                            })
+                            
                             .padding(10)
                             .onAppear {
                                 signpost(NRState.shared, "New Post", .end, "New Post view ready")
@@ -183,6 +202,7 @@ struct ComposePost: View {
                     }
                     return true
                 }
+                // TODO: Add drag n drop for video
             }
             else {
                 ProgressView()

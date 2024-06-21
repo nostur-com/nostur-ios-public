@@ -10,28 +10,31 @@ import SwiftUI
 import UIKit
 
 public typealias PhotoPickerTappedCallback = () -> Void
+public typealias VideoPickerTappedCallback = () -> Void
 public typealias GifsTappedCallback = () -> Void
 public typealias CameraTappedCallback = () -> Void
 
-protocol PastedImagesDelegate: UITextViewDelegate {
-    func didPasteImage(_ image:UIImage)
+protocol PastedMediaDelegate: UITextViewDelegate {
+    func didPasteImage(_ image: UIImage)
+    func didPasteVideo(_ video: URL)
     func photoPickerTapped()
+    func videoTapped()
     func gifsTapped()
     func cameraTapped()
 }
 
 class NosturTextView: UITextView {
-    var pastedImageDelegate: PastedImagesDelegate?
+    var pastedMediaDelegate: PastedMediaDelegate?
 
     override var delegate: UITextViewDelegate? {
-        get { pastedImageDelegate }
-        set { pastedImageDelegate = newValue as? PastedImagesDelegate }
+        get { pastedMediaDelegate }
+        set { pastedMediaDelegate = newValue as? PastedMediaDelegate }
     }
 
     // This gets called when user presses menu "Paste" option
     override func paste(_ sender: Any?) {
         if let image = UIPasteboard.general.image {
-            pastedImageDelegate?.didPasteImage(image)
+            pastedMediaDelegate?.didPasteImage(image)
         } else {
             // Call the normal paste action
             super.paste(sender)
@@ -47,15 +50,19 @@ class NosturTextView: UITextView {
     }
     
     @objc func photoPickerTapped() {
-        pastedImageDelegate?.photoPickerTapped()
+        pastedMediaDelegate?.photoPickerTapped()
+    }
+    
+    @objc func videoTapped() {
+        pastedMediaDelegate?.videoTapped()
     }
     
     @objc func gifsTapped() {
-        pastedImageDelegate?.gifsTapped()
+        pastedMediaDelegate?.gifsTapped()
     }
     
     @objc func cameraTapped() {
-        pastedImageDelegate?.cameraTapped()
+        pastedMediaDelegate?.cameraTapped()
     }
     
 }
@@ -68,13 +75,15 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     @Binding var text: String
-    @Binding var pastedImages:[PostedImageMeta]
+    @Binding var pastedImages: [PostedImageMeta]
+    @Binding var pastedVideos: [PostedVideoMeta]
     
     var shouldBecomeFirstResponder: Bool
     
     let textView = NosturTextView()
     let highlightRules: [HighlightRule]
     var photoPickerTapped: PhotoPickerTappedCallback?
+    var videoPickerTapped: VideoPickerTappedCallback?
     var gifsTapped: GifsTappedCallback?
     var cameraTapped: CameraTappedCallback?
     
@@ -86,17 +95,21 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     public init(
         text: Binding<String>,
         pastedImages: Binding<[PostedImageMeta]>,
+        pastedVideos: Binding<[PostedVideoMeta]>,
         shouldBecomeFirstResponder: Bool,
         highlightRules: [HighlightRule],
         photoPickerTapped: PhotoPickerTappedCallback? = nil,
+        videoPickerTapped: VideoPickerTappedCallback? = nil,
         gifsTapped: GifsTappedCallback? = nil,
         cameraTapped: CameraTappedCallback? = nil
     ) {
         _text = text
         _pastedImages = pastedImages
+        _pastedVideos = pastedVideos
         self.shouldBecomeFirstResponder = shouldBecomeFirstResponder
         self.highlightRules = highlightRules
         self.photoPickerTapped = photoPickerTapped
+        self.videoPickerTapped = videoPickerTapped
         self.gifsTapped = gifsTapped
         self.cameraTapped = cameraTapped
     }
@@ -118,7 +131,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         textView.isScrollEnabled = true
         textView.backgroundColor = UIColor.clear
         textView.delegate = context.coordinator
-        textView.pastedImageDelegate = context.coordinator
+        textView.pastedMediaDelegate = context.coordinator
         
         let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
         doneToolbar.barStyle = .default
@@ -152,7 +165,13 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
             let photos = UIBarButtonItem(customView: photoButton)
             
-            doneToolbar.setItems([camera, fixedSpace, photos, gifs, flexibleSpace], animated: false)
+            let videoButton = UIButton(type: .system)
+            videoButton.setImage(UIImage(systemName: "video"), for: .normal)
+            videoButton.tintColor = UIColor(Themes.default.theme.accent)
+            videoButton.addTarget(self, action: #selector(textView.videoTapped), for: .touchUpInside)
+            let videos = UIBarButtonItem(customView: videoButton)
+            
+            doneToolbar.setItems([camera, fixedSpace, photos, fixedSpace, videos, gifs, flexibleSpace], animated: false)
         }
         else {
             doneToolbar.setItems([camera, fixedSpace, gifs, flexibleSpace], animated: false)
@@ -206,21 +225,30 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         textInputTraits?.setValue(textView.tintColor, forKey: "insertionPointColor")
     }
     
-    public final class Coordinator: NSObject, UITextViewDelegate, PastedImagesDelegate {
+    public final class Coordinator: NSObject, UITextViewDelegate, PastedMediaDelegate {
         
         func didPasteImage(_ image: UIImage) {
             self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, imageData: image, type: .jpeg))
         }
         
+        func didPasteVideo(_ video: URL) {
+            self.parent.pastedVideos.append(PostedVideoMeta(index: self.parent.pastedVideos.count, videoURL: video))
+        }
+        
         func photoPickerTapped() {
-            guard let tapped = self.parent.photoPickerTapped else { return }
-            tapped()
+            guard let photoTapped = self.parent.photoPickerTapped else { return }
+            photoTapped()
+        }
+        
+        func videoTapped() {
+            guard let videoTapped = self.parent.videoPickerTapped else { return }
+            videoTapped()
         }
         
         func gifsTapped() {
             guard let gifsTapped = self.parent.gifsTapped else { return }
             gifsTapped()
-        }     
+        }
         
         func cameraTapped() {
             guard let cameraTapped = self.parent.cameraTapped else { return }
