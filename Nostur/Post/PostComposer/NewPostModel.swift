@@ -35,6 +35,7 @@ public final class TypingTextModel: ObservableObject {
         }
     }
     @Published var pastedImages: [PostedImageMeta] = []
+    @Published var pastedVideos: [PostedVideoMeta] = []
     @Published var selectedMentions: Set<Contact> = [] // will become p-tags in the final post
     @Published var unselectedMentions: Set<Contact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
     @Published var sending = false
@@ -116,7 +117,7 @@ public final class NewPostModel: ObservableObject {
     static let mentionRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\w+|(?<![/\\?])#\\S+)", options: [])
     
     public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, onDismiss: @escaping () -> Void) {
-        if (!typingTextModel.pastedImages.isEmpty) {
+        if (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty) {
             typingTextModel.uploading = true
             
             if !nip96apiUrl.isEmpty { // new nip96 media services
@@ -149,7 +150,23 @@ public final class NewPostModel: ObservableObject {
                     }
                     .map { (resizedImage, type, index) in
                         MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage, index: index)
+                    } + typingTextModel.pastedVideos
+                    .compactMap { videoMeta in // compress
+                        let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
+                        if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
+                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
+                        }
+                        
+                        // Version without compression: TODO: Add toggle for compression ON/OFF
+//                        if let compressedVideoData = try? Data(contentsOf: videoMeta.videoURL) {
+//                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
+//                        }
+                        return nil
                     }
+                    .map { (compressedVideoData, index) in
+                        MediaRequestBag(apiUrl: nip96apiURL, uploadtype: "media", filename: "media.mp4", mediaData: compressedVideoData, index: index)
+                    }
+                    
                 
                 uploader.queued = mediaRequestBags
                 uploader.onFinish = {
@@ -454,6 +471,10 @@ public final class NewPostModel: ObservableObject {
             nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
         }
         
+        for index in typingTextModel.pastedVideos.indices {
+            nEvent.content = nEvent.content + "\n-V-@!^@\(index)@^!@-V-"
+        }
+        
         if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
             nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
@@ -464,6 +485,9 @@ public final class NewPostModel: ObservableObject {
             let previewEvent = createPreviewEvent(nEvent)
             if (!self.typingTextModel.pastedImages.isEmpty) {
                 previewEvent.previewImages = self.typingTextModel.pastedImages
+            }
+            if (!self.typingTextModel.pastedVideos.isEmpty) {
+                previewEvent.previewVideos = self.typingTextModel.pastedVideos
             }
             let nrPost = NRPost(event: previewEvent, withFooter: false, isScreenshot: true, isPreview: true)
             DispatchQueue.main.async { [weak self] in
