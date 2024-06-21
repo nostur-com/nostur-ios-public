@@ -253,6 +253,27 @@ struct ContentRenderer: View { // VIEW things
                         .padding(.top, 10)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .id(index)
+                case .postPreviewVideo(let postedVideoMeta):
+                    if let thumbnail = postedVideoMeta.thumbnail {
+                        Image(uiImage: thumbnail)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 600)
+                            .padding(.top, 10)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .id(index)
+                            .overlay(alignment: .center) {
+                                Image(systemName:"play.circle")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+//                                        .centered()
+                                    .contentShape(Rectangle())
+                            }
+                    }
+                    else {
+                        EmptyView()
+                    }
                 default:
                     EmptyView()
                         .onTapGesture {

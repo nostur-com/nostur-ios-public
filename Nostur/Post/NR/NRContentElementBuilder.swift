@@ -87,6 +87,14 @@ class NRContentElementBuilder {
                         }
                     }
                 }
+                else if !matchString.matchingStrings(regex: Self.previewVideoPlaceholder).isEmpty {
+                    let m = matchString.matchingStrings(regex: Self.previewVideoPlaceholder)
+                    if let index = Int(m[0][1]) {
+                        if let p = event.previewVideos[safe: index] {
+                            result.append(ContentElement.postPreviewVideo(p))
+                        }
+                    }
+                }
                 else if !matchString.matchingStrings(regex: Self.codePattern).isEmpty {
                     let m = matchString.matchingStrings(regex: Self.codePattern)
                     if let code = m[0][safe: 1] {
@@ -227,6 +235,7 @@ class NRContentElementBuilder {
     
     static let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png#?|jpe?g#?|gif#?|webp#?)(\??\S+){0,1}\b"###
     static let previewImagePlaceholder = ###"--@!\^@(\d+)@\^!@--"###
+    static let previewVideoPlaceholder = ###"-V-@!\^@(\d+)@\^!@-V-"###
     static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4#?|mov#?|m3u8#?|m4a#?)(\??\S+){0,1}\b"###
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
     static let cashuTokenPattern = ###"cashuA([A-Za-z0-9=]+)"###
@@ -243,11 +252,11 @@ class NRContentElementBuilder {
     static let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)\.]"###
     
     // For kind 1 or similar text notes
-    static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
+    static let pattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
     static let regex = try! NSRegularExpression(pattern: pattern)
     
     // For long form articles (kind 30023), no image urls, video urls, other urls, as these are handled by markdown
-    static let articlePattern = "\(previewImagePlaceholder)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(codePattern)"
+    static let articlePattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(codePattern)"
     static let articleRegex = try! NSRegularExpression(pattern: articlePattern)
 }
 
@@ -269,6 +278,7 @@ enum ContentElement: Hashable, Identifiable {
     case video(MediaContent)
     case linkPreview(URL)
     case postPreviewImage(PostedImageMeta)
+    case postPreviewVideo(PostedVideoMeta)
     case nevent1(ShareableIdentifier)
     case nprofile1(ShareableIdentifier)
     case nrPost(NRPost) // embedded post, already processed for rendering
