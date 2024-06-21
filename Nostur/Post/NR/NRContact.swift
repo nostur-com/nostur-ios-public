@@ -204,6 +204,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                         self.nip05 = nip05
                         self.nip05nameOnly = nip05nameOnly
                         self.metaDataCreatedAt = metaDataCreatedAt
+                        // Data race in Nostur.NRContact.metadata_created_at.setter : Swift.Int64 at 0x12cb91380 (Thread 1)
                         self.metadata_created_at = metadata_created_at
                         
                         self.anyLud = anyLud

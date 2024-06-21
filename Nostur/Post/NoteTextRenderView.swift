@@ -9,7 +9,7 @@ import SwiftUI
 
 // Was before for just rendering embedded (text) posts, but does other kinds too now, should rename.
 struct NoteTextRenderView: View {
-    @EnvironmentObject private var dim:DIMENSIONS
+    @EnvironmentObject private var dim: DIMENSIONS
     public let nrPost: NRPost
     public var forceAutoload = false
     public var theme: Theme

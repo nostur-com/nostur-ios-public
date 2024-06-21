@@ -97,7 +97,7 @@ struct NosturVideoViewur: View {
                                 }
                             }
                         }
-                        .overlay(alignment:.bottomLeading) {
+                        .overlay(alignment: .bottomLeading) {
                             if !didStart {
                                 Text(videoLength)
                                     .foregroundColor(.white)

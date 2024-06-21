@@ -15,8 +15,8 @@ public struct PostedImageMeta: Hashable, Identifiable, Equatable {
     }
     public var id: Int { index }
     public let index: Int // To keep the correct order in pasted images
-    public let imageData:UIImage
-    public let type:ImageType
+    public let imageData: UIImage
+    public let type: ImageType
     
     public enum ImageType {
         case jpeg // from pasting

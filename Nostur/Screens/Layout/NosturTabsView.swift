@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct NosturTabsView: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var dm:DirectMessageViewModel
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dm: DirectMessageViewModel
     
     @AppStorage("selected_tab") private var selectedTab = "Main"
     
@@ -19,7 +19,7 @@ struct NosturTabsView: View {
 
     @State private var unread: Int = 0
     @State private var showTabBar = true
-    @ObservedObject private var ss:SettingsStore = .shared
+    @ObservedObject private var ss: SettingsStore = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
