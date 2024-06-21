@@ -67,7 +67,9 @@ struct NosturVideoViewur: View {
                 }
             }
             else if videoShown {
-                if let scaledDimensions = cachedVideo?.scaledDimensions, let videoLength = cachedVideo?.videoLength {
+                if let scaledDimensionsFromCache = cachedVideo?.scaledDimensions,
+                    let videoLength = cachedVideo?.videoLength {
+                    let scaledDimensions = Nostur.scaledToFit(scaledDimensionsFromCache, scale: 1.0, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                     theme.lineColor.opacity(0.5)
                         .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                         .overlay {
