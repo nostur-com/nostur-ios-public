@@ -84,6 +84,7 @@ public class ConnectionPool: ObservableObject {
     
     public func connectAll() {
         for (_, connection) in self.connections {
+            if (connection.isConnected) { continue }
             queue.async {
                 guard connection.relayData.shouldConnect else { return }
                 guard !connection.isSocketConnected else { return }
