@@ -90,7 +90,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
     private(set) var onCommit: OnCommitCallback?
-    private(set) var onSelectionChange: OnSelectionChangeCallback?
     private(set) var introspect: IntrospectCallback?
     
     public init(
@@ -191,6 +190,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     public func updateUIView(_ uiView: UITextView, context: Context) {
+        uiView.isScrollEnabled = false
         context.coordinator.updatingUIView = true
         
         uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.background)
@@ -207,10 +207,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         }
         updateTextViewModifiers(uiView)
         runIntrospect(uiView)
-        
-        if uiView.text != text {
-            uiView.selectedTextRange = context.coordinator.selectedTextRange
-        }
+        uiView.isScrollEnabled = true
+        uiView.selectedTextRange = context.coordinator.selectedTextRange
         context.coordinator.updatingUIView = false
     }
     
@@ -265,41 +263,19 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         }
         
         
-        
         public func textViewDidChange(_ textView: UITextView) {
             textView.backgroundColor = textView.text.isEmpty && textView.markedTextRange == nil ? UIColor.clear : UIColor(Themes.default.theme.background)
             
             // For Multistage Text Input
             guard textView.markedTextRange == nil else { return }
+
             parent.text = textView.text
-            if parent.text != textView.text {
-                selectedTextRange = textView.selectedTextRange
-            }
-            
-//            let size = CGSize(width: textView.frame.size.width, height: .infinity)
-//            let estimatedSize = textView.sizeThatFits(size)
-//            guard textView.contentSize.height < 200.0 else { textView.isScrollEnabled = true; return }
-//            textView.isScrollEnabled = false
-//            textView.constraints.forEach { (constraint) in
-//                if constraint.firstAttribute == .height {
-//                    constraint.constant = estimatedSize.height
-//                }
-//            }
+            selectedTextRange = textView.selectedTextRange
         }
         
         public func textViewDidChangeSelection(_ textView: UITextView) {
-            guard let onSelectionChange = parent.onSelectionChange, !updatingUIView
-            else { return }
+            guard !updatingUIView else { return }
             selectedTextRange = textView.selectedTextRange
-            onSelectionChange([textView.selectedRange])
-        }
-        
-        public func textViewDidBeginEditing(_ textView: UITextView) {
-            parent.onEditingChanged?()
-        }
-        
-        public func textViewDidEndEditing(_ textView: UITextView) {
-            parent.onCommit?()
         }
     }
 }
@@ -308,27 +284,6 @@ public extension HighlightedTextEditor {
     func introspect(callback: @escaping IntrospectCallback) -> Self {
         var new = self
         new.introspect = callback
-        return new
-    }
-    
-    func onSelectionChange(_ callback: @escaping (_ selectedRange: NSRange) -> Void) -> Self {
-        var new = self
-        new.onSelectionChange = { ranges in
-            guard let range = ranges.first else { return }
-            callback(range)
-        }
-        return new
-    }
-    
-    func onCommit(_ callback: @escaping OnCommitCallback) -> Self {
-        var new = self
-        new.onCommit = callback
-        return new
-    }
-    
-    func onEditingChanged(_ callback: @escaping OnEditingChangedCallback) -> Self {
-        var new = self
-        new.onEditingChanged = callback
         return new
     }
 }

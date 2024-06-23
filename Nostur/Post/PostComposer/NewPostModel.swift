@@ -504,20 +504,54 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
-    public func selectContactSearchResult(_ contact:Contact) {
-        guard textView != nil else { return }
+    public func selectContactSearchResult(_ contact: Contact) {
+        guard let textView = textView else { return }
         let mentionName = contact.handle
-        typingTextModel.text = "\(typingTextModel.text.dropLast(term.count))\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} "
-        availableContacts.insert(contact)
-        typingTextModel.selectedMentions.insert(contact)
-        mentioning = false
-        lastHit = mentionName
-        term = ""
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            // after 0.3 sec to get the new .endOfDocument
-            let newPosition = self.textView!.endOfDocument
-            self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
+        let mentionText = "\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} " // invisible characters to replace later
+
+        if let selectedRange = textView.selectedTextRange {
+            let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
+            var currentText = textView.text ?? ""
+            
+            // Insert the mention text at the cursor position
+            let textBeforeCursor = currentText.prefix(cursorPosition)
+            let textAfterCursor = currentText.suffix(currentText.count - cursorPosition)
+            currentText = "\(textBeforeCursor.dropLast(term.count))\(mentionText)\(textAfterCursor)"
+            
+            // Update the text storage
+//            textView.text = currentText
+            
+            let mentionLength = "\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} ".count - term.count // "@fa" becomes "@fabian " and we count "bian "
+            
+            // Change cursor position to after replacement
+            // so from "@fa" to "@fabian "
+            if let selectedRange = self.textView!.selectedTextRange {
+                let currentPosition = selectedRange.end
+                
+                // move the cursor
+                if let newPosition = self.textView!.position(from: currentPosition, offset: mentionLength) {
+                    textView.text = currentText
+                    self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
+                }
+                else {
+                    // or if for some reason the cursor is out of range, just move to end
+                    textView.text = currentText
+                    let newPosition = self.textView!.endOfDocument
+                    self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
+                }
+            }
+            
+            // Update the typingTextModel text
+            typingTextModel.text = currentText
+            
+            // Update the available contacts and selected mentions
+            availableContacts.insert(contact)
+            typingTextModel.selectedMentions.insert(contact)
+            mentioning = false
+            lastHit = mentionName
+
+            
+            term = ""
         }
     }
     
@@ -528,7 +562,8 @@ public final class NewPostModel: ObservableObject {
             nEvent!.content = newText
         }
         
-        if let mentionTerm = mentionTerm(newText) {
+        guard textView != nil else { return }
+        if let mentionTerm = mentionTerm(newText, textView: textView) {
             if mentionTerm == lastHit {
                 mentioning = false
             }
@@ -622,16 +657,23 @@ public final class NewPostModel: ObservableObject {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             // after 0.3 sec to get the new .endOfDocument
-            let newPosition = self.textView!.endOfDocument
+            let newPosition: UITextPosition = self.textView!.endOfDocument
             self.textView!.selectedTextRange = self.textView!.textRange(from: newPosition, to: newPosition)
         }
     }
 }
 
-func mentionTerm(_ text: String) -> String? {
-    if let rangeStart = text.lastIndex(of: Character("@")) {
-        let extractedString = String(text[rangeStart..<text.endIndex].dropFirst(1))
-        return extractedString
+func mentionTerm(_ text: String, textView: SystemTextView?) -> String? {
+    guard let textView else { return nil }
+    
+    if let selectedRange = textView.selectedTextRange {
+        let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
+        let textUntilCursor = String(text.prefix(cursorPosition))
+        
+        if let atRange = textUntilCursor.range(of: "@", options: .backwards) {
+            let textAfterAt = String(textUntilCursor[atRange.upperBound...])
+            return textAfterAt
+        }
     }
     return nil
 }
