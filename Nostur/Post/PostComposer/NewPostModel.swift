@@ -36,6 +36,7 @@ public final class TypingTextModel: ObservableObject {
     }
     @Published var pastedImages: [PostedImageMeta] = []
     @Published var pastedVideos: [PostedVideoMeta] = []
+    public var compressedVideoFiles: [URL] = [] // need a place to track tmp files created so we can clean up after upload
     @Published var selectedMentions: Set<Contact> = [] // will become p-tags in the final post
     @Published var unselectedMentions: Set<Contact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
     @Published var sending = false
@@ -153,6 +154,7 @@ public final class NewPostModel: ObservableObject {
                     } + typingTextModel.pastedVideos
                     .compactMap { videoMeta in // compress
                         let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
+                        typingTextModel.compressedVideoFiles.append(compressedURL)
                         if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
                             return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
                         }
@@ -176,6 +178,11 @@ public final class NewPostModel: ObservableObject {
                             return Imeta(url: url, dim: $0.dim, hash: $0.sha256)
                         }
                     self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: onDismiss)
+                    
+                    // clean up video tmp files (compressed videos)
+                    for videoURL in self.typingTextModel.compressedVideoFiles {
+                        try? FileManager.default.removeItem(at: videoURL)
+                    }
                 }
                 uploader.uploadingPublishers(for: mediaRequestBags, keys: keys)
                     .receive(on: RunLoop.main)
