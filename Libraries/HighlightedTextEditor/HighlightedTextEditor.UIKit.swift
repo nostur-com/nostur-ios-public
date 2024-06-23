@@ -75,6 +75,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     @Binding var text: String
+    
     @Binding var pastedImages: [PostedImageMeta]
     @Binding var pastedVideos: [PostedVideoMeta]
     
@@ -270,7 +271,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             
             // For Multistage Text Input
             guard textView.markedTextRange == nil else { return }
-            
             parent.text = textView.text
             if parent.text != textView.text {
                 selectedTextRange = textView.selectedTextRange

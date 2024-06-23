@@ -62,19 +62,19 @@ public final class NewPostModel: ObservableObject {
     private var mentioning = false
     @Published var showMentioning = false // To reduce rerendering, use this flag instead of (vm.mentioning && !vm.filteredContactSearchResults.isEmpty)
     private var term: String = ""
-    var nEvent:NEvent?
-    var lastHit:String = "NOHIT"
-    var textView:SystemTextView?
+    var nEvent: NEvent?
+    var lastHit: String = "NOHIT"
+    var textView: SystemTextView?
     
-    @Published var uploadError:String?
+    @Published var uploadError: String?
     var requiredP:String? = nil
-    @Published var availableContacts:Set<Contact> = [] // are available to toggle on/off for notifications
+    @Published var availableContacts: Set<Contact> = [] // are available to toggle on/off for notifications
     
-    @Published var previewNRPost:NRPost?
+    @Published var previewNRPost: NRPost?
     @Published var gifSheetShown = false
     
-    @Published var contactSearchResults:[Contact] = []
-    @Published var activeAccount:CloudAccount? = nil
+    @Published var contactSearchResults: [Contact] = []
+    @Published var activeAccount: CloudAccount? = nil
     
     private var subscriptions = Set<AnyCancellable>()
     

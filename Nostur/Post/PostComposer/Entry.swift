@@ -126,16 +126,6 @@ struct Entry: View {
                 }
             }
         }
-        //        .onChange(of: typingTextModel.pastedImages) { newImages in
-        ////            if let newImage {
-        ////                vm.pastedImages.append(newImage)
-        ////                textHeight = 200
-        //
-        ////            }
-        //            withAnimation {
-        //                proxy.scrollTo(images, anchor: .bottom)
-        //            }
-        //        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button { onDismiss() } label: { Text("Cancel") }
