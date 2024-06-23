@@ -36,6 +36,9 @@ struct VideoPickerView: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
+//        picker.videoExportPreset = "AVAssetExportPresetMediumQuality" // <-- blurry screen recording
+//        picker.videoExportPreset = "AVAssetExportPreset1920x1080" // <-- no compression at all for screen recording?? looks like passthrough
+//        picker.videoExportPreset = "AVAssetExportPresetHighestQuality"
         picker.delegate = context.coordinator
         picker.mediaTypes = [kUTTypeMovie as String]
         return picker
@@ -47,8 +50,14 @@ struct VideoPickerView: UIViewControllerRepresentable {
 // Compress video
 func compressVideo(inputURL: URL, outputURL: URL, handler:@escaping (AVAssetExportSession.Status) -> Void) {
     let asset = AVAsset(url: inputURL)
-    let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality)!
+//    let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality)! // <-- too blurry on simple screen recording
+    let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPreset1280x720)! // <-- Doesn't help at all, just as blurry (for screenrecordings)
+//    let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPreset1920x1080)! // <-- Doesn't help at all, just as blurry (for screenrecordings)
+//    let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPreset3840x2160)! // <-- Doesn't help at all, just as blurry (for screenrecordings)
+//    let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality)! // <-- Doesn't help at all, just as blurry (for screenrecordings)
+//    let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetPassthrough)!
     
+    exportSession.shouldOptimizeForNetworkUse = true
     exportSession.outputURL = outputURL
     exportSession.outputFileType = .mp4
     exportSession.metadata = []
