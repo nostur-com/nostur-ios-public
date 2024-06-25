@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct WelcomeSheet: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     public var offerTryOut = false
     
     var body: some View {
