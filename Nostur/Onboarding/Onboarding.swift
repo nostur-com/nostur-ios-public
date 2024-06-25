@@ -11,6 +11,7 @@ import NavigationBackport
 struct Onboarding: View {
     @AppStorage("did_accept_terms") var didAcceptTerms = false
     @EnvironmentObject private var networkMonitor: NetworkMonitor
+    @EnvironmentObject private var themes: Themes
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -20,6 +21,7 @@ struct Onboarding: View {
         else {
             NBNavigationStack {
                 WelcomeSheet(offerTryOut: true)
+                    .environmentObject(themes)
                     .interactiveDismissDisabled()
                     .withNavigationDestinations()
                     .fullScreenCover(isPresented: $networkMonitor.isDisconnected, content: {

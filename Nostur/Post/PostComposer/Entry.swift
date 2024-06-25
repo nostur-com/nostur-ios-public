@@ -111,6 +111,7 @@ struct Entry: View {
                     CameraView(onUse: { uiImage in
                         typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, imageData: uiImage, type: .jpeg))
                     })
+                    .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.listBackground)

@@ -171,6 +171,7 @@ struct NotificationsView: View {
         .sheet(isPresented: $showNotificationSettings, content: {
             NBNavigationStack {
                 NotificationSettings()
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
         })
