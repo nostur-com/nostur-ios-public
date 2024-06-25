@@ -16,7 +16,7 @@ class NRContentElementBuilder {
     static let shared = NRContentElementBuilder()
     let context = bg()
     
-    func buildElements(_ event:Event, dm:Bool = false, availableWidth: CGFloat? = nil, primaryColor: Color? = nil) -> ([ContentElement], [URL], [URL]) {
+    func buildElements(_ event: Event, dm: Bool = false, availableWidth: CGFloat? = nil, primaryColor: Color? = nil) -> ([ContentElement], [URL], [URL]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
         }
