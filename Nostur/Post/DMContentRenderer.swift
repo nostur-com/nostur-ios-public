@@ -85,7 +85,7 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: true, isScreenshot: false, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? theme.secondary : theme.accent)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: true, isScreenshot: false, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? .mint : theme.accent)
                         .equatable()
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
@@ -152,7 +152,7 @@ struct DMContentRenderer: View { // VIEW things
                             .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     }
                 case .linkPreview(let url):
-                    LinkPreviewView(url: url, autoload: false, theme: theme)
+                    LinkPreviewView(url: url, autoload: false, theme: theme, linkColor: isSentByCurrentUser ? .mint : theme.accent)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                 default:

@@ -14,6 +14,7 @@ struct LinkPreviewView: View {
     public let url: URL
     public var autoload: Bool = false
     public var theme: Theme
+    public var linkColor: Color? = nil
     @State var tags: [String: String] = [:]
     
     static let aspect:CGFloat = 16/9
@@ -101,7 +102,7 @@ struct LinkPreviewView: View {
         }
         else {
             Text(url.absoluteString)
-                .foregroundColor(theme.accent)
+                .foregroundColor(linkColor ?? theme.accent)
                 .truncationMode(.middle)
                 .onTapGesture {
                     UIApplication.shared.open(url)
