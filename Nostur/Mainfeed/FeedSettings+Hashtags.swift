@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct FeedSettings_Hashtags: View {
-    @EnvironmentObject private var themes:Themes
-    @State public var hashtags:[String]
-    public var onChange:(([String]) -> ())?
+    @EnvironmentObject private var themes: Themes
+    @State public var hashtags: [String]
+    public var onChange: (([String]) -> ())?
     var body: some View {
         LazyVStack(alignment: .leading) {
             ForEach(hashtags.indices, id:\.self) { index in
