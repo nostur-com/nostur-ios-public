@@ -12,8 +12,10 @@ import secp256k1
 struct AnySigner: View {
     @Environment(\.dismiss) private var dismiss
     @State private var input = ""
-    @State private var error:String?
-    @State private var signedNEvent:AnyNEvent? = nil
+    @State private var error: String?
+    @State private var signedNEvent: AnyNEvent? = nil
+    
+    @State private var tab = "Signer"
     
     private func publish() {
         if let signedNEvent = signedNEvent {
@@ -25,71 +27,122 @@ struct AnySigner: View {
     }
 
     var body: some View {
-        Form {
-            if #available(iOS 16.0, *) {
-                TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"), axis: .vertical)
-                    .lineLimit(16, reservesSpace: true)
+        VStack {
+            HStack {
+                TabButton(action: {
+                    withAnimation {
+                        tab = "Signer"
+                    }
+                }, title: "Signer", selected: tab == "Signer")
+                
+                TabButton(action: {
+                    withAnimation {
+                        tab = "Broadcaster"
+                    }
+                }, title: "Broadcaster", selected: tab == "Broadcaster")
             }
-            else {
-                TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"))
-                    .lineLimit(16)
-            }
-            if let account = NRState.shared.loggedInAccount?.account, account.privateKey != nil {
-                HStack {
-                    Text("Signing as")
-                    PFP(pubkey: account.publicKey, account: account, size: 30)
+            
+            Form {
+                if #available(iOS 16.0, *) {
+                    TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"), axis: .vertical)
+                        .lineLimit(16, reservesSpace: true)
+                }
+                else {
+                    TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"))
+                        .lineLimit(16)
+                }
+                if let account = NRState.shared.loggedInAccount?.account, account.privateKey != nil, tab == "Signer" {
+                    HStack {
+                        Text("Signing as")
+                        PFP(pubkey: account.publicKey, account: account, size: 30)
+                    }
+                }
+                if let error {
+                    Text(error)
+                        .fontWeight(.bold)
+                        .foregroundColor(.red)
                 }
             }
-            if let error {
-                Text(error)
-                    .fontWeight(.bold)
-                    .foregroundColor(.red)
-            }
-        }
-        .onChange(of: input) { newValue in
-            if input != newValue {
-                self.signedNEvent = nil
-            }
-
-        }
-        .navigationTitle(String(localized:"Sign any nostr event", comment:"Navigation title for screen to sign any nostr event"))
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button { UIPasteboard.general.string = input } label: { Image(systemName: "doc.on.clipboard.fill") }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(String(localized:"Publish", comment:"Button to publish")) { publish() }
-                    .disabled(signedNEvent == nil)
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(String(localized:"Sign event", comment:"Button to sign a nostr JSON event")) {
-                    let decoder = JSONDecoder()
-                    
-                    guard let inputData = input.data(using: .utf8) else {
-                        error = String(localized:"Could not convert data", comment: "Error message"); return
-                    }
-                    
-                    guard var nEvent = try? decoder.decode(AnyNEvent.self, from: inputData) else {
-                        error = String(localized:"Could not parse JSON", comment: "Error message"); return
-                    }
-                    
-                    guard let pk = NRState.shared.loggedInAccount?.account.privateKey else {
-                        error = String(localized:"Account has no private key", comment: "Error message"); return
-                    }
-                    
-                    guard let keys = try? NKeys(privateKeyHex: pk), let signedNEvent = try? nEvent.sign(keys), let verified = try? signedNEvent.verified(), verified else {
-                        error = String(localized:"Could not sign event", comment: "Error message"); return
-                    }
-
-
-                    input = signedNEvent.eventJson(.prettyPrinted)
-                    self.signedNEvent = signedNEvent
+            .onChange(of: tab) { newTab in
+                if newTab == "Broadcaster" {
+                    recheck(input)
                 }
-                .disabled(NRState.shared.loggedInAccount?.account.privateKey == nil)
             }
+            .onChange(of: input) { newValue in
+                recheck(newValue)
+            }
+            .navigationTitle(tab == "Signer" ? String(localized:"Sign any nostr event", comment:"Navigation title for screen to sign any nostr event") : String(localized:"Broadcast nostr event", comment:"Navigation title for screen to broadcast any nostr event"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { UIPasteboard.general.string = input } label: { Image(systemName: "doc.on.clipboard.fill") }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(String(localized:"Publish", comment:"Button to publish")) { publish() }
+                        .disabled(signedNEvent == nil)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if tab == "Signer" {
+                        Button(String(localized:"Sign event", comment:"Button to sign a nostr JSON event")) {
+                            let decoder = JSONDecoder()
+                            
+                            guard let inputData = input.data(using: .utf8) else {
+                                error = String(localized:"Could not convert data", comment: "Error message"); return
+                            }
+                            
+                            guard var nEvent = try? decoder.decode(AnyNEvent.self, from: inputData) else {
+                                error = String(localized:"Could not parse JSON", comment: "Error message"); return
+                            }
+                            
+                            guard let pk = NRState.shared.loggedInAccount?.account.privateKey else {
+                                error = String(localized:"Account has no private key", comment: "Error message"); return
+                            }
+                            
+                            guard let keys = try? NKeys(privateKeyHex: pk), let signedNEvent = try? nEvent.sign(keys), let verified = try? signedNEvent.verified(), verified else {
+                                error = String(localized:"Could not sign event", comment: "Error message"); return
+                            }
+
+
+                            input = signedNEvent.eventJson(.prettyPrinted)
+                            self.signedNEvent = signedNEvent
+                        }
+                        .disabled(NRState.shared.loggedInAccount?.account.privateKey == nil)
+                    }
+                }
+            }
+        }
+    }
+    
+    func recheck(_ newValue: String) {
+        guard newValue != "" else {
+            self.signedNEvent = nil
+            return
+        }
+        if input != newValue {
+            self.signedNEvent = nil
+        }
+
+        if tab == "Broadcaster" {
+            let decoder = JSONDecoder()
+            
+            guard let inputData = newValue.data(using: .utf8) else {
+                error = String(localized:"Could not convert data", comment: "Error message"); return
+            }
+            
+            guard var nEvent = try? decoder.decode(AnyNEvent.self, from: inputData) else {
+                error = String(localized:"Could not parse JSON", comment: "Error message"); return
+            }
+            
+           
+            
+            guard let verified = try? nEvent.verified(), verified else {
+                error = String(localized:"Unsigned or invalid event", comment: "Error message"); return
+            }
+            error = nil
+//            input = nEvent.eventJson(.prettyPrinted)
+            self.signedNEvent = nEvent
         }
     }
 }
@@ -100,6 +153,7 @@ struct AnySigner_Previews: PreviewProvider {
     static var previews: some View {
         NBNavigationStack {
             AnySigner()
+                .environmentObject(Themes.default)
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }
