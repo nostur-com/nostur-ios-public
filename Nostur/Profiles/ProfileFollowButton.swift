@@ -54,6 +54,7 @@ struct ProfileFollowButton: View {
             .sheet(item: $editingAccount) { account in
                 NBNavigationStack {
                     AccountEditView(account: account)
+                        .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.listBackground)

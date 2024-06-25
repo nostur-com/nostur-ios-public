@@ -10,6 +10,7 @@ import NukeUI
 import NavigationBackport
 
 struct AppRow: View {
+    @EnvironmentObject private var themes: Themes
     @Environment(\.openURL) private var openURL
     public var app: SuggestedApp
     private var appName: String { app.name }
@@ -73,6 +74,7 @@ struct AppRow: View {
                         showDetailSheet = false
                     })
                     .padding()
+                    .environmentObject(themes)
                 }
             }
             .nbUseNavigationStack(.never)

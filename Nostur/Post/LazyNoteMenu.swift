@@ -303,6 +303,7 @@ struct LazyNoteMenuSheet: View {
                     .listRowBackground(themes.theme.background)
                 }
             }
+            .environmentObject(themes)
             .scrollContentBackgroundHidden()
             .listStyle(.plain)
             .background(themes.theme.background)

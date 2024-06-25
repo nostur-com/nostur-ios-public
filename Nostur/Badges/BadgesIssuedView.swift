@@ -72,6 +72,7 @@ struct BadgesIssuedView: View {
             NBNavigationStack {
                 CreateNewBadgeSheet()
                     .environmentObject(la)
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)
