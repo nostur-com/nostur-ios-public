@@ -12,7 +12,7 @@ struct NRBalloonView: View {
     public var event: Event
     public var isSentByCurrentUser: Bool
     public var time: String
-    @State private var contentElements:[ContentElement] = []
+    @State private var contentElements: [ContentElement] = []
     @EnvironmentObject var themes: Themes
     
     var body: some View {

@@ -14,9 +14,9 @@ import Combine
 struct DMContentRenderer: View { // VIEW things
     @Environment(\.openURL) private var openURL
     private let pubkey: String // author of balloon (message)
-    private var theme:Theme
-    private let availableWidth:CGFloat
-    private let contentElements:[ContentElement]
+    private var theme: Theme
+    private let availableWidth: CGFloat
+    private let contentElements: [ContentElement]
     @State private var didStart = false
     @StateObject private var childDIM: DIMENSIONS
     private let isSentByCurrentUser: Bool
