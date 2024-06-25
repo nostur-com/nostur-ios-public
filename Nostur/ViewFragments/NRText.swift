@@ -172,7 +172,7 @@ struct NRTextFixed: UIViewRepresentable {
         self.themes = themes
         self.height = height
         self.fontColor = fontColor ?? themes.theme.primary
-        self.accentColor = accentColor
+        self.accentColor = accentColor ?? themes.theme.accent
     }
     
     init(_ text: String, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil) {
