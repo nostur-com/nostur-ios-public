@@ -431,6 +431,8 @@
 		1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */; };
 		1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49732297FCB5E0084F14E /* PreviewHelper.swift */; };
 		1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49736298029600084F14E /* NoteTextRenderView.swift */; };
+		1FD6C3482C2CCB350085A240 /* PostReactionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C3472C2CCB350085A240 /* PostReactionsModel.swift */; };
+		1FD6C34A2C2CD3600085A240 /* PostReactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C3492C2CD3600085A240 /* PostReactions.swift */; };
 		1FD6C4F82ACC41DB00885125 /* NWCWalletBalance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C4F72ACC41DB00885125 /* NWCWalletBalance.swift */; };
 		1FD78EEF2A0CB78B003E7B3E /* Kind1Default.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */; };
 		1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF02A0CB813003E7B3E /* Kind1.swift */; };
@@ -957,6 +959,8 @@
 		1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNoteToggle.swift; sourceTree = "<group>"; };
 		1FD49732297FCB5E0084F14E /* PreviewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelper.swift; sourceTree = "<group>"; };
 		1FD49736298029600084F14E /* NoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTextRenderView.swift; sourceTree = "<group>"; };
+		1FD6C3472C2CCB350085A240 /* PostReactionsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostReactionsModel.swift; sourceTree = "<group>"; };
+		1FD6C3492C2CD3600085A240 /* PostReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostReactions.swift; sourceTree = "<group>"; };
 		1FD6C4F72ACC41DB00885125 /* NWCWalletBalance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NWCWalletBalance.swift; sourceTree = "<group>"; };
 		1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1Default.swift; sourceTree = "<group>"; };
 		1FD78EF02A0CB813003E7B3E /* Kind1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1.swift; sourceTree = "<group>"; };
@@ -1107,6 +1111,7 @@
 				1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */,
 				1F3917072C23A07000A4B5AB /* VideoPreviews.swift */,
 				1F0ACD162B50113500155F94 /* WebsiteComments.swift */,
+				1FD6C3492C2CD3600085A240 /* PostReactions.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -1730,6 +1735,7 @@
 				1FAC42B42C03CB3900362997 /* GroupedReactionsFeedModel.swift */,
 				1FAC42B62C03D1C300362997 /* RepostsFeedModel.swift */,
 				1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */,
+				1FD6C3472C2CCB350085A240 /* PostReactionsModel.swift */,
 			);
 			path = MultiFeeds;
 			sourceTree = "<group>";
@@ -2280,6 +2286,7 @@
 				1F3D4BB72A25CC140084F939 /* AppView.swift in Sources */,
 				1FCFDDBD2A2881250096CD84 /* PNotification+CoreDataClass.swift in Sources */,
 				1F8AB1BB2B20BCCB00E4BD07 /* Settings+PostingToggle.swift in Sources */,
+				1FD6C3482C2CCB350085A240 /* PostReactionsModel.swift in Sources */,
 				1FD281542B16B0BB00978A9D /* CameraService+Enums.swift in Sources */,
 				1FF8BD1429D444D900C8C96A /* ProcessingStatus.swift in Sources */,
 				1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */,
@@ -2583,6 +2590,7 @@
 				1F71037D296BD9DE006245CC /* Nostr.swift in Sources */,
 				1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */,
 				1F2BD4A42A22206500F006AC /* SnapshotTest.swift in Sources */,
+				1FD6C34A2C2CD3600085A240 /* PostReactions.swift in Sources */,
 				1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */,
 				1F6629142B0D49BD00508988 /* RelayData.swift in Sources */,
 				1F88EE8E2AD12CFA006A83C3 /* MentionChoices.swift in Sources */,
