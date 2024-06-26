@@ -17,6 +17,7 @@ class ViewUpdates {
     public var profileUpdates = PassthroughSubject<ProfileInfo, Never>()
     public var bookmarkUpdates = PassthroughSubject<BookmarkUpdate, Never>()
     public var feedUpdates = PassthroughSubject<FeedUpdate, Never>()
+    public var relatedUpdates = PassthroughSubject<RelatedUpdate, Never>()
     
     public func sendMockProfileUpdate() {
         profileUpdates.send(ProfileInfo(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: Int.random(in: 1...33).description, pfpUrl: Int.random(in: 44...500).description))
@@ -107,6 +108,17 @@ enum FeedType {
     case Mentions
     case Zaps
     case Follows
+}
+
+struct RelatedUpdate {
+    let id = UUID()
+    let type: RelatedType
+    let eventId: String
+}
+
+enum RelatedType {
+    case Reactions
+    case Zaps
 }
 
 struct AccountData: Identifiable, Hashable {

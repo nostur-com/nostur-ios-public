@@ -280,6 +280,9 @@ class Importer {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
                         }
+                        if let reactionToId = savedEvent.reactionToId {
+                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reactions, eventId: reactionToId))
+                        }
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
@@ -496,6 +499,10 @@ class Importer {
                         if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
+                        }
+                        
+                        if let reactionToId = savedEvent.reactionToId {
+                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reactions, eventId: reactionToId))
                         }
                     }
                     

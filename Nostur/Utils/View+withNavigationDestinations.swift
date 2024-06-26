@@ -68,7 +68,7 @@ enum ViewPath: IdentifiableDestination {
     case Post(nrPost: NRPost)
     case Blocklist
     case Bookmarks(account: CloudAccount)
-    case NoteReactions(id: String)
+    case PostReactions(eventId: String)
     case NoteReposts(id: String)
     case NoteZaps(id: String)
     case Settings
@@ -129,8 +129,8 @@ extension View {
                             .equatable()
                     case .Blocklist:
                         BlockListView()
-                    case .NoteReactions(let id):
-                        NoteReactions(id: id)
+                    case .PostReactions(let eventId):
+                        PostReactions(eventId: eventId)
                     case .NoteReposts(let id):
                         NoteReposts(id: id)
                     case .NoteZaps(let id):

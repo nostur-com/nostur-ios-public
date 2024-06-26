@@ -23,7 +23,7 @@ struct DetailFooterFragment: View {
         Divider()
         TopZaps(id: nrPost.id)
         HStack {
-            NBNavigationLink(value: ViewPath.NoteReactions(id: nrPost.id)) {
+            NBNavigationLink(value: ViewPath.PostReactions(eventId: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.likesCount)
 //                        .fontWeight(.bold)
