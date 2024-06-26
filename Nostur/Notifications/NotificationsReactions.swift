@@ -14,7 +14,7 @@ struct NotificationsReactions: View {
     public let pubkey: String
     @Binding public var navPath: NBNavigationPath
     @EnvironmentObject private var themes: Themes
-    @StateObject private var model = ReactionsFeedModel()
+    @StateObject private var model = GroupedReactionsFeedModel()
     @State private var backlog = Backlog()
     @ObservedObject private var settings: SettingsStore = .shared
     
