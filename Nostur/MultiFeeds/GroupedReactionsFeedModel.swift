@@ -8,7 +8,7 @@
 import SwiftUI
 import Combine
 
-class ReactionsFeedModel: ObservableObject {
+class GroupedReactionsFeedModel: ObservableObject {
     @Published public var groupedReactions: [GroupedReactions] = []
 
     private var pubkey: String?
