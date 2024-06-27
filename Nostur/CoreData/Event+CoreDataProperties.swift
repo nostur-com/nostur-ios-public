@@ -1233,7 +1233,7 @@ extension Event {
                 // We need to get firstQuote from db or cache
                 if let firstE = event.firstE() {
                     if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                        savedEvent.firstQuote = repostedEvent
+                        savedEvent.firstQuote = repostedEvent // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts 
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
 //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))

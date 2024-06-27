@@ -117,7 +117,7 @@ class Unpublisher {
         DataProvider.shared().save()
     }
     
-    private func sendToRelays(_ nEvent:NEvent) {
+    private func sendToRelays(_ nEvent: NEvent) {
         if nEvent.kind == .nwcRequest {
             L.og.info("⚡️ Sending .nwcRequest to NWC relay")
             ConnectionPool.shared.sendMessage(
