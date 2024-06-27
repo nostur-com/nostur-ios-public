@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import CoreData
+import NostrEssentials
 
 public typealias CanonicalRelayUrl = String // lowercased, without trailing slash on root domain
 
@@ -232,6 +233,7 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    // TODO: NEED TO CHECK HOW WE HANDLE CLOSE PER CONNECTION WITH THE PREFERRED RELAYS....
     @MainActor
     func closeSubscription(_ subscriptionId:String) {
         for (_, connection) in self.connections {
@@ -261,11 +263,11 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
-    
-    func sendMessage(_ message: ClientMessage, subscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey:String? = nil) {
+    // Can use from any context (will switch to connection queue)
+    func sendMessage(_ message: NosturClientMessage, subscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil) {
         #if DEBUG
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-                print("Canvas.sendMessage: \(message.type) \(message.message)")
+                print("Canvas.sendMessage: \(message.clientMessage.type) \(message.message)")
                 return
             }
         #endif
@@ -275,7 +277,8 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
-    private func sendMessageAlreadyInQueue(_ message: ClientMessage, subscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil) {
+    // Only use when already in connection queue
+    private func sendMessageAlreadyInQueue(_ message: NosturClientMessage, subscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil) {
         #if DEBUG
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             fatalError("Should only be called from inside queue.async { }")
@@ -379,15 +382,107 @@ public class ConnectionPool: ObservableObject {
                 }
             }
         }
+        
+        // Additions for Outbox taken from nostr-essentials
+        
+        guard let preferredRelays = self.preferredRelays else { return }
+        
+        // SEND REQ TO WHERE OTHERS WRITE (TO FIND THEIR POSTS, SO WE CAN READ)
+        if message.type == .REQ && !preferredRelays.findEventsRelays.isEmpty {
+            self.sendToOthersPreferredWriteRelays(message.clientMessage, subscriptionId: subscriptionId)
+        }
+        
+        // SEND EVENT TO WHERE OTHERS READ (TO SEND REPLIES ETC SO THEY CAN READ IT)
+        else if message.type == .EVENT && !preferredRelays.reachUserRelays.isEmpty {
+            let pTags: Set<String> = Set( message.clientMessage.event?.tags.filter { $0.type == "p" }.compactMap { $0.pubkey } ?? [] )
+            self.sendToOthersPreferredReadRelays(message.clientMessage, pubkeys: pTags)
+        }
     }
     
     @MainActor
-    func sendEphemeralMessage(_ message:String, relay:String) {
+    func sendEphemeralMessage(_ message: String, relay: String) {
         let connection = addEphemeralConnection(RelayData.new(url: relay, read: true, write: false, search: true, auth: false, excludedPubkeys: []))
         if !connection.isConnected {
             connection.connect()
         }
         connection.sendMessage(message)
+    }
+    
+    // -- MARK: Outbox code taken from nostr-essentials, because to generic there, need more Nostur specific wiring
+    
+    // Pubkeys grouped by relay url for finding events (.findEventsRelays) (their write relays)
+    // and pubkeys grouped by relay url for publishing to reach them (.reachUserRelays) (their read relays)
+    private var preferredRelays: PreferredRelays?
+    
+    private var maxPreferredRelays: Int = 50
+    
+    // Relays to find posts on relays not in our relay set
+    public var findEventsConnections: [CanonicalRelayUrl: RelayConnection] = [:]
+    
+    // Relays to reach users on relays not in our relay set
+    public var reachUsersConnections: [CanonicalRelayUrl: RelayConnection] = [:]
+    
+    private var _pubkeysByRelay: [String: Set<String>] = [:]
+    
+    public func setPreferredRelays(using kind10002s: [NostrEssentials.Event], maxPreferredRelays: Int = 50) {
+        self.preferredRelays = pubkeysByRelay(kind10002s)
+        
+        // Set limit because to total relays will be derived from external events and can be abused
+        self.maxPreferredRelays = maxPreferredRelays
+    }
+    
+    // SEND REQ TO WHERE OTHERS WRITE (TO FIND THEIR POSTS, SO WE CAN READ)
+    private func sendToOthersPreferredWriteRelays(_ message: NostrEssentials.ClientMessage, subscriptionId: String? = nil) {
+        guard let preferredRelays = self.preferredRelays else { return }
+        
+        let ourReadRelays: Set<String> = Set(connections.filter { $0.value.relayData.read }.map { $0.key })
+        
+        // Take pubkeys from first filter. Could be more and different but that wouldn't make sense for an outbox request.
+        guard let filters = message.filters else { return }
+        guard let pubkeys = filters.first?.authors else { return }
+        
+        let plan: RequestPlan = createRequestPlan(pubkeys: pubkeys, reqFilters: filters, ourReadRelays: ourReadRelays, preferredRelays: preferredRelays)
+        
+        for req in plan.findEventsRequests
+            .filter({ (relay: String, findEventsRequest: FindEventsRequest) in
+                // Only requests that have .authors > 0
+                // Requests can have multiple filters, we can count the authors on just the first one, all others should be the same (for THIS relay)
+                findEventsRequest.pubkeys.count > 0
+                
+            })
+            .sorted(by: {
+                $0.value.pubkeys.count > $1.value.pubkeys.count
+            })
+            .prefix(self.maxPreferredRelays) // SANITY
+        {
+            print("🟩 SENDING REQ -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description)")
+        }
+    }
+    
+    // SEND EVENT TO WHERE OTHERS READ (TO SEND REPLIES ETC SO THEY CAN READ IT)
+    private func sendToOthersPreferredReadRelays(_ message: NostrEssentials.ClientMessage, pubkeys: Set<String>) {
+        guard let preferredRelays = self.preferredRelays else { return }
+        
+        let ourWriteRelays: Set<String> = Set(connections.filter { $0.value.relayData.write }.map { $0.key })
+        
+        // Take pubkeys from first filter. Could be more and different but that wouldn't make sense for an outbox request.
+        guard let filters = message.filters else { return }
+        guard let pubkeys = filters.first?.authors else { return }
+        
+        let plan: WritePlan = createWritePlan(pubkeys: pubkeys, ourWriteRelays: ourWriteRelays, preferredRelays: preferredRelays)
+        
+        for (relay, pubkeys) in plan.relays
+            .filter({ (relay: String, pubkeys: Set<String>) in
+                // Only relays that have .authors > 0
+                pubkeys.count > 0
+                
+            })
+            .sorted(by: {
+                $0.value.count > $1.value.count
+            }) {
+            
+            print("🟩 SENDING EVENT -- \(relay): \(pubkeys.joined(separator: ","))")
+        }
     }
 }
 

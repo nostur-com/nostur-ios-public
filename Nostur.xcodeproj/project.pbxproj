@@ -231,6 +231,7 @@
 		1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */; };
 		1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65BE29A14BA3009FF3EA /* Zaps.swift */; };
 		1F7D47A32B3670B90071476A /* GalleryFullScreenSwiper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7D47A22B3670B90071476A /* GalleryFullScreenSwiper.swift */; };
+		1F7E19352C2DFEDC00034B06 /* NosturClientMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E19342C2DFEDC00034B06 /* NosturClientMessage.swift */; };
 		1F7E38EC2A2D9AED00ABAA85 /* DIMENSIONS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E38EB2A2D9AED00ABAA85 /* DIMENSIONS.swift */; };
 		1F7E38EE2A2DDE7300ABAA85 /* AnySigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E38ED2A2DDE7300ABAA85 /* AnySigner.swift */; };
 		1F7E40EA29BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E40E829BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift */; };
@@ -758,6 +759,7 @@
 		1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadOnlyAccountInformationSheet.swift; sourceTree = "<group>"; };
 		1F7C65BE29A14BA3009FF3EA /* Zaps.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Zaps.swift; sourceTree = "<group>"; };
 		1F7D47A22B3670B90071476A /* GalleryFullScreenSwiper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFullScreenSwiper.swift; sourceTree = "<group>"; };
+		1F7E19342C2DFEDC00034B06 /* NosturClientMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturClientMessage.swift; sourceTree = "<group>"; };
 		1F7E38EB2A2D9AED00ABAA85 /* DIMENSIONS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DIMENSIONS.swift; sourceTree = "<group>"; };
 		1F7E38ED2A2DDE7300ABAA85 /* AnySigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnySigner.swift; sourceTree = "<group>"; };
 		1F7E40E829BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrivateNote+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1534,6 +1536,7 @@
 				1F8B134A297B3551002EB8CF /* NIP19.swift */,
 				1FC78F6829CA28940009C1C7 /* NKeys.swift */,
 				1F71037C296BD9DE006245CC /* Nostr.swift */,
+				1F7E19342C2DFEDC00034B06 /* NosturClientMessage.swift */,
 				1FA0599C2A7414320039643C /* RelayMessage.swift */,
 				1F75257D2996A1A900477AF2 /* Unpublisher.swift */,
 				1F0A25552A3E139E00178A5C /* WebOfTrust.swift */,
@@ -2581,6 +2584,7 @@
 				1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */,
 				1F365FBA2AF2F561003A82CB /* Bookmark+CoreDataClass.swift in Sources */,
 				1F71ACF82AAEE2790040EA3B /* OwnPostFooter.swift in Sources */,
+				1F7E19352C2DFEDC00034B06 /* NosturClientMessage.swift in Sources */,
 				1F77D1EC2A1FB3CA00895DB4 /* ThreadReplies.swift in Sources */,
 				1F2DD42D2A29EACA0028A062 /* NWCConnection+CoreDataClass.swift in Sources */,
 				1F056FA62A5C2E7900578B35 /* ZapAmountButton.swift in Sources */,

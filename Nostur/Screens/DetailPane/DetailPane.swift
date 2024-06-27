@@ -8,6 +8,7 @@
 import SwiftUI
 import UIKit
 import NavigationBackport
+import NostrEssentials
 
 struct DetailPane: View {
     @EnvironmentObject private var themes: Themes
@@ -84,8 +85,15 @@ struct DetailPane: View {
                                         }
                                         else {
                                             // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
-                                            let closeMessage = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "REALTIME-DETAIL"), relayType: .READ)
-                                            ConnectionPool.shared.sendMessage(closeMessage)
+                                            ConnectionPool.shared.sendMessage(
+                                                NosturClientMessage(
+                                                    clientMessage: NostrEssentials.ClientMessage(
+                                                        type: .CLOSE,
+                                                        subscriptionId: "REALTIME-DETAIL"
+                                                    ),
+                                                    relayType: .READ
+                                                )
+                                            )
                                         }
                                     }
                                     // TODO make tabs identifiable, and make animation
@@ -287,9 +295,16 @@ struct DetailPane: View {
                         }
                     }
                     else {
-                        // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
-                        let closeMessage = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "REALTIME-DETAIL"), relayType: .READ)
-                        ConnectionPool.shared.sendMessage(closeMessage)
+                        // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost                        
+                        ConnectionPool.shared.sendMessage(
+                            NosturClientMessage(
+                                clientMessage: NostrEssentials.ClientMessage(
+                                    type: .CLOSE,
+                                    subscriptionId: "REALTIME-DETAIL"
+                                ),
+                                relayType: .READ
+                            )
+                        )
                     }
                 }
                 tm.tabs.remove(at: index)

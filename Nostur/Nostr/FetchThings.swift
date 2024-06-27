@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import NostrEssentials
 
-func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {
+func fetchProfiles(pubkeys: Set<String>, subscriptionId: String? = nil) {
     // Normally we use "Profiles" sub, and track the timestamp since last fetch
     // if we fetch someone elses feed, the sub is not "Profiles" but "SomeoneElsesProfiles", and we skip the date check
     let since = subscriptionId == "Profiles" ? (Nostur.account()?.lastProfileReceivedAt ?? nil) : nil
@@ -16,12 +17,11 @@ func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {
     
     ConnectionPool.shared
         .sendMessage(
-            ClientMessage(
-                type: .REQ,
-                message: RM.getUserMetadata(
-                    pubkeys: Array(pubkeys),
+            NosturClientMessage(
+                clientMessage: NostrEssentials.ClientMessage(
+                    type: .REQ,
                     subscriptionId: subscriptionId,
-                    since: sinceNTimestamp
+                    filters: [Filters(authors: pubkeys, kinds: [0], since: sinceNTimestamp?.timestamp)]
                 ),
                 relayType: .READ
             ),
@@ -29,51 +29,19 @@ func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {
         )
 }
 
-func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, subscriptionId:String? = nil) {
-//    print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
-    if (since != nil) {
-        
-        let req = RequestMessage.getFollowingEvents(
-            pubkeys: Array(pubkeys),
-            limit: amount!,
-            subscriptionId: subscriptionId,
-            since: NTimestamp(timestamp: Int(since!))
+func fetchEvents(pubkeys: Set<String>, amount: Int? = 5000, since: Int64? = nil, subscriptionId: String? = nil) {
+    ConnectionPool.shared
+        .sendMessage(
+            NosturClientMessage(
+                clientMessage: NostrEssentials.ClientMessage(
+                    type: .REQ,
+                    subscriptionId: subscriptionId,
+                    filters: [Filters(authors: pubkeys, kinds: [1,5,6,9802,30023,34235], since: since != nil ? Int(since!) : nil, limit: amount)]
+                ),
+                relayType: .READ
+            ),
+            subscriptionId: subscriptionId
         )
-        
-        let clientMessage = ClientMessage(
-            type: .REQ,
-            message: req,
-            relayType: .READ
-        )
-        
-        ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
-    }
-    else {
-        let req = RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!, subscriptionId: subscriptionId)
-        let clientMessage = ClientMessage(
-            type: .REQ,
-            message: req,
-            relayType: .READ
-        )
-        ConnectionPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
-    }
-}
-
-// SAME BUT pubkeys already in string
-func fetchEvents(pubkeysString:String, amount:Int? = 5000, since:Int64? = nil, subscriptionId:String? = nil) {
-//    print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
-    if (since != nil) {
-        let getFollowingEvents = RM.getFollowingEvents(
-            pubkeysString: pubkeysString,
-            limit: amount!,
-            subscriptionId: subscriptionId,
-            since: NTimestamp(timestamp: Int(since!))
-        )
-        req(getFollowingEvents, activeSubscriptionId: subscriptionId)
-    }
-    else {
-        req(RM.getFollowingEvents(pubkeysString: pubkeysString, limit: amount!, subscriptionId: subscriptionId), activeSubscriptionId: subscriptionId)
-    }
 }
 
 func fetchStuffForLastAddedNotes(ids:[String]) {
@@ -81,7 +49,21 @@ func fetchStuffForLastAddedNotes(ids:[String]) {
         L.og.error("🔴🔴 fetchStuffForLastAddedNotes, ids is empty, fix it.")
         return
     }
-    req(RM.getEventReferences(ids: ids, subscriptionId: "VIEWING-"+UUID().uuidString))
+    
+    let sub = "VIEWING-"+UUID().uuidString
+    
+    ConnectionPool.shared
+        .sendMessage(
+            NosturClientMessage(
+                clientMessage: NostrEssentials.ClientMessage(
+                    type: .REQ,
+                    subscriptionId: sub,
+                    filters: [Filters(ids: Set(ids), kinds: [1,6,7,9735], limit: 5000)]
+                ),
+                relayType: .READ
+            ),
+            subscriptionId: sub
+        )
 }
 
 func pubkeys(_ contacts:[Contact]) -> [String] {

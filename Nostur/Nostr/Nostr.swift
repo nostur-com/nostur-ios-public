@@ -236,7 +236,7 @@ struct NSerializableEvent: Encodable {
     }
 }
 
-struct NEvent: Codable {
+public struct NEvent: Codable {
     
     public var id: String
     public var publicKey: String

@@ -8,6 +8,7 @@
 import Foundation
 import CoreData
 import UIKit
+import NostrEssentials
 
 /**
  Publish events after 9 seconds, gives time to undo before sending. (accidental likes etc)
@@ -119,7 +120,15 @@ class Unpublisher {
     private func sendToRelays(_ nEvent:NEvent) {
         if nEvent.kind == .nwcRequest {
             L.og.info("⚡️ Sending .nwcRequest to NWC relay")
-            ConnectionPool.shared.sendMessage(ClientMessage(onlyForNWCRelay: true, message: nEvent.wrappedEventJson(), relayType: .READ), accountPubkey: nEvent.publicKey)
+            ConnectionPool.shared.sendMessage(
+                NosturClientMessage(
+                    clientMessage: NostrEssentials.ClientMessage(type: .REQ),
+                    onlyForNWCRelay: true,
+                    relayType: .READ,
+                    message: nEvent.wrappedEventJson()
+                ),
+                accountPubkey: nEvent.publicKey
+            )
             return
         }
 
@@ -141,7 +150,15 @@ class Unpublisher {
                         NRState.shared.restoreDraft = ""
                     }
                 }
-                ConnectionPool.shared.sendMessage(ClientMessage(message: nEvent.wrappedEventJson(), relayType: .WRITE), accountPubkey: nEvent.publicKey)
+                
+                ConnectionPool.shared.sendMessage(
+                    NosturClientMessage(
+                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT),
+                        relayType: .WRITE,
+                        nEvent: nEvent
+                    ),
+                    accountPubkey: nEvent.publicKey
+                )
                 
                 dbEvent.flags = ""
                 dbEvent.cancellationId = nil
@@ -192,7 +209,15 @@ class Unpublisher {
                         NRState.shared.restoreDraft = ""
                     }
                 }
-                ConnectionPool.shared.sendMessage(ClientMessage(message: nEvent.wrappedEventJson(), relayType: .WRITE), accountPubkey: nEvent.publicKey)
+                
+                ConnectionPool.shared.sendMessage(
+                    NosturClientMessage(
+                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT),
+                        relayType: .WRITE,
+                        nEvent: nEvent
+                    ),
+                    accountPubkey: nEvent.publicKey
+                )
             }
         }
     }
