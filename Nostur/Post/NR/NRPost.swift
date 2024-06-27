@@ -1190,7 +1190,7 @@ extension NRPost { // Helpers for grouped replies
                 fr.predicate = NSPredicate(format: "created_at > %i AND replyToRootId = %@ AND kind == 1 AND NOT pubkey IN %@", afterCreatedAt, self.id, blocks())
             }
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true )]
-            let repliesToRoot = (try? bg().fetch(fr)) ?? []
+            let repliesToRoot = (try? ctx.fetch(fr)) ?? []
             for reply in repliesToRoot { // Add to queue because some may be missing .replyTo
                 EventRelationsQueue.shared.addAwaitingEvent(reply, debugInfo: "reply in .repliesToRoot")
             }

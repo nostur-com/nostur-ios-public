@@ -102,13 +102,17 @@ struct QuotedNoteFragmentView: View {
             .onAppear {
                 if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
                     L.og.debug("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(nrPost.pubkey)")
-                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.onAppear")
-                    QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+                    bg().perform {
+                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.onAppear")
+                        QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+                    }
                 }
             }
             .onDisappear {
                 if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
-                    QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                    bg().perform {
+                        QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                    }
                 }
             }
 //            .transaction { t in t.animation = nil }

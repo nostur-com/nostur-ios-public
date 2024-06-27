@@ -255,7 +255,8 @@ class Importer {
                     }
                     
                     // 493.00 ms    3.0%    1.00 ms specialized static Event.saveEvent(event:relays:flags:kind6firstQuote:context:)
-                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote, context: bgContext) // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
+                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, context: bgContext) // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
+                        // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts
                     NotificationsViewModel.shared.checkNeedsUpdate(savedEvent)
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
