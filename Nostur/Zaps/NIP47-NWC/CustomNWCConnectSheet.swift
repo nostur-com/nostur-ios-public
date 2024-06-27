@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct CustomNWCConnectSheet: View {
     @EnvironmentObject private var themes: Themes
@@ -188,7 +189,17 @@ struct CustomNWCConnectSheet: View {
                 Importer.shared.nwcConnection = c
                 
                 L.og.info("⚡️ Fetching 13194 (info) from NWC relay")
-                ConnectionPool.shared.sendMessage(ClientMessage(onlyForNWCRelay: true, message: RM.getNWCInfo(walletPubkey: walletPubkey), relayType: .READ))
+                ConnectionPool.shared
+                    .sendMessage(
+                        NosturClientMessage(
+                            clientMessage: NostrEssentials.ClientMessage(
+                                type: .REQ,
+                                filters: [Filters(authors: [walletPubkey], kinds: [13194], limit: 1)]
+                            ),
+                            onlyForNWCRelay: true,
+                            relayType: .READ
+                        )
+                    )
             }
         }
         

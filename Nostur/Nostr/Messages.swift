@@ -26,7 +26,6 @@ struct ClientMessage {
     var type:ClientMessage.type = .EVENT
     var message:String
     var relayType:RelayType
-    var accountPubkey:String = "APP"
     
     static func close(subscriptionId:String) -> String {
         return "[\"CLOSE\", \"\(subscriptionId)\"]"
@@ -517,7 +516,9 @@ enum ReportType:String {
 //        limit: 500,
 //        since: 0
 //    ))
-func req(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> = [], accountPubkey:String? = nil, relayType:ClientMessage.RelayType = .READ) {
+import NostrEssentials
+
+func req(_ rm: String, activeSubscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
     #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
         return
@@ -529,17 +530,37 @@ func req(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<RelayData> 
     if Thread.isMainThread {
         DispatchQueue.global().async {
             ConnectionPool.shared.sendMessage(
-                ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm, relayType: relayType, accountPubkey: pubkey),
+                NosturClientMessage(
+                    clientMessage: NostrEssentials.ClientMessage(
+                        type: .REQ,
+                        subscriptionId: activeSubscriptionId
+                    ),
+                    onlyForNWCRelay: activeSubscriptionId == "NWC",
+                    onlyForNCRelay: activeSubscriptionId == "NC",
+                    relayType: relayType,
+                    message: rm
+                ),
                 subscriptionId: activeSubscriptionId,
-                relays: relays
+                relays: relays,
+                accountPubkey: pubkey
             )
         }
     }
     else {
         ConnectionPool.shared.sendMessage(
-            ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm, relayType: relayType, accountPubkey: pubkey),
+            NosturClientMessage(
+                clientMessage: NostrEssentials.ClientMessage(
+                    type: .REQ,
+                    subscriptionId: activeSubscriptionId
+                ),
+                onlyForNWCRelay: activeSubscriptionId == "NWC",
+                onlyForNCRelay: activeSubscriptionId == "NC",
+                relayType: relayType,
+                message: rm
+            ),
             subscriptionId: activeSubscriptionId,
-            relays: relays
+            relays: relays,
+            accountPubkey: pubkey
         )
     }
 }

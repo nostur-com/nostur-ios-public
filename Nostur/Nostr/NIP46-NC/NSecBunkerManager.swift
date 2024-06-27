@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import NostrEssentials
 
 // TODO: The happy paths works fine, but need to handle errors, timeouts, etc and notify user instead of silent fail.
 class NSecBunkerManager: ObservableObject {
@@ -221,7 +222,15 @@ class NSecBunkerManager: ObservableObject {
             req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: bunkerManagedPublicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
             
             // Send connection request
-            ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey)
+            ConnectionPool.shared.sendMessage(
+                NosturClientMessage(
+                    clientMessage: NostrEssentials.ClientMessage(type: .EVENT),
+                    onlyForNCRelay: true,
+                    relayType: .READ,
+                    nEvent: signedReq
+                ),
+                accountPubkey: account.publicKey
+            )
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) { // Must wait until connected to bunker relay
@@ -278,7 +287,15 @@ class NSecBunkerManager: ObservableObject {
         req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey)
+        ConnectionPool.shared.sendMessage(
+            NosturClientMessage(
+                clientMessage: NostrEssentials.ClientMessage(type: .EVENT),
+                onlyForNCRelay: true,
+                relayType: .READ,
+                nEvent: signedReq
+            ),
+            accountPubkey: account.publicKey
+        )
     }
     
     
@@ -316,13 +333,29 @@ class NSecBunkerManager: ObservableObject {
         req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker, ping first for reliability
-        ConnectionPool.shared.sendMessage(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson(), relayType: .READ, accountPubkey: account.publicKey), accountPubkey: signedReq.publicKey)
+        ConnectionPool.shared.sendMessage(
+            NosturClientMessage(
+                clientMessage: NostrEssentials.ClientMessage(type: .EVENT),
+                onlyForNCRelay: true,
+                relayType: .READ,
+                nEvent: signedReq
+            ),
+            accountPubkey: account.publicKey
+        )
     }
     
-    private func handleSignedEvent(eventString:String) {
+    private func handleSignedEvent(eventString: String) {
         L.og.info("🏰 NSECBUNKER signed event received, ready to publish: \(eventString)")
         let accountPubkey = parsePubkey(eventString)
-        ConnectionPool.shared.sendMessage(ClientMessage(message: "[\"EVENT\",\(eventString)", relayType: .READ, accountPubkey: accountPubkey ?? "APP"), accountPubkey: accountPubkey)
+        
+        ConnectionPool.shared.sendMessage(
+            NosturClientMessage(
+                clientMessage: NostrEssentials.ClientMessage(type: .EVENT),
+                relayType: .WRITE,
+                message: "[\"EVENT\",\(eventString)"
+            ),
+            accountPubkey: accountPubkey
+        ) // TODO: Outbox needs to know p's for inbox relays?
     }
     
     enum STATE {

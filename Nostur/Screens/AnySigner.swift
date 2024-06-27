@@ -7,6 +7,7 @@
 
 import SwiftUI
 import secp256k1
+import NostrEssentials
 
 /// Sign any unsigned nostr event with your key
 struct AnySigner: View {
@@ -19,7 +20,17 @@ struct AnySigner: View {
     
     private func publish() {
         if let signedNEvent = signedNEvent {
-            ConnectionPool.shared.sendMessage(ClientMessage(message: signedNEvent.wrappedEventJson(), relayType: .WRITE, accountPubkey: signedNEvent.publicKey!), accountPubkey: signedNEvent.publicKey)
+            ConnectionPool.shared
+                .sendMessage(
+                    NosturClientMessage(
+                        clientMessage: NostrEssentials.ClientMessage(
+                            type: .EVENT
+                        ),
+                        relayType: .WRITE,
+                        message: signedNEvent.wrappedEventJson()
+                    ),
+                    accountPubkey: signedNEvent.publicKey!
+                )
             
             // TODO: Should also save in database, but AnyNEvent is not NEvent so can't call saveEvent()
             // Need to refactor AnyNEvent to just be NEvent...
