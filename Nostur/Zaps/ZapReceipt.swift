@@ -127,7 +127,7 @@ struct ZappedFrom: View {
     var createdAt: Date
     
     var body: some View {
-        VStack(alignment: .leading) {
+        HStack {
             Text(name ?? String(pubkey.prefix(11)))
                 .foregroundColor(.primary)
                 .fontWeight(.bold)

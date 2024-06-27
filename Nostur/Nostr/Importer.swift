@@ -293,6 +293,10 @@ class Importer {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Zaps, accountPubkey: otherPubkey))
                         }
+                        
+                        if let zappedEventId = savedEvent.zappedEventId {
+                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Zaps, eventId: zappedEventId))
+                        }
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
@@ -513,6 +517,10 @@ class Importer {
                         if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Zaps, accountPubkey: otherPubkey))
+                        }
+                        
+                        if let zappedEventId = savedEvent.zappedEventId {
+                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Zaps, eventId: zappedEventId))
                         }
                     }
                     

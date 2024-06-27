@@ -64,8 +64,8 @@ class ZapsFeedModel: ObservableObject {
             let eventsZapped: [Event] = allZapEvents.compactMap { $0.zappedEvent }
             let uniqueEventsZapped: Set<Event> = Set(eventsZapped)
         
-            let postZaps: [PostZaps] = uniqueEventsZapped.map { zappedEvent in
-                PostZaps(
+            let postZaps: [GroupedPostZaps] = uniqueEventsZapped.map { zappedEvent in
+                GroupedPostZaps(
                     zaps: self.allZapEvents
                         .filter { $0.zappedEventId == zappedEvent.id }
                         .map { ($0, $0.naiveSats)  } // We need the .naiveSats from 9735 later when we only have 9734
@@ -175,7 +175,7 @@ struct SingleZap: Identifiable {
     public let content: String // zap message
 }
 
-class PostZaps: ObservableObject, Identifiable {
+class GroupedPostZaps: ObservableObject, Identifiable {
     public var id: String { nrPost.id }
     @Published public var zaps: [SingleZap]
     public let nrPost: NRPost
@@ -206,7 +206,7 @@ struct PostOrProfileZaps: Identifiable {
         return .Unknown
     }
     
-    public var post: PostZaps?
+    public var post: GroupedPostZaps?
     public var profile: SingleZap?
     
     public var mostRecentCreatedAt: Int64 {
