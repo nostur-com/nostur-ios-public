@@ -433,6 +433,8 @@
 		1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49736298029600084F14E /* NoteTextRenderView.swift */; };
 		1FD6C3482C2CCB350085A240 /* PostReactionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C3472C2CCB350085A240 /* PostReactionsModel.swift */; };
 		1FD6C34A2C2CD3600085A240 /* PostReactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C3492C2CD3600085A240 /* PostReactions.swift */; };
+		1FD6C34D2C2CDA320085A240 /* PostZapsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C34C2C2CDA320085A240 /* PostZapsModel.swift */; };
+		1FD6C34F2C2CDEDF0085A240 /* PostZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C34E2C2CDEDF0085A240 /* PostZaps.swift */; };
 		1FD6C4F82ACC41DB00885125 /* NWCWalletBalance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C4F72ACC41DB00885125 /* NWCWalletBalance.swift */; };
 		1FD78EEF2A0CB78B003E7B3E /* Kind1Default.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */; };
 		1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF02A0CB813003E7B3E /* Kind1.swift */; };
@@ -961,6 +963,8 @@
 		1FD49736298029600084F14E /* NoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTextRenderView.swift; sourceTree = "<group>"; };
 		1FD6C3472C2CCB350085A240 /* PostReactionsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostReactionsModel.swift; sourceTree = "<group>"; };
 		1FD6C3492C2CD3600085A240 /* PostReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostReactions.swift; sourceTree = "<group>"; };
+		1FD6C34C2C2CDA320085A240 /* PostZapsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostZapsModel.swift; sourceTree = "<group>"; };
+		1FD6C34E2C2CDEDF0085A240 /* PostZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostZaps.swift; sourceTree = "<group>"; };
 		1FD6C4F72ACC41DB00885125 /* NWCWalletBalance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NWCWalletBalance.swift; sourceTree = "<group>"; };
 		1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1Default.swift; sourceTree = "<group>"; };
 		1FD78EF02A0CB813003E7B3E /* Kind1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1.swift; sourceTree = "<group>"; };
@@ -1069,6 +1073,7 @@
 		1F00E8C129C2626500797B78 /* Post */ = {
 			isa = PBXGroup;
 			children = (
+				1FD6C34B2C2CD9D30085A240 /* Related */,
 				1FC0F5A12A4AEAE8004E4DAA /* Article */,
 				1FD78EED2A0CB770003E7B3E /* Kinds */,
 				1F685B502A0D1886009EEC9B /* NR */,
@@ -1091,8 +1096,6 @@
 				1FB6E6EF29E30909008BE8A6 /* LinkPreviewView.swift */,
 				1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */,
 				1F4C1C272A07AB090010573F /* NEventView.swift */,
-				1FC268C629A2CC4F00A2B577 /* NoteReactions.swift */,
-				1F527CFC2A98CB3100128AD6 /* NoteReposts.swift */,
 				1FB130B029C0DB07004AC98D /* NoteRow.swift */,
 				1FD49736298029600084F14E /* NoteTextRenderView.swift */,
 				1F4C1C292A07B21F0010573F /* NProfileView.swift */,
@@ -1108,10 +1111,8 @@
 				1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */,
 				1F7C4CAE2AB1DDD400145D83 /* Repost.swift */,
 				1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */,
-				1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */,
 				1F3917072C23A07000A4B5AB /* VideoPreviews.swift */,
 				1F0ACD162B50113500155F94 /* WebsiteComments.swift */,
-				1FD6C3492C2CD3600085A240 /* PostReactions.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -1735,7 +1736,6 @@
 				1FAC42B42C03CB3900362997 /* GroupedReactionsFeedModel.swift */,
 				1FAC42B62C03D1C300362997 /* RepostsFeedModel.swift */,
 				1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */,
-				1FD6C3472C2CCB350085A240 /* PostReactionsModel.swift */,
 			);
 			path = MultiFeeds;
 			sourceTree = "<group>";
@@ -2043,6 +2043,21 @@
 			path = Profiles;
 			sourceTree = "<group>";
 		};
+		1FD6C34B2C2CD9D30085A240 /* Related */ = {
+			isa = PBXGroup;
+			children = (
+				1FC268C629A2CC4F00A2B577 /* NoteReactions.swift */,
+				1F527CFC2A98CB3100128AD6 /* NoteReposts.swift */,
+				1F065A9829A37A47003421D3 /* NoteZaps.swift */,
+				1FD6C3492C2CD3600085A240 /* PostReactions.swift */,
+				1FD6C3472C2CCB350085A240 /* PostReactionsModel.swift */,
+				1FD6C34C2C2CDA320085A240 /* PostZapsModel.swift */,
+				1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */,
+				1FD6C34E2C2CDEDF0085A240 /* PostZaps.swift */,
+			);
+			path = Related;
+			sourceTree = "<group>";
+		};
 		1FD78EED2A0CB770003E7B3E /* Kinds */ = {
 			isa = PBXGroup;
 			children = (
@@ -2051,7 +2066,6 @@
 				1FD78EF02A0CB813003E7B3E /* Kind1.swift */,
 				1FD78EF22A0CB878003E7B3E /* Highlight.swift */,
 				1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */,
-				1F065A9829A37A47003421D3 /* NoteZaps.swift */,
 				1F13BF9C2B4F7C4000607D98 /* URLView.swift */,
 			);
 			path = Kinds;
@@ -2397,6 +2411,7 @@
 				1F810B3329E670AB006B1614 /* MutedWords+CoreDataClass.swift in Sources */,
 				1F1F13032AA9A68100DDED82 /* Hot.swift in Sources */,
 				1FA0599F2A74D9690039643C /* LVM+pubkeys.swift in Sources */,
+				1FD6C34D2C2CDA320085A240 /* PostZapsModel.swift in Sources */,
 				1F685B562A0D6E96009EEC9B /* NRReplyingToBuilder.swift in Sources */,
 				1F0CA5D82AA68DF200DC10CD /* DirectMessageRows.swift in Sources */,
 				1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */,
@@ -2506,6 +2521,7 @@
 				1FB6E6F029E30909008BE8A6 /* LinkPreviewView.swift in Sources */,
 				1FC7A49929F9389100645FEF /* NostrcheckMeService.swift in Sources */,
 				1F49C80829B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift in Sources */,
+				1FD6C34F2C2CDEDF0085A240 /* PostZaps.swift in Sources */,
 				1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */,
 				1FD281562B16B25C00978A9D /* PhotoCaptureProcessor.swift in Sources */,
 				1F7B218C2AE3118D00CE972E /* Settings+Nip96Configurator.swift in Sources */,

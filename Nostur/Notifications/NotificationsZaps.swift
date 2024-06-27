@@ -191,10 +191,10 @@ struct NotificationsZaps: View {
 
 struct PostZapsView: View {
     @EnvironmentObject private var themes: Themes
-    @ObservedObject private var postZaps: PostZaps
+    @ObservedObject private var postZaps: GroupedPostZaps
     @ObservedObject private var footerAttributes: FooterAttributes
     
-    init(postZaps: PostZaps) {
+    init(postZaps: GroupedPostZaps) {
         self.postZaps = postZaps
         self.footerAttributes = postZaps.nrPost.footerAttributes
     }
