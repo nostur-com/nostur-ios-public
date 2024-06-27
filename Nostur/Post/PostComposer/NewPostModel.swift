@@ -650,6 +650,7 @@ public final class NewPostModel: ObservableObject {
     
     public func directMention(_ contact: Contact) {
         guard textView != nil else { return }
+        guard let pubkey = account()?.publicKey, pubkey != contact.pubkey else { return }
         let mentionName = contact.handle
         typingTextModel.text = "@\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} "
         availableContacts.insert(contact)
