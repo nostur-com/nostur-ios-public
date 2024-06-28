@@ -93,8 +93,19 @@ final class SettingsStore: ObservableObject {
         // needs registered Client ID
         getImgurService(),
         
-        // needs registered Client ID
-        getNostrCheckMeService(),
+//        // needs registered Client ID
+//        getNostrCheckMeService(),
+        MediaUploadService(name: "nostrcheck.me", request: { imageData, usePNG in
+            // Dummy function body just to be compatible with MediaUploadService
+            // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
+            let url = URL(string: "https://localhost")!
+            var request = URLRequest(url: url)
+            return request
+        }, urlFromResponse: { (data, response, _) in
+            // Dummy function body just to be compatible with MediaUploadService
+            // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
+            return "https://localhost"
+        }),
         
         // url in json response but need to replace http with https
         getNostrFilesDevService(),
