@@ -52,6 +52,9 @@ final class SettingsStore: ObservableObject {
         static let receiveLocalNotifications:String = "receive_local_notifications"
         static let receiveLocalNotificationsLimitToFollows:String = "receive_local_notifications_limit_to_follows"
         
+        static let followRelayHints:String = "follow_relay_hints"
+        static let enableOutboxRelays:String = "outbox_enabled"
+        
         static let proMode:String = "nostur_pro_mode"
     }
 
@@ -173,6 +176,8 @@ final class SettingsStore: ObservableObject {
             Keys.excludedUserAgentPubkeys: "",
             Keys.receiveLocalNotifications: true,
             Keys.receiveLocalNotificationsLimitToFollows: false,
+            Keys.followRelayHints: true,
+            Keys.enableOutboxRelays: true,
             Keys.proMode: false
         ])
 
@@ -349,6 +354,17 @@ final class SettingsStore: ObservableObject {
         }
         get { defaults.string(forKey: Keys.thunderzapLevel) ?? ThunderzapLevel.normal.rawValue }
     }
+    
+    var followRelayHints: Bool {
+        set { defaults.set(newValue, forKey: Keys.followRelayHints); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.followRelayHints) }
+    }
+    
+    var enableOutboxRelays: Bool {
+        set { defaults.set(newValue, forKey: Keys.enableOutboxRelays); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.enableOutboxRelays) }
+    }
+    
     
     // MARK: -- SPECIAL HANDLING FOR PERFORMANCE ON EVERYTHING BELOW:
     
