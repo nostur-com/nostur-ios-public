@@ -51,6 +51,18 @@ struct DetailPane: View {
                                             req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
                                         }
                                     }
+                                    else if let notePath = tm.selected?.notePath {
+                                        req(RM.getEventReferences(ids: [notePath.id], subscriptionId: "REALTIME-DETAIL"))
+                                    }
+                                    else if let event = tm.selected?.event {
+                                        bg().perform {
+                                            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NosturTabButton.onSelect.2")
+                                            req(RM.getEventReferences(ids: [event.id], subscriptionId: "REALTIME-DETAIL"))
+                                        }
+                                    }
+                                    else if let naddrPath = tm.selected?.naddr1 {
+                                        req(RM.getEventReferences(ids: [naddrPath.id], subscriptionId: "REALTIME-DETAIL"))
+                                    }
                                 },
                                 onClose: {
                                     if (index < tm.tabs.count && tm.selected == tm.tabs[index]) {
@@ -82,6 +94,18 @@ struct DetailPane: View {
                                             else {
                                                 req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
                                             }
+                                        }
+                                        else if let notePath = tm.selected?.notePath {
+                                            req(RM.getEventReferences(ids: [notePath.id], subscriptionId: "REALTIME-DETAIL"))
+                                        }
+                                        else if let event = tm.selected?.event {
+                                            bg().perform {
+                                                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NosturTabButton.onSelect.2")
+                                                req(RM.getEventReferences(ids: [event.id], subscriptionId: "REALTIME-DETAIL"))
+                                            }
+                                        }
+                                        else if let naddrPath = tm.selected?.naddr1 {
+                                            req(RM.getEventReferences(ids: [naddrPath.id], subscriptionId: "REALTIME-DETAIL"))
                                         }
                                         else {
                                             // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
@@ -295,7 +319,7 @@ struct DetailPane: View {
                         }
                     }
                     else {
-                        // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost                        
+                        // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
                         ConnectionPool.shared.sendMessage(
                             NosturClientMessage(
                                 clientMessage: NostrEssentials.ClientMessage(
