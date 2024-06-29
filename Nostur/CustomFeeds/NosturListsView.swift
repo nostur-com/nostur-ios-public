@@ -112,11 +112,6 @@ struct NosturListsView: View {
             }
         }
         
-        sortedLists.forEach { feed in
-            print("feed: \(feed.id?.uuidString ?? "?") \(feed.name_)")
-        }
-        
-        
         let duplicates = sortedLists
             .filter { list in
                 guard let id = list.id else { return false }

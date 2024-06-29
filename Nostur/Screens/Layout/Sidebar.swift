@@ -40,7 +40,7 @@ struct SideBar: View {
             ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH)
                 .overlay(alignment: .bottomLeading, content: {
                     PFP(pubkey: account.publicKey, account: account, size: 75)
-                        .equatable() 
+                        .equatable()
                         .overlay(
                             Circle()
                                 .strokeBorder(themes.theme.background, lineWidth: 3)
@@ -356,8 +356,8 @@ struct SideBar: View {
 
 
 struct SideBarOverlay: View {
-    @ObservedObject private var sm:SideBarModel = .shared
-    @EnvironmentObject private var themes:Themes
+    @ObservedObject private var sm: SideBarModel = .shared
+    @EnvironmentObject private var themes: Themes
     
     var body: some View {
         if sm.showSidebar {

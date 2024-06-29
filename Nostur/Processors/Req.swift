@@ -39,7 +39,7 @@ class ReqProcessor {
             .collect(.byTime(DispatchQueue.global(), .milliseconds(Int(Self.FASTLANE_COLLECT_TIME * 1000))))
             .filter { !$0.isEmpty }
             .sink { pubkeys in
-                print("Fast lane request for IDs: \(pubkeys)")
+//                print("Fast lane request for IDs: \(pubkeys)")
 //                let filter1 = Filters(authors: pubkeys, kinds: [0])
 //                let filter2 = Filters(kinds:[9735], limit: 200)
 //                
@@ -57,7 +57,7 @@ class ReqProcessor {
             .collect(.byTime(DispatchQueue.global(), .seconds(Self.SLOWLANE_COLLECT_TIME)))
             .filter { !$0.isEmpty }
             .sink { pubkeys in
-                print("Slow lane request for IDs: \(pubkeys)")
+//                print("Slow lane request for IDs: \(pubkeys)")
                 self.slowLaneAvailable = false
                 DispatchQueue.global().asyncAfter(deadline: .now() + Self.SLOWLANE_COLLECT_TIME) {
                     self.slowLaneAvailable = true
