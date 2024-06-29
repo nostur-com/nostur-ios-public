@@ -21,6 +21,7 @@ struct NosturListsView: View {
     @State private var didRemoveDuplicates = false
     
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
+    @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
@@ -54,11 +55,15 @@ struct NosturListsView: View {
                 Section {
                     Toggle(isOn: $enableHotFeed, label: {
                         Text("Hot")
-                        Text("Posts most liked or reposted by people you follow")
+                        Text("Posts from anyone which are most liked or reposted by people you follow")
+                    })
+                    Toggle(isOn: $enableDiscoverFeed, label: {
+                        Text("Discover")
+                        Text("Posts from people you don't follow which are most liked or reposted by people you follow")
                     })
                     Toggle(isOn: $enableGalleryFeed, label: {
                         Text("Gallery")
-                        Text("Media from posts most liked or reposted by people you follow")
+                        Text("Media from posts from anyone which are most liked or reposted by people you follow")
                     })
                     Toggle(isOn: $enableArticleFeed, label: {
                         Text("Articles")
@@ -71,7 +76,7 @@ struct NosturListsView: View {
                 } header: {
                     Text("Default feeds")
                 } footer: {
-                    Text("Hot, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
+                    Text("Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
                 }
             }
         }
