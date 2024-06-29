@@ -303,13 +303,14 @@ struct ProfileOverlayCard: View {
         }
         .onChange(of: contact.pictureUrl) { newPictureUrl in
             guard let oldFixedPfp = contact.fixedPfp,
-                  let newPicture = newPictureUrl,
-                  oldFixedPfp != newPicture.absoluteString,
+                  oldFixedPfp != newPictureUrl?.absoluteString,
                   let fixedPfpUrl = URL(string: oldFixedPfp),
                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
             else { return }
             DispatchQueue.main.async {
-                self.fixedPfp = fixedPfpUrl
+                withAnimation {
+                    self.fixedPfp = fixedPfpUrl
+                }
             }
         }
         .task { [weak contact] in
@@ -317,13 +318,14 @@ struct ProfileOverlayCard: View {
             
             bg().perform {
                 if let fixedPfp = contact.fixedPfp,
-                   let contactPicture = contact.contact?.picture,
-                   fixedPfp != contactPicture,
+                   fixedPfp != contact.contact?.picture,
                    let fixedPfpUrl = URL(string: fixedPfp),
                    hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
                 {
                     DispatchQueue.main.async {
-                        self.fixedPfp = fixedPfpUrl
+                        withAnimation {
+                            self.fixedPfp = fixedPfpUrl
+                        }
                     }
                 }
             }
