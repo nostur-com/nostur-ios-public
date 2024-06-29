@@ -53,7 +53,7 @@ struct AddExistingAccountSheet: View {
                         if isNsecbunkerKey {
                             let bunkerNpub = String(key.split(separator: "#")[0])
                             let token = String(key.split(separator: "#")[1])
-                            guard let nip19 = try? NIP19(displayString: bunkerNpub) else {
+                            guard let nip19 = try? NIP19(displayString: bunkerNpub.replacingOccurrences(of: "-", with: "")) else {
                                 invalidKey = true
                                 key = ""
                                 return
@@ -61,7 +61,7 @@ struct AddExistingAccountSheet: View {
                             addExistingBunkerAccount(pubkey: nip19.hexString, token: token)
                         }
                         else {
-                            guard let nip19 = try? NIP19(displayString: key) else {
+                            guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
                                 invalidKey = true
                                 key = ""
                                 return
