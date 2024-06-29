@@ -98,14 +98,37 @@ struct RelaysView: View {
     var relays: FetchedResults<CloudRelay>
 
     var body: some View {
-        VStack {
-            ForEach(relays, id:\.objectID) { relay in
-                RelayRowView(relay: relay)
-                    .onTapGesture {
-                        editRelay = relay
+        Form {
+            VStack(alignment: .leading) {
+                ForEach(relays, id:\.objectID) { relay in
+                    RelayRowView(relay: relay)
+                        .onTapGesture {
+                            editRelay = relay
+                        }
+                    Divider()
+                }
+                Button("Add new relay...") {
+                    createRelayPresented = true
+                }
+            }
+        }
+        .sheet(isPresented: $createRelayPresented) {
+            NewRelayView { url in
+                let relay = CloudRelay(context: viewContext)
+                relay.createdAt = Date()
+                relay.url_ = url
+                
+                do {
+                    try viewContext.save()
+                    if (relay.read || relay.write) {
+                        _ = ConnectionPool.shared.addConnection(relay.toStruct())
                     }
-                Divider()
-            }            
+                } catch {
+                    L.og.error("Unresolved error \(error)")
+                }
+            }
+            .presentationBackgroundCompat(themes.theme.listBackground)
+            .environmentObject(themes)
         }
         .sheet(item: $editRelay, content: { relay in
             NBNavigationStack {
