@@ -17,12 +17,12 @@ public class ConnectionPool: ObservableObject {
     public var queue = DispatchQueue(label: "connection-pool", qos: .utility, attributes: .concurrent)
     
     // .connections should be read/mutated from main context
-    public var connections:[CanonicalRelayUrl: RelayConnection] = [:]
+    public var connections: [CanonicalRelayUrl: RelayConnection] = [:]
     
     // .ephemeralConnections should be read/mutated from main context
-    private var ephemeralConnections:[CanonicalRelayUrl: RelayConnection] = [:]
+    private var ephemeralConnections: [CanonicalRelayUrl: RelayConnection] = [:]
     
-    public var anyConnected:Bool {
+    public var anyConnected: Bool {
         connections.contains(where: { $0.value.isConnected })
     }
     
@@ -142,7 +142,7 @@ public class ConnectionPool: ObservableObject {
     
     // Connect to relays selected for globalish feed, reuse existing connections
     @MainActor 
-    func connectFeedRelays(relays:Set<RelayData>) {
+    func connectFeedRelays(relays: Set<RelayData>) {
         for relay in relays {
             guard !relay.url.isEmpty else { continue }
             guard connectionByUrl(relay.url) == nil else { continue }
@@ -164,7 +164,7 @@ public class ConnectionPool: ObservableObject {
     }
     
     @MainActor
-    func connectionByUrl(_ url:String) -> RelayConnection? {
+    func connectionByUrl(_ url: String) -> RelayConnection? {
         let relayConnection = connections.filter { relayId, relayConnection in
             relayConnection.url == url.lowercased()
         }.first?.value
@@ -173,7 +173,7 @@ public class ConnectionPool: ObservableObject {
     
     // For view?
     @MainActor
-    func isUrlConnected(_ url:String) -> Bool {
+    func isUrlConnected(_ url: String) -> Bool {
         let relayConnection = connections.filter { relayId, relayConnection in
             relayConnection.url == url.lowercased()
         }.first?.value
@@ -235,7 +235,7 @@ public class ConnectionPool: ObservableObject {
     
     // TODO: NEED TO CHECK HOW WE HANDLE CLOSE PER CONNECTION WITH THE PREFERRED RELAYS....
     @MainActor
-    func closeSubscription(_ subscriptionId:String) {
+    func closeSubscription(_ subscriptionId: String) {
         for (_, connection) in self.connections {
             connection.queue.async(flags: .barrier) {
                 if connection.nreqSubscriptions.contains(subscriptionId) {
@@ -249,7 +249,7 @@ public class ConnectionPool: ObservableObject {
     }
     
     @MainActor
-    private func removeAfterDelay(_ url:String) {
+    private func removeAfterDelay(_ url: String) {
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(35)) { [weak self] in
             if let (_ ,connection) = self?.ephemeralConnections.first(where: { (key: String, value: RelayConnection) in
                 key == url
@@ -509,5 +509,5 @@ public class ConnectionPool: ObservableObject {
 
 struct SocketMessage {
     let id = UUID()
-    let text:String
+    let text: String
 }

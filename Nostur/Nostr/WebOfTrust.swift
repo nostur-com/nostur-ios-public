@@ -33,7 +33,7 @@ class WebOfTrust: ObservableObject {
  
     private let ENABLE_THRESHOLD = 2000 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
-    public var tresholdReached:Bool {
+    public var tresholdReached: Bool {
         allowedKeysCount >= ENABLE_THRESHOLD
     }
     
@@ -47,12 +47,12 @@ class WebOfTrust: ObservableObject {
     }
     
     // cached
-    private var mainAccountWoTpubkey:String = ""
+    private var mainAccountWoTpubkey: String = ""
     
     // For views
-    @Published public var lastUpdated:Date? = nil
+    @Published public var lastUpdated: Date? = nil
     
-    @Published public var allowedKeysCount:Int = 0
+    @Published public var allowedKeysCount: Int = 0
     
     @Published public var updatingWoT = false
     
@@ -60,14 +60,14 @@ class WebOfTrust: ObservableObject {
     // Keep separate lists for faster filtering
     
     // follows of follows (NORMAL)
-    private var followingFollowingPubkeys:Set<String> = [] {
+    private var followingFollowingPubkeys: Set<String> = [] {
         didSet {
             self.updateViewData()
         }
     }
     
     // Only follows (STRICT)
-    private var followingPubkeys:Set<String> = [] {
+    private var followingPubkeys: Set<String> = [] {
         didSet {
             self.updateViewData()
         }
