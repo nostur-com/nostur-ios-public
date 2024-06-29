@@ -293,8 +293,6 @@ public final class NewPostModel: ObservableObject {
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
 
-        // Include .p tags for @mentions (should no longer be needed, because we get them nostr:npubs in text now)
-        let selectedPtags = typingTextModel.selectedMentions.map { $0.pubkey }
         var unselectedPtags = typingTextModel.unselectedMentions.map { $0.pubkey }
         
         // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
@@ -304,7 +302,7 @@ public final class NewPostModel: ObservableObject {
         }
         
         // Merge and deduplicate all p pubkeys, remove all unselected p pubkeys and turn into NostrTag
-        let nostrTags = Set(pTags + selectedPtags + atPtags + nostrNpubTags)
+        let nostrTags = Set(pTags + atPtags + nostrNpubTags)
             .subtracting(Set(unselectedPtags))
             .map { NostrTag(["p", $0]) }
         
@@ -444,8 +442,6 @@ public final class NewPostModel: ObservableObject {
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
         
-        // Include .p tags for @mentions (should no longer be needed, because we get them nostr:npubs in text now)
-        let selectedPtags = typingTextModel.selectedMentions.map { $0.pubkey }
         var unselectedPtags = typingTextModel.unselectedMentions.map { $0.pubkey }
         
         // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
@@ -455,7 +451,7 @@ public final class NewPostModel: ObservableObject {
         }
         
         // Merge and deduplicate all p pubkeys, remove all unselected p pubkeys and turn into NostrTag
-        let nostrTags = Set(pTags + selectedPtags + atPtags + nostrNpubTags)
+        let nostrTags = Set(pTags + atPtags + nostrNpubTags)
             .subtracting(Set(unselectedPtags))
             .map { NostrTag(["p", $0]) }
         
