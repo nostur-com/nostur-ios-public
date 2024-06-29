@@ -197,6 +197,10 @@ struct InnerPFP: View {
                 }
             }
             .cornerRadius(size/2)
+            .onChange(of: pubkey) { newPubkey in
+                guard pubkey != newPubkey else { return }
+                self.updatedPictureUrl = nil
+            }
     }
 }
 
