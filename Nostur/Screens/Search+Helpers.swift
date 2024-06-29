@@ -267,7 +267,7 @@ extension Search {
     func nametagSearch(_ term:String) {
         let blockedPubkeys = blocks()
         searching = true
-        contacts.nsPredicate = NSPredicate(format: "name BEGINSWITH[cd] %@ AND NOT pubkey IN %@", String(term), blockedPubkeys)
+        contacts.nsPredicate = NSPredicate(format: "(name BEGINSWITH[cd] %@ OR fixedName BEGINSWITH[cd] %@ OR nip05 BEGINSWITH[cd] %@) AND NOT pubkey IN %@", term, term, term, blockedPubkeys)
         nrPosts = []
     }
     
@@ -411,7 +411,7 @@ extension Search {
     func otherSearch(_ term:String) {
         let blockedPubkeys = blocks()
         searching = false
-        contacts.nsPredicate = NSPredicate(format: "NOT pubkey IN %@ AND (name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@)", blockedPubkeys, term, term)
+        contacts.nsPredicate = NSPredicate(format: "NOT pubkey IN %@ AND (name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@ OR fixedName CONTAINS[cd] %@ OR nip05 CONTAINS[cd] %@)", blockedPubkeys, term, term, term, term)
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
