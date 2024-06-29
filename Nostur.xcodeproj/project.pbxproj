@@ -168,6 +168,9 @@
 		1F5E8A892A5FFD55001F86B9 /* EditableReplyingTo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */; };
 		1F5F5A5C29838F1D00DED8F4 /* DataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */; };
 		1F62F4C62A2C572700783892 /* KrakenApiResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */; };
+		1F6337DD2C30D040009C290C /* Discover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6337DA2C30CB4F009C290C /* Discover.swift */; };
+		1F6337DE2C30D042009C290C /* Discover+FeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6337DB2C30CB4F009C290C /* Discover+FeedSettings.swift */; };
+		1F6337DF2C30D044009C290C /* DiscoverViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6337DC2C30CB4F009C290C /* DiscoverViewModel.swift */; };
 		1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */; };
 		1F6629122B0D429D00508988 /* RelayConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629112B0D429D00508988 /* RelayConnection.swift */; };
 		1F6629142B0D49BD00508988 /* RelayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629132B0D49BD00508988 /* RelayData.swift */; };
@@ -701,6 +704,9 @@
 		1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableReplyingTo.swift; sourceTree = "<group>"; };
 		1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataProvider.swift; sourceTree = "<group>"; };
 		1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KrakenApiResponse.swift; sourceTree = "<group>"; };
+		1F6337DA2C30CB4F009C290C /* Discover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Discover.swift; sourceTree = "<group>"; };
+		1F6337DB2C30CB4F009C290C /* Discover+FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Discover+FeedSettings.swift"; sourceTree = "<group>"; };
+		1F6337DC2C30CB4F009C290C /* DiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverViewModel.swift; sourceTree = "<group>"; };
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
 		1F6629112B0D429D00508988 /* RelayConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayConnection.swift; sourceTree = "<group>"; };
 		1F6629132B0D49BD00508988 /* RelayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayData.swift; sourceTree = "<group>"; };
@@ -1500,6 +1506,16 @@
 			path = Processors;
 			sourceTree = "<group>";
 		};
+		1F6337D92C30CB36009C290C /* Discover */ = {
+			isa = PBXGroup;
+			children = (
+				1F6337DA2C30CB4F009C290C /* Discover.swift */,
+				1F6337DB2C30CB4F009C290C /* Discover+FeedSettings.swift */,
+				1F6337DC2C30CB4F009C290C /* DiscoverViewModel.swift */,
+			);
+			path = Discover;
+			sourceTree = "<group>";
+		};
 		1F685B502A0D1886009EEC9B /* NR */ = {
 			isa = PBXGroup;
 			children = (
@@ -1832,10 +1848,11 @@
 		1FB4D3F929BAEAE4004DB537 /* Mainfeed */ = {
 			isa = PBXGroup;
 			children = (
-				1FFA89A32B197AD700D9BE26 /* NewPostsBy */,
 				1F20F4B92AAE2F3A002D8886 /* ArticlesFeed */,
+				1F6337D92C30CB36009C290C /* Discover */,
 				1F21D6792AAB68F400CCF3B1 /* Gallery */,
 				1F1F13012AA9A65D00DDED82 /* Hot */,
+				1FFA89A32B197AD700D9BE26 /* NewPostsBy */,
 				1FDBD89A2A7641F9001D9F34 /* NoiseFilter */,
 				1F2884A92A77D11D0006766E /* FeedSettings.swift */,
 				1F1F13062AA9C09400DDED82 /* FeedSettings+AppThemeSwitcher.swift */,
@@ -2340,6 +2357,7 @@
 				1FAC3F3B2AD049D7009BA810 /* ComposePost.swift in Sources */,
 				1FDBD89C2A764224001D9F34 /* NoiseFilter.swift in Sources */,
 				1F15F0992AAF2EDC0004E706 /* FooterAttributes.swift in Sources */,
+				1F6337DF2C30D044009C290C /* DiscoverViewModel.swift in Sources */,
 				1FCCAC9A2AB6D6B000B3F00A /* ProfilePostsView.swift in Sources */,
 				1F740D9C29AF1BF600EFCCA7 /* Badges.swift in Sources */,
 				1FA1CA3D2AF6D7B6000E529B /* PrivateNotesView.swift in Sources */,
@@ -2376,9 +2394,11 @@
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FFED7FF2A3970A800A0B1E8 /* PhotosPicker.swift in Sources */,
 				1FED0D892ACB1D42002DAC02 /* FooterConfigurator.swift in Sources */,
+				1F6337DE2C30D042009C290C /* Discover+FeedSettings.swift in Sources */,
 				1FAC42B72C03D1C300362997 /* RepostsFeedModel.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1F41527F2A95B12800EC63B2 /* PostAccountSwitcher.swift in Sources */,
+				1F6337DD2C30D040009C290C /* Discover.swift in Sources */,
 				1FB8BD5C2AAB8D9600FBC15F /* NotificationSettings.swift in Sources */,
 				1FC0A9552A1094BD00F9ABF6 /* AccountSwitcher.swift in Sources */,
 				1FD2815E2B16B32C00978A9D /* CameraPreview.swift in Sources */,
