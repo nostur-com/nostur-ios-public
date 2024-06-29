@@ -15,7 +15,7 @@ class NewOnboardingTracker {
     private var guestAlreadyStarted = false
     
     // Who are we onboarding?
-    private var pubkey:String?
+    private var pubkey: String?
     
     // Tasks backlog
     private var backlog = Backlog()
@@ -42,9 +42,9 @@ class NewOnboardingTracker {
     }
     
     private var bg = DataProvider.shared().bg
-    private var account:CloudAccount?
+    private var account: CloudAccount?
     
-    public var isOnboarding:Bool {
+    public var isOnboarding: Bool {
         account != nil
     }
 
@@ -111,12 +111,12 @@ class NewOnboardingTracker {
         guard let pubkey = self.pubkey else { return }
 //        guard let account = self.account else { return }
         
-        // We maybe already have kind 0/3
+        // We maybe already have kind 0
         self.bg.performAndWait {
             self.processKind0()
         }
         
-        // We maybe already have kind 0/3
+        // We maybe already have kind 3
         self.bg.performAndWait {
             self.processKind3()
         }
