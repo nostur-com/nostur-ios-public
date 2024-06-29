@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NEventView: View {
+    @EnvironmentObject private var settings: SettingsStore
     @EnvironmentObject private var dim: DIMENSIONS
     public let identifier: ShareableIdentifier
     public var forceAutoload: Bool = false
@@ -60,7 +61,7 @@ struct NEventView: View {
                                 }
                                 // Still don't have the event? try to fetch from relay hint
                                 // TODO: Should try a relay we don't already have in our relay set
-                                else if [.initializing, .loading].contains(vm.state) {
+                                else if settings.followRelayHints && [.initializing, .loading].contains(vm.state) {
                                     // try search relays and relay hint
                                     vm.altFetch()
                                 }
