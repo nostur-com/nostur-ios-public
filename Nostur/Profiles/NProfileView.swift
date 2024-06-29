@@ -19,6 +19,7 @@ struct NProfileView: View {
     
     struct NProfileViewInner: View {
         
+        @EnvironmentObject private var settings: SettingsStore
         @State var nrPost: NRPost?
         @State var fetchTask: Task<Void, Never>?
         
@@ -56,6 +57,7 @@ struct NProfileView: View {
                                 fetchTask = Task {
                                     do {
                                         try await Task.sleep(nanoseconds: UInt64(3 * Double(NSEC_PER_SEC)))
+                                        guard settings.followRelayHints else { return }
                                         let ctx = bg()
                                         await ctx.perform {
                                             // If we don't have the event after X seconds, fetch from relay hint
