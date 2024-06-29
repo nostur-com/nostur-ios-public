@@ -29,7 +29,7 @@ struct HotFeedSettings: View {
                     Text("2h").tag(2)
                 }
                 .pickerStyle(.segmented)
-            } header: { Text("Hot feed time frame") } footer: { Text("The Hot feed shows posts most liked or reposted by people you follow in the last \(hotVM.ago) hours") }
+            } header: { Text("Hot feed time frame") } footer: { Text("The Hot feed shows posts from anyone which are most liked or reposted by people you follow in the last \(hotVM.ago) hours") }
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
