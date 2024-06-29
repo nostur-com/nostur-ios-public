@@ -129,7 +129,9 @@ struct ContactSearchResultRow: View {
                let fixedPfpUrl = URL(string: fixedPfp),
                hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
             {
-                self.fixedPfp = fixedPfpUrl
+                withAnimation {
+                    self.fixedPfp = fixedPfpUrl
+                }
             }
         }
     }

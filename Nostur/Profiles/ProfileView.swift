@@ -29,7 +29,7 @@ struct ProfileView: View {
     @State private var editingAccount: CloudAccount?
     @State private var similarPFP = false
     @State private var showingNewNote = false
-    @State var fixedPfp: URL?
+    @State private var fixedPfp: URL?
     
     @State private var showArticlesTab = false
     
@@ -448,23 +448,23 @@ struct ProfileView: View {
         }
         .task { [weak nrContact] in
             guard let nrContact else { return }
-            
+            guard !SettingsStore.shared.lowDataMode else { return }
+            guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             
             bg().perform {
-                if let fixedPfp = nrContact.fixedPfp,
-                   let contactPicture = nrContact.contact?.picture,
-                   fixedPfp != contactPicture,
+                if let fixedPfp = nrContact.contact?.fixedPfp,
+                   fixedPfp != nrContact.contact?.picture,
                    let fixedPfpUrl = URL(string: fixedPfp),
                    hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
                 {
                     DispatchQueue.main.async {
-                        self.fixedPfp = fixedPfpUrl
+                        withAnimation {
+                            self.fixedPfp = fixedPfpUrl
+                        }
                     }
                 }
             }
             
-            guard !SettingsStore.shared.lowDataMode else { return }
-            guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
             guard !nrContact.following else { return }
             guard nrContact.metadata_created_at != 0 else { return }
             guard nrContact.couldBeImposter == -1 else { return }

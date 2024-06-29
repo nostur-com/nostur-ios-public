@@ -83,7 +83,7 @@ struct ProfileRow: View {
     
     @State private var similarPFP = false
     @State private var similarToPubkey: String? = nil
-    @State var fixedPfp: URL?
+    @State private var fixedPfp: URL?
     
     private var couldBeImposter: Bool {
         guard la.pubkey != contact.pubkey else { return false }
@@ -184,12 +184,13 @@ struct ProfileRow: View {
             guard let contact else { return }
             
             if let fixedPfp = contact.fixedPfp,
-               let contactPicture = contact.picture,
-               fixedPfp != contactPicture,
+               fixedPfp != contact.picture,
                let fixedPfpUrl = URL(string: fixedPfp),
                 hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
             {
-                self.fixedPfp = fixedPfpUrl
+                withAnimation {
+                    self.fixedPfp = fixedPfpUrl
+                }
             }
             
             if la.isFollowing(pubkey: contact.pubkey) {
@@ -241,7 +242,9 @@ struct ProfileRow: View {
             if let fixedPfp = contact.fixedPfp,
                 fixedPfp != contact.picture,
                let fixedPfpUrl = URL(string: fixedPfp) {
-                self.fixedPfp = fixedPfpUrl
+                withAnimation {
+                    self.fixedPfp = fixedPfpUrl
+                }
             }
         }
     }
