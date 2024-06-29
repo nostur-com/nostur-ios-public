@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NProfileView: View {
     
-    let identifier:ShareableIdentifier
+    let identifier: ShareableIdentifier
     
     var body: some View {
         if let pubkey = identifier.pubkey {
