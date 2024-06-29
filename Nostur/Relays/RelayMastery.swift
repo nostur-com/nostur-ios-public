@@ -19,9 +19,9 @@ struct RelayMastery: View {
     
     var body: some View {
         VStack {
-            VStack(spacing:0) {
+            VStack(spacing: 0) {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing:0) {
+                    HStack(spacing: 0) {
                         TabButton(
                             action: { accountTab = "SHARED" },
                             title: String(localized:"Relays", comment:"Tab title for relay mastery"),
