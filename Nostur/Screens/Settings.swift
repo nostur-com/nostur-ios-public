@@ -358,35 +358,33 @@ struct Settings: View {
                 }
                 
                 Section(header: Text("Relays", comment: "Relay settings heading")) {
-                    RelaysView()
-                    Button {
-                        createRelayPresented = true
-                    } label: {
-                        Label("Add relay", systemImage: "plus")
-                    }
-                    .sheet(isPresented: $createRelayPresented) {
-                        NewRelayView { url in
-                            let relay = CloudRelay(context: viewContext)
-                            relay.createdAt = Date()
-                            relay.url_ = url
-                            
-                            do {
-                                try viewContext.save()
-                                if (relay.read || relay.write) {
-                                    _ = ConnectionPool.shared.addConnection(relay.toStruct())
-                                }
-                            } catch {
-                                L.og.error("Unresolved error \(error)")
-                            }
+                    RelaysLink()
+                        .listRowBackground(themes.theme.background)
+                    
+                    RelayMasteryLink() // Wrapped in View else SwiftUI will freeze
+                        .listRowBackground(themes.theme.background)
+                    
+                    Toggle(isOn: $settings.enableOutboxRelays) {
+                        VStack(alignment: .leading) {
+                            Text("Enhanced Relay Routing", comment: "Setting on settings screen")
+                            Text("Connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set", comment: "Setting on settings screen")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
                         }
-                        .presentationBackgroundCompat(themes.theme.listBackground)
-                        .environmentObject(themes)
                     }
+                    
+                    Toggle(isOn: $settings.followRelayHints) {
+                        VStack(alignment: .leading) {
+                            Text("Follow relay hints", comment: "Setting on settings screen")
+                            Text("Connect to relays included in nostr links when content can't be found", comment:"Setting on settings screen")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
                 }
                 .listRowBackground(themes.theme.background)
                 
-                RelayMasteryLink() // Wrapped in View else SwiftUI will freeze
-                    .listRowBackground(themes.theme.background)
                 
                 Section(header: Text("Data usage", comment: "Setting heading on settings screen")) {
                     Toggle(isOn: $settings.lowDataMode) {
@@ -658,10 +656,21 @@ struct RelayMasteryLink: View {
                     relays = CloudRelay.fetchAll()
                 }
         }, label: {
-            Text("Relay Mastery")
+            Text("Relay Mastery...")
         })
         .onAppear {
             
         }
+    }
+}
+
+
+struct RelaysLink: View {
+    var body: some View {
+        NavigationLink(destination: {
+            RelaysView()
+        }, label: {
+            Text("Configure relays...")
+        })
     }
 }
