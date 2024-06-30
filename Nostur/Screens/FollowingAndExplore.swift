@@ -45,24 +45,25 @@ struct FollowingAndExplore: View, Equatable {
     
     private var navigationTitle: String {
         if selectedSubTab == "List" {
-            return (selectedList?.name_ ?? String(localized:"List"))
+            return (selectedList?.name_ ?? String(localized: "List"))
         }
         if selectedSubTab == "Following" {
-            return String(localized:"Following", comment:"Tab title for feed of people you follow")
+            return String(localized: "Following", comment: "Tab title for feed of people you follow")
         }
         if selectedSubTab == "Explore" {
-            return String(localized:"Explore", comment:"Tab title for the Explore feed")
+            return String(localized: "Explore", comment: "Tab title for the Explore feed")
         }
         if selectedSubTab == "Hot" {
-            return String(localized:"Hot", comment:"Tab title for the Hot feed")
+            return String(localized: "Hot", comment: "Tab title for the Hot feed")
+        }
         }
         if selectedSubTab == "Gallery" {
-            return String(localized:"Gallery", comment:"Tab title for the Gallery feed")
+            return String(localized: "Gallery", comment: "Tab title for the Gallery feed")
         }
         if selectedSubTab == "Articles" {
-            return String(localized:"Articles", comment:"Tab title for the Articles feed")
+            return String(localized: "Articles", comment: "Tab title for the Articles feed")
         }
-        return String(localized:"Feed", comment:"Tab title for a feed")
+        return String(localized: "Feed", comment: "Tab title for a feed")
     }
     
     @State var showFeedSettings = false
