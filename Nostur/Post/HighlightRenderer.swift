@@ -25,6 +25,16 @@ struct HighlightRenderer: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .fontItalic()
                 .padding(20)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if let firstE = nrPost.firstE {
+                        navigateTo(NotePath(id: firstE))
+                    }
+                    else if let aTag = nrPost.fastTags.first(where: { $0.0 == "a" }),
+                            let naddr = try? ShareableIdentifier(aTag: aTag.1) {
+                            navigateTo(Naddr1Path(naddr1: naddr.bech32string))
+                    }
+                }
                 .overlay(alignment:.topLeading) {
                     Image(systemName: "quote.opening")
                         .foregroundColor(Color.secondary)
