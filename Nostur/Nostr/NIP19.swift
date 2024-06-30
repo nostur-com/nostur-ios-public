@@ -76,9 +76,9 @@ class ShareableIdentifier: Hashable {
         hasher.combine(bech32string)
     }
     
-    var id:String { bech32string }
-    let bech32string:String
-    let prefix:String
+    var id: String { bech32string }
+    let bech32string: String
+    let prefix: String
     
     var pubkey: String?
     var eventId: String?
@@ -186,6 +186,44 @@ class ShareableIdentifier: Hashable {
             tlvData.append(UInt8(value.count))
             tlvData.append(value)
         }
+        
+        let bech32 = Bech32()
+        
+        self.bech32string = bech32.encode(prefix, values: tlvData, eightToFive: true)
+    }
+    
+    init(aTag: String) throws {
+        self.prefix = "naddr"
+        
+        let elements = aTag.split(separator: ":")
+        guard elements.count >= 3, let aTagKind = elements[safe: 0], let aTagPubkey = elements[safe: 1], let aTagDefinition = elements[safe: 2]
+        else {
+            throw "Invalid aTag"
+        }
+        self.kind = Int64(aTagKind)
+        self.pubkey = String(aTagPubkey)
+        self.eventId = String(aTagDefinition)
+        
+        var tlvData = Data()
+        
+        // Append TLV for the special type
+        let dTagValue = aTagDefinition.data(using: .utf8)!
+        tlvData.append(0) // Type
+        tlvData.append(UInt8(dTagValue.count)) // Length
+        tlvData.append(contentsOf: dTagValue) // Value
+        
+        let authorValue = String(aTagPubkey).hexToBytes()
+        tlvData.append(2)
+        tlvData.append(UInt8(authorValue.count))
+        tlvData.append(contentsOf: authorValue)
+        
+        var kindValue = UInt32(Int64(aTagKind)!).bigEndian
+        let kindBytes = withUnsafeBytes(of: &kindValue) { Array($0) }
+        tlvData.append(3) // Type
+        tlvData.append(UInt8(kindBytes.count)) // Length (assuming 4 bytes)
+        tlvData.append(contentsOf: kindBytes) // Value
+        
+       
         
         let bech32 = Bech32()
         
