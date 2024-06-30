@@ -26,6 +26,9 @@ class DiscoverViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
     
+    // If we have posts already shown in Hot feed we don't want to show them again here, so need hotVM.
+    public var hotVM: HotViewModel?
+    
     // From DB we always fetch the maximum time frame selected
     private var agoTimestamp:Int {
         return Int(Date.now.addingTimeInterval(-1 * Double(ago) * 3600).timeIntervalSince1970)
@@ -250,10 +253,16 @@ class DiscoverViewModel: ObservableObject {
             onComplete?()
             return
         }
+        let hotVMpostIds: Set<String> = Set((hotVM?.hotPosts ?? []).map { $0.id }) // Post IDs already on Hot feed
+        
         let blockedPubkeys = blocks()
         bg().perform { [weak self] in
             guard let self else { return }
             let sortedByLikesAndReposts = self.posts
+                .filter { post in // filter out posts already on hot feed
+                    guard !hotVMpostIds.isEmpty else { return true }
+                    return !hotVMpostIds.contains(post.key)
+                }
                 .sorted(by: { $0.value.count > $1.value.count })
                 .prefix(Self.POSTS_LIMIT)
             

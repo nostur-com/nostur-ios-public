@@ -59,7 +59,7 @@ struct FollowingAndExplore: View, Equatable {
             return String(localized: "Hot", comment: "Tab title for the Hot feed")
         }
         if selectedSubTab == "Discover" {
-            return String(localized: "Discover", comment: "Tab title for the Hot feed")
+            return String(localized: "Discover", comment: "Tab title for the Discover feed")
         }
         if selectedSubTab == "Gallery" {
             return String(localized: "Gallery", comment: "Tab title for the Gallery feed")
@@ -286,6 +286,8 @@ struct FollowingAndExplore: View, Equatable {
                     selectedList = lists.first
                 }
             }
+            // Make hot feed posts available to discover feed to not show the same posts
+            discoverVM.hotVM = hotVM
         }
         .onChange(of: account, perform: { newAccount in
             guard account != newAccount else { return }
