@@ -647,7 +647,7 @@ struct FooterConfiguratorLink: View {
 }
 
 struct RelayMasteryLink: View {
-    @State private var relays:[CloudRelay] = []
+    @State private var relays: [CloudRelay] = []
     
     var body: some View {
         NavigationLink(destination: {
@@ -656,7 +656,12 @@ struct RelayMasteryLink: View {
                     relays = CloudRelay.fetchAll()
                 }
         }, label: {
-            Text("Relay Mastery...")
+            VStack(alignment: .leading) {
+                Text("Announce your relays...")
+                Text("Relays others will use to find your content")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
         })
         .onAppear {
             
@@ -670,7 +675,12 @@ struct RelaysLink: View {
         NavigationLink(destination: {
             RelaysView()
         }, label: {
-            Text("Configure relays...")
+            VStack(alignment: .leading) {
+                Text("Configure your relays...")
+                Text("Relays Nostur uses to find content")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
         })
     }
 }

@@ -9,24 +9,24 @@ import SwiftUI
 import NavigationBackport
 
 struct RelayMastery: View {
-    @EnvironmentObject private var dim:DIMENSIONS
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var dim: DIMENSIONS
+    @EnvironmentObject private var themes: Themes
     
-    public var relays:[CloudRelay]
+    public var relays: [CloudRelay]
     
-    @State private var accountTab:String = "SHARED"
-    @State private var accounts:[CloudAccount] = []
+    @State private var accountTab: String = ""
+    @State private var accounts: [CloudAccount] = []
     
     var body: some View {
         VStack {
             VStack(spacing: 0) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
-                        TabButton(
-                            action: { accountTab = "SHARED" },
-                            title: String(localized:"Relays", comment:"Tab title for relay mastery"),
-                            selected: accountTab == "SHARED")
-                        Spacer()
+//                        TabButton(
+//                            action: { accountTab = "SHARED" },
+//                            title: String(localized:"Relays", comment:"Tab title for relay mastery"),
+//                            selected: accountTab == "SHARED")
+//                        Spacer()
                         
                         ForEach(accounts) { account in
                             TabButton(
@@ -42,9 +42,8 @@ struct RelayMastery: View {
                 ZStack {
                     themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
                     
-                    SharedRelaySettings(relays: relays)
-                        .opacity(accountTab == "SHARED" ? 1 : 0)
-                 
+//                    SharedRelaySettings(relays: relays)
+//                        .opacity(accountTab == "SHARED" ? 1 : 0)
                     
                     ForEach(accounts) { account in
                         if accountTab == account.publicKey {
@@ -58,11 +57,15 @@ struct RelayMastery: View {
                 
             }
         }
-        .navigationTitle("Relay Mastery")
+        .navigationTitle("Announced relays")
         .task {
             accounts = NRState.shared.accounts
                 .filter { $0.isFullAccount }
                 .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
+            
+            if accountTab == "", let firstAccountPubkey = accounts.first?.publicKey {
+                accountTab = firstAccountPubkey
+            }
         }
     }
 }
@@ -85,7 +88,7 @@ struct SharedRelaySettings: View {
     
     var body: some View {
         Form {
-            Text("These relays are used for all accounts, and are not published unless configured on the account specific tabs.")
+            Text("These relays are used for all accounts, and are not announced unless configured on the account specific settings.")
             
             Section(header: Text("Relays", comment: "Relay settings heading")) {
                 ForEach(relays) { relay in
@@ -127,7 +130,7 @@ struct AccountRelaySettings: View {
             case .initializing, .loading, .altLoading:
                 self.loadingView
             case .ready(let accountRelays):
-                Section("Published relays for \(account.anyName)") {
+                Section("Announced relays for \(account.anyName)") {
                     ForEach(accountRelays) { relay in
                         if (relay.read && relay.write) {
                             HStack {
@@ -155,7 +158,7 @@ struct AccountRelaySettings: View {
                         }
                     }
                     
-                    Button("Reconfigure published relays") {
+                    Button("Reconfigure announced relays...") {
                         showWizard = true
                     }
                 }
@@ -168,7 +171,7 @@ struct AccountRelaySettings: View {
         .sheet(isPresented: $showWizard, content: {
             NBNavigationStack {
                 Kind10002ConfigurationWizard(account: account, onDismiss: onDismiss)
-                    .navigationTitle("Published relays")
+                    .navigationTitle("Announced relays")
                     .navigationBarTitleDisplayMode(.inline)
                     .environmentObject(themes)
             }
@@ -178,7 +181,7 @@ struct AccountRelaySettings: View {
     
     @ViewBuilder
     private var loadingView: some View {
-        Section("Published relays for \(account.anyName)") {
+        Section("Announced relays for \(account.anyName)") {
             Text("\(Image(systemName: "hourglass.circle.fill")) Checking relays...")
                 .onAppear { [weak vm, weak account] in
                     guard let vm, let account else { return }
@@ -257,8 +260,8 @@ struct AccountRelaySettings: View {
     
     @ViewBuilder
     private var timeoutView: some View {
-        Section("Published relays for \(account.anyName)") {
-            Button("Configure published relays") {
+        Section("Announced relays for \(account.anyName)") {
+            Button("Configure announced relays") {
                 showWizard = true
             }
         }

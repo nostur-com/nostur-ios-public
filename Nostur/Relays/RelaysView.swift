@@ -99,6 +99,8 @@ struct RelaysView: View {
 
     var body: some View {
         Form {
+            Text("These relays are used for all your accounts, and are not announced unless configured on the account specific tabs.")
+            
             VStack(alignment: .leading) {
                 ForEach(relays, id:\.objectID) { relay in
                     RelayRowView(relay: relay)
