@@ -25,6 +25,7 @@ struct FollowingAndExplore: View, Equatable {
     @AppStorage("selected_listId") private var selectedListId = ""
     
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
+    @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
@@ -37,6 +38,7 @@ struct FollowingAndExplore: View, Equatable {
     @State private var selectedList: CloudFeed?
     @StateObject private var exploreVM: LVM = LVMManager.shared.exploreLVM()
     @StateObject private var hotVM = HotViewModel()
+    @StateObject private var discoverVM = DiscoverViewModel()
     @StateObject private var articlesVM = ArticlesFeedViewModel()
     @StateObject private var galleryVM = GalleryViewModel()
     
@@ -56,6 +58,8 @@ struct FollowingAndExplore: View, Equatable {
         if selectedSubTab == "Hot" {
             return String(localized: "Hot", comment: "Tab title for the Hot feed")
         }
+        if selectedSubTab == "Discover" {
+            return String(localized: "Discover", comment: "Tab title for the Hot feed")
         }
         if selectedSubTab == "Gallery" {
             return String(localized: "Gallery", comment: "Tab title for the Gallery feed")
@@ -72,6 +76,7 @@ struct FollowingAndExplore: View, Equatable {
     private var shouldHideTabBar: Bool {
         if (account.followingPubkeys.count > 10 && enableHotFeed) { return false }
         if (account.followingPubkeys.count > 10 && enableGalleryFeed) { return false }
+        if (account.followingPubkeys.count > 10 && enableDiscoverFeed) { return false }
         if enableExploreFeed { return false }
         if (account.followingPubkeys.count > 10 && enableArticleFeed) { return false }
         if lists.count > 0 { return false }
@@ -111,6 +116,15 @@ struct FollowingAndExplore: View, Equatable {
                                 title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
                                 secondaryText: String(format: "%ih", hotVM.ago),
                                 selected: selectedSubTab == "Hot")
+                            Spacer()
+                        }
+                        
+                        if account.followingPubkeys.count > 10 && enableDiscoverFeed {
+                            TabButton(
+                                action: { selectedSubTab = "Discover" },
+                                title: String(localized: "Discover", comment:"Tab title for Discover feed"),
+                                secondaryText: String(format: "%ih", discoverVM.ago),
+                                selected: selectedSubTab == "Discover")
                             Spacer()
                         }
                         
@@ -217,6 +231,9 @@ struct FollowingAndExplore: View, Equatable {
                     case "Hot":
                         Hot()
                             .environmentObject(hotVM)
+                    case "Discover":
+                        Discover()
+                            .environmentObject(discoverVM)
                     case "Articles":
                         ArticlesFeed()
                             .environmentObject(articlesVM)
@@ -248,6 +265,8 @@ struct FollowingAndExplore: View, Equatable {
                         .environmentObject(la)
                 case "Hot":
                     HotFeedSettings(hotVM: hotVM)
+                case "Discover":
+                    DiscoverFeedSettings(discoverVM: discoverVM)
                 case "Articles":
                     ArticleFeedSettings(vm: articlesVM)
                 case "Gallery":
