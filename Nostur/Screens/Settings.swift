@@ -360,6 +360,9 @@ struct Settings: View {
                         }
                     }
                     
+                    RelaysStatsLink()
+                        .listRowBackground(themes.theme.background)
+                    
                 }
                 .listRowBackground(themes.theme.background)
                 
@@ -680,6 +683,19 @@ struct RelaysLink: View {
                 Text("Relays Nostur uses to find content")
                     .font(.footnote)
                     .foregroundColor(.secondary)
+            }
+        })
+    }
+}
+
+struct RelaysStatsLink: View {
+    var body: some View {
+        NavigationLink(destination: {
+            RelayStats(stats: ConnectionPool.shared.connectionStats)
+                .padding(10)
+        }, label: {
+            VStack(alignment: .leading) {
+                Text("Relay connection stats")
             }
         })
     }
