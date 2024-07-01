@@ -10,6 +10,23 @@ import Combine
 import CoreData
 import NostrEssentials
 
+// // When resolving outbox relays, don't use relays that are widely known to be special purpose relays, not meant for finding events to (eg blastr)
+let SPECIAL_PURPOSE_RELAYS: Set<String> = [
+    "wss://nostr.mutinywallet.com",
+    "wss://filter.nostr.wine",
+    "wss://purplepag.es"
+]
+
+// Popular relays that are widely known, we can keep a list and choose to avoid these relays when finding content using Enhanced Relay Routing
+// The skipTopRelays param of createRequestPlan() probably gives the same result so we might not need this
+let POPULAR_RELAYS: Set<String> = [
+    "wss://nos.lol",
+    "wss://nostr.wine",
+    "wss://relay.damus.io",
+    "wss://relay.primal.net",
+    "wss://relay.nostr.band"
+]
+
 public typealias CanonicalRelayUrl = String // lowercased, without trailing slash on root domain
 
 public class ConnectionPool: ObservableObject {
@@ -21,6 +38,19 @@ public class ConnectionPool: ObservableObject {
     
     // .ephemeralConnections should be read/mutated from main context
     private var ephemeralConnections: [CanonicalRelayUrl: RelayConnection] = [:]
+    
+    // .outboxConnections should be read/mutated from connection context
+    private var outboxConnections: [CanonicalRelayUrl: RelayConnection] = [:]
+    
+    // for relays that always have zero (re)connected + 3 or more errors (TODO: need to finetune and better guess/retry)
+    public var penaltybox: Set<CanonicalRelayUrl> = [] {
+        didSet {
+            self.reloadPreferredRelays()
+        }
+    }
+    
+    // .connectionStats should only be accessed from connection ConnectionPool.queue
+    public var connectionStats: [CanonicalRelayUrl: RelayConnectionStats] = [:]
     
     public var anyConnected: Bool {
         connections.contains(where: { $0.value.isConnected })
@@ -51,6 +81,25 @@ public class ConnectionPool: ObservableObject {
             ephemeralConnections[relayData.id] = newConnection
             removeAfterDelay(relayData.id)
             L.og.debug("addEphemeralConnection: adding new connection \(relayData.id)")
+            return newConnection
+        }
+    }
+    
+    // Same as addConnection() but should use from connection queue, not @MainActor
+    public func addOutboxConnection(_ relayData: RelayData) -> RelayConnection {
+        if let existingConnection = outboxConnections[relayData.id] {
+            if relayData.read && !existingConnection.relayData.read {
+                existingConnection.relayData.setRead(true)
+            }
+            if relayData.write && !existingConnection.relayData.write {
+                existingConnection.relayData.setWrite(true)
+            }
+            return existingConnection
+        }
+        else {
+            let newConnection = RelayConnection(relayData, queue: queue)
+            outboxConnections[relayData.id] = newConnection
+//            removeAfterDelay(relayData.id)
             return newConnection
         }
     }
@@ -256,8 +305,8 @@ public class ConnectionPool: ObservableObject {
             }) {
                 L.sockets.info("Removing ephemeral relay \(url)")
                 connection.disconnect()
-                if (self?.connections.keys.contains(url) ?? false) {
-                    self?.connections.removeValue(forKey: url)
+                if (self?.ephemeralConnections.keys.contains(url) ?? false) {
+                    self?.ephemeralConnections.removeValue(forKey: url)
                 }
             }
         }
@@ -384,7 +433,7 @@ public class ConnectionPool: ObservableObject {
         }
         
         // Additions for Outbox taken from nostr-essentials
-        
+        guard SettingsStore.shared.enableOutboxRelays else { return } // Check if Enhanced Relay Routing toggle is turned on
         guard let preferredRelays = self.preferredRelays else { return }
         
         // SEND REQ TO WHERE OTHERS WRITE (TO FIND THEIR POSTS, SO WE CAN READ)
@@ -425,10 +474,15 @@ public class ConnectionPool: ObservableObject {
     private var _pubkeysByRelay: [String: Set<String>] = [:]
     
     public func setPreferredRelays(using kind10002s: [NostrEssentials.Event], maxPreferredRelays: Int = 50) {
-        self.preferredRelays = pubkeysByRelay(kind10002s)
+        self.preferredRelays = pubkeysByRelay(kind10002s , ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
         
         // Set limit because to total relays will be derived from external events and can be abused
         self.maxPreferredRelays = maxPreferredRelays
+    }
+    
+    private var kind10002s: [NostrEssentials.Event] = [] // cache here for easy reload after updating .penaltybox
+    private func reloadPreferredRelays() {
+        self.preferredRelays = pubkeysByRelay(self.kind10002s , ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
     }
     
     // SEND REQ TO WHERE OTHERS WRITE (TO FIND THEIR POSTS, SO WE CAN READ)
@@ -441,7 +495,7 @@ public class ConnectionPool: ObservableObject {
         guard let filters = message.filters else { return }
         guard let pubkeys = filters.first?.authors else { return }
         
-        let plan: RequestPlan = createRequestPlan(pubkeys: pubkeys, reqFilters: filters, ourReadRelays: ourReadRelays, preferredRelays: preferredRelays)
+        let plan: RequestPlan = createRequestPlan(pubkeys: pubkeys, reqFilters: filters, ourReadRelays: ourReadRelays, preferredRelays: preferredRelays, skipTopRelays: 3)
         
         for req in plan.findEventsRequests
             .filter({ (relay: String, findEventsRequest: FindEventsRequest) in
@@ -455,7 +509,20 @@ public class ConnectionPool: ObservableObject {
             })
             .prefix(self.maxPreferredRelays) // SANITY
         {
-            print("🟩 SENDING REQ -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description)")
+            
+            L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description)")
+            let connection = ConnectionPool.shared.addOutboxConnection(RelayData(read: true, write: false, search: false, auth: false, url: req.key, excludedPubkeys: []))
+            if !connection.isConnected {
+                connection.connect()
+            }
+            guard let message = NostrEssentials.ClientMessage(
+                type: .REQ,
+                subscriptionId: subscriptionId,
+                filters: req.value.filters
+            ).json()
+            else { return }
+            
+            connection.sendMessage(message)
         }
     }
     
@@ -481,7 +548,13 @@ public class ConnectionPool: ObservableObject {
                 $0.value.count > $1.value.count
             }) {
             
-            print("🟩 SENDING EVENT -- \(relay): \(pubkeys.joined(separator: ","))")
+            L.og.debug("📤📤 Outbox 🟩 SENDING EVENT -- \(relay): \(pubkeys.joined(separator: ","))")
+            let connection = ConnectionPool.shared.addOutboxConnection(RelayData(read: false, write: true, search: false, auth: false, url: relay, excludedPubkeys: []))
+            if !connection.isConnected {
+                connection.connect()
+            }
+            guard let messageString = message.json() else { return }
+            connection.sendMessage(messageString)
         }
     }
 }

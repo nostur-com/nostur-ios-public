@@ -69,24 +69,24 @@ class NewPostNotifier: ObservableObject {
             subscriptionId: "NP",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
-                if let cm = NostrEssentials
-                    .ClientMessage(type: .REQ,
-                                   subscriptionId: taskId,
-                                   filters: [
-                                    Filters(
-                                        authors: self.enabledPubkeys,
-                                        kinds: PROFILE_KINDS,
-                                        since: Int(since),
-                                        limit: 250
-                                    )
-                                   ]
-                    ).json() {
-                    self.lastCheck = .now
-                    req(cm)
-                }
-                else {
-                    L.og.info("NewPostNotifier: unable to create REQ")
-                }
+                self.lastCheck = .now
+                outboxReq(
+                    NosturClientMessage(
+                        clientMessage: NostrEssentials.ClientMessage(
+                            type: .REQ,
+                            subscriptionId: taskId,
+                            filters: [
+                                Filters(
+                                    authors: self.enabledPubkeys,
+                                    kinds: PROFILE_KINDS,
+                                    since: Int(since),
+                                    limit: 250
+                                )
+                            ]
+                        ),
+                        relayType: .READ
+                    )
+                )
             },
             processResponseCommand: { [weak self] taskId, relayMessage, event in
                 guard let self else { return }

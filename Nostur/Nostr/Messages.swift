@@ -400,7 +400,7 @@ public struct RequestMessage {
     
     static func getUserMetadataAndContactList(pubkey:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,3], "limit": 20}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,3,10002], "limit": 20}]
 """
     }
     
@@ -517,6 +517,35 @@ enum ReportType:String {
 //        since: 0
 //    ))
 import NostrEssentials
+
+func outboxReq(_ cm: NosturClientMessage, activeSubscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
+    #if DEBUG
+    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+        return
+    }
+    #endif
+    
+    let pubkey = (accountPubkey ?? NRState.shared.activeAccountPublicKey)
+    
+    if Thread.isMainThread {
+        DispatchQueue.global().async {
+            ConnectionPool.shared.sendMessage(
+                cm,
+                subscriptionId: activeSubscriptionId,
+                relays: relays,
+                accountPubkey: pubkey
+            )
+        }
+    }
+    else {
+        ConnectionPool.shared.sendMessage(
+            cm,
+            subscriptionId: activeSubscriptionId,
+            relays: relays,
+            accountPubkey: pubkey
+        )
+    }
+}
 
 func req(_ rm: String, activeSubscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
     #if DEBUG
