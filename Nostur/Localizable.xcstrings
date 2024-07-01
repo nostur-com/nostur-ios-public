@@ -53,7 +53,7 @@
       }
     },
     "__Source code__" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -106,8 +106,25 @@
         }
       }
     },
+    "(Re)connects/Messages/Errors" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbonden/Berichten/Fouten"
+          }
+        }
+      }
+    },
     "[__Source code__](https://github.com/nostur-com/nostur-ios-public)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[__Source code__](https://github.com/nostur-com/nostur-ios-public)"
+          }
+        }
+      }
     },
     "[#asknostr](nostur:t:asknostr)" : {
       "localizations" : {
@@ -826,7 +843,14 @@
       }
     },
     "1" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1"
+          }
+        }
+      }
     },
     "1) Send screenshot of this error and wait for an update with fix" : {
       "localizations" : {
@@ -1212,6 +1236,16 @@
         }
       }
     },
+    "Add new relay..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg relay toe..."
+          }
+        }
+      }
+    },
     "Add private note" : {
       "comment" : "Post context menu button",
       "localizations" : {
@@ -1325,6 +1359,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "en 1 iemand anders"
+          }
+        }
+      }
+    },
+    "Announce your relays..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publiceer jouw relays..."
+          }
+        }
+      }
+    },
+    "Announced relays" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerde relays"
+          }
+        }
+      }
+    },
+    "Announced relays for %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerde relays voor %@"
           }
         }
       }
@@ -1706,6 +1770,17 @@
         }
       }
     },
+    "Broadcast nostr event" : {
+      "comment" : "Navigation title for screen to broadcast any nostr event",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broadcast nostr event"
+          }
+        }
+      }
+    },
     "Button configurator" : {
       "comment" : "Heading when entering Report details",
       "localizations" : {
@@ -1946,6 +2021,16 @@
         }
       }
     },
+    "Configure announced relays" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerde relays instellen"
+          }
+        }
+      }
+    },
     "Configure contacts..." : {
       "localizations" : {
         "nl" : {
@@ -1957,6 +2042,7 @@
       }
     },
     "Configure published relays" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1983,6 +2069,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stel de reactie knoppen in, je kan ook de positie veranderen of knoppen verwijderen."
+          }
+        }
+      }
+    },
+    "Configure your relays..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jouw relays instellen..."
           }
         }
       }
@@ -2016,6 +2112,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbind met Alby portemonnee"
+          }
+        }
+      }
+    },
+    "Connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind met extra relays van mensen die je volgt om te voorkomen dat je berichten mist"
+          }
+        }
+      }
+    },
+    "Connect to relays included in nostr links when content can't be found" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind met relays die worden meegestuurd in nostr links als berichten niet gevonden kunnen worden"
           }
         }
       }
@@ -2612,6 +2730,17 @@
         }
       }
     },
+    "Discover" : {
+      "comment" : "Tab title for the Discover feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discover"
+          }
+        }
+      }
+    },
     "Discover Communities" : {
       "comment" : "Heading above list of communities",
       "localizations" : {
@@ -2619,6 +2748,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ontdek groepen"
+          }
+        }
+      }
+    },
+    "Discover feed time frame" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discover feed tijdsvak"
           }
         }
       }
@@ -2803,7 +2942,25 @@
       }
     },
     "End test" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End test"
+          }
+        }
+      }
+    },
+    "Enhanced Relay Routing" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enhanced Relay Routing"
+          }
+        }
+      }
     },
     "Enter a NIP-96 compatible media server address to host your images" : {
       "localizations" : {
@@ -2887,6 +3044,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voer je naam in"
+          }
+        }
+      }
+    },
+    "Error messages for %@" : {
+      "comment" : "Title of relay error messages log sheet",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foutberichten voor %@"
           }
         }
       }
@@ -3174,6 +3342,17 @@
         }
       }
     },
+    "Follow relay hints" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volgt relay hints"
+          }
+        }
+      }
+    },
     "Followed by" : {
       "localizations" : {
         "nl" : {
@@ -3414,7 +3593,18 @@
         }
       }
     },
+    "Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hot, Discover, Gallery en Artikelen zullen niet zichtbaar zijn als je niet meer dan 10 mensen volgt"
+          }
+        }
+      }
+    },
     "Hot, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3986,7 +4176,18 @@
         }
       }
     },
+    "Media from posts from anyone which are most liked or reposted by people you follow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media van berichten van iedereen met de meeste reacties of herplaatsingen van mensen die je volgt"
+          }
+        }
+      }
+    },
     "Media from posts most liked or reposted by people you follow" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4164,6 +4365,16 @@
         }
       }
     },
+    "NColumnFeedView" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NColumnFeedView"
+          }
+        }
+      }
+    },
     "New direct message" : {
       "comment" : "Navigation title for a new Direct Message",
       "localizations" : {
@@ -4329,6 +4540,16 @@
         }
       }
     },
+    "Niks" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niks"
+          }
+        }
+      }
+    },
     "No articles found from your follow list in selected time frame." : {
       "localizations" : {
         "nl" : {
@@ -4356,6 +4577,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geen berichtverzoeken"
+          }
+        }
+      }
+    },
+    "No stats collected yet." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nog geen statistieken verzameld"
           }
         }
       }
@@ -4911,6 +5142,16 @@
         }
       }
     },
+    "Posts from anyone which are most liked or reposted by people you follow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van iedereen met de meeste reacties of herplaatsingen door mensen die je volgt"
+          }
+        }
+      }
+    },
     "Posts from contacts" : {
       "localizations" : {
         "nl" : {
@@ -4931,6 +5172,16 @@
         }
       }
     },
+    "Posts from people you don't follow which are most liked or reposted by people you follow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van mensen die je niet volgt met de meeste reacties of herplaatsingen door mensen die je volgt"
+          }
+        }
+      }
+    },
     "Posts from relays" : {
       "localizations" : {
         "nl" : {
@@ -4942,6 +5193,7 @@
       }
     },
     "Posts most liked or reposted by people you follow" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5187,6 +5439,7 @@
       }
     },
     "Published relays" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5197,6 +5450,7 @@
       }
     },
     "Published relays for %@" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5397,7 +5651,29 @@
         }
       }
     },
+    "Reconfigure announced relays" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerde relays opnieuw instellen"
+          }
+        }
+      }
+    },
+    "Reconfigure announced relays..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerde relays opnieuw instellen..."
+          }
+        }
+      }
+    },
     "Reconfigure published relays" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5448,7 +5724,18 @@
         }
       }
     },
+    "Relay connection stats" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay verbindingsstatistieken"
+          }
+        }
+      }
+    },
     "Relay Mastery" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5492,12 +5779,32 @@
       }
     },
     "Relays" : {
-      "comment" : "Relay settings heading\nTab title for relay mastery",
+      "comment" : "Relay settings heading",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Relays"
+          }
+        }
+      }
+    },
+    "Relays Nostur uses to find content" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays die Nostur gebruikt om berichten te vinden"
+          }
+        }
+      }
+    },
+    "Relays others will use to find your content" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays die anderen zullen gebruiken om jouw berichten te vinden"
           }
         }
       }
@@ -6567,6 +6874,16 @@
         }
       }
     },
+    "The Discover feed shows posts from people you don't follow which are most liked or reposted by people you follow in the last %lld hours" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van mensen die je niet volgt met de meeste reacties of herplaatsingen door mensen die je volgt in de afgelopen %lld uur"
+          }
+        }
+      }
+    },
     "The Gallery feed shows pictures most liked or reposted by people you follow in the last %lld hours" : {
       "localizations" : {
         "nl" : {
@@ -6588,7 +6905,18 @@
         }
       }
     },
+    "The Hot feed shows posts from anyone which are most liked or reposted by people you follow in the last %lld hours" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van iedereen met de meeste reacties of herplaatsingen door mensen die je volgt in de afgelopen %lld uur"
+          }
+        }
+      }
+    },
     "The Hot feed shows posts most liked or reposted by people you follow in the last %lld hours" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6639,12 +6967,33 @@
         }
       }
     },
+    "These relays are used for all accounts, and are not announced unless configured on the account specific settings." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze relays worden gebruikt voor alle accounts en zijn niet gepubliceerd tenzij ingesteld bij de account specifieke instellingen"
+          }
+        }
+      }
+    },
     "These relays are used for all accounts, and are not published unless configured on the account specific tabs." : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deze relays worden gebruikt voor alle accounts en worden niet gepubliceerd tenzij zo ingesteld op de account-specifieke tabs."
+          }
+        }
+      }
+    },
+    "These relays are used for all your accounts, and are not announced unless configured on the account specific tabs." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze relays worden gebruikt voor al je accounts en zijn niet gepubliceerd tenzij ingesteld op account specifieke tabs."
           }
         }
       }
@@ -6855,6 +7204,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Time-out"
+          }
+        }
+      }
+    },
+    "Time-out while loading discover feed" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time-out tijdens laden"
           }
         }
       }
@@ -7143,6 +7502,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Maak los"
+          }
+        }
+      }
+    },
+    "Unsigned or invalid event" : {
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsigned or invalid event"
           }
         }
       }
