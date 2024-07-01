@@ -335,28 +335,6 @@ struct Settings: View {
                 }
                 .listRowBackground(themes.theme.background)
                 
-                if #available(iOS 16, *) {
-                    Section(header: Text("Data export")) {
-                        Button("Save to file...") {
-                            guard let account = account() else { L.og.error("Cannot export, no account"); return }
-                            exportAccount = account
-                            showExporter.toggle()
-                        }
-                        if let exportAccount = exportAccount, showExporter == true {
-                            Color.clear
-                                .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: exportAccount.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(exportAccount.npub.prefix(11)))") { result in
-                                    switch result {
-                                    case .success(let url):
-                                        L.og.info("Saved to \(url)")
-                                    case .failure(let error):
-                                        L.og.debug("Export: \(error.localizedDescription)")
-                                    }
-                                }
-                        }
-                    }
-                    .listRowBackground(themes.theme.background)
-                }
-                
                 Section(header: Text("Relays", comment: "Relay settings heading")) {
                     RelaysLink()
                         .listRowBackground(themes.theme.background)
@@ -543,6 +521,28 @@ struct Settings: View {
                 }
             }
             .listRowBackground(themes.theme.background)
+            
+            if #available(iOS 16, *) {
+                Section(header: Text("Data export")) {
+                    Button("Save to file...") {
+                        guard let account = account() else { L.og.error("Cannot export, no account"); return }
+                        exportAccount = account
+                        showExporter.toggle()
+                    }
+                    if let exportAccount = exportAccount, showExporter == true {
+                        Color.clear
+                            .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: exportAccount.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(exportAccount.npub.prefix(11)))") { result in
+                                switch result {
+                                case .success(let url):
+                                    L.og.info("Saved to \(url)")
+                                case .failure(let error):
+                                    L.og.debug("Export: \(error.localizedDescription)")
+                                }
+                            }
+                    }
+                }
+                .listRowBackground(themes.theme.background)
+            }
             
             if account()?.privateKey != nil && !(account()?.isNC ?? false) {
                 Section(header: Text("Account", comment: "Heading for section to delete account")) {
