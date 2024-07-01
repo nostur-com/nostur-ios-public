@@ -32,6 +32,13 @@ class NewOnboardingTracker {
             DataProvider.shared().bgSave()
         }
     }
+    
+    private var fetchedOutboxRelaysTask = false { // Fetched relay metadata (kind 10002)
+        didSet {
+            DataProvider.shared().bgSave()
+        }
+    }
+    
     private var fetchedProfilesOfFollowersTask = false { // Fetched profiles of followers (KIND 0 of Ps in OWN KIND 3)
         didSet {
             DataProvider.shared().bgSave()
@@ -82,6 +89,7 @@ class NewOnboardingTracker {
         self.fetchedOwnProfileTask = false
         self.fetchedFollowersTask = false
         self.fetchedProfilesOfFollowersTask = false
+        self.fetchedOutboxRelaysTask = false
         self.fetchProfileAndFollowers()
     }
     
@@ -121,11 +129,16 @@ class NewOnboardingTracker {
             self.processKind3()
         }
         
+        // We maybe already have kind 10002
+        self.bg.performAndWait {
+            self.processKind10002()
+        }
+        
         let fetchProfileAndFollowersTask = ReqTask(
             prefix: "FPF-",
             reqCommand: { (taskId) in
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.reqCommand()")
-                guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false else {
+                guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false && self.fetchedOutboxRelaysTask == false else {
                     L.onboarding.info("\(taskId) ✈️✈️ SKIPPED - ALREADY HAVE BOTH")
                     return
                 }
@@ -147,9 +160,16 @@ class NewOnboardingTracker {
                         self.processKind3()
                     }
                 }
+                
+                self?.bg.perform {
+                    guard let self = self else { return }
+                    if !self.fetchedOutboxRelaysTask {
+                        self.processKind10002()
+                    }
+                }
             })
 
-        guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false else {
+        guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false && self.fetchedOutboxRelaysTask == false else {
             self.account = nil
             return
         }
@@ -203,6 +223,21 @@ class NewOnboardingTracker {
             self.preloadAccountInfo(kind0)
             
             self.fetchedOwnProfileTask = true
+        }
+    }
+    
+    private func processKind10002() {
+        L.onboarding.info("✈️✈️ processing kind 10002")
+        guard let pubkey = self.pubkey else { return }
+        guard let account = self.account else { return }
+        if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: pubkey, context: self.bg) {
+            
+            self.createRelaysFromKind10002(kind10002)
+            self.fetchedOutboxRelaysTask = true
+            L.onboarding.info("✈️✈️ created relays from kind 10002")
+        }
+        else {
+            L.onboarding.info("✈️✈️ kind kind 10002 not found. ")
         }
     }
     
@@ -304,5 +339,40 @@ class NewOnboardingTracker {
                 L.og.error("Error decoding JSON: \(error)")
             }
         }
+    }
+    
+    private func createRelaysFromKind10002(_ event: Event) {
+        guard let pubkey = self.pubkey, AccountManager.shared.hasPrivateKey(pubkey: pubkey) else { return }
+        
+        let relayTags = event.fastTags.filter { tag in
+            tag.0 == "r"
+        }
+        
+        for relayTag in relayTags {
+            let relayUrl = normalizeRelayUrl(relayTag.1)
+            let fr = CloudRelay.fetchRequest()
+            if relayUrl.suffix(1) == "/" {
+                let relayWithoutSlash = String(relayUrl.dropLast(1))
+                fr.predicate = NSPredicate(format: "url_ == %@ OR url_ == %@", relayUrl, relayWithoutSlash)
+            }
+            else {
+                let relayWithSlash = relayUrl + "/"
+                fr.predicate = NSPredicate(format: "url_ == %@ OR url_ == %@", relayUrl, relayWithSlash)
+            }
+            L.onboarding.info("✈️✈️✈️ adding \(relayUrl) ")
+            if let existingRelay = try? self.bg.fetch(fr).first {
+                existingRelay.read = relayTag.2 == nil || relayTag.2 == "read"
+                existingRelay.write = relayTag.2 == nil || relayTag.2 == "write"
+            }
+            else {
+                let newRelay = CloudRelay(context: self.bg)
+                newRelay.url_ = relayUrl
+                newRelay.read = relayTag.2 == nil || relayTag.2 == "read"
+                newRelay.write = relayTag.2 == nil || relayTag.2 == "write"
+                newRelay.createdAt = Date()
+            }
+            DataProvider.shared().bgSave()
+        }
+        
     }
 }
