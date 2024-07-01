@@ -39,7 +39,11 @@ extension LVM {
             filters.append(followingHashtagsFilter)
         }
         
-        if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
+        // TODO: Add toggle on .pubkeys custom feeds so it can work also for non-"Following"
+        if self.id == "Following" {
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters), activeSubscriptionId: subscriptionId)
+        }
+        else if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
             req(message, activeSubscriptionId: subscriptionId)
         }
     }
@@ -67,7 +71,11 @@ extension LVM {
             filters.append(followingHashtagsFilter)
         }
         
-        if let message = CM(type: .REQ, subscriptionId: "CATCHUP-" + subscriptionId, filters: filters).json() {
+        // TODO: Add toggle on .pubkeys custom feeds so it can work also for non-"Following"
+        if self.id == "Following" {
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "CATCHUP-" + subscriptionId, filters: filters))
+        }
+        else if let message = CM(type: .REQ, subscriptionId: "CATCHUP-" + subscriptionId, filters: filters).json() {
             req(message)
         }
     }
@@ -92,7 +100,12 @@ extension LVM {
             filters.append(followingHashtagsFilter)
         }
         
-        if let message = CM(type: .REQ, subscriptionId: "RESUME-" + subscriptionId, filters: filters).json() {
+        
+        // TODO: Add toggle on .pubkeys custom feeds so it can work also for non-"Following"
+        if self.id == "Following" {
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + subscriptionId, filters: filters))
+        }
+        else if let message = CM(type: .REQ, subscriptionId: "RESUME-" + subscriptionId, filters: filters).json() {
             req(message)
         }
     }
@@ -119,7 +132,10 @@ extension LVM {
             filters.append(followingHashtagsFilter)
         }
         
-        if let message = CM(type: .REQ, subscriptionId: "PAGE-" + UUID().uuidString, filters: filters).json() {
+        if self.id == "Following" {
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + UUID().uuidString, filters: filters))
+        }
+        else if let message = CM(type: .REQ, subscriptionId: "PAGE-" + UUID().uuidString, filters: filters).json() {
             req(message)
         }
     }

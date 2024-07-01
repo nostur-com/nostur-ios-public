@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import NostrEssentials
 
 class InstantFeed {
     typealias CompletionHandler = ([Event]) -> ()
@@ -122,7 +123,10 @@ class InstantFeed {
             
             let getFollowingEventsTask = ReqTask(prefix: "GFET-") { taskId in
                 L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
-                req(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
+//                req(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
+                let filters = [Filters(authors: pubkeys, kinds: [1,5,6,9802,30023,34235], limit: 400)]
+                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
+                
             } processResponseCommand: { [weak self] taskId, _, _ in
                 bg().perform {
                     guard let self = self else { return }

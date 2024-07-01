@@ -71,21 +71,19 @@ class NewPostNotifier: ObservableObject {
                 guard let self else { return }
                 self.lastCheck = .now
                 outboxReq(
-                    NosturClientMessage(
-                        clientMessage: NostrEssentials.ClientMessage(
-                            type: .REQ,
-                            subscriptionId: taskId,
-                            filters: [
-                                Filters(
-                                    authors: self.enabledPubkeys,
-                                    kinds: PROFILE_KINDS,
-                                    since: Int(since),
-                                    limit: 250
-                                )
-                            ]
-                        ),
-                        relayType: .READ
-                    )
+                    NostrEssentials.ClientMessage(
+                        type: .REQ,
+                        subscriptionId: taskId,
+                        filters: [
+                            Filters(
+                                authors: self.enabledPubkeys,
+                                kinds: PROFILE_KINDS,
+                                since: Int(since),
+                                limit: 250
+                            )
+                        ]
+                    ),
+                    relayType: .READ
                 )
             },
             processResponseCommand: { [weak self] taskId, relayMessage, event in

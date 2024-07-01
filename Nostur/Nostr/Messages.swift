@@ -518,19 +518,21 @@ enum ReportType:String {
 //    ))
 import NostrEssentials
 
-func outboxReq(_ cm: NosturClientMessage, activeSubscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
+func outboxReq(_ cm: NostrEssentials.ClientMessage, activeSubscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
     #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
         return
     }
     #endif
     
+    let _cm = NosturClientMessage(clientMessage: cm, relayType: relayType)
+    
     let pubkey = (accountPubkey ?? NRState.shared.activeAccountPublicKey)
     
     if Thread.isMainThread {
         DispatchQueue.global().async {
             ConnectionPool.shared.sendMessage(
-                cm,
+                _cm,
                 subscriptionId: activeSubscriptionId,
                 relays: relays,
                 accountPubkey: pubkey
@@ -539,7 +541,7 @@ func outboxReq(_ cm: NosturClientMessage, activeSubscriptionId: String? = nil, r
     }
     else {
         ConnectionPool.shared.sendMessage(
-            cm,
+            _cm,
             subscriptionId: activeSubscriptionId,
             relays: relays,
             accountPubkey: pubkey
