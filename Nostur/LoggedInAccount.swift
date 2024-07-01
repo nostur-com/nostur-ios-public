@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import NostrEssentials
 
 // Must be initialized with account
 class LoggedInAccount: ObservableObject {
@@ -130,6 +131,7 @@ class LoggedInAccount: ObservableObject {
         return signedEvent
     }
     
+    private var outboxLoader: OutboxLoader? = nil
     
     // BG high speed
     public var accountCache: AccountCache?
@@ -202,6 +204,8 @@ class LoggedInAccount: ObservableObject {
                     DirectMessageViewModel.default.loadAfterWoT()
                     WebOfTrust.shared.loadWoT()
                 }
+                
+                self.outboxLoader = OutboxLoader(pubkey: self.pubkey, follows: follows, cp: ConnectionPool.shared)
             }
         }
     }
@@ -246,7 +250,7 @@ class LoggedInAccount: ObservableObject {
     
     
     // Other
-    private var bg:NSManagedObjectContext
+    private var bg: NSManagedObjectContext
 }
 
 
