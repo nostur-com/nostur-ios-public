@@ -177,7 +177,7 @@ final class SettingsStore: ObservableObject {
             Keys.receiveLocalNotifications: true,
             Keys.receiveLocalNotificationsLimitToFollows: false,
             Keys.followRelayHints: true,
-            Keys.enableOutboxRelays: true,
+            Keys.enableOutboxRelays: false,
             Keys.proMode: false
         ])
 
