@@ -38,6 +38,16 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     private var subscriptions = Set<AnyCancellable>()
     private var outQueue: [SocketMessage] = []
     
+    public var stats: RelayConnectionStats {
+        if let existingStats = ConnectionPool.shared.connectionStats[self.url] {
+            return existingStats
+        }
+        else {
+            let newStats = RelayConnectionStats(id: self.url)
+            ConnectionPool.shared.connectionStats[self.url] = newStats
+            return newStats
+        }
+    }
     
     private var isDeviceConnected = false {
         didSet {
@@ -295,6 +305,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         if let error {
             self.didReceiveError(error)
         }
+        queue.async(flags: .barrier) { [weak self] in
+            self?.stats.errors += 1
+            if let errorMessage = error?.localizedDescription {
+                self?.stats.addErrorMessage(errorMessage)
+            }
+        }
     }
     
     // didReceiveInformationalResponse
@@ -310,6 +326,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 #if DEBUG
     L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
 #endif
+        queue.async(flags: .barrier) { [weak self] in
+            self?.stats.errors += 1
+            if let errorMessage = error?.localizedDescription {
+                self?.stats.addErrorMessage(errorMessage)
+            }
+        }
     }
     
     public func didReceiveMessage(string: String) {
@@ -329,6 +351,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self.lastMessageReceivedAt = .now
             self.exponentialReconnectBackOff = 0
             self.skipped = 0
+            
+            self.stats.messages += 1
         }
     }
     
@@ -345,6 +369,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self.lastMessageReceivedAt = .now
             self.exponentialReconnectBackOff = 0
             self.skipped = 0
+
+            self.stats.messages += 1
         }
     }
     
@@ -367,6 +393,13 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 DispatchQueue.main.async {
                     sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
                 }
+            }
+            
+            guard let self else { return }
+            self.stats.errors += 1
+            self.stats.addErrorMessage(error.localizedDescription)
+            if (self.stats.errors > 3) && (self.stats.connected == 0) {
+                ConnectionPool.shared.penaltybox.insert(self.url)
             }
         }
         L.sockets.debug("🏎️🏎️🔌🔴🔴 Error \(self.url): \(error.localizedDescription)")
@@ -393,6 +426,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
+            self.stats.connected += 1
             self.startReceiving()
             self.nreqSubscriptions = []
             self.exponentialReconnectBackOff = 0
