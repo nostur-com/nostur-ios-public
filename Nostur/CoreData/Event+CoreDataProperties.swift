@@ -736,6 +736,12 @@ extension Event {
         return (try? context.fetch(fr)) ?? []
     }
     
+    static func fetchReplacableEvents(_ kind: Int64, pubkeys: Set<String>, context: NSManagedObjectContext) -> [Event] {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+        request.predicate = NSPredicate(format: "kind == %d AND pubkey IN %@", kind, pubkeys)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        return (try? context.fetch(request)) ?? []
+    }
     
     static func eventExists(id: String, context: NSManagedObjectContext) -> Bool {
         if Thread.isMainThread {
