@@ -9,7 +9,6 @@ import Foundation
 import Combine
 import Network
 
-
 public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableObject, Identifiable {
     
     // for views (viewContext)
@@ -211,7 +210,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 return
             }
             
-            if bypassQueue {
+            if bypassQueue { // To give prio to stuff like AUTH
                 #if DEBUG
                 L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
                 #endif
@@ -406,7 +405,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     public func didReceivePong() {
-        L.sockets.debug("PING: Did receive PONG: \(self.url)")
+//        L.sockets.debug("PING: Did receive PONG: \(self.url)")
         // Respond to a WebSocket connection receiving a Pong from the peer
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }

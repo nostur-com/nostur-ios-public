@@ -10,15 +10,15 @@ import CoreData
 import NavigationBackport
 
 struct RelayRowView: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject public var relay:CloudRelay
-    @ObservedObject private var cp:ConnectionPool = .shared
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject public var relay: CloudRelay
+    @ObservedObject private var cp: ConnectionPool = .shared
     
     private var isConnected:Bool {
         connection?.isConnected ?? false
     }
     
-    @State private var connection:RelayConnection? = nil
+    @State private var connection: RelayConnection? = nil
     
     var body: some View {
         #if DEBUG
