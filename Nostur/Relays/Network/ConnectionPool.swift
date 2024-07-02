@@ -477,7 +477,7 @@ public class ConnectionPool: ObservableObject {
     
     public func setPreferredRelays(using kind10002s: [NostrEssentials.Event], maxPreferredRelays: Int = 50) {
         self.preferredRelays = pubkeysByRelay(kind10002s , ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
-        
+        self.kind10002s = kind10002s
         // Set limit because to total relays will be derived from external events and can be abused
         self.maxPreferredRelays = maxPreferredRelays
     }
