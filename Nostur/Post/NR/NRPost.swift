@@ -459,8 +459,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             missingPs.insert(event.pubkey)
         }
         let eventContactPs = (referencedContacts.compactMap({ contact in
-            // Data race in Nostur.NRContact.metadata_created_at.getter (Thread 1174)
-            if contact.metadata_created_at != 0 {
+            if (contact.contact?.metadata_created_at ?? 0) != 0 {
                 return contact.pubkey
             }
             return nil
