@@ -97,7 +97,7 @@ public class ConnectionPool: ObservableObject {
             return existingConnection
         }
         else {
-            let newConnection = RelayConnection(relayData, queue: queue)
+            let newConnection = RelayConnection(relayData, isOutbox: true, queue: queue)
             outboxConnections[relayData.id] = newConnection
 //            removeAfterDelay(relayData.id)
             return newConnection
@@ -237,6 +237,14 @@ public class ConnectionPool: ObservableObject {
         if let connection = connections[relayId] {
             connection.disconnect()
             connections.removeValue(forKey: relayId)
+        }
+    }
+    
+    @MainActor
+    func removeOutboxConnection(_ relayId: String) {
+        if let connection = outboxConnections[relayId] {
+            connection.disconnect()
+            outboxConnections.removeValue(forKey: relayId)
         }
     }
     
