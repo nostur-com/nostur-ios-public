@@ -1119,6 +1119,16 @@
         }
       }
     },
+    "Accounts found" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accounts gevonden"
+          }
+        }
+      }
+    },
     "Activate" : {
       "comment" : "Button to check if a file storage server is compatible",
       "localizations" : {
@@ -2201,6 +2211,16 @@
         }
       }
     },
+    "Content from these accounts you follow was received this relay" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data van deze accounts die je volgt is ontvangen van deze relay"
+          }
+        }
+      }
+    },
     "Continue" : {
       "localizations" : {
         "nl" : {
@@ -3050,6 +3070,7 @@
     },
     "Error messages for %@" : {
       "comment" : "Title of relay error messages log sheet",
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3076,6 +3097,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kon contact pubkey niet vinden"
+          }
+        }
+      }
+    },
+    "Errors" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foutmeldingen"
           }
         }
       }
@@ -3854,6 +3885,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kind: %2"
+          }
+        }
+      }
+    },
+    "Last 10 error messages" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatste 10 foutmeldingen"
           }
         }
       }

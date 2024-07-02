@@ -238,10 +238,11 @@ class WebOfTrust: ObservableObject {
             if let list = try? bg().fetch(fr).first {
                 followsOfPubkey = followsOfPubkey.union( Set(list.fastPs.map { $0.1 }) )
             }
-            guard wotDunbarNumber == 0 || followsOfPubkey.count <= wotDunbarNumber else { return }
-            self.followingFollowingPubkeys = self.followingFollowingPubkeys.union(followsOfPubkey)
-            L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
-            self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
+            if wotDunbarNumber == 0 || followsOfPubkey.count <= wotDunbarNumber {
+                self.followingFollowingPubkeys = self.followingFollowingPubkeys.union(followsOfPubkey)
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
+                self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
+            }
         }
     }
     
@@ -354,8 +355,9 @@ class WebOfTrust: ObservableObject {
             if let contactLists = try? bg().fetch(fr) {
                 for list in contactLists {
                     let pubkeys = Set(list.fastPs.map { $0.1 })
-                    guard wotDunbarNumber == 0 || pubkeys.count <= wotDunbarNumber else { continue }
-                    followFollows = followFollows.union(pubkeys)
+                    if wotDunbarNumber == 0 || pubkeys.count <= wotDunbarNumber {
+                        followFollows = followFollows.union(pubkeys)
+                    }
                 }
             }
             self.followingFollowingPubkeys = followFollows
