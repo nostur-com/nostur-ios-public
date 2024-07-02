@@ -191,6 +191,7 @@ final class SettingsStore: ObservableObject {
         
         // TODO: Refactor settings, better use all properties on SettingsStore directly instead of (slower) defaults.bool()
         // for now only a few that we need right now:
+        _enableOutboxRelays = defaults.bool(forKey: Keys.enableOutboxRelays)
         _animatedPFPenabledCache = defaults.bool(forKey: Keys.animatedPFPenabled)
         _lowDataModeCache = defaults.bool(forKey: Keys.lowDataMode)
         _rowFooterEnabled = defaults.bool(forKey: Keys.rowFooterEnabled)
@@ -360,13 +361,18 @@ final class SettingsStore: ObservableObject {
         get { defaults.bool(forKey: Keys.followRelayHints) }
     }
     
-    var enableOutboxRelays: Bool {
-        set { defaults.set(newValue, forKey: Keys.enableOutboxRelays); objectWillChange.send() }
-        get { defaults.bool(forKey: Keys.enableOutboxRelays) }
+    // MARK: -- SPECIAL HANDLING FOR PERFORMANCE ON EVERYTHING BELOW:
+    
+    public var enableOutboxRelays: Bool {
+        set {
+            objectWillChange.send()
+            _enableOutboxRelays = newValue
+            defaults.set(newValue, forKey: Keys.enableOutboxRelays);
+        }
+        get { _enableOutboxRelays }
     }
     
-    
-    // MARK: -- SPECIAL HANDLING FOR PERFORMANCE ON EVERYTHING BELOW:
+    private var _enableOutboxRelays:Bool = false
     
     var webOfTrustLevel: String {
         set {
