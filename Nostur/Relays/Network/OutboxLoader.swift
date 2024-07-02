@@ -37,7 +37,9 @@ public class OutboxLoader {
         self.loadKind10002sFromDb { kind10002s in
             
             self.mostRecentKind10002At = kind10002s.sorted(by: { $0.created_at > $1.created_at }).first?.created_at
-            self.cp.setPreferredRelays(using: kind10002s)
+            self.cp.queue.async(flags: .barrier) { [weak self] in
+                self?.cp.setPreferredRelays(using: kind10002s)
+            }
             
             L.sockets.debug("📤📤 Outbox: loaded \(kind10002s.count) from db")
             self.fetchMoreKind10002sFromRelays()
@@ -77,7 +79,9 @@ public class OutboxLoader {
                 self.loadKind10002sFromDb { kind10002s in
                     
                     self.mostRecentKind10002At = kind10002s.sorted(by: { $0.created_at > $1.created_at }).first?.created_at
-                    self.cp.setPreferredRelays(using: kind10002s)
+                    self.cp.queue.async(flags: .barrier) { [weak self] in
+                        self?.cp.setPreferredRelays(using: kind10002s)
+                    }
                     
                     L.sockets.debug("📤📤 Outbox: loaded \(kind10002s.count) from db")
                 }

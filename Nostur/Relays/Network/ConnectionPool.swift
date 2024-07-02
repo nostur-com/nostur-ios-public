@@ -321,7 +321,7 @@ public class ConnectionPool: ObservableObject {
             }
         #endif
         
-        queue.async { [weak self] in
+        queue.async(flags:. barrier) { [weak self] in
             self?.sendMessageAlreadyInQueue(message, subscriptionId: subscriptionId, relays: relays, accountPubkey: accountPubkey)
         }
     }
