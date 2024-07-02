@@ -432,6 +432,8 @@ public class ConnectionPool: ObservableObject {
             }
         }
         
+        guard !SettingsStore.shared.lowDataMode else { return } // Don't continue with additional outbox relays on low data mode
+        
         // Additions for Outbox taken from nostr-essentials
         guard SettingsStore.shared.enableOutboxRelays else { return } // Check if Enhanced Relay Routing toggle is turned on
         guard let preferredRelays = self.preferredRelays else { return }
