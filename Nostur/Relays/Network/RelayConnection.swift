@@ -539,6 +539,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
 
     public func sendAuthResponse() {
+        guard self.relayData.auth else { return }
+        
         DispatchQueue.main.async {
             guard let account = Nostur.account(), account.isFullAccount else { return }
             guard !self.relayData.excludedPubkeys.contains(account.publicKey) else { return }
