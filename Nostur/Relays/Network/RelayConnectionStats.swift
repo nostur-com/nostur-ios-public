@@ -16,11 +16,23 @@ public class RelayConnectionStats: Identifiable {
     
     public var lastErrorMessages: [String] = []
     
+    // Pubkeys actually received from this relay
+    public var receivedPubkeys: Set<String> = []
+    
     init(id: String) {
         self.id = id
     }
     
     public func addErrorMessage(_ message: String) {
         lastErrorMessages = Array(([String(format: "%@: %@", Date().ISO8601Format(), message)] + lastErrorMessages).prefix(10))
+    }
+}
+
+func updateConnectionStats(receivedPubkey pubkey: String, fromRelay relay: String) {
+    // Only track pubkey we follow
+    guard NRState.shared.loggedInAccount?.viewFollowingPublicKeys.contains(pubkey) ?? false else { return }
+    ConnectionPool.shared.queue.async(flags: .barrier) {
+        guard let relayStats = ConnectionPool.shared.connectionStats[relay] else { return }
+        relayStats.receivedPubkeys.insert(pubkey)
     }
 }
