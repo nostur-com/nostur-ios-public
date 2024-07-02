@@ -23,6 +23,7 @@ struct RelayStats: View {
                     ForEach(Array(stats.keys), id: \.self) { (relayUrl: String) in
                         RelayStatsRow(stats: stats[relayUrl]!)
                             .id(stats[relayUrl]!.id)
+                            .drawingGroup()
                         .contentShape(Rectangle())
                         .onTapGesture {
                             guard stats[relayUrl]?.errors ?? 0 > 0 || stats[relayUrl]?.receivedPubkeys.count ?? 0 > 0 else { return }
@@ -71,7 +72,8 @@ struct RelayStatsRow: View {
             
             ForEach(foundAccountRows.indices, id: \.self) { index in
                 PFP(pubkey: foundAccountRows[index].pubkey, pictureUrl: foundAccountRows[index].pfp, size: 20.0)
-                    .offset(x: -CGFloat(index*15))
+                    .offset(x: -CGFloat(index*18))
+                    .id(foundAccountRows[index].pubkey)
             }
             
             Spacer()
@@ -79,17 +81,18 @@ struct RelayStatsRow: View {
                 .lineLimit(1)
         }
         .onAppear {
-            foundAccountRows = stats.receivedPubkeys
+            foundAccountRows = Array(stats.receivedPubkeys
                 .filter { pubkey in // We only care about pubkeys we follow
                     return NRState.shared.loggedInAccount?.viewFollowingPublicKeys.contains(pubkey) ?? false
                 }
                 .compactMap { pubkey in
-                return (
-                    pubkey,
-                    NRState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL,
-                    NRState.shared.loggedInAccount?.followingCache[pubkey]?.anyName ?? "..."
-                )
-            }
+                    return (
+                        pubkey,
+                        NRState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL,
+                        NRState.shared.loggedInAccount?.followingCache[pubkey]?.anyName ?? "..."
+                    )
+                }
+                .prefix(10))
             
             ConnectionPool.shared.queue.async {
                 let statsString = String(format: "%d/%d/%d", stats.connected, stats.messages, stats.errors)
@@ -120,7 +123,7 @@ struct RelayStatsDetails: View {
                 } header: {
                     Text("Accounts found")
                 } footer: {
-                    Text("Content from these accounts you follow was received this relay")
+                    Text("Content from these accounts you follow was received from this relay")
                         .font(.footnote)
                         .foregroundColor(.secondary)
                 }
