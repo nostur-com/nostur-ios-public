@@ -692,7 +692,6 @@ struct RelaysStatsLink: View {
     var body: some View {
         NavigationLink(destination: {
             RelayStats(stats: ConnectionPool.shared.connectionStats)
-                .padding(10)
         }, label: {
             VStack(alignment: .leading) {
                 Text("Relay connection stats")

@@ -187,13 +187,13 @@ class RelayMessage {
 }
 
 struct MinimalMessage: Decodable {
-    var container:UnkeyedDecodingContainer
+    var container: UnkeyedDecodingContainer
     
-    let subscriptionId:String
-    let id:String
-    let kind:Int
-    let pubkey:String
-    var relays:String = ""
+    let subscriptionId: String
+    let id: String
+    let kind: Int
+    let pubkey: String
+    var relays: String = ""
 
     init(from decoder: Decoder) throws {
         container = try decoder.unkeyedContainer()
@@ -211,9 +211,9 @@ struct MinimalMessage: Decodable {
 // - id to check duplicates
 // - kind + pubkey to know if we received our contact list this session
 struct MinimalEvent: Decodable {
-    let id:String
-    let kind:Int
-    let pubkey:String
+    let id: String
+    let kind: Int
+    let pubkey: String
 }
 
 // These subscriptions: "Following", "CATCHUP-", "RESUME-", "PAGE-"
