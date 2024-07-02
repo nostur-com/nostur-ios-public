@@ -24,6 +24,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public var nreqSubscriptions: Set<String> = []
     public var isNWC: Bool
     public var isNC: Bool
+    public var isOutbox: Bool
     
     public var lastMessageReceivedAt: Date? = nil
     private var exponentialReconnectBackOff = 0
@@ -79,11 +80,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
-    init(_ relayData: RelayData, isNWC: Bool = false, isNC: Bool = false, queue: DispatchQueue) {
+    init(_ relayData: RelayData, isNWC: Bool = false, isNC: Bool = false, isOutbox: Bool = false, queue: DispatchQueue) {
         self.relayData = relayData
         self.queue = queue
         self.isNC = isNC
         self.isNWC = isNWC
+        self.isOutbox = isOutbox
         self.isDeviceConnected = NetworkMonitor.shared.isConnected
         super.init()
         

@@ -63,6 +63,17 @@ class MessageParser {
                 case .CLOSED:
                     L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED)")
                     if message.message.prefix(14) == "auth-required:" {
+                        // Send auth response, but check first if its outbox relay, then remove from outbox relays
+                        guard !client.isOutbox else {
+                            DispatchQueue.main.async {
+                                ConnectionPool.shared.removeConnection(relayUrl)
+                                ConnectionPool.shared.queue.async(flags: .barrier) {
+                                    ConnectionPool.shared.penaltybox.insert(relayUrl)
+                                }
+                            }
+                            return
+                        }
+                        
                         client.sendAuthResponse()
                     }
                 case .NOTICE:
