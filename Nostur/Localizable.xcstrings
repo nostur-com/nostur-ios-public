@@ -2211,7 +2211,11 @@
         }
       }
     },
+    "Content from these accounts you follow was received from this relay" : {
+
+    },
     "Content from these accounts you follow was received this relay" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
