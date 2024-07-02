@@ -137,6 +137,8 @@ class RelayMessage {
                     if let relays = eventState.relays, !relays.contains(relay) {
                         updateEventCache(mMessage.id, status: .SAVED, relays: relay)
                         Event.updateRelays(mMessage.id, relays: relay, context: bgContext)
+                        // Here we received the event again and have the .pubkey available so we can update RelayConnectionStats
+                        updateConnectionStats(receivedPubkey: mMessage.pubkey, fromRelay: relay)
                     }
                 }
                 
@@ -148,6 +150,7 @@ class RelayMessage {
                     if let sameMessageInQueue {
                         sameMessageInQueue.relays = sameMessageInQueue.relays + " " + relay
                         updateEventCache(mMessage.id, status: .PARSED, relays: sameMessageInQueue.relays)
+                        updateConnectionStats(receivedPubkey: mMessage.pubkey, fromRelay: relay)
                     }
                 }
                 
@@ -171,6 +174,9 @@ class RelayMessage {
             }
             else {
                 updateEventCache(mMessage.id, status: .RECEIVED, relays: relay)
+                
+                // Here we first time received the event and have the .pubkey available so we can update RelayConnectionStats
+                updateConnectionStats(receivedPubkey: mMessage.pubkey, fromRelay: relay)
             }
         }
     
