@@ -18,7 +18,7 @@ extension CloudBlocked {
 
     @NSManaged public var eventId_: String?
     @NSManaged public var pubkey_: String?
-    @NSManaged public var word_: String?
+    @NSManaged public var word_: String? // word or hashtag
     @NSManaged public var fixedName_: String?
     @NSManaged public var type_: String? // enum BlockType.rawValue. nil is "CONTACT"
     @NSManaged public var createdAt_: Date?
@@ -27,6 +27,7 @@ extension CloudBlocked {
         case contact = "CONTACT"
         case post = "POST"
         case mutedWord = "WORD"
+        case hashtag = "HASHTAG"
     }
 }
 
@@ -63,6 +64,9 @@ extension CloudBlocked : Identifiable {
             }
             else if type == BlockType.contact.rawValue {
                 return .contact
+            }
+            else if type == BlockType.hashtag.rawValue {
+                return .hashtag
             }
             else {
                 return .contact
@@ -108,9 +112,22 @@ extension CloudBlocked : Identifiable {
         block.word_ = word
     }
     
+    static func addBlock(hashtag: String) {
+        let block = CloudBlocked(context: Thread.isMainThread ? DataProvider.shared().viewContext : bg())
+        block.createdAt_ = .now
+        block.type = .hashtag
+        block.word_ = hashtag
+    }
+    
     static func blockedPubkeys(context: NSManagedObjectContext = context()) -> Set<String> {
         let fr = CloudBlocked.fetchRequest()
         fr.predicate = NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.contact.rawValue)
+        return Set(((try? context.fetch(fr)) ?? []).compactMap { $0.pubkey_ })
+    }
+    
+    static func blockedHashtags(context: NSManagedObjectContext = context()) -> Set<String> {
+        let fr = CloudBlocked.fetchRequest()
+        fr.predicate = NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.hashtag.rawValue)
         return Set(((try? context.fetch(fr)) ?? []).compactMap { $0.pubkey_ })
     }
     

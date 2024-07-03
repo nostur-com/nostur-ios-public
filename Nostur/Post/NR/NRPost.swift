@@ -255,6 +255,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     var missingPs:Set<String> // missing or have no contact info
     var fastTags:[(String, String, String?, String?)] = []
+    var hashtags: Set<String> = [] // lowercased hashtags for fast hashtag blocking
     
     var fileMetadata:KindFileMetadata?
     
@@ -411,6 +412,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.inWoT = event.inWoT
         self.isSpam = event.isSpam
         self.aTag = event.aTag
+        self.hashtags = Set(fastTags.filter { $0.0 == "t" }.compactMap({ fastTag in
+            if (fastTag.1 == "") { return nil }
+            return fastTag.1.lowercased()
+        }))
         
         // Show if ["client", "Name", ""31990:..." ...]
         // Hide if ["client", ""31990:..." ..]
