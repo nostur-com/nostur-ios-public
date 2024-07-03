@@ -40,7 +40,7 @@ class NRState: ObservableObject {
         }
     }
     @Published var readOnlyAccountSheetShown:Bool = false
-    var rawExplorePubkeys:Set<String> = []
+    var rawExplorePubkeys: Set<String> = []
     
     @MainActor public func logout(_ account: CloudAccount) {
         DataProvider.shared().viewContext.delete(account)
@@ -81,15 +81,15 @@ class NRState: ObservableObject {
     private var _activeAccountPublicKey: String = ""
     
     // BG high speed vars
-    public var accountPubkeys:Set<String> = []
-    public var fullAccountPubkeys:Set<String> = []
-    public var mutedWords:[String] = [] {
+    public var accountPubkeys: Set<String> = []
+    public var fullAccountPubkeys: Set<String> = []
+    public var mutedWords: [String] = [] {
         didSet {
 //            sendNotification(.mutedWordsChanged, mutedWords) // TODO update listeners
         }
     }
-    public var blockedPubkeys:Set<String> = []
-    public var mutedRootIds:Set<String> = []
+    public var blockedPubkeys: Set<String> = []
+    public var mutedRootIds: Set<String> = []
     
     private init() {
         self._activeAccountPublicKey = UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? ""

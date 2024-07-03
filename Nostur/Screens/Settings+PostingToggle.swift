@@ -48,6 +48,7 @@ struct PostingToggle: View {
                                     .opacity(isExcluded(account) ? 0.25 : 1.0)
                             }
                         }
+                        .drawingGroup()
                     }
                     Text("Tap account to exclude")
                         .font(.footnote)
