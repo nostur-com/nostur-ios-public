@@ -153,9 +153,8 @@ class Unpublisher {
                 
                 ConnectionPool.shared.sendMessage(
                     NosturClientMessage(
-                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT),
-                        relayType: .WRITE,
-                        nEvent: nEvent
+                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: nEvent.toNostrEssentialsEvent()),
+                        relayType: .WRITE
                     ),
                     accountPubkey: nEvent.publicKey
                 )
@@ -212,9 +211,8 @@ class Unpublisher {
                 
                 ConnectionPool.shared.sendMessage(
                     NosturClientMessage(
-                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT),
-                        relayType: .WRITE,
-                        nEvent: nEvent
+                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: nEvent.toNostrEssentialsEvent()),
+                        relayType: .WRITE
                     ),
                     accountPubkey: nEvent.publicKey
                 )

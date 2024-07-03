@@ -109,6 +109,19 @@ extension Event {
     }
 }
 
+extension NEvent {
+    func toNostrEssentialsEvent() -> NostrEssentials.Event {
+        return NostrEssentials.Event(
+            pubkey: self.publicKey,
+            content: self.content,
+            kind: self.kind.id,
+            created_at: self.createdAt.timestamp,
+            id: self.id,
+            tags: self.tags.map { Tag($0.tag) },
+            sig: self.signature)
+    }
+}
+
 // From Nostur .tagsSerialized to [NostrEssentials.Tag]
 func tagsSerializedToTags(_ tagsSerialized: String?) -> [Tag] {
     guard let tagsSerialized = tagsSerialized else { return [] }
