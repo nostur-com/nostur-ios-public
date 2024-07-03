@@ -546,10 +546,6 @@ public class ConnectionPool: ObservableObject {
         
         let ourWriteRelays: Set<String> = Set(connections.filter { $0.value.relayData.write }.map { $0.key })
         
-        // Take pubkeys from first filter. Could be more and different but that wouldn't make sense for an outbox request.
-        guard let filters = message.filters else { return }
-        guard let pubkeys = filters.first?.authors else { return }
-        
         let plan: WritePlan = createWritePlan(pubkeys: pubkeys, ourWriteRelays: ourWriteRelays, preferredRelays: preferredRelays)
         
         for (relay, pubkeys) in plan.relays
