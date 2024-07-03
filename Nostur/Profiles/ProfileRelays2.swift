@@ -126,7 +126,7 @@ struct ProfileRelays: View {
 }
 
 struct RelayConnectButton: View {
-    @EnvironmentObject private var cp:ConnectionPool
+    @EnvironmentObject private var cp: ConnectionPool
     private var url: String
     private var isConnected: Bool {
         cp.isUrlConnected(normalizeRelayUrl(url))
@@ -158,6 +158,7 @@ struct RelayConnectButton: View {
                     }
                 }
             }
+                .buttonStyle(BorderlessButtonStyle())
         }
     }
 }
