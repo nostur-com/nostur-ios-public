@@ -13,21 +13,23 @@ struct RelayStats: View {
     public let stats: [CanonicalRelayUrl: RelayConnectionStats]
     @State private var showingStats: RelayConnectionStats? = nil
     
+    @State private var statsSorted: [RelayConnectionStats] = []
+    
     var body: some View {
         Form {
-            if stats.isEmpty {
+            if statsSorted.isEmpty {
                 Text("No stats collected yet.")
             }
             else {
                 Section {
-                    ForEach(Array(stats.keys), id: \.self) { (relayUrl: String) in
-                        RelayStatsRow(stats: stats[relayUrl]!)
-                            .id(stats[relayUrl]!.id)
+                    ForEach(statsSorted) { relayStats in
+                        RelayStatsRow(stats: relayStats)
+                            .id(relayStats.id)
                             .drawingGroup()
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            guard stats[relayUrl]?.errors ?? 0 > 0 || stats[relayUrl]?.receivedPubkeys.count ?? 0 > 0 else { return }
-                            showingStats = stats[relayUrl]
+                            guard relayStats.errors > 0 || relayStats.receivedPubkeys.count > 0 else { return }
+                            showingStats = relayStats
                         }
                     }
                 } footer: {
@@ -39,6 +41,12 @@ struct RelayStats: View {
                     }
                 }
             }
+        }
+        .onAppear {
+            statsSorted = stats.values
+                .sorted(by: { $0.errors < $1.errors })
+                .sorted(by: { $0.receivedPubkeys.count > $1.receivedPubkeys.count })
+                .sorted(by: { $0.connected != 0 && $1.connected == 0 })
         }
         .sheet(item: $showingStats, content: { relayConnectionStats in
             NBNavigationStack {
