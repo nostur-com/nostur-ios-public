@@ -8,6 +8,7 @@
 import Foundation
 import CoreData
 import NostrEssentials
+import Combine
 
 public class OutboxLoader {
     
@@ -19,6 +20,7 @@ public class OutboxLoader {
     
     private var cp: ConnectionPool
     private var backlog: Backlog
+    private var subscriptions: Set<AnyCancellable> = []
     
     init(pubkey: String, follows: Set<String> = [], cp: ConnectionPool) {
         self.pubkey = pubkey
@@ -27,7 +29,18 @@ public class OutboxLoader {
         self.backlog = Backlog(timeout: 60, auto: true)
         self.context = bg()
         
+        fetchKind1002AfterNewFollowListener()
         self.load()
+    }
+    
+    private func fetchKind1002AfterNewFollowListener() {
+        receiveNotification(.followingAdded)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let pubkey = notification.object as! String
+                self.fetchKind10002(forPubkey: pubkey)
+            }
+            .store(in: &subscriptions)
     }
 
     public func load() {
@@ -88,6 +101,41 @@ public class OutboxLoader {
             },
             timeoutCommand: { taskId in
                 L.sockets.debug("📤📤 Outbox: timeout or no new kind 10002s")
+            })
+
+        backlog.add(task)
+        task.fetch()
+    }
+    
+    private func fetchKind10002(forPubkey pubkey: String) {
+        let task = ReqTask(
+            debounceTime: 3.0,
+            prefix: "OUTBOX2-",
+            reqCommand: { [weak self] taskId in
+                guard let self, let cm = NostrEssentials
+                    .ClientMessage(type: .REQ,
+                                   subscriptionId: taskId,
+                                   filters: [Filters(authors: [pubkey], kinds: [10002])]
+                    ).json()
+                else { return }
+                
+                L.sockets.debug("📤📤 Outbox: Fetching contact relay info for \(pubkey)")
+                req(cm)
+            },
+            processResponseCommand: { [weak self] taskId, _, _ in
+                guard let self else { return }
+                
+                self.loadKind10002sFromDb { kind10002s in
+
+                    self.cp.queue.async(flags: .barrier) { [weak self] in
+                        self?.cp.reloadPreferredRelays(kind10002s: kind10002s)
+                    }
+                    
+                    L.sockets.debug("📤📤 Outbox: reloading for \(pubkey)")
+                }
+            },
+            timeoutCommand: { taskId in
+                L.sockets.debug("📤📤 Outbox: timeout or no kind 10002 for \(pubkey)")
             })
 
         backlog.add(task)
