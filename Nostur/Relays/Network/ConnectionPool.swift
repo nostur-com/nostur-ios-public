@@ -453,6 +453,9 @@ public class ConnectionPool: ObservableObject {
         
         // SEND EVENT TO WHERE OTHERS READ (TO SEND REPLIES ETC SO THEY CAN READ IT)
         else if message.type == .EVENT && !preferredRelays.reachUserRelays.isEmpty {
+            // don't send to p's if it is an event kind where p's have a different purpose than notification (eg kind:3)
+            guard (message.clientMessage.event?.kind ?? 1) != 3 else { return }
+            
             let pTags: Set<String> = Set( message.clientMessage.event?.tags.filter { $0.type == "p" }.compactMap { $0.pubkey } ?? [] )
             self.sendToOthersPreferredReadRelays(message.clientMessage, pubkeys: pTags)
         }
