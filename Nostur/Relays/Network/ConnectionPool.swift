@@ -495,8 +495,9 @@ public class ConnectionPool: ObservableObject {
     }
     
     private var kind10002s: [NostrEssentials.Event] = [] // cache here for easy reload after updating .penaltybox
-    private func reloadPreferredRelays() {
-        self.preferredRelays = pubkeysByRelay(self.kind10002s , ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
+    
+    public func reloadPreferredRelays(kind10002s newerKind10002s: [NostrEssentials.Event]? = nil) {
+        self.preferredRelays = pubkeysByRelay(newerKind10002s ?? self.kind10002s, ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
     }
     
     // SEND REQ TO WHERE OTHERS WRITE (TO FIND THEIR POSTS, SO WE CAN READ)
