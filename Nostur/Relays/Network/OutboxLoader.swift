@@ -135,3 +135,22 @@ func tagsSerializedToTags(_ tagsSerialized: String?) -> [Tag] {
         return Tag(stringArray)
     }
 }
+
+extension Filters {
+    
+    // Normally a Filters REQ is sent to a relay, but for outbox we send the same req to different relays with different pubkeys
+    // to get only events from those pubkeys. But if the REQ also contains hashtags ("t") we need to remove that
+    func withoutHashtags() -> Filters {
+        if self.tagFilter?.tag == "t" {
+            return Filters(
+                ids: self.ids,
+                authors: self.authors,
+                kinds: self.kinds,
+                since: self.since,
+                until: self.until,
+                limit: self.limit
+            )
+        }
+        return self
+    }
+}
