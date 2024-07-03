@@ -524,8 +524,11 @@ public class ConnectionPool: ObservableObject {
     private var _pubkeysByRelay: [String: Set<String>] = [:]
     
     public func setPreferredRelays(using kind10002s: [NostrEssentials.Event], maxPreferredRelays: Int = 50) {
-        self.preferredRelays = pubkeysByRelay(kind10002s , ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
-        self.kind10002s = kind10002s
+        
+        let cleanKind10002s = removeMisconfiguredKind10002s(kind10002s)
+        
+        self.preferredRelays = pubkeysByRelay(cleanKind10002s , ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
+        self.kind10002s = cleanKind10002s
         // Set limit because to total relays will be derived from external events and can be abused
         self.maxPreferredRelays = maxPreferredRelays
     }
@@ -533,7 +536,13 @@ public class ConnectionPool: ObservableObject {
     private var kind10002s: [NostrEssentials.Event] = [] // cache here for easy reload after updating .penaltybox
     
     public func reloadPreferredRelays(kind10002s newerKind10002s: [NostrEssentials.Event]? = nil) {
-        self.preferredRelays = pubkeysByRelay(newerKind10002s ?? self.kind10002s, ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
+        if let newerKind10002s { // Update with new kind 10002s
+            let cleanKind10002s = removeMisconfiguredKind10002s(newerKind10002s) // remove garbage first
+            self.preferredRelays = pubkeysByRelay(cleanKind10002s, ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
+        }
+        else { // no new kind 10002s, so probably update because new relays in penalty box
+            self.preferredRelays = pubkeysByRelay(self.kind10002s, ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(POPULAR_RELAYS).union(self.penaltybox))
+        }
     }
     
     // SEND REQ TO WHERE OTHERS WRITE (TO FIND THEIR POSTS, SO WE CAN READ)

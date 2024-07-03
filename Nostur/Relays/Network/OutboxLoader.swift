@@ -202,3 +202,46 @@ extension Filters {
         return self
     }
 }
+
+
+// Some clients put wrong relays in kind 10002, or don't explain to users what to put in there
+// Probably because its still early and people dont know how to use outbox yet
+// So to detect useless kind 10002s we have some hardcoded relays, if these are found we can assume
+// the kind 10002 is incorrectly configured and just ignore it
+// these are relays that others are not supposed to read from, but announced in the kind 10002 as if it should
+// We match these relays by "starts with"
+let DETECT_MISCONFIGURED_KIND10002_HELPER_LIST: Set<String> = [
+    "ws://127.0.0.1",
+    "ws://localhost",
+    "wss://filter.nostr.wine",
+    "wss://welcome.nostr.wine",
+    "wss://nostr.mutinywallet.com",
+    "wss://feeds.nostr.band",
+    "wss://search.nos.today",
+    "wss://feeds.nostr.band"
+]
+
+func removeMisconfiguredKind10002s(_ kind10002s: [NostrEssentials.Event]) -> [NostrEssentials.Event] {
+    
+    
+    return kind10002s.filter { kind10002 in
+        
+        // Relays the user says they are writing to
+        let writeRelays = kind10002.tags.filter { tag in
+            tag.type == "r" && (tag.tag.count == 2 || (tag.tag.count == 3 && tag.tag[2] == "write"))
+        }
+        
+        // Check if one the write relays can't be written to or can't be used for others to read from (DETECT_MISCONFIGURED_KIND10002_HELPER_LIST)
+        // Then we know this kind 10002 is garbage and we can ignore it
+        for writeRelay in writeRelays {
+            guard let relay = writeRelay.value?.lowercased() else { continue }
+            for detect in DETECT_MISCONFIGURED_KIND10002_HELPER_LIST {
+                if relay.starts(with: detect) {
+                    return false
+                }
+            }
+        }
+        
+        return true
+    }
+}
