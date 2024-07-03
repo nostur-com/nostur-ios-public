@@ -321,7 +321,7 @@ struct PublishedRelaySet: View {
                 HStack {
                     Text(selectedRelay.url_ ?? "(no relay url)")
                     Spacer()
-                    Text("read + write")
+                    Text("read")
                         .foregroundColor(.secondary)
                 }
             }
@@ -329,7 +329,7 @@ struct PublishedRelaySet: View {
                 HStack {
                     Text(selectedRelay.url_ ?? "(no relay url)")
                     Spacer()
-                    Text("read + write")
+                    Text("write")
                         .foregroundColor(.secondary)
                 }
             }
