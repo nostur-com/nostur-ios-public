@@ -90,6 +90,7 @@ class NRState: ObservableObject {
     }
     public var blockedPubkeys: Set<String> = []
     public var mutedRootIds: Set<String> = []
+    public var blockedHashtags: Set<String> = [] // put lowercased here
     
     private init() {
         self._activeAccountPublicKey = UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? ""
@@ -99,6 +100,7 @@ class NRState: ObservableObject {
         managePowerUsage()
         loadMutedWords()
         loadBlockedPubkeys()
+        loadBlockedHashtags()
         loadMutedRootIds()
     }
     
@@ -174,6 +176,10 @@ class NRState: ObservableObject {
     
     public func loadBlockedPubkeys() {
         self.blockedPubkeys = CloudBlocked.blockedPubkeys()
+    }
+    
+    public func loadBlockedHashtags() {
+        self.blockedHashtags = CloudBlocked.blockedHashtags()
     }
     
     public func loadMutedRootIds() {
@@ -324,6 +330,10 @@ func follows() -> Set<String> {
 
 func blocks() -> Set<String> {
     NRState.shared.blockedPubkeys
+}
+
+func blockedHashtags() -> Set<String> {
+    NRState.shared.blockedHashtags
 }
 
 

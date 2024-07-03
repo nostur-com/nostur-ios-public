@@ -30,6 +30,10 @@ extension Notification.Name {
         return Notification.Name("muteListUpdated")
     }
     
+    static var blockedHashtagsUpdated: Notification.Name {
+        return Notification.Name("blockedHashtagsUpdated")
+    }
+    
     static var willDeleteAllEvents: Notification.Name {
         return Notification.Name("willDeleteAllEvents")
     }
