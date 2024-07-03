@@ -77,16 +77,15 @@ struct RelayStatsRow: View {
             Text(stats.id)
                 .strikethrough(ConnectionPool.shared.penaltybox.contains(stats.id))
                 .lineLimit(1)
+                .layoutPriority(2)
             
-            ForEach(foundAccountRows.indices, id: \.self) { index in
-                PFP(pubkey: foundAccountRows[index].pubkey, pictureUrl: foundAccountRows[index].pfp, size: 20.0)
-                    .offset(x: -CGFloat(index*18))
-                    .id(foundAccountRows[index].pubkey)
-            }
+            FoundAccountPFPs(foundAccountRows: foundAccountRows)
+                .layoutPriority(1)
             
             Spacer()
             Text(statsString)
                 .lineLimit(1)
+                .layoutPriority(3)
         }
         .onAppear {
             foundAccountRows = Array(stats.receivedPubkeys
@@ -107,6 +106,23 @@ struct RelayStatsRow: View {
                 DispatchQueue.main.async {
                     self.statsString = statsString
                 }
+            }
+        }
+    }
+}
+
+struct FoundAccountPFPs: View {
+    public let foundAccountRows: [(pubkey: String, pfp: URL?, name: String)]
+    
+    var body: some View {
+        ZStack(alignment: .leading) {
+            ForEach(foundAccountRows.indices, id: \.self) { index in
+                HStack(spacing: 0) {
+                    Color.clear
+                        .frame(width: CGFloat(index) * 12)
+                    PFP(pubkey: foundAccountRows[index].pubkey, pictureUrl: foundAccountRows[index].pfp, size: 20.0)
+                }
+                .id(foundAccountRows[index].pubkey)
             }
         }
     }
