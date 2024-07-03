@@ -16,7 +16,7 @@
 // We can search hashtag, but follow hashtag is not a thing yet so low prio
 
 // PLAN: What do we white list:
-// Followers + Followers of followers
+// Follows + Follows of follows
 // We can create a Web of Trust setting, strict, normal or off.
 
 // In the future we could have more data points (badges, nip05, post counts, interactions with followers, etc
