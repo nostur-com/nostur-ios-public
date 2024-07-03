@@ -223,9 +223,9 @@ class Unpublisher {
 
 extension Unpublisher {
     struct Unpublished {
-        var type:Unpublisher.type
-        var cancellationId:UUID
-        var nEvent:NEvent
-        var createdAt:Date
+        var type: Unpublisher.type
+        var cancellationId: UUID
+        var nEvent: NEvent
+        var createdAt: Date
     }
 }
