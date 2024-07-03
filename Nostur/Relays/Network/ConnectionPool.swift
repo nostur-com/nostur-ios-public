@@ -441,6 +441,7 @@ public class ConnectionPool: ObservableObject {
         }
         
         guard !SettingsStore.shared.lowDataMode else { return } // Don't continue with additional outbox relays on low data mode
+        guard !message.onlyForNWCRelay && !message.onlyForNCRelay else { return } // also not NW or NWC
         
         // Additions for Outbox taken from nostr-essentials
         guard SettingsStore.shared.enableOutboxRelays else { return } // Check if Enhanced Relay Routing toggle is turned on
