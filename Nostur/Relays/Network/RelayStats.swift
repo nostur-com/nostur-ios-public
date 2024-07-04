@@ -42,6 +42,8 @@ struct RelayStats: View {
                 }
             }
         }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitle(String(localized: "Relay stats", comment: "Title for  relay connection statistics sheet"))
         .onAppear {
             statsSorted = stats.values
                 .sorted(by: { $0.errors < $1.errors })
@@ -191,7 +193,7 @@ struct RelayStatsDetails: View {
 }
 
 #Preview {
-    VStack {
+    NBNavigationStack {
         let example: [CanonicalRelayUrl: RelayConnectionStats] = [
             "wss://nos.lol": RelayConnectionStats(id: "wss://nos.lol"),
             "wss://relay.nostr.band": RelayConnectionStats(id: "wss://relay.nostr.band"),
