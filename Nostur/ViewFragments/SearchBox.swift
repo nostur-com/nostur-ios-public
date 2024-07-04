@@ -41,7 +41,10 @@ struct SearchBox: View {
                 Image(systemName: "multiply.circle.fill")
                     .imageScale(.medium)
                     .foregroundColor(Color.secondary)
+                    .padding(.leading, 10)
                     .padding(.trailing, 5)
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         debounceObject.text = ""
                     }
