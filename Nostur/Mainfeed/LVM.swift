@@ -159,7 +159,7 @@ class LVM: NSObject, ObservableObject {
         startInstantFeed()
     }
     
-    @Published var hideReplies = false {
+    @Published var hideReplies = true {
         didSet {
             guard oldValue != hideReplies else { return }
             posts.send([:])
