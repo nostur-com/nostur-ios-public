@@ -18,7 +18,8 @@ struct SearchBox: View {
         TextField(text: $debounceObject.text, prompt: Text(prompt).foregroundColor(Color.secondary), label: {
             Text(prompt)
         })
-        .focused($isFocused) 
+        .autocorrectionDisabled(true)
+        .focused($isFocused)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isFocused = true
