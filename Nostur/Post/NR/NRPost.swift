@@ -122,23 +122,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         hasher.combine(id)
     }
     
-    let createdAt:Date
-    let created_at:Int64
-    let ago:String
+    let createdAt: Date
+    let created_at: Int64
+    let ago: String
     
-    let id:NRPostID
-    let kind:Int64
+    let id: NRPostID
+    let kind: Int64
     
-    let pubkey:String
+    let pubkey: String
     
-    var subject:String?
-    var content:String?
-    var plainText:String = ""
-    var contentElements:[ContentElement] = [] // NoteRow.Kind1
-    var contentElementsDetail:[ContentElement] = [] // PostDetail.Kind1
-    var via:String?
+    var subject: String?
+    var content: String?
+    var plainText: String = ""
+    var contentElements: [ContentElement] = [] // NoteRow.Kind1
+    var contentElementsDetail: [ContentElement] = [] // PostDetail.Kind1
+    var via: String?
     
-    var contact:NRContact?  {
+    var contact: NRContact?  {
         get { pfpAttributes.contact }
         set {
             DispatchQueue.main.async { [weak self] in
@@ -156,7 +156,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
     }
     
-    var referencedContacts:[NRContact] = []
+    var referencedContacts: [NRContact] = []
     
     private var _parentPosts: [NRPost] // access from BG only through .parentPosts
     
@@ -253,11 +253,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     var event: Event? // Only touch this in BG context!!!
     
-    var missingPs:Set<String> // missing or have no contact info
-    var fastTags:[(String, String, String?, String?)] = []
+    var missingPs: Set<String> // missing or have no contact info
+    var fastTags: [(String, String, String?, String?)] = []
     var hashtags: Set<String> = [] // lowercased hashtags for fast hashtag blocking
     
-    var fileMetadata:KindFileMetadata?
+    var fileMetadata: KindFileMetadata?
     
     var following = false
     var blocked: Bool {
@@ -311,8 +311,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     private var groupRepliesToRoot = PassthroughSubject<[NRPost], Never>()
     
-    let inWoT:Bool // This is just one of the inputs to determine spam or not, should have more inputs.
-    let isSpam:Bool // Should use this in all views to hide or not
+    let inWoT: Bool // This is just one of the inputs to determine spam or not, should have more inputs.
+    let isSpam: Bool // Should use this in all views to hide or not
     
     // article stuff
     var eventId: String? // d tag
