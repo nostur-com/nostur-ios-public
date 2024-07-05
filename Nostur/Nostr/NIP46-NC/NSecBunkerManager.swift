@@ -14,12 +14,12 @@ class NSecBunkerManager: ObservableObject {
     
     static let shared = NSecBunkerManager()
     
-    @Published var state:STATE = .disconnected
+    @Published var state: STATE = .disconnected
     @Published var error = ""
     @Published var isSelfHostedNsecBunker = false
     @Published var ncRelay = ""
     
-    var invalidSelfHostedAddress:Bool {
+    var invalidSelfHostedAddress: Bool {
         if let url = URL(string: ncRelay) {
             if url.absoluteString.lowercased().prefix(6) == "wss://" { return false }
             if url.absoluteString.lowercased().prefix(5) == "ws://" { return false }
@@ -29,11 +29,11 @@ class NSecBunkerManager: ObservableObject {
     
     var backlog = Backlog(timeout: 15, auto: true)
     let decoder = JSONDecoder()
-    var account:CloudAccount? = nil
+    var account: CloudAccount? = nil
     var subscriptions = Set<AnyCancellable>()
     
     // Queue of commands to execute when we receive a response
-    var responseCommmandQueue:[String: (NEvent) -> Void] = [:] // TODO: need to add clean up, timeout...
+    var responseCommmandQueue: [String: (NEvent) -> Void] = [:] // TODO: need to add clean up, timeout...
     
     private init() {
         listenForNCMessages()
