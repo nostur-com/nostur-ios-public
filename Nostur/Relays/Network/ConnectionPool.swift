@@ -125,9 +125,7 @@ public class ConnectionPool: ObservableObject {
         else {
             let relayData = RelayData.new(url: url, read: true, write: true, search: false, auth: false, excludedPubkeys: [])
             let newConnection = RelayConnection(relayData, isNC: true, queue: queue)
-            queue.async(flags: .barrier) { [weak self] in
-                self?.connections[connectionId] = newConnection
-            }
+            connections[connectionId] = newConnection
             return newConnection
         }
     }
