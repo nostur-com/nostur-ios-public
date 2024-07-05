@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct AddExistingAccountSheet: View {
     
@@ -24,7 +25,10 @@ struct AddExistingAccountSheet: View {
     
     
     private var grayBackground: Color = Color.gray.opacity(0.2)
-    private var isNsecbunkerKey:Bool { key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#").count == 2 && key.split(separator: "#")[1].count == 64 }
+    private var isNsecbunkerKey: Bool {
+        key.starts(with: "bunker://") ||
+        (key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#").count == 2 && key.split(separator: "#")[1].count == 64)
+    }
     
     @ObservedObject private var bunkerManager = NSecBunkerManager.shared
     
@@ -51,14 +55,28 @@ struct AddExistingAccountSheet: View {
                     
                     Button {
                         if isNsecbunkerKey {
-                            let bunkerNpub = String(key.split(separator: "#")[0])
-                            let token = String(key.split(separator: "#")[1])
-                            guard let nip19 = try? NIP19(displayString: bunkerNpub.replacingOccurrences(of: "-", with: "")) else {
-                                invalidKey = true
-                                key = ""
-                                return
+                            if let bunkerURL = parseBunkerUrl(key) {
+                                guard isValidPubkey(bunkerURL.pubkey) else {
+                                    invalidKey = true
+                                    key = ""
+                                    return
+                                }
+                                if let ncRelay = bunkerURL.relay {
+                                    bunkerManager.ncRelay = ncRelay
+                                    bunkerManager.isSelfHostedNsecBunker = true
+                                }
+                                addExistingBunkerAccount(pubkey: bunkerURL.pubkey, token: bunkerURL.secret)
                             }
-                            addExistingBunkerAccount(pubkey: nip19.hexString, token: token)
+                            else {
+                                let bunkerNpub = String(key.split(separator: "#")[0])
+                                let token = String(key.split(separator: "#")[1])
+                                guard let nip19 = try? NIP19(displayString: bunkerNpub.replacingOccurrences(of: "-", with: "")) else {
+                                    invalidKey = true
+                                    key = ""
+                                    return
+                                }
+                                addExistingBunkerAccount(pubkey: nip19.hexString, token: token)
+                            }
                         }
                         else {
                             guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
@@ -81,10 +99,11 @@ struct AddExistingAccountSheet: View {
                     } label: {
                         if bunkerManager.state == .connecting {
                             ProgressView()
+                                .foregroundColor(.white)
                                 .padding(.vertical, 10)
                         }
                         else if (isNsecbunkerKey) {
-                            Text("Add (nsecBunker)")
+                            Text("Add (Remote Signer)")
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity)
                         }
@@ -98,14 +117,14 @@ struct AddExistingAccountSheet: View {
                     .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                     .disabled(bunkerManager.state == .connecting || (bunkerManager.isSelfHostedNsecBunker && bunkerManager.invalidSelfHostedAddress))
                     
-                    if isNsecbunkerKey {
+                    if isNsecbunkerKey && parseBunkerUrl(key)?.relay == nil {
                         
                         Toggle(isOn: $bunkerManager.isSelfHostedNsecBunker) {
-                            Text("Self-hosted nsecBunker")
+                            Text("Custom relay for signer")
                         }.padding()
                         if bunkerManager.isSelfHostedNsecBunker {
                             TextField(text: $bunkerManager.ncRelay) {
-                                Text("Enter nsecBunker relay address")
+                                Text("Enter relay address")
                             }
                             .keyboardType(.URL)
                             .padding()
