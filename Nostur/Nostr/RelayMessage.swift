@@ -166,7 +166,7 @@ class RelayMessage {
                 else if eventState.status == .PARSED {
                     throw error.DUPLICATE_ALREADY_PARSED
                 }
-                else if eventState.status == .RECEIVED {
+                else if eventState.status == .RECEIVED && mMessage.kind != 24133 {
                     throw error.DUPLICATE_ALREADY_RECEIVED
                 }
                 throw error.DUPLICATE_UNKNOWN
