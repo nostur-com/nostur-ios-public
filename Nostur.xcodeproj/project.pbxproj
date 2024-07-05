@@ -598,6 +598,7 @@
 		1F15F09D2AAF34F10004E706 /* RepostButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepostButton.swift; sourceTree = "<group>"; };
 		1F15F09F2AAF35560004E706 /* LikeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LikeButton.swift; sourceTree = "<group>"; };
 		1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkButton.swift; sourceTree = "<group>"; };
+		1F18035C2C381D570025227E /* NostrEssentials.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = NostrEssentials.xctestplan; sourceTree = "<group>"; };
 		1F1ABC482981718700D03FA9 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		1F1ABC4A29819CAC00D03FA9 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		1F1DCB8C2999290E0085223E /* LightningInvoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningInvoice.swift; sourceTree = "<group>"; };
@@ -1796,6 +1797,7 @@
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
 				1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */,
 				1FAC67AF29F5527800798661 /* DisabledAssets.xcassets */,
+				1F18035C2C381D570025227E /* NostrEssentials.xctestplan */,
 				1FC7A54629FA46F000645FEF /* Highlight with Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
