@@ -84,7 +84,14 @@ class NSecBunkerManager: ObservableObject {
                         L.og.error("🏰 ncMessage does not have result, \(event.eventJson()) - \(decrypted)")
                         return
                     }
-                    if result == "ack" {
+                    if result == "auth_url" { // ugh need useless OAuth like flow now
+                        DispatchQueue.main.async {
+                            self.state = .connected
+                            L.og.info("🏰 NSECBUNKER connection needs auth_url oauth type handling ")
+//                            L.og.info("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
+                        }
+                    }                   
+                    else if result == "ack" {
                         DispatchQueue.main.async {
                             self.state = .connected
                             L.og.info("🏰 NSECBUNKER connection success ")
