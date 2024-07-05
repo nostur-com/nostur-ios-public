@@ -45,6 +45,7 @@ class NSecBunkerManager: ObservableObject {
                 guard let self = self else { return }
                 let message = notification.object as! RelayMessage
                 guard let event = message.event else { return }
+                guard event.kind == .ncMessage else { return }
                 guard let account = self.account else { return }
                 guard let sessionPrivateKey = account.privateKey else { return }
              
