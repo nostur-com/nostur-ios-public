@@ -9,6 +9,41 @@ import SwiftUI
 import Combine
 
 struct AnimatedNumber: View {
+
+    private let number: Int
+    
+    init<T: BinaryInteger>(number: T) {
+        self.number = Int(number)
+    }
+    
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            AnimatedNumber16(number: number)
+        }
+        else {
+            AnimatedNumber15(number: number)
+        }
+    }
+}
+
+@available(iOS 16, *)
+struct AnimatedNumber16: View {
+    
+    private let number: Int
+    
+    init<T: BinaryInteger>(number: T) {
+        self.number = Int(number)
+    }
+    
+    var body: some View {
+        Text(String(number))
+            .multilineTextAlignment(.center)
+            .animation(.snappy, value: number)
+            .contentTransition(.numericText(countsDown: false))
+    }
+}
+
+struct AnimatedNumber15: View {
     
     static let numberHeight: CGFloat = 18.0
     private let number: Int
@@ -62,13 +97,40 @@ struct AnimatedNumber: View {
 }
 
 struct AnimatedNumberString: View {
+
+    public let number: String
+    
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            AnimatedNumberString16(number: number)
+        }
+        else {
+            AnimatedNumberString15(number: number)
+        }
+    }
+}
+
+@available(iOS 16, *)
+struct AnimatedNumberString16: View {
+    
+    public let number: String
+    
+    var body: some View {
+        Text(number)
+            .multilineTextAlignment(.center)
+            .animation(.snappy, value: number)
+            .contentTransition(.numericText(countsDown: false))
+    }
+}
+
+struct AnimatedNumberString15: View {
     
     static let numberHeight = 18.0
-    public let number:String
+    public let number: String
     @State private var currentNumber = ""
     @State private var nextNumber = ""
     @State private var offset = 0.0
-    @State private var timer:Timer?
+    @State private var timer: Timer?
     
     var body: some View {
         Text(verbatim: currentNumber)
@@ -97,17 +159,7 @@ struct AnimatedNumberString: View {
                     offset -= Self.numberHeight
                 }
             }
-//            .border(Color.green)
     }
-}
-
-extension View {
-    
-    // This seems to work to stop views from flying around the screen
-    // Works better than .transaction { t in t.animation = nil }
-//    func withoutAnimation() -> some View {
-//        self.animation(nil, value: UUID())
-//    }
 }
 
 struct AnimatedNumberPreviewContainer: View {
@@ -120,18 +172,13 @@ struct AnimatedNumberPreviewContainer: View {
             if visibleRed {
                 Color.red
                     .frame(width: 200, height: 300)
-//                    .transaction { t in t.animation = nil }
             }
-            
-            AnimatedNumber(number: number)
-                
-//                .transaction { t in t.animation = nil } // this breaks animation in child views
-            
-            
-//                .withoutAnimation() // <-- this doesn't break animation in child views, and correctly stop this view from moving around the screen
-            
-                
-            
+            if #available(iOS 16.0, *) {
+                AnimatedNumber(number: number)
+            }
+            else {
+                AnimatedNumber15(number: number)
+            }
             Group {
                 Button("+1") { number += 25 }
 //                    .transaction { t in t.animation = nil }
