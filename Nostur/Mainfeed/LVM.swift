@@ -1464,19 +1464,20 @@ extension LVM {
     }
     
     func saveListState() {
+        let lastReadIdMainContext = self.lastReadId
+        let lastAppearedIdMainContext = self.lastAppearedIdSubject.value
         bg().perform { [weak self] in
             guard let self = self else { return }
             guard let listStateObjectId = self.listStateObjectId else { return }
             guard let listState = bg().object(with: listStateObjectId) as? ListState else { return }
-            let lastAppearedId = self.lastAppearedIdSubject.value
-            let lastReadId = self.lastReadId
+            
             let leafs = self.nrPostLeafs.map { $0.id }.joined(separator: ",")
-            listState.lastAppearedId = lastAppearedId
-            listState.mostRecentAppearedId = lastReadId
+            listState.lastAppearedId = lastAppearedIdMainContext
+            listState.mostRecentAppearedId = lastReadIdMainContext
             listState.updatedAt = Date.now
             listState.leafs = leafs
             listState.hideReplies = hideReplies
-            L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedId ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
+            L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedIdMainContext ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
                 try bg().save()
             }
