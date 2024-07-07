@@ -35,8 +35,11 @@ struct MainWoTaccountPicker: View {
             Text("Main account")
         }
         .pickerStyleCompatNavigationLink()
-        .onChange(of: selectedMainWoTaccountPubkey) { selectedMainWoTaccountPubkey in
-            UserDefaults.standard.set(selectedMainWoTaccountPubkey, forKey: "main_wot_account_pubkey")
+        .onChange(of: selectedMainWoTaccountPubkey) { newMainWotKey in
+            UserDefaults.standard.set(newMainWotKey, forKey: "main_wot_account_pubkey")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                WebOfTrust.shared.loadWoT(force: true, mainWoTpubkey: newMainWotKey)
+            }
         }
     }
 }
