@@ -244,8 +244,8 @@ extension PreviewEnvironment {
         }
     }
     
-    func loadFollowers() {
-        guard let account = account() else { L.og.debug("Preview.loadFollowers - missing Account"); return }
+    func loadFollows() {
+        guard let account = account() else { L.og.debug("Preview.loadFollows - missing Account"); return }
         context.performAndWait {
             if let clNevent = PreviewFetcher.fetchEvents(account.publicKey, kind: 3, context: context).first?.toNEvent() {
                 
