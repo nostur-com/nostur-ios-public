@@ -8,18 +8,16 @@
 import SwiftUI
 
 struct MainWoTaccountPicker: View {
-    @EnvironmentObject private var themes:Themes
-    @State private var selectedMainWoTaccountPubkey:String // Should just use @AppStorage("app_theme") here, but this freezes on desktop. so workaround via init() and .onChange(of: selectedTheme).
+    @EnvironmentObject private var themes: Themes
+    @State private var selectedMainWoTaccountPubkey: String // Should just use @AppStorage("app_theme") here, but this freezes on desktop. so workaround via init() and .onChange(of: selectedTheme).
     
     init() {
         let selectedMainWoTaccountPubkey = UserDefaults.standard.string(forKey: "main_wot_account_pubkey") ?? ""
         _selectedMainWoTaccountPubkey = State(initialValue: selectedMainWoTaccountPubkey)
     }
     
-    private var accounts:[CloudAccount] { NRState.shared.accounts.filter { $0.publicKey != GUEST_ACCOUNT_PUBKEY } }
-    
-    static let gridColumns = Array(repeating: GridItem(.flexible()), count: 3)
-    
+    private var accounts: [CloudAccount] { NRState.shared.accounts.filter { $0.publicKey != GUEST_ACCOUNT_PUBKEY } }
+
     var body: some View {
         Picker(selection: $selectedMainWoTaccountPubkey) {
             ForEach(accounts) { account in

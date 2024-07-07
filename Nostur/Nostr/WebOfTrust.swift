@@ -209,7 +209,7 @@ class WebOfTrust: ObservableObject {
             .store(in: &subscriptions)
     }
     
-    private func updateWoTwithFollowsOf(_ pubkey:String) {
+    private func updateWoTwithFollowsOf(_ pubkey: String) {
         // Fetch kind 3 for pubkey
         let task = ReqTask(
             subscriptionId: "RM.getAuthorContactsList",
@@ -230,7 +230,7 @@ class WebOfTrust: ObservableObject {
         task.fetch()
     }
     
-    private func regenerateWoTWithFollowsOf(_ otherPubkey:String) {
+    private func regenerateWoTWithFollowsOf(_ otherPubkey: String) {
         guard mainAccountWoTpubkey != "" else { return }
         var followsOfPubkey = Set<String>()
         bg().perform { [weak self] in
@@ -249,9 +249,9 @@ class WebOfTrust: ObservableObject {
         }
     }
     
-    public var webOfTrustLevel:String = UserDefaults.standard.string(forKey: SettingsStore.Keys.webOfTrustLevel) ?? SettingsStore.WebOfTrustLevel.normal.rawValue // Faster then querying UserDefaults so cache here
+    public var webOfTrustLevel: String = UserDefaults.standard.string(forKey: SettingsStore.Keys.webOfTrustLevel) ?? SettingsStore.WebOfTrustLevel.normal.rawValue // Faster then querying UserDefaults so cache here
     
-    public func isAllowed(_ pubkey:String) -> Bool {
+    public func isAllowed(_ pubkey: String) -> Bool {
         // TODO: Accessing UserDefaults seems slow (mainAccountWoTpubkey)
         guard mainAccountWoTpubkey != "" else { return true }
         if webOfTrustLevel != SettingsStore.WebOfTrustLevel.strict.rawValue && allowedKeysCount < ENABLE_THRESHOLD { return true }
@@ -267,7 +267,7 @@ class WebOfTrust: ObservableObject {
     }
     
     // This is for "normal" mode (follows + follows of follows)
-    public func loadNormal(wotFollowingPubkeys:Set<String>, force:Bool = false) { // force = true to force fetching (update)
+    public func loadNormal(wotFollowingPubkeys: Set<String>, force: Bool = false) { // force = true to force fetching (update)
         guard mainAccountWoTpubkey != "" else {
             sendNotification(.WoTReady)
             return
@@ -282,7 +282,7 @@ class WebOfTrust: ObservableObject {
     }
     
     // force = true to force fetching (update) - else will only use what is already on disk
-    private func loadFollowingFollowing(wotFollowingPubkeys:Set<String>, force:Bool = false) {
+    private func loadFollowingFollowing(wotFollowingPubkeys: Set<String>, force: Bool = false) {
         guard mainAccountWoTpubkey != "" else {
             sendNotification(.WoTReady)
             return
@@ -395,7 +395,7 @@ class WebOfTrust: ObservableObject {
     }
     
     // Get data from documents directory
-    private func loadData(_ pubkey:String) -> Set<String> {
+    private func loadData(_ pubkey: String) -> Set<String> {
         do {
             let filename = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
                 .appendingPathComponent("web-of-trust-\(pubkey).txt")
@@ -429,7 +429,7 @@ class WebOfTrust: ObservableObject {
         }
     }
     
-    private func lastUpdatedDate(_ pubkey:String) -> Date? {
+    private func lastUpdatedDate(_ pubkey: String) -> Date? {
         do {
             let filename = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
                 .appendingPathComponent("web-of-trust-\(pubkey).txt")

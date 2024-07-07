@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct WebOfTrustLevelPicker: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @ObservedObject private var wot = WebOfTrust.shared
     @ObservedObject private var settings: SettingsStore = .shared
     
@@ -19,7 +19,7 @@ struct WebOfTrustLevelPicker: View {
                     .foregroundColor(themes.theme.primary)
             }
         } label: {
-            Text("Web of Trust filter", comment:"Setting on settings screen")
+            Text("Web of Trust filter", comment: "Setting on settings screen")
         }
         .pickerStyleCompatNavigationLink()
         .onChange(of: settings.webOfTrustLevel) { newValue in
