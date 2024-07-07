@@ -256,7 +256,7 @@ struct MainView_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-            pe.loadFollowers()
+            pe.loadFollows()
         }) {
             MainView()
         }
