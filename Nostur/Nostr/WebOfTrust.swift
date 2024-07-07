@@ -375,48 +375,71 @@ class WebOfTrust: ObservableObject {
         }
     }
     
-    private func storeData(pubkeys:Set<String>, pubkey:String) {
+    private func storeData(pubkeys: Set<String>, pubkey: String) {
         do {
             let filename = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-                .appendingPathComponent("web-of-trust-\(pubkey).txt")
+                .appendingPathComponent("web-of-trust-\(pubkey).bin")
             
-            try pubkeys.joined(separator: "\n").write(to: filename, atomically: true, encoding: String.Encoding.utf8)
-            
+            let data = try NSKeyedArchiver.archivedData(withRootObject: Array(pubkeys), requiringSecureCoding: false)
+                   try data.write(to: filename)
+
             if let lastUpdated = lastUpdatedDate(pubkey) {
-                L.og.info("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(pubkey).txt --> \(lastUpdated.description)")
+                L.og.info("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(pubkey).bin --> \(lastUpdated.description)")
                 DispatchQueue.main.async { [weak self] in
                     self?.lastUpdated = lastUpdated
                 }
             }
         }
         catch {
-            L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to write file: web-of-trust-\(pubkey).txt: \(error)")
+            L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to write file: web-of-trust-\(pubkey).bin: \(error)")
         }
     }
     
     // Get data from documents directory
     private func loadData(_ pubkey: String) -> Set<String> {
         do {
-            let filename = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-                .appendingPathComponent("web-of-trust-\(pubkey).txt")
+            let binFilename = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+                .appendingPathComponent("web-of-trust-\(pubkey).bin")
             
-            let input = try String(contentsOf: filename)
-            let pubkeys = Set(input.split(separator: "\n").map { String($0) })
-            if pubkeys.count < 2 {
-                // Something wrong, delete corrupt file
-                do {
-                    try FileManager.default.removeItem(at: filename)
-                    L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Something wrong, deleting corrupt file: web-of-trust-\(pubkey).txt")
-                } catch {
-                    L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Something wrong, but could not delete file: web-of-trust-\(pubkey).txt: \(error)")
+            migrateDataIfNeeded(pubkey)
+            
+            let data = try Data(contentsOf: binFilename)
+            if let pubkeysArray = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? [String] {
+                let pubkeys = Set(pubkeysArray)
+                if pubkeys.count < 2 {
+                    // Something wrong, delete corrupt file
+                    try FileManager.default.removeItem(at: binFilename)
+                    L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Something wrong, deleting corrupt file: \(binFilename.lastPathComponent)")
+                    return Set<String>()
                 }
+                return pubkeys
+            } else {
+                L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to decode file: \(binFilename.lastPathComponent)")
                 return Set<String>()
             }
-            return pubkeys
         }
         catch {
             L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to read file: web-of-trust-\(pubkey).txt: \(error)")
             return Set<String>()
+        }
+    }
+    
+    private func migrateDataIfNeeded(_ pubkey: String) {
+        let fileManager = FileManager.default
+        let cachesDirectory = try! fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+        let txtFilename = cachesDirectory.appendingPathComponent("web-of-trust-\(pubkey).txt")
+        
+        if fileManager.fileExists(atPath: txtFilename.path) {
+            // Migrate from .txt to .bin
+            do {
+                let input = try String(contentsOf: txtFilename)
+                let pubkeys = Set(input.split(separator: "\n").map { String($0) })
+                storeData(pubkeys: pubkeys, pubkey: pubkey)
+                try fileManager.removeItem(at: txtFilename)
+                L.og.info("🕸️🕸️ WebOfTrust/WoTFol: Successfully migrated data from .txt to .bin for pubkey: \(pubkey)")
+            } catch {
+                L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Migration failed for pubkey: \(pubkey): \(error)")
+            }
         }
     }
     
