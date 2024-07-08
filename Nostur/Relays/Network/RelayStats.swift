@@ -32,7 +32,7 @@ struct RelayStats: View {
                             showingStats = relayStats
                         }
                     }
-                } footer: {
+                } header: {
                     HStack {
                         Spacer()
                         Text("(Re)connects/Messages/Errors")
