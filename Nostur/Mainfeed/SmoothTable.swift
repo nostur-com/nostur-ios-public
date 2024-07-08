@@ -143,7 +143,7 @@ struct SmoothTable: UIViewControllerRepresentable {
     func refresh(_ viewHolder: TViewHolder, coordinator: Coordinator) {
         L.sl.debug("⭐️ SmoothTable \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): refresh")
         if #available(iOS 16, *) {
-            viewHolder.tableView.register(PostOrThreadCell.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell")
+            viewHolder.tableView.register(PostOrThreadCell16.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell16")
         }
         else {
             viewHolder.tableView.register(PostOrThreadCell15.self, forCellReuseIdentifier: "Nostur.PostOrThreadCell15")
@@ -506,8 +506,7 @@ struct SmoothTable: UIViewControllerRepresentable {
     }
 }
 
-@available(iOS 16, *)
-final class PostOrThreadCell: UITableViewCell {
+final class PostOrThreadCell16: UITableViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
@@ -516,21 +515,23 @@ final class PostOrThreadCell: UITableViewCell {
     }
 
     func configure(with nrPost: NRPost? = nil, dim: DIMENSIONS, themes: Themes) {
-        if let nrPost {
+        if #available(iOS 16.0, *) {
+            if let nrPost {
+                return self.contentConfiguration = UIHostingConfiguration {
+                    PostOrThread(nrPost: nrPost)
+                        .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
+                        .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
+                }
+                .margins(.all, 0)
+            }
+            
             return self.contentConfiguration = UIHostingConfiguration {
-                PostOrThread(nrPost: nrPost)
+                Text("⚠️")
                     .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
                     .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
             }
             .margins(.all, 0)
         }
-        
-        return self.contentConfiguration = UIHostingConfiguration {
-            Text("⚠️")
-                .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
-                .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
-        }
-        .margins(.all, 0)
     }
 }
 
@@ -546,52 +547,33 @@ final class PostOrThreadCell15: UITableViewCell {
 
     func configure(with nrPost: NRPost? = nil, dim: DIMENSIONS, themes: Themes) {
         if let nrPost {
-            if #available(iOS 16.0, *) {
-                return self.contentConfiguration = UIHostingConfiguration {
-                    PostOrThread(nrPost: nrPost)
-                        .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
-                        .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
-                }
-                .margins(.all, 0)
-            } else {
-                // Fallback on earlier versions
-                let view = PostOrThread15(nrPost: nrPost, themes: themes, dim: dim)
-                
-                self.hostingController.rootView = view
-                self.hostingController.view.invalidateIntrinsicContentSize()
-                
-                contentView.addSubview(hostingController.view)
-                
-                hostingController.view
-                               .translatesAutoresizingMaskIntoConstraints = false
-                hostingController.view.leadingAnchor.constraint(
-                               equalTo: self.contentView.leadingAnchor
-                           ).isActive = true
-                hostingController.view.trailingAnchor.constraint(
-                               equalTo: self.contentView.trailingAnchor
-                           ).isActive = true
-                hostingController.view.topAnchor.constraint(
-                               equalTo: self.contentView.topAnchor
-                           ).isActive = true
-                hostingController.view.bottomAnchor.constraint(
-                               equalTo: self.contentView.bottomAnchor
-                           ).isActive = true
-                
-                return
-            }
-        }
-        
-        if #available(iOS 16.0, *) {
-            return self.contentConfiguration = UIHostingConfiguration {
-                Text("⚠️")
-                    .environmentObject(dim) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
-                    .environmentObject(themes) // Shouldn't need this, but otherwise sometimes crash? on iOS 16 but not 17
-            }
-            .margins(.all, 0)
-        } else {
             // Fallback on earlier versions
+            let view = PostOrThread15(nrPost: nrPost, themes: themes, dim: dim)
+            
+            self.hostingController.rootView = view
+            self.hostingController.view.invalidateIntrinsicContentSize()
+            
+            contentView.addSubview(hostingController.view)
+            
+            hostingController.view
+                           .translatesAutoresizingMaskIntoConstraints = false
+            hostingController.view.leadingAnchor.constraint(
+                           equalTo: self.contentView.leadingAnchor
+                       ).isActive = true
+            hostingController.view.trailingAnchor.constraint(
+                           equalTo: self.contentView.trailingAnchor
+                       ).isActive = true
+            hostingController.view.topAnchor.constraint(
+                           equalTo: self.contentView.topAnchor
+                       ).isActive = true
+            hostingController.view.bottomAnchor.constraint(
+                           equalTo: self.contentView.bottomAnchor
+                       ).isActive = true
+            
             return
         }
+        
+        return
     }
 }
 
@@ -631,7 +613,7 @@ final class TViewHolder {
             tableView: tableView,
             cellProvider: { tableView, indexPath, identifier -> UITableViewCell? in
                 if #available(iOS 16, *) {
-                    guard let cell = tableView.dequeueReusableCell(withIdentifier: PostOrThreadCell.description(), for: indexPath) as? PostOrThreadCell else {
+                    guard let cell = tableView.dequeueReusableCell(withIdentifier: PostOrThreadCell16.description(), for: indexPath) as? PostOrThreadCell16 else {
                         return UITableViewCell()
                     }
                     cell.configure(with: coordinator.lvm.posts.value.elements[safe: indexPath.row]?.value, dim: coordinator.dim, themes: coordinator.themes)
