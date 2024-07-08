@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NEventView: View {
-    @EnvironmentObject private var settings: SettingsStore
+    @ObservedObject private var settings: SettingsStore = .shared
     @EnvironmentObject private var dim: DIMENSIONS
     public let identifier: ShareableIdentifier
     public var forceAutoload: Bool = false
