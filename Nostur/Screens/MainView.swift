@@ -9,6 +9,8 @@ import SwiftUI
 import NavigationBackport
 
 struct MainView: View {
+    @EnvironmentObject private var ns: NRState
+    @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     @State private var fg: FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @State private var fn: FollowerNotifier = .shared
@@ -67,11 +69,15 @@ struct MainView: View {
                                 WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                                     ComposePostCompat(onDismiss: { showingNewNote = false })
                                         .environmentObject(themes)
+                                        .environmentObject(dim)
+                                        .environmentObject(ns)
                                 }
                             }
                             else {
                                 ComposePostCompat(onDismiss: { showingNewNote = false })
                                     .environmentObject(themes)
+                                    .environmentObject(dim)
+                                    .environmentObject(ns)
                             }
                         }
                         .presentationBackgroundCompat(themes.theme.background)
