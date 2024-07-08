@@ -344,8 +344,8 @@ struct Settings: View {
                     
                     Toggle(isOn: $settings.enableOutboxRelays) {
                         VStack(alignment: .leading) {
-                            Text("Enhanced Relay Routing", comment: "Setting on settings screen")
-                            Text("Connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set", comment: "Setting on settings screen")
+                            Text("Autopilot", comment: "Setting on settings screen")
+                            Text("Automatically connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set", comment: "Setting on settings screen")
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
