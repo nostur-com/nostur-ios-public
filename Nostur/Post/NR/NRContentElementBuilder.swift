@@ -331,7 +331,7 @@ func findImetaDimensions(_ event:Event, url:String) -> CGSize? {
     // DIP-01
     // Find any tag that is 'imeta' and has matching 'url', spec is unclear about order, so check every imeta value:
     // fastTags only supports tags with 3 values, so too bad if there are more.
-    let imetaTag:FastTag? = event.fastTags.first(where: { tag in
+    let imetaTag: FastTag? = event.fastTags.first(where: { tag in
         
         guard tag.0 == "imeta" else { return false }
         

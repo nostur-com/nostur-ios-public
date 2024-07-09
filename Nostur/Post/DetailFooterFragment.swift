@@ -17,7 +17,7 @@ struct DetailFooterFragment: View {
         self.footerAttributes = nrPost.footerAttributes
     }
     
-    @State var tallyString:String = ""
+    @State var tallyString: String = ""
     
     var body: some View {
         Divider()
