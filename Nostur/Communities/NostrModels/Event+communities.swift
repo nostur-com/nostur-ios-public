@@ -37,7 +37,7 @@ extension Event {
     }
 }
 
-typealias ModeratorPTag = (String, String, String?, String?)
+typealias ModeratorPTag = (String, String, String?, String?, String?)
 typealias CommunityRelay = (String, String, String?)
 
 

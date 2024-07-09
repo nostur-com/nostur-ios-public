@@ -567,15 +567,15 @@ extension Event {
         return true
     }
     
-    var fastPs:[(String, String, String?, String?)] {
+    var fastPs: [(String, String, String?, String?, String?)] {
         fastTags.filter { $0.0 == "p" && $0.1.count == 64 }
     }
     
-    var fastEs:[(String, String, String?, String?)] {
+    var fastEs: [(String, String, String?, String?, String?)] {
         fastTags.filter { $0.0 == "e" && $0.1.count == 64 }
     }
     
-    var fastTs:[(String, String, String?, String?)] {
+    var fastTs: [(String, String, String?, String?, String?)] {
         fastTags.filter { $0.0 == "t" && !$0.1.isEmpty }
     }
     

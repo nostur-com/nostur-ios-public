@@ -240,7 +240,7 @@ public struct RequestMessage {
     
     // Fetch anything in the tags (only e -> "ids" and p -> "authors" kind=0  (for now))
     // For when you have 1 event, and want to fetch, reply to, mentions, contacts
-    static func getFastTags(_ tags:[(String, String, String?, String?)], limit:Int = 500, subscriptionId:String? = nil) -> String? {
+    static func getFastTags(_ tags:[(String, String, String?, String?, String?)], limit:Int = 500, subscriptionId:String? = nil) -> String? {
         let ids = tags.filter { $0.0 == "e" }.map { $0.1 }
         let authors = tags.filter { $0.0 == "p" }.map { $0.1 }
         

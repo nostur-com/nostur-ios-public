@@ -35,7 +35,7 @@ public class Event: NSManagedObject, Identifiable {
         try super.validateValue(value, forKey: key)
     }
     
-    lazy var fastTags: [(String, String, String?, String?)] = {
+    lazy var fastTags: [(String, String, String?, String?, String?)] = {
         guard let tagsSerialized = tagsSerialized else { return [] }
         guard let jsonData = tagsSerialized.data(using: .utf8) else { return [] }
         
@@ -45,7 +45,7 @@ public class Event: NSManagedObject, Identifiable {
         
         return jsonArray
         //            .filter { $0.count >= 2 }
-            .map { ($0[safe: 0] ?? "WTF", $0[safe: 1] ?? "WTF", $0[safe: 2], $0[safe: 3]) }
+            .map { ($0[safe: 0] ?? "WTF", $0[safe: 1] ?? "WTF", $0[safe: 2], $0[safe: 3], $0[safe: 4]) }
     }()
 }
 

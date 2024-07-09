@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-typealias FastTag = (String, String, String?, String?)
+typealias FastTag = (String, String, String?, String?, String?)
 
 class NRContentElementBuilder {
     
