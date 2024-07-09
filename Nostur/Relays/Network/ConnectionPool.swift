@@ -623,7 +623,7 @@ public class ConnectionPool: ObservableObject {
     }
 }
 
-@MainActor func fetchEventFromRelayHint(_ eventId:String, fastTags:[(String, String, String?, String?)]) {
+@MainActor func fetchEventFromRelayHint(_ eventId:String, fastTags: [(String, String, String?, String?, String?)]) {
     // EventRelationsQueue.shared.addAwaitingEvent(event) <-- not needed, should already be awaiting
     //    [
     //      "e",
