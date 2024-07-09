@@ -378,9 +378,6 @@ class Importer {
                 var alreadyInDBskipped = 0
                 var saved = 0
                 
-                // We send a notification every .save with the saved subscriptionIds
-                // so other parts of the system can start fetching from local db
-                var subscriptionIds = Set<String>()
                 while let message = MessageParser.shared.priorityBucket.popFirst() {
                     count = count + 1
                     guard let event = message.event else {

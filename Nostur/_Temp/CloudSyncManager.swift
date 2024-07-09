@@ -34,9 +34,6 @@ class CloudSyncManager {
     }
     
     @objc func contextObjectsDidChange(notification: NSNotification) {
-        guard let context = notification.object as? NSManagedObjectContext else { return }
-        guard let name = context.name else { return }
-//        L.og.debug("contextObjectsDidChange - \(name)")
         guard let userInfo = notification.userInfo else { return }
 
         // Process Bookmark Changes (toggle bookmark buttons in view)
