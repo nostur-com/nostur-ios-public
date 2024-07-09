@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PostOrThread: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     private let nrPost: NRPost
     @ObservedObject private var postOrThreadAttributes: NRPost.PostOrThreadAttributes
     private var grouped = false
