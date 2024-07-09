@@ -111,8 +111,8 @@ public class OutboxLoader {
         let task = ReqTask(
             debounceTime: 3.0,
             prefix: "OUTBOX2-",
-            reqCommand: { [weak self] taskId in
-                guard let self, let cm = NostrEssentials
+            reqCommand: { taskId in
+                guard let cm = NostrEssentials
                     .ClientMessage(type: .REQ,
                                    subscriptionId: taskId,
                                    filters: [Filters(authors: [pubkey], kinds: [10002])]

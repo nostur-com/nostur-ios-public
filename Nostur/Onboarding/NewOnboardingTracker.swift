@@ -229,7 +229,6 @@ class NewOnboardingTracker {
     private func processKind10002() {
         L.onboarding.info("✈️✈️ processing kind 10002")
         guard let pubkey = self.pubkey else { return }
-        guard let account = self.account else { return }
         if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: pubkey, context: self.bg) {
             
             self.createRelaysFromKind10002(kind10002)

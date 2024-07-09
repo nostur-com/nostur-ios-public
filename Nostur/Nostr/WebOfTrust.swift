@@ -404,7 +404,7 @@ class WebOfTrust: ObservableObject {
             migrateDataIfNeeded(pubkey)
             
             let data = try Data(contentsOf: binFilename)
-            if let pubkeysArray = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? [String] {
+            if let pubkeysArray = try NSKeyedUnarchiver.unarchivedObject(ofClasses: [NSArray.self, NSString.self], from: data) as? [String] {
                 let pubkeys = Set(pubkeysArray)
                 if pubkeys.count < 2 {
                     // Something wrong, delete corrupt file

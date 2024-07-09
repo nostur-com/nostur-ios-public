@@ -142,7 +142,7 @@ struct AnySigner: View {
                 error = String(localized:"Could not convert data", comment: "Error message"); return
             }
             
-            guard var nEvent = try? decoder.decode(AnyNEvent.self, from: inputData) else {
+            guard let nEvent = try? decoder.decode(AnyNEvent.self, from: inputData) else {
                 error = String(localized:"Could not parse JSON", comment: "Error message"); return
             }
             

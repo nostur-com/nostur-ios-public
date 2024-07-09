@@ -21,7 +21,7 @@ struct VideoPickerView: UIViewControllerRepresentable {
         }
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let mediaType = info[.mediaType] as? String, mediaType == (kUTTypeMovie as String) {
+            if let mediaType = info[.mediaType] as? String, mediaType == UTType.movie.identifier {
                 if let url = info[.mediaURL] as? URL {
                     parent.selectedVideoURL = url
                 }
@@ -40,7 +40,7 @@ struct VideoPickerView: UIViewControllerRepresentable {
 //        picker.videoExportPreset = "AVAssetExportPreset1920x1080" // <-- no compression at all for screen recording?? looks like passthrough
 //        picker.videoExportPreset = "AVAssetExportPresetHighestQuality"
         picker.delegate = context.coordinator
-        picker.mediaTypes = [kUTTypeMovie as String]
+        picker.mediaTypes = [UTType.movie.identifier]
         return picker
     }
 
