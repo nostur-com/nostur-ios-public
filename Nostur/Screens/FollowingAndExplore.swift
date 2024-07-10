@@ -88,7 +88,7 @@ struct FollowingAndExplore: View, Equatable {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        VStack(spacing:0) {
+        VStack(spacing: 0) {
             if !shouldHideTabBar {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing:0) {

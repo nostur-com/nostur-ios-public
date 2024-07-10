@@ -550,19 +550,19 @@ struct Articles_Previews: PreviewProvider {
 // - MARK: ARTICLE STUFF
 extension Event {
     
-    var eventId:String? {
+    var eventId: String? {
         fastTags.first(where: { $0.0 == "d" })?.1
     }
     
-    var eventTitle:String? {
+    var eventTitle: String? {
         fastTags.first(where: { $0.0 == "title" })?.1
     }
     
-    var eventSummary:String? {
+    var eventSummary: String? {
         fastTags.first(where: { $0.0 == "summary" })?.1
     }
     
-    var eventPublishedAt:Date? {
+    var eventPublishedAt: Date? {
         if let p = fastTags.first(where: { $0.0 == "published_at" })?.1, let timestamp = TimeInterval(p) {
             if timestamp > 1000000000000 { // fix for buggy clients using microseconds for published_at
                 return Date(timeIntervalSince1970: timestamp / 1000)
@@ -572,15 +572,15 @@ extension Event {
         return nil
     }
     
-    var eventImage:String? {
+    var eventImage: String? {
         fastTags.first(where: { $0.0 == "image" })?.1
     }
     
-    var eventThumb:String? {
+    var eventThumb: String? {
         fastTags.first(where: { $0.0 == "thumb" })?.1
     }
     
-    var eventUrl:String? {
+    var eventUrl: String? {
         fastTags.first(where: { $0.0 == "url" })?.1
     }
 }
