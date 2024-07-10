@@ -126,6 +126,35 @@ extension View {
         else {
             self
         }
+    }    
+    
+    @ViewBuilder
+    func scrollTargetBehaviorViewAligned() -> some View {
+        if #available(iOS 17.0, *) {
+            self.scrollTargetBehavior(.viewAligned)
+        }
+        else {
+            self
+        }
+    }
+    
+    @ViewBuilder
+    func symbolEffectPulse() -> some View {
+        if #available(iOS 17.0, *) {
+            self.symbolEffect(.pulse, options: .speed(6), isActive: true)
+        }
+        else {
+            self
+        }
+    }    
+    @ViewBuilder
+    func safeAreaPadding() -> some View {
+        if #available(iOS 17.0, *) {
+            self.safeAreaPadding(.horizontal, 10.0)
+        }
+        else {
+            self
+        }
     }
     
     @ViewBuilder
