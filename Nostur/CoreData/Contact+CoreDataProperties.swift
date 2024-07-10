@@ -504,7 +504,13 @@ extension Contact : Identifiable {
         return try? context.fetch(r).first
     }
     
-    static func fetchByPubkeys(_ pubkeys:[String], context: NSManagedObjectContext = context()) -> [Contact] {
+    static func fetchByPubkeys(_ pubkeys: [String], context: NSManagedObjectContext = context()) -> [Contact] {
+        let r = Contact.fetchRequest()
+        r.predicate = NSPredicate(format: "pubkey IN %@", pubkeys)
+        return (try? context.fetch(r)) ?? []
+    }
+    
+    static func fetchByPubkeys(_ pubkeys: Set<String>, context: NSManagedObjectContext = context()) -> [Contact] {
         let r = Contact.fetchRequest()
         r.predicate = NSPredicate(format: "pubkey IN %@", pubkeys)
         return (try? context.fetch(r)) ?? []
