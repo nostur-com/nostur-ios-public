@@ -1442,15 +1442,6 @@ extension LVM {
         return max(0,count) // cant go negative
     }
     
-    var itemsAfterLastRead: Int {
-        guard let lastReadIndex = self.lastReadIdIndex else {
-            return 0
-        }
-        let postsAfterLastRead = self.posts.value.elements.prefix(lastReadIndex).values
-        let count = threadCount(Array(postsAfterLastRead))
-        return max(0,count) // cant go negative
-    }
-    
     func keepListStateSaved() {
         lastAppearedIdSubject
             .dropFirst()

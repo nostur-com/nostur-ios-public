@@ -38,7 +38,10 @@ class MessageParser {
     public var priorityBucket = Deque<RelayMessage>()
     public var isSignatureVerificationEnabled = true
     
+    public let tagSerializer: TagSerializer
+    
     init() {
+        tagSerializer = TagSerializer.shared
         bgQueue.perform {
             self.isSignatureVerificationEnabled = SettingsStore.shared.isSignatureVerificationEnabled
         }
