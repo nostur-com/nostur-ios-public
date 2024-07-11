@@ -156,8 +156,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
     }
     
-    var referencedContacts: [NRContact] = []
-    
     private var _parentPosts: [NRPost] // access from BG only through .parentPosts
     
     var parentPosts: [NRPost] { // access from BG only
