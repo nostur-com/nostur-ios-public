@@ -1173,11 +1173,22 @@
       }
     },
     "Add (nsecBunker)" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voeg toe (nsecBunker)"
+          }
+        }
+      }
+    },
+    "Add (Remote Signer)" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg toe (Remote Signer)"
           }
         }
       }
@@ -1533,6 +1544,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alleen volgend"
+          }
+        }
+      }
+    },
+    "Automatically connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind automatisch met extra relays van anderen die je volgt"
+          }
+        }
+      }
+    },
+    "Autopilot" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autopilot"
           }
         }
       }
@@ -2128,6 +2161,7 @@
     },
     "Connect to additional relays from people you follow to reduce missing content that can't be found on your own relay set" : {
       "comment" : "Setting on settings screen",
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2212,10 +2246,17 @@
       }
     },
     "Content from these accounts you follow was received from this relay" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van deze accounts die je volgt zijn ontvangen van deze relay"
+          }
+        }
+      }
     },
     "Content from these accounts you follow was received this relay" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2499,6 +2540,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aangepaste opslag"
+          }
+        }
+      }
+    },
+    "Custom relay for signer" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aangepaste relay voor signer"
           }
         }
       }
@@ -2977,6 +3028,7 @@
     },
     "Enhanced Relay Routing" : {
       "comment" : "Setting on settings screen",
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3008,6 +3060,7 @@
       }
     },
     "Enter nsecBunker relay address" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3057,6 +3110,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voer privé notitie in voor jezelf"
+          }
+        }
+      }
+    },
+    "Enter relay address" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay adres"
           }
         }
       }
@@ -5812,6 +5875,17 @@
         }
       }
     },
+    "Relay stats" : {
+      "comment" : "Title for  relay connection statistics sheet",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay stats"
+          }
+        }
+      }
+    },
     "Relay URL" : {
       "comment" : "Relay URL header",
       "localizations" : {
@@ -6340,6 +6414,7 @@
       }
     },
     "Self-hosted nsecBunker" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
