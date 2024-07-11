@@ -11,7 +11,7 @@ import NostrEssentials
 
 typealias CM = NostrEssentials.ClientMessage
 
-let FETCH_FOLLOWING_KINDS: Set<Int> = [0,1,5,6,9802,30023,34235]
+let FETCH_FOLLOWING_KINDS: Set<Int> = [0,1,5,6,9802,30023,34235,10002]
 let QUERY_FOLLOWING_KINDS: Set<Int> = [1,6,9802,30023,34235]
 let QUERY_FETCH_LIMIT = 50 // Was 25 before, but seems we are missing posts, maybe too much non WoT-hashtag coming back. Increase limit or split query? or could be the time cutoff is too short/strict
 
