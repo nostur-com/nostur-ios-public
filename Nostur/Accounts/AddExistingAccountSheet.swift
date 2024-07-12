@@ -68,6 +68,7 @@ struct AddExistingAccountSheet: View {
                                 addExistingBunkerAccount(pubkey: bunkerURL.pubkey, token: bunkerURL.secret)
                             }
                             else {
+                                guard key.split(separator: "#").count >= 2 else { return }
                                 let bunkerNpub = String(key.split(separator: "#")[0])
                                 let token = String(key.split(separator: "#")[1])
                                 guard let nip19 = try? NIP19(displayString: bunkerNpub.replacingOccurrences(of: "-", with: "")) else {
