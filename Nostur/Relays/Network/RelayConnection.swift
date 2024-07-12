@@ -399,6 +399,11 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             guard let self else { return }
             self.stats.errors += 1
             self.stats.addErrorMessage(error.localizedDescription)
+            
+            guard self.isOutbox else { return } // Only outbox relays can go in penalty box, not normal relays
+            guard SettingsStore.shared.enableOutboxRelays else { return }
+            guard ConnectionPool.shared.canPutInPenaltyBox(self.url) else { return }
+            
             if (self.stats.errors > 3) && (self.stats.connected == 0) {
                 ConnectionPool.shared.penaltybox.insert(self.url)
             }
