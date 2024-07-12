@@ -16,7 +16,7 @@ struct AddExistingAccountSheet: View {
     
     public var offerTryOut = false
     
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
