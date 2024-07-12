@@ -301,9 +301,13 @@ private struct WithSheets: ViewModifier {
                 addRemoveContactFromList = contact
             }
             .sheet(item: $addRemoveContactFromList) { contact in
-                AddRemoveToListsheet(contact: contact)
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                NBNavigationStack {
+                    AddRemoveToListsheet(contact: contact)
+                        .environmentObject(themes)
+                        .environment(\.managedObjectContext, viewContext)
+                }
+                .nbUseNavigationStack(.never)
+                .presentationBackgroundCompat(themes.theme.listBackground)
             }
         
         // New highlight
