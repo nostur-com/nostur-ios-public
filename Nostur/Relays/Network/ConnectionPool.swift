@@ -104,6 +104,15 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
+    private var ourRelaySet: Set<String> {
+        return Set(connections.filter { $0.value.relayData.shouldConnect }.map { $0.key })
+    }
+    
+    // call from bg
+    public func canPutInPenaltyBox(_ relayUrl: String) -> Bool {
+        return !ourRelaySet.contains(relayUrl)
+    }
+    
     @MainActor
     public func addNWCConnection(connectionId:String, url:String) -> RelayConnection  {
         if let existingConnection = connections[connectionId] {

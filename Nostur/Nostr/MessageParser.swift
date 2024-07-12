@@ -69,8 +69,10 @@ class MessageParser {
                         // Send auth response, but check first if its outbox relay, then remove from outbox relays
                         guard !client.isOutbox else {
                             DispatchQueue.main.async {
-                                ConnectionPool.shared.removeConnection(relayUrl)
+                                ConnectionPool.shared.removeOutboxConnection(relayUrl)
                                 ConnectionPool.shared.queue.async(flags: .barrier) {
+                                    guard SettingsStore.shared.enableOutboxRelays else { return }
+                                    guard ConnectionPool.shared.canPutInPenaltyBox(relayUrl) else { return }
                                     ConnectionPool.shared.penaltybox.insert(relayUrl)
                                 }
                             }
