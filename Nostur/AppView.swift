@@ -91,19 +91,6 @@ struct AppView: View {
                             }
                         }
                 }
-//                    else if (1 == 1) {
-//                        Text("test")
-//                            .onReceive(ViewUpdates.shared.bookmarkUpdates.receive(on: RunLoop.main), perform: { update in
-////                                    let update = update as! BookmarkUpdate
-////                                    guard eventModel.isRelevantUpdate(update) else { return }
-////                                    eventModel.applyUpdate(update)
-//
-//                                print("new update: \(update.id) isBookmarked: \(update.isBookmarked)")
-//                                bg().perform {
-//                                    try? bg().save()
-//                                }
-//                            })
-//                    }
                 else {
                     if let loggedInAccount = ns.loggedInAccount { // 74 MB -> 175MB
                         NosturRootMenu()
