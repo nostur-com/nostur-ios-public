@@ -33,6 +33,7 @@ struct WithNSecBunkerConnection<Content: View>: View {
                     guard let nsecBunker else { return }
                     nsecBunker.state = .connecting
                     nsecBunker.describe()
+                    nsecBunker.getPublicKey()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
                         if (nsecBunker.state != .connected) {
                             nsecBunker.state = .error
