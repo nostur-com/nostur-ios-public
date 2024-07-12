@@ -192,6 +192,7 @@ struct FollowingAndExplore: View, Equatable {
                             .padding(.all, 30.0)
                         
                         Button {
+                            enableExploreFeed = true
                             selectedSubTab = "Explore"
                         } label: {
                             Text("Explore", comment: "Button to go to the Explore tab")
