@@ -89,7 +89,7 @@ struct LazyNoteMenuSheet: View {
                     Button {
                         dismiss()
                         guard let contact = nrPost.mainEvent?.contact else { return }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY + 0.35) { // Short delay freezes????
                             sendNotification(.addRemoveToListsheet, contact)
                         }
                     } label: {

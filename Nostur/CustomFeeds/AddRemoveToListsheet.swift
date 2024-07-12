@@ -22,65 +22,62 @@ struct AddRemoveToListsheet: View {
     var lists:FetchedResults<CloudFeed>
     
     var body: some View {
-        NBNavigationStack {
-            ScrollView {
-                if !lists.isEmpty {
-                    LazyVStack {
-                        ForEach(lists) { list in
-                            HStack(spacing: 10) {
-                                if list.contactPubkeys.contains(contact.pubkey) {
-                                    Button {
-                                        list.contactPubkeys.remove(contact.pubkey)
-                                    } label: {
-                                        Image(systemName:  "checkmark.circle.fill")
-                                            .padding(.vertical, 10)
-                                    }
+        ScrollView {
+            if !lists.isEmpty {
+                LazyVStack {
+                    ForEach(lists) { list in
+                        HStack(spacing: 10) {
+                            if list.contactPubkeys.contains(contact.pubkey) {
+                                Button {
+                                    list.contactPubkeys.remove(contact.pubkey)
+                                } label: {
+                                    Image(systemName:  "checkmark.circle.fill")
+                                        .padding(.vertical, 10)
                                 }
-                                else {
-                                    Button {
-                                        list.contactPubkeys.insert(contact.pubkey)
-                                    } label: {
-                                        Image(systemName:  "circle")
-                                            .foregroundColor(Color.secondary)
-                                            .padding(.vertical, 10)
-                                    }
-                                }
-                                ListRow(list: list, showPin: false)
-                                    .padding(.vertical, 10)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        if list.contactPubkeys.contains(contact.pubkey) {
-                                            list.contactPubkeys.remove(contact.pubkey)
-                                        }
-                                        else {
-                                            list.contactPubkeys.insert(contact.pubkey)
-                                        }
-                                    }
                             }
+                            else {
+                                Button {
+                                    list.contactPubkeys.insert(contact.pubkey)
+                                } label: {
+                                    Image(systemName:  "circle")
+                                        .foregroundColor(Color.secondary)
+                                        .padding(.vertical, 10)
+                                }
+                            }
+                            ListRow(list: list, showPin: false)
+                                .padding(.vertical, 10)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    if list.contactPubkeys.contains(contact.pubkey) {
+                                        list.contactPubkeys.remove(contact.pubkey)
+                                    }
+                                    else {
+                                        list.contactPubkeys.insert(contact.pubkey)
+                                    }
+                                }
                         }
-                        Divider()
                     }
+                    Divider()
                 }
             }
-            .padding(10)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Done") {
-                        dismiss()
-                        DataProvider.shared().save()
-                        for list in lists {
-                            sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
-                        }
-                    }
-                }
-            }
-            .navigationTitle(String(localized:"Add/Remove from feed", comment: "Navigation title for screen to add or remove contacts to a feed"))
-            .navigationBarTitleDisplayMode(.inline)
         }
-        .nbUseNavigationStack(.never)
+        .padding(10)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Done") {
+                    dismiss()
+                    DataProvider.shared().save()
+                    for list in lists {
+                        sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
+                    }
+                }
+            }
+        }
+        .navigationTitle(String(localized:"Add/Remove from feed", comment: "Navigation title for screen to add or remove contacts to a feed"))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 struct AddRemoveToListsheet_Previews: PreviewProvider {
