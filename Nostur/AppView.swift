@@ -16,6 +16,7 @@ import NavigationBackport
 ///
 /// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
 struct AppView: View {  
+    @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var ns:NRState
     @EnvironmentObject private var networkMonitor:NetworkMonitor
     @EnvironmentObject private var dm:DirectMessageViewModel
@@ -40,7 +41,6 @@ struct AppView: View {
     @State private var vmc:ViewModelCache = .shared
     @State private var sound:SoundManager = .shared
     
-//    @EnvironmentObject private var themes:Themes
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
     @AppStorage("did_accept_terms") private var didAcceptTerms = false
     
@@ -50,8 +50,6 @@ struct AppView: View {
     
     @State private var priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
-    
-    @StateObject private var themes:Themes = .default
 
     var body: some View {
         #if DEBUG
@@ -81,7 +79,7 @@ struct AppView: View {
             else {
                 if !didAcceptTerms || isOnboarding || (didLoad && ns.accounts.isEmpty) || ns.activeAccountPublicKey.isEmpty {
                     Onboarding()
-                        .nbUseNavigationStack(.never)
+                        .environmentObject(themes)
                         .environmentObject(ns)
                         .environmentObject(networkMonitor)
                         .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
@@ -94,6 +92,7 @@ struct AppView: View {
                 else {
                     if let loggedInAccount = ns.loggedInAccount { // 74 MB -> 175MB
                         NosturRootMenu()
+                            .environmentObject(themes)
                             .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
                                 NBNavigationStack {
                                     ReadOnlyAccountInformationSheet()
@@ -120,7 +119,7 @@ struct AppView: View {
                                 }
                             }
                             .background(themes.theme.listBackground)
-                            .environmentObject(themes)
+//                                .environmentObject(themes)
     //                        .buttonStyle(NRButtonStyle(theme: themes.theme)) // This breaks .swipeActions in Lists - WTF?
                             .tint(themes.theme.accent)
                             .onAppear {
@@ -182,7 +181,7 @@ struct AppView: View {
                         ProgressView()
                     }
                 }
-            }
+            }            
         }
         .task {
             await startNosturing()
@@ -193,7 +192,6 @@ struct AppView: View {
                 isOnboarding = onBoardingIsShown
             }
         }
-        .environmentObject(themes)
     }
     
     private func startNosturing() async {

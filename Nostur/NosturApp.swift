@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NostrEssentials
+import NavigationBackport
 
 struct AppScene: Scene {
     private let dataProvider = DataProvider.shared()
@@ -32,20 +33,29 @@ struct AppScene: Scene {
     
     @Environment(\.scenePhase) private var phase
     
+    private let themes: Themes = .default
+    
     var body: some Scene {
         WindowGroup {
             // Not sure why the preview canvas is loading this on every other view so wrap in condition:
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                AppView()
-                    .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
-                    .environmentObject(cp)
-                    .environmentObject(npn)
-                    .environmentObject(ss)
-                    .environmentObject(nvm)
-                    .environmentObject(dm)
-                    .environmentObject(networkMonitor)
-                    .environmentObject(ns)
-                    .environmentObject(dataProvider)
+                NBNavigationStack {
+                    AppView()
+                        .navigationBarTitleDisplayMode(.inline)
+                        .withNavigationDestinations()
+                }
+                .nbUseNavigationStack(.never)
+                .environmentObject(themes)
+                .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
+                .environmentObject(cp)
+                .environmentObject(themes)
+                .environmentObject(npn)
+                .environmentObject(ss)
+                .environmentObject(nvm)
+                .environmentObject(dm)
+                .environmentObject(networkMonitor)
+                .environmentObject(ns)
+                .environmentObject(dataProvider)
             }
         }
         .onChange(of: phase) { newPhase in
@@ -96,20 +106,29 @@ struct RefreshingAppScene: Scene {
     
     @Environment(\.scenePhase) private var phase
     
+    private let themes: Themes = .default
+    
     var body: some Scene {
         WindowGroup {
             // Not sure why the preview canvas is loading this on every other view so wrap in condition:
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                AppView()
-                    .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
-                    .environmentObject(cp)
-                    .environmentObject(npn)
-                    .environmentObject(ss)
-                    .environmentObject(nvm)
-                    .environmentObject(dm)
-                    .environmentObject(networkMonitor)
-                    .environmentObject(ns)
-                    .environmentObject(dataProvider)
+                NBNavigationStack {
+                    AppView()
+                        .navigationBarTitleDisplayMode(.inline)
+                        .withNavigationDestinations()
+                }
+                .nbUseNavigationStack(.never)
+                .environmentObject(themes)
+                .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
+                .environmentObject(cp)
+                .environmentObject(npn)
+                .environmentObject(ss)
+                .environmentObject(nvm)
+                .environmentObject(dm)
+                .environmentObject(networkMonitor)
+                .environmentObject(ns)
+                .environmentObject(dataProvider)
+                .environmentObject(themes)
             }
         }
         .onChange(of: phase) { newPhase in
