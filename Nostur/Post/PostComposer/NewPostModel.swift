@@ -260,10 +260,10 @@ public final class NewPostModel: ObservableObject {
                 nEvent.content += "\n\(imeta.url)"
                 
                 var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
-                if let dim = imeta.dim {
+                if let dim = imeta.dim, !dim.isEmpty {
                     imetaParts.append("dim \(dim)")
                 }
-                if let hash = imeta.hash {
+                if let hash = imeta.hash, !hash.isEmpty {
                     imetaParts.append("sha256 \(hash)")
                 }
 
