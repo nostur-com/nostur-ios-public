@@ -46,8 +46,10 @@ class Importer {
     
     let decoder = JSONDecoder()
     var nwcConnection:NWCConnection?
+    private var bgContext: NSManagedObjectContext
     
     init() {
+        bgContext = bg()
         triggerImportWhenRelayMessagesAreAdded()
         sendReceivedNotifications()
     }
@@ -58,7 +60,7 @@ class Importer {
             .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
-                bg().perform { [weak self] in
+                self?.bgContext.perform { [weak self] in
                     guard let self else { return }
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
                     let notified = self.callbackSubscriptionIds
@@ -97,14 +99,14 @@ class Importer {
     // Might as well just load all??? Its fast anyway
     func preloadExistingIdsCache() async {
         didPreload = true
-        await bg().perform { [weak self] in
+        await bgContext.perform { [weak self] in
             guard let self else { return }
             
             let fr = Event.fetchRequest()
             fr.fetchLimit = 1_000_000
             fr.propertiesToFetch = ["id", "relays"]
             
-            if let results = try? bg().fetch(fr) {
+            if let results = try? bgContext.fetch(fr) {
                 let existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
                     dict[event.id] = EventState(status: .SAVED, relays: event.relays)
                 }
@@ -116,7 +118,6 @@ class Importer {
     
     // 876.00 ms    5.3%    0 s                   closure #1 in Importer.importEvents()
     public func importEvents() {
-        let bgContext = bg()
         bgContext.perform { [unowned self] in
             if (self.isImporting) {
                 let itemsCount = MessageParser.shared.messageBucket.count
@@ -162,18 +163,6 @@ class Importer {
                         }
                     }
                     
-                    if event.kind == .nwcInfo {
-                        _ = existingIds.removeValue(forKey: event.id)
-                        guard let nwcConnection = self.nwcConnection else { continue }
-                        guard event.publicKey == nwcConnection.walletPubkey else { continue }
-                        L.og.debug("⚡️ Received 13194 info event, saving methods: \(event.content)")
-                        nwcConnection.methods = event.content
-                        DispatchQueue.main.async {
-                            sendNotification(.nwcInfoReceived, NWCInfoNotification(methods: event.content))
-                        }
-                        continue
-                    }
-                                        
                     if message.subscriptionId == "Profiles" && event.kind == .setMetadata {
                         account()?.lastProfileReceivedAt = Date.now
                     }
@@ -365,7 +354,6 @@ class Importer {
     }
     
     public func importPrioEvents() {
-        let bgContext = bg()
         bgContext.perform { [unowned self] in
             let forImportsCount = MessageParser.shared.priorityBucket.count
             guard forImportsCount != 0 else {
@@ -390,18 +378,6 @@ class Importer {
                             L.importing.info("🔴🔴😡😡 hey invalid sig yo 😡😡")
                             continue
                         }
-                    }
-                    
-                    if event.kind == .nwcInfo {
-                        _ = existingIds.removeValue(forKey: event.id)
-                        guard let nwcConnection = self.nwcConnection else { continue }
-                        guard event.publicKey == nwcConnection.walletPubkey else { continue }
-                        L.og.debug("⚡️ Received 13194 info event, saving methods: \(event.content)")
-                        nwcConnection.methods = event.content
-                        DispatchQueue.main.async {
-                            sendNotification(.nwcInfoReceived, NWCInfoNotification(methods: event.content))
-                        }
-                        continue
                     }
                                          
                     guard existingIds[event.id]?.status != .SAVED else {
