@@ -66,7 +66,7 @@ struct NosturTabsView: View {
                             .badge((dm.unread + dm.newRequests))
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
                     }
-                    .withSheets()
+                    .withSheets() // Move .sheets to each (NB)NavigationStack?
                     .edgesIgnoringSafeArea(.all)
                 }
             }

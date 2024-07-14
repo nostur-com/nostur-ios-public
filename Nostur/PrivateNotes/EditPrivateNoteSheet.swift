@@ -22,72 +22,69 @@ struct EditPrivateNoteSheet: View {
     }
     
     var body: some View {
-        NBNavigationStack {
-            Form {
-                if #available(iOS 16.0, *) {
-                    TextField(
-                        text: $noteText,
-                        prompt: Text("Enter private note for yourself", comment: "Placeholder in text field"),
-                        axis: .vertical) {
-                            Text("Private note", comment: "Label for private note edit field")
-                    }
-                    .lineLimit(10, reservesSpace: true)
+        Form {
+            if #available(iOS 16.0, *) {
+                TextField(
+                    text: $noteText,
+                    prompt: Text("Enter private note for yourself", comment: "Placeholder in text field"),
+                    axis: .vertical) {
+                        Text("Private note", comment: "Label for private note edit field")
                 }
-                else {
-                    TextField(
-                        text: $noteText,
-                        prompt: Text("Enter private note for yourself", comment: "Placeholder in text field")) {
-                            Text("Private note", comment: "Label for private note edit field")
-                    }
-                    .lineLimit(10)
-                }
+                .lineLimit(10, reservesSpace: true)
             }
-            .navigationTitle(String(localized: "Edit private note", comment: "Navigation title for private note edit screen"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+            else {
+                TextField(
+                    text: $noteText,
+                    prompt: Text("Enter private note for yourself", comment: "Placeholder in text field")) {
+                        Text("Private note", comment: "Label for private note edit field")
                 }
-                ToolbarItem(placement: .destructiveAction) {
-                    Button(role: .destructive) {
-                        privateNoteToRemove = privateNote
-                    } label: {
-                        Image(systemName: "trash")
-                    }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Save") {
-                        do {
-                            privateNote.content = noteText
-                            try viewContext.save()
-                            if let type = privateNote.type, type == CloudPrivateNote.PrivateNoteType.post.rawValue, let eventId = privateNote.eventId {
-                                sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: eventId, hasPrivateNote: true))
-                            }
-                        }
-                        catch { L.og.error("problem saving private note \(error)") }
-                        dismiss()
-                    }
-                }
-            }
-            .actionSheet(item: $privateNoteToRemove) { pNote in
-                ActionSheet(
-                    title: Text("Delete private note", comment: "Sheet title"),
-                    buttons: [
-                        .destructive(Text("Delete", comment: "Button to delete"), action: {
-                            dismiss()
-                            
-                            if let type = privateNote.type, type == CloudPrivateNote.PrivateNoteType.post.rawValue, let eventId = privateNote.eventId {
-                                sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: eventId, hasPrivateNote: false))
-                            }
-                            
-                            viewContext.delete(privateNote)
-                            DataProvider.shared().save()
-                        }),
-                        .cancel(Text("Cancel"))
-                    ])
+                .lineLimit(10)
             }
         }
-        .nbUseNavigationStack(.never)
+        .navigationTitle(String(localized: "Edit private note", comment: "Navigation title for private note edit screen"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+            ToolbarItem(placement: .destructiveAction) {
+                Button(role: .destructive) {
+                    privateNoteToRemove = privateNote
+                } label: {
+                    Image(systemName: "trash")
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Save") {
+                    do {
+                        privateNote.content = noteText
+                        try viewContext.save()
+                        if let type = privateNote.type, type == CloudPrivateNote.PrivateNoteType.post.rawValue, let eventId = privateNote.eventId {
+                            sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: eventId, hasPrivateNote: true))
+                        }
+                    }
+                    catch { L.og.error("problem saving private note \(error)") }
+                    dismiss()
+                }
+            }
+        }
+        .actionSheet(item: $privateNoteToRemove) { pNote in
+            ActionSheet(
+                title: Text("Delete private note", comment: "Sheet title"),
+                buttons: [
+                    .destructive(Text("Delete", comment: "Button to delete"), action: {
+                        dismiss()
+                        
+                        if let type = privateNote.type, type == CloudPrivateNote.PrivateNoteType.post.rawValue, let eventId = privateNote.eventId {
+                            sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: eventId, hasPrivateNote: false))
+                        }
+                        
+                        viewContext.delete(privateNote)
+                        DataProvider.shared().save()
+                    }),
+                    .cancel(Text("Cancel"))
+                ])
+        }
         .onAppear {
             noteText = privateNote.content_
         }

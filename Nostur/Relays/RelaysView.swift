@@ -115,30 +115,21 @@ struct RelaysView: View {
             }
         }
         .sheet(isPresented: $createRelayPresented) {
-            NewRelayView { url in
-                let relay = CloudRelay(context: viewContext)
-                relay.createdAt = Date()
-                relay.url_ = url
-                
-                do {
-                    try viewContext.save()
-                    if (relay.read || relay.write) {
-                        _ = ConnectionPool.shared.addConnection(relay.toStruct())
-                    }
-                } catch {
-                    L.og.error("Unresolved error \(error)")
-                }
+            NBNavigationStack {
+                NewRelayView()
+                    .presentationBackgroundCompat(themes.theme.listBackground)
+                    .environmentObject(themes)
             }
-            .presentationBackgroundCompat(themes.theme.listBackground)
-            .environmentObject(themes)
+            .nbUseNavigationStack(.never)
         }
         .sheet(item: $editRelay, content: { relay in
             NBNavigationStack {
                 RelayEditView(relay: relay)
                     .environmentObject(themes)
+                    .presentationBackgroundCompat(themes.theme.listBackground)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            
         })
         .nosturNavBgCompat(themes: themes)
     }

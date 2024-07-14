@@ -559,9 +559,13 @@ struct Settings: View {
             }
         }
         .sheet(isPresented: $showDefaultZapAmountSheet) {
-            SettingsDefaultZapAmount()
-                .environmentObject(themes)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+            NBNavigationStack {
+                SettingsDefaultZapAmount()
+                    .environmentObject(themes)
+                    .presentationBackgroundCompat(themes.theme.listBackground)
+            }
+            .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .scrollContentBackgroundHidden()
         .background(themes.theme.listBackground)

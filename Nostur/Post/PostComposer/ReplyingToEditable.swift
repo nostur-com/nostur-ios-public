@@ -41,8 +41,11 @@ struct ReplyingToEditable: View {
             showContactsToggleSheet = true
         }
         .sheet(isPresented: $showContactsToggleSheet) {
-            ContactsToggleSheet(requiredP: requiredP, available: available, selected: $selected, unselected: $unselected)
-            .presentationDetentsMedium()
+            NBNavigationStack {
+                ContactsToggleSheet(requiredP: requiredP, available: available, selected: $selected, unselected: $unselected)
+                    .presentationDetentsMedium()
+            }
+            .nbUseNavigationStack(.never)
         }
     }
 }
