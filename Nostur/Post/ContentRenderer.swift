@@ -201,21 +201,40 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrPost.imageUrls)
-                        //                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
-//                            .debugDimensions("sd.image \(scaledDimensions.width)x\(scaledDimensions.height)")
-                            .background {
-                                if SettingsStore.shared.lowDataMode {
-                                    theme.lineColor.opacity(0.2)
+                        
+                        if fullWidth && isDetail {
+                            SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height: scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrPost.imageUrls)
+                                .background {
+                                    if SettingsStore.shared.lowDataMode {
+                                        theme.lineColor.opacity(0.2)
+                                    }
                                 }
-                            }
-                            .padding(.horizontal, fullWidth ? -10 : 0)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .id(index)
-//                            .withoutAnimation()
-//                            .transaction { t in t.animation = nil }
+                                .padding(.horizontal, fullWidth ? -10 : 0)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+                                .id(index)
+    //                            .withoutAnimation()
+    //                            .transaction { t in t.animation = nil }
+                        }
+                        else {
+                            SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height: scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrPost.imageUrls)
+//                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
+    //                            .debugDimensions("sd.image \(scaledDimensions.width)x\(scaledDimensions.height)")
+                                .background {
+                                    if SettingsStore.shared.lowDataMode {
+                                        theme.lineColor.opacity(0.2)
+                                    }
+                                }
+                                .padding(.horizontal, fullWidth ? -10 : 0)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+                                .id(index)
+    //                            .withoutAnimation()
+    //                            .transaction { t in t.animation = nil }
+                        }
+                        
+
                     }
                     else {
                         
