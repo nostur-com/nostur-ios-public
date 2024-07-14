@@ -192,8 +192,7 @@ struct ContentRenderer: View { // VIEW things
                     
                 case .image(let mediaContent):
                     if let dimensions = mediaContent.dimensions {
-                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                        
+                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: isDetail ? 5000.0 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
 #if DEBUG
                         //                        Text(".image.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
                         //                            .frame(maxWidth: .infinity)
