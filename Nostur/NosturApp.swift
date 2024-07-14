@@ -39,12 +39,7 @@ struct AppScene: Scene {
         WindowGroup {
             // Not sure why the preview canvas is loading this on every other view so wrap in condition:
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                NBNavigationStack {
-                    AppView()
-                        .navigationBarTitleDisplayMode(.inline)
-                        .withNavigationDestinations()
-                }
-                .nbUseNavigationStack(.never)
+                AppView()
                 .environmentObject(themes)
                 .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                 .environmentObject(cp)
@@ -112,12 +107,7 @@ struct RefreshingAppScene: Scene {
         WindowGroup {
             // Not sure why the preview canvas is loading this on every other view so wrap in condition:
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                NBNavigationStack {
-                    AppView()
-                        .navigationBarTitleDisplayMode(.inline)
-                        .withNavigationDestinations()
-                }
-                .nbUseNavigationStack(.never)
+                AppView()
                 .environmentObject(themes)
                 .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                 .environmentObject(cp)

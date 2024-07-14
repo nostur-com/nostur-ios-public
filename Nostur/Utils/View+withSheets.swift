@@ -97,9 +97,12 @@ private struct WithSheets: ViewModifier {
                 self.privateNote = note
             }
             .sheet(item: $privateNote) { note in
-                EditPrivateNoteSheet(privateNote: note)
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                NBNavigationStack {
+                    EditPrivateNoteSheet(privateNote: note)
+                        .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
+                }
+                .nbUseNavigationStack(.never)
             }
         
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
@@ -107,9 +110,12 @@ private struct WithSheets: ViewModifier {
                 post = try! Event.fetchEvent(id: id, context: viewContext)
             }
             .sheet(item: $post) { post in
-                NewPrivateNoteSheet(post: post)
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                NBNavigationStack {
+                    NewPrivateNoteSheet(post: post)
+                        .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
+                }
+                .nbUseNavigationStack(.never)
             }
         
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
@@ -117,9 +123,12 @@ private struct WithSheets: ViewModifier {
                 contact = Contact.fetchByPubkey(pubkey, context: viewContext)
             }
             .sheet(item: $contact) { contact in
-                NewPrivateNoteSheet(contact: contact)
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                NBNavigationStack {
+                    NewPrivateNoteSheet(contact: contact)
+                        .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
+                }
+                .nbUseNavigationStack(.never)
             }
         
             .onReceive(receiveNotification(.reportPost), perform: { notification in
@@ -331,11 +340,14 @@ private struct WithSheets: ViewModifier {
                 self.contextMenuNrPost = nrPost
             }
             .sheet(item: $contextMenuNrPost) { nrPost in
-                LazyNoteMenuSheet(nrPost: nrPost)
-                    .environmentObject(NRState.shared)
-                    .presentationDetentsMedium()
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                NBNavigationStack {
+                    LazyNoteMenuSheet(nrPost: nrPost)
+                        .environmentObject(NRState.shared)
+                        .presentationDetentsMedium()
+                        .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
+                }
+                .nbUseNavigationStack(.never)
             }
         
         // Zap customizer sheet

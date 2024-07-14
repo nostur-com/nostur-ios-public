@@ -78,16 +78,20 @@ struct AppView: View {
             }
             else {
                 if !didAcceptTerms || isOnboarding || (didLoad && ns.accounts.isEmpty) || ns.activeAccountPublicKey.isEmpty {
-                    Onboarding()
-                        .environmentObject(themes)
-                        .environmentObject(ns)
-                        .environmentObject(networkMonitor)
-                        .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
-                        .onAppear {
-                            if ns.activeAccountPublicKey.isEmpty {
-                                isOnboarding = true
+                    NBNavigationStack {
+                        Onboarding()
+                            .withNavigationDestinations() // TODO maybe make seperate for just onboarding
+                            .environmentObject(themes)
+                            .environmentObject(ns)
+                            .environmentObject(networkMonitor)
+                            .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
+                            .onAppear {
+                                if ns.activeAccountPublicKey.isEmpty {
+                                    isOnboarding = true
+                                }
                             }
-                        }
+                    }
+                    .nbUseNavigationStack(.never)
                 }
                 else {
                     if let loggedInAccount = ns.loggedInAccount { // 74 MB -> 175MB
