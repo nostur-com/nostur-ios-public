@@ -33,12 +33,10 @@ class LVM: NSObject, ObservableObject {
         
     var feed: NosturList?
     
-//    @Published var state:LVM.LIST_STATE = .INIT
-    
     // BG?
     var nrPostLeafs: [NRPost] = [] {
         didSet {
-            var posts:Posts = [:]
+            var posts: Posts = [:]
             for nrPost in nrPostLeafs {
                 posts[nrPost.id] = nrPost
             }
