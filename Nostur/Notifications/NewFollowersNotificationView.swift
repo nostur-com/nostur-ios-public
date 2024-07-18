@@ -8,13 +8,17 @@
 import SwiftUI
 
 struct NewFollowersNotificationView: View {
-    var notification:PersistentNotification
+    var notification: PersistentNotification
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.metadata_created_at, ascending: false)], predicate: NSPredicate(value: false))
-    var contacts:FetchedResults<Contact>
+    var contacts: FetchedResults<Contact>
     
-    init(notification:PersistentNotification) {
+    @State private var similarPFP = false
+    @State private var similarToPubkey: String? = nil
+    @State private var didCheck = false
+    
+    init(notification: PersistentNotification) {
         self.notification = notification
         let fr = Contact.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.metadata_created_at, ascending: false)]
@@ -33,6 +37,14 @@ struct NewFollowersNotificationView: View {
                         }
                         .zIndex(-Double(index))
                         .offset(x:Double(0 + (30*index)))
+                        .overlay(alignment: .topLeading) {
+                            if index == 0 && (similarPFP || contacts[index].couldBeImposter == 1) {
+                                PossibleImposterLabel(possibleImposterPubkey: contacts[index].pubkey, followingPubkey: contacts[index].similarToPubkey)
+                                    .lineLimit(1)
+                                    .fixedSize()
+                                    .offset(x: -10, y: -10)
+                            }
+                        }
                 }
             }
             if (contacts.count > 1) {
@@ -49,6 +61,57 @@ struct NewFollowersNotificationView: View {
                 .foregroundColor(.gray)
         }
         .padding(10)
+        .onAppear {
+            // Check if first could be imposter
+            self.checkIfFirstNameIsImposter()
+        }
+    }
+    
+    func checkIfFirstNameIsImposter() {
+        // TODO: All imposter checker code is copy pasted in 10 places, need to make 1 reusable func
+        guard !didCheck else { return }
+        guard contacts.count > 0 else { return }
+        let contact = contacts[0]
+        guard !Nostur.isFollowing(contact.pubkey) else { return }
+        guard !SettingsStore.shared.lowDataMode else { return }
+        guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
+        guard contact.metadata_created_at != 0 else { return }
+        guard contact.couldBeImposter == -1 else { return }
+        guard contact.picture != nil, let cPic = contact.pictureUrl else { return }
+        guard !NewOnboardingTracker.shared.isOnboarding else { return }
+        guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+        
+        let contactAnyName = contact.anyName.lowercased()
+        let cPubkey = contact.pubkey
+        let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+        
+        bg().perform { [weak contact] in
+            guard let account = account() else { return }
+            guard account.publicKey == currentAccountPubkey else { return }
+            guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
+            }) else { return }
+            
+            guard similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
+            
+            L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarFollow.anyName)")
+            
+            Task.detached(priority: .background) {
+                let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+                if similarPFP {
+                    L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
+                }
+                
+                DispatchQueue.main.async {
+                    guard let contact else { return }
+                    guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                    self.similarPFP = similarPFP
+                    self.similarToPubkey = followingPubkey
+                    contact.couldBeImposter = similarPFP ? 1 : 0
+                    contact.similarToPubkey = similarPFP ? followingPubkey : nil
+                }
+            }
+        }
     }
 }
 
