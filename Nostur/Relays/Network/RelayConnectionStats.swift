@@ -24,6 +24,8 @@ public class RelayConnectionStats: Identifiable {
     }
     
     public func addErrorMessage(_ message: String) {
+//        31.00 ms    0.2%    25.00 ms           closure #1 in RelayConnection.didReceiveError(_:)
+//        5.00 ms    0.0%    3.00 ms            RelayConnectionStats.addErrorMessage(_:)
         lastErrorMessages = Array(([String(format: "%@: %@", Date().ISO8601Format(), message)] + lastErrorMessages).prefix(10))
     }
 }
