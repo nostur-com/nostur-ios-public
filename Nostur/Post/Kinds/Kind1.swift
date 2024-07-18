@@ -120,6 +120,7 @@ struct Kind1: View {
                     }
                     else {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
+                            .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                             .frame(maxHeight: didStart ? 800 : 500, alignment: .top)
                             .clipped()
                         if (nrPost.previewWeights?.moreItems ?? false) {

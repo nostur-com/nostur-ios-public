@@ -153,7 +153,8 @@ struct Kind1Default: View {
                     }
                     else {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
-                            .frame(maxWidth: .infinity, alignment:.leading)
+                            .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .frame(maxHeight: didStart ? 750 : 450, alignment: .top)
                             .clipped()
                         
