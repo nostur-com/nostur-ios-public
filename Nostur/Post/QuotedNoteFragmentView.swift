@@ -79,7 +79,7 @@ struct QuotedNoteFragmentView: View {
                     
                     Spacer()
                 }
-                .frame(height: 40)
+//                .frame(height: 40)
                 VStack(alignment: .leading) {
                     NoteTextRenderView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: parentDIM.availablePostDetailImageWidth() - 20, isScreenshot: nrPost.isScreenshot))
@@ -87,20 +87,18 @@ struct QuotedNoteFragmentView: View {
 //                        .transaction { t in t.animation = nil }
                 }
             }
-            .padding(10)
+            .padding(.horizontal, 10)
+            .padding(.top, 10)
+            .padding(.bottom, 5)
             .background(
                 theme.background
-                    .cornerRadius(15)
+                    .cornerRadius(8)
                     .onTapGesture(perform: navigateToPost)
-//                    .withoutAnimation()
-//                    .transaction { t in t.animation = nil }
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
-//                    .withoutAnimation()
-//                    .transaction { t in t.animation = nil }
-            )
+//            .overlay(
+//                RoundedRectangle(cornerRadius: 8)
+//                    .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
+//            )
             .onAppear {
                 if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
                     L.og.debug("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(nrPost.pubkey)")

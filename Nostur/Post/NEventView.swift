@@ -85,22 +85,34 @@ struct NEventView: View {
                         vm?.setFetchParams(fetchParams)
                         vm?.fetch()
                     }
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.lineColor, lineWidth: 1)
+                    )
             case .ready(let nrPost):
                 EmbeddedPost(nrPost, forceAutoload: forceAutoload, theme: theme)
             case .timeout:
                 Text("Unable to fetch content")
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.lineColor, lineWidth: 1)
+                    )
             case .error(let error):
                 Text(error)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.lineColor, lineWidth: 1)
+                    )
             }
         }
-        .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
-        )
+//        .overlay(
+//            RoundedRectangle(cornerRadius: 15)
+//                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
+//        )
     }
 }
 
