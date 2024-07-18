@@ -33,9 +33,10 @@ struct NRContentTextRendererInner: View {
     public var isPreview = false
     public var primaryColor: Color? = nil
     public var accentColor: Color? = nil
-    
-    @State private var height: CGFloat? = nil
+
     @State private var text: NSAttributedString? = nil
+    
+    @EnvironmentObject private var dim: DIMENSIONS
     
     var body: some View {
         if isPreview {
@@ -52,9 +53,11 @@ struct NRContentTextRendererInner: View {
         }
         else {
             if #available(iOS 16.0, *) { // because 15.0 doesn't have sizeThatFits(_ proposal: ProposedViewSize...
-                NRTextFixed(text ?? attributedStringWithPs.output, height: height ?? attributedStringWithPs.height, fontColor: primaryColor ?? Themes.default.theme.primary, accentColor: accentColor)
+//                Color.red
+//                    .frame(height: 30)
+//                    .debugDimensions("spacer")
+                NRTextFixed(text ?? attributedStringWithPs.output, fontColor: primaryColor ?? Themes.default.theme.primary, accentColor: accentColor, availableWidth: dim.availableNoteRowImageWidth())
                     .id(text ?? attributedStringWithPs.output)
-//                    .debugDimensions("NRTextFixed")
                     .onReceive(
                         Importer.shared.contactSaved
                             .receive(on: RunLoop.main)
@@ -72,7 +75,6 @@ struct NRContentTextRendererInner: View {
                                 L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                                 DispatchQueue.main.async {
                                     self.text = reparsed.output
-                                    self.height = reparsed.height
                                 }
                             }
                         }
@@ -99,7 +101,6 @@ struct NRContentTextRendererInner: View {
                                 L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                                 DispatchQueue.main.async {
                                     self.text = reparsed.output
-                                    self.height = reparsed.height
                                 }
                             }
                         }

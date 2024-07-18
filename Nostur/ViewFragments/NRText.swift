@@ -140,10 +140,10 @@ struct NRTextDynamic: View {
 
 #Preview("NRTextFixed") {
     VStack {
-        NRTextFixed("Some text with a tag [#bitcoin](nostur:t:bitcoin)", height: 128, themes: Themes.default)
+        NRTextFixed("Some text with a tag [#bitcoin](nostur:t:bitcoin)", themes: Themes.default, availableWidth: DIMENSIONS.shared.availableNoteRowImageWidth())
             .background(Color.red)
         
-        NRTextFixed("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long", height: 128, themes: Themes.default)
+        NRTextFixed("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long", themes: Themes.default, availableWidth: DIMENSIONS.shared.availableNoteRowImageWidth())
             .background(Color.blue)
         
         Text("What")
@@ -162,24 +162,31 @@ struct NRTextFixed: UIViewRepresentable {
     private let height: CGFloat
     private let fontColor: Color
     private let accentColor: Color?
+    private let availableWidth: CGFloat
     
     // Height calculation is expensive, so calculate before in background, then pass as prop.
     // see AttributedStringWithPs.
     // For other situations maybe use GeometryReader
-    init(_ attributedString: NSAttributedString, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil) {
+    init(_ attributedString: NSAttributedString, plain: Bool = false, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil, availableWidth: CGFloat) {
         self.attributedString = attributedString
         self.plain = plain
         self.themes = themes
-        self.height = height
         self.fontColor = fontColor ?? themes.theme.primary
         self.accentColor = accentColor ?? themes.theme.accent
+        self.availableWidth = availableWidth
+        
+        self.height = attributedString.boundingRect(
+            with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            context: nil
+        ).height
     }
     
-    init(_ text: String, plain: Bool = false, height: CGFloat, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil) {
+    init(_ text: String, plain: Bool = false, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil, availableWidth: CGFloat) {
         self.themes = themes
-        self.height = height
         self.fontColor = fontColor ?? themes.theme.primary
         self.accentColor = accentColor ?? themes.theme.accent
+        self.availableWidth = availableWidth
         do {
 //            let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             
@@ -197,6 +204,13 @@ struct NRTextFixed: UIViewRepresentable {
             mutableAttributedString.addHashtagIcons()
             
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
+            
+            self.height = mutableAttributedString.boundingRect(
+                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                context: nil
+            ).height
+            
         }
         catch {
 //            let finalText = AttributedString(text)
@@ -216,6 +230,12 @@ struct NRTextFixed: UIViewRepresentable {
             
             L.og.error("NRTextParser: \(error)")
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
+            
+            self.height = mutableAttributedString.boundingRect(
+                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                context: nil
+            ).height
         }
         self.plain = plain
     }

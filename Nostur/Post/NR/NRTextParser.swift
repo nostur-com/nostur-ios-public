@@ -20,9 +20,8 @@ class NRTextParser { // TEXT things
     
     private init() { }
 
-    func parseText(_ event: Event, text: String, availableWidth: CGFloat? = nil, primaryColor: Color? = nil) -> AttributedStringWithPs {
+    func parseText(_ event: Event, text: String, primaryColor: Color? = nil) -> AttributedStringWithPs {
         let fontColor = primaryColor ?? Themes.default.theme.primary
-        let availableWidth = availableWidth ??  DIMENSIONS.shared.availableNoteRowImageWidth()
 
         // Remove image links + Handle naddr1...
         // because they get rendered as embeds in PostDetail.
@@ -59,14 +58,8 @@ class NRTextParser { // TEXT things
             )
             
             mutableAttributedString.addHashtagIcons()
-            
-            let height = mutableAttributedString.boundingRect(
-                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                context: nil
-            ).height
-            
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event, height: height)
+                        
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             
             return a
         }
@@ -83,15 +76,9 @@ class NRTextParser { // TEXT things
             )
             
             mutableAttributedString.addHashtagIcons()
-            
-            let height = mutableAttributedString.boundingRect(
-                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                context: nil
-            ).height
-            
+   
             L.og.error("NRTextParser: \(error)")
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event, height: height)
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             return a
         }
     }
