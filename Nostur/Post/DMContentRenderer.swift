@@ -27,7 +27,7 @@ struct DMContentRenderer: View { // VIEW things
         self.contentElements = contentElements
         self.theme = theme
         self.isSentByCurrentUser = isSentByCurrentUser
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 98, isScreenshot: false))
     }
     
     var body: some View {
