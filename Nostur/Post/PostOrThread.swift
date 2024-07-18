@@ -183,3 +183,51 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
         }
     }
 }
+
+// Content to debug cutoff text, wrong .fixedSize etc
+#Preview {
+    PreviewContainer({ pe in
+    
+        pe.parseMessages([
+            
+            ###"["EVENT","repost",{"kind":6,"id":"43340b307c7b4cb76e29f3a8dd796279c5d27e1729d8ab3f68d961397d4c478a","pubkey":"eab0e756d32b80bcd464f3d844b8040303075a13eabc3599a762c9ac7ab91f4f","created_at":1721273990,"tags":[["e","53087fec373112df4c3e5d1f1b1d228473b55f50125dd6bd3640f411cad2e5cd"],["p","50d94fc2d8580c682b071a542f8b1e31a200b0508bab95a33bef0855df281d63"]],"content":"{\"tags\":[],\"id\":\"53087fec373112df4c3e5d1f1b1d228473b55f50125dd6bd3640f411cad2e5cd\",\"pubkey\":\"50d94fc2d8580c682b071a542f8b1e31a200b0508bab95a33bef0855df281d63\",\"content\":\"Huge milestone: First demo of Nostr Web Services (NWS) bringing TCP to Nostr. With NWS, you can host any existing web application on Nostr without having to use DNS or even announce your public IP to the world, simply by sharing your service's npub (or nprofile).\\n\\nTry it out the demo yourself. Here is a Cashu test mint running with NWS. Let's use curl to retrieve the mint's information. The request travels from your computer to the public NWS entry relay, then through nostr to the service's NWS exit relay. At the other end is a Cashu mint with HTTPS encryption.\\n\\n```\\ncurl -s -x socks5h:\\/\\/relay.8333.space:8882 https:\\/\\/nprofile1qqs8a8nk09fhrxylcd42haz8ev4cprhnk5egntvs0whafvaaxpk8plgpzemhxue69uhhyetvv9ujuwpnxvejuumsv93k2g6k9kr\\/v1\\/info --insecure | jq\\n```\\n\\nhttps:\\/\\/m.primal.net\\/JTMl.png \\n\\nI can't stress this enough: THE MINT RUNS BEHIND HTTPS!\\n\\nThe NWS entry relay can't read your traffic. It's encrypted. We can host public entry relays that can be used by anyone.\\n\\nThis means we can plug the entire internet to it 🌐.\\n\\nLet's plug it into Cashu for now. Nutshell wallet supports socks5 proxies (that's how it uses Tor). By setting the public entry relay as the proxy, the wallet can now connect to a mint's npub\\/nprofile and communicate with it via NWS.\\n\\nhttps:\\/\\/m.primal.net\\/JTot.png \\n\\nThis is going to be so freaking cool. And it's going to be a lot more useful than just for Cashu. There are still bugs and issues that need to be ironed out but the code is coming out soon. Watch this space.\",\"sig\":\"640d0ef5e8c7b3303e8077217ee43d3b8fcc45729bb50877684496c576e9ad477350602bb7d4b4731b12364a43fed84a5a1c1170d1529866607549b54d24ee60\",\"kind\":1,\"created_at\":1721208525}","sig":"791393a87acbc2b4a37053937837a4bb784f8c34f969d89c7bbd41a754479433ef5de8c0cf13a74ef9965b97a8a3b5deac21b82564b48c07839cd26c3559fac7"}]"###,
+            ###"["EVENT",]"###,
+            
+//            ###"["EVENT","root",{"created_at":1721256083,"sig":"7e2ac6eee57c247c53d8eb066a0c8c93dbfa6b1b59fef65adf6e8f5d849abd28c6d2bda0e2bf28fc473b276605915b83058c8f8c28e45f6f2fd87420fdc5ed6a","pubkey":"04c960497af618ae18f5147b3e5c309ef3d8a6251768a1c0820e02c93768cc3b","content":"WOW !\nI am loving the Gallery #Amethyst\nThank you so much for this awesome improvement,  Devs!!! \nI was using tags to keep up with notes, but know I don't need it!!!\n\nYOU ARE DOING AN AMAZING WORK!!!\n\nI love #Nostr and I love you all! 🔥⚡🔥\nhttps://image.nostr.build/4c3ff209c0c57e7aef4629ebb04186e5f0f4fb7fb7e1dd2430bab5399b0b4e50.jpg\n\nhttps://image.nostr.build/a2ae05026bed7238481e967bdff18bb61ed508675014444cf704e6fc77802ef1.jpg","id":"c8b4b5268edc80b6e8af3288f6e3a73a991f908287fa3848e3054b7bbb140897","tags":[["t","Amethyst"],["t","amethyst"],["t","Nostr"],["t","nostr"],["r","https://image.nostr.build/4c3ff209c0c57e7aef4629ebb04186e5f0f4fb7fb7e1dd2430bab5399b0b4e50.jpg"],["r","https://image.nostr.build/a2ae05026bed7238481e967bdff18bb61ed508675014444cf704e6fc77802ef1.jpg"],["imeta","url https://image.nostr.build/4c3ff209c0c57e7aef4629ebb04186e5f0f4fb7fb7e1dd2430bab5399b0b4e50.jpg","m image/jpeg","alt Verifiable file url","x fc93d6ab17d4a723acebcfe50aecdf7d838cd0ad49f1ff34019cf1f4993de99b","size 34534","dim 1080x1080","blurhash UwM|]szwbtr@|qspn%W:RiX6S2W;r^WCbbj[","ox 4c3ff209c0c57e7aef4629ebb04186e5f0f4fb7fb7e1dd2430bab5399b0b4e50"],["imeta","url https://image.nostr.build/a2ae05026bed7238481e967bdff18bb61ed508675014444cf704e6fc77802ef1.jpg","m image/jpeg","alt Verifiable file url","x 71f27d5fa45d68e53da494d47ae10c0f9d2cd2c70a5bdbd7c47d26d27d47757e","size 34470","dim 1024x1024","blurhash UES#@xj[?wj[s.fkW=ay%hfPMcj[o~f6ROj[","ox a2ae05026bed7238481e967bdff18bb61ed508675014444cf704e6fc77802ef1"]],"kind":1}]"###,
+            
+//            ###"["EVENT","parent",{"id":"c0a2c2bdec5139129ee37ecbdc8b7b6f51a15ac5ac6b4e60c1692a62cc115778","created_at":1721259387,"sig":"6c1913f3b83ef648989a4f0d59c99f7c1fc144395141cff9f9ff9970c195d10fa993d628a2695ca83dc2e47324c54c03471bb26bda2ba7e680be0f1536c85c80","pubkey":"460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c","tags":[["e","c8b4b5268edc80b6e8af3288f6e3a73a991f908287fa3848e3054b7bbb140897","","root"],["p","04c960497af618ae18f5147b3e5c309ef3d8a6251768a1c0820e02c93768cc3b"],["p","99bb5591c9116600f845107d31f9b59e2f7c7e09a1ff802e84f1d43da557ca64","","mention"]],"kind":1,"content":"You should thank nostr:nprofile1qqsfnw64j8y3zesqlpz3qlf3lx6eutmu0cy6rluq96z0r4pa54tu5eqpz9mhxue69uhkummnw3ezuamfdejj7qg4waehxw309aex2mrp0yhxgctdw4eju6t09uq3qamnwvaz7tmwdaehgu3wd4hk6tcdt5dav He did all of this. :)"}]"###,
+            
+            ###"["EVENT","parent",{"id":"67a2ff9cdd0f4dd1c3c2edc722451a079aea6db5d9cfd15b98173cc7fd4fb9df","content":"Is there any event metadata that would allow a client to recognize a post that is picture-focused? I’ve noticed in Nostur that nostr:npub1n0sturny6w9zn2wwexju3m6asu7zh7jnv2jt2kx6tlmfhs7thq0qnflahe is rendering long form differently in the timeline and it looks great. Could imagine a different rendering for pictures that would look cleaner (like instagram) if the client could parse those out","kind":1,"created_at":1721259769,"tags":[["e","c8b4b5268edc80b6e8af3288f6e3a73a991f908287fa3848e3054b7bbb140897","","root"],["e","c0a2c2bdec5139129ee37ecbdc8b7b6f51a15ac5ac6b4e60c1692a62cc115778","","reply"],["p","460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c"],["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"],["client","Nostur","31990:9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33:1685868693432"]],"pubkey":"c80b5248fbe8f392bc3ba45091fb4e6e2b5872387601bf90f53992366b30d720","sig":"749364beb2ee193a3e5aab3d3f219d0d2fb099ce68dcad98b4cb5735d9ba9a2a9200effd6a3f5e40048783309db10b41d20cf4a490fee89fcd4cdf59b8515086"}]"###,
+                            
+            ###"["EVENT","reply",{"tags":[["e","c8b4b5268edc80b6e8af3288f6e3a73a991f908287fa3848e3054b7bbb140897","","root"],["e","c0a2c2bdec5139129ee37ecbdc8b7b6f51a15ac5ac6b4e60c1692a62cc115778"],["e","67a2ff9cdd0f4dd1c3c2edc722451a079aea6db5d9cfd15b98173cc7fd4fb9df","","reply"],["p","460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c"],["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"],["p","c80b5248fbe8f392bc3ba45091fb4e6e2b5872387601bf90f53992366b30d720"]],"created_at":1721259928,"kind":1,"id":"148f326f04d10c1ef210d25a434ae8a4bc9e1087e9ddd87ad9323e1d21aa9751","content":"Sure, it's all about coding the parser and sending it to a different layout 😎\n\nSend a pic of what you are referring from Nostur :)","pubkey":"460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c","sig":"e3116437ffee9020bd9f5c6be5cbda4f445d0991b05a434dd7025d3360e8b7336b3c09f8dac551b3cc48558bf1db7cad1553cb2f30b0ba11375ea3720ca4a7fc"}]"###
+        ])
+        
+        pe.loadPosts()
+        pe.loadContacts()
+        SettingsStore.shared.fullWidthImages = false
+    }) {
+        NBNavigationStack {
+            SmoothListMock {
+                
+                Color.red
+                    .frame(height: 30)
+                    .debugDimensions("spacer", alignment: .center)
+                
+                if let fz = PreviewFetcher.fetchNRPost("43340b307c7b4cb76e29f3a8dd796279c5d27e1729d8ab3f68d961397d4c478a") {
+                    PostOrThread(nrPost: fz)
+                }
+                
+                if let reply = PreviewFetcher.fetchEvent("148f326f04d10c1ef210d25a434ae8a4bc9e1087e9ddd87ad9323e1d21aa9751") {
+                    let _ = reply.parentEvents = Event.getParentEvents(reply, fixRelations: true)
+                    let nrReply = NRPost(event: reply, withReplyTo: true, withParents: true, withReplies: false, plainText: false)
+                    
+                    PostOrThread(nrPost: nrReply)
+                }
+                
+                if let p = PreviewFetcher.fetchNRPost() {
+                    PostOrThread(nrPost: p)
+                }
+            }
+        }
+    }
+}
