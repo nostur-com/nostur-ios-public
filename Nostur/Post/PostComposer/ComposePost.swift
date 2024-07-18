@@ -91,6 +91,11 @@ struct ComposePost: View {
                                 
                                 if let quotingNRPost = quotingNRPost {
                                     QuotedNoteFragmentView(nrPost: quotingNRPost, theme: themes.theme)
+                                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width - 70, isScreenshot: false))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(themes.theme.lineColor.opacity(0.5), lineWidth: 1)
+                                        )
                                         .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
                                 }
                             }

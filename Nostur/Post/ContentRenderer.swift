@@ -379,10 +379,10 @@ func scaledToFit(_ dimensions: CGSize, scale screenScale: Double, maxWidth: Doub
 
 
 struct EmbeddedPost: View {
-    private let nrPost:NRPost
-    @ObservedObject var prd:NRPost.PostRowDeletableAttributes
-    private var forceAutoload:Bool
-    private var theme:Theme
+    private let nrPost: NRPost
+    @ObservedObject var prd: NRPost.PostRowDeletableAttributes
+    private var forceAutoload: Bool
+    private var theme: Theme
     
     init(_ nrPost:NRPost, forceAutoload:Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -401,7 +401,7 @@ struct EmbeddedPost: View {
             .padding(.leading, 8)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    .stroke(theme.lineColor, lineWidth: 1)
             )
             .hCentered()
         }
@@ -420,6 +420,10 @@ struct EmbeddedPost: View {
         }
         else {
             QuotedNoteFragmentView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
 //                .debugDimensions("EmbeddedPost.QuotedNoteFragmentView", alignment: .bottomLeading)
         }
     }

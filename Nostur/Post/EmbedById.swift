@@ -22,6 +22,10 @@ struct EmbedById: View {
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .onAppear(perform: load)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.lineColor, lineWidth: 1)
+                    )
             case .ready(let nrPost):
                 if nrPost.kind == 30023 {
                     ArticleView(nrPost, hideFooter: true, forceAutoload: forceAutoload, theme: theme)
@@ -41,6 +45,10 @@ struct EmbedById: View {
                     QuotedNoteFragmentView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
 //                        .transaction { t in t.animation = nil }
 //                        .debugDimensions("EmbedById.QuotedNoteFragmentView")
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(theme.lineColor, lineWidth: 1)
+                        )
                 }
             case .timeout:
                 VStack {
@@ -52,16 +60,24 @@ struct EmbedById: View {
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
             case .error(let error):
                 Text(error)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.lineColor, lineWidth: 1)
+                    )
             }
         }
-        .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
-        )
+//        .overlay(
+//            RoundedRectangle(cornerRadius: 15)
+//                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
+//        )
     }
     
     private func load() {
