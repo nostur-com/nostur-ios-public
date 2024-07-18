@@ -519,7 +519,16 @@ class LVM: NSObject, ObservableObject {
         return onlyNew
     }
     
-    public var isAtTop = true // main thread
+    public var isAtTop = true { // main thread
+        didSet {
+            if isAtTop && (self.posts.value.count - 20) > 1 {
+                var tmp = self.posts.value
+                L.lvm.debug("Removing \(self.posts.value.count - 20) from bottom of feed")
+                tmp.removeLast(self.posts.value.count - 20)
+                self.posts.send(tmp)
+            }
+        }
+    }
     public var isInitialApply = true { // main thread
         didSet {
             L.lvm.debug("isInitialApply set to: \(oldValue) -> \(self.isInitialApply) (COUNT)")
