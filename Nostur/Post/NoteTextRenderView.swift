@@ -41,7 +41,10 @@ struct NoteTextRenderView: View {
                 KnownKindView(nrPost: nrPost, hideFooter: true, theme: theme)
                 
             case 1,6,30023,99999:
-                ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
+//                Color.red.frame(height: 30)
+//                    .debugDimensions("spacer")
+//                Text(dim.availablePostDetailImageWidth().description)
+                ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
                 
             default:
                 UnknownKindView(nrPost: nrPost, theme: theme)
