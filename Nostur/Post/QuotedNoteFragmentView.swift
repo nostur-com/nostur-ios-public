@@ -13,6 +13,7 @@ struct QuotedNoteFragmentView: View {
     private var forceAutoload: Bool
     private var theme: Theme
     @State private var name: String
+    @EnvironmentObject private var parentDIM: DIMENSIONS
     
     init(nrPost: NRPost, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -37,7 +38,7 @@ struct QuotedNoteFragmentView: View {
             .hCentered()
         }
         else {
-            VStack(alignment:.leading) {
+            VStack(alignment: .leading) {
                 HStack(alignment: .top) { // name + reply + context menu
                     VStack(alignment: .leading) { // Name + menu "replying to"
                         HStack(spacing: 5) {
@@ -81,6 +82,7 @@ struct QuotedNoteFragmentView: View {
                 .frame(height: 40)
                 VStack(alignment: .leading) {
                     NoteTextRenderView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: parentDIM.availablePostDetailImageWidth() - 20, isScreenshot: nrPost.isScreenshot))
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 }
