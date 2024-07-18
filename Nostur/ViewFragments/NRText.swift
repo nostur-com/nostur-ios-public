@@ -221,6 +221,9 @@ struct NRTextFixed: UIViewRepresentable {
     }
     
     func makeUIView(context: Context) -> UITextView {
+//        105.00 ms    0.9%    0 s           protocol witness for UIViewRepresentable.makeUIView(context:) in conformance NRTextFixed
+//        105.00 ms    0.9%    50.00 ms            NRTextFixed.makeUIView(context:)
+
         let view = UITextView()
 //        _ = view.layoutManager
         view.isScrollEnabled = false

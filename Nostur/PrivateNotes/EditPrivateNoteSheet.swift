@@ -12,9 +12,9 @@ struct EditPrivateNoteSheet: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     
-    private var privateNote:CloudPrivateNote
+    private var privateNote: CloudPrivateNote
     
-    @State private var privateNoteToRemove:CloudPrivateNote?
+    @State private var privateNoteToRemove: CloudPrivateNote?
     @State private var noteText = ""
     
     init(privateNote: CloudPrivateNote) {

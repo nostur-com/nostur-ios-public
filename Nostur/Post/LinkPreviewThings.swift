@@ -88,6 +88,8 @@ func parseYoutube(json: String) -> [String: String] {
 }
 
 func parseMetaTags(html: String) -> [String: String] {
+//    15.00 ms    0.1%    11.00 ms            parseMetaTags(html:)
+//    4.00 ms    0.0%    0 s             specialized Collection.prefix(_:)
     let html = html.count > 300000 ? String(html.prefix(300000)) : html
     var metaTags = [String: String]()
     let matches = LinkPreviewCache.shared.metaTagsRegex.matches(in: html, options: [], range: NSRange(location: 0, length: html.utf16.count))
