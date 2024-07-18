@@ -16,7 +16,7 @@ class NRContentElementBuilder {
     static let shared = NRContentElementBuilder()
     let context = bg()
     
-    func buildElements(_ event: Event, dm: Bool = false, availableWidth: CGFloat? = nil, primaryColor: Color? = nil) -> ([ContentElement], [URL], [URL]) {
+    func buildElements(_ event: Event, dm: Bool = false, primaryColor: Color? = nil) -> ([ContentElement], [URL], [URL]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
         }
@@ -38,7 +38,7 @@ class NRContentElementBuilder {
                 let matchString = (input as NSString).substring(with: matchRange)
                 
                 if !nonMatch.isEmpty {
-                    result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch, availableWidth: availableWidth, primaryColor: primaryColor)))
+                    result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch, primaryColor: primaryColor)))
                 }
                 
                 if !matchString.matchingStrings(regex: Self.imageUrlPattern).isEmpty {
@@ -48,7 +48,7 @@ class NRContentElementBuilder {
                         imageUrls.append(url)
                     }
                     else {
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, availableWidth: availableWidth, primaryColor: primaryColor)))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.videoUrlPattern).isEmpty {
@@ -57,7 +57,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.video(MediaContent(url: url, dimensions: dimensions)))
                     }
                     else {
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, availableWidth: availableWidth, primaryColor: primaryColor)))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.otherUrlsPattern).isEmpty {
@@ -66,7 +66,7 @@ class NRContentElementBuilder {
                         linkPreviewUrls.append(url)
                     }
                     else {
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, availableWidth: availableWidth, primaryColor: primaryColor)))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.npubPattern).isEmpty {
@@ -111,7 +111,7 @@ class NRContentElementBuilder {
                     }
                     catch {
                         L.og.notice("problem decoding nevent in event.id: \(event.id) - \(matchString)")
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, availableWidth: availableWidth, primaryColor: primaryColor)))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.nprofilePattern).isEmpty {
@@ -123,7 +123,7 @@ class NRContentElementBuilder {
                     }
                     catch {
                         L.og.notice("problem decoding nevent in profile.pubkey: \(event.id) - \(matchString)")
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, availableWidth: availableWidth, primaryColor: primaryColor)))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.lightningInvoicePattern).isEmpty {
@@ -133,7 +133,7 @@ class NRContentElementBuilder {
                     result.append(ContentElement.cashu(matchString))
                 }
                 else {
-                    result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, availableWidth: availableWidth, primaryColor: primaryColor)))
+                    result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
                 }
                 
                 lastMatchEnd = matchRange.location + matchRange.length
@@ -144,7 +144,7 @@ class NRContentElementBuilder {
         let nonMatch = (input as NSString).substring(with: nonMatchRange)
         
         if !nonMatch.isEmpty {
-            result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch, availableWidth: availableWidth, primaryColor: primaryColor)))
+            result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch, primaryColor: primaryColor)))
         }
         return (result, linkPreviewUrls, imageUrls)
     }
@@ -307,7 +307,6 @@ struct AttributedStringWithPs: Hashable {
     var output: NSAttributedString // For selectable text
     var pTags: [Ptag]
     weak var event: Event?
-    var height: CGFloat // precalculated height
 }
 
 // For long form articles

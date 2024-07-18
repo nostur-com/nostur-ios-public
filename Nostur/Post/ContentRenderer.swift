@@ -120,6 +120,7 @@ struct ContentRenderer: View { // VIEW things
                 case .text(let attributedStringWithPs): // For text notes
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview)
                         .equatable()
+                        .environmentObject(childDIM)
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
