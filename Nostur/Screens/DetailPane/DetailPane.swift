@@ -37,6 +37,7 @@ struct DetailPane: View {
                             NosturTabButton(
                                 isSelected: tm.selected == tm.tabs[index],
                                 onSelect: {
+                                    guard index < tm.tabs.count else { return }
                                     let t = tm.tabs[index]
                                     tm.selected = t
                                     t.suspended = false
