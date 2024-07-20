@@ -81,6 +81,14 @@ struct RelayStatsRow: View {
                 .lineLimit(1)
                 .layoutPriority(2)
             
+            if stats.lastNoticeMessages.count > 0 {
+                Text("\(stats.lastNoticeMessages.count)")
+                    .font(.footnote)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 4)
+                    .background(Capsule().foregroundColor(.orange))
+            }
+            
             FoundAccountPFPs(foundAccountRows: foundAccountRows)
                 .layoutPriority(1)
             
@@ -134,6 +142,7 @@ struct RelayStatsDetails: View {
     
     public let stats: RelayConnectionStats
     @State private var errorMessages: [String] = []
+    @State private var noticeMessages: [String] = []
     @State private var foundAccountRows: [(pubkey: String, pfp: URL?, name: String)] = []
  
     var body: some View {
@@ -180,12 +189,27 @@ struct RelayStatsDetails: View {
                     Text("Last 10 error messages")
                 }
             }
+            
+            if noticeMessages.count > 0 {
+                Section {
+                    ForEach(noticeMessages.indices, id: \.self) { index in
+                        Text(noticeMessages[index])
+                            .font(.footnote)
+                    }
+                } header: {
+                    Text("Notices")
+                } footer: {
+                    Text("Last 10 notice messages")
+                }
+            }
         }
         .onAppear {
             ConnectionPool.shared.queue.async {
                 let lastErrorMessages = stats.lastErrorMessages
+                let lastNoticeMessages = stats.lastNoticeMessages
                 DispatchQueue.main.async {
                     errorMessages = lastErrorMessages
+                    noticeMessages = lastNoticeMessages
                 }
             }
         }
