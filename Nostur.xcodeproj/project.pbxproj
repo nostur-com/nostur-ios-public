@@ -218,7 +218,7 @@
 		1F75257E2996A1AA00477AF2 /* Unpublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75257D2996A1A900477AF2 /* Unpublisher.swift */; };
 		1F7525802997854200477AF2 /* OldNewPost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75257F2997854200477AF2 /* OldNewPost.swift */; };
 		1F7525842997B21D00477AF2 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7525832997B21D00477AF2 /* NotificationsView.swift */; };
-		1F75531B2C31FE5D009A2CFB /* RelayStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75531A2C31FE5D009A2CFB /* RelayStats.swift */; };
+		1F75531B2C31FE5D009A2CFB /* RelayStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75531A2C31FE5D009A2CFB /* RelayStatsView.swift */; };
 		1F75531D2C322B64009A2CFB /* OutboxLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75531C2C322B64009A2CFB /* OutboxLoader.swift */; };
 		1F75531F2C322C26009A2CFB /* RelayConnectionStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75531E2C322C26009A2CFB /* RelayConnectionStats.swift */; };
 		1F756531296AE4260078474E /* RelaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F756530296AE4260078474E /* RelaysView.swift */; };
@@ -754,7 +754,7 @@
 		1F75257D2996A1A900477AF2 /* Unpublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Unpublisher.swift; sourceTree = "<group>"; };
 		1F75257F2997854200477AF2 /* OldNewPost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OldNewPost.swift; sourceTree = "<group>"; };
 		1F7525832997B21D00477AF2 /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
-		1F75531A2C31FE5D009A2CFB /* RelayStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayStats.swift; sourceTree = "<group>"; };
+		1F75531A2C31FE5D009A2CFB /* RelayStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayStatsView.swift; sourceTree = "<group>"; };
 		1F75531C2C322B64009A2CFB /* OutboxLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutboxLoader.swift; sourceTree = "<group>"; };
 		1F75531E2C322C26009A2CFB /* RelayConnectionStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayConnectionStats.swift; sourceTree = "<group>"; };
 		1F756530296AE4260078474E /* RelaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelaysView.swift; sourceTree = "<group>"; };
@@ -1201,7 +1201,7 @@
 				1F6629112B0D429D00508988 /* RelayConnection.swift */,
 				1F75531E2C322C26009A2CFB /* RelayConnectionStats.swift */,
 				1F6629132B0D49BD00508988 /* RelayData.swift */,
-				1F75531A2C31FE5D009A2CFB /* RelayStats.swift */,
+				1F75531A2C31FE5D009A2CFB /* RelayStatsView.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -2658,7 +2658,7 @@
 				1F75257E2996A1AA00477AF2 /* Unpublisher.swift in Sources */,
 				1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */,
 				1F9A55262A3C7FD300F67627 /* DetailTab.swift in Sources */,
-				1F75531B2C31FE5D009A2CFB /* RelayStats.swift in Sources */,
+				1F75531B2C31FE5D009A2CFB /* RelayStatsView.swift in Sources */,
 				1F527CFD2A98CB3100128AD6 /* NoteReposts.swift in Sources */,
 				1F45C7ED29EF997200F58772 /* ImgurMediaUploadService.swift in Sources */,
 				1F2E760529F6DF6C00E67CE7 /* EditListTitleSheet.swift in Sources */,
