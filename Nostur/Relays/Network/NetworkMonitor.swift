@@ -34,7 +34,10 @@ public class NetworkMonitor: ObservableObject {
             .subscribe(on: queue)
             .receive(on: RunLoop.main)
             .sink { [weak self] isConnected in
-                self?.isConnected = isConnected
+                guard let self else { return }
+                if self.isConnected != isConnected {
+                    self.isConnected = isConnected
+                }
             }
             .store(in: &subscriptions)
         
