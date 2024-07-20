@@ -391,10 +391,13 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             guard let self else { return }
             
             let code = (error as NSError).code
-            if code == 57 {
+            if Set([57,-999,53,54]).contains(code) {
                 // standard "The operation couldn’t be completed. Socket is not connected"
                 // not really error just standard websocket garbage
                 // dont continue as if actual error
+                // also -999 cancelled
+                // No pong 53 "Software caused connection abort"
+                // 54 The operation couldn’t be completed. Connection reset by peer
                 return
             }
             
@@ -405,14 +408,19 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             guard SettingsStore.shared.enableOutboxRelays else { return }
             guard ConnectionPool.shared.canPutInPenaltyBox(self.url) else { return }
             
-            // TODO: Add check: if other relays do respond, but this gives error, continue error handling, but if no relays respond, the problem is not relay but something else, so dont put in penalty box
-            
             if Set([-1200,-1003,-1011,100,-1202]).contains(code) { // Error codes to put directly in penalty box
                 // -1200 An SSL error has occurred and a secure connection to the server cannot be made.
                 // -1003 A server with the specified hostname could not be found.
                 // -1011 There was a bad response from the server.
                 // -1202 The certificate for this server is invalid. You might be connecting to a server that is pretending to be “nostr.zebedee.cloud” which could put your confidential information at risk.
                 // 100 The operation couldn’t be completed. Protocol error
+                ConnectionPool.shared.penaltybox.insert(self.url)
+            }
+            // if other relays do respond, but this gives error, continue error handling, but if no relays respond, the problem is not relay but something else, so dont put in penalty box
+            else if Set([-1001,-1005]).contains(code) && (self.stats.connected == 0) && ConnectionPool.shared.anyConnected {
+                // -1005 The network connection was lost.
+                // -1001 The request timed out.
+                
                 ConnectionPool.shared.penaltybox.insert(self.url)
             }
             else if (self.stats.errors > 3) && (self.stats.connected == 0) { // other errors, put in penalty box if too many and no success connection ever
