@@ -306,12 +306,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         if let error {
             self.didReceiveError(error)
         }
-        queue.async(flags: .barrier) { [weak self] in
-            self?.stats.errors += 1
-            if let errorMessage = error?.localizedDescription {
-                self?.stats.addErrorMessage(errorMessage)
-            }
-        }
     }
     
     // didReceiveInformationalResponse
@@ -327,10 +321,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 #if DEBUG
     L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
 #endif
-        queue.async(flags: .barrier) { [weak self] in
-            self?.stats.errors += 1
-            if let errorMessage = error?.localizedDescription {
-                self?.stats.addErrorMessage(errorMessage)
+        if let error {
+            queue.async(flags: .barrier) { [weak self] in
+                self?.stats.errors += 1
+                self?.stats.addErrorMessage(error.localizedDescription)
             }
         }
     }
@@ -395,8 +389,16 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
                 }
             }
-            
             guard let self else { return }
+            
+            let code = (error as NSError).code
+            if code == 57 {
+                // standard "The operation couldn’t be completed. Socket is not connected"
+                // not really error just standard websocket garbage
+                // dont continue as if actual error
+                return
+            }
+            
             self.stats.errors += 1
             self.stats.addErrorMessage(error.localizedDescription)
             
@@ -404,11 +406,22 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             guard SettingsStore.shared.enableOutboxRelays else { return }
             guard ConnectionPool.shared.canPutInPenaltyBox(self.url) else { return }
             
-            if (self.stats.errors > 3) && (self.stats.connected == 0) {
+            // TODO: Add check: if other relays do respond, but this gives error, continue error handling, but if no relays respond, the problem is not relay but something else, so dont put in penalty box
+            
+            if Set([-1200,-1003,-1011,100,-1202]).contains(code) { // Error codes to put directly in penalty box
+                // -1200 An SSL error has occurred and a secure connection to the server cannot be made.
+                // -1003 A server with the specified hostname could not be found.
+                // -1011 There was a bad response from the server.
+                // -1202 The certificate for this server is invalid. You might be connecting to a server that is pretending to be “nostr.zebedee.cloud” which could put your confidential information at risk.
+                // 100 The operation couldn’t be completed. Protocol error
+                ConnectionPool.shared.penaltybox.insert(self.url)
+            }
+            else if (self.stats.errors > 3) && (self.stats.connected == 0) { // other errors, put in penalty box if too many and no success connection ever
                 ConnectionPool.shared.penaltybox.insert(self.url)
             }
         }
-        L.sockets.debug("🏎️🏎️🔌🔴🔴 Error \(self.url): \(error.localizedDescription)")
+        let code = (error as NSError).code
+        L.sockets.debug("🏎️🏎️🔌🔴🔴 Error \(self.url): \(code.description) \(error.localizedDescription)")
     }
     
     public func didReceivePong() {
