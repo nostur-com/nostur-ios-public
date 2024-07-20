@@ -321,11 +321,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 #if DEBUG
     L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
 #endif
+        
+        // TODO: Should we handle different from didBecomeInvalidWithError or not???
         if let error {
-            queue.async(flags: .barrier) { [weak self] in
-                self?.stats.errors += 1
-                self?.stats.addErrorMessage(error.localizedDescription)
-            }
+            self.didReceiveError(error)
         }
     }
     
