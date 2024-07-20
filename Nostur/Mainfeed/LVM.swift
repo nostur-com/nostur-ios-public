@@ -316,7 +316,7 @@ class LVM: NSObject, ObservableObject {
     
     private func getAllObjectIds(_ nrPosts: [NRPost]) -> Set<NRPostID> { // called from main thread?
         #if DEBUG
-            if Thread.isMainThread {
+            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should be bg")
             }
         #endif
