@@ -28,8 +28,7 @@ struct RelayStatsView: View {
                             .drawingGroup()
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            guard relayStats.errors > 0 || relayStats.receivedPubkeys.count > 0 else { return }
-                            showingStats = relayStats
+                            showingStats = relayStats        
                         }
                     }
                 } header: {
