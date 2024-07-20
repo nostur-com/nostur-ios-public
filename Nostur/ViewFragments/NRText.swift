@@ -70,6 +70,8 @@ struct NRTextDynamic: View {
         .fixedSize(horizontal: false, vertical: true)
     }
     
+//    89.00 ms    0.8%    0 s  NRTextDynamic.makeUITextView()
+//    48.00 ms    0.4%    0 s  UITextView.__allocating_init()
     func makeUITextView() -> UITextView {
         let view = UITextView()
 //        _ = view.layoutManager

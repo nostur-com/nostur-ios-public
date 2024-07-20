@@ -443,7 +443,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
             self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: pubkey)
-            anyName = cachedNRContact.contact?.anyName 
+            anyName = cachedNRContact.contact?.anyName
         }
         else if let contact = event.contact_ {
             self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following), pubkey: pubkey)
@@ -586,7 +586,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         if let content = event.content {
             self.content = content
-        }        
+        }
         
         self.subject = fastTags.first(where: { $0.0 == "subject" })?.1
         if let subject {
