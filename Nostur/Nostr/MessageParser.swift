@@ -90,6 +90,9 @@ class MessageParser {
                             sendNotification(.anyStatus, (String(format:"Notice: %@: %@", relayUrl.replacingOccurrences(of: "wss://", with: ""), message.message), "RELAY_NOTICE"))
                         }
                     #endif
+                    poolQueue.async(flags: .barrier) {
+                        client.stats.addNoticeMessage(message.message)
+                    }
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
