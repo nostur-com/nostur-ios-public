@@ -27,7 +27,7 @@ struct NRContentTextRenderer: View, Equatable {
 }
 
 struct NRContentTextRendererInner: View {
-    public let attributedStringWithPs:AttributedStringWithPs
+    public let attributedStringWithPs: AttributedStringWithPs
     public var isDetail = false
     public var isScreenshot = false
     public var isPreview = false

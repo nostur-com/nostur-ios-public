@@ -8,7 +8,7 @@
 import SwiftUI
 import NavigationBackport
 
-struct RelayStats: View {
+struct RelayStatsView: View {
     
     public let stats: [CanonicalRelayUrl: RelayConnectionStats]
     @State private var showingStats: RelayConnectionStats? = nil
@@ -210,6 +210,6 @@ struct RelayStatsDetails: View {
         
 
         
-        RelayStats(stats: example)
+        RelayStatsView(stats: example)
     }
 }
