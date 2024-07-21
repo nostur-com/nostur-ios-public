@@ -40,6 +40,7 @@ struct NRTextDynamic: View {
             )
             
             mutableAttributedString.addHashtagIcons()
+            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
             
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
         }
@@ -56,6 +57,7 @@ struct NRTextDynamic: View {
             )
             
             mutableAttributedString.addHashtagIcons()
+            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
             
             L.og.error("NRTextParser: \(error)")
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
@@ -204,8 +206,10 @@ struct NRTextFixed: UIViewRepresentable {
             )
             
             mutableAttributedString.addHashtagIcons()
+            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
             
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
+            
             
             self.height = mutableAttributedString.boundingRect(
                 with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
@@ -229,6 +233,7 @@ struct NRTextFixed: UIViewRepresentable {
             )
             
             mutableAttributedString.addHashtagIcons()
+            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
             
             L.og.error("NRTextParser: \(error)")
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
@@ -303,6 +308,15 @@ extension NSMutableAttributedString {
                 
                 self.insert(appendingImage, at: contentRange.upperBound)
             }
+        }
+    }
+    
+    func addNewlinesIfContainsAsianCharacters() {
+        let fullRange = NSRange(location: 0, length: self.length)
+        let regex = try! NSRegularExpression(pattern: "\\p{Script=Hiragana}|\\p{Script=Katakana}|\\p{Script=Han}|\\p{Script=Hangul}|\\p{Script=Thai}|\\p{Script=Lao}|\\p{Script=Khmer}")
+        
+        if regex.firstMatch(in: self.string, options: [], range: fullRange) != nil {
+            self.append(NSAttributedString(string: "\n\n"))
         }
     }
 }

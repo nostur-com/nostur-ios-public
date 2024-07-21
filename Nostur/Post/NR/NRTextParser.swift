@@ -58,6 +58,7 @@ class NRTextParser { // TEXT things
             )
             
             mutableAttributedString.addHashtagIcons()
+            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
                         
             let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             
@@ -76,6 +77,7 @@ class NRTextParser { // TEXT things
             )
             
             mutableAttributedString.addHashtagIcons()
+            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
    
             L.og.error("NRTextParser: \(error)")
             let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
