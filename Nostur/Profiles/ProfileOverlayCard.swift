@@ -9,11 +9,9 @@ import SwiftUI
 import Combine
 
 struct ProfileOverlayCardContainer: View {
-    @Environment(\.managedObjectContext) private var viewContext
-    
-    let pubkey:String
-    @State var contact:NRContact? = nil
-    var zapEtag:String? = nil // so other clients can still tally zaps
+    let pubkey: String
+    @State var contact: NRContact? = nil
+    var zapEtag: String? = nil // so other clients can still tally zaps
     
     @State private var backlog = Backlog(timeout: 15, auto: true)
     @State private var error: String? = nil
@@ -103,6 +101,27 @@ struct ProfileOverlayCard: View {
         guard !contact.following else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
         return similarPFP
+    }
+    
+    private var hasFixedName: Bool {
+        if let fixedName = contact.fixedName, fixedName != contact.anyName {
+            return true
+        }
+        return false
+    }
+    
+    private var hasNip05Shortened: Bool {
+        guard contact.nip05 != nil, contact.nip05verified else { return false }
+        if contact.nip05nameOnly.lowercased() == contact.anyName.lowercased() {
+            return true
+        }
+        if contact.nip05nameOnly.lowercased() == "_" {
+            return true
+        }
+        if contact.nip05nameOnly.lowercased() == "" {
+            return true
+        }
+        return false
     }
     
     var body: some View {
@@ -208,46 +227,52 @@ struct ProfileOverlayCard: View {
                     HStack(alignment: .bottom, spacing: 3) {
                         Text(contact.anyName).font(.title).foregroundColor(.primary)
                             .lineLimit(1)
-                        if let nip05 = contact.nip05, contact.nip05verified, contact.nip05nameOnly.lowercased() == contact.anyName.lowercased() {
-                            NostrAddress(nip05: nip05, shortened: true)
+                        
+                        if hasNip05Shortened {
+                            NostrAddress(nip05: contact.nip05 ?? "", shortened: true)
                                 .layoutPriority(3)
                                 .offset(y: -4)
                         }
-                        if (isFollowingYou) {
-                            Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 2)
-                                .background(Color.secondary)
-                                .opacity(0.7)
-                                .cornerRadius(13)
-                                .offset(y: -4)
-                        }
-                    }
-                    
-                    if couldBeImposter {
-                        PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: similarToPubkey ?? contact.similarToPubkey)
-                    }
-                    else if let nip05 = contact.nip05, contact.nip05verified, contact.nip05nameOnly.lowercased() != contact.anyName.lowercased() {
-                        NostrAddress(nip05: nip05, shortened: false)
-                            .layoutPriority(3)
-                    }
 
-                    if let fixedName = contact.fixedName, fixedName != contact.anyName {
-                        HStack {
-                            Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
-                                .lineLimit(1)
-                            Image(systemName: "multiply.circle.fill")
-                                .onTapGesture {
-                                    contact.setFixedName(contact.anyName)
-                                }
-                        }
+                        Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary)
+                            .opacity(0.7)
+                            .cornerRadius(13)
+                            .offset(y: -4)
+                            .opacity(isFollowingYou ? 1.0 : 0)
                     }
                     
-                    Text(verbatim:lastSeen ?? "Last seen:")
-                        .font(.caption).foregroundColor(.primary)
+                    Color.clear
+                        .frame(height: 15)
+                        .overlay(alignment: .leading) {
+                            if couldBeImposter {
+                                PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: similarToPubkey ?? contact.similarToPubkey)
+                            }
+                            else if let nip05 = contact.nip05, contact.nip05verified, contact.nip05nameOnly.lowercased() != contact.anyName.lowercased() {
+                                NostrAddress(nip05: nip05, shortened: false)
+                                    .layoutPriority(3)
+                            }
+                        }
+                    
+                    HStack {
+                        Text("Previously known as: \(contact.fixedName ?? "")").font(.caption).foregroundColor(.primary)
                             .lineLimit(1)
+                        Image(systemName: "multiply.circle.fill")
+                            .onTapGesture {
+                                contact.setFixedName(contact.anyName)
+                            }
+                    }
+                    .opacity(hasFixedName ? 1.0 : 0)
+                    
+                    Text(verbatim: lastSeen ?? "Last seen:")
+                        .font(.caption)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
                         .opacity(lastSeen != nil ? 1.0 : 0)
+                        .animation(.easeIn, value: lastSeen)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -256,10 +281,13 @@ struct ProfileOverlayCard: View {
                     sendNotification(.dismissMiniProfile)
                 }
                 .padding(.bottom, 10)
+                .offset(y: -15.0)
                 
                 NRTextDynamic("\(String(contact.about ?? ""))\n")
+                    .frame(minHeight: 75.0)
                 
                 FollowedBy(pubkey: contact.pubkey)
+                    .frame(minHeight: 95.0)
                 
                 HStack(spacing:0) {
                     Button(String(localized:"Posts", comment:"Tab title")) {
@@ -380,7 +408,9 @@ struct ProfileOverlayCard: View {
                 EventRelationsQueue.shared.addAwaitingContact(contact)
                 if (contact.followsYou()) {
                     DispatchQueue.main.async {
-                        isFollowingYou = true
+                        withAnimation {
+                            isFollowingYou = true
+                        }
                     }
                 }
                 
