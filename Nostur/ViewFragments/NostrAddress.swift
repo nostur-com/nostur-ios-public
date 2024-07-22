@@ -10,7 +10,7 @@ import SwiftUI
 struct NostrAddress: View {
     @EnvironmentObject private var themes:Themes
 
-    public var nip05:String
+    public var nip05: String
     public var shortened = false
     
     var domainPart:String {

@@ -493,7 +493,7 @@ private struct WithSheets: ViewModifier {
                             .scaleEffect(miniProfileAnimateIn ? 1.0 : 0.25, anchor: .leading)
                             .opacity(miniProfileAnimateIn ? 1.0 : 0.15)
                             .animation(.easeInOut(duration: 0.15), value: miniProfileAnimateIn)
-                            .offset(x: 0.0, y: min(max(m.location.y - 60,50), UIScreen.main.bounds.height - 200))
+                            .offset(x: 0.0, y: min(max(m.location.y - 60,50), UIScreen.main.bounds.height - 350))
                             .zIndex(50)
                     }
                     .onDisappear {

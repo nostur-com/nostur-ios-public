@@ -83,7 +83,9 @@ struct FollowedBy: View {
                 })
                
                 DispatchQueue.main.async {
-                    self.commonFollowerPFPs = commonFollowerPFPs
+                    withAnimation {
+                        self.commonFollowerPFPs = commonFollowerPFPs
+                    }
                 }
             }
             
