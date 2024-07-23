@@ -228,9 +228,9 @@ struct FullImageViewer: View {
 
 struct MediaPostPreview: View {
     @EnvironmentObject private var themes:Themes
-    let nrPost:NRPost
-    @ObservedObject var pfpAttributes:NRPost.PFPAttributes
-    @Binding var showMiniProfile:Bool
+    private let nrPost: NRPost
+    @ObservedObject private var pfpAttributes: PFPAttributes
+    @Binding private var showMiniProfile: Bool
     @Environment(\.dismiss) var dismiss
     
     init(_ nrPost: NRPost, showMiniProfile: Binding<Bool>) {
