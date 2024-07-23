@@ -380,11 +380,11 @@ func scaledToFit(_ dimensions: CGSize, scale screenScale: Double, maxWidth: Doub
 
 struct EmbeddedPost: View {
     private let nrPost: NRPost
-    @ObservedObject var prd: NRPost.PostRowDeletableAttributes
+    @ObservedObject var prd: PostRowDeletableAttributes
     private var forceAutoload: Bool
     private var theme: Theme
     
-    init(_ nrPost:NRPost, forceAutoload:Bool = false, theme: Theme) {
+    init(_ nrPost: NRPost, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.prd = nrPost.postRowDeletableAttributes
         self.forceAutoload = forceAutoload

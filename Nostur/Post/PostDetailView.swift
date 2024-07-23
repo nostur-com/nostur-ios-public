@@ -388,11 +388,11 @@ struct PostAndParent: View {
 }
 
 struct ParentPost: View {
-    @ObservedObject private var nrPost:NRPost
-    @ObservedObject private var postRowDeletableAttributes:NRPost.PostRowDeletableAttributes
-    @ObservedObject private var settings:SettingsStore = .shared
-    @EnvironmentObject private var dim:DIMENSIONS
-    @EnvironmentObject private var themes:Themes
+    @ObservedObject private var nrPost: NRPost
+    @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
+    @ObservedObject private var settings: SettingsStore = .shared
+    @EnvironmentObject private var dim: DIMENSIONS
+    @EnvironmentObject private var themes: Themes
     private let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     private var connect:ThreadConnectDirection? = nil
     @State private var showMiniProfile = false

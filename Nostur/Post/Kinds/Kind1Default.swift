@@ -13,7 +13,7 @@ struct Kind1Default: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
-    @ObservedObject private var pfpAttributes: NRPost.PFPAttributes
+    @ObservedObject private var pfpAttributes: PFPAttributes
     
     private let hideFooter: Bool // For rendering in NewReply
     private let missingReplyTo: Bool // For rendering in thread

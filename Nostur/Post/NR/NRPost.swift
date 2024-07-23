@@ -16,91 +16,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     @Published var groupedRepliesSorted: [NRPost] = []
     @Published var groupedRepliesNotWoT: [NRPost] = []
     
-    // Has some subclass-ObservableObjects to isolate rerendering to specific view attributes:
-    // PostOrThreadAttributes, PostRowDeletableAttributes, NoteRowAttributes, PFPAttributes
-    
-    class PostOrThreadAttributes: ObservableObject {
-        @Published var parentPosts:[NRPost] = []
-        
-        init(parentPosts: [NRPost] = []) {
-            self.parentPosts = parentPosts
-        }
-    }
-    
-    class PostRowDeletableAttributes: ObservableObject {
-        @Published var blocked = false
-        @Published var deletedById: String? = nil
-
-        init(blocked: Bool = false, deletedById: String? = nil) {
-            self.blocked = blocked
-            self.deletedById = deletedById
-        }
-    }
-    
-    class NoteRowAttributes: ObservableObject {
-        @Published var firstQuote: NRPost? = nil
-        
-        init(firstQuote: NRPost? = nil) {
-            self.firstQuote = firstQuote
-        }
-    }
-    
-    class PFPAttributes: ObservableObject {
-        @Published var contact: NRContact? = nil
-        private var contactSavedSubscription: AnyCancellable?
-        
-        init(contact: NRContact? = nil, pubkey: String) {
-            self.contact = contact
-            
-            if contact == nil {
-                contactSavedSubscription = ViewUpdates.shared.contactUpdated
-                    .filter { pubkey == $0.pubkey }
-                    .sink(receiveValue: { [weak self] contact in
-                        let nrContact = NRContact(contact: contact, following: isFollowing(contact.pubkey))
-                        DispatchQueue.main.async { [weak self] in
-                            self?.objectWillChange.send()
-                            self?.contact = nrContact
-                        }
-                        self?.contactSavedSubscription?.cancel()
-                        self?.contactSavedSubscription = nil
-                    })
-            }
-        }
-        
-        
-        // Listen here or somewhere in view?
-    }
-    
-    class HighlightAttributes: ObservableObject {
-        @Published var contact: NRContact? = nil
-        
-        public var authorPubkey: String?
-        public var anyName: String? {
-            get {
-                if let anyName = contact?.anyName {
-                    return anyName
-                }
-                guard let authorPubkey = authorPubkey else { return nil }
-                return String(authorPubkey.suffix(11))
-            }
-        }
-        public var url: String?
-        // TODO: Add naddr support
-
-        init(contact: NRContact? = nil, authorPubkey: String? = nil, url: String? = nil) {
-            self.contact = contact
-            self.authorPubkey = authorPubkey
-            self.url = url
-        }
-    }
-    
-    class ReplyingToAttributes: ObservableObject {
-        @Published var replyingToUsernamesMarkDown: AttributedString? = nil
-        
-        init(replyingToUsernamesMarkDown: AttributedString? = nil) {
-            self.replyingToUsernamesMarkDown = replyingToUsernamesMarkDown
-        }
-    }
 
     // Separate ObservableObjects for view performance optimization
     var postOrThreadAttributes: PostOrThreadAttributes
@@ -1365,4 +1280,91 @@ func getKindFileMetadata(event: Event) -> KindFileMetadata {
         dim: event.fastTags.first(where: { $0.0 == "dim" })?.1,
         blurhash: event.fastTags.first(where: { $0.0 == "blurhash" })?.1
     )
+}
+
+
+// Has some subclass-ObservableObjects to isolate rerendering to specific view attributes:
+// PostOrThreadAttributes, PostRowDeletableAttributes, NoteRowAttributes, PFPAttributes
+
+class PostOrThreadAttributes: ObservableObject {
+    @Published var parentPosts:[NRPost] = []
+    
+    init(parentPosts: [NRPost] = []) {
+        self.parentPosts = parentPosts
+    }
+}
+
+class PostRowDeletableAttributes: ObservableObject {
+    @Published var blocked = false
+    @Published var deletedById: String? = nil
+
+    init(blocked: Bool = false, deletedById: String? = nil) {
+        self.blocked = blocked
+        self.deletedById = deletedById
+    }
+}
+
+class NoteRowAttributes: ObservableObject {
+    @Published var firstQuote: NRPost? = nil
+    
+    init(firstQuote: NRPost? = nil) {
+        self.firstQuote = firstQuote
+    }
+}
+
+class PFPAttributes: ObservableObject {
+    @Published var contact: NRContact? = nil
+    private var contactSavedSubscription: AnyCancellable?
+    
+    init(contact: NRContact? = nil, pubkey: String) {
+        self.contact = contact
+        
+        if contact == nil {
+            contactSavedSubscription = ViewUpdates.shared.contactUpdated
+                .filter { pubkey == $0.pubkey }
+                .sink(receiveValue: { [weak self] contact in
+                    let nrContact = NRContact(contact: contact, following: isFollowing(contact.pubkey))
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.contact = nrContact
+                    }
+                    self?.contactSavedSubscription?.cancel()
+                    self?.contactSavedSubscription = nil
+                })
+        }
+    }
+    
+    
+    // Listen here or somewhere in view?
+}
+
+class HighlightAttributes: ObservableObject {
+    @Published var contact: NRContact? = nil
+    
+    public var authorPubkey: String?
+    public var anyName: String? {
+        get {
+            if let anyName = contact?.anyName {
+                return anyName
+            }
+            guard let authorPubkey = authorPubkey else { return nil }
+            return String(authorPubkey.suffix(11))
+        }
+    }
+    public var url: String?
+    // TODO: Add naddr support
+
+    init(contact: NRContact? = nil, authorPubkey: String? = nil, url: String? = nil) {
+        self.contact = contact
+        self.authorPubkey = authorPubkey
+        self.url = url
+    }
+}
+
+class ReplyingToAttributes: ObservableObject {
+    @Published var replyingToUsernamesMarkDown: AttributedString? = nil
+    
+    init(replyingToUsernamesMarkDown: AttributedString? = nil) {
+        self.replyingToUsernamesMarkDown = replyingToUsernamesMarkDown
+    }
 }

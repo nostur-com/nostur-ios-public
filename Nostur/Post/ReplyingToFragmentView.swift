@@ -9,11 +9,11 @@ import SwiftUI
 import Combine
 
 struct ReplyingToFragmentView: View {
-    private let nrPost:NRPost
-    @ObservedObject private var replyingToAttributes:NRPost.ReplyingToAttributes
-    private var theme:Theme
+    private let nrPost: NRPost
+    @ObservedObject private var replyingToAttributes: ReplyingToAttributes
+    private var theme: Theme
     
-    init(nrPost: NRPost, theme:Theme) {
+    init(nrPost: NRPost, theme: Theme) {
         self.nrPost = nrPost
         self.replyingToAttributes = nrPost.replyingToAttributes
         self.theme = theme
