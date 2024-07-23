@@ -77,7 +77,7 @@ class NewPostNotifier: ObservableObject {
                         filters: [
                             Filters(
                                 authors: self.enabledPubkeys,
-                                kinds: PROFILE_KINDS,
+                                kinds: PROFILE_KINDS.subtracting(Set([6])), // not reposts
                                 since: Int(since),
                                 limit: 250
                             )
@@ -93,7 +93,7 @@ class NewPostNotifier: ObservableObject {
                     guard let self else { return }
                     let fr = Event.fetchRequest()
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS)
+                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.subtracting(Set([6]))) // not reposts
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
                         self.createNewPostsNotification(newPosts, accountPubkey: accountPubkey)
                     }
@@ -106,7 +106,7 @@ class NewPostNotifier: ObservableObject {
                 bg().perform { [weak self] in
                     guard let self else { return }
                     let fr = Event.fetchRequest()
-                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS)
+                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.subtracting(Set([6]))) // not reposts
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
                         self.createNewPostsNotification(newPosts, accountPubkey: accountPubkey)
                     }
