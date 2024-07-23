@@ -139,10 +139,10 @@ struct Gallery_Previews: PreviewProvider {
 
 struct GridItemView: View {
     @EnvironmentObject private var themes:Themes
-    let size: Double
-    let item: GalleryItem
-    var withPFP = false
-    var url:URL { item.url }
+    public let size: Double
+    public let item: GalleryItem
+    public var withPFP = false
+    private var url: URL { item.url }
     
     var body: some View {
         LazyImage(request: makeImageRequest(url, width: size, height: size, contentMode: .aspectFill, upscale: true, label: "GridItemView")) { state in
@@ -179,7 +179,6 @@ struct GridItemView: View {
                     .onTapGesture {
                         sendNotification(.fullScreenView, FullScreenItem(url: url, galleryItem: item))
                     }
-//                    .transaction { t in t.animation = nil }
                     .overlay(alignment:.topLeading) {
                         if state.isLoading { // does this conflict with showing preview images??
                             ImageProgressView(state: state)
@@ -200,17 +199,16 @@ struct GridItemView: View {
             }
         }
         .pipeline(ImageProcessing.shared.content)
-//        .transaction { t in t.animation = nil }
         .frame(width: size, height: size)
     }
 }
 
 struct GridItemView17: View {
-    @EnvironmentObject private var themes:Themes
-    let size: Double
-    let item: GalleryItem
-    var withPFP = false
-    var url:URL { item.url }
+    @EnvironmentObject private var themes: Themes
+    public let size: Double
+    public let item: GalleryItem
+    public var withPFP = false
+    private var url: URL { item.url }
     
     var body: some View {
         LazyImage(request: makeImageRequest(url, width: size, height: size, contentMode: .aspectFill, upscale: true, label: "GridItemView")) { state in
@@ -264,7 +262,6 @@ struct GridItemView17: View {
             }
         }
         .pipeline(ImageProcessing.shared.content)
-//        .transaction { t in t.animation = nil }
         .frame(width: size, height: size)
     }
 }

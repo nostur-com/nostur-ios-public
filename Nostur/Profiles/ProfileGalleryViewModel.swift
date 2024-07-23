@@ -17,18 +17,15 @@ class ProfileGalleryViewModel: ObservableObject {
     private var backlog: Backlog
     private var pubkey: String
     private var didLoad = false
-    private static let POSTS_LIMIT = 300
+
     private static let MAX_IMAGES_PER_POST = 10
-    private var prefetchedIds = Set<String>()
         
     @Published var items: [GalleryItem] = [] {
         didSet {
             guard !items.isEmpty else { return }
-            L.og.info("Gallery feed loaded \(self.items.count) items")
+            L.og.info("Profile Gallery feed loaded \(self.items.count) items")
         }
     }
-    
-    private var lastFetch: Date?
     
     public func timeout() {
         self.state = .timeout
@@ -40,8 +37,7 @@ class ProfileGalleryViewModel: ObservableObject {
         self.backlog = Backlog(timeout: 13.0, auto: true)
     }
     
-    // STEP 1: FETCH LIKES FROM FOLLOWS FROM RELAYS
-    private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
+    // STEP 1: FETCH POSTS FROM SINGLE AUTHOR FROM RELAY
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "PROFILEGALLERY",
@@ -59,7 +55,6 @@ class ProfileGalleryViewModel: ObservableObject {
                                            ]
                             ).json() {
                     req(cm)
-                    self.lastFetch = Date.now
                 }
                 else {
                     L.og.error("Gallery feed: Problem generating request")
@@ -111,8 +106,8 @@ class ProfileGalleryViewModel: ObservableObject {
         }
     }
     
+    @MainActor
     public func load() {
-        guard shouldReload else { return }
         self.state = .loading
         self.items = []
         self.fetchPostsFromRelays()
@@ -135,16 +130,6 @@ class ProfileGalleryViewModel: ObservableObject {
                 continuation.resume()
             }
         }
-    }
-    
-    public var shouldReload: Bool {
-        // Should only refetch since last fetch, if last fetch is more than 10 mins ago
-        guard let lastFetch else { return true }
-
-        if (Date.now.timeIntervalSince1970 - lastFetch.timeIntervalSince1970) > 60 * 10 {
-            return true
-        }
-        return false
     }
     
     public enum GalleryState {

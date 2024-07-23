@@ -23,8 +23,8 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     let id = UUID()
     
     @Published var state:GalleryState
-    private var posts:[PostID: RecommendedBy<Pubkey>]
-    private var backlog:Backlog
+    private var posts: [PostID: RecommendedBy<Pubkey>]
+    private var backlog: Backlog
     private var follows:Set<Pubkey>
     private var didLoad = false
     private static let POSTS_LIMIT = 100
@@ -33,7 +33,7 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
         
-    @Published var items:[GalleryItem] = [] {
+    @Published var items: [GalleryItem] = [] {
         didSet {
             guard !items.isEmpty else { return }
             L.og.info("Gallery feed loaded \(self.items.count) items")
