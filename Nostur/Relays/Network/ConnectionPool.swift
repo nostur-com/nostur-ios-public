@@ -500,7 +500,7 @@ public class ConnectionPool: ObservableObject {
             // don't send to p's if it is an event kind where p's have a different purpose than notification (eg kind:3)
             guard (message.clientMessage.event?.kind ?? 1) != 3 else { return }
             
-            let pTags: Set<String> = Set( message.clientMessage.event?.tags.filter { $0.type == "p" }.compactMap { $0.pubkey } ?? [] )
+            let pTags: Set<String> = Set( message.nEvent?.pTags() ?? [] )
             self.sendToOthersPreferredReadRelays(message.clientMessage, pubkeys: pTags)
         }
     }
