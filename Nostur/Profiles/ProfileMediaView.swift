@@ -28,9 +28,12 @@ struct ProfileMediaView: View {
                 .padding(10)
                 .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
                 .task(id: "profilegallery") {
+                    vm.load()
                     do {
                         try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                        vm.state = .timeout
+                        if vm.state == .initializing || vm.state == .loading {
+                            vm.state = .timeout
+                        }
                     } catch { }
                 }
         case .ready:
@@ -40,6 +43,9 @@ struct ProfileMediaView: View {
                         ForEach(vm.items.indices, id:\.self) { index in
                             GeometryReader { geo in
                                 GridItemView17(size: geo.size.width, item: vm.items[index])
+                                    .onBecomingVisible {
+                                        vm.fetchMoreIfNeeded(index)
+                                    }
                             }
                             .clipped()
                             .aspectRatio(1, contentMode: .fit)
@@ -48,16 +54,21 @@ struct ProfileMediaView: View {
                             .onTapGesture {
                                 sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
                             }
+                           
                         }
                     }
                 }
                 else {
                     LazyVGrid(columns: gridColumns) {
-                        ForEach(vm.items) { item in
+                        ForEach(vm.items.indices, id:\.self) { index in
                             GeometryReader { geo in
-                                GridItemView(size: geo.size.width, item: item)
+                                GridItemView(size: geo.size.width, item: vm.items[index])
+                                    .onBecomingVisible {
+                                        vm.fetchMoreIfNeeded(index)
+                                    }
                             }
                             .clipped()
+                            .id(index)
                             .aspectRatio(1, contentMode: .fit)
                         }
                     }
@@ -76,11 +87,6 @@ struct ProfileMediaView: View {
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .center)
         }
-        
-        Color.clear
-            .onAppear {
-                vm.load()
-            }
     }
 }
 

@@ -38,6 +38,7 @@ class ProfileGalleryViewModel: ObservableObject {
     }
     
     // STEP 1: FETCH POSTS FROM SINGLE AUTHOR FROM RELAY
+    private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil, limit: Int = 250) {
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "PROFILEGALLERY",
@@ -50,7 +51,7 @@ class ProfileGalleryViewModel: ObservableObject {
                                             Filters(
                                                 authors: Set([self.pubkey]),
                                                 kinds: Set([1]),
-                                                limit: 9999
+                                                limit: limit
                                             )
                                            ]
                             ).json() {
@@ -137,5 +138,17 @@ class ProfileGalleryViewModel: ObservableObject {
         case loading
         case ready
         case timeout
+    }
+    
+    
+    private var didFetchMore: Bool = false
+    
+    @MainActor
+    public func fetchMoreIfNeeded(_ index: Int) {
+        // fetch more if: index > 12 (next page)
+        // or not enough images and last appeared: index <= 12 && index == items.count
+        guard (index > 12) || (index <= 12 && index == items.count), !didFetchMore else { return }
+        didFetchMore = true
+        self.fetchPostsFromRelays(limit: 999)
     }
 }
