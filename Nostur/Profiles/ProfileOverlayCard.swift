@@ -228,7 +228,7 @@ struct ProfileOverlayCard: View {
                         Text(contact.anyName).font(.title).foregroundColor(.primary)
                             .lineLimit(1)
                         
-                        if hasNip05Shortened {
+                        if !couldBeImposter && hasNip05Shortened {
                             NostrAddress(nip05: contact.nip05 ?? "", shortened: true)
                                 .layoutPriority(3)
                                 .offset(y: -4)
@@ -251,7 +251,7 @@ struct ProfileOverlayCard: View {
                             if couldBeImposter {
                                 PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: similarToPubkey ?? contact.similarToPubkey)
                             }
-                            else if let nip05 = contact.nip05, contact.nip05verified, contact.nip05nameOnly.lowercased() != contact.anyName.lowercased() {
+                            else if let nip05 = contact.nip05, contact.nip05verified, contact.nip05nameOnly.lowercased() != contact.anyName.lowercased(), !hasNip05Shortened {
                                 NostrAddress(nip05: nip05, shortened: false)
                                     .layoutPriority(3)
                             }
