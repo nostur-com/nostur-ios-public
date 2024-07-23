@@ -48,7 +48,7 @@ class NewPostsVM: ObservableObject {
                                        filters: [
                                         Filters(
                                             authors: self.pubkeys,
-                                            kinds: PROFILE_KINDS,
+                                            kinds: PROFILE_KINDS.subtracting(Set([6])), // not reposts
                                             since: self.since != 0 ? Int(self.since) : nil,
                                             limit: 150
                                         )
@@ -84,7 +84,7 @@ class NewPostsVM: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.since, self.pubkeys, PROFILE_KINDS)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", self.since, self.pubkeys, PROFILE_KINDS.subtracting(Set([6]))) // not reposts
             fr.fetchLimit = 75
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
             guard let events = try? bg().fetch(fr) else { return }
