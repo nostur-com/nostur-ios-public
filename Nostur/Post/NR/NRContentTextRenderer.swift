@@ -70,7 +70,7 @@ struct NRContentTextRendererInner: View {
                     ) { pubkey in
                         bg().perform {
                             guard let event = attributedStringWithPs.event else { return }
-                            let reparsed = NRTextParser.shared.parseText(event, text: attributedStringWithPs.input)
+                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input)
                             if self.text != reparsed.output {
                                 L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                                 DispatchQueue.main.async {
@@ -96,7 +96,7 @@ struct NRContentTextRendererInner: View {
                     ) { pubkey in
                         bg().perform {
                             guard let event = attributedStringWithPs.event else { return }
-                            let reparsed = NRTextParser.shared.parseText(event, text: attributedStringWithPs.input)
+                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input)
                             if self.text != reparsed.output {
                                 L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                                 DispatchQueue.main.async {

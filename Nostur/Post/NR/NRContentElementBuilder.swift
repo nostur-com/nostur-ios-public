@@ -16,12 +16,10 @@ class NRContentElementBuilder {
     static let shared = NRContentElementBuilder()
     let context = bg()
     
-    func buildElements(_ event: Event, dm: Bool = false, primaryColor: Color? = nil) -> ([ContentElement], [URL], [URL]) {
+    func buildElements(input: String, fastTags: [FastTag], event: Event? = nil, primaryColor: Color? = nil, previewImages: [PostedImageMeta] = [], previewVideos: [PostedVideoMeta] = []) -> ([ContentElement], [URL], [URL]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
         }
-        
-        let input = dm ? event.noteText : event.noteTextPrepared
         
         let range = NSRange(location: 0, length: input.utf16.count)
         
@@ -38,26 +36,26 @@ class NRContentElementBuilder {
                 let matchString = (input as NSString).substring(with: matchRange)
                 
                 if !nonMatch.isEmpty {
-                    result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch, primaryColor: primaryColor)))
+                    result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:nonMatch, primaryColor: primaryColor)))
                 }
                 
                 if !matchString.matchingStrings(regex: Self.imageUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
-                        let dimensions:CGSize? = findImetaDimensions(event, url: matchString)
+                        let dimensions:CGSize? = findImetaDimensions(fastTags, url: matchString)
                         result.append(ContentElement.image(MediaContent(url: url, dimensions: dimensions)))
                         imageUrls.append(url)
                     }
                     else {
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.videoUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
-                        let dimensions:CGSize? = findImetaDimensions(event, url: matchString)
+                        let dimensions:CGSize? = findImetaDimensions(fastTags, url: matchString)
                         result.append(ContentElement.video(MediaContent(url: url, dimensions: dimensions)))
                     }
                     else {
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.otherUrlsPattern).isEmpty {
@@ -66,7 +64,7 @@ class NRContentElementBuilder {
                         linkPreviewUrls.append(url)
                     }
                     else {
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.npubPattern).isEmpty {
@@ -82,7 +80,7 @@ class NRContentElementBuilder {
                 else if !matchString.matchingStrings(regex: Self.previewImagePlaceholder).isEmpty {
                     let m = matchString.matchingStrings(regex: Self.previewImagePlaceholder)
                     if let index = Int(m[0][1]) {
-                        if let p = event.previewImages[safe: index] {
+                        if let p = previewImages[safe: index] {
                             result.append(ContentElement.postPreviewImage(p))
                         }
                     }
@@ -90,7 +88,7 @@ class NRContentElementBuilder {
                 else if !matchString.matchingStrings(regex: Self.previewVideoPlaceholder).isEmpty {
                     let m = matchString.matchingStrings(regex: Self.previewVideoPlaceholder)
                     if let index = Int(m[0][1]) {
-                        if let p = event.previewVideos[safe: index] {
+                        if let p = previewVideos[safe: index] {
                             result.append(ContentElement.postPreviewVideo(p))
                         }
                     }
@@ -110,8 +108,8 @@ class NRContentElementBuilder {
                         
                     }
                     catch {
-                        L.og.notice("problem decoding nevent in event.id: \(event.id) - \(matchString)")
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
+                        L.og.notice("problem decoding nevent in event.id: \(event?.id ?? "?") - \(matchString)")
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.nprofilePattern).isEmpty {
@@ -122,8 +120,8 @@ class NRContentElementBuilder {
                         result.append(ContentElement.nprofile1(identifier))
                     }
                     catch {
-                        L.og.notice("problem decoding nevent in profile.pubkey: \(event.id) - \(matchString)")
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
+                        L.og.notice("problem decoding nevent in profile.pubkey: \(event?.id ?? "?") - \(matchString)")
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
                 else if !matchString.matchingStrings(regex: Self.lightningInvoicePattern).isEmpty {
@@ -133,7 +131,7 @@ class NRContentElementBuilder {
                     result.append(ContentElement.cashu(matchString))
                 }
                 else {
-                    result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString, primaryColor: primaryColor)))
+                    result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
                 }
                 
                 lastMatchEnd = matchRange.location + matchRange.length
@@ -144,7 +142,7 @@ class NRContentElementBuilder {
         let nonMatch = (input as NSString).substring(with: nonMatchRange)
         
         if !nonMatch.isEmpty {
-            result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch, primaryColor: primaryColor)))
+            result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:nonMatch, primaryColor: primaryColor)))
         }
         return (result, linkPreviewUrls, imageUrls)
     }
@@ -323,14 +321,14 @@ struct MarkdownContentWithPs: Hashable {
 }
 
 
-func findImetaDimensions(_ event:Event, url:String) -> CGSize? {
+func findImetaDimensions(_ fastTags: [FastTag], url:String) -> CGSize? {
     // NIP-54
     if let dim = findImetaFromUrl(url) { return dim }
     
     // DIP-01
     // Find any tag that is 'imeta' and has matching 'url', spec is unclear about order, so check every imeta value:
     // fastTags only supports tags with 3 values, so too bad if there are more.
-    let imetaTag: FastTag? = event.fastTags.first(where: { tag in
+    let imetaTag: FastTag? = fastTags.first(where: { tag in
         
         guard tag.0 == "imeta" else { return false }
         

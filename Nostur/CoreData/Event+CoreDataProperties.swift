@@ -309,8 +309,8 @@ extension Event {
         return WebOfTrust.shared.isAllowed(pubkey)
     }
     
-    var plainText:String {
-        return NRTextParser.shared.copyPasteText(self, text: self.content ?? "").text
+    var plainText: String {
+        return NRTextParser.shared.copyPasteText(fastTags: self.fastTags, event: self, text: self.content ?? "").text
     }
     
     var date: Date {
