@@ -75,8 +75,8 @@ class Unpublisher {
         return cancellationId
     }
     
-    func publishNow(_ nEvent:NEvent) {
-        sendToRelays(nEvent)
+    func publishNow(_ nEvent: NEvent, skipDB: Bool = false) {
+        sendToRelays(nEvent, skipDB: skipDB)
     }
     
     func cancel(_ cancellationId:UUID) -> Bool {
@@ -117,7 +117,7 @@ class Unpublisher {
         DataProvider.shared().save()
     }
     
-    private func sendToRelays(_ nEvent: NEvent) {
+    private func sendToRelays(_ nEvent: NEvent, skipDB: Bool = false) {
         if nEvent.kind == .nwcRequest {
             L.og.info("⚡️ Sending .nwcRequest to NWC relay")
             ConnectionPool.shared.sendMessage(
@@ -126,6 +126,17 @@ class Unpublisher {
                     onlyForNWCRelay: true,
                     relayType: .READ,
                     message: nEvent.wrappedEventJson()
+                ),
+                accountPubkey: nEvent.publicKey
+            )
+            return
+        }
+        
+        if skipDB {
+            ConnectionPool.shared.sendMessage(
+                NosturClientMessage(
+                    clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: nEvent.toNostrEssentialsEvent()),
+                    relayType: .WRITE
                 ),
                 accountPubkey: nEvent.publicKey
             )
