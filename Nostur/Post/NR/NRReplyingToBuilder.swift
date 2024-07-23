@@ -55,17 +55,20 @@ class NRReplyingToBuilder {
 
 }
 
-func contactUsername(fromPubkey pubkey: String, event: Event) -> String {
+func contactUsername(fromPubkey pubkey: String, event: Event? = nil) -> String {
     if let anyName = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
         return anyName
     }
-    if let contact = event.contact, contact.pubkey == pubkey {
-        PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
-        return contact.anyName
-    }
-    if let contact = event.replyTo?.contact, pubkey == contact.pubkey {
-        PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
-        return contact.anyName
+    
+    if let event {
+        if let contact = event.contact, contact.pubkey == pubkey {
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+            return contact.anyName
+        }
+        if let contact = event.replyTo?.contact, pubkey == contact.pubkey {
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+            return contact.anyName
+        }
     }
     if !Thread.isMainThread {
         if let contact = EventRelationsQueue.shared.getAwaitingBgContacts().first(where: { $0.pubkey == pubkey }) {
@@ -74,10 +77,12 @@ func contactUsername(fromPubkey pubkey: String, event: Event) -> String {
         }
     }
     
-    if let context = event.managedObjectContext {
-        if let contact = Contact.fetchByPubkey(pubkey, context: context) {
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
-            return contact.anyName
+    if let event {
+        if let context = event.managedObjectContext {
+            if let contact = Contact.fetchByPubkey(pubkey, context: context) {
+                PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+                return contact.anyName
+            }
         }
     }
     return "..."

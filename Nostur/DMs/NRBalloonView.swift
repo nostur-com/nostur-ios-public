@@ -59,7 +59,7 @@ struct NRBalloonView: View {
         .onAppear {
             // Take width of NRContentTextRendererInner > NRTextFixed.debugDimensions("NRTextFixed")
             // Subtract that from dim.listWidth. We need to pass that result (98.0) to NRContentElementBuilder.buildElements(_ event:Event, dm:Bool, availableWidth: CGFloat?) so our NRTextFixed calculates correct heights and doesn't cut off
-            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(event, dm: true, primaryColor: isSentByCurrentUser ? .white : themes.theme.primary)
+            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(input: event.noteText, fastTags: event.fastTags, event: event , primaryColor: isSentByCurrentUser ? .white : themes.theme.primary)
             self.contentElements = elements
         }
     }

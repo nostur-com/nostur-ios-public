@@ -20,7 +20,7 @@ class NRTextParser { // TEXT things
     
     private init() { }
 
-    func parseText(_ event: Event, text: String, primaryColor: Color? = nil) -> AttributedStringWithPs {
+    func parseText(fastTags: [FastTag], event: Event? = nil, text: String, primaryColor: Color? = nil) -> AttributedStringWithPs {
         let fontColor = primaryColor ?? Themes.default.theme.primary
 
         // Remove image links + Handle naddr1...
@@ -28,7 +28,6 @@ class NRTextParser { // TEXT things
         // and NoteRow shows them in ImageViewer
         var newText = Self.replaceNaddrWithMarkdownLinks(
             in: self.removeImageLinks(
-                event: event,
                 text: text
             )
         )
@@ -37,7 +36,7 @@ class NRTextParser { // TEXT things
         newText = Self.replaceHashtagsWithMarkdownLinks(in: newText)
 
         // NIP-08, handle #[0] #[1] etc
-        let textWithPs = parseTagIndexedMentions(event: event, text: newText)
+        let textWithPs = parseTagIndexedMentions(fastTags: fastTags, event: event, text: newText)
 
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
         var newerTextWithPs = parseUserMentions(event: event, text: textWithPs.text)
@@ -60,7 +59,7 @@ class NRTextParser { // TEXT things
             mutableAttributedString.addHashtagIcons()
             mutableAttributedString.addNewlinesIfContainsAsianCharacters()
                         
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
             
             return a
         }
@@ -85,11 +84,12 @@ class NRTextParser { // TEXT things
         }
     }
     
-    func parseMD(_ event:Event, text: String) -> MarkdownContentWithPs {
+    func parseMD(_ event: Event, text: String) -> MarkdownContentWithPs {
 
         // 1) Replace naddr
         // 2) NIP-08, handle #[0] #[1] etc
         let textWithPs = parseTagIndexedMentions(
+            fastTags: event.fastTags,
             event: event,
             // Replace [..](nostr:....) with interal [..](nostur:...)
             text:  Self.replaceNaddrWithMarkdownLinksMD(in: text)
@@ -108,13 +108,13 @@ class NRTextParser { // TEXT things
         
 //        print(finalText)
         
-        let a = MarkdownContentWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+        let a = MarkdownContentWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
         return a
     }
 
-    func copyPasteText(_ event:Event, text: String) -> TextWithPs {
+    func copyPasteText(fastTags: [FastTag], event: Event? = nil, text: String) -> TextWithPs {
         // NIP-08, handle #[0] #[1] etc
-        let textWithPs = parseTagIndexedMentions(event: event, text: text, plainText: true)
+        let textWithPs = parseTagIndexedMentions(fastTags: fastTags, event: event, text: text, plainText: true)
 
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
         let newerTextWithPs = parseUserMentions(event: event, text: textWithPs.text, plainText: true)
@@ -123,8 +123,8 @@ class NRTextParser { // TEXT things
     }
 
     // NIP-08 (deprecated in favor of NIP-27)
-    private func parseTagIndexedMentions(event: Event, text: String, plainText: Bool = false) -> TextWithPs {
-        guard !event.fastTags.isEmpty else { return TextWithPs(text: text, pTags: []) }
+    private func parseTagIndexedMentions(fastTags: [FastTag], event: Event? = nil, text: String, plainText: Bool = false) -> TextWithPs {
+        guard !fastTags.isEmpty else { return TextWithPs(text: text, pTags: []) }
 
         var pTags = [Ptag]()
         var newText = text
@@ -136,11 +136,11 @@ class NRTextParser { // TEXT things
             let range = match.range(at: 1)
             guard let swiftRange = Range(range, in: text),
                   let tagIndex = Int(text[swiftRange]),
-                  tagIndex < event.fastTags.count else {
+                  tagIndex < fastTags.count else {
                 continue
             }
             
-            let tag = event.fastTags[tagIndex]
+            let tag = fastTags[tagIndex]
 
             if tag.0 == "p" {
                 pTags.append(tag.1)
@@ -171,7 +171,7 @@ class NRTextParser { // TEXT things
     static let npubNprofRegex = try! NSRegularExpression(pattern: "(@npub1[023456789acdefghjklmnpqrstuvwxyz]{58})|(nostr:npub1[023456789acdefghjklmnpqrstuvwxyz]{58})|(nostr:nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b", options: [])
     
     // NIP-27 handle nostr:npub or nostr:nprofile
-    private func parseUserMentions(event: Event, text: String, plainText: Bool = false) -> TextWithPs {
+    private func parseUserMentions(event: Event? = nil, text: String, plainText: Bool = false) -> TextWithPs {
         var replacedString = text
         let nsRange = NSRange(replacedString.startIndex..<replacedString.endIndex, in: text)
         var pTags = [Ptag]()
@@ -235,7 +235,7 @@ class NRTextParser { // TEXT things
     }
 
 
-    private func removeImageLinks(event: Event, text:String) -> String {
+    private func removeImageLinks(text:String) -> String {
         text.replacingOccurrences(of: #"(?i)https?:\/\/\S+?\.(?:png#?|jpe?g#?|gif#?|webp#?|bmp#?)(\??\S+){0,1}\b"#,
                                   with: "",
                                   options: .regularExpression)
