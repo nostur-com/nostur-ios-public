@@ -65,7 +65,7 @@ struct NosturVideoViewur: View {
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 }
                 else {
-                    MusicOrVideo(url: url, isPlaying: $isPlaying, isMuted: $isMuted, didStart: $didStart, fullWidth: fullWidth, contentPadding: contentPadding, videoWidth: videoWidth)
+                    MusicOrVideo(url: url, isPlaying: $isPlaying, isMuted: $isMuted, didStart: $didStart, fullWidth: fullWidth, contentPadding: contentPadding, videoWidth: videoWidth, thumbnail: thumbnail)
                 }
             }
             else if videoShown {

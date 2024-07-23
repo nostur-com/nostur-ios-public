@@ -71,6 +71,11 @@ struct MusicOrVideo: View {
                     if !didStart {
                         Color.black
                             .overlay {
+                                if let thumbnail {
+                                    SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: videoWidth, autoload: true)
+                                }
+                            }
+                            .overlay {
                                 Button(action: {
                                     isPlaying = true
                                     didStart = true
