@@ -83,7 +83,7 @@ public struct Nip05Parts {
 
 extension Search {
     
-    func nprofileSearch(_ term:String) {
+    func nprofileSearch(_ term: String) {
         guard let identifier = try? ShareableIdentifier(term),
               let pubkey = identifier.pubkey
         else { return }

@@ -134,14 +134,16 @@ struct InnerPFP: View {
                         if let image = state.image {
                             if state.imageContainer?.type == .gif {
                                 image
-                                    .interpolation(.none)
                                     .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
+                                    .interpolation(.none)
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: size, height: size)
 //                                    .withoutAnimation()
                             }
                             else {
-                                image.interpolation(.none)
+                                image
+                                    .resizable()
+                                    .interpolation(.none)
                                     .frame(width: size, height: size)
 //                                    .withoutAnimation()
                             }
@@ -162,8 +164,8 @@ struct InnerPFP: View {
                                 ZStack {
                                     if let image = state.image {
                                         image
-                                            .interpolation(.none)
                                             .resizable()
+                                            .interpolation(.none)
                                             .aspectRatio(contentMode: .fill)
 //                                            .withoutAnimation()
                                     }
@@ -177,8 +179,8 @@ struct InnerPFP: View {
                             }
                             else if let image = state.image {
                                 image
-                                    .interpolation(.none)
                                     .resizable()
+                                    .interpolation(.none)
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: size, height: size)
 //                                    .cornerRadius(size/2)

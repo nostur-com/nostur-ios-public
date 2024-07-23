@@ -11,22 +11,22 @@ import SwiftUI
 
 // Note Full width
 struct Kind1: View {
-    @EnvironmentObject private var dim:DIMENSIONS
-    @ObservedObject private var pfpAttributes: NRPost.PFPAttributes
+    @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject private var pfpAttributes: PFPAttributes
     @ObservedObject var settings:SettingsStore = .shared
     
-    private let nrPost:NRPost
-    private let hideFooter:Bool // For rendering in NewReply
-    private let missingReplyTo:Bool // For rendering in thread
-    private var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-    private let isReply:Bool // is reply of PostDetail
-    private let isDetail:Bool
-    private let grouped:Bool
-    private let forceAutoload:Bool
-    private var theme:Theme
+    private let nrPost: NRPost
+    private let hideFooter: Bool // For rendering in NewReply
+    private let missingReplyTo: Bool // For rendering in thread
+    private var connect: ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+    private let isReply: Bool // is reply of PostDetail
+    private let isDetail: Bool
+    private let grouped: Bool
+    private let forceAutoload: Bool
+    private var theme: Theme
     @State private var didStart = false
     
-    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, grouped:Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -41,7 +41,7 @@ struct Kind1: View {
     
     let THREAD_LINE_OFFSET = 34.0
     
-    var imageWidth:CGFloat {
+    var imageWidth: CGFloat {
         // FULL WIDTH IS ON
         
         // LIST OR LIST PARENT

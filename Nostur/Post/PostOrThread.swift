@@ -10,10 +10,10 @@ import SwiftUI
 struct PostOrThread: View {
     @EnvironmentObject private var themes: Themes
     private let nrPost: NRPost
-    @ObservedObject private var postOrThreadAttributes: NRPost.PostOrThreadAttributes
+    @ObservedObject private var postOrThreadAttributes:  PostOrThreadAttributes
     private var grouped = false
-    private var rootId:String? = nil
-    @ObservedObject private  var settings:SettingsStore = .shared
+    private var rootId: String? = nil
+    @ObservedObject private  var settings: SettingsStore = .shared
     
     init(nrPost: NRPost, grouped: Bool = false, rootId: String? = nil) {
         self.nrPost = nrPost

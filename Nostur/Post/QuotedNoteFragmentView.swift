@@ -9,7 +9,7 @@ import SwiftUI
 
 struct QuotedNoteFragmentView: View {
     @ObservedObject private var nrPost: NRPost
-    @ObservedObject private var postRowDeletableAttributes: NRPost.PostRowDeletableAttributes
+    @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
     private var forceAutoload: Bool
     private var theme: Theme
     @State private var name: String

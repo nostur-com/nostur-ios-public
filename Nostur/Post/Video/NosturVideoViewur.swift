@@ -14,14 +14,17 @@ import AVFoundation
 @MainActor
 struct NosturVideoViewur: View {
     @Environment(\.openURL) private var openURL
-    public let url:URL
-    public let pubkey:String
-    public var height:CGFloat?
-    public let videoWidth:CGFloat
-    public let autoload:Bool
-    public var fullWidth:Bool = false
-    public var contentPadding:CGFloat = 10.0
-    public var theme:Theme
+    public let url: URL
+    public let pubkey: String
+    public var height: CGFloat?
+    public let videoWidth: CGFloat
+    public let autoload: Bool
+    public var fullWidth: Bool = false
+    public var contentPadding: CGFloat = 10.0
+    public var theme: Theme
+    @Binding public var didStart: Bool
+    public var thumbnail: URL?
+    
     @State private var videoState:VideoLoadingState = .initial
     @State private var videoShown = true
     @State private var cachedVideo:CachedVideo? = nil
@@ -30,10 +33,9 @@ struct NosturVideoViewur: View {
     @State private var loadNonHttpsAnyway = false
     @State private var isPlaying = false
     @State private var isMuted = false
-    @Binding var didStart:Bool
     @State private var isStream = false
     
-    static let aspect:CGFloat = 16/9
+    static let aspect: CGFloat = 16/9
     
     var body: some View {
         VStack {

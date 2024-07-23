@@ -9,18 +9,18 @@ import SwiftUI
 
 // Highlight note
 struct Highlight: View {
-    @ObservedObject private var pfpAttributes: NRPost.PFPAttributes
-    @ObservedObject private var highlightAttributes: NRPost.HighlightAttributes
-    @ObservedObject private var settings:SettingsStore = .shared
+    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var highlightAttributes: HighlightAttributes
+    @ObservedObject private var settings: SettingsStore = .shared
     
-    private let nrPost:NRPost
-    private let hideFooter:Bool // For rendering in NewReply
-    private let missingReplyTo:Bool // For rendering in thread
-    private var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-    private let grouped:Bool
-    private var theme:Theme
+    private let nrPost: NRPost
+    private let hideFooter: Bool // For rendering in NewReply
+    private let missingReplyTo :Bool // For rendering in thread
+    private var connect: ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+    private let grouped: Bool
+    private var theme: Theme
     
-    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, grouped:Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, grouped: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.highlightAttributes = nrPost.highlightAttributes

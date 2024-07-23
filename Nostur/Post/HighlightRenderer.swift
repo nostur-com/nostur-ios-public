@@ -9,9 +9,9 @@ import SwiftUI
 
 // TODO: Not sure why we have Highlight() and HighlightRenderer(). Can maybe remove one.
 struct HighlightRenderer: View {
-    private let nrPost:NRPost
-    @ObservedObject private var highlightAttributes:NRPost.HighlightAttributes
-    private var theme:Theme
+    private let nrPost: NRPost
+    @ObservedObject private var highlightAttributes: HighlightAttributes
+    private var theme: Theme
     
     init(nrPost: NRPost, theme: Theme) {
         self.nrPost = nrPost

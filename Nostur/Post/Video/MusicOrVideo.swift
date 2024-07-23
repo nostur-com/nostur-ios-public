@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct MusicOrVideo: View {
-    public var url:URL
-    @Binding public var isPlaying:Bool
-    @Binding public var isMuted:Bool
-    @Binding public var didStart:Bool
-    public var fullWidth:Bool
-    public var contentPadding:CGFloat
-    public var videoWidth:CGFloat
+    public var url: URL
+    @Binding public var isPlaying: Bool
+    @Binding public var isMuted: Bool
+    @Binding public var didStart: Bool
+    public var fullWidth: Bool
+    public var contentPadding: CGFloat
+    public var videoWidth: CGFloat
+    public var thumbnail: URL?
     
     enum LoadingState {
         case initializing
@@ -25,9 +26,9 @@ struct MusicOrVideo: View {
         case timeout
     }
     
-    static let aspect:CGFloat = 16/9
+    static let aspect: CGFloat = 16/9
     
-    @State private var state:LoadingState = .initializing
+    @State private var state: LoadingState = .initializing
     
     var body: some View {
         switch state {
