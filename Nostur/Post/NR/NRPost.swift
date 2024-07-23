@@ -316,7 +316,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
 //        self.mentionsCount = event.mentionsCount
         
         self.fastTags = event.fastTags
-        self.plainText = NRTextParser.shared.copyPasteText(event, text: event.content ?? "").text
+        self.plainText = NRTextParser.shared.copyPasteText(fastTags: fastTags, event: event, text: event.content ?? "").text
         self.withParents = withParents
         self.withReplies = withReplies
         self.withReplyTo = withReplyTo
