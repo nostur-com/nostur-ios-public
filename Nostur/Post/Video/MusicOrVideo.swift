@@ -184,6 +184,9 @@ func detectStreamType(_ content:String) -> StreamType {
     else if content.contains("FRAME-RATE=") {
         return .video
     }
+    else if content.contains("PLAYLIST-TYPE:VOD") {
+        return .video
+    }
     return .unknown // probably audio
 }
 
