@@ -49,8 +49,7 @@ class EventRelationsQueue {
         cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true, block: { [weak self] timer in
             let now = Date()
             
-            bg().perform {
-                guard let self else { return }
+            self.ctx.perform { [unowned self] in
                 self.waitingEvents = self.waitingEvents.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
                 self.waitingContacts = self.waitingContacts.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
             }            
@@ -61,42 +60,22 @@ class EventRelationsQueue {
     /// - Parameter event: Event should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingEvent(_ event: Event? = nil, debugInfo:String? = "") {
         guard let event = event else { return }
-        let isBGevent = event.managedObjectContext == ctx || event.managedObjectContext == nil
-        if Thread.isMainThread {
-            if isBGevent {
-                ctx.perform { [unowned self] in
-                    guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
-                    self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
-                    L.og.debug("🟢🟢🟢🔴🔴 WRONG THREAD: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
-                }
+        
+        #if DEBUG
+            if event.managedObjectContext != ctx && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                fatalError("Should only be called from bg()")
             }
-            else {
-                ctx.perform { [unowned self] in
-                    guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
-                    guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
-                    self.waitingEvents[privateEvent.id] = QueuedEvent(event: privateEvent, queuedAt: Date.now)
-                    L.og.debug("🟢🟢🟢🔴🔴 WRONG THREAD+MAINEVENT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
-                }
-            }
+        #endif
+        
+        guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
+        guard self.waitingEvents[event.id] == nil else { return }
+        self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
+        
+        #if DEBUG
+        if self.waitingEvents.count % 25 == 0 {
+            L.og.debug("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
         }
-        else {
-            guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
-            if isBGevent {
-                guard self.waitingEvents[event.id] == nil else { return }
-                self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
-                if self.waitingEvents.count % 25 == 0 {
-                    L.og.debug("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
-                }
-                else {
-                    L.og.debug("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
-                }
-            }
-            else {
-                guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
-                self.waitingEvents[privateEvent.id] = QueuedEvent(event: privateEvent, queuedAt: Date.now)
-                L.og.debug("🟢🟢🟢🟢🔴🔴 WRONG MAINEVENT. addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
-            }
-        }
+        #endif
     }
     
     /// Returns events that are waiting for relations to be updated, like .contact, .contacts, .replyTo etc

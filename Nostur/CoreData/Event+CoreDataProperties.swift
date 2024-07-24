@@ -72,18 +72,6 @@ extension Event {
     // - "is_update": to not show same article over and over in feed when it gets updates
     @NSManaged public var flags: String
     
-    var reactionTo_:Event? {
-        guard reactionTo == nil else { return reactionTo }
-        guard let reactionToId = reactionToId else { return nil }
-        guard let ctx = managedObjectContext else { return nil }
-        if let found = try? Event.fetchEvent(id: reactionToId, context: ctx) {
-//            self.objectWillChange.send()
-            self.reactionTo = found
-            return found
-        }
-        return nil
-    }
-    
     var contact_: Contact? {
         guard contact == nil else { return contact }
         guard let ctx = managedObjectContext else { return nil }
@@ -946,10 +934,14 @@ extension Event {
                         // TODO: Maybe wrong main context event added somewhere?
                     }
                     else {
-                        savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
+                        context.perform { // set relation on next .perform to fix context crash?
+                            savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
+                        }
                     }
                     if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
-                        savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
+                        context.perform { // we don't have .zappedEvent yet without .perform { } .. see few lines above
+                            savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
+                        }
                         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, eTag: savedEvent.zappedEventId, zapState: .zapReceiptConfirmed))
                     }
                 }
@@ -972,13 +964,17 @@ extension Event {
         if event.kind == .reaction {
             if let lastE = event.lastE() {
                 savedEvent.reactionToId = lastE
-                savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context) // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
-                if let otherPubkey =  savedEvent.reactionTo?.pubkey {
-                    savedEvent.otherPubkey = otherPubkey
+                // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
+                // here savedEvent is not saved yet, so appears it can crash on context, even when its the same context
+                context.perform { // so we save on next .perform?
+                    savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
+                    if let otherPubkey =  savedEvent.reactionTo?.pubkey {
+                        savedEvent.otherPubkey = otherPubkey
+                    }
+                    if savedEvent.otherPubkey == nil, let lastP = event.lastP() {
+                        savedEvent.otherPubkey = lastP
+                    }
                 }
-            }
-            if savedEvent.otherPubkey == nil, let lastP = event.lastP() {
-                savedEvent.otherPubkey = lastP
             }
         }
         
