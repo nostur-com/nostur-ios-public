@@ -14,6 +14,7 @@ struct QuotedNoteFragmentView: View {
     private var theme: Theme
     @State private var name: String
     @EnvironmentObject private var parentDIM: DIMENSIONS
+    @State private var couldBeImposter: Int16
     
     init(nrPost: NRPost, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -21,6 +22,7 @@ struct QuotedNoteFragmentView: View {
         self.forceAutoload = forceAutoload
         self.theme = theme
         self.name = nrPost.anyName
+        self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
     
     var body: some View {
@@ -59,6 +61,10 @@ struct QuotedNoteFragmentView: View {
                                         name = profile.name
                                     }
                                 }
+                            
+                            if couldBeImposter == 1 {
+                                PossibleImposterLabel(possibleImposterPubkey: nrPost.pubkey, followingPubkey: nrPost.contact?.similarToPubkey)
+                            }
                             
                             Group {
                                 Text(verbatim: " ·") //
@@ -115,7 +121,45 @@ struct QuotedNoteFragmentView: View {
                     }
                 }
             }
-//            .transaction { t in t.animation = nil }
+            .task {
+                guard let nrContact = nrPost.contact else { return }
+                guard !SettingsStore.shared.lowDataMode else { return }
+                guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
+                guard nrContact.metadata_created_at != 0 else { return }
+                guard nrContact.couldBeImposter == -1 else { return }
+                guard !nrContact.following else { return }
+                guard !NewOnboardingTracker.shared.isOnboarding else { return }
+                guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+
+                let contactAnyName = nrContact.anyName.lowercased()
+                let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+                let cPubkey = nrContact.pubkey
+
+                bg().perform { [weak nrContact] in
+                    guard let nrContact else { return }
+                    guard let account = account() else { return }
+                    guard account.publicKey == currentAccountPubkey else { return }
+                    guard let (_, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                        pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
+                    }) else { return }
+                    
+                    guard let cPic = nrContact.pictureUrl, similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
+                    Task.detached(priority: .background) {
+                        let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+                        DispatchQueue.main.async { [weak nrContact] in
+                            guard let nrContact else { return }
+                            guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                            couldBeImposter = similarPFP ? 1 : 0
+                            nrContact.couldBeImposter = couldBeImposter
+                            bg().perform {
+                                guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
+                                nrContact.contact?.couldBeImposter = similarPFP ? 1 : 0
+    //                            DataProvider.shared().bgSave()
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     
