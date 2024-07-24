@@ -114,8 +114,8 @@ class MessageParser {
                         
                         // Handle directly (not to db) or continue to importer
                         switch nEvent.kind {
-                        case .ncMessage:
-                            try handleNCMessage(message: message, nEvent: nEvent)
+                        case .ncMessage, .chatMessage:
+                            try handleNoDbMessage(message: message, nEvent: nEvent)
                         case .nwcInfo:
                             try handleNWCInfoResponse(message: message, nEvent: nEvent)
                         case .nwcResponse:
@@ -162,7 +162,7 @@ class MessageParser {
     
     // MARK: Handle directly without touching db
     
-    func handleNCMessage(message: RelayMessage, nEvent: NEvent) throws {
+    func handleNoDbMessage(message: RelayMessage, nEvent: NEvent) throws {
         guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
             throw RelayMessage.error.INVALID_SIGNATURE
         }
