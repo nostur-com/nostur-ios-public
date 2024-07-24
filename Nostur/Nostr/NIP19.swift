@@ -86,6 +86,11 @@ class ShareableIdentifier: Hashable {
     var relays: [String] = []
     var kind: Int64?
     
+    public var aTag: String? {
+        guard let kind, let pubkey, let dTag = self.eventId else { return nil }
+        return String(format: "%d:%@:%@", kind, pubkey, dTag)
+    }
+    
     init(_ bech32string:String) throws {
         self.bech32string = bech32string
         let (prefix, tlvData) = try Bech32.decode(other: bech32string)
