@@ -274,7 +274,7 @@ class WebOfTrust: ObservableObject {
         }
         self.loadFollowingFollowing(wotFollowingPubkeys:wotFollowingPubkeys, force: force)
         if let lastUpdated = lastUpdatedDate(mainAccountWoTpubkey) {
-            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.mainAccountWoTpubkey).txt --> \(lastUpdated.description)")
+            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.mainAccountWoTpubkey).bin --> \(lastUpdated.description)")
             DispatchQueue.main.async { [weak self] in
                 self?.lastUpdated = lastUpdated
             }
@@ -419,7 +419,7 @@ class WebOfTrust: ObservableObject {
             }
         }
         catch {
-            L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to read file: web-of-trust-\(pubkey).txt: \(error)")
+            L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to read file: web-of-trust-\(pubkey).bin: \(error)")
             return Set<String>()
         }
     }
@@ -455,14 +455,14 @@ class WebOfTrust: ObservableObject {
     private func lastUpdatedDate(_ pubkey: String) -> Date? {
         do {
             let filename = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-                .appendingPathComponent("web-of-trust-\(pubkey).txt")
+                .appendingPathComponent("web-of-trust-\(pubkey).bin")
 
             let attributes = try FileManager.default.attributesOfItem(atPath: filename.path)
             let date = attributes[FileAttributeKey.modificationDate] as! Date
             return date
         }
         catch {
-            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate? doesn't exist yet: web-of-trust-\(pubkey).txt")
+            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate? doesn't exist yet: web-of-trust-\(pubkey).bin")
             return nil
         }
     }
