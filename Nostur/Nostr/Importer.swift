@@ -48,7 +48,7 @@ class Importer {
     var nwcConnection:NWCConnection?
     private var bgContext: NSManagedObjectContext
     
-    init() {
+    private init() {
         bgContext = bg()
         triggerImportWhenRelayMessagesAreAdded()
         sendReceivedNotifications()

@@ -23,17 +23,17 @@ import CoreData
 
 class EventRelationsQueue {
     
-    let SPAM_LIMIT = 2000
+    private let SPAM_LIMIT = 2000
     
     typealias EventId = String
     typealias ContactPubkey = String
     
-    struct QueuedEvent {
+    public struct QueuedEvent {
         let event: Event
         let queuedAt: Date
     }
     
-    struct QueuedContact {
+    public struct QueuedContact {
         let contact: Contact
         let queuedAt: Date
     }
@@ -45,8 +45,8 @@ class EventRelationsQueue {
     private var waitingContacts = [ContactPubkey: QueuedContact]()
     private var cleanUpTimer: Timer?
     
-    init() {
-        cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true, block: { [weak self] timer in
+    private init() {
+        cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true, block: { [unowned self] timer in
             let now = Date()
             
             self.ctx.perform { [unowned self] in
