@@ -80,6 +80,19 @@ public class PreviewEnvironment {
             }
         }
     }
+    
+    public func parseNoDbMessages(_ messages: [String]) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            for text in messages {
+                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory") else { continue }
+                guard message.event != nil else { continue }
+
+                DispatchQueue.main.async {
+                    sendNotification(.receivedMessage, message)
+                }
+            }
+        }
+    }
 }
 
 extension PreviewEnvironment {
