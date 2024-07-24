@@ -515,7 +515,9 @@ public final class NewPostModel: ObservableObject {
             
             // Insert the mention text at the cursor position
             let textBeforeCursor = currentText.prefix(cursorPosition)
-            let textAfterCursor = currentText.suffix(currentText.count - cursorPosition)
+            
+            // #0    (null) in Swift runtime failure: Can't take a suffix of negative length from a collection () <-- Maybe fix with max(,)
+            let textAfterCursor = currentText.suffix(max(0,currentText.count - cursorPosition))
             currentText = "\(textBeforeCursor.dropLast(term.count))\(mentionText)\(textAfterCursor)"
             
             // Update the text storage
