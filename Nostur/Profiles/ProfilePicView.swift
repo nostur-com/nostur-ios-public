@@ -271,31 +271,39 @@ struct ProfilePicView_Previews: PreviewProvider {
 
 
 struct MiniPFP: View {
-    public var pictureUrl: URL
+    public var pictureUrl: URL?
     public var size: CGFloat = 20.0
     
     var body: some View {
-        LazyImage(request: pfpImageRequestFor(pictureUrl, size: size)) { state in
-            if let image = state.image {
-                if state.imageContainer?.type == .gif {
-                    image
-                        .interpolation(.none)
-                        .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
-                        .aspectRatio(contentMode: .fill)
+        if let pictureUrl {
+            LazyImage(request: pfpImageRequestFor(pictureUrl, size: size)) { state in
+                if let image = state.image {
+                    if state.imageContainer?.type == .gif {
+                        image
+                            .interpolation(.none)
+                            .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    }
+                    else {
+                        image.interpolation(.none)
+                    }
                 }
-                else {
-                    image.interpolation(.none)
-                }
+                else { Color.systemBackground }
             }
-            else { Color.systemBackground }
+            .pipeline(ImageProcessing.shared.pfp)
+            .frame(width: size, height: size)
+            .cornerRadius(size/2)
+            .background(
+                Circle()
+                    .strokeBorder(.regularMaterial, lineWidth: 3)
+                    .background(Circle().fill(Color.systemBackground))
+            )
         }
-        .pipeline(ImageProcessing.shared.pfp)
-        .frame(width: size, height: size)
-        .cornerRadius(size/2)
-        .background(
+        else {
             Circle()
-                .strokeBorder(.regularMaterial, lineWidth: 5)
+                .strokeBorder(.regularMaterial, lineWidth: 3)
                 .background(Circle().fill(Color.systemBackground))
-        )
+                .frame(width: size, height: size)
+        }
     }
 }
