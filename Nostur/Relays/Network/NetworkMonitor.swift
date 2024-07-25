@@ -18,6 +18,8 @@ public class NetworkMonitor: ObservableObject {
     
     @Published public var isConnected: Bool = true
     
+    
+    @Published public var vpnConfigurationDetected: Bool = false
     // Helper for SwiftUI views where a negative binding is needed
     // (example: .fullScreenCover(isPresented: $networkMonitor.isDisconnected)
     // !$networkMonitor.isConnected is not possible but $networkMonitor.isDisconnected works.
@@ -38,11 +40,21 @@ public class NetworkMonitor: ObservableObject {
                 if self.isConnected != isConnected {
                     self.isConnected = isConnected
                 }
+                if isConnected {
+                }
+                else {
+                    DispatchQueue.main.async {
+                        self.vpnConfigurationDetected = false
+                    }
+                }
             }
             .store(in: &subscriptions)
         
         monitor.pathUpdateHandler = { path in
             self.isConnectedSubject.send(path.status == .satisfied)
+            DispatchQueue.main.async {
+                self.vpnConfigurationDetected = path.usesInterfaceType(.other)
+            }
         }
         monitor.start(queue: queue)
     }
