@@ -115,6 +115,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     public func connect(andSend: String? = nil, forceConnectionAttempt: Bool = false) {
+        if isOutbox && !vpnGuardOK() { // TODO: Maybe need a small delay so VPN has time to connect first?
+            L.sockets.debug("📡📡 No VPN: Connection cancelled (\(self.relayData.url)"); return
+        }
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             guard self.isDeviceConnected else {

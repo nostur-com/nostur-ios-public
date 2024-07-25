@@ -100,6 +100,7 @@ extension Search {
                 try await Task.sleep(nanoseconds: UInt64(3) * NSEC_PER_SEC)
                 await bg().perform {
                     // If we don't have the event after X seconds, fetch from relay hint
+                    guard vpnGuardOK() else { return }
                     if Contact.fetchByPubkey(pubkey, context: bg()) == nil {
                         if let relay = identifier.relays.first {
                             ConnectionPool.shared.sendEphemeralMessage(RM.getUserMetadata(pubkey: pubkey), relay: relay)
@@ -164,6 +165,7 @@ extension Search {
                                 try await Task.sleep(nanoseconds: UInt64(3) * NSEC_PER_SEC)
                                 await bg().perform {
                                     // If we don't have the event after X seconds, fetch from relay hint
+                                    guard vpnGuardOK() else { return }
                                     guard Event.fetchReplacableEvent(
                                         kind,
                                         pubkey: pubkey,
@@ -241,7 +243,9 @@ extension Search {
             do {
                 try await Task.sleep(nanoseconds: UInt64(3) * NSEC_PER_SEC)
                 await bg().perform {
+                    
                     // If we don't have the event after X seconds, fetch from relay hint
+                    guard vpnGuardOK() else { return }
                     guard (try? Event.fetchEvent(id: noteHex, context: bg())) == nil
                     else { return }
                     
