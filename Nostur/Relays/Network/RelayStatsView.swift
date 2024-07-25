@@ -82,6 +82,7 @@ struct RelayStatsRow: View {
             
             if stats.lastNoticeMessages.count > 0 {
                 Text("\(stats.lastNoticeMessages.count)")
+                    .lineLimit(1)
                     .font(.footnote)
                     .foregroundColor(.white)
                     .padding(.horizontal, 4)
