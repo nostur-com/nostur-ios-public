@@ -41,13 +41,7 @@ struct NoteRow: View {
             KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped, theme: theme)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
-//                    .transaction { t in
-//                        t.animation = nil
-//                    }
         }
-//        .transaction { t in
-//            t.animation = nil
-//        }
     }
     
     private func enqueue() {

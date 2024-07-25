@@ -66,12 +66,8 @@ struct Kind1Default: View {
                         theme.lineColor
                             .frame(width: 1, height: 20)
                             .offset(x: -0.5, y: -10)
-//                            .transaction { t in
-//                                t.animation = nil
-//                            }
                     }
                 }
-//                .withoutAnimation() // seems to fix flying PFPs
                 .onTapGesture {
                     withAnimation {
                         showMiniProfile = true
@@ -113,33 +109,17 @@ struct Kind1Default: View {
 //                .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
 //                .drawingGroup(opaque: true)
 //                .debugDimensions()
-//                .withoutAnimation()
-//                .transaction { t in
-//                    t.animation = nil
-//                }
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
-//                        .withoutAnimation()
-//                        .transaction { t in
-//                            t.animation = nil
-//                        }
                 }
                 if let fileMetadata = nrPost.fileMetadata {
                     Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, theme: theme, didStart: $didStart)
-//                        .withoutAnimation()
-//                        .transaction { transaction in
-//                            transaction.animation = nil
-//                        }
                 }
                 else {
                     if let subject = nrPost.subject {
                         Text(subject)
                             .fontWeight(.bold)
                             .lineLimit(3)
-//                            .withoutAnimation()
-//                            .transaction { t in
-//                                t.animation = nil
-//                            }
                     }
                     if imageWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -161,7 +141,6 @@ struct Kind1Default: View {
                         if (nrPost.previewWeights?.moreItems ?? false) {
                             ReadMoreButton(nrPost: nrPost)
                                 .padding(.vertical, 5)
-//                                .withoutAnimation()
                                 .hCentered()
                         }
                     }
@@ -170,10 +149,6 @@ struct Kind1Default: View {
                     CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
                         .drawingGroup(opaque: true)
-//                        .withoutAnimation()
-//                        .transaction { t in
-//                            t.animation = nil
-//                        }
                 }
             }
         }
@@ -181,12 +156,7 @@ struct Kind1Default: View {
             if connect == .bottom || connect == .both {
                 theme.lineColor
                     .frame(width: 1)
-//                    .opacity(0.2)
                     .offset(x: THREAD_LINE_OFFSET, y: 20)
-//                    .withoutAnimation()
-//                    .transaction { t in
-//                        t.animation = nil
-//                    }
             }
         }
     }
