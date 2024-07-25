@@ -14,6 +14,7 @@ import NavigationBackport
 struct Settings: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject private var settings: SettingsStore = .shared
+    @ObservedObject private var network: NetworkMonitor = .shared
     @AppStorage("devToggle") private var devToggle: Bool = false
     @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
     @AppStorage("nip96_api_url") private var nip96ApiUrl = ""
@@ -353,6 +354,7 @@ struct Settings: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+          
                     
                     Toggle(isOn: $settings.followRelayHints) {
                         VStack(alignment: .leading) {
@@ -360,6 +362,34 @@ struct Settings: View {
                             Text("Connect to relays included in nostr links when content can't be found", comment:"Setting on settings screen")
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
+                        }
+                    }
+
+                    if settings.enableOutboxRelays || settings.followRelayHints {
+                        Toggle(isOn: $settings.enableVPNdetection) {
+                            VStack(alignment: .leading) {
+                                Text("VPN detection", comment: "Setting on settings screen")
+                                Text("Only connect to additional relays when a VPN is active")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                
+                                if network.vpnDetected {
+                                    HStack(spacing: 3) {
+                                        Image(systemName: "circle.fill").foregroundColor(.green)
+                                        Text("VPN detected")
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .font(.footnote)
+                                }
+                                else {
+                                    HStack(spacing: 3) {
+                                        Image(systemName: "circle.fill").foregroundColor(.red)
+                                        Text("VPN not detected")
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .font(.footnote)
+                                }
+                            }
                         }
                     }
                     

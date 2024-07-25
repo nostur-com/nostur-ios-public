@@ -54,6 +54,7 @@ final class SettingsStore: ObservableObject {
         
         static let followRelayHints:String = "follow_relay_hints"
         static let enableOutboxRelays:String = "outbox_enabled"
+        static let enableVPNdetection:String = "vpn_detection_enabled"
         
         static let proMode:String = "nostur_pro_mode"
     }
@@ -178,6 +179,7 @@ final class SettingsStore: ObservableObject {
             Keys.receiveLocalNotificationsLimitToFollows: false,
             Keys.followRelayHints: true,
             Keys.enableOutboxRelays: false,
+            Keys.enableVPNdetection: true,
             Keys.proMode: false
         ])
 
@@ -192,6 +194,7 @@ final class SettingsStore: ObservableObject {
         // TODO: Refactor settings, better use all properties on SettingsStore directly instead of (slower) defaults.bool()
         // for now only a few that we need right now:
         _enableOutboxRelays = defaults.bool(forKey: Keys.enableOutboxRelays)
+        _enableVPNdetection = defaults.bool(forKey: Keys.enableVPNdetection)
         _animatedPFPenabledCache = defaults.bool(forKey: Keys.animatedPFPenabled)
         _lowDataModeCache = defaults.bool(forKey: Keys.lowDataMode)
         _rowFooterEnabled = defaults.bool(forKey: Keys.rowFooterEnabled)
@@ -373,6 +376,17 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _enableOutboxRelays:Bool = false
+    
+    public var enableVPNdetection: Bool {
+        set {
+            objectWillChange.send()
+            _enableVPNdetection = newValue
+            defaults.set(newValue, forKey: Keys.enableVPNdetection);
+        }
+        get { _enableVPNdetection }
+    }
+    
+    private var _enableVPNdetection:Bool = false
     
     var webOfTrustLevel: String {
         set {
