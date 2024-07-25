@@ -507,6 +507,7 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func sendEphemeralMessage(_ message: String, relay: String) {
+        guard vpnGuardOK() else { L.sockets.debug("📡📡 No VPN: Connection cancelled (\(relay)"); return }
         let connection = addEphemeralConnection(RelayData.new(url: relay, read: true, write: false, search: true, auth: false, excludedPubkeys: []))
         if !connection.isConnected {
             connection.connect()
@@ -656,4 +657,17 @@ public class ConnectionPool: ObservableObject {
 struct SocketMessage {
     let id = UUID()
     let text: String
+}
+
+
+// Check if a connection is allowed
+func vpnGuardOK() -> Bool {
+    // VPN check is disabled in settings, so always allow
+    if (!SettingsStore.shared.enableVPNdetection) { return true }
+    
+    // VPN is detected so allow
+    if NetworkMonitor.shared.vpnDetected { return true }
+    
+    // VPN is not detected, don't allow connection
+    return false
 }

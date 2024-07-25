@@ -280,7 +280,9 @@ struct PostAndParent: View {
                                 if nrPost.replyTo == nil {
                                     // try search relays
                                     req(RM.getEvent(id: replyToId), relayType: .SEARCH)
+                                    
                                     // try relay hint
+                                    guard vpnGuardOK() else { return }
                                     fetchEventFromRelayHint(replyToId, fastTags: nrPost.fastTags)
                                 }
                             }

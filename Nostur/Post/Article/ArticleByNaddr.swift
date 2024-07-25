@@ -74,7 +74,7 @@ struct ArticleByNaddr: View {
                                 }
                                 // Still don't have the event? try to fetch from relay hint
                                 // TODO: Should try a relay we don't already have in our relay set
-                                else if settings.followRelayHints && [.initializing, .loading].contains(vm.state) {
+                                else if (settings.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
                                     // try search relays and relay hint
                                     vm.altFetch()
                                 }
