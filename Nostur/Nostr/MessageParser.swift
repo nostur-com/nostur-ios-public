@@ -30,7 +30,7 @@ class MessageParser {
     static let shared = MessageParser()
 
     // Subscriptions that will be kept open afte EOSE
-    static let ACTIVE_SUBSCRIPTIONS = Set(["Following","Explore","Notifications","REALTIME-DETAIL", "REALTIME-DETAIL-A", "NWC", "NC"])
+    static let ACTIVE_SUBSCRIPTIONS = Set(["Following","Explore","Notifications","REALTIME-DETAIL", "REALTIME-DETAIL-A", "NWC", "NC", "LIVEEVENTS", "ROOMPRESENCE", "-DB-CHAT-"])
     
     private var bgQueue = bg()
     private var poolQueue = ConnectionPool.shared.queue
@@ -96,7 +96,7 @@ class MessageParser {
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
-                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
+                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(5)) != "-DB-CHAT-" {
                         // Send close message to this specific socket, not all.
                         #if DEBUG
                         L.sockets.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
@@ -108,13 +108,22 @@ class MessageParser {
                         L.sockets.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId)")
                         #endif
                     }
+                    if subscriptionId.prefix(4) == "-DB-" {
+                        try handleNoDbMessage(message: message)
+                    }
                 default:
                     if (message.type == .EVENT) {
                         guard let nEvent = message.event else { L.sockets.info("🔴🔴 uhh, where is nEvent "); return }
                         
+                        // If a sub is prefixed with "-DB-" never hit db.
+                        if let subscriptionId = message.subscriptionId, subscriptionId.prefix(4) == "-DB-" {
+                            try handleNoDbMessage(message: message, nEvent: nEvent)
+                            return
+                        }
+                        
                         // Handle directly (not to db) or continue to importer
                         switch nEvent.kind {
-                        case .ncMessage, .chatMessage:
+                        case .ncMessage, .chatMessage, .custom(10312):
                             try handleNoDbMessage(message: message, nEvent: nEvent)
                         case .nwcInfo:
                             try handleNWCInfoResponse(message: message, nEvent: nEvent)
@@ -162,9 +171,11 @@ class MessageParser {
     
     // MARK: Handle directly without touching db
     
-    func handleNoDbMessage(message: RelayMessage, nEvent: NEvent) throws {
-        guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
-            throw RelayMessage.error.INVALID_SIGNATURE
+    func handleNoDbMessage(message: RelayMessage, nEvent: NEvent? = nil) throws {
+        if let nEvent {
+            guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
+                throw RelayMessage.error.INVALID_SIGNATURE
+            }
         }
         // Don't save to database, just handle response directly
         DispatchQueue.main.async {
