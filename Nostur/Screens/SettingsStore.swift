@@ -545,7 +545,7 @@ final class SettingsStore: ObservableObject {
     
     private var _mainWoTaccountPubkey:String = ""
     
-    static func shouldAutodownload(_ nrPost:NRPost) -> Bool {
+    static func shouldAutodownload(_ nrPost: NRPost) -> Bool {
         if nrPost.following { return true }
         switch SettingsStore.shared.autoDownloadFrom {
         case AutodownloadLevel.all.rawValue:
@@ -555,6 +555,21 @@ final class SettingsStore: ObservableObject {
             return WebOfTrust.shared.isAllowed(nrPost.pubkey)
         case AutodownloadLevel.onlyWoTstrict.rawValue:
             return isFollowing(nrPost.pubkey)
+        default:
+            return true
+        }
+    }
+    
+    static func shouldAutodownload(_ nrChat: NRChatMessage) -> Bool {
+        if nrChat.following { return true }
+        switch SettingsStore.shared.autoDownloadFrom {
+        case AutodownloadLevel.all.rawValue:
+            return true
+        case AutodownloadLevel.onlyWoT.rawValue:
+            guard WebOfTrust.shared.tresholdReached else { return true }
+            return WebOfTrust.shared.isAllowed(nrChat.pubkey)
+        case AutodownloadLevel.onlyWoTstrict.rawValue:
+            return isFollowing(nrChat.pubkey)
         default:
             return true
         }
