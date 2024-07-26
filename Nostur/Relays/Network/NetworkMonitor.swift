@@ -44,14 +44,15 @@ public class NetworkMonitor: ObservableObject {
                 guard let self else { return }
                 if self.isConnected != isConnected {
                     self.isConnected = isConnected
-                }
-                if isConnected {
-                    self.detectActualConnection()
-                }
-                else {
-                    DispatchQueue.main.async {
-                        self.vpnConfigurationDetected = false
-                        self.actualVPNconnectionDetected = false
+                    
+                    if isConnected {
+                        self.detectActualConnection()
+                    }
+                    else {
+                        DispatchQueue.main.async {
+                            self.vpnConfigurationDetected = false
+                            self.actualVPNconnectionDetected = false
+                        }
                     }
                 }
             }
@@ -87,6 +88,7 @@ public class NetworkMonitor: ObservableObject {
                     }
                     L.sockets.debug("📡📡 Connection is not over VPN")
                 }
+                c.cancel()
             }
         }
         c.start(queue: .main)
