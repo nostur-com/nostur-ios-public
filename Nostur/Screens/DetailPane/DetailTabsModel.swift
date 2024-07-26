@@ -15,14 +15,16 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     var nrContactPath: NRContactPath?
     var event: Event?
     var nrPost: NRPost?
+    var nrLiveEvent: NRLiveEvent?
     var nrContact: NRContact?
     var naddr1: Naddr1Path?
     var articlePath: ArticlePath?
     var profileTab: String?
     var galleryVM: GalleryViewModel?
     var isArticle: Bool {
-        naddr1 != nil || articlePath != nil
+        (naddr1 != nil && naddr1!.kind == 30023) || articlePath != nil
     }
+    
     @Published var navigationTitle = "" {
         didSet {
             L.og.debug("💄💄 navigationTitle set to \(self.navigationTitle)")
@@ -33,7 +35,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     
     public let navId: String
     
-    init(notePath: NotePath? = nil, contactPath: ContactPath? = nil, nrContactPath: NRContactPath? = nil, event: Event? = nil, nrContact: NRContact? = nil, nrPost: NRPost? = nil, naddr1: Naddr1Path? = nil, articlePath: ArticlePath? = nil, profileTab: String? = nil, galleryVM: GalleryViewModel? = nil, navId: String) {
+    init(notePath: NotePath? = nil, contactPath: ContactPath? = nil, nrContactPath: NRContactPath? = nil, event: Event? = nil, nrContact: NRContact? = nil, nrPost: NRPost? = nil, nrLiveEvent: NRLiveEvent? = nil, naddr1: Naddr1Path? = nil, articlePath: ArticlePath? = nil, profileTab: String? = nil, galleryVM: GalleryViewModel? = nil, navId: String) {
         self.id = UUID()
         self.navId = navId
         self.notePath = notePath
@@ -42,6 +44,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
         self.event = event
         self.nrContact = nrContact
         self.nrPost = nrPost
+        self.nrLiveEvent = nrLiveEvent
         self.naddr1 = naddr1
         self.articlePath = articlePath
         self.profileTab = profileTab
@@ -68,6 +71,10 @@ class TabModel: ObservableObject, Identifiable, Equatable {
         }
         if let nrPost = self.nrPost {
             navigationTitle = nrPost.anyName
+            return
+        }        
+        if let nrLiveEvent = self.nrLiveEvent {
+            navigationTitle = nrLiveEvent.title ?? "(stream)"
             return
         }
         if let event = self.event {
@@ -139,6 +146,9 @@ class DetailTabsModel: ObservableObject {
             else if let id = tab.nrPost?.id, let identifier = try? si("nevent", id: id).identifier {
                 return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
             }
+            else if let aTag = tab.nrLiveEvent?.id, let identifier = try? si(aTag: aTag).identifier {
+                return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
+            }
             else if let id = tab.articlePath?.id, let identifier = try? si("nevent", id: id).identifier {
                 return SavedTab(title: tab.navigationTitle, nostrIdentifier: identifier, selected: tab == self.selected)
             }
@@ -187,7 +197,7 @@ class DetailTabsModel: ObservableObject {
                     self.selected = tabModel
                 }
             case "naddr":
-                let tabModel = TabModel(naddr1: Naddr1Path(naddr1: si.identifier, navigationTitle: tab.title), navId: si.identifier)
+                let tabModel = TabModel(naddr1: Naddr1Path(naddr1: si.identifier, navigationTitle: tab.title), navId: (si.aTag ?? si.identifier))
                 self.tabs.append(tabModel)
                 tabModel.suspended = true
                 if tab.selected {
@@ -212,7 +222,7 @@ class DetailTabsModel: ObservableObject {
 
 
 struct SavedTab: Codable {
-    let title:String
-    let nostrIdentifier:String
-    let selected:Bool
+    let title: String
+    let nostrIdentifier: String
+    let selected: Bool
 }

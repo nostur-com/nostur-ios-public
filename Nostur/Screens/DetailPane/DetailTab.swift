@@ -24,6 +24,14 @@ struct DetailTab: View {
                         .withNavigationDestinations()
                 }
             }
+            else if let nrLiveEvent = tab.nrLiveEvent {
+                ZStack {
+                    themes.theme.listBackground
+                        .ignoresSafeArea()
+                    LiveEventDetail(liveEvent: nrLiveEvent)
+                        .withNavigationDestinations()
+                }
+            }
             else if let nrContact = tab.nrContact {
                 ZStack {
                     themes.theme.listBackground
@@ -41,12 +49,18 @@ struct DetailTab: View {
                 }
                 
             }
-            else if let naddr1 = tab.naddr1?.naddr1 {
+            else if let naddr1 = tab.naddr1  {
                 ZStack {
                     themes.theme.listBackground
                         .ignoresSafeArea()
-                    ArticleByNaddr(naddr1: naddr1, navTitleHidden: true, theme: themes.theme)
-                        .withNavigationDestinations()
+                    switch naddr1.kind {
+                    case 30311:
+                        LiveEventByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true, theme: themes.theme)
+                            .withNavigationDestinations()
+                    default:
+                        ArticleByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true, theme: themes.theme)
+                            .withNavigationDestinations()
+                    }
                 }
                 
             }

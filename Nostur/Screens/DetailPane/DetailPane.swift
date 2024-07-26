@@ -45,7 +45,7 @@ struct DetailPane: View {
                                         bg().perform {
                                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onSelect")
                                         }
-                                        if nrPost.kind == 30023 {
+                                        if nrPost.kind >= 30000 && nrPost.kind < 40000 {
                                             req(RM.getPREventReferences(aTag: nrPost.aTag, subscriptionId: "REALTIME-DETAIL"))
                                         }
                                         else {
@@ -62,7 +62,12 @@ struct DetailPane: View {
                                         }
                                     }
                                     else if let naddrPath = tm.selected?.naddr1 {
-                                        req(RM.getEventReferences(ids: [naddrPath.id], subscriptionId: "REALTIME-DETAIL"))
+                                        if naddrPath.kind >= 30000 && naddrPath.kind < 40000 {
+                                            req(RM.getPREventReferences(aTag: naddrPath.navId, subscriptionId: "REALTIME-DETAIL"))
+                                        }
+                                        else {
+                                            req(RM.getEventReferences(ids: [naddrPath.id], subscriptionId: "REALTIME-DETAIL"))
+                                        }
                                     }
                                 },
                                 onClose: {
@@ -89,7 +94,7 @@ struct DetailPane: View {
                                             bg().perform {
                                                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onClose")
                                             }
-                                            if nrPost.kind == 30023 {
+                                            if nrPost.kind >= 30000 && nrPost.kind < 40000 {
                                                 req(RM.getPREventReferences(aTag: nrPost.aTag, subscriptionId: "REALTIME-DETAIL"))
                                             }
                                             else {
@@ -106,7 +111,12 @@ struct DetailPane: View {
                                             }
                                         }
                                         else if let naddrPath = tm.selected?.naddr1 {
-                                            req(RM.getEventReferences(ids: [naddrPath.id], subscriptionId: "REALTIME-DETAIL"))
+                                            if naddrPath.kind >= 30000 && naddrPath.kind < 40000 {
+                                                req(RM.getPREventReferences(aTag: naddrPath.navId, subscriptionId: "REALTIME-DETAIL"))
+                                            }
+                                            else {
+                                                req(RM.getEventReferences(ids: [naddrPath.id], subscriptionId: "REALTIME-DETAIL"))
+                                            }
                                         }
                                         else {
                                             // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
@@ -192,6 +202,7 @@ struct DetailPane: View {
         .padding(0)
         .background(themes.theme.listBackground)
         .onReceive(receiveNotification(.navigateTo)) { notification in
+            // This does similar as .withNavigationDestinations() but for DetailPane, should refactor / clean up
             let destination = notification.object as! NavigationDestination
             let navId = destination.destination.id as! String
             
@@ -216,6 +227,13 @@ struct DetailPane: View {
                     return
                 }
             }
+            else if type(of: destination.destination) == NRLiveEvent.self {
+                let p = destination.destination as! NRLiveEvent
+                let tab = TabModel(nrLiveEvent: p, navId: p.id)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
             else if type(of: destination.destination) == Event.self {
                 let p = destination.destination as! Event
                 let tab = TabModel(event: p, navId: p.id)
@@ -225,7 +243,14 @@ struct DetailPane: View {
             }
             else if type(of: destination.destination) == Naddr1Path.self {
                 let p = destination.destination as! Naddr1Path
-                let tab = TabModel(naddr1: p, navId: p.id)
+                
+                if let existingTab = tm.tabs.first(where: { $0.navId == p.navId }) {
+                    tm.selected = existingTab
+                    tm.selected?.suspended = false
+                    return
+                }
+                
+                let tab = TabModel(naddr1: p, navId: p.navId)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
