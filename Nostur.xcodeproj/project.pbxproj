@@ -321,6 +321,7 @@
 		1FA70F942B053C9500BB636F /* CloudDMState+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA70F922B053C9500BB636F /* CloudDMState+CoreDataProperties.swift */; };
 		1FA7B57C2BDBBC03008A78A8 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1FA7B57B2BDBBC03008A78A8 /* Localizable.xcstrings */; };
 		1FA7B57E2BDBBC03008A78A8 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1FA7B57D2BDBBC03008A78A8 /* InfoPlist.xcstrings */; };
+		1FA97AA62C3F61480091446A /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA97AA52C3F61480091446A /* LiveKit */; };
 		1FAC3F3B2AD049D7009BA810 /* ComposePost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC3F3A2AD049D7009BA810 /* ComposePost.swift */; };
 		1FAC42B52C03CB3900362997 /* GroupedReactionsFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC42B42C03CB3900362997 /* GroupedReactionsFeedModel.swift */; };
 		1FAC42B72C03D1C300362997 /* RepostsFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC42B62C03D1C300362997 /* RepostsFeedModel.swift */; };
@@ -620,6 +621,7 @@
 		1F21D67B2AAB69F900CCF3B1 /* Gallery+FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Gallery+FeedSettings.swift"; sourceTree = "<group>"; };
 		1F21D67C2AAB69FA00CCF3B1 /* GalleryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryViewModel.swift; sourceTree = "<group>"; };
 		1F2245B72AA46C6F00C06342 /* NostrAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrAddress.swift; sourceTree = "<group>"; };
+		1F2573C82C41D52B00831FD7 /* LiveKitVoiceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitVoiceSession.swift; sourceTree = "<group>"; };
 		1F2810BA2B1E150B00042928 /* NRBalloonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRBalloonView.swift; sourceTree = "<group>"; };
 		1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMContentRenderer.swift; sourceTree = "<group>"; };
 		1F2884A92A77D11D0006766E /* FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSettings.swift; sourceTree = "<group>"; };
@@ -1071,6 +1073,7 @@
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
+				1FA97AA62C3F61480091446A /* LiveKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1227,6 +1230,14 @@
 				1FC5834B2BDDAEBD000C3588 /* TopZaps.swift */,
 			);
 			path = PostFooter;
+			sourceTree = "<group>";
+		};
+		1F1803492C36AF240025227E /* LiveEvents */ = {
+			isa = PBXGroup;
+			children = (
+				1F2573C82C41D52B00831FD7 /* LiveKitVoiceSession.swift */,
+			);
+			path = LiveEvents;
 			sourceTree = "<group>";
 		};
 		1F1F13012AA9A65D00DDED82 /* Hot */ = {
@@ -2210,6 +2221,7 @@
 				1F747A0F2B3F1E9D0020F4A5 /* RepresentableKit */,
 				1FE8828A2B48E9DC00A903F0 /* NavigationBackport */,
 				1FC5834E2BDDBA5B000C3588 /* SwiftUIFlow */,
+				1FA97AA52C3F61480091446A /* LiveKit */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -2273,6 +2285,7 @@
 				1F747A0E2B3F1E9C0020F4A5 /* XCRemoteSwiftPackageReference "RepresentableKit" */,
 				1FE882892B48E9DC00A903F0 /* XCRemoteSwiftPackageReference "NavigationBackport" */,
 				1FC5834D2BDDB98A000C3588 /* XCRemoteSwiftPackageReference "SwiftUIFlow" */,
+				1FA97AA42C3F61480091446A /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -2686,6 +2699,7 @@
 				1F8B6A712A20C6020060EDB3 /* PostActionNotification.swift in Sources */,
 				1FB6E6FB29E3B827008BE8A6 /* MainView.swift in Sources */,
 				1F88490E29B537B400145340 /* HighlightingTextEditor.swift in Sources */,
+				1F2573C92C41D52B00831FD7 /* LiveKitVoiceSession.swift in Sources */,
 				1F77D2E229D238520028DC95 /* ShareableIdentifierTest.swift in Sources */,
 				1F21CE432A067EC10021E2C7 /* View+onDelete.swift in Sources */,
 				1FDF0ED929EC047C00B56AC4 /* ImagePreviews.swift in Sources */,
@@ -3208,6 +3222,14 @@
 				revision = 45c4e133e8cca122bcdb7c3828658c68db998118;
 			};
 		};
+		1FA97AA42C3F61480091446A /* XCRemoteSwiftPackageReference "client-sdk-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/livekit/client-sdk-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.12;
+			};
+		};
 		1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Kitura/swift-html-entities.git";
@@ -3297,6 +3319,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = Collections;
+		};
+		1FA97AA52C3F61480091446A /* LiveKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FA97AA42C3F61480091446A /* XCRemoteSwiftPackageReference "client-sdk-swift" */;
+			productName = LiveKit;
 		};
 		1FB6E6F429E31C71008BE8A6 /* HTMLEntities */ = {
 			isa = XCSwiftPackageProductDependency;
