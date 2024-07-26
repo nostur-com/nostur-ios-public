@@ -11,6 +11,7 @@ import os
 class L {
     static let p = OSLog(subsystem: "com.nostur.Nostur", category: "Performance")
     static let og = Logger(subsystem: "com.nostur.Nostur", category: "Nostur")
+    static let nests = Logger(subsystem: "com.nostur.Nostur", category: "Nests")
     static let cloud = Logger(subsystem: "com.nostur.Nostur", category: "iCloud")
     static let sl = Logger(subsystem: "com.nostur.Nostur", category: "SmoothList")
     static let onboarding = Logger(subsystem: "com.nostur.Nostur", category: "Onboarding")
@@ -21,6 +22,7 @@ class L {
     static let fetching = Logger(subsystem: "com.nostur.Nostur", category: "Fetching")
     static let lvm = Logger(subsystem: "com.nostur.Nostur", category: "LVM")
     static let user = Logger(subsystem: "com.nostur.Nostur", category: "User Action")
+    static let media = Logger(subsystem: "com.nostur.Nostur", category: "Media")
 }
 
 func logAction(_ message: String) {

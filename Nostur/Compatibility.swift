@@ -141,7 +141,7 @@ extension View {
     @ViewBuilder
     func symbolEffectPulse() -> some View {
         if #available(iOS 17.0, *) {
-            self.symbolEffect(.pulse, options: .speed(6), isActive: true)
+            self.symbolEffect(.pulse, options: .speed(3).repeat(10), isActive: true)
         }
         else {
             self
@@ -151,6 +151,16 @@ extension View {
     func safeAreaPadding() -> some View {
         if #available(iOS 17.0, *) {
             self.safeAreaPadding(.horizontal, 10.0)
+        }
+        else {
+            self
+        }
+    }
+    
+    @ViewBuilder
+    func safeAreaScroll() -> some View {
+        if #available(iOS 17.0, *) {
+            self.safeAreaPadding(.vertical, 10.0)
         }
         else {
             self

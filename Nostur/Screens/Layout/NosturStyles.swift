@@ -11,6 +11,7 @@ import SwiftUI
 struct NosturButton: ButtonStyle {
     @Environment(\.colorScheme) var colorScheme
     public var height: CGFloat = 30
+    public var bgColor: Color = Color.secondary
 
     func makeBody(configuration: Configuration) -> some View {        
         
@@ -20,7 +21,7 @@ struct NosturButton: ButtonStyle {
             .padding(.horizontal, 10)
             .font(.caption.weight(.heavy))
             .foregroundColor(Color.white)
-            .background(Color.secondary)
+            .background(bgColor)
             .cornerRadius(15)
             .overlay {
                 RoundedRectangle(cornerRadius: 15)
