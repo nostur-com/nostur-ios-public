@@ -283,4 +283,41 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         }
     }
     
+    // Live events/activities/nests
+    
+    // if ["hand", "1"] tag is present in room presence event
+    @Published public var raisedHand = false
+    private var presenceATag: String?
+    private var presenceSubscription: AnyCancellable?
+    public var presenceTimestamp: Int? = nil
+    
+    public func listenForPresence(_ aTag: String) {
+        self.presenceATag = aTag
+        guard presenceSubscription == nil else { return }
+        presenceSubscription = receiveNotification(.receivedMessage)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let message = notification.object as! RelayMessage
+                guard let event = message.event else { return }
+                guard event.kind == .custom(10312) else { return }
+                
+                let ago = Int(Date().timeIntervalSince1970 - (60 * 2)) // 2 min ago?
+                guard event.createdAt.timestamp > ago else { return }
+                
+                
+                guard event.publicKey == self.pubkey else { return }
+                guard event.tags.first(where: { $0.type == "a" && $0.value == self.presenceATag }) != nil else { return }
+                
+                self.presenceTimestamp = event.createdAt.timestamp
+                
+                let raisedHand = event.tags.first(where: { $0.type == "hand" && $0.value == "1" }) != nil
+                
+                if raisedHand != self.raisedHand {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.raisedHand = raisedHand
+                    }
+                }
+            }
+    }
 }

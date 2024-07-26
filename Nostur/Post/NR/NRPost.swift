@@ -18,6 +18,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
 
     // Separate ObservableObjects for view performance optimization
+    var nrLiveEvent: NRLiveEvent?
     var postOrThreadAttributes: PostOrThreadAttributes
     var postRowDeletableAttributes: PostRowDeletableAttributes
     var noteRowAttributes: NoteRowAttributes
@@ -430,7 +431,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             }
             self.highlightAttributes = HighlightAttributes(contact: highlightContact, authorPubkey: highlightAuthorPubkey, url: highlightUrl)
             
-        case 30023, 34235:
+        case 30023, 34235, 30311:
             eventId = event.eventId
             eventTitle = event.eventTitle
             eventSummary = event.eventSummary
@@ -442,6 +443,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 self.eventUrl = eventUrl
             }
             mostRecentId = event.mostRecentId
+            
+            if event.kind == 30311 {
+                self.nrLiveEvent = NRLiveEvent(event: event)
+            }
+            
         default:
             break
         }
