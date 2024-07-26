@@ -28,6 +28,7 @@ final class SettingsStore: ObservableObject {
         static let restrictAutoDownload:String = "restrict_autodownload"
         static let animatedPFPenabled:String = "animated_pfp_enabled"
         static let rowFooterEnabled:String = "row_footer_enabled"
+        static let enableLiveEvents:String = "enable_live_events"
         static let autoScroll:String = "autoscroll"
         static let statusBubble:String = "statusBubble"
         static let fullWidthImages:String = "full_width_images"
@@ -157,6 +158,7 @@ final class SettingsStore: ObservableObject {
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id,
             Keys.animatedPFPenabled: false,
             Keys.rowFooterEnabled: true,
+            Keys.enableLiveEvents: true,
             Keys.autoScroll: false,
             Keys.fullWidthImages: false,
             Keys.defaultMediaUploadService: "nostrcheck.me",
@@ -253,6 +255,11 @@ final class SettingsStore: ObservableObject {
     var statusBubble: Bool {
         set { defaults.set(newValue, forKey: Keys.statusBubble); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.statusBubble) }
+    }
+    
+    var enableLiveEvents: Bool {
+        set { defaults.set(newValue, forKey: Keys.enableLiveEvents); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.enableLiveEvents) }
     }
     
     var autoScroll: Bool {
