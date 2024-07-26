@@ -93,6 +93,8 @@
 		1F2DD42D2A29EACA0028A062 /* NWCConnection+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD42B2A29EACA0028A062 /* NWCConnection+CoreDataClass.swift */; };
 		1F2DD42E2A29EACA0028A062 /* NWCConnection+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD42C2A29EACA0028A062 /* NWCConnection+CoreDataProperties.swift */; };
 		1F2DD4302A29F5B70028A062 /* AlbyNWCConnectSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD42F2A29F5B70028A062 /* AlbyNWCConnectSheet.swift */; };
+		1F2DD5DC2C4D4B1B00562A5D /* LiveEventByNaddr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD5DB2C4D4B1B00562A5D /* LiveEventByNaddr.swift */; };
+		1F2DD5DE2C4F07D900562A5D /* LiveEventRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD5DD2C4F07D900562A5D /* LiveEventRowView.swift */; };
 		1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DE02F298E5C5C00891D2E /* BlockListView.swift */; };
 		1F2DEDDB2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DEDDA2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift */; };
 		1F2DEDDD2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DEDDC2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift */; };
@@ -635,6 +637,7 @@
 		1F2DD42B2A29EACA0028A062 /* NWCConnection+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NWCConnection+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F2DD42C2A29EACA0028A062 /* NWCConnection+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NWCConnection+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F2DD42F2A29F5B70028A062 /* AlbyNWCConnectSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbyNWCConnectSheet.swift; sourceTree = "<group>"; };
+		1F2DD5DB2C4D4B1B00562A5D /* LiveEventByNaddr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventByNaddr.swift; sourceTree = "<group>"; };
 		1F2DE02F298E5C5C00891D2E /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
 		1F2DEDDA2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Settings+WebOfTrustLevelPicker.swift"; sourceTree = "<group>"; };
 		1F2DEDDC2ADAB41F009E360C /* Settings+MediaUploadServicePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Settings+MediaUploadServicePicker.swift"; sourceTree = "<group>"; };
@@ -2533,6 +2536,7 @@
 				1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */,
 				1FFE7F602A7927E2001E8D80 /* PostTest.swift in Sources */,
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
+				1F2DD5DC2C4D4B1B00562A5D /* LiveEventByNaddr.swift in Sources */,
 				1F2DEDDF2ADAB52E009E360C /* Settings+LightningWalletPicker.swift in Sources */,
 				1F2DD4292A29C1170028A062 /* NIP47.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,

@@ -31,6 +31,10 @@ struct KindResolver: View {
             URLView(nrPost: nrPost, theme: theme)
         case 9802:
             Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, grouped: grouped, theme: theme)
+        case 30311:
+            if let liveEvent = nrPost.nrLiveEvent {
+                LiveEventRowView(liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
+            }
         case 30023:
             ArticleView(nrPost, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
         default:

@@ -41,9 +41,22 @@ struct Nevent1Path: IdentifiableDestination {
 }
 
 struct Naddr1Path: IdentifiableDestination {
-    var id: String { naddr1 }
-    var naddr1: String
-    var navigationTitle: String? = nil
+    public var id: String { naddr1 }
+    public var naddr1: String
+    public var navigationTitle: String? = nil
+    
+    public var kind: Int { // -999999912 means we dont have a kind
+        Int((try? ShareableIdentifier(naddr1).kind) ?? -999899912)
+    }
+    
+    public var navId: String { 
+        (try? ShareableIdentifier(naddr1))?.aTag ?? id
+    }
+    
+    init(naddr1: String, navigationTitle: String? = nil) {
+        self.naddr1 = naddr1
+        self.navigationTitle = navigationTitle
+    }
 }
 
 struct ArticlePath: IdentifiableDestination {
@@ -85,13 +98,28 @@ extension View {
                 switch nrPost.kind {
                 case 30023:
                     ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
+                case 30311:
+                    if let nrLiveEvent = nrPost.nrLiveEvent {
+                        LiveEventDetail(liveEvent: nrLiveEvent)
+                    }
+                    else {
+                        Text("Missing nrLiveEvent")
+                    }
                 default:
                     PostDetailView(nrPost: nrPost)
                         .equatable()
                 }
             }
             .nbNavigationDestination(for: Naddr1Path.self) { path in
-                ArticleByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
+                switch path.kind {
+                case 30311:
+                    LiveEventByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
+                default:
+                    ArticleByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
+                }
+            }       
+            .nbNavigationDestination(for: NRLiveEvent.self) { nrLiveEvent in
+                LiveEventDetail(liveEvent: nrLiveEvent)
             }
             .nbNavigationDestination(for: ArticlePath.self) { path in
                 ArticleById(id: path.id, navigationTitle: path.navigationTitle)
