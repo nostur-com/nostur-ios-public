@@ -700,6 +700,16 @@
         }
       }
     },
+    "%lld participants" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%llddeelnemers"
+          }
+        }
+      }
+    },
     "%lld requests outside Web of Trust" : {
       "localizations" : {
         "en" : {
@@ -1887,6 +1897,9 @@
           }
         }
       }
+    },
+    "Checked" : {
+
     },
     "Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues." : {
       "localizations" : {
@@ -3555,6 +3568,16 @@
         }
       }
     },
+    "Go to stream" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open stream"
+          }
+        }
+      }
+    },
     "Green" : {
       "localizations" : {
         "nl" : {
@@ -3572,6 +3595,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "u"
+          }
+        }
+      }
+    },
+    "Hand is raised" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hand is omhoog"
           }
         }
       }
@@ -3962,6 +3995,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Laatste 10 foutmeldingen"
+          }
+        }
+      }
+    },
+    "Last 10 notice messages" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laatste 10 meldingen"
           }
         }
       }
@@ -4358,6 +4401,26 @@
         }
       }
     },
+    "Mic is off" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mic is uit"
+          }
+        }
+      }
+    },
+    "Mic is on" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mic is aan"
+          }
+        }
+      }
+    },
     "Missing mesages?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4378,6 +4441,9 @@
           }
         }
       }
+    },
+    "Missing nrLiveEvent" : {
+
     },
     "Mock Bookmark update" : {
       "localizations" : {
@@ -4441,6 +4507,16 @@
         }
       }
     },
+    "Mute mic" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demp mic"
+          }
+        }
+      }
+    },
     "Muted conversations" : {
       "comment" : "Title of tab where Muted conversations are listed",
       "localizations" : {
@@ -4474,6 +4550,7 @@
       }
     },
     "NColumnFeedView" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4649,6 +4726,7 @@
       }
     },
     "Niks" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4842,6 +4920,16 @@
         }
       }
     },
+    "Notices" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldingen"
+          }
+        }
+      }
+    },
     "Notification settings" : {
       "localizations" : {
         "nl" : {
@@ -4919,6 +5007,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        }
+      }
+    },
+    "Only connect to additional relays when a VPN is active" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind alleen met extra relays als VPN aan staat"
           }
         }
       }
@@ -5585,6 +5683,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Citeer bericht"
+          }
+        }
+      }
+    },
+    "Raise hand" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hand opsteken"
           }
         }
       }
@@ -6860,6 +6968,16 @@
         }
       }
     },
+    "Start listening" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luister mee"
+          }
+        }
+      }
+    },
     "Status" : {
       "comment" : "Connection status header",
       "localizations" : {
@@ -6867,6 +6985,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Status"
+          }
+        }
+      }
+    },
+    "Stream has ended" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stream is beëindigd"
           }
         }
       }
@@ -7368,6 +7496,9 @@
         }
       }
     },
+    "timeout" : {
+
+    },
     "Tip" : {
       "localizations" : {
         "nl" : {
@@ -7586,6 +7717,9 @@
         }
       }
     },
+    "Unchecked" : {
+
+    },
     "Undo" : {
       "localizations" : {
         "nl" : {
@@ -7612,6 +7746,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toon"
+          }
+        }
+      }
+    },
+    "Unmute" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dempen opheffen"
           }
         }
       }
@@ -7702,6 +7846,47 @@
         }
       }
     },
+    "View on web" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon via web"
+          }
+        }
+      }
+    },
+    "VPN detected" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VPN gedetecteerd"
+          }
+        }
+      }
+    },
+    "VPN detection" : {
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VPN herkenning"
+          }
+        }
+      }
+    },
+    "VPN not detected" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VPN niet gedetecteerd"
+          }
+        }
+      }
+    },
     "We Don't Need No Stinkin' Badges" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -7751,6 +7936,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Welkom bij **Nostur**"
+          }
+        }
+      }
+    },
+    "Welcome to the chat" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welkom in de chat"
           }
         }
       }
