@@ -30,6 +30,8 @@ struct FollowingAndExplore: View, Equatable {
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
     
+    @AppStorage("enable_live_events") private var enableLiveEvents: Bool = true
+    
     @State private var showingNewNote = false
     @State private var noteCancellationId: UUID?
     
@@ -88,7 +90,7 @@ struct FollowingAndExplore: View, Equatable {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        VStack(spacing: 0) {
+        VStack(spacing: 10) {
             if !shouldHideTabBar {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing:0) {
@@ -178,6 +180,10 @@ struct FollowingAndExplore: View, Equatable {
                     .toolbarVisibleCompat(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
                 }
                 .frame(width: dim.listWidth, height: max(44.0 + tabsOffsetY,0))
+            }
+            
+            if enableLiveEvents {
+                LiveEventsBanner()
             }
             
             ZStack {
