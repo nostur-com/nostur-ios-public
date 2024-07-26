@@ -35,6 +35,7 @@ class ViewUpdates {
     public var contactUpdated = PassthroughSubject<Contact, Never>()
     public var nip05updated = PassthroughSubject<(pubkey: String, isVerified: Bool, nip05: String, nameOnly: String), Never>() //
     public var updateNRPost = PassthroughSubject<Event, Never>()
+    public var replacableEventUpdate = PassthroughSubject<Event, Never>()
 }
 
 struct ZapStateChange {

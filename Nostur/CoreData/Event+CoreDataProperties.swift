@@ -1349,6 +1349,9 @@ extension Event {
                 }
             }
             
+            if Set([30311]).contains(savedEvent.kind) { // Only update views for kinds that need it (so far: 30311)
+                ViewUpdates.shared.replacableEventUpdate.send(savedEvent)
+            }
         }
         
         
