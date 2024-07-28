@@ -175,6 +175,7 @@ struct DMConversationView: View {
                                     }
                                     
                                     FollowedBy(pubkey: contactPubkey, alignment: .center)
+                                        .frame(minHeight: 95.0)
                                         .padding(.vertical, 15)
                                     
                                     HStack {
