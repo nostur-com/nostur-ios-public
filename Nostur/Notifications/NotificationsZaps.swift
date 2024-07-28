@@ -61,7 +61,7 @@ struct NotificationsZaps: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                LazyVStack(alignment:.leading, spacing: 10) {
+                LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(notifications) { pNotification in
                         switch pNotification.type {
                         case .NOTIFICATION:
