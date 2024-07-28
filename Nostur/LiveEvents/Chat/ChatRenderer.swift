@@ -105,7 +105,7 @@ struct ChatRenderer: View { // VIEW things
                         .font(.system(.body, design: .monospaced))
                         .id(index)
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth)
                         .equatable()
                         .id(index)
                 case .md(let markdownContentWithPs): // For long form articles
