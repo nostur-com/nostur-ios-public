@@ -51,7 +51,7 @@ struct LiveEventsBanner: View {
         }
         .scrollTargetBehaviorViewAligned()
         .safeAreaPadding()
-        .frame(height: nrLiveEvents.isEmpty ? 0 : 30)
+        .frame(height: nrLiveEvents.isEmpty ? 0 : 50)
         .animation(.interactiveSpring, value: nrLiveEvents)
         .onAppear {
             liveEventsModel.load()
