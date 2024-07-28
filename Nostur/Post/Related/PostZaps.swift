@@ -113,11 +113,11 @@ struct NxZapReceipt: View {
     
     var body: some View { // Copy pasta from Kind1Default, remove all non 9735 stuff, removed footer, removed thread connecting lines
         HStack(alignment: .top) {
-            VStack {
+            VStack(alignment: .center) {
                 Image(systemName: "bolt.fill")
                     .foregroundColor(themes.theme.accent)
                 Text(sats.satsFormatted)
-                    .font(.title2)
+                    .font(.title3)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
                     let fiatPrice = String(format: "$%.02f",(Double(sats) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
 
@@ -126,7 +126,7 @@ struct NxZapReceipt: View {
                         .opacity(sats != 0 ? 0.5 : 0)
                 }
             }
-            .frame(width:80)
+            .frame(width: 80)
             
             InnerPFP(pubkey: fromPubkey, pictureUrl: pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: color)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
@@ -156,13 +156,12 @@ struct NxZapReceipt: View {
                           }
                     }
                 }
-         
+            
             VStack(alignment: .leading, spacing: 3) { // Post container
                 ZappedFrom(pubkey: fromPubkey, name: name, couldBeImposter: 0, createdAt: nrZapFrom.createdAt)
                 
-                ContentRenderer(nrPost: nrZapFrom, isDetail: false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth(), theme: themes.theme, didStart: $didStart)
-                    .frame(maxWidth: .infinity, minHeight: 40, alignment:.leading)
-                
+                ContentRenderer(nrPost: nrZapFrom, isDetail: false, fullWidth: false, availableWidth: dim.availableNoteRowWidth - 80, theme: themes.theme, didStart: $didStart)
+                    .frame(maxWidth: dim.availableNoteRowWidth - 80, minHeight: 40, alignment: .leading)
 //                ReceiptFrom(pubkey: receiptPubkey)
             }
             .task {
