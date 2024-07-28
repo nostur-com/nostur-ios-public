@@ -37,29 +37,34 @@ struct LiveEventCapsule: View {
         .foregroundColor(.white)
         .padding(.horizontal, 8)
         .background(themes.theme.accent)
-        .frame(height: 30)
-        .clipShape(.rect(cornerRadius: 15))
+        .frame(height: 44)
+        .clipShape(.rect(cornerRadius: 22))
         .contentShape(Rectangle())
-                   .offset(y: dragOffset.height)
-                   .gesture(
-                       TapGesture()
-                           .onEnded {
-                               navigateTo(liveEvent)
-                           }
-                           .simultaneously(with: DragGesture()
-                               .onChanged { value in
-                                   if value.translation.height < 0 { // Only allow upward swipes
-                                       dragOffset = value.translation
-                                   }
-                               }
-                               .onEnded { value in
-                                   if value.translation.height < -50 { // Adjust the threshold as needed
-                                       onRemove(liveEvent.id)
-                                   }
-                                   dragOffset = .zero
-                               }
-                           )
-                   )
+        .offset(y: dragOffset.height)
+        .gesture(
+            TapGesture()
+               .onEnded {
+                   if IS_CATALYST {
+                       navigateTo(liveEvent)
+                   }
+                   else {
+                       LiveKitVoiceSession.shared.activeNest = liveEvent
+                   }
+               }
+               .simultaneously(with: DragGesture()
+                   .onChanged { value in
+                       if value.translation.height < 0 { // Only allow upward swipes
+                           dragOffset = value.translation
+                       }
+                   }
+                   .onEnded { value in
+                       if value.translation.height < -50 { // Adjust the threshold as needed
+                           onRemove(liveEvent.id)
+                       }
+                       dragOffset = .zero
+                   }
+               )
+       )
     }
 }
 
