@@ -42,6 +42,10 @@ class DIMENSIONS: ObservableObject {
         return (listWidth - (Self.BOX_PADDING*2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
     }
     
+    var availableNoteRowWidth: CGFloat {
+        (listWidth - (Self.BOX_PADDING*2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_PFP_SPACE))
+    }
+    
     // NoteRow but without the profile pic on the side
     func articleRowImageWidth() -> CGFloat {
         // 10 + (availableWidth) + 10 

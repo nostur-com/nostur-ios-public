@@ -102,6 +102,16 @@ class NRState: ObservableObject {
         loadBlockedPubkeys()
         loadBlockedHashtags()
         loadMutedRootIds()
+        dynamicFontSize()
+    }
+    
+    func dynamicFontSize() {
+        NotificationCenter.default.addObserver(self, selector: #selector(preferredContentSizeChanged(_:)), name: UIContentSizeCategory.didChangeNotification, object: nil)
+    }
+
+    @objc func preferredContentSizeChanged(_ notification: Notification) {
+        NRTextParser.shared.reloadHashtagIcons()
+        sendNotification(.dynamicTextChanged)
     }
     
     @MainActor public func loadAccountsState() {

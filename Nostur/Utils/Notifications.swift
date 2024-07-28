@@ -361,4 +361,8 @@ extension Notification.Name {
     static var showImposterDetails: Notification.Name {
         return Notification.Name("showImposterDetails")
     }
+    
+    static var dynamicTextChanged: Notification.Name {
+        return Notification.Name("dynamicTextChanged")
+    }
 }
