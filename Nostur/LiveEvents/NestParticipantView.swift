@@ -13,8 +13,7 @@ struct NestParticipantView: View {
     public var role: String? = nil
     public let aTag: String
     
-    // Toggle controls, like mute
-    @State private var showControls = false
+    public var showControls = true
     
     var body: some View {
         VStack(spacing: 2.0) {
@@ -29,9 +28,9 @@ struct NestParticipantView: View {
                             .symbolEffectPulse()
                     }
                 }
-                .overlay(alignment: .topTrailing) {
-                    if showControls {
-                        MicButton()
+                .overlay(alignment: .bottomTrailing) {
+                    if showControls && nrContact.volume > 0 {
+                        MicButton(volume: nrContact.volume)
                             .offset(x: 15.0, y: 5)
                     }
                 }
@@ -53,6 +52,7 @@ struct NestParticipantView: View {
         pe.loadContacts()
     }) {
         if let nrContact = PreviewFetcher.fetchNRContact() {
+            let _ = nrContact.volume = 0.25
             NestParticipantView(nrContact: nrContact, role: "Moderator", aTag: "30311:07c058945239c541e7875ec21285e89d53afacc34a8e81b2c5ecdf028c198729:07056f33-cd48-4126-8b2e-ee68eeefafd9")
         }
     }
@@ -60,15 +60,23 @@ struct NestParticipantView: View {
 
 
 struct MicButton: View {
+    public var volume: CGFloat
+    
     var body: some View {
-        ZStack {
-                    Circle()
-                        .fill(Color.gray)
-                        .frame(width: 28, height: 28)
-                    
-                    Image(systemName: "mic")
-                        .font(.system(size: 20))
-                        .foregroundColor(.white) 
+        ZStack(alignment: .center) {
+            Circle()
+                .fill(Color.gray)
+                .frame(width: 28, height: 28)
+                .overlay(alignment: .bottom) {
+                    Color.accentColor
+                        .frame(height: 28*(min(volume+(volume > 0.125 ? 0.25 : 0), 1.0)))
+                        .animation(.interpolatingSpring(stiffness: 400, damping: 3), value: volume)
                 }
+                
+                Image(systemName: "mic")
+                    .font(.system(size: 20))
+                    .foregroundColor(.white)
+        }
+        .clipShape(Circle())
     }
 }

@@ -259,6 +259,17 @@ extension LiveKitVoiceSession: RoomDelegate {
         L.nests.debug("participant: didUpdateSpeakingParticipants: participants.count \(participants.count.description)")
         for participant in participants {
             L.nests.debug("participant audio level: \(participant.audioLevel.description)")
+            
+            guard let participantPubkey = participant.identity?.stringValue else { continue }
+            guard isValidPubkey(participantPubkey) else { continue }
+            
+            if let nrContact = self.nrLiveEvent?.participantsOrSpeakers.first(where: { $0.pubkey == participantPubkey }) {
+                Task { @MainActor in
+                    withAnimation {
+                        nrContact.volume = CGFloat(participant.audioLevel)
+                    }
+                }
+            }
         }
     }
     
