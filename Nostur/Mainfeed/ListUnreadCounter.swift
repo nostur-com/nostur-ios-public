@@ -38,6 +38,8 @@ struct ListUnreadCounter: View {
             .frame(width: 65, height: 40)
             .overlay(alignment: .leading) {
                 Text(String(vmCounter.count))
+                    .animation(.snappy, value: vmCounter.count)
+                    .rollingNumber()
                     .fixedSize()
                     .frame(width: 35, alignment: .center)
                     .padding(.leading, 5)
