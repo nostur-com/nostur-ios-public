@@ -118,7 +118,7 @@ struct ContentRenderer: View { // VIEW things
                         }
                         .id(index)
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: isDetail, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview)
                         .equatable()
                         .onTapGesture {
                             guard !isDetail else { return }

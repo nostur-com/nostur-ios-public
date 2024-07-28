@@ -85,7 +85,7 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isDetail: true, isScreenshot: false, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? .mint : theme.accent)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, isScreenshot: false, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? .mint : theme.accent)
                         .equatable()
                         .environmentObject(childDIM)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts

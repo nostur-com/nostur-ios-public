@@ -18,7 +18,9 @@ class NRTextParser { // TEXT things
     static let shared = NRTextParser()
     private let context = bg()
     
-    private init() { }
+    private init() { 
+        self.hashtagIcons = Self.prepareHashtagIcons()
+    }
 
     func parseText(fastTags: [FastTag], event: Event? = nil, text: String, primaryColor: Color? = nil) -> AttributedStringWithPs {
         let fontColor = primaryColor ?? Themes.default.theme.primary
@@ -46,18 +48,23 @@ class NRTextParser { // TEXT things
 
         do {
             let mutableAttributedString = try NSMutableAttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-            let attributes:[NSAttributedString.Key: NSObject] = [
+            
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineBreakMode = .byWordWrapping
+            
+            let attributes: [NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(fontColor)
+//                .font: UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body)),
+                .foregroundColor: UIColor(fontColor),
+                .paragraphStyle: paragraphStyle
             ]
+            
+            mutableAttributedString.addHashtagIcons()
             
             mutableAttributedString.addAttributes(
                 attributes,
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
-            
-            mutableAttributedString.addHashtagIcons()
-            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
                         
             let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
             
@@ -65,19 +72,24 @@ class NRTextParser { // TEXT things
         }
         catch {
             let mutableAttributedString = NSMutableAttributedString(string: newerTextWithPs.text)
-            let attributes:[NSAttributedString.Key: NSObject] = [
+            
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineBreakMode = .byWordWrapping
+            
+            let attributes: [NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(fontColor)
+//                .font: UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body)),
+                .foregroundColor: UIColor(fontColor),
+                .paragraphStyle: paragraphStyle
             ]
+            
+            mutableAttributedString.addHashtagIcons()
             
             mutableAttributedString.addAttributes(
                 attributes,
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
             
-            mutableAttributedString.addHashtagIcons()
-            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
-   
             L.og.error("NRTextParser: \(error)")
             let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             return a
@@ -342,9 +354,11 @@ class NRTextParser { // TEXT things
     static let htRegex = try! NSRegularExpression(pattern: "\\b\(hashtags.keys.joined(separator: "\\b|"))\\b", options: [.caseInsensitive])
     
     // Build NSAttributedString hashtag icons once for reuse in NSMutableAttributedString.addHashtagIcons()
-    public lazy var hashtagIcons: [String: NSAttributedString] = {
-        
+    public var hashtagIcons: [String: NSAttributedString]
+    
+    static public func prepareHashtagIcons() -> [String: NSAttributedString] {
         let font = UIFont.preferredFont(forTextStyle: .body)
+//        let font = UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body))
         let size = (font.capHeight - font.pointSize).rounded() / 2
         
         return Self.hashtags.mapValues { imageName in
@@ -355,7 +369,11 @@ class NRTextParser { // TEXT things
             let attributedImageString = NSAttributedString(attachment: attachment)
             return attributedImageString
         }
-    }()
+    }
+    
+    func reloadHashtagIcons() {
+        self.hashtagIcons = Self.prepareHashtagIcons()
+    }
 }
 
 struct TextWithPs: Hashable {

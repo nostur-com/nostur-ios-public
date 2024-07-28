@@ -28,37 +28,45 @@ struct NRTextDynamic: View {
         self.accentColor = accentColor
         do {
             let mutableAttributedString = try NSMutableAttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+            
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineBreakMode = .byWordWrapping
                         
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(self.fontColor)
+//                .font: UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body)),
+                .foregroundColor: UIColor(self.fontColor),
+                .paragraphStyle: paragraphStyle
             ]
+
+            mutableAttributedString.addHashtagIcons()
             
             mutableAttributedString.addAttributes(
                 attributes,
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
-            
-            mutableAttributedString.addHashtagIcons()
-            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
             
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
         }
         catch {
             let mutableAttributedString = NSMutableAttributedString(string: text)
+            
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineBreakMode = .byWordWrapping
+            
             let attributes:[NSAttributedString.Key: NSObject] = [
                 .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(self.fontColor)
+//                .font: UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body)),
+                .foregroundColor: UIColor(self.fontColor),
+                .paragraphStyle: paragraphStyle
             ]
             
+            mutableAttributedString.addHashtagIcons()
+
             mutableAttributedString.addAttributes(
                 attributes,
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
-            
-            mutableAttributedString.addHashtagIcons()
-            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
-            
             L.og.error("NRTextParser: \(error)")
             self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
         }
@@ -78,6 +86,7 @@ struct NRTextDynamic: View {
         let view = UITextView()
 //        _ = view.layoutManager
         view.isScrollEnabled = false
+        view.adjustsFontForContentSizeCategory = false
         view.textColor = UIColor(self.fontColor)
         view.tintColor = UIColor(accentColor ?? themes.theme.accent)
         view.isSelectable = true
@@ -142,109 +151,25 @@ struct NRTextDynamic: View {
 }
 
 
-#Preview("NRTextFixed") {
-    VStack {
-        NRTextFixed("Some text with a tag [#bitcoin](nostur:t:bitcoin)", themes: Themes.default, availableWidth: DIMENSIONS.shared.availableNoteRowImageWidth())
-            .background(Color.red)
-        
-        NRTextFixed("Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long Some text long", themes: Themes.default, availableWidth: DIMENSIONS.shared.availableNoteRowImageWidth())
-            .background(Color.blue)
-        
-        Text("What")
-            .background(Color.green)
-    }
-    .environmentObject(Themes.default)
-    .environmentObject(DIMENSIONS())
-}
-
 struct NRTextFixed: UIViewRepresentable {
     typealias UIViewType = UITextView
     
     private let attributedString: NSAttributedString
     private let plain: Bool
     private let themes: Themes
-    private let height: CGFloat
     private let fontColor: Color
     private let accentColor: Color?
-    private let availableWidth: CGFloat
+    @Binding var textWidth: CGFloat
+    @Binding var textHeight: CGFloat
     
-    // Height calculation is expensive, so calculate before in background, then pass as prop.
-    // see AttributedStringWithPs.
-    // For other situations maybe use GeometryReader
-    init(_ attributedString: NSAttributedString, plain: Bool = false, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil, availableWidth: CGFloat) {
+    init(_ attributedString: NSAttributedString, plain: Bool = false, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>) {
         self.attributedString = attributedString
         self.plain = plain
         self.themes = themes
         self.fontColor = fontColor ?? themes.theme.primary
         self.accentColor = accentColor ?? themes.theme.accent
-        self.availableWidth = availableWidth
-        
-        self.height = attributedString.boundingRect(
-            with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
-            options: [.usesLineFragmentOrigin, .usesFontLeading],
-            context: nil
-        ).height
-    }
-    
-    init(_ text: String, plain: Bool = false, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil, availableWidth: CGFloat) {
-        self.themes = themes
-        self.fontColor = fontColor ?? themes.theme.primary
-        self.accentColor = accentColor ?? themes.theme.accent
-        self.availableWidth = availableWidth
-        do {
-//            let finalText = try AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-            
-            let mutableAttributedString = try NSMutableAttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-            let attributes:[NSAttributedString.Key: NSObject] = [
-                .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(self.fontColor)
-            ]
-            
-            mutableAttributedString.addAttributes(
-                attributes,
-                range: NSRange(location: 0, length: mutableAttributedString.length)
-            )
-            
-            mutableAttributedString.addHashtagIcons()
-            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
-            
-            self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
-            
-            
-            self.height = mutableAttributedString.boundingRect(
-                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                context: nil
-            ).height
-            
-        }
-        catch {
-//            let finalText = AttributedString(text)
-            
-            let mutableAttributedString = NSMutableAttributedString(string: text)
-            let attributes:[NSAttributedString.Key: NSObject] = [
-                .font: UIFont.preferredFont(forTextStyle: .body),
-                .foregroundColor: UIColor(self.fontColor)
-            ]
-            
-            mutableAttributedString.addAttributes(
-                attributes,
-                range: NSRange(location: 0, length: mutableAttributedString.length)
-            )
-            
-            mutableAttributedString.addHashtagIcons()
-            mutableAttributedString.addNewlinesIfContainsAsianCharacters()
-            
-            L.og.error("NRTextParser: \(error)")
-            self.attributedString = NSAttributedString(attributedString: mutableAttributedString)
-            
-            self.height = mutableAttributedString.boundingRect(
-                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                context: nil
-            ).height
-        }
-        self.plain = plain
+        _textWidth = textWidth
+        _textHeight = textHeight
     }
     
     func makeUIView(context: Context) -> UITextView {
@@ -256,38 +181,56 @@ struct NRTextFixed: UIViewRepresentable {
         view.isScrollEnabled = false
         view.textColor = UIColor(self.fontColor)
         view.tintColor = UIColor(accentColor ?? themes.theme.accent)
+        view.adjustsFontForContentSizeCategory = false
         view.isSelectable = true
         view.isEditable = false
         view.dataDetectorTypes = plain ? [] : [.link]
         view.backgroundColor = .clear
         view.textContainer.lineFragmentPadding = 0
         view.textContainerInset = .zero
-        view.attributedText = self.attributedString
+        view.textContainer.lineBreakMode = .byWordWrapping
+        view.attributedText = attributedString
         
         view.translatesAutoresizingMaskIntoConstraints = false
-        //        view.widthAnchor.constraint(equalToConstant: width).isActive = true
+        
+        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        view.setContentCompressionResistancePriority(.required, for: .vertical)
+        
+        view.showsVerticalScrollIndicator = false
+        view.showsHorizontalScrollIndicator = false
+//        view.textAlignment = .left
+        
+        // Debug view size
+//        view.layer.backgroundColor = UIColor.red.cgColor
+//        view.layer.borderColor = UIColor.lightGray.cgColor
+//        view.layer.borderWidth = 1.0
+//        self.setHeightIfNeeded(uiView: view)
         return view
     }
     
     func updateUIView(_ uiView: UITextView, context: Context) {
+        self.setHeightIfNeeded(uiView: uiView)
+    }
+    
+    private func setHeightIfNeeded(uiView: UITextView) {
+      DispatchQueue.main.async {
+          let idealSize = uiView.sizeThatFits(CGSize(
+            width: self.textWidth ,
+            height: .infinity
+          ))
+          if self.textHeight != idealSize.height {
+              self.textHeight = idealSize.height
+          }
+      }
     }
     
     @available(iOS 16.0, *)
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
-        let dimensions = proposal.replacingUnspecifiedDimensions(
-            by: CGSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
-        )
-        
-        return CGSize(width: dimensions.width, height: height)
+        return CGSize(width: self.textWidth, height: self.textHeight)
     }
     
     func sizeThatFits(_ proposal: CGSize, uiView: UITextView) -> CGSize {
-        let size = CGSize(width: proposal.width, height: CGFloat.greatestFiniteMagnitude)
-        let fittingSize = uiView.sizeThatFits(size)
-
-        // You can use fittingSize.height if you want the height to be dynamic based on content.
-        // If you have a specific height in mind, replace fittingSize.height with that value.
-        return CGSize(width: proposal.width, height: fittingSize.height)
+        return CGSize(width: self.textWidth, height: self.textHeight)
     }
 }
 
@@ -311,12 +254,75 @@ extension NSMutableAttributedString {
         }
     }
     
-    func addNewlinesIfContainsAsianCharacters() {
-        let fullRange = NSRange(location: 0, length: self.length)
-        let regex = try! NSRegularExpression(pattern: "\\p{Script=Hiragana}|\\p{Script=Katakana}|\\p{Script=Han}|\\p{Script=Hangul}|\\p{Script=Thai}|\\p{Script=Lao}|\\p{Script=Khmer}")
+}
+
+
+struct NRTextFixedTester: View {
+    @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject public var nrPost: NRPost
+    @State private var textWidth: CGFloat = 90
+    @State private var textHeight: CGFloat = 90
+    
+    var body: some View {
+        Text(dim.listWidth.description)
+        Color.green
+            .frame(height: 300)
+            .fixedSize(horizontal: false, vertical: true)
+            .debugDimensions()
         
-        if regex.firstMatch(in: self.string, options: [], range: fullRange) != nil {
-            self.append(NSAttributedString(string: "\n\n"))
+        ZStack {
+            Color.black.opacity(0.1)
+                .frame(width: textWidth, height: textHeight)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            NRTextFixed(NRTextParser.shared.parseText(fastTags: nrPost.fastTags, text: nrPost.content ?? "").output,
+                        textWidth: $textWidth,
+                        textHeight: $textHeight
+            )
+            .onAppear {
+                textWidth = dim.listWidth - 20
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .opacity(0.5)
+            
+            
+            Text(nrPost.content ?? "")
+                .font(.system(.body))
+                .multilineTextAlignment(.leading)
+                .frame(width: textWidth, height: textHeight, alignment: .topLeading)
+                .fixedSize(horizontal: false, vertical: true)
+                .opacity(0.8)
+        }
+        
+        Color.blue
+            .frame(height: 300)
+            .fixedSize(horizontal: false, vertical: true)
+            .debugDimensions()
+    }
+}
+
+#Preview("NRTextFixedTester2") {
+    PreviewContainer({ pe in
+        pe.parseMessages([
+            ###"["EVENT","test",{"content":"Since I am running my own relay, I want to back up my notes to it. Is there a command line tool that I can run from Cron, I give it an npub, source and destination relay and it would synchronize all posts from one to the other?","pubkey":"dab6c6065c439b9bafb0b0f1ff5a0c68273bce5c1959a4158ad6a70851f507b6","created_at":1722171009,"kind":1,"tags":[],"sig":"7ef9206ca7c26b0a9ae1d15f70fe511dda03fbb78e7035094e22eea3694c7fd2e7a0f5c34b80c8ef17fb26a0e5e6e6d63dc7124913386d1613a38567eef41850","id":"da2ca70cecc3349046bec82873855d2c8eafb55aa1da3f2a83a392eb6c2dcc44"}]"###
+        ])
+    }) {
+        if let test = PreviewFetcher.fetchNRPost("da2ca70cecc3349046bec82873855d2c8eafb55aa1da3f2a83a392eb6c2dcc44") {
+           PostDetailView(nrPost: test)
+        }
+    }
+}
+
+
+#Preview("NRTextFixedTester") {
+    PreviewContainer({ pe in
+        pe.parseMessages([
+            ###"["EVENT","test",{"content":"Since I am running my own relay, I want to back up my notes to it. Is there a command line tool that I can run from Cron, I give it an npub, source and destination relay and it would synchronize all posts from one to the other?","pubkey":"dab6c6065c439b9bafb0b0f1ff5a0c68273bce5c1959a4158ad6a70851f507b6","created_at":1722171009,"kind":1,"tags":[],"sig":"7ef9206ca7c26b0a9ae1d15f70fe511dda03fbb78e7035094e22eea3694c7fd2e7a0f5c34b80c8ef17fb26a0e5e6e6d63dc7124913386d1613a38567eef41850","id":"da2ca70cecc3349046bec82873855d2c8eafb55aa1da3f2a83a392eb6c2dcc44"}]"###
+        ])
+    }) {
+        if let test = PreviewFetcher.fetchNRPost("da2ca70cecc3349046bec82873855d2c8eafb55aa1da3f2a83a392eb6c2dcc44") {
+            NRTextFixedTester(nrPost: test)
+                .padding(.horizontal, 10)
         }
     }
 }

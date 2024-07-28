@@ -43,7 +43,7 @@ struct Kind1Default: View {
         // FULL WIDTH IS OFF
         
         // LIST OR LIST PARENT
-        if !isDetail { return dim.availableNoteRowImageWidth() }
+        if !isDetail { return dim.availableNoteRowWidth }
         
         // DETAIL
         if isDetail && !isReply { return dim.availablePostDetailImageWidth() }
