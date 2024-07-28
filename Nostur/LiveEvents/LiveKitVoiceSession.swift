@@ -5,12 +5,14 @@
 //  Created by Fabian Lachman on 12/07/2024.
 //
 
-import Foundation
+import SwiftUI
 import LiveKit
 import AVFoundation
 import NostrEssentials
 
 class LiveKitVoiceSession: ObservableObject {
+    
+    @Published public var activeNest: NRLiveEvent? = nil
     
     @Published public var state: LiveKitVoiceSessionState = .disconnected
     
@@ -221,12 +223,12 @@ extension LiveKitVoiceSession: RoomDelegate {
     
     func roomDidConnect(_ room: Room) {
         L.nests.debug("roomDidConnect: participantCount: \(room.participantCount.description)")
-        self.state = .connected
         
         self.syncParticipants()
         
-        // Broadcast room presence
         Task { @MainActor in
+            self.state = .connected
+            // Broadcast room presence
             self.broadCastRoomPresence()
         }
     }
@@ -240,7 +242,6 @@ extension LiveKitVoiceSession: RoomDelegate {
     // A ``RemoteParticipant`` left the room.
     func room(_ room: Room, participantDidDisconnect participant: RemoteParticipant) {
         L.nests.debug("room: participantDidDisconnect: participant.name \(participant.name ?? "")")
-//        participants.removeAll(where: { $0.identity == participant.identity })
         
         guard let participantPubkey = participant.identity?.stringValue else { return }
         guard isValidPubkey(participantPubkey) else { return }
@@ -428,7 +429,9 @@ extension LiveKitVoiceSession: RoomDelegate {
     // Could not connect to the room. Only triggered when the initial connect attempt fails.
     func room(_ room: Room, didFailToConnectWithError error: LiveKitError?) {
         L.nests.debug("didFailToConnectWithError: error \(error?.localizedDescription ?? "")")
-        self.state = .error(error?.localizedDescription ?? "Error")
+        Task { @MainActor in
+            self.state = .error(error?.localizedDescription ?? "Error")
+        }
     }
 
 }
