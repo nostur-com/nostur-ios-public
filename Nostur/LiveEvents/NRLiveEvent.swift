@@ -212,7 +212,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         
         if let cm = NostrEssentials
             .ClientMessage(type: .REQ,
-                           subscriptionId: "ROOMPRESENCE",
+                           subscriptionId: "-DB-ROOMPRESENCE",
                            filters: [
                             Filters(
                                 kinds: Set([10312]),
@@ -222,7 +222,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                             )
                            ]
             ).json() {
-            req(cm, activeSubscriptionId: "ROOMPRESENCE")
+            req(cm, activeSubscriptionId: "-DB-ROOMPRESENCE")
         }
         else {
             L.og.error("fetchPresentInRoom feed: Problem generating request")
