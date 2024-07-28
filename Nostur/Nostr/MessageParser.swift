@@ -30,7 +30,7 @@ class MessageParser {
     static let shared = MessageParser()
 
     // Subscriptions that will be kept open afte EOSE
-    static let ACTIVE_SUBSCRIPTIONS = Set(["Following","Explore","Notifications","REALTIME-DETAIL", "REALTIME-DETAIL-A", "NWC", "NC", "LIVEEVENTS", "ROOMPRESENCE", "-DB-CHAT-"])
+    static let ACTIVE_SUBSCRIPTIONS = Set(["Following","Explore","Notifications","REALTIME-DETAIL", "REALTIME-DETAIL-A", "NWC", "NC", "LIVEEVENTS", "-DB-ROOMPRESENCE", "-DB-CHAT-"])
     
     private var bgQueue = bg()
     private var poolQueue = ConnectionPool.shared.queue
@@ -96,7 +96,7 @@ class MessageParser {
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
-                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(5)) != "-DB-CHAT-" {
+                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(9)) != "-DB-CHAT-" {
                         // Send close message to this specific socket, not all.
                         #if DEBUG
                         L.sockets.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
