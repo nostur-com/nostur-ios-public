@@ -320,4 +320,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                 }
             }
     }
+    
+    @Published public var volume: CGFloat = 0.0
+    @Published public var isMuted: Bool = true
 }

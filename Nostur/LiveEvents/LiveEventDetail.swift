@@ -135,7 +135,8 @@ struct LiveEventDetail: View {
                 NestParticipantView(
                     nrContact: liveEvent.listeners[index],
                     role: liveEvent.role(forPubkey: liveEvent.listeners[index].pubkey),
-                    aTag: liveEvent.id
+                    aTag: liveEvent.id,
+                    showControls: false
                 )
                 .id(liveEvent.listeners[index].pubkey)
                 .onTapGesture {
