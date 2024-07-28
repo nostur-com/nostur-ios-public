@@ -280,17 +280,22 @@ struct MiniPFP: View {
                 if let image = state.image {
                     if state.imageContainer?.type == .gif {
                         image
-                            .interpolation(.none)
                             .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
+                            .interpolation(.none)
                             .aspectRatio(contentMode: .fill)
+                            .frame(width: size, height: size)
                     }
                     else {
-                        image.interpolation(.none)
+                        image
+                            .resizable()
+                            .interpolation(.none)
+                            .frame(width: size, height: size)
                     }
                 }
                 else { Color.systemBackground }
             }
             .pipeline(ImageProcessing.shared.pfp)
+            .drawingGroup()
             .frame(width: size, height: size)
             .cornerRadius(size/2)
             .background(
