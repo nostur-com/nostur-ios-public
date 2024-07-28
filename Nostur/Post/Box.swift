@@ -35,9 +35,6 @@ struct Box<Content: View>: View {
     }
     
     var body: some View {
-        //        VStack(spacing: 10) {
-        //            content
-        //        }
         if navMode == .view {
             content
                 .padding(kind == 30023 ? 20 : 10)
@@ -46,10 +43,6 @@ struct Box<Content: View>: View {
                 .onTapGesture {
                     navigate()
                 }
-//                .withoutAnimation()
-//                .transaction { transaction in
-//                    transaction.animation = nil
-//                }
         }
         else if navMode == .noNavigation {
             content
@@ -59,10 +52,6 @@ struct Box<Content: View>: View {
                 .onTapGesture {
                     
                 }
-//                .withoutAnimation()
-//                .transaction { transaction in
-//                    transaction.animation = nil
-//                }
         }
         else {
             content
@@ -70,28 +59,17 @@ struct Box<Content: View>: View {
                 .background {
                     if kind == 30023 || ((nrPost?.kind ?? 0) == 6) && (nrPost?.firstQuote?.kind ?? 0) == 30023 {
                         theme.secondaryBackground
-//                            .withoutAnimation()
-//                            .transaction { t in
-//                                t.animation = nil
-//                            }
                             .onTapGesture {
                                 navigate()
                             }
                     }
                     else {
                         theme.background
-//                            .withoutAnimation()
-//                            .transaction { t in
-//                                t.animation = nil
-//                            }
                             .onTapGesture {
                                 navigate()
                             }
                     }
                 }
-//                .transaction { t in
-//                    t.animation = nil
-//                }
         }
     }
     
