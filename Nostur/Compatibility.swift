@@ -146,11 +146,24 @@ extension View {
         else {
             self
         }
-    }    
+    }
+    
+    
+    @ViewBuilder
+    func rollingNumber() -> some View {
+        if #available(iOS 17.0, *) {
+            self.contentTransition(.numericText(countsDown: false))
+        }
+        else {
+            self
+        }
+    }
+    
+    
     @ViewBuilder
     func safeAreaPadding() -> some View {
         if #available(iOS 17.0, *) {
-            self.safeAreaPadding(.horizontal, 10.0)
+            self.safeAreaPadding(.horizontal, 0)
         }
         else {
             self

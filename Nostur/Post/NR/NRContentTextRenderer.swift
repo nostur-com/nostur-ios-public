@@ -108,7 +108,7 @@ struct NRContentTextRendererInner: View {
                             }
                         }
                     }
-                    .transaction { t in t.animation = nil }
+                    .transaction { t in t.animation = nil } // <-- needed or not?
                     .onAppear {
                         textWidth = availableWidth ?? dim.listWidth
                     }

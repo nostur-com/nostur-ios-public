@@ -4063,6 +4063,9 @@
         }
       }
     },
+    "Leave" : {
+
+    },
     "Let's go!" : {
       "comment" : "Button to start using Nostur, during onboarding",
       "localizations" : {
@@ -8360,6 +8363,9 @@
           }
         }
       }
+    },
+    "出張の帰りに新幹線で報告書まとめたら後で楽だなあと思ってパソコン開いたけど気持ち悪くなってやめたことあるL cuttttttt tttof d d d d d d d d d a b c d" : {
+
     }
   },
   "version" : "1.0"

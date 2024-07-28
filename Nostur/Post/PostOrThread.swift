@@ -276,7 +276,7 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
     PreviewContainer({ pe in
     
         pe.parseMessages([
-            ###"["EVENT","jap",{"content":"出張の帰りに新幹線で報告書まとめたら後で楽だなあと思ってパソコン開いたけど気持ち悪くなってやめたことあるL","tags":[],"created_at":1721348354,"kind":1,"id":"3dcaf40eaf8820d97d0fc5ae9a2eed02b356717c88c3ee6a46f1a7d18e5caf4f","pubkey":"26bb2ebed6c552d670c804b0d655267b3c662b21e026d6e48ac93a6070530958","sig":"0be801ce1e447e59e40f8f25b3a2865ef667b1393baae7660edbbdd7e32a86bafd9fbc1b0548ddceb39f6706fec18df6b60ffd87ed4e255baa9b9428b59b1558"}]"###
+            ###"["EVENT","jap",{"content":"出張の帰りに新幹線で報告書まとめたら後で楽だなあと思ってパソコン開いたけど気持ち悪くなってやめたことあるL cuttttttt tttof d d d d d d d d d a b c d","tags":[],"created_at":1721348354,"kind":1,"id":"3dcaf40eaf8820d97d0fc5ae9a2eed02b356717c88c3ee6a46f1a7d18e5caf4f","pubkey":"26bb2ebed6c552d670c804b0d655267b3c662b21e026d6e48ac93a6070530958","sig":"0be801ce1e447e59e40f8f25b3a2865ef667b1393baae7660edbbdd7e32a86bafd9fbc1b0548ddceb39f6706fec18df6b60ffd87ed4e255baa9b9428b59b1558"}]"###
         ])
         
         SettingsStore.shared.fullWidthImages = false
@@ -287,6 +287,8 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
                 Color.red
                     .frame(height: 30)
                     .debugDimensions("spacer", alignment: .center)
+                
+                Text("出張の帰りに新幹線で報告書まとめたら後で楽だなあと思ってパソコン開いたけど気持ち悪くなってやめたことあるL cuttttttt tttof d d d d d d d d d a b c d")
                 
                 if let qq = PreviewFetcher.fetchNRPost("3dcaf40eaf8820d97d0fc5ae9a2eed02b356717c88c3ee6a46f1a7d18e5caf4f") {
                     PostOrThread(nrPost: qq)

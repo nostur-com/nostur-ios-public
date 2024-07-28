@@ -325,7 +325,7 @@ struct PostAndParent: View {
                         }
                         else {
                             DetailPost(nrPost: nrPost)
-                                .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
+//                                .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                                 .id(nrPost.id)
                                 .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
                                 .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
