@@ -871,7 +871,7 @@ class LVM: NSObject, ObservableObject {
                     return $0
                 })
             }
-            self.startRenderingSubject.send(firstRenderedEvents)
+            self.startRenderingSubject.send(applyWoTifNeeded(firstRenderedEvents))
             
             if (!self.instantFinished) {
                 self.performLocalFetchAfterImport()
