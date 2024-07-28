@@ -25,7 +25,7 @@ struct NRBalloonView: View {
                 NRTextDynamic(convertToHieroglyphs(text: event.noteText))
             }
             else if !contentElements.isEmpty {
-                DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: DIMENSIONS.shared.listWidth, theme: themes.theme, isSentByCurrentUser: isSentByCurrentUser)
+                DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: dim.listWidth, theme: themes.theme, isSentByCurrentUser: isSentByCurrentUser)
 //                    .debugDimensions("DMContentRenderer")
                     .padding(10)
                     .background(
