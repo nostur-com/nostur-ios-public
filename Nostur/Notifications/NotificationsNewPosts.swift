@@ -57,7 +57,7 @@ struct NotificationsNewPosts: View {
             if !notifications.isEmpty {
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
-                    LazyVStack(spacing: 10) {
+                    LazyVStack(spacing: 2) {
                         ForEach(notifications) { notification in
                             NBNavigationLink(value: NewPostsForPubkeys(pubkeys: Set(notification.contactsInfo.map { $0.pubkey }), since: notification.since), label: {
                                 Text("New posts by \(notification.contactsInfo.map { $0.name }.formatted(.list(type: .and)))")

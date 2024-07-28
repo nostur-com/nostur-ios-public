@@ -58,7 +58,7 @@ struct BlockedAccounts:View {
     var body: some View {
         ScrollView {
             if !blockedPubkeys.isEmpty {
-                LazyVStack(spacing: 10) {
+                LazyVStack(spacing: 2) {
                     ForEach(blockedPubkeys) { blockedPubkey in
                         if let contact = Contact.fetchByPubkey(blockedPubkey.pubkey, context: viewContext) {
                             ProfileRow(withoutFollowButton: true, contact: contact)
@@ -168,7 +168,7 @@ struct MutedConversations: View {
     var body: some View {
         ScrollView {
             if !mutedRootIds.isEmpty {
-                LazyVStack(spacing: 10) {
+                LazyVStack(spacing: 2) {
                     ForEach(mutedRootIds) { mutedRootId in
                         Box {
                             if let event = try? Event.fetchEvent(id: mutedRootId.eventId, context: viewContext) {

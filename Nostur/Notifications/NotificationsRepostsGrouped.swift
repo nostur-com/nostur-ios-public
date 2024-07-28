@@ -28,7 +28,7 @@ struct NotificationsRepostsGrouped: View {
         
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 10) {
+            LazyVStack(spacing: 2) {
                 ForEach(fl.nrPosts) { nrPost in
                     Box(nrPost: nrPost) {
                         // TODO: Put grouped repost header here

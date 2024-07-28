@@ -194,7 +194,7 @@ struct ReceiptFrom: View {
         
 //        ProcessorTest(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e")
         
-        LazyVStack(spacing: 10) {
+        LazyVStack(spacing: 2) {
             if let zapReceipt = PreviewFetcher.fetchEvent("eafca163fd997086016a41e56fa938932eaedae7b386b74954522bfb78fb41ca"),
                let zapFrom = zapReceipt.zapFromRequest {
                 

@@ -37,7 +37,7 @@ struct NotificationsReposts: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                LazyVStack(spacing: 10) {
+                LazyVStack(spacing: 2) {
                     ForEach(model.reposts) { nrPost in
                         Box(nrPost: nrPost) {
                             VStack(alignment: .leading, spacing: 0) {

@@ -37,7 +37,7 @@ struct NotificationsReactions: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                LazyVStack(alignment:.leading, spacing: 10) {
+                LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(model.groupedReactions) { groupedReactions in
                         Box(nrPost: groupedReactions.nrPost, navMode: .view) {
                             VStack(alignment:.leading, spacing: 3) {

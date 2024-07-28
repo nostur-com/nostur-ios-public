@@ -99,7 +99,7 @@ struct PostDetailView: View, Equatable {
         GeometryReader { geometry in
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(spacing: 10) { // 10 for space between (parents+detail) and replies
+                    VStack(spacing: 2) { // 10 for space between (parents+detail) and replies
                         PostAndParent(nrPost: nrPost,  navTitleHidden:navTitleHidden)
                         
                             // Around parents + detail (not replies)

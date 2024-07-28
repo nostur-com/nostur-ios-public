@@ -24,7 +24,7 @@ struct PostReactions: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                LazyVStack(spacing: 10) {
+                LazyVStack(spacing: 2) {
                     ForEach(model.reactions) { nrPost in
                         HStack(alignment: .top) {
                             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)

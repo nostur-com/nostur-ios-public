@@ -54,7 +54,7 @@ struct PostOrThread: View {
     //                    }
                 }
             } // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
-            .padding(.top, 10)
+            .padding(.top, 2)
             .background { // This is the background between PostOrThread's.
                 themes.theme.listBackground
 //                    .withoutAnimation()
@@ -62,10 +62,11 @@ struct PostOrThread: View {
             }
         }
         else { // Reply thread
-            VStack(spacing: 10) {
+            VStack(spacing: 2) {
                 ForEach(postOrThreadAttributes.parentPosts) { nrParent in
                     Box(nrPost: nrParent, theme: themes.theme) {
                         PostRowDeletable(nrPost: nrParent,
+                                         hideFooter: true,
                                          missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
                                          connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped, theme: themes.theme)
     //                    .transaction { t in
@@ -110,7 +111,7 @@ struct PostOrThread: View {
     //                    }
                 }
             } // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
-            .padding(.top, 10)
+            .padding(.top, 2)
             .background { // This is the background between PostOrThread's.
                 themes.theme.listBackground
 //                    .withoutAnimation()

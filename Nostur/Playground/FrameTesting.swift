@@ -15,7 +15,7 @@ struct FrameTesting: View {
             Color.pink
                 .frame(width: 10, height: 50)
             
-            LazyVStack(spacing: 10) {
+            LazyVStack(spacing: 2) {
                 Something()
 //                    .fixedSize()
                     .frame(height: 25)
@@ -30,7 +30,7 @@ struct FrameTesting: View {
             }
             .background(themes.theme.listBackground)
             
-            LazyVStack(spacing: 10) {
+            LazyVStack(spacing: 2) {
                 Something()
                     .frame(height: 25)
     //                .clipped()
