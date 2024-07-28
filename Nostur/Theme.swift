@@ -20,7 +20,7 @@ public struct Theme {
     
     // Need to remove/redo/rename these:
     public var lineColor = Color("defaultLineColor")
-    public var footerButtons = Color("defaultLineColor")
+    public var footerButtons = Color("defaultFooterButtonsColor")
 }
 
 class Themes: ObservableObject {
