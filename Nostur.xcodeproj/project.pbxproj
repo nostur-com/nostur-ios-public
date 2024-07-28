@@ -1936,7 +1936,6 @@
 				1FA059A02A74F87B0039643C /* LVM+relays.swift */,
 				1F1EF1982AA0FEB300B78A55 /* LVM+someonesFeed.swift */,
 				1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */,
-				1FFA899F2B19720A00D9BE26 /* NewPostsBy.swift */,
 				1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */,
 				1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */,
 				1FEA59162B1D28D800A88DCD /* SmoothTable.swift */,
@@ -2208,6 +2207,7 @@
 		1FFA89A32B197AD700D9BE26 /* NewPostsBy */ = {
 			isa = PBXGroup;
 			children = (
+				1FFA899F2B19720A00D9BE26 /* NewPostsBy.swift */,
 				1FFA89A42B197AE600D9BE26 /* NewPostsVM.swift */,
 			);
 			path = NewPostsBy;
