@@ -215,10 +215,10 @@ struct NRTextFixed: UIViewRepresentable {
     private func setHeightIfNeeded(uiView: UITextView) {
       DispatchQueue.main.async {
           let idealSize = uiView.sizeThatFits(CGSize(
-            width: self.textWidth ,
+            width: self.textWidth,
             height: .infinity
           ))
-          if self.textHeight != idealSize.height {
+          if idealSize.height > 60 && self.textHeight != idealSize.height {
               self.textHeight = idealSize.height
           }
       }
