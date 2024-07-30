@@ -238,6 +238,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var mostRecentId: String?
     
     var isNSFW: Bool = false
+    var sizeEstimate: RowSizeEstimate
     
     init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isScreenshot: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil) {
         var isAwaiting = false
@@ -481,6 +482,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             
             self.previewWeights = previewWeights
         }
+        
+        self.sizeEstimate = previewWeights?.sizeEstimate ?? .small
         
         self.following = isFollowing(event.pubkey)
         
