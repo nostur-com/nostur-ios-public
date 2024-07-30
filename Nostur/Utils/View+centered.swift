@@ -67,29 +67,49 @@ struct DebugDimensions: ViewModifier {
     var alignment:Alignment
     @State var actualSize:CGSize? = nil
     
+    var horizontalAlignment: HorizontalAlignment {
+        switch alignment {
+        case .bottomLeading, .leading, .topLeading:
+            .leading
+        case .bottomTrailing, .trailing, .topTrailing:
+            .trailing
+        default:
+            .center
+        }
+    }
+    
     func body(content: Content) -> some View {
-        content
-            .readSize { size in
-                actualSize = size
-            }
-            .overlay(alignment: alignment) {
-                if let actualSize {
-                    VStack {
-                        if let label {
-                            Text(label)
+    #if DEBUG
+        if 1 == 2 {
+            content
+                .readSize { size in
+                    actualSize = size
+                }
+                .overlay(alignment: alignment) {
+                    if let actualSize {
+                        VStack(alignment: horizontalAlignment) {
+                            if let label {
+                                Text(label)
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                                    .background(.brown)
+                                    .fontWeightBold()
+                            }
+                            Text(actualSize.debugDescription)
                                 .font(.caption)
                                 .foregroundColor(.white)
-                                .background(.brown)
+                                .background(.black)
                                 .fontWeightBold()
                         }
-                        Text(actualSize.debugDescription)
-                            .font(.caption)
-                            .foregroundColor(.white)
-                            .background(.black)
-                            .fontWeightBold()
                     }
                 }
-            }
+        }
+        else {
+            content
+        }
+    #else
+        content
+    #endif
     }
 }
 
