@@ -267,6 +267,19 @@ public class ConnectionPool: ObservableObject {
     }
     
     @MainActor
+    func disconnectAllAdditional() {
+        L.og.debug("ConnectionPool.disconnectAllAdditional")
+        
+        for (_, connection) in outboxConnections {
+            connection.disconnect()
+        }
+        
+        for (_, connection) in ephemeralConnections {
+            connection.disconnect()
+        }
+    }
+    
+    @MainActor
     func removeActiveAccountSubscriptions() {
         for (_, connection) in connections {
             connection.queue.async {
