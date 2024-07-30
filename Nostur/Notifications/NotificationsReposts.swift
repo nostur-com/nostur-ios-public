@@ -18,7 +18,6 @@ struct NotificationsReposts: View {
     @ObservedObject private var settings: SettingsStore = .shared
 
     @State private var backlog = Backlog()
-    @Namespace private var top
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -36,7 +35,6 @@ struct NotificationsReposts: View {
         #endif
         ScrollViewReader { proxy in
             ScrollView {
-                Color.clear.frame(height: 1).id(top)
                 LazyVStack(spacing: GUTTER) {
                     ForEach(model.reposts) { nrPost in
                         Box(nrPost: nrPost) {
@@ -76,9 +74,9 @@ struct NotificationsReposts: View {
             .onReceive(receiveNotification(.didTapTab)) { notification in
                 guard selectedNotificationsTab == "Reposts" else { return }
                 guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                if navPath.count == 0 {
+                if navPath.count == 0, let topId = model.reposts.first?.id {
                     withAnimation {
-                        proxy.scrollTo(top)
+                        proxy.scrollTo(topId)
                     }
                 }
             }
