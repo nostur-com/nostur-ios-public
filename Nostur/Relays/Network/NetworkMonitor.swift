@@ -52,6 +52,9 @@ public class NetworkMonitor: ObservableObject {
                         DispatchQueue.main.async {
                             self.vpnConfigurationDetected = false
                             self.actualVPNconnectionDetected = false
+                            if SettingsStore.shared.enableVPNdetection {
+                                ConnectionPool.shared.disconnectAllAdditional()
+                            }
                         }
                     }
                 }
