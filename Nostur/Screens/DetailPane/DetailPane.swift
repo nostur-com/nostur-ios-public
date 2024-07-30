@@ -155,6 +155,7 @@ struct DetailPane: View {
                 ForEach(tm.tabs) { tab in
                     if !tab.suspended {
                         DetailTab(tab: tab)
+                            .environmentObject(dim)
                             .environmentObject(tm)
     //                        .padding(.vertical, 10)
     //                        .background(Color.systemBackground)
@@ -194,7 +195,6 @@ struct DetailPane: View {
                     }
                 }
             }
-            .environmentObject(dim)
         }
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)

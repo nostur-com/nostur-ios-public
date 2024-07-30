@@ -31,7 +31,7 @@ struct ContentRenderer: View { // VIEW things
         self.forceAutoload = forceAutoload
         self.theme = theme
         _didStart = didStart
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 20, isScreenshot: nrPost.isScreenshot))
     }
     
     private var shouldAutoload: Bool {
@@ -118,6 +118,9 @@ struct ContentRenderer: View { // VIEW things
                         }
                         .id(index)
                 case .text(let attributedStringWithPs): // For text notes
+//                    Color.red
+//                        .frame(height: 50)
+//                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview)
                         .equatable()
                         .onTapGesture {
@@ -383,6 +386,8 @@ struct EmbeddedPost: View {
     @ObservedObject var prd: PostRowDeletableAttributes
     private var forceAutoload: Bool
     private var theme: Theme
+    
+    @EnvironmentObject private var parentDIM: DIMENSIONS
     
     init(_ nrPost: NRPost, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost

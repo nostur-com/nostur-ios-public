@@ -65,6 +65,7 @@ struct NoteById: View {
             }
             else {
                 PostDetailView(nrPost: nrPost, navTitleHidden: navTitleHidden)
+                    .debugDimensions("NoteById.PostDetailView", alignment: .topLeading)
             }
         case .timeout:
             Text("Unable to fetch")
@@ -493,14 +494,14 @@ struct ParentPost: View {
                                         .padding(.vertical, 10)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 case 1,6,9734: // text, repost, zap request
-                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailRowImageWidth() - 20, theme: themes.theme, didStart: $didStart)
+                                    ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.listWidth - 80, theme: themes.theme, didStart: $didStart)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 case 1063: // File Metadata
                                     NoteTextRenderView(nrPost: nrPost, theme: themes.theme)
                                 case 99999:
                                     let title = nrPost.eventTitle ?? "Untitled"
                                     if let eventUrl = nrPost.eventUrl {
-                                        VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true, theme: themes.theme, availableWidth: dim.availablePostDetailImageWidth() - 20)
+                                        VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true, theme: themes.theme, availableWidth: dim.listWidth - 80)
                                             .padding(.vertical, 10)
                                     }
                                     else {
@@ -639,7 +640,8 @@ struct DetailPost: View {
                     NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
                 }
                 else {
-                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (20)), theme: themes.theme, didStart: $didStart)
+//                    Text("case 1,6,9734: dim.listWidth: \(dim.listWidth - 20)")
+                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: themes.theme, didStart: $didStart)
                         .padding(.vertical, 10)
                 }
             case 1063:

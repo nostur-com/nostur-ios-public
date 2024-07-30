@@ -44,7 +44,7 @@ struct NoteTextRenderView: View {
 //                Color.red.frame(height: 30)
 //                    .debugDimensions("spacer")
 //                Text(dim.availablePostDetailImageWidth().description)
-                ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.availablePostDetailImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
+                ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.listWidth, forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
                 
             default:
                 UnknownKindView(nrPost: nrPost, theme: theme)

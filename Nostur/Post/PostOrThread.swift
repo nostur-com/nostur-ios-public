@@ -7,8 +7,14 @@
 
 import SwiftUI
 
-struct PostOrThread: View {
 let GUTTER = 2.0 // Gap size between posts, used to be 10, now small so it looks more like a thin line.
+
+struct PostOrThread: View { //, Equatable {
+    
+//    static func == (lhs: Self, rhs: Self) -> Bool {
+//        lhs.nrPost.id == rhs.nrPost.id
+//    }
+    
     @EnvironmentObject private var themes: Themes
     private let nrPost: NRPost
     @ObservedObject private var postOrThreadAttributes:  PostOrThreadAttributes

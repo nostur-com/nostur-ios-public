@@ -87,8 +87,11 @@ struct QuotedNoteFragmentView: View {
                 }
 //                .frame(height: 40)
                 VStack(alignment: .leading) {
+//                    Color.green
+//                        .frame(height: 50)
+//                        .debugDimensions("QuotedNoteFrVi.availableWidth \(parentDIM.listWidth)", alignment: .topLeading)
                     NoteTextRenderView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: parentDIM.availablePostDetailImageWidth() - 20, isScreenshot: nrPost.isScreenshot))
+//                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: parentDIM.listWidth - 20, isScreenshot: nrPost.isScreenshot))
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 }
