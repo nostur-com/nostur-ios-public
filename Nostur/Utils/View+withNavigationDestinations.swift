@@ -108,6 +108,7 @@ extension View {
                 default:
                     PostDetailView(nrPost: nrPost)
                         .equatable()
+                        .debugDimensions("nbNavigationDestination.PostDetailView", alignment: .topLeading)
                 }
             }
             .nbNavigationDestination(for: Naddr1Path.self) { path in
@@ -155,6 +156,7 @@ extension View {
                     case .Post(let post):
                         PostDetailView(nrPost: post)
                             .equatable()
+                            .debugDimensions("nbNavigationDestination2.PostDetailView", alignment: .topLeading)
                     case .Blocklist:
                         BlockListView()
                     case .PostReactions(let eventId):

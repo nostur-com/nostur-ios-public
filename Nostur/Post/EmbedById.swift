@@ -43,6 +43,7 @@ struct EmbedById: View {
                 }
                 else {
                     QuotedNoteFragmentView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
+                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: dim.listWidth - 20, isScreenshot: nrPost.isScreenshot))
 //                        .transaction { t in t.animation = nil }
 //                        .debugDimensions("EmbedById.QuotedNoteFragmentView")
                         .overlay(

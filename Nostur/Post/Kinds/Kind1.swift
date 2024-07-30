@@ -45,7 +45,7 @@ struct Kind1: View {
         // FULL WIDTH IS ON
         
         // LIST OR LIST PARENT
-        if !isDetail { return dim.listWidth }
+        if !isDetail { return dim.listWidth - 20 }
         
         // DETAIL
         if isDetail && !isReply { return dim.availablePostDetailRowImageWidth() }
