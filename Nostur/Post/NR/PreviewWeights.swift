@@ -15,7 +15,7 @@ class PreviewWeights {
     var other = 0.0
     var text = 0.0
     
-    var weight:Double {
+    var weight: Double {
         var weight  = (posts * 0.8)
             weight += (videos * 0.8)
             weight += (pictures * 0.8)
@@ -26,11 +26,11 @@ class PreviewWeights {
         return weight
     }
     
-    var moreItems:Bool {
+    var moreItems: Bool {
         (morePosts + moreVideos + morePictures + moreLinkPreviews + moreOther) > 0
     }
     
-    var moreItemsCount:Int {
+    var moreItemsCount: Int {
         (morePosts + moreVideos + morePictures + moreLinkPreviews + moreOther)
     }
     
@@ -40,16 +40,34 @@ class PreviewWeights {
     var moreLinkPreviews = 0
     var moreOther = 0
     var moreText = 0
+    
+    var characters: Int = 0
+    
+    var sizeEstimate: RowSizeEstimate = .small
+    
+    public var textOnly: Bool {
+        return (posts + videos + pictures + linkPreviews + other) == 0
+    }
+    
+    public var hasLargeItem: Bool {
+        return moreItems || (videos + pictures + other) > 0 // removed "posts", because too many times small posts makes it become .large when it should be .medium
+    }
 }
 
 let PREVIEW_WEIGHT_LIMIT = 2
+
+enum RowSizeEstimate: CGFloat {
+    case small = 30
+    case medium = 100
+    case large = 240 // 450 
+}
 
 func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement], PreviewWeights) {
     let w = PreviewWeights()
     
     let previewElements = contentElements.filter { element in
         switch element {
-        case .note1:
+        case .note1, .nrPost:
             w.posts += 1;
             guard w.weight < 2 else {
                 w.morePosts += 1
@@ -63,7 +81,7 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
                 return false
             }
             return true
-        case .lnbc:
+        case .lnbc, .cashu:
             w.other += 1;
             guard w.weight < 2 else {
                 w.moreOther += 1
@@ -100,14 +118,16 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
                 return false
             }
             return true
-        case .nprofile1:
+        case .nprofile1, .npub1:
             w.other += 1;
             guard w.weight < 2 else {
                 w.moreOther += 1
                 return false
             }
             return true
-        case .text:
+        case .text(let attributedStringWithPs):
+            w.characters += attributedStringWithPs.output.length
+            w.characters += (attributedStringWithPs.input.utf8.lazy.filter { $0 == 10 }.count * 40) // count newlines 90 characters
             w.text += 1;
             guard w.weight < 2 else {
                 w.moreText += 1
@@ -122,6 +142,22 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
             }
             return true
         }
+    }
+    
+    // Text only?
+    if w.textOnly {
+        if w.characters < 200 {
+            w.sizeEstimate = .small
+        }
+        else if w.characters < 500 || w.linkPreviews > 0 || w.morePosts > 0 {
+            w.sizeEstimate = .medium
+        }
+        else {
+            w.sizeEstimate = .large
+        }
+    }
+    else if w.hasLargeItem {
+        w.sizeEstimate = .large
     }
     
     return (previewElements, w)

@@ -132,11 +132,48 @@ struct Kind1Default: View {
                             .frame(maxWidth: .infinity, alignment:.leading)
                     }
                     else {
-                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
-                            .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(maxHeight: didStart ? 750 : 450, alignment: .top)
-                            .clipped()
+//                        ZStack(alignment: .bottom) {
+                            ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: false, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
+                                .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+    //                            .frame(height: 500, alignment: .top)
+    //                            .fixedSize(horizontal: false, vertical: true)
+                                .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: didStart ? 750 : 450, alignment: .top)
+                                .clipped()
+                            
+                            
+                            // Fade bottom instead of hard clip. disabled because not accurate enough
+//                            if nrPost.sizeEstimate == .large && !didStart {
+//                                // Fade effect
+//                               LinearGradient(
+//                                gradient: Gradient(colors: [.clear, theme.background.opacity(0.35), theme.background.opacity(0.75), theme.background.opacity(0.95)]),
+//                                   startPoint: .top,
+//                                   endPoint: .bottom
+//                               )
+//                               .frame(height: 30) // Adjust the height of the fade effect
+//                               .edgesIgnoringSafeArea(.bottom)
+//                            }
+//                        }
+                        
+                            // Debug size estimate
+//                            .overlay(alignment: .topTrailing) {
+//                                VStack {
+//                                    let est = switch nrPost.sizeEstimate {
+//                                    case .large:
+//                                        "large"
+//                                    case .medium:
+//                                        "medium"
+//                                    case .small:
+//                                        "small"
+//                                    }
+//                                    Text(est)
+//                                        .background(.red)
+//                                        .foregroundColor(.white)
+//                                    if let weights = nrPost.previewWeights {
+//                                        Text(weights.weight.rounded().description)
+//                                    }
+//                                }
+//                            }
                         
                         if (nrPost.previewWeights?.moreItems ?? false) {
                             ReadMoreButton(nrPost: nrPost)

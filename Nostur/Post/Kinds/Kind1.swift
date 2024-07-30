@@ -119,10 +119,33 @@ struct Kind1: View {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                     }
                     else {
+//                        Color.pink
+//                            .frame(height: 50)
+//                            .debugDimensions("Kind1")
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: true, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                             .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
-                            .frame(maxHeight: didStart ? 800 : 500, alignment: .top)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: didStart ? 800 : 500, alignment: .top)
                             .clipped()
+                        // Debug size estimate
+//                            .overlay(alignment: .top) {
+//                                VStack {
+//                                    let est = switch nrPost.sizeEstimate {
+//                                    case .large:
+//                                        "large"
+//                                    case .medium:
+//                                        "medium"
+//                                    case .small:
+//                                        "small"
+//                                    }
+//                                    Text(est)
+//                                        .background(.red)
+//                                        .foregroundColor(.white)
+//                                    if let weights = nrPost.previewWeights {
+//                                        Text(weights.weight.rounded().description)
+//                                    }
+//                                }
+//                            }
                         if (nrPost.previewWeights?.moreItems ?? false) {
                             ReadMoreButton(nrPost: nrPost)
                                 .hCentered()
