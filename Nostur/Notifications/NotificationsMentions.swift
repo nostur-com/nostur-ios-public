@@ -28,15 +28,12 @@ struct NotificationsMentions: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
     }
     
-    @Namespace private var top
-        
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
             ScrollView {
-                Color.clear.frame(height: 1).id(top)
                 LazyVStack(spacing: GUTTER) {
                     ForEach(model.mentions) { nrPost in
                         Box(nrPost: nrPost) {
@@ -62,9 +59,9 @@ struct NotificationsMentions: View {
             .onReceive(receiveNotification(.didTapTab)) { notification in
                 guard selectedNotificationsTab == "Mentions" else { return }
                 guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                if navPath.count == 0 {
+                if navPath.count == 0, let topId = model.mentions.first?.id {
                     withAnimation {
-                        proxy.scrollTo(top)
+                        proxy.scrollTo(topId)
                     }
                 }
             }

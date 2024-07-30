@@ -29,8 +29,6 @@ struct NotificationsFollowers: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
     }
     
-    @Namespace private var top
-    
     @FetchRequest
     private var notifications:FetchedResults<PersistentNotification>
     
@@ -48,7 +46,6 @@ struct NotificationsFollowers: View {
         #endif
         ScrollViewReader { proxy in
             ScrollView {
-                Color.clear.frame(height: 1).id(top)
                 LazyVStack(spacing: GUTTER) {
                     ForEach(notifications) { notification in
                         NewFollowersNotificationView(notification: notification)
@@ -61,9 +58,9 @@ struct NotificationsFollowers: View {
             .onReceive(receiveNotification(.didTapTab)) { notification in
                 guard selectedNotificationsTab == "Followers" else { return }
                 guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                if navPath.count == 0 {
+                if navPath.count == 0, let topId = notifications.first?.id {
                     withAnimation {
-                        proxy.scrollTo(top)
+                        proxy.scrollTo(topId)
                     }
                 }
             }

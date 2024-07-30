@@ -28,8 +28,6 @@ struct NotificationsZaps: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
     }
     
-    @Namespace private var top
-    
     @FetchRequest
     private var pNotifications:FetchedResults<PersistentNotification>
     
@@ -60,7 +58,6 @@ struct NotificationsZaps: View {
         #endif
         ScrollViewReader { proxy in
             ScrollView {
-                Color.clear.frame(height: 1).id(top)
                 LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(notifications) { pNotification in
                         switch pNotification.type {
@@ -103,9 +100,9 @@ struct NotificationsZaps: View {
             .onReceive(receiveNotification(.didTapTab)) { notification in
                 guard selectedNotificationsTab == "Zaps" else { return }
                 guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                if navPath.count == 0 {
+                if navPath.count == 0, let topId = notifications.first?.id {
                     withAnimation {
-                        proxy.scrollTo(top)
+                        proxy.scrollTo(topId)
                     }
                 }
             }

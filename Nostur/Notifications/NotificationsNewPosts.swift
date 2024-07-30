@@ -33,8 +33,6 @@ struct NotificationsNewPosts: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
     }
     
-    @Namespace private var top
-    
     @FetchRequest
     private var notifications:FetchedResults<PersistentNotification>
     
@@ -56,7 +54,6 @@ struct NotificationsNewPosts: View {
         ScrollViewReader { proxy in
             if !notifications.isEmpty {
                 ScrollView {
-                    Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: GUTTER) {
                         ForEach(notifications) { notification in
                             NBNavigationLink(value: NewPostsForPubkeys(pubkeys: Set(notification.contactsInfo.map { $0.pubkey }), since: notification.since), label: {
@@ -79,9 +76,9 @@ struct NotificationsNewPosts: View {
                 .onReceive(receiveNotification(.didTapTab)) { notification in
                     guard selectedNotificationsTab == "New Posts" else { return }
                     guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                    if navPath.count == 0 {
+                    if navPath.count == 0, let topId = notifications.first?.id {
                         withAnimation {
-                            proxy.scrollTo(top)
+                            proxy.scrollTo(topId)
                         }
                     }
                 }
