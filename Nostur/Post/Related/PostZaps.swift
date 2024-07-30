@@ -25,7 +25,7 @@ struct PostZaps: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                LazyVStack(spacing: 2) {
+                LazyVStack(spacing: GUTTER) {
                     ForEach(model.verifiedZaps) { nxZap in
                         Box {
                             NxZapReceipt(sats: nxZap.sats, receiptPubkey: nxZap.receiptPubkey, fromPubkey: nxZap.fromPubkey, nrZapFrom: nxZap.nrZapFrom)

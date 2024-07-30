@@ -47,7 +47,7 @@ struct BookmarksView: View {
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
                 if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: GUTTER) {
                         ForEach(filteredBookmarks) { bookmark in
                             LazyBookmark(bookmark, events: events)
                             .onDelete {

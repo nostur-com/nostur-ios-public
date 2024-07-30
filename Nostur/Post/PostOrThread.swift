@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PostOrThread: View {
+let GUTTER = 2.0 // Gap size between posts, used to be 10, now small so it looks more like a thin line.
     @EnvironmentObject private var themes: Themes
     private let nrPost: NRPost
     @ObservedObject private var postOrThreadAttributes:  PostOrThreadAttributes
@@ -54,7 +55,7 @@ struct PostOrThread: View {
     //                    }
                 }
             } // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
-            .padding(.top, 2)
+            .padding(.top, GUTTER)
             .background { // This is the background between PostOrThread's.
                 themes.theme.listBackground
 //                    .withoutAnimation()
@@ -62,7 +63,7 @@ struct PostOrThread: View {
             }
         }
         else { // Reply thread
-            VStack(spacing: 2) {
+            VStack(spacing: GUTTER) {
                 ForEach(postOrThreadAttributes.parentPosts) { nrParent in
                     Box(nrPost: nrParent, theme: themes.theme) {
                         PostRowDeletable(nrPost: nrParent,
@@ -111,7 +112,7 @@ struct PostOrThread: View {
     //                    }
                 }
             } // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
-            .padding(.top, 2)
+            .padding(.top, GUTTER)
             .background { // This is the background between PostOrThread's.
                 themes.theme.listBackground
 //                    .withoutAnimation()

@@ -57,7 +57,7 @@ struct SmoothListMock<Content: View>: View {
     
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 2) {
+            LazyVStack(spacing: GUTTER) {
                 content
             }
         }

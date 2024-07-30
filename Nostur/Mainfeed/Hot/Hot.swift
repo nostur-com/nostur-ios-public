@@ -42,7 +42,7 @@ struct Hot: View {
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     if !hotVM.hotPosts.isEmpty {
-                        LazyVStack(spacing: 2) {
+                        LazyVStack(spacing: GUTTER) {
                             ForEach(hotVM.hotPosts) { post in
                                 Box(nrPost: post) {
                                     PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)

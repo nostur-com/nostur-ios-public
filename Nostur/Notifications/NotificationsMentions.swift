@@ -37,7 +37,7 @@ struct NotificationsMentions: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                LazyVStack(spacing: 2) {
+                LazyVStack(spacing: GUTTER) {
                     ForEach(model.mentions) { nrPost in
                         Box(nrPost: nrPost) {
                             PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
