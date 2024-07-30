@@ -11,6 +11,9 @@ struct AvailableWidthContainer<Content: View>: View {
     
     @StateObject private var dim = DIMENSIONS()
     
+    // Need this or .listWidth won't be set until next resize
+    @State private var ready = false
+    
     private let content: Content
     
     init(@ViewBuilder content: () -> Content) {
@@ -22,12 +25,19 @@ struct AvailableWidthContainer<Content: View>: View {
         let _ = Self._printChanges()
         #endif
         GeometryReader { geo in
-            content
-                .onAppear(perform: {
-                    dim.listWidth = geo.size.width
-                    L.og.debug("dim.listWidth = \(geo.size.width)")
-                })
+            if ready {
+                content
+                    .environmentObject(dim)
+            }
+            else {
+                Color.clear
+                    .frame(height: 1)
+                    .onAppear(perform: {
+                        ready = true
+                        dim.listWidth = geo.size.width
+                    })
+            }
         }
-        .environmentObject(dim)
+        
     }
 }
