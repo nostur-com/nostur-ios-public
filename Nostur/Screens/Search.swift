@@ -77,7 +77,7 @@ struct Search: View {
                     if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
                         CenteredProgressView()
                     }
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: GUTTER) {
                         ForEach(filteredContactSearchResults.prefix(75)) { contact in
                             ProfileRow(contact: contact)
                                 .background(themes.theme.background)

@@ -49,7 +49,7 @@ struct NotificationsFollowers: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
-                LazyVStack(spacing: 2) {
+                LazyVStack(spacing: GUTTER) {
                     ForEach(notifications) { notification in
                         NewFollowersNotificationView(notification: notification)
                             .padding(10)

@@ -41,7 +41,7 @@ struct PrivateNotesView: View {
             ScrollView {
                 Color.clear.frame(height: 1).id(top)
                 if !privateNotes.isEmpty && (!events.isEmpty || noEvents) && (!contacts.isEmpty || noContacts) {
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: GUTTER) {
                         ForEach(privateNotes) { pn in
                             LazyPrivateNote(pn: pn, events: events, contacts: contacts)
                                 .onDelete {

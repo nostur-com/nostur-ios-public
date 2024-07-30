@@ -18,7 +18,7 @@ struct ThreadReplies: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        VStack(spacing: 2) {
+        VStack(spacing: GUTTER) {
             if didLoad {
                 ForEach(nrPost.groupedRepliesSorted) { reply in
                     PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)

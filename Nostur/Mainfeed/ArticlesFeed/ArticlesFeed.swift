@@ -39,7 +39,7 @@ struct ArticlesFeed: View {
             else {
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: GUTTER) {
                         ForEach(vm.articles) { post in
                             Box(nrPost: post) {
                                 PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
