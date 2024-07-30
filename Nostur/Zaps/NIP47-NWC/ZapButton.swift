@@ -66,9 +66,9 @@ struct ZapButtonInner: View {
     
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+//        #if DEBUG
+//        let _ = Self._printChanges()
+//        #endif
         Image(systemName: icon)
             .overlay(alignment: .leading) {
                 AnimatedNumberString(number: footerAttributes.zapTally.formatNumber)

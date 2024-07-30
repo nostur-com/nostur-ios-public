@@ -24,9 +24,9 @@ struct CustomizableFooterFragmentView: View {
     }
     
     var body: some View {
-        //        #if DEBUG
-        //        let _ = Self._printChanges()
-        //        #endif
+//        #if DEBUG
+//        let _ = Self._printChanges()
+//        #endif
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 0.0) {
                 ForEach(vmc.buttonRow) { button in
