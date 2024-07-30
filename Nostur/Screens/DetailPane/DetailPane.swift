@@ -12,7 +12,7 @@ import NostrEssentials
 
 struct DetailPane: View {
     @EnvironmentObject private var themes: Themes
-    @StateObject private var dim = DIMENSIONS.shared
+    @EnvironmentObject private var dim: DIMENSIONS
     @StateObject private var tm = DetailTabsModel()
     @State private var offsetX = 200.0
 
@@ -28,7 +28,6 @@ struct DetailPane: View {
                 .onPreferenceChange(SizePreferenceKey.self) { size in
                     guard size.width > 0 else { return }
                     dim.listWidth = (size.width - (DIMENSIONS.BOX_PADDING*2))
-                    L.og.debug("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
                 }
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {

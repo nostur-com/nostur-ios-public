@@ -28,9 +28,7 @@ struct NotificationsContainer: View {
         let _ = Self._printChanges()
         #endif
         NBNavigationStack(path: $navPath) {
-            VStack {
-                NotificationsView(account: la.account, navPath: $navPath)
-            }
+            NotificationsView(account: la.account, navPath: $navPath)
             .background(themes.theme.listBackground)
             .withNavigationDestinations()
         }
@@ -69,7 +67,7 @@ struct NotificationsView: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        VStack(spacing:0) {
+        VStack(spacing: 0) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     TabButton(action: {
@@ -114,7 +112,6 @@ struct NotificationsView: View {
                         }
                     }, icon: "person.3", selected: tab == "Followers", unread: nvm.unreadNewFollowers_, muted: nvm.muteFollows)
                 }
-//                .padding(.horizontal, 10)
                 .frame(minWidth: dim.listWidth)
             }
             .frame(width: dim.listWidth)
@@ -155,9 +152,7 @@ struct NotificationsView: View {
                     .padding(.bottom, 10)
             }
         }
-//        .padding(.top, 5)
         .navigationTitle(String(localized: "Notifications"))
-//        .navigationBarHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
