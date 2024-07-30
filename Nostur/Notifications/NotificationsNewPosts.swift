@@ -12,14 +12,14 @@ import NavigationBackport
 
 struct NewPostsForPubkeys: Hashable {
     let id = UUID()
-    let pubkeys:Set<String>
+    let pubkeys: Set<String>
     let since: Int64 // for use in REQ
 }
 
 // Copy pasta from old NotificationsFollowers
 struct NotificationsNewPosts: View {
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var dim:DIMENSIONS
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
     
     @Binding private var navPath: NBNavigationPath
     
@@ -34,7 +34,7 @@ struct NotificationsNewPosts: View {
     }
     
     @FetchRequest
-    private var notifications:FetchedResults<PersistentNotification>
+    private var notifications: FetchedResults<PersistentNotification>
     
     @State private var showNewPosts = false
     @State private var newPostsForPubkeys:NewPostsForPubkeys? = nil
