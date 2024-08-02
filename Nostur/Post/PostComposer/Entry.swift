@@ -163,7 +163,7 @@ struct Entry: View {
                     }
                     
                     Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
-                        vm.showPreview(quotingEvent: quotingEvent)
+                        vm.showPreview(quotingEvent: quotingEvent, replyTo: replyTo)
                     }
                     .disabled(typingTextModel.uploading)
                     
