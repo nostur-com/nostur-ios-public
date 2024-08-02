@@ -57,7 +57,7 @@ struct EditListTitleSheet: View {
 struct EditListTitleSheet_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
-            pe.loadNosturLists()
+            pe.loadCloudFeeds()
         }) {
             NBNavigationStack {
                 if let list = PreviewFetcher.fetchList() {

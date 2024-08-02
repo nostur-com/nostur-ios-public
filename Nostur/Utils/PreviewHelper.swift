@@ -477,7 +477,7 @@ extension PreviewEnvironment {
     func loadPosts() {
         context.performAndWait {
             self.parseMessages(testKind1Events())
-            self.parseMessages(testSnowden())
+//            self.parseMessages(testSnowden())
         }
     }
 
@@ -656,9 +656,9 @@ extension PreviewEnvironment {
         }
     }
     
-    func loadNosturLists() {
+    func loadCloudFeeds(_ amount: Int = 10) {
         context.performAndWait {
-            NosturList.generateExamples(context: context)
+            CloudFeed.generateExamples(amount: amount, context: context)
         }
     }
     

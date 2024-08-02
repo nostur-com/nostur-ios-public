@@ -85,7 +85,7 @@ struct AddRemoveToListsheet_Previews: PreviewProvider {
         
         PreviewContainer({ pe in
             pe.loadContacts()
-            pe.loadNosturLists()
+            pe.loadCloudFeeds()
         }) {
             NBNavigationStack {
                 if let contact = PreviewFetcher.fetchContact() {
