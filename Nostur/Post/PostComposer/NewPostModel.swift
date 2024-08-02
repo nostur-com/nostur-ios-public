@@ -278,7 +278,7 @@ public final class NewPostModel: ObservableObject {
             nEvent.content = replaceMentionsWithNpubs15(nEvent.content, selected: typingTextModel.selectedMentions)
         }
         
-        // Pasted @npubs to nostr:npub and return pTags
+        // @npubs to nostr:npub and return pTags
         let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
         nEvent.content = content
         let atPtags = atNpubs.compactMap { Keys.hex(npub: $0) }
@@ -301,6 +301,12 @@ public final class NewPostModel: ObservableObject {
             unselectedPtags.removeAll(where: { $0 == requiredP })
         }
         
+        if let replyTo, let replyToBg = replyTo.toMain()  {
+            // pTags from replyTo.pTags
+            let replyToPTags = replyToBg.pTags() + [replyToBg.pubkey]
+            pTags.append(contentsOf: replyToPTags)
+        }
+        
         // Merge and deduplicate all p pubkeys, remove all unselected p pubkeys and turn into NostrTag
         let nostrTags = Set(pTags + atPtags + nostrNpubTags)
             .subtracting(Set(unselectedPtags))
@@ -309,7 +315,6 @@ public final class NewPostModel: ObservableObject {
         nEvent.tags.append(contentsOf: nostrTags)
         
         // If we are quote reposting, include the quoted post as nostr:note1 at the end
-        // TODO: maybe at .q tag, need to look up if there is a spec
         if let quotingEvent {
             if let note1id = note1(quotingEvent.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
@@ -416,11 +421,12 @@ public final class NewPostModel: ObservableObject {
         sendNotification(.didSend)
     }
     
-    public func showPreview(quotingEvent:Event? = nil) {
+    public func showPreview(quotingEvent: Event? = nil, replyTo: Event? = nil) {
         guard let account = activeAccount else { return }
         var nEvent = nEvent ?? NEvent(content: "")
-        var pTags:[String] = []
         nEvent.publicKey = account.publicKey
+        var pTags: [String] = []
+        nEvent.createdAt = NTimestamp.init(date: Date())
         
         // @mentions to nostr:npub
         if #available(iOS 16.0, *) {
@@ -438,6 +444,9 @@ public final class NewPostModel: ObservableObject {
         // Scan for any nostr:npub and return pTags
         let npubs = getNostrNpubs(nEvent.content)
         let nostrNpubTags = npubs.compactMap { Keys.hex(npub: $0) }
+        
+        // Scan for any nostr:note1 or nevent1 and return q tags
+        let qTags = Set(getQuoteTags(nEvent.content))
 
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
@@ -450,6 +459,12 @@ public final class NewPostModel: ObservableObject {
             unselectedPtags.removeAll(where: { $0 == requiredP })
         }
         
+        if let replyTo, let replyToBg = replyTo.toMain()  {
+            // pTags from replyTo.pTags
+            let replyToPTags = replyToBg.pTags() + [replyToBg.pubkey]
+            pTags.append(contentsOf: replyToPTags)
+        }
+        
         // Merge and deduplicate all p pubkeys, remove all unselected p pubkeys and turn into NostrTag
         let nostrTags = Set(pTags + atPtags + nostrNpubTags)
             .subtracting(Set(unselectedPtags))
@@ -458,7 +473,6 @@ public final class NewPostModel: ObservableObject {
         nEvent.tags.append(contentsOf: nostrTags)
         
         // If we are quote reposting, include the quoted post as nostr:note1 at the end
-        // TODO: maybe at .q tag, need to look up if there is a spec
         if let quotingEvent {
             if let note1id = note1(quotingEvent.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
@@ -468,6 +482,10 @@ public final class NewPostModel: ObservableObject {
             if !nEvent.pTags().contains(quotingEvent.pubkey) { 
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
             }
+        }
+        
+        qTags.forEach { qTag in
+            nEvent.tags.append(NostrTag(["q", qTag]))
         }
 
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
@@ -608,15 +626,15 @@ public final class NewPostModel: ObservableObject {
         nEvent = newQuoteRepost
     }
     
-    public func loadReplyTo(_ replyTo:Event) {
+    public func loadReplyTo(_ replyTo: Event) {
         var newReply = NEvent(content: typingTextModel.text)
         newReply.kind = .textNote
         guard let replyTo = replyTo.toMain() else {
             L.og.error("🔴🔴 Problem getting event from viewContext")
             return
         }
-        let existingPtags = TagsHelpers(replyTo.tags()).pTags()
-        let availableContacts = Set(Contact.fetchByPubkeys(existingPtags.map { $0.pubkey }, context: DataProvider.shared().viewContext))
+        let existingPtags = replyTo.pTags()
+        let availableContacts = Set(Contact.fetchByPubkeys(existingPtags, context: DataProvider.shared().viewContext))
         requiredP = replyTo.contact?.pubkey
         self.availableContacts = Set([replyTo.contact].compactMap { $0 } + availableContacts)
         typingTextModel.selectedMentions = Set([replyTo.contact].compactMap { $0 } + availableContacts)
