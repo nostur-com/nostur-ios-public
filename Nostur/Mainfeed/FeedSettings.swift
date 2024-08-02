@@ -123,7 +123,7 @@ struct FeedSettingsTester: View {
 
 struct FeedSettings_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer({ pe in pe.loadNosturLists() }) {
+        PreviewContainer({ pe in pe.loadCloudFeeds() }) {
             FeedSettingsTester()
         }
     }

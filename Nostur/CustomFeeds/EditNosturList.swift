@@ -100,7 +100,7 @@ struct EditList_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadContacts()
-            pe.loadNosturLists()
+            pe.loadCloudFeeds()
         }) {
             NBNavigationStack {
                 if let list = PreviewFetcher.fetchList() {

@@ -270,7 +270,7 @@ struct MacListsView_Previews: PreviewProvider {
         PreviewContainer({ pe in
             
             pe.loadContacts()
-            pe.loadNosturLists()
+            pe.loadCloudFeeds()
 //            pe.loadRelayNosturLists()
             
         }, previewDevice:PreviewDevice(rawValue: "My Mac (Mac Catalyst)"), content: {
