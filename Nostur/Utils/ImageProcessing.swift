@@ -16,14 +16,17 @@ class ImageProcessing {
     
     static public var shared = ImageProcessing()
     
-    var pfp:ImagePipeline
-    var banner:ImagePipeline
-    var content:ImagePipeline
-    var communities:ImagePipeline
-    var badges:ImagePipeline
-    var video:ImagePipeline
+    var pfp: ImagePipeline
+    var banner: ImagePipeline
+    var content: ImagePipeline
+    var communities: ImagePipeline
+    var badges: ImagePipeline
+    var video: ImagePipeline
     
-    init() {
+    var contentPrefetcher: ImagePrefetcher
+    var pfpPrefetcher: ImagePrefetcher
+    
+    private init() {
         ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
         
         pfp = ImagePipeline {
@@ -130,7 +133,12 @@ class ImageProcessing {
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeOriginalData
         }
+     
+        contentPrefetcher = ImagePrefetcher(pipeline: content)
+        contentPrefetcher.priority = .normal
         
+        pfpPrefetcher = ImagePrefetcher(pipeline: pfp)
+        pfpPrefetcher.priority = .high
     }
     
 }
