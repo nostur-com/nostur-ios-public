@@ -1162,7 +1162,7 @@ extension LVM {
     }
     
     func performLocalFetchAfterImport() {
-        Importer.shared.newEventsInDatabase
+        Importer.shared.importedMessagesFromSubscriptionIds
             .subscribe(on: DispatchQueue.global())
             .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
             .throttle(for: .seconds(5.0), scheduler: DispatchQueue.global(), latest: true)
