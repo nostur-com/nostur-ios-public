@@ -30,6 +30,9 @@ extension Date {
         } else if -timeIntervalSinceNow >= Self.secondsInMinute {
             return (String(Int(-timeIntervalSinceNow / Self.secondsInMinute)) + Self.minuteString)
         } else {
+            if -timeIntervalSinceNow <= 30 {
+                return "just now"
+            }
             return (String(max(1,Int(-timeIntervalSinceNow / Self.secondsInDay))) + Self.secondString)
         }
     }
