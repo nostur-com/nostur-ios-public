@@ -12,6 +12,36 @@ struct NXColumnConfig: Identifiable {
     var columnType: NXColumnType?
     var accountPubkey: String?
     var hideReplies: Bool = false
+    
+    @MainActor
+    var wotEnabled: Bool {
+        return switch columnType {
+        case .following(_):
+            true // true because can also have hashtags
+        case .relays(let feed):
+            feed.wotEnabled
+        case .hashtags(let feed):
+            feed.wotEnabled
+        default:
+            false
+        }
+    }
+    
+    @MainActor
+    var repliesEnabled: Bool {
+        return switch columnType {
+        case .following(let feed):
+            feed.repliesEnabled
+        case .pubkeys(let feed):
+            feed.repliesEnabled
+        case .relays(let feed):
+            feed.repliesEnabled
+        case .hashtags(let feed):
+            feed.repliesEnabled
+        default:
+            false
+        }
+    }
 }
 
 enum NXColumnType {
@@ -20,7 +50,7 @@ enum NXColumnType {
     case pubkeys(CloudFeed) // input=specific pubkeys, no accountPubkey needed
     case pubkey // input=single pubkey - stalker
     case relays(CloudFeed)
-    case hashtags
+    case hashtags(CloudFeed)
     
     case mentions
     case newPosts
