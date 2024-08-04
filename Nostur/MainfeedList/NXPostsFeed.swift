@@ -83,10 +83,12 @@ struct NXPostsFeed: View {
                        let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
                        rows > scrollToIndex
                     {
-                        collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
-                                                    at: .top,
-                                                    animated: false)
-                        vm.scrollToIndex = nil
+                        if collectionView.contentOffset.y == 0 {
+                            collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
+                                                        at: .top,
+                                                        animated: false)
+                            vm.scrollToIndex = nil
+                        }
                     }
                 }
                 else { // iOS 15 UITableView
@@ -96,8 +98,10 @@ struct NXPostsFeed: View {
                        let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
                        rows > scrollToIndex
                     {
-                        tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
-                        vm.scrollToIndex = nil
+                        if tableView.contentOffset.y == 0 {
+                            tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
+                            vm.scrollToIndex = nil
+                        }
                     }
                 }
             }
@@ -144,9 +148,9 @@ struct NXPostsFeed: View {
     }
     
     private func onPostAppear(_ nrPost: NRPost) {
+        updateIsAtTop()
         vm.haltProcessing() // will stop new updates on screen for 2.5 seconds
         vm.unreadIds[nrPost.id] = 0
-
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
             if appearedIndex == 0 {
                 vm.unreadIds = [:]
@@ -156,15 +160,40 @@ struct NXPostsFeed: View {
                 vm.unreadIds[posts[i].id] = 0
             }
         }
-        
-        if let firstPost = posts.first, firstPost.id == nrPost.id {
-            vm.isAtTop = true
+    }
+    
+    private func updateIsAtTop() {
+        if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
+            if let collectionView {
+                if collectionView.contentOffset.y == 0 {
+                    if !vm.isAtTop {
+                        vm.isAtTop = true
+                    }
+                }
+                else {
+                    if vm.isAtTop {
+                        vm.isAtTop = false
+                    }
+                }
+            }
+        }
+        else { // iOS 15 UITableView
+            if let tableView {
+                if tableView.contentOffset.y == 0 {
+                    if !vm.isAtTop {
+                        vm.isAtTop = true
+                    }
+                }
+                else {
+                    if vm.isAtTop {
+                        vm.isAtTop = false
+                    }
+                }
+            }
         }
     }
     
     private func onPostDisappear(_ nrPost: NRPost) {
-        if let firstPost = posts.first, firstPost.id == nrPost.id {
-            vm.isAtTop = false
-        }
+        updateIsAtTop()
     }
 }

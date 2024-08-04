@@ -894,7 +894,9 @@ extension NXColumnViewModel {
                     
                     let previousFirstPostId: String? = existingPosts.first?.id
                     
+                    isAtTop = false
                     viewState = .posts(addedAndExistingPostsTruncated)
+                    
 
                     // Update unread count
                     for post in onlyNewAddedPosts {
@@ -939,8 +941,9 @@ extension NXColumnViewModel {
             L.og.debug("☘️☘️ \(config.id) putOnScreen addedPosts (FIRST) \(uniqueAddedPosts.count.description)")
 #endif
             allIdsSeen = allIdsSeen.union(getAllPostIds(uniqueAddedPosts))
+            isAtTop = true
             withAnimation {
-                self.viewState = .posts(uniqueAddedPosts)
+                viewState = .posts(uniqueAddedPosts)
             }
         }
         
