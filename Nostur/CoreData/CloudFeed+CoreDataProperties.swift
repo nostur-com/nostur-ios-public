@@ -26,12 +26,19 @@ extension CloudFeed {
     // default (nil) or "pubkeys" = feed of posts from selected pubkeys
     // "relays" = Relays feed. Any post from selected relays
     // "hashtags" = Feed of posts with selected hashtag(s) (TODO)
+    // "following" = Feed of posts with selected hashtag(s)
     // "..more??" = ...
     @NSManaged public var type: String? // Use LVM.ListType enum
     @NSManaged public var wotEnabled: Bool
     @NSManaged public var pubkeys: String?
     @NSManaged public var relays: String?
-
+    
+    // Fields from old ListState migrated to CloudFeed
+    
+    @NSManaged public var updatedAt: Date?
+    @NSManaged public var listId: String?
+    @NSManaged public var repliesEnabled: Bool
+    @NSManaged public var accountPubkey: String?
 }
 
 extension CloudFeed : Identifiable {
@@ -110,6 +117,39 @@ extension CloudFeed : Identifiable {
     var subscriptionId: String {
         let id = id?.uuidString ?? "UNKNOWN"
         let idLength = id.count
-        return ("List-" + String(id.prefix(min(idLength,18))))
+        
+        switch type {
+        case "following":
+            return ("Following-" + String(id.prefix(min(idLength,18))))
+        case "pubkeys":
+            return ("List-" + String(id.prefix(min(idLength,18))))
+        case "relays":
+            return ("List-" + String(id.prefix(min(idLength,18))))
+        default:
+            return ("List-" + String(id.prefix(min(idLength,18))))
+        }
     }
+    
+    var feedType: NXColumnType {
+        switch type {
+        case "following":
+            .following(self)
+        case "pubkeys":
+            .pubkeys(self)
+        case "relays":
+            .relays(self)
+        default:
+            .pubkeys(self)
+        }
+    }
+    
+    var relaysData: Set<RelayData> {
+        Set(relays_.map { $0.toStruct() })
+    }
+}
+
+enum CloudFeedType: String {
+    case following = "following"
+    case pubkeys = "pubkeys"
+    case relays = "relays"
 }
