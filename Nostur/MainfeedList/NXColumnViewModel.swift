@@ -231,6 +231,7 @@ class NXColumnViewModel: ObservableObject {
         let currentIdsOnScreen = self.currentIdsOnScreen
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
         let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+        let wotEnabled = config.wotEnabled
   
         // Fetch since 5 minutes before most recent item on screen
         let sinceTimestamp: Int64 = if case .posts(let nrPosts) = viewState {
@@ -241,7 +242,7 @@ class NXColumnViewModel: ObservableObject {
         }
         
         switch config.columnType {
-        case .following(let feed):
+        case .following(_):
 #if DEBUG
             L.og.debug("☘️☘️ \(config.id) loadLocal(.following)")
 #endif
@@ -252,7 +253,7 @@ class NXColumnViewModel: ObservableObject {
                 guard let self else { return }
                 let fr = Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: config.hideReplies) // TODO: Need to handle hashtags
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt)
+                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt, wotEnabled: wotEnabled)
             }
         case .pubkeys(let feed):
 #if DEBUG
@@ -263,7 +264,7 @@ class NXColumnViewModel: ObservableObject {
                 guard let self else { return }
                 let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: config.hideReplies)
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt)
+                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt, wotEnabled: wotEnabled)
             }
         case .pubkey:
             viewState = .error("Not supported yet")
@@ -280,7 +281,7 @@ class NXColumnViewModel: ObservableObject {
                 guard let self else { return }
                 let fr = Event.postsByRelays(relaysData, lastAppearedCreatedAt: sinceTimestamp, hideReplies: config.hideReplies)
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt)
+                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt, wotEnabled: wotEnabled)
             }
         case .hashtags:
             viewState = .error("Not supported yet")
@@ -625,10 +626,11 @@ class NXColumnViewModel: ObservableObject {
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+                        let wotEnabled = config.wotEnabled
                         
                         // Then back to bg for processing
                         bg().perform {
-                            self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt)
+                            self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt, wotEnabled: wotEnabled)
                         }
                     }
                 }
@@ -647,10 +649,11 @@ class NXColumnViewModel: ObservableObject {
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+                        let wotEnabled = config.wotEnabled
                         
                         // Then back to bg for processing
                         bg().perform {
-                            self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt)
+                            self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt, wotEnabled: wotEnabled)
                         }
                     }
 
@@ -668,10 +671,10 @@ class NXColumnViewModel: ObservableObject {
 extension NXColumnViewModel {
     
     // Primary function to put Events on screen
-    private func processToScreen(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], mostRecentCreatedAt: Int, older: Bool = false) {
+    private func processToScreen(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], mostRecentCreatedAt: Int, older: Bool = false, wotEnabled: Bool) {
         
         // Apply WoT filter, remove already on screen
-        let preparedEvents = prepareEvents(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt)
+        let preparedEvents = prepareEvents(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt, wotEnabled: wotEnabled)
         
         // Transform from Event to NRPost (only not already on screen by prev statement)
         let nrPosts: [NRPost] = self.transformToNRPosts(preparedEvents, config: config, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen)
@@ -703,14 +706,14 @@ extension NXColumnViewModel {
     // -- MARK: Subfunctions used by processToScreen():
     
     // Prepare events: apply WoT filter, remove already on screen, load .parentEvents
-    private func prepareEvents(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, mostRecentCreatedAt: Int) -> [Event] {
+    private func prepareEvents(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, mostRecentCreatedAt: Int, wotEnabled: Bool) -> [Event] {
         shouldBeBg()
             
 #if DEBUG
         L.og.debug("☘️☘️ \(config.id) prepareEvents \(events.count.description)")
 #endif
         
-        let filteredEvents: [Event] = applyWoTifNeeded(events, config: config) // Apply WoT filter
+        let filteredEvents: [Event] = (wotEnabled ? applyWoT(events, config: config) : events) // Apply WoT filter or not
             .filter { // Apply (app wide) already-seen filter
                 if $0.isRepost, let firstQuoteId = $0.firstQuoteId {
                     return !allIdsSeen.contains(firstQuoteId)
@@ -740,7 +743,7 @@ extension NXColumnViewModel {
         return newUnrenderedEvents
     }
     
-    private func applyWoTifNeeded(_ events: [Event], config: NXColumnConfig) -> [Event] {
+    private func applyWoT(_ events: [Event], config: NXColumnConfig) -> [Event] {
         // if pubkeys feed, always show all the pubkeys
         if case .pubkeys(_) = config.columnType {
             return events
@@ -748,20 +751,15 @@ extension NXColumnViewModel {
         
         // if following feed, always show all the pubkeys
         if case .following(_) = config.columnType {
-            return events
+            return events // no need, hashtags are already filtered in RelayMessage.parseRelayMessage()
         }
         
         guard WOT_FILTER_ENABLED() else { return events }  // Return all if globally disabled
         
         
-        if case .relays(let feed) = config.columnType {
+        if case .relays(_) = config.columnType {
             // if we are here, type is .relays, only filter if the feed specific WoT filter is enabled
-            if feed.wotEnabled {
-                return events.filter { $0.inWoT } // apply WoT filter
-            }
-            else {
-                return events
-            }
+            return events.filter { $0.inWoT }
         }
                 
         // TODO: handle other config.columnTypes
@@ -988,6 +986,7 @@ extension NXColumnViewModel {
         let instantFeed = InstantFeed()
         self.instantFeed = instantFeed
         let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+        let wotEnabled = config.wotEnabled
         
         bg().perform { [weak self] in
             instantFeed.start(pubkeys, since: mostRecentCreatedAt) { [weak self] events in
@@ -1001,10 +1000,10 @@ extension NXColumnViewModel {
                     let allIdsSeen = self.allIdsSeen
                     let currentIdsOnScreen = self.currentIdsOnScreen
                     let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
-                    
+  
                     // Then back to bg for processing
                     bg().perform {
-                        self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt)
+                        self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt, wotEnabled: wotEnabled)
                     }
                 }
             }
@@ -1023,6 +1022,7 @@ extension NXColumnViewModel {
         let instantFeed = InstantFeed()
         self.instantFeed = instantFeed
         let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+        let wotEnabled = config.wotEnabled
         
         bg().perform { [weak self] in
             instantFeed.start(relays, since: mostRecentCreatedAt) { [weak self] events in
@@ -1041,7 +1041,7 @@ extension NXColumnViewModel {
                     
                     // Then back to bg for processing
                     bg().perform {
-                        self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt)
+                        self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, mostRecentCreatedAt: mostRecentCreatedAt, wotEnabled: wotEnabled)
                     }
                 }
             }
