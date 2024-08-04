@@ -11,15 +11,17 @@ struct QuotedNoteFragmentView: View {
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
     private var forceAutoload: Bool
+    private var fullWidth: Bool
     private var theme: Theme
     @State private var name: String
     @EnvironmentObject private var parentDIM: DIMENSIONS
     @State private var couldBeImposter: Int16
     
-    init(nrPost: NRPost, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.forceAutoload = forceAutoload
+        self.fullWidth = fullWidth
         self.theme = theme
         self.name = nrPost.anyName
         self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
@@ -90,7 +92,7 @@ struct QuotedNoteFragmentView: View {
 //                    Color.green
 //                        .frame(height: 50)
 //                        .debugDimensions("QuotedNoteFrVi.availableWidth \(parentDIM.listWidth)", alignment: .topLeading)
-                    NoteTextRenderView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
+                    NoteTextRenderView(nrPost: nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
 //                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: parentDIM.listWidth - 20, isScreenshot: nrPost.isScreenshot))
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }

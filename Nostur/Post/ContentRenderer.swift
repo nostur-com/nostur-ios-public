@@ -43,7 +43,7 @@ struct ContentRenderer: View { // VIEW things
             ForEach(contentElements.indices, id:\.self) { index in
                 switch contentElements[index] {
                 case .nrPost(let nrPost):
-                    EmbeddedPost(nrPost, forceAutoload: shouldAutoload, theme: theme)
+                    EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
                     //                        .fixedSize(horizontal: false, vertical: true)
@@ -53,7 +53,7 @@ struct ContentRenderer: View { // VIEW things
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .nevent1(let identifier):
-                    NEventView(identifier: identifier, forceAutoload: shouldAutoload, theme: theme)
+                    NEventView(identifier: identifier, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
@@ -79,7 +79,7 @@ struct ContentRenderer: View { // VIEW things
 //                        .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
-                        EmbedById(id: noteHex, forceAutoload: shouldAutoload, theme: theme)
+                        EmbedById(id: noteHex, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
 //                            .frame(minHeight: 75)
                             .environmentObject(childDIM)
 //                            .debugDimensions("QuoteById.note1")
@@ -97,7 +97,7 @@ struct ContentRenderer: View { // VIEW things
                             .id(index)
                     }
                 case .noteHex(let hex):
-                    EmbedById(id: hex, forceAutoload: shouldAutoload, theme: theme)
+                    EmbedById(id: hex, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
 //                        .debugDimensions("QuoteById.noteHex")
@@ -205,7 +205,7 @@ struct ContentRenderer: View { // VIEW things
 #endif
                         
                         
-                        if fullWidth && isDetail {
+                        if fullWidth || isDetail {
                             SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height: scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrPost.imageUrls)
                                 .background {
                                     if SettingsStore.shared.lowDataMode {
@@ -384,14 +384,16 @@ func scaledToFit(_ dimensions: CGSize, scale screenScale: Double, maxWidth: Doub
 struct EmbeddedPost: View {
     private let nrPost: NRPost
     @ObservedObject var prd: PostRowDeletableAttributes
+    private var fullWidth: Bool
     private var forceAutoload: Bool
     private var theme: Theme
     
     @EnvironmentObject private var parentDIM: DIMENSIONS
     
-    init(_ nrPost: NRPost, forceAutoload: Bool = false, theme: Theme) {
+    init(_ nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.prd = nrPost.postRowDeletableAttributes
+        self.fullWidth = fullWidth
         self.forceAutoload = forceAutoload
         self.theme = theme
     }
@@ -424,7 +426,7 @@ struct EmbeddedPost: View {
 //                .debugDimensions("EmbeddedPost.ArticleView", alignment: .bottomLeading)
         }
         else {
-            QuotedNoteFragmentView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
+            QuotedNoteFragmentView(nrPost: nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(theme.lineColor, lineWidth: 1)
