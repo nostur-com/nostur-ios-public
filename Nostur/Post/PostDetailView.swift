@@ -497,7 +497,7 @@ struct ParentPost: View {
                                     ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.listWidth - 80, theme: themes.theme, didStart: $didStart)
                                     //                                .padding(.trailingx, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                 case 1063: // File Metadata
-                                    NoteTextRenderView(nrPost: nrPost, theme: themes.theme)
+                                    NoteTextRenderView(nrPost: nrPost, fullWidth: settings.fullWidthImages, theme: themes.theme)
                                 case 99999:
                                     let title = nrPost.eventTitle ?? "Untitled"
                                     if let eventUrl = nrPost.eventUrl {

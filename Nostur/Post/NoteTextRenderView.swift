@@ -11,6 +11,7 @@ import SwiftUI
 struct NoteTextRenderView: View {
     @EnvironmentObject private var dim: DIMENSIONS
     public let nrPost: NRPost
+    public var fullWidth: Bool = false
     public var forceAutoload = false
     public var theme: Theme
     @State private var didStart = false
@@ -44,7 +45,7 @@ struct NoteTextRenderView: View {
 //                Color.red.frame(height: 30)
 //                    .debugDimensions("spacer")
 //                Text(dim.availablePostDetailImageWidth().description)
-                ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: dim.listWidth, forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
+                ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: fullWidth, availableWidth: dim.listWidth, forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
                 
             default:
                 UnknownKindView(nrPost: nrPost, theme: theme)

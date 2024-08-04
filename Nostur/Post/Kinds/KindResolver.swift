@@ -38,12 +38,7 @@ struct KindResolver: View {
         case 30023:
             ArticleView(nrPost, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
         default:
-            if fullWidth {
-                Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isDetail: isDetail, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
-            }
-            else {
-                Kind1Default(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
-            }
+            Kind1Both(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, fullWidth: fullWidth, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
         }
     }
 }

@@ -10,6 +10,7 @@ import SwiftUI
 struct EmbedById: View {
     @EnvironmentObject private var dim: DIMENSIONS
     public let id: String
+    public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
     public var theme: Theme
     @StateObject private var vm = FetchVM<NRPost>(timeout: 2.5, debounceTime: 0.05)
@@ -42,7 +43,7 @@ struct EmbedById: View {
 //                        .debugDimensions("EmbedById.ArticleView")
                 }
                 else {
-                    QuotedNoteFragmentView(nrPost: nrPost, forceAutoload: forceAutoload, theme: theme)
+                    QuotedNoteFragmentView(nrPost: nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
                         .environmentObject(DIMENSIONS.embeddedDim(availableWidth: dim.listWidth - 20, isScreenshot: nrPost.isScreenshot))
 //                        .transaction { t in t.animation = nil }
 //                        .debugDimensions("EmbedById.QuotedNoteFragmentView")

@@ -11,6 +11,7 @@ struct NEventView: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @EnvironmentObject private var dim: DIMENSIONS
     public let identifier: ShareableIdentifier
+    public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
     public var theme: Theme
     @StateObject private var vm = FetchVM<NRPost>(timeout: 5.0, debounceTime: 0.05)
@@ -90,7 +91,7 @@ struct NEventView: View {
                             .stroke(theme.lineColor, lineWidth: 1)
                     )
             case .ready(let nrPost):
-                EmbeddedPost(nrPost, forceAutoload: forceAutoload, theme: theme)
+                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
             case .timeout:
                 Text("Unable to fetch content")
                     .padding(10)

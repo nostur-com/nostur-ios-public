@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct MinimalQuotedNoteFragment: View {
-    @ObservedObject var nrPost:NRPost
+    @ObservedObject var nrPost: NRPost
+    public let fullWidth: Bool = false
     
     var body: some View {
         VStack(alignment:.leading) {
