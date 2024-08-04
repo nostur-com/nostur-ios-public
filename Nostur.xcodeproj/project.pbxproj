@@ -911,6 +911,7 @@
 		1FB6E6FA29E3B827008BE8A6 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LVMManager.swift; sourceTree = "<group>"; };
 		1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothList.swift; sourceTree = "<group>"; };
+		1FB7FF812C5FCC0C00EAAD07 /* NosturCloud 7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 7.xcdatamodel"; sourceTree = "<group>"; };
 		1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettings.swift; sourceTree = "<group>"; };
 		1FBAA6132B53E50D007C7535 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
 		1FBAA6152B53E694007C7535 /* Thunderzap16.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = Thunderzap16.m4a; sourceTree = "<group>"; };
@@ -3412,6 +3413,7 @@
 		1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				1FB7FF812C5FCC0C00EAAD07 /* NosturCloud 7.xcdatamodel */,
 				1F7B0B3C2BE40A9B00182FB3 /* NosturCloud 6.xcdatamodel */,
 				1F44A1F12BDD1EEF00C1D3DB /* NosturCloud 5.xcdatamodel */,
 				1FEA81B62BCAB0D30059D569 /* NosturCloud 4.xcdatamodel */,
@@ -3419,7 +3421,7 @@
 				1F37C8392B8B71F700B0B78B /* NosturCloud 2.xcdatamodel */,
 				1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */,
 			);
-			currentVersion = 1F7B0B3C2BE40A9B00182FB3 /* NosturCloud 6.xcdatamodel */;
+			currentVersion = 1FB7FF812C5FCC0C00EAAD07 /* NosturCloud 7.xcdatamodel */;
 			path = NosturCloud.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
