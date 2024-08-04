@@ -70,7 +70,7 @@ struct Maintenance {
             Self.runSaveFullAccountFlag(context: context)
             Self.runFixMissingDMStates(context: context)
             Self.runInsertFixedPfps(context: context)
-            
+            Self.runMigrateListStateToCustomFeeds(context: context)
             do {
                 if context.hasChanges {
                     try context.save()
@@ -1281,6 +1281,38 @@ struct Maintenance {
         migration.migrationCode = migrationCode.updateKeychainInfo.rawValue
     }
     
+    // Migrate ListState fields to CloudFeed
+    static func runMigrateListStateToCustomFeeds(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.migrateListStateToCloudFeed, context: context) else { return }
+        
+
+        // For every existing CloudFeed, find the related ListState, and migrate hideReplies to repliesEnabled (inverted)
+        let fr = CloudFeed.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+        
+        var migratedListStates: Int = 0
+        if let customFeeds = try? context.fetch(fr) {
+            L.maintenance.info("runMigrateListStateToCustomFeeds: Found \(customFeeds.count) custom feeds")
+            for cf in customFeeds {
+                
+                guard cf.subscriptionId.starts(with: "List-") else { continue }
+                
+                // We have related ListState?
+                let fr = ListState.fetchRequest()
+                fr.predicate = NSPredicate(format: "listId == %@", cf.subscriptionId)
+                
+                if let listState =  try? context.fetch(fr).first {
+                    cf.repliesEnabled = !listState.hideReplies
+                    migratedListStates += 1
+                }
+            }
+            L.maintenance.info("runMigrateListStateToCustomFeeds: Migrated \(migratedListStates) list states")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.migrateListStateToCloudFeed.rawValue
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -1349,5 +1381,8 @@ struct Maintenance {
 
         // Fix missing DM States
         case fixMissingDMStates = "fixMissingDMStates"
+        
+        // Migrate ListState fields to CloudFeed
+        case migrateListStateToCloudFeed = "migrateListStateToCloudFeed"
     }
 }
