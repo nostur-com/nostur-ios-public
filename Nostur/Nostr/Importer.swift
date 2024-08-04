@@ -35,7 +35,6 @@ class Importer {
     
     public var importedMessagesFromSubscriptionIds = PassthroughSubject<Set<String>, Never>()
     public var importedPrioMessagesFromSubscriptionId = PassthroughSubject<ImportedPrioNotification, Never>()
-    public var newEventsInDatabase = PassthroughSubject<Void, Never>()
     public var contactSaved = PassthroughSubject<String, Never>()
     public var listStatus = PassthroughSubject<String, Never>()
     
@@ -306,7 +305,6 @@ class Importer {
                                 let mainQueueCount = count
                                 let mainQueueForImportsCount = forImportsCount
                                 self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
-                                self.newEventsInDatabase.send()
                                 self.listStatus.send("Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
                                 subscriptionIds.removeAll()
                             }
@@ -323,7 +321,6 @@ class Importer {
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
                         self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
-                        self.newEventsInDatabase.send()
                         self.listStatus.send("Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
                         subscriptionIds.removeAll()
                     }
