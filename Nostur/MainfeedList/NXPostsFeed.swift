@@ -108,26 +108,23 @@ struct NXPostsFeed: View {
             .overlay(alignment: .topTrailing) {
                 unreadCounterView
                     .onTapGesture {
-                        for post in posts.reversed() {
-                            if let unreadCount = vm.unreadIds[post.id], unreadCount > 0 {
-                                if let firstUnreadPost = posts.first(where: { $0.id == post.id }) {
-                                    withAnimation {
-                                        proxy.scrollTo(firstUnreadPost.id, anchor: .top)
-                                    }
-                                }
-                                break
-                            }
-                        }
+                        scrollToFirstUnread(proxy)
                     }
                     .simultaneousGesture(LongPressGesture().onEnded { _ in
-                        guard let topPost = posts.first else { return }
-                        withAnimation {
-                            proxy.scrollTo(topPost.id, anchor: .top)
-                        }
+                        scrollToTop(proxy)
                     })
             }
             .overlay(alignment: .top) {
                 Text("posts: \(posts.count) atTop: \(vm.isAtTop ? "1" : "0") load time: \(vm.formattedLoadTime)")
+            }
+            .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                guard vm.isVisible else { return }
+                scrollToFirstUnread(proxy)
+            }
+            .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
+                guard vm.isVisible else { return }
+                
+                scrollToTop(proxy)
             }
         }
     }
@@ -139,12 +136,26 @@ struct NXPostsFeed: View {
         NXUnreadCounterView(count: vm.unreadCount)
             .padding(.trailing, 10)
             .padding(.top, 5)
-//            .onTapGesture {
-//                vm.scrollToFirstUnread()
-//            }
-//            .simultaneousGesture(LongPressGesture().onEnded { _ in
-//                vm.scrollToTop()
-//            })
+    }
+    
+    private func scrollToFirstUnread(_ proxy: ScrollViewProxy) {
+        for post in posts.reversed() {
+            if let unreadCount = vm.unreadIds[post.id], unreadCount > 0 {
+                if let firstUnreadPost = posts.first(where: { $0.id == post.id }) {
+                    withAnimation {
+                        proxy.scrollTo(firstUnreadPost.id, anchor: .top)
+                    }
+                }
+                break
+            }
+        }
+    }
+    
+    private func scrollToTop(_ proxy: ScrollViewProxy) {
+        guard let topPost = posts.first else { return }
+        withAnimation {
+            proxy.scrollTo(topPost.id, anchor: .top)
+        }
     }
     
     private func onPostAppear(_ nrPost: NRPost) {
