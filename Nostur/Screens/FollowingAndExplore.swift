@@ -36,7 +36,7 @@ struct FollowingAndExplore: View, Equatable {
     @State private var noteCancellationId: UUID?
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)], predicate: NSPredicate(format: "showAsTab == true"))
-    var lists:FetchedResults<CloudFeed>
+    var lists: FetchedResults<CloudFeed>
     @State private var selectedList: CloudFeed?
     @StateObject private var exploreVM: LVM = LVMManager.shared.exploreLVM()
     @StateObject private var hotVM = HotViewModel()
@@ -46,6 +46,10 @@ struct FollowingAndExplore: View, Equatable {
     
     @State var tabsOffsetY: CGFloat = 0.0
     @State var didSend = false
+    
+    @State var columnConfigs: [NXColumnConfig] = []
+    @State var followingConfig: NXColumnConfig?
+    @State var exploreConfig: NXColumnConfig?
     
     private var navigationTitle: String {
         if selectedSubTab == "List" {
@@ -212,24 +216,31 @@ struct FollowingAndExplore: View, Equatable {
                     }
                 }
                 else {
-                    ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
-                        .opacity(selectedSubTab == "Following" ? 1 : 0)
-//                        .withoutAnimation()
+                    if let followingConfig {
+                        AvailableWidthContainer {
+                            NXColumnView(config: followingConfig, isVisible: selectedSubTab == "Following")
+                        }
+                        .id(followingConfig.id)
+                        .opacity(selectedSubTab == "Following" ? 1.0 : 0)
+                    }
                 }
                 
                 // LISTS
-                ForEach(lists) { list in
-                    ListViewContainer(vm: LVMManager.shared.listLVM(forList: list))
-//                        .id(list.subscriptionId)
-                        .opacity(selectedSubTab == "List" && list == selectedList ? 1 : 0)
-//                        .withoutAnimation()
+                ForEach(columnConfigs) { config in
+                    AvailableWidthContainer {
+                        NXColumnView(config: config, isVisible: selectedSubTab == "List" && selectedList?.subscriptionId == config.id)
+                    }
+                    .id(config.id)
+                    .opacity(selectedSubTab == "List" && selectedList?.subscriptionId == config.id  ? 1.0 : 0)
                 }
                 
                 // EXPLORE
-                if enableExploreFeed {
-                    ListViewContainer(vm: exploreVM)
-                        .opacity(selectedSubTab == "Explore" ? 1 : 0)
-    //                    .withoutAnimation()
+                if enableExploreFeed, let exploreConfig = exploreConfig {
+                    AvailableWidthContainer {
+                        NXColumnView(config: exploreConfig, isVisible: selectedSubTab == "Explore")
+                    }
+                    .id(exploreConfig.id)
+                    .opacity(selectedSubTab == "Explore" ? 1.0 : 0)
                 }
                 
                 
@@ -296,6 +307,8 @@ struct FollowingAndExplore: View, Equatable {
             }
             // Make hot feed posts available to discover feed to not show the same posts
             discoverVM.hotVM = hotVM
+
+            loadColumnConfigs()
         }
         .onChange(of: account, perform: { newAccount in
             guard account != newAccount else { return }
@@ -350,6 +363,89 @@ struct FollowingAndExplore: View, Equatable {
         if !duplicates.isEmpty {
             L.cloud.debug("Deleting: \(duplicates.count) duplicate feeds")
             DataProvider.shared().save()
+        }
+    }
+    
+    func loadColumnConfigs() {
+        columnConfigs = lists
+            .filter {
+                switch $0.feedType {
+                    case .pubkeys(_):
+                        return true
+                    case .relays(_):
+                        return true
+                    default:
+                        return false
+                }
+            }
+            .map { list in
+                NXColumnConfig(id: list.subscriptionId, columnType: list.feedType, accountPubkey: list.accountPubkey)
+            }
+        
+#if DEBUG
+        for columnConfig in columnConfigs {
+            L.og.debug("☘️☘️ FollowingAndExplore columnConfigs \(columnConfig.id)")
+        }
+#endif
+        
+        // If we don't have "Following" CloudFeed, create it. Check if we need to migrate hideReplies from ListState. (should run only once)
+        // ListState.listId: "Following" + ListState.pubkey "hex.." ---> CloudFeed.type "follows" + CloudFeed.accountPubkey
+
+        createFollowingFeed()
+        createExploreFeed() // Also create Explore Feed
+    }
+    
+    private func createFollowingFeed() {
+        let context = viewContext()
+        let fr = CloudFeed.fetchRequest()
+        fr.predicate = NSPredicate(format: "type == %@ && accountPubkey == %@", CloudFeedType.following.rawValue, la.pubkey)
+        if let followingFeed = try? context.fetch(fr).first {
+            followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: la.pubkey)
+        }
+        else {
+            let newFollowingFeed = CloudFeed(context: context)
+            newFollowingFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
+            newFollowingFeed.name = "Following for " + la.account.anyName
+            newFollowingFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds" (TODO: Need to filter from custom feeds edit list)
+            newFollowingFeed.id = UUID()
+            newFollowingFeed.createdAt = .now
+            newFollowingFeed.accountPubkey = la.pubkey
+            newFollowingFeed.type = CloudFeedType.following.rawValue
+            DataProvider.shared().save() { // callback after save:
+                followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: la.pubkey)
+            }
+            
+            // Check for existing ListState
+            let fr = ListState.fetchRequest()
+            fr.predicate = NSPredicate(format: "listId == %@ && pubkey == %@", "Following", la.pubkey)
+            if let followingListState = try? context.fetch(fr).first {
+                newFollowingFeed.repliesEnabled = !followingListState.hideReplies
+            }
+        }
+    }
+    
+    // Copy paste of createFollowingFeed
+    private func createExploreFeed() {
+        let context = viewContext()
+        let fr = CloudFeed.fetchRequest()
+        fr.predicate = NSPredicate(format: "type == %@ && accountPubkey == %@", CloudFeedType.following.rawValue, EXPLORER_PUBKEY)
+        if let exploreFeed = try? context.fetch(fr).first {
+            exploreConfig = NXColumnConfig(id: exploreFeed.subscriptionId, columnType: .following(exploreFeed), accountPubkey: EXPLORER_PUBKEY)
+        }
+        else {
+            let newExploreFeed = CloudFeed(context: context)
+            newExploreFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
+            newExploreFeed.name = "Explore feed"
+            newExploreFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds" (TODO: Need to filter from custom feeds edit list)
+            newExploreFeed.id = UUID()
+            newExploreFeed.createdAt = .now
+            newExploreFeed.accountPubkey = EXPLORER_PUBKEY
+            newExploreFeed.type = CloudFeedType.following.rawValue
+            newExploreFeed.repliesEnabled = false
+            
+            DataProvider.shared().save() { // callback after save:
+                followingConfig = NXColumnConfig(id: newExploreFeed.subscriptionId, columnType: .following(newExploreFeed), accountPubkey: EXPLORER_PUBKEY)
+            }
         }
     }
 }
