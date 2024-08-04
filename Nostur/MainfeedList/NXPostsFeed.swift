@@ -1,0 +1,170 @@
+//
+//  NXPostsFeed.swift
+//  Nosturix
+//
+//  Created by Fabian Lachman on 01/08/2024.
+//
+
+import SwiftUI
+@_spi(Advanced) import SwiftUIIntrospect
+
+struct NXPostsFeed: View {
+    
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject public var vm: NXColumnViewModel
+    public let posts: [NRPost]
+    
+    @State private var collectionView: UICollectionView?
+    @State private var collectionPrefetcher: NXPostsFeedPrefetcher?
+    
+    @State private var tableView: UITableView?
+    @State private var tablePrefetcher: NXPostsFeedTablePrefetcher?
+    
+    var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
+        ScrollViewReader { proxy in
+            List {
+                ForEach(posts) { nrPost in
+                    ZStack(alignment: .leading) {
+                        PostOrThread(nrPost: nrPost)
+                    }
+                    .id(nrPost.id)
+                    .onAppear {
+                        onPostAppear(nrPost)
+                    }                    
+                    .onDisappear {
+                        onPostDisappear(nrPost)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(themes.theme.listBackground)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+//                    .alignmentGuide(.listRowSeparatorLeading) { _ in
+//                      -100
+//                    }
+                }
+            }
+            .environment(\.defaultMinListRowHeight, 50)
+            .listStyle(.plain)
+            .introspect(.list, on: .iOS(.v15)) { view in
+//                view.backgroundView = UIView()
+//                view.backgroundColor = UIColor(themes.theme.listBackground)
+                DispatchQueue.main.async {
+                  self.tableView = view
+                }
+                if tablePrefetcher == nil {
+                    tablePrefetcher = NXPostsFeedTablePrefetcher()
+                    tablePrefetcher?.columnViewModel = vm
+                    view.isPrefetchingEnabled = true
+                    view.prefetchDataSource = tablePrefetcher
+                }
+            }
+            .introspect(.list, on: .iOS(.v16...)) { view in
+//                view.backgroundView = UIView()
+//                view.subviews.dropFirst(1).first?.backgroundColor = UIColor(themes.theme.listBackground)
+                DispatchQueue.main.async {
+                  self.collectionView = view
+                }
+                if collectionPrefetcher == nil {
+                    collectionPrefetcher = NXPostsFeedPrefetcher()
+                    collectionPrefetcher?.columnViewModel = vm
+                    view.isPrefetchingEnabled = true
+                    view.prefetchDataSource = collectionPrefetcher
+                }
+            }
+            .scrollContentBackgroundHidden()
+            .onChange(of: vm.scrollToIndex) { scrollToIndex in
+                L.og.debug("☘️☘️ NXPostsFeed onChange(of: vm.scrollToIndex) \(scrollToIndex?.description ?? "?")")
+                
+                if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
+                    if let collectionView,
+                       let scrollToIndex,
+                       let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
+                       rows > scrollToIndex
+                    {
+                        collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
+                                                    at: .top,
+                                                    animated: false)
+                        vm.scrollToIndex = nil
+                    }
+                }
+                else { // iOS 15 UITableView
+                    
+                    if let tableView,
+                       let scrollToIndex,
+                       let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
+                       rows > scrollToIndex
+                    {
+                        tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
+                        vm.scrollToIndex = nil
+                    }
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                unreadCounterView
+                    .onTapGesture {
+                        for post in posts.reversed() {
+                            if let unreadCount = vm.unreadIds[post.id], unreadCount > 0 {
+                                if let firstUnreadPost = posts.first(where: { $0.id == post.id }) {
+                                    withAnimation {
+                                        proxy.scrollTo(firstUnreadPost.id, anchor: .top)
+                                    }
+                                }
+                                break
+                            }
+                        }
+                    }
+                    .simultaneousGesture(LongPressGesture().onEnded { _ in
+                        guard let topPost = posts.first else { return }
+                        withAnimation {
+                            proxy.scrollTo(topPost.id, anchor: .top)
+                        }
+                    })
+            }
+            .overlay(alignment: .top) {
+                Text("posts: \(posts.count) atTop: \(vm.isAtTop ? "1" : "0") load time: \(vm.formattedLoadTime)")
+            }
+        }
+    }
+    
+    // TODO: Create loading spinner on first load. on unreadcounter
+    
+    @ViewBuilder
+    public var unreadCounterView: some View {
+        NXUnreadCounterView(count: vm.unreadCount)
+            .padding(.trailing, 10)
+            .padding(.top, 5)
+//            .onTapGesture {
+//                vm.scrollToFirstUnread()
+//            }
+//            .simultaneousGesture(LongPressGesture().onEnded { _ in
+//                vm.scrollToTop()
+//            })
+    }
+    
+    private func onPostAppear(_ nrPost: NRPost) {
+        vm.haltProcessing() // will stop new updates on screen for 2.5 seconds
+        vm.unreadIds[nrPost.id] = 0
+
+        if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
+            if appearedIndex == 0 {
+                vm.unreadIds = [:]
+            }
+            
+            for i in appearedIndex..<posts.count {
+                vm.unreadIds[posts[i].id] = 0
+            }
+        }
+        
+        if let firstPost = posts.first, firstPost.id == nrPost.id {
+            vm.isAtTop = true
+        }
+    }
+    
+    private func onPostDisappear(_ nrPost: NRPost) {
+        if let firstPost = posts.first, firstPost.id == nrPost.id {
+            vm.isAtTop = false
+        }
+    }
+}
