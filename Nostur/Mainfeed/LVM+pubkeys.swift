@@ -256,4 +256,32 @@ extension Event {
         }
         return fr
     }
+    
+    static func postsByPubkeys(_ pubkeys: Set<String>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, hashtagRegex: String? = nil) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        fr.fetchLimit = QUERY_FETCH_LIMIT
+        if let hashtagRegex = hashtagRegex {
+            
+            let after = cutOffPoint - (8 * 3600) // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
+            
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+        }
+        else {
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+        }
+        return fr
+    }
 }

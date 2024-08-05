@@ -160,6 +160,7 @@ struct NXPostsFeed: View {
     
     private func onPostAppear(_ nrPost: NRPost) {
         updateIsAtTop()
+        loadMoreIfNeeded()
         vm.haltProcessing() // will stop new updates on screen for 2.5 seconds
         vm.unreadIds[nrPost.id] = 0
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
@@ -200,6 +201,27 @@ struct NXPostsFeed: View {
                         vm.isAtTop = false
                     }
                 }
+            }
+        }
+    }
+    
+    private func loadMoreIfNeeded() {
+        if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
+            if let collectionView,
+               let lastCreatedAt = posts.last?.created_at,
+               let lastItem = collectionView.indexPathsForVisibleItems.last,
+               lastItem.row > (collectionView.numberOfItems(inSection: 0) - 10)
+            {
+                vm.onAppearSubject.send(lastCreatedAt)
+            }
+        }
+        else { // iOS 15 UITableView
+            if let tableView,
+               let lastCreatedAt = posts.last?.created_at,
+               let lastItem = tableView.indexPathsForVisibleRows?.last,
+               lastItem.row > (tableView.numberOfRows(inSection: 0) - 10)
+            {
+                vm.onAppearSubject.send(lastCreatedAt)
             }
         }
     }
