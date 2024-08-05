@@ -130,4 +130,26 @@ extension Event {
         }
         return fr
     }
+    
+    
+    static func postsByRelays(_ relays:Set<RelayData>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies:Bool = false) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let regex = "(" + relays.compactMap { $0.url }.map {
+            NSRegularExpression.escapedPattern(for: $0)
+        }.joined(separator: "|") + ")"
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        fr.fetchLimit = 50 // TODO: Should apply WoT on message parser / receive, before adding to adding to database
+        
+        if hideReplies {
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+        }
+        return fr
+    }
 }
