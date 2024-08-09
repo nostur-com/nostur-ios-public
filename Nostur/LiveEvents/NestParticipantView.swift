@@ -30,7 +30,7 @@ struct NestParticipantView: View {
                 }
                 .overlay(alignment: .bottomTrailing) {
                     if showControls && nrContact.volume > 0 {
-                        MicButton(volume: nrContact.volume)
+                        MicButton(volume: nrContact.volume, isMuted: nrContact.isMuted)
                             .offset(x: 15.0, y: 5)
                     }
                 }
@@ -61,6 +61,7 @@ struct NestParticipantView: View {
 
 struct MicButton: View {
     public var volume: CGFloat
+    public var isMuted: Bool
     
     var body: some View {
         ZStack(alignment: .center) {
@@ -73,7 +74,7 @@ struct MicButton: View {
                         .animation(.interpolatingSpring(stiffness: 400, damping: 3), value: volume)
                 }
                 
-                Image(systemName: "mic")
+            Image(systemName: isMuted ? "mic.slash.fill" : "mic.fill")
                     .font(.system(size: 20))
                     .foregroundColor(.white)
         }
