@@ -21,72 +21,75 @@ struct ChatRoom: View {
     var body: some View {
         ScrollViewReader { proxy in
             if let account {
-                VStack(spacing: 0) {
-                    List {
-                        switch vm.state {
-                        case .initializing:
-                            CenteredProgressView()
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(theme.background)
-                                .scaleEffect(x: 1, y: -1, anchor: .center)
-                                .onAppear {
-                                    try? vm.start(aTag: aTag)
-                                }
-                        case .loading:
-                            CenteredProgressView()
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(theme.background)
-                                .scaleEffect(x: 1, y: -1, anchor: .center)
-                        case .ready:
-                            if vm.messages.isEmpty {
-                                VStack {
-                                    Spacer()
-                                    Text("Welcome to the chat")
-                                }
+                AvailableWidthContainer {
+                    VStack(spacing: 0) {
+                        List {
+                            switch vm.state {
+                            case .initializing:
+                                CenteredProgressView()
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(theme.background)
                                     .scaleEffect(x: 1, y: -1, anchor: .center)
-                                    .centered()
+                                    .onAppear {
+                                        try? vm.start(aTag: aTag)
+                                    }
+                            case .loading:
+                                CenteredProgressView()
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(theme.background)
+                                    .scaleEffect(x: 1, y: -1, anchor: .center)
+                            case .ready:
+                                if vm.messages.isEmpty {
+                                    VStack {
+                                        Spacer()
+                                        Text("Welcome to the chat")
+                                    }
+                                        .scaleEffect(x: 1, y: -1, anchor: .center)
+                                        .centered()
+                                        .listRowInsets(.init())
+                                        .listRowSeparator(.hidden)
+                                        .listRowBackground(theme.background)
+                                }
+                                else {
+                                    ForEach(vm.messages) { nrChat in
+                                        ChatRow(nrChat: nrChat)
+                                            .padding(.vertical, 5)
+                                        .scaleEffect(x: 1, y: -1, anchor: .center)
+                                    }
                                     .listRowInsets(.init())
                                     .listRowSeparator(.hidden)
                                     .listRowBackground(theme.background)
-                            }
-                            else {
-                                ForEach(vm.messages) { nrChat in
-                                    ChatRow(nrChat: nrChat)
-                                    .scaleEffect(x: 1, y: -1, anchor: .center)
                                 }
-                                .listRowInsets(.init())
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(theme.background)
+                            case .timeout:
+                                VStack {
+                                    Text("timeout")
+                                }
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(theme.background)
+                                    .scaleEffect(x: 1, y: -1, anchor: .center)
+                            case .error(let string):
+                                Text(string)
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(theme.background)
+                                    .scaleEffect(x: 1, y: -1, anchor: .center)
                             }
-                        case .timeout:
-                            VStack {
-                                Text("timeout")
+                        }
+                        .scrollContentBackgroundCompat(.hidden)
+                        .listStyle(.plain)
+                        .safeAreaScroll()
+                        .scaleEffect(x: 1, y: -1, anchor: .center)
+                        .onChange(of: vm.state) { newValue in
+                            if newValue == .ready {
+                                proxy.scrollTo(bottom)
                             }
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(theme.background)
-                                .scaleEffect(x: 1, y: -1, anchor: .center)
-                        case .error(let string):
-                            Text(string)
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(theme.background)
-                                .scaleEffect(x: 1, y: -1, anchor: .center)
                         }
-                    }
-                    .scrollContentBackgroundCompat(.hidden)
-                    .listStyle(.plain)
-                    .safeAreaScroll()
-                    .scaleEffect(x: 1, y: -1, anchor: .center)
-                    .onChange(of: vm.state) { newValue in
-                        if newValue == .ready {
-                            proxy.scrollTo(bottom)
+                        
+                        HStack {
+                            MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
+                            ChatInputField(message: $message, onSubmit: submitMessage)
                         }
+                        .padding(.bottom, 15)
                     }
-                    
-                    HStack {
-                        MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
-                        ChatInputField(message: $message, onSubmit: submitMessage)
-                    }
-                    .padding(.bottom, 15)
                 }
             }
         }
@@ -181,6 +184,7 @@ struct ChatRoom: View {
     }){
         Box {
             ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme)
+                .padding(10)
         }
     }
 }
@@ -188,6 +192,7 @@ struct ChatRoom: View {
 
 struct ChatRow: View {
     @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject public var nrChat: NRChatMessage
     @State private var didStart = false
     
@@ -218,8 +223,7 @@ struct ChatRow: View {
                             }
                         Ago(zapFromAttributes.created_at).foregroundColor(themes.theme.secondary)
                     }
-                    ChatRenderer(nrChat: nrChat, availableWidth: 400, forceAutoload: false, theme: themes.theme, didStart: $didStart)
-                        .padding(.bottom, 10)
+                    ChatRenderer(nrChat: nrChat, availableWidth: dim.listWidth, forceAutoload: false, theme: themes.theme, didStart: $didStart)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .frame(maxHeight: 450, alignment: .top)
                     
@@ -249,8 +253,7 @@ struct ChatRow: View {
                         }
                     Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
                 }
-                ChatRenderer(nrChat: nrChat, availableWidth: 400, forceAutoload: false, theme: themes.theme, didStart: $didStart)
-                    .padding(.bottom, 10)
+                ChatRenderer(nrChat: nrChat, availableWidth: dim.listWidth, forceAutoload: false, theme: themes.theme, didStart: $didStart)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(maxHeight: 450, alignment: .top)
                 
