@@ -12,7 +12,20 @@ import NostrEssentials
 
 class LiveKitVoiceSession: ObservableObject {
     
-    @Published public var activeNest: NRLiveEvent? = nil
+    @Published public var activeNest: NRLiveEvent? = nil {
+        didSet {
+            if activeNest != oldValue {
+                Task { @MainActor in
+                    self.disconnect()
+                }
+            }
+            else {
+                visibleNest = activeNest
+            }
+        }
+    }
+    
+    @Published public var visibleNest: NRLiveEvent? = nil
     
     @Published public var state: LiveKitVoiceSessionState = .disconnected
     
@@ -190,6 +203,12 @@ class LiveKitVoiceSession: ObservableObject {
                 guard let self else { return }
                 if let contact = Contact.fetchByPubkey(participantPubkey, context: ctx) {
                     let nrContact = NRContact(contact: contact)
+                    nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
+                        true
+                    }
+                    else {
+                        false
+                    }
 
                     DispatchQueue.main.async {
                         self.nrLiveEvent?.objectWillChange.send()
@@ -206,6 +225,12 @@ class LiveKitVoiceSession: ObservableObject {
                     QueuedFetcher.shared.enqueue(pTag: participantPubkey)
                     
                     let nrContact = NRContact(contact: contact)
+                    nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
+                        true
+                    }
+                    else {
+                        false
+                    }
                     DispatchQueue.main.async {
                         self.nrLiveEvent?.objectWillChange.send()
                         self.nrLiveEvent?.participantsOrSpeakers.append(nrContact)
@@ -260,6 +285,7 @@ extension LiveKitVoiceSession: RoomDelegate {
         L.nests.debug("participant: didUpdateSpeakingParticipants: participants.count \(participants.count.description)")
         for participant in participants {
             L.nests.debug("participant audio level: \(participant.audioLevel.description)")
+            L.nests.debug("participant firstAudioPublication?.isMuted: \((participant.firstAudioPublication?.isMuted ?? false).description)")
             
             guard let participantPubkey = participant.identity?.stringValue else { continue }
             guard isValidPubkey(participantPubkey) else { continue }
@@ -268,6 +294,7 @@ extension LiveKitVoiceSession: RoomDelegate {
                 Task { @MainActor in
                     withAnimation {
                         nrContact.volume = CGFloat(participant.audioLevel)
+                        nrContact.isMuted = participant.firstAudioPublication?.isMuted ?? false
                     }
                 }
             }

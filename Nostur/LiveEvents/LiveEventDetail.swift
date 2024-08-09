@@ -67,11 +67,6 @@ struct LiveEventDetail: View {
             liveEvent.fetchPresenceFromRelays()
             account = Nostur.account()
         }
-        .onDisappear {
-            if case .connected = liveKitVoiceSession.state {
-                liveKitVoiceSession.disconnect()
-            }
-        }
         .padding(10)
         .background(themes.theme.background)
 //        .navigationTitle(liveEvent.title ?? "(Stream)")
