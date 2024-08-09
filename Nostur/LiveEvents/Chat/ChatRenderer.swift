@@ -24,7 +24,7 @@ struct ChatRenderer: View { // VIEW things
         self.forceAutoload = forceAutoload
         self.theme = theme
         _didStart = didStart
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 20, isScreenshot: false))
     }
     
     private var shouldAutoload: Bool {
@@ -105,6 +105,9 @@ struct ChatRenderer: View { // VIEW things
                         .font(.system(.body, design: .monospaced))
                         .id(index)
                 case .text(let attributedStringWithPs): // For text notes
+//                    Color.red
+//                        .frame(height: 50)
+//                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .center)
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth)
                         .equatable()
                         .id(index)
@@ -180,7 +183,8 @@ struct ChatRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrChat.pubkey, height: scaledDimensions.height, imageWidth: availableWidth, autoload: shouldAutoload, contentPadding: 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrChat.imageUrls)
+                        
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrChat.pubkey, height: scaledDimensions.height, imageWidth: availableWidth, fullWidth: false, autoload: shouldAutoload, contentPadding: 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrChat.imageUrls)
 //                                .fixedSize(horizontal: false, vertical: true)
                             .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
 //                            .debugDimensions("sd.image \(scaledDimensions.width)x\(scaledDimensions.height)")
@@ -208,7 +212,7 @@ struct ChatRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrChat.pubkey, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, autoload: shouldAutoload, contentPadding:  0, theme: theme, imageUrls: nrChat.imageUrls)
+                        SingleMediaViewer(url: mediaContent.url, pubkey: nrChat.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: false, autoload: shouldAutoload, contentPadding: 0, theme: theme, imageUrls: nrChat.imageUrls)
 //                            .debugDimensions("image")
                             .padding(.horizontal, 0)
                             .padding(.vertical, 10)
