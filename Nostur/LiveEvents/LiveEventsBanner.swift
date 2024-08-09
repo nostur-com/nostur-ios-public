@@ -56,14 +56,19 @@ struct LiveEventsBanner: View {
         .onAppear {
             liveEventsModel.load()
         }
-        .fullScreenCover(item: $liveKitVoiceSession.activeNest) { activeNest in
+        .fullScreenCover(item: $liveKitVoiceSession.visibleNest) { visibleNest in
             NBNavigationStack {
-                LiveEventDetail(liveEvent: activeNest)
+                LiveEventDetail(liveEvent: visibleNest)
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Leave") {
                                 LiveKitVoiceSession.shared.activeNest = nil
-                                LiveKitVoiceSession.shared.disconnect()
+                            }
+                        }
+                        
+                        ToolbarItem(placement: .primaryAction) {
+                            Button("Minimize") {
+                                LiveKitVoiceSession.shared.visibleNest = nil
                             }
                         }
                     }
