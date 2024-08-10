@@ -72,6 +72,16 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             Task { @MainActor in
                 self.objectWillChange.send()
                 self.isConnected = isSocketConnected
+                
+                // Disconnected? If this is last "disconnect" we should set "VPN detected" to false
+                if !isSocketConnected && !ConnectionPool.shared.anyConnected {
+                    // Similar as in NetworMonitor.init .isConnectedSubject.sink { }
+                    NetworkMonitor.shared.vpnConfigurationDetected = false
+                    NetworkMonitor.shared.actualVPNconnectionDetected = false
+                    if SettingsStore.shared.enableVPNdetection {
+                        ConnectionPool.shared.disconnectAllAdditional()
+                    }
+                }
             }
             self.queue.async(flags: .barrier) { [weak self] in
                 self?.recentAuthAttempts = 0

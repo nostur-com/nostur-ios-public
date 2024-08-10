@@ -52,7 +52,7 @@ public class ConnectionPool: ObservableObject {
     // .connectionStats should only be accessed from connection ConnectionPool.queue
     public var connectionStats: [CanonicalRelayUrl: RelayConnectionStats] = [:]
     
-    public var anyConnected: Bool {
+    public var anyConnected: Bool { // TODO: Should also include outbox connections?
         connections.contains(where: { $0.value.isConnected })
     }
     
