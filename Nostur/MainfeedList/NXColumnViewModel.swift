@@ -208,8 +208,10 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public func load(_ config: NXColumnConfig) {
         self.config = config
-        guard isVisible || config.id.starts(with: "Following-") else { return }
-        
+        if !ConnectionPool.shared.anyConnected {
+            self.watchForFirstConnection = true
+        }
+        guard isVisible || (config.id.starts(with: "Following-") && config.name != "Explore") else { return }
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
         startTime = .now
         startFetchFeedTimer()
@@ -218,6 +220,7 @@ class NXColumnViewModel: ObservableObject {
             self?.loadRemote(config) // <--- fetch new posts (catch up)
         }
         listenForNewPosts(config: config) // <-- listen realtime for new posts  TODO: maybe do after 2 second delay?
+        listenForFirstConnection(config: config)
         loadMoreWhenNearBottom(config)
     }
     
@@ -273,18 +276,15 @@ class NXColumnViewModel: ObservableObject {
     }
     
     private func fetchFeedTimerNextTick() {
-        guard !NRState.shared.appIsInBackground && self.isVisible else { return }
-
+        guard let config, !NRState.shared.appIsInBackground && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
         bg().perform {
             guard !Importer.shared.isImporting else { return }
-//            guard let self, let config, !Importer.shared.isImporting else { return }
             setFirstTimeCompleted()
-            
-            // TODO: Proper restore on next tick, maybe we got disconnected, subscriptions gone or something
-            
-//            Task { @MainActor in
-//                self.sendRealtimeReq(config)
-//            }
+
+            Task { @MainActor in
+                // TODO: Check if everthing is restored, .sendRealtimeReq is enough?
+                self.sendRealtimeReq(config)
+            }
         }
     }
 
@@ -730,7 +730,7 @@ class NXColumnViewModel: ObservableObject {
                 .filter { !$0.isEmpty }
                 .sink { [weak self] subscriptionIds in
                     guard let self else { return }
-                    guard !haltedProcessing && isVisible && !isPaused && !NRState.shared.appIsInBackground else {
+                    guard !haltedProcessing && (isVisible) && !isPaused && !NRState.shared.appIsInBackground else {
                         queuedSubscriptionIds.add(subscriptionIds)
                         return
                     }
@@ -746,6 +746,41 @@ class NXColumnViewModel: ObservableObject {
         }
  
         self.sendRealtimeReq(config)
+    }
+    
+    @MainActor
+    private func listenForFirstConnection(config: NXColumnConfig) {
+        guard firstConnectionSub == nil else { return }
+        firstConnectionSub = receiveNotification(.firstConnection)
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
+            .sink { [weak self] _ in
+                guard let self, watchForFirstConnection else { return }
+#if DEBUG
+                L.og.debug("☘️☘️ \(config.id) listenForFirstConnection")
+#endif
+                Task { @MainActor in
+                    self.watchForFirstConnection = false
+                    self.load(config)
+                }
+            }
+        
+    }
+    
+    @MainActor
+    private func listenForLastDisconnection(config: NXColumnConfig) {
+        guard lastDisconnectionSub == nil else { return }
+        lastDisconnectionSub = receiveNotification(.lastDisconnection)
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
+            .sink { [weak self] _ in
+                guard let self else { return }
+#if DEBUG
+                L.og.debug("☘️☘️ \(config.id) listenForLastDisconnection")
+#endif
+                Task { @MainActor in
+                    self.watchForFirstConnection = true
+                }
+            }
+        
     }
     
     private func fetchParents(_ danglers: [NRPost], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool = false) {
@@ -857,7 +892,12 @@ extension NXColumnViewModel {
             fetchParents(newDanglers, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older)
         }
         
-        guard !partialThreadsWithParent.isEmpty else { return }
+        guard !partialThreadsWithParent.isEmpty else {
+            Task { @MainActor in
+                completion?()
+            }
+            return
+        }
         
         Task { @MainActor in
             self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older, completion: completion)
