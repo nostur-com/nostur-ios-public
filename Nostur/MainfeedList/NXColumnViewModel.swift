@@ -89,7 +89,13 @@ class NXColumnViewModel: ObservableObject {
         resumeSubject.send(Set())
     }
     
-    @Published var unreadIds: [String: Int] = [:] // Dict of [post id: posts count (post + parent posts)]
+    @Published var unreadIds: [String: Int] = [:] { // Dict of [post id: posts count (post + parent posts)]
+        didSet {
+            if unreadCount == 0 {
+                isAtTop = true
+            }
+        }
+    }
     private var danglingIds: Set<NRPostID> = [] // posts that are transformed, but somehow not on screen (maybe not found on relays). either we put on on screen or not, dont transform over and over again.
     
     public var unreadCount: Int {
