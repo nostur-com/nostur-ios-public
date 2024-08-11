@@ -92,7 +92,9 @@ class NXColumnViewModel: ObservableObject {
     @Published var unreadIds: [String: Int] = [:] { // Dict of [post id: posts count (post + parent posts)]
         didSet {
             if unreadCount == 0 {
-                isAtTop = true
+                if !isAtTop {
+                    isAtTop = true
+                }
             }
         }
     }
@@ -828,7 +830,7 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor in
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
-                        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+//                        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
                         
@@ -852,7 +854,7 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor in
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
-                        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+//                        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
                         
@@ -1112,6 +1114,7 @@ extension NXColumnViewModel {
                     isAtTop = false
                     viewState = .posts(addedAndExistingPostsTruncated)
                     
+                    // TODO: Should already start prefetching missing onlyNewAddedPosts pfp/kind 0 here
 
                     // Update unread count
                     for post in onlyNewAddedPosts {
@@ -1157,7 +1160,9 @@ extension NXColumnViewModel {
             L.og.debug("☘️☘️ \(config.id) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description)")
 #endif
             allIdsSeen = allIdsSeen.union(getAllPostIds(uniqueAddedPosts))
-            isAtTop = true
+            if !isAtTop {
+                isAtTop = true
+            }
             withAnimation {
                 viewState = .posts(uniqueAddedPosts)
             }
@@ -1276,7 +1281,7 @@ extension NXColumnViewModel {
                 Task { @MainActor in
                     let allIdsSeen = self.allIdsSeen
                     let currentIdsOnScreen = self.currentIdsOnScreen
-                    let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+//                    let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
                     let sinceOrUntil = !older ? (self.mostRecentCreatedAt ?? 0) : (self.oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
                     
                     // Then back to bg for processing
@@ -1373,6 +1378,11 @@ func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, si
     }
     
     return filters
+}
+
+func globalFeedReqFilters(since: Int? = nil, until: Int? = nil, limit: Int = 5000) -> [Filters] {
+    return [Filters(kinds: FETCH_GLOBAL_KINDS,
+                    since: since, until: until, limit: limit )]
 }
 
 // Return replies without parents seperataly

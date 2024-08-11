@@ -11,6 +11,7 @@ import NostrEssentials
 
 typealias CM = NostrEssentials.ClientMessage
 
+let FETCH_GLOBAL_KINDS: Set<Int> = [1,5,6,9802,30023,34235]
 let FETCH_FOLLOWING_KINDS: Set<Int> = [0,1,5,6,9802,30023,34235,30311,10002]
 let QUERY_FOLLOWING_KINDS: Set<Int> = [1,6,9802,30023,34235]
 let QUERY_FETCH_LIMIT = 50 // Was 25 before, but seems we are missing posts, maybe too much non WoT-hashtag coming back. Increase limit or split query? or could be the time cutoff is too short/strict
@@ -45,38 +46,6 @@ extension LVM {
         }
         else if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
             req(message, activeSubscriptionId: subscriptionId)
-        }
-    }
-    
-    // FETCHES ALL NEW, UNTIL NOW
-    func fetchNewestUntilNow(subscriptionId: String) {
-        let now = NTimestamp(date: Date.now)
-        guard !pubkeys.isEmpty else { return }
-        
-        
-        var filters: [Filters] = []
-        
-        let followingContactsFilter = Filters(
-            authors: Set(self.pubkeys), // seems prefixes are no longer in NIP-01
-            kinds: FETCH_FOLLOWING_KINDS,
-            until: now.timestamp, limit: 5000)
-        
-        filters.append(followingContactsFilter)
-        
-        if !hashtags.isEmpty {
-            let followingHashtagsFilter = Filters(
-                kinds: FETCH_FOLLOWING_KINDS,
-                tagFilter: TagFilter(tag:"t", values: Array(hashtags)),
-                until: now.timestamp, limit: 5000)
-            filters.append(followingHashtagsFilter)
-        }
-        
-        // TODO: Add toggle on .pubkeys custom feeds so it can work also for non-"Following"
-        if self.id == "Following" {
-            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "CATCHUP-" + subscriptionId, filters: filters))
-        }
-        else if let message = CM(type: .REQ, subscriptionId: "CATCHUP-" + subscriptionId, filters: filters).json() {
-            req(message)
         }
     }
     

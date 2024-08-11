@@ -11,10 +11,10 @@ import NostrEssentials
 
 class InstantFeed {
     typealias CompletionHandler = ([Event]) -> ()
-    public var backlog = Backlog(timeout: 15, auto: true)
-    private var pongReceiver:AnyCancellable?
-    private var pubkey:Pubkey?
-    private var onComplete:CompletionHandler?
+    public var backlog = Backlog(timeout: 8, auto: true)
+    private var pongReceiver: AnyCancellable?
+    private var pubkey: Pubkey?
+    private var onComplete: CompletionHandler?
 
     private var pubkeys:Set<Pubkey>? {
         didSet {
@@ -23,6 +23,7 @@ class InstantFeed {
             }
         }
     }
+    private var since: Int?
     private var events:[Event]? {
         didSet {
             if let events, events.count > 20 {
@@ -35,31 +36,34 @@ class InstantFeed {
     private var relays:Set<RelayData> = []
     public var isRunning = false
     
-    public func start(_ pubkey:Pubkey, onComplete: @escaping CompletionHandler) {
+    public func start(_ pubkey:Pubkey, since: Int? = nil, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(pubkey.short))")
         self.isRunning = true
+        self.since = since
         self.pubkey = pubkey
         self.onComplete = onComplete
         fetchContactListPubkeys(pubkey: pubkey)
     }
     
-    public func start(_ pubkeys:Set<Pubkey>, onComplete: @escaping CompletionHandler) {
+    public func start(_ pubkeys:Set<Pubkey>, since: Int? = nil, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(pubkeys.count) pubkeys)")
         self.isRunning = true
         self.onComplete = onComplete
+        self.since = since
         self.pubkeys = pubkeys
 //        fetchPostsFromRelays() <-- No need, already done on .pubkeys { didSet }
     }
     
-    public func start(_ relays:Set<RelayData>, onComplete: @escaping CompletionHandler) {
+    public func start(_ relays:Set<RelayData>, since: Int? = nil, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(relays.count) relays)")
         self.isRunning = true
         self.onComplete = onComplete
+        self.since = since
         self.relays = relays
         fetchPostsFromGlobalishRelays()
     }
     
-    private var kind3listener:AnyCancellable?
+    private var kind3listener: AnyCancellable?
 
     private func fetchContactListPubkeys(pubkey: Pubkey) {
         signpost(self, "InstantFeed", .event, "Fetching contact list pubkeys")
@@ -118,19 +122,19 @@ class InstantFeed {
     private func fetchPostsFromRelays() {
         signpost(self, "InstantFeed", .event, "Fetching posts from relays")
         bg().perform { [weak self] in
-            guard let self = self else { return }
-            guard let pubkeys = self.pubkeys else { return }
+            guard let self else { return }
+            guard let pubkeys else { return }
             
             let getFollowingEventsTask = ReqTask(prefix: "GFET-") { taskId in
                 L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
 //                req(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
-                let filters = [Filters(authors: pubkeys, kinds: [1,5,6,9802,30023,34235], limit: 400)]
+                let filters = [Filters(authors: pubkeys, kinds: [1,5,6,9802,30023,34235], since: self.since, limit: 400)]
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
                 
             } processResponseCommand: { [weak self] taskId, _, _ in
                 bg().perform {
-                    guard let self = self else { return }
-                    let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)
+                    guard let self else { return }
+                    let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: Int64(self.since ?? 0))
                     guard let events = try? bg().fetch(fr) else {
                         L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
                         return
@@ -166,11 +170,14 @@ class InstantFeed {
                 guard let self = self else { return }
                 let getGlobalEventsTask = ReqTask(subscriptionId: "RM.getGlobalFeedEvents-" + UUID().uuidString) { taskId in
                     L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
-                    req(RM.getGlobalFeedEvents(limit: 200, subscriptionId: taskId), relays: self.relays)
+                    let filters = [Filters(kinds: [1,5,6,9802,30023,34235], since: self.since, limit: 200)]
+                    if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
+                        req(message, relays: self.relays)
+                    }
                 } processResponseCommand: { [weak self] taskId, _, _ in
                     bg().perform {
                         guard let self = self else { return }
-                        let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: 0)
+                        let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0))
                         guard let events = try? bg().fetch(fr) else {
                             L.og.notice("🟪 \(taskId) Could not fetch posts from globalish relays using \(relayCount) relays.")
                             return
