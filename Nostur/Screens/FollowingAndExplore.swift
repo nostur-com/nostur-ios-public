@@ -34,6 +34,7 @@ struct FollowingAndExplore: View, Equatable {
     
     @State private var showingNewNote = false
     @State private var noteCancellationId: UUID?
+    @State private var didCreate = false
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)], predicate: NSPredicate(format: "showAsTab == true"))
     var lists: FetchedResults<CloudFeed>
@@ -306,9 +307,15 @@ struct FollowingAndExplore: View, Equatable {
                 }
             }
             // Make hot feed posts available to discover feed to not show the same posts
-            discoverVM.hotVM = hotVM
-
+            if discoverVM.hotVM == nil {
+                discoverVM.hotVM = hotVM
+            }
+            
+            guard !didCreate else { return }
+            didCreate = true
             loadColumnConfigs()
+            createFollowingFeed()
+            createExploreFeed() // Also create Explore Feed
         }
         .onChange(of: account, perform: { newAccount in
             guard account != newAccount else { return }
@@ -332,6 +339,7 @@ struct FollowingAndExplore: View, Equatable {
         .onReceive(lists.publisher.collect()) { lists in
             if !lists.isEmpty && self.lists.count != lists.count {
                 removeDuplicateLists()
+                loadColumnConfigs()
             }
         }
         .onChange(of: shouldHideTabBar) { newValue in
@@ -379,7 +387,7 @@ struct FollowingAndExplore: View, Equatable {
                 }
             }
             .map { list in
-                NXColumnConfig(id: list.subscriptionId, columnType: list.feedType, accountPubkey: list.accountPubkey)
+                NXColumnConfig(id: list.subscriptionId, columnType: list.feedType, accountPubkey: list.accountPubkey, name: list.name_)
             }
         
 #if DEBUG
@@ -390,9 +398,6 @@ struct FollowingAndExplore: View, Equatable {
         
         // If we don't have "Following" CloudFeed, create it. Check if we need to migrate hideReplies from ListState. (should run only once)
         // ListState.listId: "Following" + ListState.pubkey "hex.." ---> CloudFeed.type "follows" + CloudFeed.accountPubkey
-
-        createFollowingFeed()
-        createExploreFeed() // Also create Explore Feed
     }
     
     private func createFollowingFeed() {
@@ -400,7 +405,7 @@ struct FollowingAndExplore: View, Equatable {
         let fr = CloudFeed.fetchRequest()
         fr.predicate = NSPredicate(format: "type == %@ && accountPubkey == %@", CloudFeedType.following.rawValue, la.pubkey)
         if let followingFeed = try? context.fetch(fr).first {
-            followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: la.pubkey)
+            followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: la.pubkey, name: "Following")
         }
         else {
             let newFollowingFeed = CloudFeed(context: context)
@@ -412,7 +417,7 @@ struct FollowingAndExplore: View, Equatable {
             newFollowingFeed.accountPubkey = la.pubkey
             newFollowingFeed.type = CloudFeedType.following.rawValue
             DataProvider.shared().save() { // callback after save:
-                followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: la.pubkey)
+                followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: la.pubkey, name: "Following")
             }
             
             // Check for existing ListState
@@ -430,7 +435,7 @@ struct FollowingAndExplore: View, Equatable {
         let fr = CloudFeed.fetchRequest()
         fr.predicate = NSPredicate(format: "type == %@ && accountPubkey == %@", CloudFeedType.following.rawValue, EXPLORER_PUBKEY)
         if let exploreFeed = try? context.fetch(fr).first {
-            exploreConfig = NXColumnConfig(id: exploreFeed.subscriptionId, columnType: .following(exploreFeed), accountPubkey: EXPLORER_PUBKEY)
+            exploreConfig = NXColumnConfig(id: exploreFeed.subscriptionId, columnType: .following(exploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
         }
         else {
             let newExploreFeed = CloudFeed(context: context)
@@ -444,7 +449,7 @@ struct FollowingAndExplore: View, Equatable {
             newExploreFeed.repliesEnabled = false
             
             DataProvider.shared().save() { // callback after save:
-                followingConfig = NXColumnConfig(id: newExploreFeed.subscriptionId, columnType: .following(newExploreFeed), accountPubkey: EXPLORER_PUBKEY)
+                followingConfig = NXColumnConfig(id: newExploreFeed.subscriptionId, columnType: .following(newExploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
             }
         }
     }
