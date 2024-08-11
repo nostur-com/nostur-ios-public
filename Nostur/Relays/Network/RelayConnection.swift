@@ -13,7 +13,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     // for views (viewContext)
     @Published private(set) var isConnected = false { // don't set directly, set isDeviceConnected or isSocketConnected
-        didSet {
+        willSet {
             ConnectionPool.shared.objectWillChange.send()
         }
     }
@@ -308,17 +308,22 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         queue.async { [weak self] in
             if self?.webSocketTask == nil {
                 L.sockets.debug("🔴🔴 PING: Not connected. ????? \(self?.url ?? "")")
+                self?.isConnected = false
                 return
             }
             self?.webSocketTask?.sendPing(pongReceiveHandler: { [weak self] error in
                 if let error {
                     self?.queue.async(flags: .barrier) { [weak self] in
-                        self?.session?.invalidateAndCancel()
-                        self?.nreqSubscriptions = []
-//                        self?.exponentialReconnectBackOff = 0
-//                        self?.skipped = 0
-                        self?.lastMessageReceivedAt = nil
-                        self?.isSocketConnected = false
+                        guard let self else { return }
+                        self.session?.invalidateAndCancel()
+                        self.nreqSubscriptions = []
+//                        self.exponentialReconnectBackOff = 0
+//                        self.skipped = 0
+                        self.lastMessageReceivedAt = nil
+                        self.isSocketConnected = false
+                        Task { @MainActor in
+                            self.isConnected = false
+                        }
                     }
                     L.sockets.debug("🔴🔴 PING: No pong \(self?.url ?? ""): \(error)")
                 }
