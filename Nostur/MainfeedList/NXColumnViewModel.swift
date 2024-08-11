@@ -135,6 +135,9 @@ class NXColumnViewModel: ObservableObject {
     }
     private var fetchFeedTimer: Timer? = nil
     private var newEventsInDatabaseSub: AnyCancellable?
+    private var firstConnectionSub: AnyCancellable?
+    private var lastDisconnectionSub: AnyCancellable?
+    private var watchForFirstConnection = false
     private var subscriptions = Set<AnyCancellable>()
     public var onAppearSubject = PassthroughSubject<Int64,Never>()
     
