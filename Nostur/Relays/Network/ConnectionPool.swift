@@ -56,6 +56,18 @@ public class ConnectionPool: ObservableObject {
         connections.contains(where: { $0.value.isConnected })
     }
     
+    public var connectedCount: Int {
+        connections.filter({ $0.value.isConnected }).count
+    }
+    
+    public var outboxConnectedCount: Int {
+        outboxConnections.filter({ $0.value.isConnected }).count
+    }
+    
+    public var ephemeralConnectedCount: Int {
+        ephemeralConnections.filter({ $0.value.isConnected }).count
+    }
+    
     private var stayConnectedTimer: Timer?
     
     @MainActor
@@ -181,10 +193,8 @@ public class ConnectionPool: ObservableObject {
     private func stayConnectedPing() {
         for (_, connection) in self.connections {
             queue.async { [weak connection] in
-                guard let connection, connection.relayData.shouldConnect else { return }
-                guard !connection.isNWC else { return }
-                guard !connection.isNC else { return }
-                
+                guard let connection, connection.isConnected else { return }
+
                 if let lastReceivedMessageAt = connection.lastMessageReceivedAt {
                     if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
                         L.sockets.debug("PING: \(connection.url) Last message older that 45 seconds, sending ping")
