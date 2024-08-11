@@ -16,14 +16,26 @@ public class NetworkMonitor: ObservableObject {
     private let monitor = NWPathMonitor()
     private var queue = DispatchQueue(label: "network-monitor")
     
-    @Published public var isConnected: Bool = true
+    @Published public var isConnected: Bool = true {
+        didSet {
+            L.og.debug("NetworkMonitor.isConnected was: \(oldValue) now: \(self.isConnected)")
+        }
+    }
     
     public var vpnDetected: Bool {
         vpnConfigurationDetected && actualVPNconnectionDetected
     }
     
-    @Published public var vpnConfigurationDetected: Bool = false
-    @Published public var actualVPNconnectionDetected: Bool = false
+    @Published public var vpnConfigurationDetected: Bool = false {
+        didSet {
+            L.og.debug("NetworkMonitor.vpnConfigurationDetected was: \(oldValue) now: \(self.vpnConfigurationDetected)")
+        }
+    }
+    @Published public var actualVPNconnectionDetected: Bool = false {
+        didSet {
+            L.og.debug("NetworkMonitor.actualVPNconnectionDetected was: \(oldValue) now: \(self.actualVPNconnectionDetected)")
+        }
+    }
     
     // Helper for SwiftUI views where a negative binding is needed
     // (example: .fullScreenCover(isPresented: $networkMonitor.isDisconnected)
@@ -50,8 +62,12 @@ public class NetworkMonitor: ObservableObject {
                     }
                     else {
                         DispatchQueue.main.async {
-                            self.vpnConfigurationDetected = false
-                            self.actualVPNconnectionDetected = false
+                            if !self.vpnConfigurationDetected {
+                                self.vpnConfigurationDetected = false
+                            }
+                            if !self.actualVPNconnectionDetected {
+                                self.actualVPNconnectionDetected = false
+                            }
                             if SettingsStore.shared.enableVPNdetection {
                                 ConnectionPool.shared.disconnectAllAdditional()
                             }
@@ -64,7 +80,10 @@ public class NetworkMonitor: ObservableObject {
         monitor.pathUpdateHandler = { path in
             self.isConnectedSubject.send(path.status == .satisfied)
             DispatchQueue.main.async {
-                self.vpnConfigurationDetected = path.usesInterfaceType(.other)
+                let usesOtherInterface = path.usesInterfaceType(.other)
+                if self.vpnConfigurationDetected != usesOtherInterface {
+                    self.vpnConfigurationDetected = usesOtherInterface
+                }
             }
         }
         monitor.start(queue: queue)
