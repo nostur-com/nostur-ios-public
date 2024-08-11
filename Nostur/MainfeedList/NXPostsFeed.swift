@@ -105,6 +105,9 @@ struct NXPostsFeed: View {
                     }
                 }
             }
+            .onChange(of: posts) { newPosts in
+                updateIsAtTop() // TODO: in .async or not?
+            }
             .overlay(alignment: .topTrailing) {
                 unreadCounterView
                     .onTapGesture {
@@ -155,6 +158,7 @@ struct NXPostsFeed: View {
         guard let topPost = posts.first else { return }
         withAnimation {
             proxy.scrollTo(topPost.id, anchor: .top)
+            vm.isAtTop = true
         }
     }
     
@@ -177,7 +181,7 @@ struct NXPostsFeed: View {
     private func updateIsAtTop() {
         if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
             if let collectionView {
-                if collectionView.contentOffset.y == 0 {
+                if collectionView.contentOffset.y <= 3 {
                     if !vm.isAtTop {
                         vm.isAtTop = true
                     }
@@ -191,7 +195,7 @@ struct NXPostsFeed: View {
         }
         else { // iOS 15 UITableView
             if let tableView {
-                if tableView.contentOffset.y == 0 {
+                if tableView.contentOffset.y <= 3 {
                     if !vm.isAtTop {
                         vm.isAtTop = true
                     }
