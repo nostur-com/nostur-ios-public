@@ -139,12 +139,15 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
-    public func connectAll() {
+    public func connectAll(resetExpBackOff: Bool = false) {
         for (_, connection) in self.connections {
             if (connection.isConnected) { continue }
             queue.async {
                 guard connection.relayData.shouldConnect else { return }
                 guard !connection.isSocketConnected else { return }
+                if resetExpBackOff {
+                    connection.resetExponentialBackOff()
+                }
                 connection.connect()
             }
         }

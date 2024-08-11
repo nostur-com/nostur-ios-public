@@ -38,6 +38,11 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     private var subscriptions = Set<AnyCancellable>()
     private var outQueue: [SocketMessage] = []
     
+    public func resetExponentialBackOff() {
+        self.exponentialReconnectBackOff = 0
+        self.skipped = 0
+    }
+    
     public var stats: RelayConnectionStats {
         if let existingStats = ConnectionPool.shared.connectionStats[self.url] {
             return existingStats
@@ -69,19 +74,31 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         didSet {
             isSocketConnecting = false
             let isSocketConnected = isSocketConnected
+            let wasConnected = oldValue
             Task { @MainActor in
                 self.objectWillChange.send()
-                self.isConnected = isSocketConnected
-                
                 // Disconnected? If this is last "disconnect" we should set "VPN detected" to false
-                if !isSocketConnected && !ConnectionPool.shared.anyConnected {
+                if wasConnected && !isSocketConnected && !ConnectionPool.shared.anyConnected {
                     // Similar as in NetworMonitor.init .isConnectedSubject.sink { }
-                    NetworkMonitor.shared.vpnConfigurationDetected = false
-                    NetworkMonitor.shared.actualVPNconnectionDetected = false
+                    if NetworkMonitor.shared.vpnConfigurationDetected {
+                        NetworkMonitor.shared.vpnConfigurationDetected = false
+                    }
+                    if NetworkMonitor.shared.actualVPNconnectionDetected {
+                        NetworkMonitor.shared.actualVPNconnectionDetected = false
+                    }
                     if SettingsStore.shared.enableVPNdetection {
+                        L.og.debug("RelayConnection \(self.url) - last disconnect")
                         ConnectionPool.shared.disconnectAllAdditional()
                     }
                 }
+                
+                // Or if it is the first connection after all were disconnected,
+                // we should reset the exponential back off and connectAll
+                else if !wasConnected && isSocketConnected && !ConnectionPool.shared.anyConnected {
+                    L.og.debug("RelayConnection \(self.url) - first connection after all disconnected")
+                    ConnectionPool.shared.connectAll(resetExpBackOff: true)
+                }
+                self.isConnected = isSocketConnected
             }
             self.queue.async(flags: .barrier) { [weak self] in
                 self?.recentAuthAttempts = 0
@@ -105,18 +122,18 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard let self = self else { return }
                 let fromDisconnectedToConnected = !self.isDeviceConnected && isNowConnected
                 let fromConnectedToDisconnected = self.isDeviceConnected && !isNowConnected
-                if self.isDeviceConnected != isNowConnected {
+                if self.isDeviceConnected != isNowConnected { // Status changed
                     self.queue.async(flags: .barrier) { [weak self] in
                         self?.isDeviceConnected = isNowConnected
                     }
                 }
-                if (fromDisconnectedToConnected) {
+                if (fromDisconnectedToConnected) { // Connected
                     if self.relayData.shouldConnect {
                         self.connect(forceConnectionAttempt: true)
                     }
                 }
-                else if fromConnectedToDisconnected {
-                    if self.relayData.shouldConnect {
+                else if fromConnectedToDisconnected { // Disconnected
+                    if self.relayData.shouldConnect || self.isConnected {
                         self.disconnect()
                     }
                 }
@@ -128,6 +145,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         if isOutbox && !vpnGuardOK() { // TODO: Maybe need a small delay so VPN has time to connect first?
             L.sockets.debug("📡📡 No VPN: Connection cancelled (\(self.relayData.url)"); return
         }
+        let anyConnected = ConnectionPool.shared.anyConnected
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             guard self.isDeviceConnected else {
@@ -172,7 +190,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             if self.exponentialReconnectBackOff >= 512 {
                 self.exponentialReconnectBackOff = 512
             }
-            else {
+            else if anyConnected { // Only increase if we have any connection
                 self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
             }
 //            else if !self.isSocketConnecting  {
@@ -383,6 +401,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public func didReceiveError(_ error: Error) {
         // Respond to a WebSocket error event
+        let anyConnected = ConnectionPool.shared.anyConnected
         queue.async(flags: .barrier) { [weak self] in
             self?.webSocketTask?.cancel()
             self?.session?.invalidateAndCancel()
@@ -391,7 +410,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             if (self?.exponentialReconnectBackOff ?? 0) >= 512 {
                 self?.exponentialReconnectBackOff = 512
             }
-            else {
+            else if anyConnected {
                 self?.exponentialReconnectBackOff = max(1, (self?.exponentialReconnectBackOff ?? 0) * 2)
             }
             self?.isSocketConnected = false
