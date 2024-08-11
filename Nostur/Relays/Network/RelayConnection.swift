@@ -90,6 +90,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                         L.og.debug("RelayConnection \(self.url) - last disconnect")
                         ConnectionPool.shared.disconnectAllAdditional()
                     }
+                    sendNotification(.lastDisconnection)
                 }
                 
                 // Or if it is the first connection after all were disconnected,
@@ -97,6 +98,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 else if !wasConnected && isSocketConnected && !ConnectionPool.shared.anyConnected {
                     L.og.debug("RelayConnection \(self.url) - first connection after all disconnected")
                     ConnectionPool.shared.connectAll(resetExpBackOff: true)
+                    // Should trigger resume on any visible feed?
+                    sendNotification(.firstConnection)
                 }
                 self.isConnected = isSocketConnected
             }

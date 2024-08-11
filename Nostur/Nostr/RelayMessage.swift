@@ -104,7 +104,7 @@ class RelayMessage {
         // Try to get just the ID so if it is duplicate we don't parse whole event for nothing
         if let mMessage = try? decoder.decode(MinimalMessage.self, from: dataFromString) { // Thread 3: EXC_BAD_ACCESS (code=1, address=0x1178fc000)
             
-            // These subscriptions: "Following", "CATCHUP-", "RESUME-", "PAGE-"
+            // These subscriptions: "Following-", "CATCHUP-", "RESUME-", "PAGE-"
             // also can include hashtags, if WoT spam filter is enabled we filter these messages out
             if WOT_FILTER_ENABLED() && subCanHaveHashtags(mMessage.subscriptionId) {
                 if !(WebOfTrust.shared.isAllowed(mMessage.pubkey)) {
@@ -220,8 +220,8 @@ struct MinimalEvent: Decodable {
 
 // These subscriptions: "Following", "CATCHUP-", "RESUME-", "PAGE-"
 // also can include hashtags, if WoT spam filter is enabled we filter these messages out
-func subCanHaveHashtags(_ subscriptionId:String) -> Bool {
-    if subscriptionId == "Following" { return true }
+func subCanHaveHashtags(_ subscriptionId: String) -> Bool {
+    if subscriptionId.hasPrefix("Following") { return true }
     if subscriptionId.hasPrefix("CATCHUP-") { return true }
     if subscriptionId.hasPrefix("RESUME-") { return true }
     if subscriptionId.hasPrefix("PAGE-") { return true }

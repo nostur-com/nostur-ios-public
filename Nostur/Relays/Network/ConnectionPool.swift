@@ -296,33 +296,29 @@ public class ConnectionPool: ObservableObject {
     func removeActiveAccountSubscriptions() {
         for (_, connection) in connections {
             connection.queue.async {
-                if connection.nreqSubscriptions.contains("Following") {
-                    let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"), relayType: .READ)
+                let subscriptionsToRemove: Set<String> = connection.nreqSubscriptions.filter({ sub in
+                    return sub.starts(with: "Following-") || sub.starts(with: "List-") || sub.starts(with: "Notifications")
+                })
+                
+                for sub in subscriptionsToRemove {
+                    let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: sub), relayType: .READ)
                     connection.sendMessage(closeFollowing.message)
                 }
-                if connection.nreqSubscriptions.contains("Notifications") {
-                    let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"), relayType: .READ)
-                    connection.sendMessage(closeNotifications.message)
-                }
-                if !connection.nreqSubscriptions.isDisjoint(with: Set(["Following", "Notifications"])) {
-                    connection.nreqSubscriptions.subtract(Set(["Following", "Notifications"]))
-                }
+                connection.nreqSubscriptions.subtract(subscriptionsToRemove)
             }
         }
         
         for (_, connection) in outboxConnections {
             connection.queue.async {
-                if connection.nreqSubscriptions.contains("Following") {
-                    let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"), relayType: .READ)
+                let subscriptionsToRemove: Set<String> = connection.nreqSubscriptions.filter({ sub in
+                    return sub.starts(with: "Following-") || sub.starts(with: "List-") || sub.starts(with: "Notifications")
+                })
+                
+                for sub in subscriptionsToRemove {
+                    let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: sub), relayType: .READ)
                     connection.sendMessage(closeFollowing.message)
                 }
-                if connection.nreqSubscriptions.contains("Notifications") {
-                    let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"), relayType: .READ)
-                    connection.sendMessage(closeNotifications.message)
-                }
-                if !connection.nreqSubscriptions.isDisjoint(with: Set(["Following", "Notifications"])) {
-                    connection.nreqSubscriptions.subtract(Set(["Following", "Notifications"]))
-                }
+                connection.nreqSubscriptions.subtract(subscriptionsToRemove)
             }
         }
     }
@@ -331,17 +327,19 @@ public class ConnectionPool: ObservableObject {
     func allowNewFollowingSubscriptions() {
         // removes "Following" from the active subscriptions so when we try a new one when following keys has changed, it would be ignored because didn't pass !contains..
         for (_, connection) in self.connections {
-            connection.queue.async(flags: .barrier) {
-                if connection.nreqSubscriptions.contains("Following") {
-                    connection.nreqSubscriptions.remove("Following")
-                }
+            connection.queue.async {
+                let subscriptionsToRemove: Set<String> = connection.nreqSubscriptions.filter({ sub in
+                    return sub.starts(with: "Following-")
+                })
+                connection.nreqSubscriptions.subtract(subscriptionsToRemove)
             }
         }
         for (_, connection) in self.outboxConnections {
             connection.queue.async(flags: .barrier) {
-                if connection.nreqSubscriptions.contains("Following") {
-                    connection.nreqSubscriptions.remove("Following")
-                }
+                let subscriptionsToRemove: Set<String> = connection.nreqSubscriptions.filter({ sub in
+                    return sub.starts(with: "Following-")
+                })
+                connection.nreqSubscriptions.subtract(subscriptionsToRemove)
             }
         }
     }
@@ -360,7 +358,7 @@ public class ConnectionPool: ObservableObject {
             }
         }
         
-        if subscriptionId == "Following" {
+        if subscriptionId.starts(with: "Following-") { // TODO: Also List- or not?
             for (_, connection) in self.outboxConnections {
                 connection.queue.async(flags: .barrier) {
                     if connection.nreqSubscriptions.contains(subscriptionId) {

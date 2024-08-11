@@ -361,4 +361,12 @@ extension Notification.Name {
     static var dynamicTextChanged: Notification.Name {
         return Notification.Name("dynamicTextChanged")
     }
+    
+    static var firstConnection: Notification.Name {
+        return Notification.Name("firstConnection")
+    }
+    
+    static var lastDisconnection: Notification.Name {
+        return Notification.Name("lastDisconnection")
+    }
 }
