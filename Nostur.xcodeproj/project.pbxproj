@@ -368,6 +368,7 @@
 		1FB6E70329E52EF3008BE8A6 /* SmoothList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */; };
 		1FB7FF832C5FE03900EAAD07 /* NXDelayur.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB7FF822C5FE03900EAAD07 /* NXDelayur.swift */; };
 		1FB7FF852C5FE05800EAAD07 /* NXQueuedSubscriptionIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB7FF842C5FE05800EAAD07 /* NXQueuedSubscriptionIds.swift */; };
+		1FB7FF872C5FFE9F00EAAD07 /* Kind1Both.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB7FF862C5FFE9F00EAAD07 /* Kind1Both.swift */; };
 		1FB8BD5C2AAB8D9600FBC15F /* NotificationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */; };
 		1FBAA6142B53E50D007C7535 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBAA6132B53E50D007C7535 /* SoundManager.swift */; };
 		1FBAA6182B53E694007C7535 /* Thunderzap16.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1FBAA6152B53E694007C7535 /* Thunderzap16.m4a */; };
@@ -929,6 +930,7 @@
 		1FB7FF812C5FCC0C00EAAD07 /* NosturCloud 7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 7.xcdatamodel"; sourceTree = "<group>"; };
 		1FB7FF822C5FE03900EAAD07 /* NXDelayur.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NXDelayur.swift; sourceTree = "<group>"; };
 		1FB7FF842C5FE05800EAAD07 /* NXQueuedSubscriptionIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NXQueuedSubscriptionIds.swift; sourceTree = "<group>"; };
+		1FB7FF862C5FFE9F00EAAD07 /* Kind1Both.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1Both.swift; sourceTree = "<group>"; };
 		1FB8BD5B2AAB8D9600FBC15F /* NotificationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettings.swift; sourceTree = "<group>"; };
 		1FBAA6132B53E50D007C7535 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
 		1FBAA6152B53E694007C7535 /* Thunderzap16.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = Thunderzap16.m4a; sourceTree = "<group>"; };
@@ -2188,6 +2190,7 @@
 			children = (
 				1FD78EF22A0CB878003E7B3E /* Highlight.swift */,
 				1FD78EF02A0CB813003E7B3E /* Kind1.swift */,
+				1FB7FF862C5FFE9F00EAAD07 /* Kind1Both.swift */,
 				1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */,
 				1F0A3C242A0C113700B30D7E /* Kind1063.swift */,
 				1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */,
@@ -2765,6 +2768,7 @@
 				1FCFDDD229FCEA91005320B8 /* HighlightComposer.swift in Sources */,
 				1FC85CA92B0C23CF00789615 /* CloudRelay+CoreDataClass.swift in Sources */,
 				1F043F072B45036200307526 /* AppDetail.swift in Sources */,
+				1FB7FF872C5FFE9F00EAAD07 /* Kind1Both.swift in Sources */,
 				1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */,
 				1F09D2772B03B16E000B9B2B /* NetworkMonitor.swift in Sources */,
 				1F8CBFFB2AC3002D0077EF7D /* NotificationsMentions.swift in Sources */,

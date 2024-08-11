@@ -167,7 +167,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     var event: Event? // Only touch this in BG context!!!
     
-    var missingPs:Set<String> // missing or have no contact info
+    var missingPs: Set<String> // missing or have no contact info
     var fastTags: [(String, String, String?, String?, String?)] = []
     var hashtags: Set<String> = [] // lowercased hashtags for fast hashtag blocking
     
