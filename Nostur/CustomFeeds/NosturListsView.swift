@@ -12,7 +12,7 @@ struct NosturListsView: View {
     @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)])
+    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.createdAt, order: .reverse)], predicate: NSPredicate(format: "type != %@", "following"))
     var lists: FetchedResults<CloudFeed>
     
     @State var confirmDeleteShown = false

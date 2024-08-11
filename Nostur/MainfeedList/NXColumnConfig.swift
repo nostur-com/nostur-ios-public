@@ -11,6 +11,7 @@ struct NXColumnConfig: Identifiable {
     var id: String
     var columnType: NXColumnType?
     var accountPubkey: String?
+    var name: String
     
     @MainActor
     var wotEnabled: Bool {
