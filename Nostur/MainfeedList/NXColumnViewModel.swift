@@ -12,8 +12,8 @@ import NostrEssentials
 class NXColumnViewModel: ObservableObject {
     
     // "Following" / "List-56D5EE90-17CB-4925" / ...
-    private var id: String? { config?.id }
-    private var config: NXColumnConfig?
+    public var id: String? { config?.id }
+    public var config: NXColumnConfig?
     private var account: CloudAccount?
     
     private var startTime: Date? {
@@ -145,21 +145,83 @@ class NXColumnViewModel: ObservableObject {
         }
         return []
     }
+    
+    // Use feed.refreshedAt for filling gaps, because most recent on screen can be from local db from a different column, so different query and may be missing posts from earlier
+    // We need to only update refreshed at after putting on screen from remote, not from local
+    @MainActor
+    public var refreshedAt: Int64 {
+        get {
+            guard let config else { // 7 days ago if config is somehow missing
+                return (Int64(Date().timeIntervalSince1970) - (7 * 3600 * 24))
+            }
+            
+            switch config.columnType {
+            case .following(let feed):
+                if let refreshedAt = feed.refreshedAt { // 5 minutes before last refreshedAt
+                    return Int64(refreshedAt.timeIntervalSince1970) - (5 * 60)
+                }
+                else if let mostRecentCreatedAt = self.mostRecentCreatedAt {
+                   return Int64(mostRecentCreatedAt) // or most recent on screen
+                }
+            case .pubkeys(let feed):
+                if let refreshedAt = feed.refreshedAt { // 5 minutes before last refreshedAt
+                    return Int64(refreshedAt.timeIntervalSince1970) - (5 * 60)
+                }
+                else if let mostRecentCreatedAt = self.mostRecentCreatedAt {
+                   return Int64(mostRecentCreatedAt) // or most recent on screen
+                }
+            case .relays(_): // 8 hours
+                if let mostRecentCreatedAt = self.mostRecentCreatedAt {
+                   return Int64(mostRecentCreatedAt) // or most recent on screen
+                }
+                return (Int64(Date().timeIntervalSince1970) - (8 * 3600))
+            default:
+                if let mostRecentCreatedAt = self.mostRecentCreatedAt {
+                   return Int64(mostRecentCreatedAt) // or most recent on screen
+                }
+                // else take 8 hours?
+                return (Int64(Date().timeIntervalSince1970) - (8 * 3600))
+            }
+            if let mostRecentCreatedAt = self.mostRecentCreatedAt {
+               return Int64(mostRecentCreatedAt) // or most recent on screen
+            }
+            // else take 7 days
+            return (Int64(Date().timeIntervalSince1970) - (7 * 3600 * 24))
+        }
+        set {
+            guard let config else { return }
+            switch config.columnType {
+            case .following(let feed):
+                feed.refreshedAt = Date(timeIntervalSince1970: TimeInterval(newValue))
+            case .pubkeys(let feed):
+                feed.refreshedAt = Date(timeIntervalSince1970: TimeInterval(newValue))
+            case .relays(let feed): // 8 hours
+                feed.refreshedAt = Date(timeIntervalSince1970: TimeInterval(newValue))
+            default:
+                return
+            }
+        }
+    }
+    
+    private var gapFiller: NXGapFiller?
 
     @MainActor
     public func load(_ config: NXColumnConfig) {
         self.config = config
-        guard isVisible || config.id == "Following" else { return }
+        guard isVisible || config.id.starts(with: "Following-") else { return }
         
+        gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
         startTime = .now
         startFetchFeedTimer()
-        loadLocal(config) // <-- instant, and works offline
-        loadRemote(config) // <--- fetch new posts (catch up)
+        loadLocal(config) { [weak self] in // <-- instant, and works offline
+         // callback to load remote
+            self?.loadRemote(config) // <--- fetch new posts (catch up)
+        }
         listenForNewPosts(config: config) // <-- listen realtime for new posts  TODO: maybe do after 2 second delay?
         loadMoreWhenNearBottom(config)
     }
     
-    private var isPaused: Bool { self.fetchFeedTimer == nil }
+    public var isPaused: Bool { self.fetchFeedTimer == nil }
     
     @MainActor
     private func pause() {
@@ -204,18 +266,10 @@ class NXColumnViewModel: ObservableObject {
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
         
-        let fourHoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
-        
-        // Fetch since 5 minutes before most recent item on screen
-        let sinceTimestamp: Int64 = if case .posts(let nrPosts) = viewState {
-            (nrPosts.first?.created_at ?? fourHoursAgo) - (60 * 5)
-        }
-        else { // or 4 hours ago if empty screen
-            fourHoursAgo
-        }
+//        let fourHoursAgo = Int64(Date().timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
         
         self.listenForNewPosts(config: config)
-        self.sendCatchupReq(config, since: sinceTimestamp)
+        gapFiller?.fetchGap(since: self.refreshedAt, currentGap: 0)
     }
     
     private func fetchFeedTimerNextTick() {
@@ -235,19 +289,20 @@ class NXColumnViewModel: ObservableObject {
     }
 
     @MainActor
-    private func loadLocal(_ config: NXColumnConfig, older: Bool = false) {
+    public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
         let allIdsSeen = self.allIdsSeen
         let currentIdsOnScreen = self.currentIdsOnScreen
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
-        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+//        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
         let wotEnabled = config.wotEnabled
         let repliesEnabled = config.repliesEnabled
   
-        // Fetch since 5 minutes before most recent item on screen
+        // Fetch since 5 minutes before most recent item on screen (since)
+        // Or until oldest (bottom) item on screen (until)
         let (sinceTimestamp, untilTimestamp) = if case .posts(let nrPosts) = viewState {
             ((nrPosts.first?.created_at ?? (60 * 5)) - (60 * 5), (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)))
         }
-        else { // or 0 if empty screen
+        else { // or if empty screen: 0 (since) or now (until)
             (0, Int64(Date().timeIntervalSince1970))
         }
         
@@ -271,7 +326,7 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .pubkeys(let feed):
 #if DEBUG
@@ -287,7 +342,7 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .relays(let feed):
 #if DEBUG
@@ -303,7 +358,7 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .pubkey:
             viewState = .error("Not supported yet")
@@ -465,67 +520,79 @@ class NXColumnViewModel: ObservableObject {
     }
     
     @MainActor
-    private func sendCatchupReq(_ config: NXColumnConfig, since: Int64) {
+    public func getFillGapReqStatement(_ config: NXColumnConfig, since: Int, until: Int? = nil) -> (cmd: () -> Void, subId: String)? {
         switch config.columnType {
         case .following(_):
-            guard let account else { return }
+            guard let account else { return nil }
             let pubkeys = account.followingPubkeys
             let hashtags = account.followingHashtags
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: Int(since))
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until)
             
             // TODO: Update "Following" to "Following-xxx" so we can have multiple following columns
-            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id, filters: filters))
+            return (cmd: {
+                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id, filters: filters))
+            }, subId: "RESUME-" + config.id)
             
         case .pubkeys(let feed):
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: Int(since))
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id, filters: filters).json() {
-                req(message)
+                return (cmd: {
+                    req(message)
+                }, subId: "RESUME-" + config.id)
                 // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
             }
+            return nil
         case .pubkey:
-            let _: String? = nil
+            return nil
         case .relays(let feed):
             let relaysData = feed.relaysData
-            guard !relaysData.isEmpty else { return }
-            req(RM.getGlobalFeedEvents(subscriptionId: "G-RESUME-" + config.id, since: NTimestamp(timestamp: Int(since))), relays: relaysData)
+            guard !relaysData.isEmpty else { return nil }
             
+            let filters = globalFeedReqFilters(since: since, until: until)
+            
+            if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id, filters: filters).json() {
+                return (cmd: {
+                    req(message)
+                }, subId: "G-RESUME-" + config.id)
+            }
+            return nil
         case .hashtags:
-            let _: String? = nil
+            return nil
         case .mentions:
-            let _: String? = nil
+            return nil
         case .newPosts:
-            let _: String? = nil
+            return nil
         case .reactions:
-            let _: String? = nil
+            return nil
         case .reposts:
-            let _: String? = nil
+            return nil
         case .zaps:
-            let _: String? = nil
+            return nil
         case .newFollowers:
-            let _: String? = nil
+            return nil
         case .search:
-            let _: String? = nil
+            return nil
         case .bookmarks:
-            let _: String? = nil
+            return nil
         case .privateNotes:
-            let _: String? = nil
+            return nil
         case .DMs:
-            let _: String? = nil
+            return nil
         case .hot:
-            let _: String? = nil
+            return nil
         case .discover:
-            let _: String? = nil
+            return nil
         case .gallery:
-            let _: String? = nil
+            return nil
         case .explore:
-            let _: String? = nil
+            return nil
         case .articles:
-            let _: String? = nil
+            return nil
         case .none:
-            let _: String? = nil
+            return nil
         }
     }
     
@@ -771,7 +838,7 @@ class NXColumnViewModel: ObservableObject {
 extension NXColumnViewModel {
     
     // Primary function to put Events on screen
-    private func processToScreen(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) {
+    private func processToScreen(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, completion: (() -> Void)? = nil) {
         
         // Apply WoT filter, remove already on screen
         let preparedEvents = prepareEvents(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
@@ -793,7 +860,7 @@ extension NXColumnViewModel {
         guard !partialThreadsWithParent.isEmpty else { return }
         
         Task { @MainActor in
-            self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older)
+            self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older, completion: completion)
             
             #if DEBUG
             if availableWidth == nil {
@@ -955,7 +1022,7 @@ extension NXColumnViewModel {
     }
     
     @MainActor
-    public func putOnScreen(_ addedPosts: [NRPost], config: NXColumnConfig, insertAtEnd: Bool = false) {
+    public func putOnScreen(_ addedPosts: [NRPost], config: NXColumnConfig, insertAtEnd: Bool = false, completion: (() -> Void)? = nil) {
         
         if case .posts(let existingPosts) = viewState { // There are already posts on screen
             
@@ -1054,6 +1121,7 @@ extension NXColumnViewModel {
             sendNextPageReq(config, until: uniqueAddedPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970))
         }
         
+        completion?()
         didFinish()
     }
     
@@ -1088,37 +1156,53 @@ extension NXColumnViewModel {
 extension NXColumnViewModel {
     
     @MainActor // // TODO: Need to handle hashtags. (probably replace instantFeed?, fixes hashtags and maybe also 50 limit)
-    private func loadRemote(_ pubkeys: Set<String>, config: NXColumnConfig) {
+    private func loadRemote(_ pubkeys: Set<String>, config: NXColumnConfig, older: Bool = false) {
 #if DEBUG
         L.og.debug("☘️☘️ \(config.id) loadRemote(pubkeys)")
 #endif
-        let instantFeed = InstantFeed()
-        self.instantFeed = instantFeed
-        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
-        let wotEnabled = config.wotEnabled
-        let repliesEnabled = config.repliesEnabled
-        let older = false // TODO: Fix instantFeed to work with OLDER / UNTIL
+//        let instantFeed = InstantFeed()
+//        self.instantFeed = instantFeed
+//        let wotEnabled = config.wotEnabled
+//        let repliesEnabled = config.repliesEnabled
         
-        bg().perform { [weak self] in
-            instantFeed.start(pubkeys, since: mostRecentCreatedAt) { [weak self] events in
-                guard let self, events.count > 0 else { return }
-#if DEBUG
-                L.og.debug("☘️☘️ \(config.id) loadRemote(pubkeys) instantFeed.onComplete events.count \(events.count.description)")
-#endif
-                
-                // Need to go to main context again to get current screen state
-                Task { @MainActor in
-                    let allIdsSeen = self.allIdsSeen
-                    let currentIdsOnScreen = self.currentIdsOnScreen
-                    let sinceOrUntil = !older ? (self.mostRecentCreatedAt ?? 0) : (self.oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
-  
-                    // Then back to bg for processing
-                    bg().perform {
-                        self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
-                    }
-                }
-            }
+        // Fetch since 5 minutes before most recent item on screen (since)
+        // Or until oldest (bottom) item on screen (until)
+        let (sinceTimestamp, untilTimestamp) = if case .posts(let nrPosts) = viewState {
+            (self.refreshedAt, (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)))
         }
+        else { // or if empty screen: refreshedAt (since) or now (until)
+            (0, Int64(Date().timeIntervalSince1970))
+        }
+        
+        let sinceOrUntil = !older ? sinceTimestamp : untilTimestamp
+        
+        if !older {
+            self.gapFiller?.fetchGap(since: sinceOrUntil, currentGap: 0)
+        }
+        else {
+            // TODO: handler older
+        }
+        
+//        bg().perform { [weak self] in
+//            instantFeed.start(pubkeys, since: mostRecentCreatedAt) { [weak self] events in
+//                guard let self, events.count > 0 else { return }
+//#if DEBUG
+//                L.og.debug("☘️☘️ \(config.id) loadRemote(pubkeys) instantFeed.onComplete events.count \(events.count.description)")
+//#endif
+//                
+//                // Need to go to main context again to get current screen state
+//                Task { @MainActor in
+//                    let allIdsSeen = self.allIdsSeen
+//                    let currentIdsOnScreen = self.currentIdsOnScreen
+//                    let sinceOrUntil = !older ? (self.mostRecentCreatedAt ?? 0) : (self.oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
+//
+//                    // Then back to bg for processing
+//                    bg().perform {
+//                        self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+//                    }
+//                }
+//            }
+//        }
     }
 }
 
@@ -1278,4 +1362,90 @@ func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
     }
     
     return nil
+}
+
+// Catch up - resume feed
+// Fetch posts since last time in X hour windows
+// Wait Y seconds per window
+// Can't know if fetch window has no posts or connection failure
+// So before advancing to next window, make sure we have connection
+// Note: don't use for "older"
+class NXGapFiller {
+    private var since: Int64
+    private var windowSize: Int // Hours
+    private var timeout: Double // Seconds
+    private var currentGap: Int // used to calculate nextGapSince
+    private weak var columnVM: NXColumnViewModel?
+    private var backlog: Backlog
+    
+    private var windowStart: Int { // Depending on older or not we use start/end as since/until
+        return Int(since) + (currentGap * 3600 * windowSize)
+    }
+    private var windowEnd: Int { // Depending on older or not we use start/end as since/until
+        windowStart + (3600 * windowSize)
+    }
+    
+    public init(since: Int64, windowSize: Int = 4, timeout: Double = 2, currentGap: Int = 0, columnVM: NXColumnViewModel) {
+        self.since = since
+        self.windowSize = windowSize
+        self.timeout = timeout
+        self.currentGap = currentGap
+        self.columnVM = columnVM
+        self.backlog = Backlog(timeout: timeout, auto: true)
+    }
+    
+    @MainActor
+    public func fetchGap(since: Int64, currentGap: Int) {
+        guard let columnVM, let config = columnVM.config else { return }
+        self.since = since
+        self.currentGap = currentGap
+        
+        // Check connection?
+        guard ConnectionPool.shared.anyConnected else {
+            L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") Not connected, skipping fetchGap")
+            return
+        }
+        
+        // Check if paused
+        guard !columnVM.isPaused else {
+            L.og.debug("☘️☘️🔴🔴 \(columnVM.id ?? "?") paused, skipping fetchGap")
+            return
+        }
+                
+        // send REQ
+        if let (cmd, subId) = columnVM.getFillGapReqStatement(config, since: windowStart, until: windowEnd) {
+            
+            let reqTask = ReqTask(
+//                prio: true,
+//                debounceTime: ??,
+                timeout: 15.0,
+                subscriptionId: subId,
+                reqCommand: { [weak self] _ in
+                    guard let self else { return }
+                    L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted())")
+                    cmd()
+                },
+                processResponseCommand: { [weak self] _, _, _ in
+                    guard let self else { return }
+                    self.columnVM?.refreshedAt = Int64(Date().timeIntervalSince1970)
+                    self.columnVM?.loadLocal(config)
+                    
+                    if self.windowStart < Int(Date().timeIntervalSince1970) {
+                        self.fetchGap(since: self.since, currentGap: self.currentGap + 1) // next gap (no since param)
+                    }
+                    else {
+                        self.currentGap = 0
+                    }
+                },
+                timeoutCommand: { subId in
+                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") timeout in fetchGap \(subId)")
+                    Task { @MainActor in
+                        self.columnVM?.loadLocal(config)
+                    }
+                })
+
+            self.backlog.add(reqTask)
+            reqTask.fetch()
+        }
+    }
 }
