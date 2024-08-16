@@ -63,6 +63,7 @@ struct LiveEventsBanner: View {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Leave") {
                                 LiveKitVoiceSession.shared.activeNest = nil
+                                LiveKitVoiceSession.shared.visibleNest = nil
                             }
                         }
                         
