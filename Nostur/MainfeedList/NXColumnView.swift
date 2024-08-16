@@ -10,6 +10,7 @@ import NavigationBackport
 
 struct NXColumnView: View {
     
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var dim: DIMENSIONS
     public let config: NXColumnConfig
     @StateObject private var viewModel = NXColumnViewModel()
@@ -58,6 +59,28 @@ struct NXColumnView: View {
             .nbUseNavigationStack(.never)
         })
         
+        
+        // Resume on (re)connect or back from background
+        .onChange(of: scenePhase) { newScenePhase in
+            switch newScenePhase {
+            case .active:
+                if !IS_CATALYST {
+                    if (NRState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
+                        viewModel.resume()
+                    }
+                }
+                else {
+                    viewModel.resume()
+                }
+                
+            case .background:
+                if !IS_CATALYST {
+                    viewModel.pause()
+                }
+            default:
+                break
+            }
+        }
     }
 }
 
