@@ -11,10 +11,9 @@ import NostrEssentials
 
 class NXColumnViewModel: ObservableObject {
     
-    // "Following" / "List-56D5EE90-17CB-4925" / ...
+    // "Following-..." / "List-56D5EE90-17CB-4925" / ...
     public var id: String? { config?.id }
     public var config: NXColumnConfig?
-    private var account: CloudAccount?
     
     private var startTime: Date? {
         didSet {
@@ -232,7 +231,7 @@ class NXColumnViewModel: ObservableObject {
     public var isPaused: Bool { self.fetchFeedTimer == nil }
     
     @MainActor
-    private func pause() {
+    public func pause() {
         guard let config, !isPaused else { return }
 #if DEBUG
         L.og.debug("☘️☘️ \(config.id) pause()")
@@ -264,7 +263,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     @MainActor
-    private func resume() {
+    public func resume() {
         guard let config else { return }
 #if DEBUG
         L.og.debug("☘️☘️ \(config.id) resume()")
@@ -273,9 +272,6 @@ class NXColumnViewModel: ObservableObject {
         
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
-        
-//        let fourHoursAgo = Int64(Date().timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
-        
         self.listenForNewPosts(config: config)
         gapFiller?.fetchGap(since: self.refreshedAt, currentGap: 0)
     }
@@ -287,7 +283,6 @@ class NXColumnViewModel: ObservableObject {
             setFirstTimeCompleted()
 
             Task { @MainActor in
-                // TODO: Check if everthing is restored, .sendRealtimeReq is enough?
                 self.sendRealtimeReq(config)
             }
         }
@@ -298,7 +293,6 @@ class NXColumnViewModel: ObservableObject {
         let allIdsSeen = self.allIdsSeen
         let currentIdsOnScreen = self.currentIdsOnScreen
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
-//        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
         let wotEnabled = config.wotEnabled
         let repliesEnabled = config.repliesEnabled
   
@@ -403,74 +397,17 @@ class NXColumnViewModel: ObservableObject {
             viewState = .error("Missing column type")
         }
     }
-    
-    @MainActor
-    private func loadRemote(_ config: NXColumnConfig) {
-        switch config.columnType {
-        case .following(_):
-            guard let account else { return } // TODO: Need to handle hashtags
-            loadRemote(account.followingPubkeys, config: config)
-        case .pubkeys(let feed):
-            loadRemote(feed.contactPubkeys, config: config)
-        case .pubkey:
-            viewState = .error("Not supported yet")
-        case .relays(let feed):
-            let relaysData = feed.relaysData
-            guard !relaysData.isEmpty else {
-                viewState = .error("No relays selected for this custom feed")
-                return
-            }
-            loadRemote(relaysData, config: config)
-        case .hashtags:
-            viewState = .error("Not supported yet")
-        case .mentions:
-            viewState = .error("Not supported yet")
-        case .newPosts:
-            viewState = .error("Not supported yet")
-        case .reactions:
-            viewState = .error("Not supported yet")
-        case .reposts:
-            viewState = .error("Not supported yet")
-        case .zaps:
-            viewState = .error("Not supported yet")
-        case .newFollowers:
-            viewState = .error("Not supported yet")
-        case .search:
-            viewState = .error("Not supported yet")
-        case .bookmarks:
-            viewState = .error("Not supported yet")
-        case .privateNotes:
-            viewState = .error("Not supported yet")
-        case .DMs:
-            viewState = .error("Not supported yet")
-        case .hot:
-            viewState = .error("Not supported yet")
-        case .discover:
-            viewState = .error("Not supported yet")
-        case .gallery:
-            viewState = .error("Not supported yet")
-        case .explore:
-            viewState = .error("Not supported yet")
-        case .articles:
-            viewState = .error("Not supported yet")
-        case .none:
-            viewState = .error("Missing column type")
-        }
-    }
-    
+        
     @MainActor
     private func sendRealtimeReq(_ config: NXColumnConfig) {
         switch config.columnType {
-        case .following(_):
-            guard let account else { return }
+        case .following(let feed):
+            guard let account = feed.account else { return }
             let pubkeys = account.followingPubkeys
             let hashtags = account.followingHashtags
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp)
             
-            // TODO: Update "Following" to "Following-xxx" so we can have multiple following columns
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
-            
-            fetchProfiles(pubkeys: pubkeys, subscriptionId: "Profiles-" + config.id)
         case .pubkeys(let feed):
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
@@ -804,7 +741,6 @@ class NXColumnViewModel: ObservableObject {
             debounceTime: 1.0, // getting all missing replyTo's in 1 req, so can debounce a bit longer
             timeout: 6.0,
             reqCommand: { (taskId) in
-//                guard let self else { return }
                 let danglerIds = danglers.compactMap { $0.replyToId }
                     .filter { postId in
                         Importer.shared.existingIds[postId] == nil && postId.range(of: ":") == nil // @TODO: <-- Workaround for aTag instead of e here, need to handle some other way
@@ -830,7 +766,6 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor in
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
-//                        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
                         
@@ -854,7 +789,6 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor in
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
-//                        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
                         
@@ -867,10 +801,8 @@ class NXColumnViewModel: ObservableObject {
                 }
             })
 
-    //        DispatchQueue.main.async {
             self.backlog.add(danglingFetchTask)
-    //        }
-        danglingFetchTask.fetch()
+            danglingFetchTask.fetch()
     }
 }
 
@@ -975,14 +907,12 @@ extension NXColumnViewModel {
         
         guard WOT_FILTER_ENABLED() else { return events }  // Return all if globally disabled
         
-        
         if case .relays(_) = config.columnType {
             // if we are here, type is .relays, only filter if the feed specific WoT filter is enabled
             return events.filter { $0.inWoT }
         }
                 
         // TODO: handle other config.columnTypes
-        
         return events
     }
     
@@ -1360,7 +1290,7 @@ extension NXColumnViewModel {
             .sink { [weak self] lastCreatedAt in
                 
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.id) onAppearSubject lastCreatedAt \(lastCreatedAt)")
+                L.og.debug("☘️☘️ \(config.id) loadMoreWhenNearBottom.onAppearSubject lastCreatedAt \(lastCreatedAt)")
 #endif
                 // fetch older, can reuse NXDelayur?
                 self?.loadLocal(config, older: true)
@@ -1432,11 +1362,6 @@ func extractDanglingReplies(_ nrPosts: [NRPost]) -> (danglers: [NRPost], threads
     return (danglers: danglers, threads: threads)
 }
 
-
-// TODO: loadSomeonesFeed()
-// TODO: Still reusing old InstantFeed(), good or refactor/clean up?
-
-
 func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
     if !hashtags.isEmpty {
         let regex = ".*(" + hashtags.map {
@@ -1447,3 +1372,5 @@ func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
     
     return nil
 }
+
+// TODO: Still reusing old InstantFeed(), good or refactor/clean up?

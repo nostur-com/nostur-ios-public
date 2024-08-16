@@ -59,8 +59,6 @@ class NXGapFiller {
         if let (cmd, subId) = columnVM.getFillGapReqStatement(config, since: windowStart, until: windowEnd) {
             
             let reqTask = ReqTask(
-//                prio: true,
-//                debounceTime: ??,
                 timeout: 15.0,
                 subscriptionId: subId,
                 reqCommand: { [weak self] _ in

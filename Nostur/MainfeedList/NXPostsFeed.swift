@@ -40,16 +40,11 @@ struct NXPostsFeed: View {
                     .listRowSeparator(.hidden)
                     .listRowBackground(themes.theme.listBackground)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-//                    .alignmentGuide(.listRowSeparatorLeading) { _ in
-//                      -100
-//                    }
                 }
             }
             .environment(\.defaultMinListRowHeight, 50)
             .listStyle(.plain)
             .introspect(.list, on: .iOS(.v15)) { view in
-//                view.backgroundView = UIView()
-//                view.backgroundColor = UIColor(themes.theme.listBackground)
                 DispatchQueue.main.async {
                   self.tableView = view
                 }
@@ -61,8 +56,6 @@ struct NXPostsFeed: View {
                 }
             }
             .introspect(.list, on: .iOS(.v16...)) { view in
-//                view.backgroundView = UIView()
-//                view.subviews.dropFirst(1).first?.backgroundColor = UIColor(themes.theme.listBackground)
                 DispatchQueue.main.async {
                   self.collectionView = view
                 }
@@ -117,9 +110,11 @@ struct NXPostsFeed: View {
                         scrollToTop(proxy)
                     })
             }
-            .overlay(alignment: .top) {
+            #if DEBUG
+            .overlay(alignment: .bottom) {
                 Text("posts: \(posts.count) atTop: \(vm.isAtTop ? "1" : "0") load time: \(vm.formattedLoadTime)")
             }
+            #endif
             .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
                 guard vm.isVisible else { return }
                 scrollToFirstUnread(proxy)
