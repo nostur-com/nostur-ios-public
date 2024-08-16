@@ -164,7 +164,13 @@ struct SingleMediaViewer: View {
                     else {
                         ProgressView()
                             .onAppear {
-                                theDimensions = getGifDimensions(data: data)
+                                DispatchQueue.global().async {
+                                    let theDimensions = getGifDimensions(data: data)
+                                    DispatchQueue.main.async {
+                                        self.theDimensions = theDimensions
+                                    }
+                                }
+                                
                             }
                     }
                 }
