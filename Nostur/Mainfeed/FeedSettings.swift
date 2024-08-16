@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FeedSettings: View {
     @Environment(\.dismiss) private var dismiss
-    public var config: NXColumnConfig
+    @ObservedObject public var feed: CloudFeed
     @EnvironmentObject private var la: LoggedInAccount
     
     var body: some View {
@@ -24,7 +24,7 @@ struct FeedSettings: View {
             }
             
             
-            if case .following(let feed) = config.columnType {
+            if feed.type == "following" {
                 Section("") {
                     Toggle(isOn: Binding(get: {
                         feed.repliesEnabled
@@ -46,7 +46,7 @@ struct FeedSettings: View {
                 }
             }
             
-            if case .relays(let feed) = config.columnType {
+            if feed.type == "relays" {
                 Section("") {
                     Toggle(isOn: Binding(get: {
                         feed.repliesEnabled
@@ -68,7 +68,7 @@ struct FeedSettings: View {
                 }
             }
             
-            if case .pubkeys(let feed) = config.columnType {
+            if feed.type == "pubkeys" || feed.type == nil {
                 Section("") {
                     Toggle(isOn: Binding(get: {
                         feed.repliesEnabled
@@ -84,15 +84,6 @@ struct FeedSettings: View {
                 }
             }
         }
-//        .onChange(of: lvm.wotEnabled) { wotEnabled in
-//            guard let list = list else { return }
-//            list.wotEnabled = wotEnabled
-//        }
-//        .onDisappear {
-//            if needsReload {
-//                lvm.reload()
-//            }
-//        }
         .navigationTitle("Feed settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -111,9 +102,8 @@ struct FeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             VStack {
-                if let list = PreviewFetcher.fetchList() {
-                    let config = NXColumnConfig(id: list.id?.uuidString ?? "?", columnType: .pubkeys(list), accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: "Following")
-                    FeedSettings(config: config)
+                if let feed = PreviewFetcher.fetchList() {
+                    FeedSettings(feed: feed)
                 }
                 Spacer()
             }
