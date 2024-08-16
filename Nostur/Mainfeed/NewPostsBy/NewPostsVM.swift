@@ -101,7 +101,7 @@ class NewPostsVM: ObservableObject {
             
             guard !nrPosts.isEmpty else { return }
             
-            guard SettingsStore.shared.fetchCounts else { return }
+            guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
             for nrPost in nrPosts.prefix(5) {
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
             }
@@ -113,7 +113,7 @@ class NewPostsVM: ObservableObject {
     }
     
     public func prefetch(_ post:NRPost) {
-        guard SettingsStore.shared.fetchCounts else { return }
+        guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
         guard !self.prefetchedIds.contains(post.id) else { return }
         guard let index = self.posts.firstIndex(of: post) else { return }
         guard index % 5 == 0 else { return }

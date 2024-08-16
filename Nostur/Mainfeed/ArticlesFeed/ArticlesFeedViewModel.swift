@@ -121,7 +121,7 @@ class ArticlesFeedViewModel: ObservableObject {
             
             guard !sortedByPublishedAt.isEmpty else { return }
             
-            guard SettingsStore.shared.fetchCounts else { return }
+            guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
             for nrPost in sortedByPublishedAt.prefix(5) {
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
             }
