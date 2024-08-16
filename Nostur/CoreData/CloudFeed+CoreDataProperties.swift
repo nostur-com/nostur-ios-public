@@ -39,6 +39,7 @@ extension CloudFeed {
     @NSManaged public var listId: String?
     @NSManaged public var repliesEnabled: Bool
     @NSManaged public var accountPubkey: String?
+    @NSManaged public var profilesFetchedAt: Date? // use as "since" for checking new profiles for this feed
 }
 
 extension CloudFeed : Identifiable {
