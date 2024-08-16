@@ -18,6 +18,8 @@ struct NXColumnView: View {
     
     @State var showFeedSettings = false
     @State private var feedSettingsConfig: NXColumnConfig?
+    @State private var didLoad = false
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -33,6 +35,9 @@ struct NXColumnView: View {
             }
         }
         .onAppear {
+            guard !didLoad else { return }
+            didLoad = true
+            L.og.debug("☘️☘️ \(config.id) .onAppear")
             viewModel.isVisible = isVisible
             viewModel.availableWidth = dim.availableNoteRowWidth
             viewModel.load(config)
