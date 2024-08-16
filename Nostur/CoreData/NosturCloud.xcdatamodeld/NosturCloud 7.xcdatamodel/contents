@@ -87,6 +87,7 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="listId" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="profilesFetchedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="pubkeys" optional="YES" attributeType="String"/>
         <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="relays" optional="YES" attributeType="String"/>

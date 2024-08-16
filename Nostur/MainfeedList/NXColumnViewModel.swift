@@ -1220,17 +1220,48 @@ extension NXColumnViewModel {
         }
         else { // or if empty screen: refreshedAt (since) or now (until)
             (0, Int64(Date().timeIntervalSince1970))
-        }
-        
-        let sinceOrUntil = !older ? sinceTimestamp : untilTimestamp
-        
-        if !older {
-            self.gapFiller?.fetchGap(since: sinceOrUntil, currentGap: 0)
+    private func fetchProfiles(_ config: NXColumnConfig) {
+        guard let feed = config.feed else { return }
+        let since: Int? = if let profilesFetchedAt = feed.profilesFetchedAt {
+            Int(profilesFetchedAt.timeIntervalSince1970)
         }
         else {
-            // TODO: handler older
+            nil
         }
         
+        let pubkeys: Set<String> = switch config.columnType {
+        case .following(let feed):
+            feed.account?.followingPubkeys ?? []
+        case .pubkeys(let feed): 
+            feed.contactPubkeys
+        case .someoneElses(_):
+            config.pubkeys
+        default:
+            []
+        }
+        
+        guard !pubkeys.isEmpty else {
+            L.fetching.debug("not checking profiles, pubkeys isEmpty")
+            return
+        }
+        
+        L.fetching.info("checking profiles since: \(since?.description ?? "")")
+        
+        let subscriptionId = "Profiles-" + feed.subscriptionId
+        ConnectionPool.shared
+            .sendMessage(
+                NosturClientMessage(
+                    clientMessage: NostrEssentials.ClientMessage(
+                        type: .REQ,
+                        subscriptionId: subscriptionId,
+                        filters: [Filters(authors: pubkeys, kinds: [0], since: since)]
+                    ),
+                    relayType: .READ
+                ),
+                subscriptionId: subscriptionId
+            )
+        feed.profilesFetchedAt = .now
+    }
 //        bg().perform { [weak self] in
 //            instantFeed.start(pubkeys, since: mostRecentCreatedAt) { [weak self] events in
 //                guard let self, events.count > 0 else { return }
