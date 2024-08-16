@@ -129,6 +129,7 @@ class NXColumnViewModel: ObservableObject {
     @Published public var isAtTop: Bool = true
     private var fetchFeedTimer: Timer? = nil
     private var newEventsInDatabaseSub: AnyCancellable?
+    private var newPostSavedSub: AnyCancellable?
     private var firstConnectionSub: AnyCancellable?
     private var reloadWhenNeededSub: AnyCancellable?
     private var lastDisconnectionSub: AnyCancellable?
@@ -238,10 +239,46 @@ class NXColumnViewModel: ObservableObject {
                 self?.loadRemote(config) // <--- fetch new posts (with gap filler)
             }
         }
+        
+        listenForOwnNewPostSaved(config)
         listenForNewPosts(config: config) // <-- listen realtime for new posts  TODO: maybe do after 2 second delay?
         listenForFirstConnection(config: config)
         loadMoreWhenNearBottom(config)
         reloadWhenNeeded(config)
+    }
+    
+    @MainActor
+    private func listenForOwnNewPostSaved(_ config: NXColumnConfig) {
+        guard newPostSavedSub == nil else { return }
+        newPostSavedSub = receiveNotification(.newPostSaved)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+
+                let pubkeys: Set<String> = switch config.columnType {
+                case .pubkeys(let feed):
+                    feed.contactPubkeys
+                case .following(let feed):
+                    (config.account?.followingPubkeys ?? []).union(Set([config.accountPubkey ?? ""]))
+                default:
+                    []
+                }
+                
+                let currentIdsOnScreen = self.currentIdsOnScreen
+                let repliesEnabled = config.repliesEnabled
+                
+                let event = notification.object as! Event
+                bg().perform { [weak self] in
+                    guard pubkeys.contains(event.pubkey), !currentIdsOnScreen.contains(event.id) else { return }
+                    EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NXColumnViewModel.listenForOwnNewPostSaved")
+                    // If we are not hiding replies, we render leafs + parents --> withParents: true
+                    //     and we don't load replies (withReplies) because any reply we follow should already be its own leaf (PostOrThread)
+                    // If we are hiding replies (view), we show mini pfp replies instead, for that we need reply info: withReplies: true
+                    let newOwnPost = NRPost(event: event, withParents: repliesEnabled, withReplies: !repliesEnabled, withRepliesCount: true, cancellationId: event.cancellationId)
+                    Task { @MainActor in
+                        self?.putOnScreen([newOwnPost], config: config)
+                    }
+                }
+            }
     }
     
     // Reload (after toggle replies enabled etc)
@@ -369,7 +406,7 @@ class NXColumnViewModel: ObservableObject {
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
-        case .someoneElses(let _):
+        case .someoneElses(_):
 #if DEBUG
             L.og.debug("☘️☘️ \(config.id) loadLocal(.someoneElses)\(older ? "older" : "")")
 #endif
