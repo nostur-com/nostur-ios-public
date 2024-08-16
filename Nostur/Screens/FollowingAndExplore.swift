@@ -369,7 +369,7 @@ struct FollowingAndExplore: View, Equatable {
             let newFollowingFeed = CloudFeed(context: context)
             newFollowingFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
             newFollowingFeed.name = "Following for " + la.account.anyName
-            newFollowingFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds" (TODO: Need to filter from custom feeds edit list)
+            newFollowingFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds" 
             newFollowingFeed.id = UUID()
             newFollowingFeed.createdAt = .now
             newFollowingFeed.accountPubkey = la.pubkey
@@ -408,7 +408,7 @@ struct FollowingAndExplore: View, Equatable {
             let newExploreFeed = CloudFeed(context: context)
             newExploreFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
             newExploreFeed.name = "Explore feed"
-            newExploreFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds" (TODO: Need to filter from custom feeds edit list)
+            newExploreFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
             newExploreFeed.id = UUID()
             newExploreFeed.createdAt = .now
             newExploreFeed.accountPubkey = EXPLORER_PUBKEY

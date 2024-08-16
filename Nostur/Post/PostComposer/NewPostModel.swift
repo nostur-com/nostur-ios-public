@@ -288,7 +288,7 @@ public final class NewPostModel: ObservableObject {
         let nostrNpubTags = npubs.compactMap { Keys.hex(npub: $0) }
         
         // Scan for any nostr:note1 or nevent1 and return q tags
-        let qTags = Set(getQuoteTags(nEvent.content))
+        let qTags = Set(getQuoteTags(nEvent.content)) // TODO: Should resolve p-tags from quoted events and include those too.
         
         // #hashtags to .t tags
         nEvent = putHashtagsInTags(nEvent)
