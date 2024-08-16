@@ -29,6 +29,10 @@ struct NXPostsFeed: View {
                 ForEach(posts) { nrPost in
                     ZStack(alignment: .leading) {
                         PostOrThread(nrPost: nrPost)
+                            .onBecomingVisible {
+                                // SettingsStore.shared.fetchCounts should be true for below to work
+                                vm.prefetch(nrPost)
+                            }
                     }
                     .id(nrPost.id)
                     .onAppear {
