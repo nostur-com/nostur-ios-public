@@ -15,9 +15,8 @@ struct NXColumnView: View {
     public let config: NXColumnConfig
     @StateObject private var viewModel = NXColumnViewModel()
     public var isVisible: Bool
-    
-    @State var showFeedSettings = false
-    @State private var feedSettingsConfig: NXColumnConfig?
+
+    @State private var feedSettingsFeed: CloudFeed?
     @State private var didLoad = false
     
     var body: some View {
@@ -59,12 +58,11 @@ struct NXColumnView: View {
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             guard isVisible, let config = viewModel.config else { return }
-            showFeedSettings = true
-            feedSettingsConfig = config
+            feedSettingsFeed = config.feed
         }
-        .sheet(item: $feedSettingsConfig, content: { configToUse in
+        .sheet(item: $feedSettingsFeed, content: { feed in
             NBNavigationStack {
-                FeedSettings(config: configToUse)
+                FeedSettings(feed: feed)
             }
             .nbUseNavigationStack(.never)
         })
