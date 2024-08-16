@@ -15,6 +15,8 @@ struct NXColumnView: View {
     @StateObject private var viewModel = NXColumnViewModel()
     public var isVisible: Bool
     
+    @State var showFeedSettings = false
+    @State private var feedSettingsConfig: NXColumnConfig?
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -44,6 +46,18 @@ struct NXColumnView: View {
             guard viewModel.availableWidth != newValue else { return }
             viewModel.availableWidth = newValue
         }
+        .onReceive(receiveNotification(.showFeedToggles)) { _ in
+            guard isVisible, let config = viewModel.config else { return }
+            showFeedSettings = true
+            feedSettingsConfig = config
+        }
+        .sheet(item: $feedSettingsConfig, content: { configToUse in
+            NBNavigationStack {
+                FeedSettings(config: configToUse)
+            }
+            .nbUseNavigationStack(.never)
+        })
+        
     }
 }
 

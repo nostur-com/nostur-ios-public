@@ -76,9 +76,7 @@ struct FollowingAndExplore: View, Equatable {
         }
         return String(localized: "Feed", comment: "Tab title for a feed")
     }
-    
-    @State var showFeedSettings = false
-    
+
     // If only the Following feed is enabled and all other feeds are disabled, we can hide the entire tab bar
     private var shouldHideTabBar: Bool {
         if (account.followingPubkeys.count > 10 && enableHotFeed) { return false }
@@ -263,39 +261,8 @@ struct FollowingAndExplore: View, Equatable {
                         EmptyView()
                     }                        
                 }
-                
-                
             }
-            
         }
-        .sheet(isPresented: $showFeedSettings, content: {
-            NBNavigationStack {
-                switch selectedSubTab {
-                case "Following":
-                    FeedSettings(lvm: LVMManager.shared.followingLVM(forAccount: account))
-                        .environmentObject(la)
-                case "List":
-                    if let list = selectedList {
-                        FeedSettings(lvm: LVMManager.shared.listLVM(forList: list), list: list)
-                            .environmentObject(la)
-                    }
-                case "Explore":
-                    FeedSettings(lvm: exploreVM)
-                        .environmentObject(la)
-                case "Hot":
-                    HotFeedSettings(hotVM: hotVM)
-                case "Discover":
-                    DiscoverFeedSettings(discoverVM: discoverVM)
-                case "Articles":
-                    ArticleFeedSettings(vm: articlesVM)
-                case "Gallery":
-                    GalleryFeedSettings(vm: galleryVM)
-                default:
-                    EmptyView()
-                }
-            }
-            .nbUseNavigationStack(.never)
-        })
         .onAppear {
             if selectedSubTab == "List" {
                 if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {

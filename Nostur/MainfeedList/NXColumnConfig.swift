@@ -7,7 +7,12 @@
 
 import Foundation
 
-struct NXColumnConfig: Identifiable {
+struct NXColumnConfig: Identifiable, Equatable {
+    
+    static func == (lhs: NXColumnConfig, rhs: NXColumnConfig) -> Bool {
+        lhs.id == rhs.id
+    }
+    
     var id: String
     var columnType: NXColumnType?
     var accountPubkey: String?
@@ -15,33 +20,46 @@ struct NXColumnConfig: Identifiable {
     
     @MainActor
     var wotEnabled: Bool {
-        return switch columnType {
-        case .following(_):
-            true // true because can also have hashtags
-        case .relays(let feed):
-            feed.wotEnabled
-        case .hashtags(let feed):
-            feed.wotEnabled
-        default:
-            false
+        get { feed?.wotEnabled ?? false }
+        set { 
+            feed?.wotEnabled = newValue
+            DataProvider.shared().save()
         }
     }
     
     @MainActor
     var repliesEnabled: Bool {
-        return switch columnType {
-        case .following(let feed):
-            feed.repliesEnabled
-        case .pubkeys(let feed):
-            feed.repliesEnabled
-        case .relays(let feed):
-            feed.repliesEnabled
-        case .hashtags(let feed):
-            feed.repliesEnabled
-        default:
-            false
+        get { (feed?.repliesEnabled ?? false) }
+        set {
+            feed?.repliesEnabled = newValue
+            DataProvider.shared().save()
         }
     }
+    
+    // helper to get feed (in enum)
+    var feed: CloudFeed? {
+        switch columnType {
+        case .following(let feed):
+            return feed
+        case .pubkeys(let feed):
+            return feed
+        case .relays(let feed):
+            return feed
+        case .hashtags(let feed):
+            return feed
+        default:
+            return nil
+        }
+    }
+    
+    // helper to get account
+    var account: CloudAccount? {
+        guard let accountPubkey = feed?.accountPubkey,
+              let account = NRState.shared.accounts.first(where: { $0.publicKey == accountPubkey })
+        else { return nil }
+        return account
+    }
+    
     // Temporary for SomeoneElses feed
     var pubkeys: Set<String> = []
     var hashtags: Set<String> = []
