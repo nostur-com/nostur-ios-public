@@ -369,7 +369,7 @@ class NXColumnViewModel: ObservableObject {
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
-        case .someoneElses(let pubkey):
+        case .someoneElses(let _):
 #if DEBUG
             L.og.debug("☘️☘️ \(config.id) loadLocal(.someoneElses)\(older ? "older" : "")")
 #endif
