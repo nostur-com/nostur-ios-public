@@ -335,6 +335,19 @@ struct FollowingAndExplore: View, Equatable {
                 selectedSubTab = "Following"
             }
         }
+        .onReceive(receiveNotification(.showingSomeoneElsesFeed)) { notification in
+            let nrContact = notification.object as! NRContact
+            if SettingsStore.shared.appWideSeenTracker {
+                Deduplicator.shared.onScreenSeen = []
+            }
+            createSomeoneElsesFeed(nrContact.pubkey)
+        }
+        .onReceive(receiveNotification(.revertToOwnFeed)) { _ in
+            if SettingsStore.shared.appWideSeenTracker {
+                Deduplicator.shared.onScreenSeen = []
+            }
+            createFollowingFeed()
+        }        
     }
     
     private func removeDuplicateLists() {
@@ -405,6 +418,15 @@ struct FollowingAndExplore: View, Equatable {
                 newFollowingFeed.repliesEnabled = !followingListState.hideReplies
             }
         }
+    }
+    
+    private func createSomeoneElsesFeed(_ pubkey: String) {
+        
+        // Switch to main tab
+        UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+        UserDefaults.standard.setValue("Following", forKey: "selected_subtab")
+        
+        followingConfig = NXColumnConfig(id: "List-\(pubkey.prefix(18))", columnType: .someoneElses(pubkey), name: "Other feed")
     }
     
     // Copy paste of createFollowingFeed

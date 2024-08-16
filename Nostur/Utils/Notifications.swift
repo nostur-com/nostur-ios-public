@@ -338,6 +338,10 @@ extension Notification.Name {
         return Notification.Name("showingSomeoneElsesFeed")
     }
     
+    static var revertToOwnFeed: Notification.Name {
+        return Notification.Name("revertToOwnFeed")
+    }
+    
     static var WoTReady: Notification.Name {
         return Notification.Name("WoTReady")
     }

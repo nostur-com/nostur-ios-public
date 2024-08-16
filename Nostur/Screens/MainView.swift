@@ -120,6 +120,7 @@ struct MainView: View {
                                         .onTapGesture {
                                             guard let account = Nostur.account() else { return }
                                             self.showingOtherContact = nil
+                                            sendNotification(.revertToOwnFeed)
                                         }
                                 }
                             }

@@ -222,6 +222,23 @@ class NXColumnViewModel: ObservableObject {
         loadLocal(config) { [weak self] in // <-- instant, and works offline
          // callback to load remote
             self?.loadRemote(config) // <--- fetch new posts (catch up)
+        // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
+        if case .someoneElses(let pubkey) = config.columnType {
+            // Reset all posts already seen for SomeoneElses Feed
+            allIdsSeen = []
+            fetchKind3ForSomeoneElsesFeed(pubkey, config: config) { [weak self] updatedConfig in
+                self?.config = updatedConfig
+                self?.loadLocal(updatedConfig) { [weak self] in // <-- instant, and works offline
+                    // callback to load remote
+                    self?.loadRemote(updatedConfig) // <--- fetch new posts (with gap filler)
+                }
+            }
+        }
+        else { // Else we can start as normal with loadLocal
+            loadLocal(config) { [weak self] in // <-- instant, and works offline
+                // callback to load remote
+                self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+            }
         }
         listenForNewPosts(config: config) // <-- listen realtime for new posts  TODO: maybe do after 2 second delay?
         listenForFirstConnection(config: config)
@@ -343,6 +360,23 @@ class NXColumnViewModel: ObservableObject {
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
+        case .someoneElses(let pubkey):
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.id) loadLocal(.someoneElses)\(older ? "older" : "")")
+#endif
+            // pubkeys and hashtags coming from loadLocal(_:pubkeys: hashtags:) not from config
+            let hashtagRegex: String? = !config.hashtags.isEmpty ? makeHashtagRegex(config.hashtags) : nil
+            bg().perform { [weak self] in
+                guard let self else { return }
+                let fr = if !older {
+                    Event.postsByPubkeys(config.pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex)
+                }
+                else {
+                    Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex)
+                }
+                guard let events: [Event] = try? bg().fetch(fr) else { return }
+                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+            }
         case .relays(let feed):
 #if DEBUG
             L.og.debug("☘️☘️ \(config.id) loadLocal(.relays)\(older ? "older" : "")")
@@ -417,6 +451,12 @@ class NXColumnViewModel: ObservableObject {
                 req(message, activeSubscriptionId: config.id)
                 // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
             }
+        case .someoneElses(_):
+            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: NTimestamp(date: Date.now).timestamp)
+            
+            if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
+                req(message, activeSubscriptionId: config.id)
+            }
         case .pubkey:
             let _: String? = nil
         case .relays(let feed):
@@ -485,6 +525,15 @@ class NXColumnViewModel: ObservableObject {
                     req(message)
                 }, subId: "RESUME-" + config.id)
                 // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
+            }
+            return nil
+        case .someoneElses(_):
+            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: since, until: until)
+            
+            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id, filters: filters).json() {
+                return (cmd: {
+                    req(message)
+                }, subId: "RESUME-" + config.id)
             }
             return nil
         case .pubkey:
@@ -558,6 +607,13 @@ class NXColumnViewModel: ObservableObject {
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
                 req(message)
                 // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
+            }
+            
+        case .someoneElses(_):
+            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, until: Int(until), limit: 100)
+            
+            if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
+                req(message)
             }
         case .pubkey:
             let _: String? = nil
@@ -1248,10 +1304,54 @@ extension NXColumnViewModel {
                     // Then back to bg for processing
                     bg().perform {
                         self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+    public func fetchKind3ForSomeoneElsesFeed(_ pubkey: String, config: NXColumnConfig, completion: @escaping (NXColumnConfig) -> Void) {
+        let getContactListTask = ReqTask(
+            prio: true,
+            reqCommand: { taskId in
+                L.og.notice("🟪 Fetching clEvent from relays")
+                req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
+            },
+            processResponseCommand: { taskId, _, clEvent in
+                bg().perform {
+                    L.og.notice("🟪 Processing clEvent response from relays")
+                    var updatedConfig = config
+                    if let clEvent = clEvent {
+                        updatedConfig.setPubkeys(Set(clEvent.fastPs.map { $0.1 }.filter { isValidPubkey($0) }))
+                        
+                        updatedConfig.setHashtags(Set(clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }))
+    
+                        Task { @MainActor in
+                            completion(updatedConfig)
+                        }
+                    }
+                    else if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
+                        updatedConfig.setPubkeys(Set(clEvent.fastPs.map { $0.1 }.filter { isValidPubkey($0) }))
+                        
+                        updatedConfig.setHashtags(Set(clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }))
+    
+                        Task { @MainActor in
+                            completion(updatedConfig)
+                        }
+                    }
+                }
+            },
+            timeoutCommand: { taskId in
+                bg().perform {
+                    if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
+                        var updatedConfig = config
+                        updatedConfig.setPubkeys(Set(clEvent.fastPs.map { $0.1 }.filter { isValidPubkey($0) }))
+                        
+                        updatedConfig.setHashtags(Set(clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }))
+    
+                        Task { @MainActor in
+                            completion(updatedConfig)
+                        }
                     }
                 }
             }
-        }
+        )
+        Backlog.shared.add(getContactListTask)
+        getContactListTask.fetch()
     }
 }
 
