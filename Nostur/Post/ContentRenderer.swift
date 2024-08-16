@@ -121,6 +121,13 @@ struct ContentRenderer: View { // VIEW things
 //                    Color.red
 //                        .frame(height: 50)
 //                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
+//                    Text(verbatim: attributedStringWithPs.input)
+//                        .font(.system(.body, design: .monospaced))
+//                        .onTapGesture {
+//                            guard !isDetail else { return }
+//                            navigateTo(nrPost)
+//                        }
+//                        .id(index)
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview)
                         .equatable()
                         .onTapGesture {
@@ -197,11 +204,11 @@ struct ContentRenderer: View { // VIEW things
                     if let dimensions = mediaContent.dimensions {
                         let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: isDetail ? 5000.0 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
 #if DEBUG
-                        //                        Text(".image.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
-                        //                            .frame(maxWidth: .infinity)
-                        //                            .background(.red)
-                        //                            .foregroundColor(.white)
-                        //                            .debugDimensions()
+//                                                Text(".image.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
+//                                                    .frame(maxWidth: .infinity)
+//                                                    .background(.red)
+//                                                    .foregroundColor(.white)
+//                                                    .debugDimensions()
 #endif
                         
                         
@@ -213,8 +220,10 @@ struct ContentRenderer: View { // VIEW things
                                     }
                                 }
                                 .padding(.horizontal, fullWidth ? -10 : 0)
+//                                .debugDimensions("smv")
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+//                                .debugDimensions("smv.frame")
                                 .id(index)
     //                            .withoutAnimation()
     //                            .transaction { t in t.animation = nil }
