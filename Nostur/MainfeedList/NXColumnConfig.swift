@@ -42,6 +42,17 @@ struct NXColumnConfig: Identifiable {
             false
         }
     }
+    // Temporary for SomeoneElses feed
+    var pubkeys: Set<String> = []
+    var hashtags: Set<String> = []
+    
+    mutating func setPubkeys(_ newPubkeys: Set<String>) {
+        pubkeys = newPubkeys
+    }
+    
+    mutating func setHashtags(_ newHashtags: Set<String>) {
+        hashtags = newHashtags
+    }
 }
 
 enum NXColumnType {
@@ -50,6 +61,7 @@ enum NXColumnType {
     case pubkey // input=single pubkey - stalker
     case relays(CloudFeed)
     case hashtags(CloudFeed)
+    case someoneElses(String) // pubkeys
     
     case mentions
     case newPosts
