@@ -79,6 +79,15 @@ struct Settings: View {
                     Toggle(isOn: $settings.fullWidthImages) {
                         Text("Enable full width pictures", comment:"Setting on settings screen")
                     }
+                    
+                    Toggle(isOn: $settings.enableLiveEvents) {
+                        Text("Show Live banner", comment:"Setting on settings screen")
+                        Text("Live Nests or streams from follows")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    
                     VStack(alignment: .leading) {
                         AutodownloadLevelPicker()
                         

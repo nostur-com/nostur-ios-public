@@ -185,7 +185,7 @@ struct FollowingAndExplore: View, Equatable {
                 .frame(width: dim.listWidth, height: max(44.0 + tabsOffsetY,0))
             }
             
-            if enableLiveEvents && 1 == 2 {
+            if enableLiveEvents {
                 LiveEventsBanner()
                     .animation(.easeIn, value: enableLiveEvents)
             }
