@@ -891,6 +891,34 @@ class NXColumnViewModel: ObservableObject {
             self.backlog.add(danglingFetchTask)
             danglingFetchTask.fetch()
     }
+    
+    private var prefetchedIds: Set<String> = []
+    
+    @MainActor
+    public func prefetch(_ post: NRPost) {
+        guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
+        
+        if case .posts(let nrPosts) = viewState {
+            guard let index = nrPosts.firstIndex(of: post) else { return }
+            let before = max(index - 2, 0)
+            let after = min(index + 2, nrPosts.count - 1)
+
+            let rangeOfPostsIds = Array(nrPosts[before...after]).compactMap { post in
+                if post.kind == 6 {
+                    return post.firstQuoteId
+                }
+                return post.id
+            }
+            
+            guard !rangeOfPostsIds.isEmpty else { return }
+            
+            let unfetchedIds = rangeOfPostsIds.filter { !self.prefetchedIds.contains($0) }
+              
+            guard !unfetchedIds.isEmpty else { return }
+            fetchStuffForLastAddedNotes(ids: unfetchedIds)
+            self.prefetchedIds = self.prefetchedIds.union(Set(unfetchedIds)) // TODO: need to LRU self.prefetchedIds
+        }
+    }
 }
 
 // -- MARK: POST RENDERING
