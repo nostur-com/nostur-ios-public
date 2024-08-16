@@ -141,6 +141,10 @@ struct NXPostsFeed: View {
     }
     
     private func scrollToFirstUnread(_ proxy: ScrollViewProxy) {
+        if vm.unreadCount == 0 {
+            scrollToTop(proxy)
+            return
+        }
         for post in posts.reversed() {
             if let unreadCount = vm.unreadIds[post.id], unreadCount > 0 {
                 if let firstUnreadPost = posts.first(where: { $0.id == post.id }) {
