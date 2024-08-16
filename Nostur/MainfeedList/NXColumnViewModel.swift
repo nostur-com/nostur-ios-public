@@ -1230,23 +1230,70 @@ extension NXColumnViewModel {
 // -- MARK: PUBKEYS
 extension NXColumnViewModel {
     
-    @MainActor // // TODO: Need to handle hashtags. (probably replace instantFeed?, fixes hashtags and maybe also 50 limit)
-    private func loadRemote(_ pubkeys: Set<String>, config: NXColumnConfig, older: Bool = false) {
-#if DEBUG
+    @MainActor
+    private func loadRemote(_ config: NXColumnConfig, older: Bool = false) {
+        #if DEBUG
         L.og.debug("☘️☘️ \(config.id) loadRemote(pubkeys)")
-#endif
-//        let instantFeed = InstantFeed()
-//        self.instantFeed = instantFeed
-//        let wotEnabled = config.wotEnabled
-//        let repliesEnabled = config.repliesEnabled
+        #endif
         
-        // Fetch since 5 minutes before most recent item on screen (since)
-        // Or until oldest (bottom) item on screen (until)
-        let (sinceTimestamp, untilTimestamp) = if case .posts(let nrPosts) = viewState {
-            (self.refreshedAt, (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)))
+        switch config.columnType {
+        case .relays(let feed):
+            let relays = feed.relaysData
+            guard !relays.isEmpty else {
+                viewState = .error("No relays selected for this custom feed")
+                return
+            }
+            let instantFeed = InstantFeed()
+            self.instantFeed = instantFeed
+            let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
+            let wotEnabled = config.wotEnabled
+            let repliesEnabled = config.repliesEnabled
+            
+            bg().perform { [weak self] in
+                instantFeed.start(relays, since: mostRecentCreatedAt) { [weak self] events in
+                    guard let self, events.count > 0 else { return }
+                    
+                    // TODO: Check if we still hit .fetchLimit problem here
+    #if DEBUG
+                    L.og.debug("☘️☘️ \(config.id) loadRemoteRelays() instantFeed.onComplete events.count \(events.count.description)")
+    #endif
+                    
+                    // Need to go to main context again to get current screen state
+                    Task { @MainActor in
+                        let allIdsSeen = self.allIdsSeen
+                        let currentIdsOnScreen = self.currentIdsOnScreen
+                        let sinceOrUntil = !older ? (self.mostRecentCreatedAt ?? 0) : (self.oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
+                        
+                        // Then back to bg for processing
+                        bg().perform { [weak self] in
+                            self?.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                        }
+                    }
+                }
+            }
+        default:
+            // Fetch since 5 minutes before most recent item on screen (since)
+            // Or until oldest (bottom) item on screen (until)
+            let (sinceTimestamp, untilTimestamp) = if case .posts(let nrPosts) = viewState {
+                (self.refreshedAt, (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)))
+            }
+            else { // or if empty screen: refreshedAt (since) or now (until)
+                (0, Int64(Date().timeIntervalSince1970))
+            }
+            
+            let sinceOrUntil = !older ? sinceTimestamp : untilTimestamp
+            
+            if !older {
+                self.gapFiller?.fetchGap(since: sinceOrUntil, currentGap: 0)
+            }
+            else {
+                // TODO: handler older
+            }
+            
+            fetchProfiles(config)
         }
-        else { // or if empty screen: refreshedAt (since) or now (until)
-            (0, Int64(Date().timeIntervalSince1970))
+    }
+    
     private func fetchProfiles(_ config: NXColumnConfig) {
         guard let feed = config.feed else { return }
         let since: Int? = if let profilesFetchedAt = feed.profilesFetchedAt {
@@ -1289,62 +1336,11 @@ extension NXColumnViewModel {
             )
         feed.profilesFetchedAt = .now
     }
-//        bg().perform { [weak self] in
-//            instantFeed.start(pubkeys, since: mostRecentCreatedAt) { [weak self] events in
-//                guard let self, events.count > 0 else { return }
-//#if DEBUG
-//                L.og.debug("☘️☘️ \(config.id) loadRemote(pubkeys) instantFeed.onComplete events.count \(events.count.description)")
-//#endif
-//                
-//                // Need to go to main context again to get current screen state
-//                Task { @MainActor in
-//                    let allIdsSeen = self.allIdsSeen
-//                    let currentIdsOnScreen = self.currentIdsOnScreen
-//                    let sinceOrUntil = !older ? (self.mostRecentCreatedAt ?? 0) : (self.oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
-//
-//                    // Then back to bg for processing
-//                    bg().perform {
-//                        self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
-//                    }
-//                }
-//            }
-//        }
-    }
 }
 
-// -- MARK: RELAYS
+// -- MARK: SOMEONE ELSES FEED
 extension NXColumnViewModel {
-    
     @MainActor
-    public func loadRemote(_ relays: Set<RelayData>, config: NXColumnConfig, older: Bool = false) {
-#if DEBUG
-        L.og.debug("☘️☘️ \(config.id) loadRemote(relays)")
-#endif
-        let instantFeed = InstantFeed()
-        self.instantFeed = instantFeed
-        let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
-        let wotEnabled = config.wotEnabled
-        let repliesEnabled = config.repliesEnabled
-        
-        bg().perform { [weak self] in
-            instantFeed.start(relays, since: mostRecentCreatedAt) { [weak self] events in
-                guard let self, events.count > 0 else { return }
-                
-                // TODO: We always only get max 50 event here, need to adjust fetch limit depending on situation
-#if DEBUG
-                L.og.debug("☘️☘️ \(config.id) loadRemote(relays) instantFeed.onComplete events.count \(events.count.description)")
-#endif
-                
-                // Need to go to main context again to get current screen state
-                Task { @MainActor in
-                    let allIdsSeen = self.allIdsSeen
-                    let currentIdsOnScreen = self.currentIdsOnScreen
-//                    let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
-                    let sinceOrUntil = !older ? (self.mostRecentCreatedAt ?? 0) : (self.oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
-                    
-                    // Then back to bg for processing
-                    bg().perform {
-                        self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
     public func fetchKind3ForSomeoneElsesFeed(_ pubkey: String, config: NXColumnConfig, completion: @escaping (NXColumnConfig) -> Void) {
         let getContactListTask = ReqTask(
             prio: true,
