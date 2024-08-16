@@ -86,7 +86,7 @@ extension CloudAccount {
         }
     }
     
-    var follows:[Contact] {
+    var follows: [Contact] {
         get {
             let followsIncludingPrivate = followingPubkeys.union(privateFollowingPubkeys)
             return Contact.fetchByPubkeys(Array(followsIncludingPrivate), context: Thread.isMainThread ? DataProvider.shared().viewContext : bg())
@@ -98,22 +98,30 @@ extension CloudAccount {
         }
     }
     
-    var followingPubkeys:Set<String> {
+    // 20.00 ms    0.1%    10.00 ms                 CloudAccount.privateFollowingPubkeys.getter
+    var followingPubkeys: Set<String> {
         get {
+            if !followingPubkeysCache.isEmpty { return followingPubkeysCache }
             guard let followingPubkeys = followingPubkeys_ else { return [] }
-            return Set(followingPubkeys.split(separator: " ").map { String($0) }.filter { isValidPubkey($0) } )
+            followingPubkeysCache = Set(followingPubkeys.split(separator: " ").map { String($0) }.filter { isValidPubkey($0) } )
+            return followingPubkeysCache
         }
         set {
+            followingPubkeysCache = newValue
             followingPubkeys_ = newValue.joined(separator: " ")
         }
     }
     
-    var privateFollowingPubkeys:Set<String> {
+    
+    var privateFollowingPubkeys: Set<String> {
         get {
+            if !privateFollowingPubkeysCache.isEmpty { return privateFollowingPubkeysCache }
             guard let privateFollowingPubkeys = privateFollowingPubkeys_ else { return [] }
-            return Set(privateFollowingPubkeys.split(separator: " ").map { String($0) }.filter { isValidPubkey($0) })
+            privateFollowingPubkeysCache = Set(privateFollowingPubkeys.split(separator: " ").map { String($0) }.filter { isValidPubkey($0) } )
+            return privateFollowingPubkeysCache
         }
         set {
+            privateFollowingPubkeysCache = newValue
             privateFollowingPubkeys_ = newValue.joined(separator: " ")
         }
     }

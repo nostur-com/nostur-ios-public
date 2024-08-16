@@ -56,4 +56,8 @@ public class CloudAccount: NSManagedObject {
             _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
         }
     }
+    
+    // Cache because:  20.00 ms    0.1%    10.00 ms                 CloudAccount.privateFollowingPubkeys.getter
+    var followingPubkeysCache: Set<String> = []
+    var privateFollowingPubkeysCache: Set<String> = []
 }
