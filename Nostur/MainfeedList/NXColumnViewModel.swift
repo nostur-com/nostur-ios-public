@@ -137,6 +137,7 @@ class NXColumnViewModel: ObservableObject {
     private var fetchFeedTimer: Timer? = nil
     private var newEventsInDatabaseSub: AnyCancellable?
     private var firstConnectionSub: AnyCancellable?
+    private var reloadWhenNeededSub: AnyCancellable?
     private var lastDisconnectionSub: AnyCancellable?
     private var watchForFirstConnection = false
     private var subscriptions = Set<AnyCancellable>()
@@ -243,6 +244,17 @@ class NXColumnViewModel: ObservableObject {
         listenForNewPosts(config: config) // <-- listen realtime for new posts  TODO: maybe do after 2 second delay?
         listenForFirstConnection(config: config)
         loadMoreWhenNearBottom(config)
+        reloadWhenNeeded(config)
+    }
+    
+    // Reload (after toggle replies enabled etc)
+    @MainActor
+    public func reload(_ config: NXColumnConfig) {
+        viewState = .loading
+        self.allIdsSeen = []
+        startTime = .now
+        startFetchFeedTimer()
+        loadLocal(config)
     }
     
     public var isPaused: Bool { self.fetchFeedTimer == nil }
@@ -762,6 +774,25 @@ class NXColumnViewModel: ObservableObject {
                 }
             }
         
+    }
+    
+    @MainActor
+    private func reloadWhenNeeded(_ config: NXColumnConfig) {
+        guard reloadWhenNeededSub == nil, let feed = config.feed else { return }
+
+        reloadWhenNeededSub = feed.publisher(for: \.repliesEnabled)
+            .scan((feed.repliesEnabled, feed.repliesEnabled)) { (previous, current) in
+                return (previous.1, current)
+            }
+            .dropFirst()  // Skip the initial value to avoid unnecessary reload on setup
+            .sink { [weak self] oldValue, newValue in
+                if oldValue != newValue {
+                    L.og.debug("☘️☘️💬 \(config.id) reloadWhenNeeded feed.repliesEnabled changed from \(oldValue) to \(newValue)")
+                    self?.reload(config)
+                } else {
+                    L.og.debug("☘️☘️💬 \(config.id) reloadWhenNeeded feed.repliesEnabled unchanged: \(newValue)")
+                }
+            }
     }
     
     @MainActor
