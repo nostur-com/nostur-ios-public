@@ -65,7 +65,7 @@ struct NoteById: View {
             }
             else {
                 PostDetailView(nrPost: nrPost, navTitleHidden: navTitleHidden)
-                    .debugDimensions("NoteById.PostDetailView", alignment: .topLeading)
+//                    .debugDimensions("NoteById.PostDetailView", alignment: .topLeading)
             }
         case .timeout:
             Text("Unable to fetch")

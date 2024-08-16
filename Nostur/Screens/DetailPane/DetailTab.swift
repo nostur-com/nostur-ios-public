@@ -22,7 +22,7 @@ struct DetailTab: View {
                     themes.theme.listBackground
                         .ignoresSafeArea()
                     PostDetailView(nrPost: nrPost, navTitleHidden: true)
-                        .debugDimensions("DetailTab.PostDetailView", alignment: .topLeading)
+//                        .debugDimensions("DetailTab.PostDetailView", alignment: .topLeading)
                         .withNavigationDestinations()
                 }
             }

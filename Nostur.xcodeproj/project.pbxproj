@@ -475,7 +475,6 @@
 		1FD78EF72A0CC365003E7B3E /* PostRowDeletable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF62A0CC365003E7B3E /* PostRowDeletable.swift */; };
 		1FD78EF92A0CE49D003E7B3E /* NRPost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF82A0CE49D003E7B3E /* NRPost.swift */; };
 		1FD8AD7329D831CD00693302 /* Color+random.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8AD7229D831CD00693302 /* Color+random.swift */; };
-		1FD8AD7529D87D0B00693302 /* ListViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */; };
 		1FDB74582BD6B71700649E0A /* PossibleImposterLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDB74572BD6B71700649E0A /* PossibleImposterLabel.swift */; };
 		1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */; };
 		1FDBD89C2A764224001D9F34 /* NoiseFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDBD89B2A764224001D9F34 /* NoiseFilter.swift */; };
@@ -1038,7 +1037,6 @@
 		1FD78EF62A0CC365003E7B3E /* PostRowDeletable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostRowDeletable.swift; sourceTree = "<group>"; };
 		1FD78EF82A0CE49D003E7B3E /* NRPost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRPost.swift; sourceTree = "<group>"; };
 		1FD8AD7229D831CD00693302 /* Color+random.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+random.swift"; sourceTree = "<group>"; };
-		1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewContainer.swift; sourceTree = "<group>"; };
 		1FDB74572BD6B71700649E0A /* PossibleImposterLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PossibleImposterLabel.swift; sourceTree = "<group>"; };
 		1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingGuardian.swift; sourceTree = "<group>"; };
 		1FDBD89B2A764224001D9F34 /* NoiseFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoiseFilter.swift; sourceTree = "<group>"; };
@@ -1954,7 +1952,6 @@
 				1FE694792A8B4DCD004BB949 /* FeedSettings+Hashtags.swift */,
 				1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */,
 				1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */,
-				1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */,
 				1F00E8C229C2FE7800797B78 /* LVM.swift */,
 				1FA0599E2A74D9680039643C /* LVM+pubkeys.swift */,
 				1FA059A02A74F87B0039643C /* LVM+relays.swift */,
@@ -2569,7 +2566,6 @@
 				1F38AFF42A2789C80035641E /* MacListsView.swift in Sources */,
 				1FE9D2982A0E104D00256B90 /* NRTextParser.swift in Sources */,
 				1FF9BF1629DC966700D16EE7 /* ReportContactSheet.swift in Sources */,
-				1FD8AD7529D87D0B00693302 /* ListViewContainer.swift in Sources */,
 				1F9A55222A3C7EB500F67627 /* NosturTabButton.swift in Sources */,
 				1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */,
 				1FD8AD7329D831CD00693302 /* Color+random.swift in Sources */,
