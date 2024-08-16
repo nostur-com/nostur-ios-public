@@ -211,10 +211,7 @@ struct ProfileOverlayCard: View {
                             }
                             
                             Button("Show feed") {
-                                guard let account = account() else { return }
                                 dismiss()
-                                LVMManager.shared.followingLVM(forAccount: account)
-                                    .loadSomeonesFeed(contact.pubkey)
                                 sendNotification(.showingSomeoneElsesFeed, contact)
                                 sendNotification(.dismissMiniProfile)
                             }

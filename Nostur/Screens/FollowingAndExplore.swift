@@ -39,7 +39,7 @@ struct FollowingAndExplore: View, Equatable {
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)], predicate: NSPredicate(format: "showAsTab == true"))
     var lists: FetchedResults<CloudFeed>
     @State private var selectedList: CloudFeed?
-    @StateObject private var exploreVM: LVM = LVMManager.shared.exploreLVM()
+
     @StateObject private var hotVM = HotViewModel()
     @StateObject private var discoverVM = DiscoverViewModel()
     @StateObject private var articlesVM = ArticlesFeedViewModel()
@@ -320,16 +320,7 @@ struct FollowingAndExplore: View, Equatable {
         .onChange(of: account, perform: { newAccount in
             guard account != newAccount else { return }
             L.og.info("Account changed from: \(account.name)/\(account.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
-            LVMManager.shared.listVMs.filter { $0.pubkey == account.publicKey }
-                .forEach { lvm in
-                    lvm.cleanUp()
-                }
-            LVMManager.shared.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
-            LVMManager.shared.followingLVM(forAccount: newAccount).restoreSubscription()
-            
-            if newAccount.followingPubkeys.count <= 10 && selectedSubTab == "Hot" {
-                selectedSubTab = "Following"
-            }
+            createFollowingFeed()
         })
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)

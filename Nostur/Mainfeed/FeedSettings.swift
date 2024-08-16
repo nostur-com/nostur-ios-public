@@ -9,12 +9,8 @@ import SwiftUI
 
 struct FeedSettings: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject public var lvm: LVM
-    public var list: CloudFeed? = nil
-    
+    public var config: NXColumnConfig
     @EnvironmentObject private var la: LoggedInAccount
-    
-    @State private var needsReload = false
     
     var body: some View {
         #if DEBUG
@@ -27,67 +23,77 @@ struct FeedSettings: View {
                 }
             }
             
-            Section("") {
-                Toggle(isOn: $lvm.hideReplies.not) {
-                    Text("Show replies")
-                }
-                if lvm.type == .relays {
-                    Toggle(isOn: $lvm.wotEnabled) {
-                        Text("Web of Trust filter")
+            
+            if case .following(let feed) = config.columnType {
+                Section("") {
+                    Toggle(isOn: Binding(get: {
+                        feed.repliesEnabled
+                    }, set: { newValue in
+                        feed.repliesEnabled = newValue
+                    })) {
+                        Text("Show replies")
                     }
                 }
-                Group {
-                    if let list = list, lvm.type == .relays {
-                        NavigationLink(destination: EditRelaysNosturList(list: list)) {
-                            Text("Configure relays...")
-                        }
-//                        NavigationLink("Configure relays...", value: list)
-//                        Button("Configure relays...") {
-//                            guard let list = list else { return }
-//                            navigateToOnMain(list)
-//                        }
-                    }
-                    else if let list = list, lvm.pubkey == nil && lvm.id != "Explore" {
-                        NavigationLink(destination: EditNosturList(list: list)) {
-                            Text("Configure contacts...")
-                        }
-//                        NavigationLink("Configure contacts...", value: list)
-//                        Button("Configure contacts...") {
-//                            guard let list = list else { return }
-//                            navigateToOnMain(list)
-//                        }
+                
+                if feed.accountPubkey != nil, !la.account.followingHashtags.isEmpty {
+                    Section("Included hashtags") {
+                        FeedSettings_Hashtags(hashtags: Array(la.account.followingHashtags), onChange: { hashtags in
+                            la.account.followingHashtags = Set(hashtags)
+//                            needsReload = true
+                            la.account.publishNewContactList()
+                        })
                     }
                 }
             }
             
-            if lvm.pubkey != nil, !la.account.followingHashtags.isEmpty {
-                Section("Included hashtags") {
-                    FeedSettings_Hashtags(hashtags: Array(la.account.followingHashtags), onChange: { hashtags in
-                        la.account.followingHashtags = Set(hashtags)
-                        needsReload = true
-                        la.account.publishNewContactList()
-                    })
-                } 
+            if case .relays(let feed) = config.columnType {
+                Section("") {
+                    Toggle(isOn: Binding(get: {
+                        feed.repliesEnabled
+                    }, set: { newValue in
+                        feed.repliesEnabled = newValue
+                    })) {
+                        Text("Show replies")
+                    }
+                    Toggle(isOn: Binding(get: {
+                        feed.wotEnabled
+                    }, set: { newValue in
+                        feed.wotEnabled = newValue
+                    })) {
+                        Text("Web of Trust filter")
+                    }
+                    NavigationLink(destination: EditRelaysNosturList(list: feed)) {
+                        Text("Configure relays...")
+                    }
+                }
             }
-            if lvm.pubkey == nil, let list = list, !list.followingHashtags.isEmpty {
-                Section("Included hashtags") {
-                    FeedSettings_Hashtags(hashtags: Array(list.followingHashtags), onChange: { hashtags in
-                        list.followingHashtags = Set(hashtags)
-                        needsReload = true
-                    })
+            
+            if case .pubkeys(let feed) = config.columnType {
+                Section("") {
+                    Toggle(isOn: Binding(get: {
+                        feed.repliesEnabled
+                    }, set: { newValue in
+                        feed.repliesEnabled = newValue
+                    })) {
+                        Text("Show replies")
+                    }
+                    
+                    NavigationLink(destination: EditNosturList(list: feed)) {
+                        Text("Configure contacts...")
+                    }
                 }
             }
         }
-        .onChange(of: lvm.wotEnabled) { wotEnabled in
-            guard let list = list else { return }
-            list.wotEnabled = wotEnabled
-        }
-        .onDisappear {
-            if needsReload {
-                lvm.reload()
-            }
-        }
-        .navigationTitle("\(lvm.pubkey != nil ? String(localized: "Following") : lvm.name) settings")
+//        .onChange(of: lvm.wotEnabled) { wotEnabled in
+//            guard let list = list else { return }
+//            list.wotEnabled = wotEnabled
+//        }
+//        .onDisappear {
+//            if needsReload {
+//                lvm.reload()
+//            }
+//        }
+        .navigationTitle("Feed settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -105,9 +111,9 @@ struct FeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             VStack {
-                FeedSettings(lvm:LVMManager.shared.followingLVM(forAccount: la.account))
                 if let list = PreviewFetcher.fetchList() {
-                    FeedSettings(lvm:LVMManager.shared.listLVM(forList: list))
+                    let config = NXColumnConfig(id: list.id?.uuidString ?? "?", columnType: .pubkeys(list), accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: "Following")
+                    FeedSettings(config: config)
                 }
                 Spacer()
             }

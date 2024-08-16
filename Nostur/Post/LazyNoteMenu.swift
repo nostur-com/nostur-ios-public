@@ -177,8 +177,6 @@ struct LazyNoteMenuSheet: View {
                 Button {
                     guard let contact = nrPost.contact else { return }
                     dismiss()
-                    LVMManager.shared.followingLVM(forAccount: la.account)
-                        .loadSomeonesFeed(nrPost.pubkey)
                     sendNotification(.showingSomeoneElsesFeed, contact)
                     sendNotification(.dismissMiniProfile)
                 } label: {

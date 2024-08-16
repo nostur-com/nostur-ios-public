@@ -139,7 +139,7 @@ struct AppView: View {
                                         if (NRState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
                                             ConnectionPool.shared.connectAll()
                                             sendNotification(.scenePhaseActive)
-                                            lvmManager.restoreSubscriptions()
+//                                            lvmManager.restoreSubscriptions()
                                             NotificationsViewModel.shared.restoreSubscriptions()
                                             ns.startTaskTimers()
                                         }
@@ -148,7 +148,7 @@ struct AppView: View {
                                     else {
                                         ConnectionPool.shared.connectAll()
                                         sendNotification(.scenePhaseActive)
-                                        lvmManager.restoreSubscriptions()
+//                                        lvmManager.restoreSubscriptions()
                                         NotificationsViewModel.shared.restoreSubscriptions()
                                         ns.startTaskTimers()
                                     }
@@ -157,7 +157,7 @@ struct AppView: View {
                                     L.og.notice("scenePhase background")
                                     if !IS_CATALYST {
                                         NRState.shared.appIsInBackground = true
-                                        lvmManager.stopSubscriptions()
+//                                        lvmManager.stopSubscriptions()
                                     }
                                     sendNotification(.scenePhaseBackground)
                                     

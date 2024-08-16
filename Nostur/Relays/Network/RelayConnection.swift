@@ -504,21 +504,24 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     sendNotification(.socketConnected, "Connected: \(self?.url ?? "?")")
                 }
             }
-            else { // restore subscriptions
-                DispatchQueue.main.async { [weak self] in
-                    if IS_CATALYST || !NRState.shared.appIsInBackground {
-                        if self?.relayData.auth ?? false {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            else { 
+                // restore subscriptions
+                if !isOutbox {
+                    DispatchQueue.main.async { [weak self] in
+                        if IS_CATALYST || !NRState.shared.appIsInBackground {
+                            if self?.relayData.auth ?? false {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                    LVMManager.shared.restoreSubscriptions()
+                                    NotificationsViewModel.shared.restoreSubscriptions()
+                                }
+                            }
+                            else {
                                 LVMManager.shared.restoreSubscriptions()
                                 NotificationsViewModel.shared.restoreSubscriptions()
                             }
                         }
-                        else {
-                            LVMManager.shared.restoreSubscriptions()
-                            NotificationsViewModel.shared.restoreSubscriptions()
-                        }
+                        sendNotification(.socketConnected, "Connected: \(self?.url ?? "?")")
                     }
-                    sendNotification(.socketConnected, "Connected: \(self?.url ?? "?")")
                 }
             }
             self.firstConnection = false

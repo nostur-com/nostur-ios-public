@@ -128,7 +128,6 @@ class NRState: ObservableObject {
             self.loggedInAccount = nil
             self.onBoardingIsShown = true
             sendNotification(.clearNavigation)
-            LVMManager.shared.listVMs.removeAll()
             Task { @MainActor in
                 self.changeAccount(nil)
             }
@@ -152,7 +151,6 @@ class NRState: ObservableObject {
                 self.loggedInAccount = nil
                 self.onBoardingIsShown = true
                 sendNotification(.clearNavigation)
-                LVMManager.shared.listVMs.removeAll()
                 Task { @MainActor in
                     self.changeAccount(nil)
                 }
