@@ -77,6 +77,15 @@ public class NetworkMonitor: ObservableObject {
             }
             .store(in: &subscriptions)
         
+        // Detect actual VPN connection again after first relay connection
+        receiveNotification(.firstConnection)
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
+            .sink { [weak self] _ in
+                self?.detectActualConnection()
+            }
+            .store(in: &subscriptions)
+        
+        
         monitor.pathUpdateHandler = { path in
             self.isConnectedSubject.send(path.status == .satisfied)
             DispatchQueue.main.async {
