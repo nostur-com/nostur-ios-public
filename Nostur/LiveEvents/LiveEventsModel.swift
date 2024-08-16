@@ -52,7 +52,7 @@ class LiveEventsModel: ObservableObject {
             
             let nrLiveEvents: [NRLiveEvent] = events
                 .filter { !self.dismissedLiveEvents.contains($0.aTag) } // don't show dismissed events
-                .filter { $0.fastTags.contains(where: { $0.0 == "status" && $0.1 == "live" })} // only LIVE
+                .filter { $0.fastTags.contains(where: { $0.0 == "status" && $0.1 == "live" }) } // only LIVE
                 .filter { self.hasSpeakerOrHostInFollows($0) }
                 .map { NRLiveEvent(event: $0) }
             
@@ -84,10 +84,11 @@ class LiveEventsModel: ObservableObject {
         self.agoTimestamp = Int(Date().timeIntervalSince1970 - (60 * 60 * 4)) // Only with recent 4 hours
         guard let agoTimestamp = self.agoTimestamp else { return }
         
-        let reqTask = ReqTask(
+        // Live Event created by follows
+        let createdByTask = ReqTask(
             debounceTime: 0.5,
             timeout: 3.0,
-            subscriptionId: "LIVE",
+            subscriptionId: "LIVE-FOLLOWS",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
                 if let cm = NostrEssentials
@@ -95,14 +96,50 @@ class LiveEventsModel: ObservableObject {
                                    subscriptionId: taskId,
                                    filters: [
                                     Filters(
-                                        authors: self.follows, // Live Event created by follows
+                                        authors: self.follows,
                                         kinds: Set([30311]),
                                         since: agoTimestamp,
                                         limit: 200
-                                    ),
+                                    )
+                                   ]
+                    ).json() {
+                    req(cm)
+                }
+                else {
+#if DEBUG
+                    L.og.error("LIVE feed: Problem generating request")
+#endif
+                }
+            },
+            processResponseCommand: { [weak self] taskId, relayMessage, _ in
+                guard let self else { return }
+                self.fetchFromDB(onComplete)
+#if DEBUG
+                L.og.debug("LIVE feed: ready to process relay response")
+#endif
+            },
+            timeoutCommand: { [weak self] taskId in
+                guard let self else { return }
+                self.fetchFromDB(onComplete)
+#if DEBUG
+                L.og.debug("LIVE feed: timeout")
+#endif
+            })
+        
+        // Live Event invited or participated by follows (TODO: should check proof)
+        let participatingTask = ReqTask(
+            debounceTime: 0.5,
+            timeout: 3.0,
+            subscriptionId: "LIVE-PARTICIPATING",
+            reqCommand: { [weak self] taskId in
+                guard let self else { return }
+                if let cm = NostrEssentials
+                    .ClientMessage(type: .REQ,
+                                   subscriptionId: taskId,
+                                   filters: [
                                     Filters(
                                         kinds: Set([30311]),
-                                        tagFilter: TagFilter(tag: "p", values: self.follows), // Live Event invited or participated by follows (TODO: should check proof)
+                                        tagFilter: TagFilter(tag: "p", values: self.follows),
                                         since: agoTimestamp,
                                         limit: 200
                                     ),
@@ -111,28 +148,36 @@ class LiveEventsModel: ObservableObject {
                     req(cm)
                 }
                 else {
-                    L.og.error("LIVE feed: Problem generating request")
+#if DEBUG
+                    L.og.debug("LIVE feed: Problem generating request")
+#endif
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 guard let self else { return }
                 self.fetchFromDB(onComplete)
-                self.backlog.clear()
-                L.og.info("LIVE feed: ready to process relay response")
+#if DEBUG
+                L.og.debug("LIVE feed: ready to process relay response")
+#endif
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.fetchFromDB(onComplete)
-                self.backlog.clear()
-                L.og.info("LIVE feed: timeout")
+#if DEBUG
+                L.og.debug("LIVE feed: timeout")
+#endif
             })
         
-        backlog.add(reqTask)
-        reqTask.fetch()
+        backlog.add(createdByTask)
+        backlog.add(participatingTask)
+        createdByTask.fetch()
+        participatingTask.fetch()
     }
     
     public func load() {
-        L.og.info("LIVE feed: load()")
+#if DEBUG
+        L.og.debug("LIVE feed: load()")
+#endif
         self.follows = Nostur.follows()
         self.nrLiveEvents = []
         self.fetchFromRelays()
