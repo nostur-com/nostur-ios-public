@@ -126,14 +126,7 @@ class NXColumnViewModel: ObservableObject {
         }
     }
     public var availableWidth: CGFloat? // Should set in NXColumnView.onAppear { } before .load()
-    @Published public var isAtTop: Bool = true {
-        didSet {
-#if DEBUG
-            guard let config else { return }
-            L.og.debug("☘️☘️ \(config.id) isAtTop: \(self.isAtTop)")
-#endif
-        }
-    }
+    @Published public var isAtTop: Bool = true
     private var fetchFeedTimer: Timer? = nil
     private var newEventsInDatabaseSub: AnyCancellable?
     private var firstConnectionSub: AnyCancellable?
@@ -216,13 +209,17 @@ class NXColumnViewModel: ObservableObject {
         if !ConnectionPool.shared.anyConnected {
             self.watchForFirstConnection = true
         }
-        guard isVisible || (config.id.starts(with: "Following-") && config.name != "Explore") else { return }
+        // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
+        guard isVisible || (config.id.starts(with: "Following-") && config.name != "Explore") else { return }
         startTime = .now
         startFetchFeedTimer()
-        loadLocal(config) { [weak self] in // <-- instant, and works offline
-         // callback to load remote
-            self?.loadRemote(config) // <--- fetch new posts (catch up)
+        
+        // Change to loading if we were displaying posts before
+        if case .posts(_) = viewState {
+            viewState = .loading
+        }
+        
         // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
         if case .someoneElses(let pubkey) = config.columnType {
             // Reset all posts already seen for SomeoneElses Feed
@@ -337,12 +334,12 @@ class NXColumnViewModel: ObservableObject {
         let sinceOrUntil = !older ? sinceTimestamp : untilTimestamp
         
         switch config.columnType {
-        case .following(_):
+        case .following(let feed):
 #if DEBUG
             L.og.debug("☘️☘️ \(config.id) loadLocal(.following) \(older ? "older" : "")")
 #endif
-            guard let accountPubkey = config.accountPubkey, let account = NRState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) else { return }
-            self.account = account
+            guard let account = feed.account else { return }
+
             let followingPubkeys = account.followingPubkeys // TODO: Need to keep updated on changing .followingPubkeys
             let hashtagRegex: String? = makeHashtagRegex(account.followingHashtags)
             bg().perform { [weak self] in
@@ -516,8 +513,8 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public func getFillGapReqStatement(_ config: NXColumnConfig, since: Int, until: Int? = nil) -> (cmd: () -> Void, subId: String)? {
         switch config.columnType {
-        case .following(_):
-            guard let account else { return nil }
+        case .following(let feed):
+            guard let account = feed.account else { return nil }
             let pubkeys = account.followingPubkeys
             let hashtags = account.followingHashtags
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until)
@@ -601,9 +598,12 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     private func sendNextPageReq(_ config: NXColumnConfig, until: Int64) {
+#if DEBUG
+        L.og.debug("☘️☘️ \(config.id) sendNextPageReq()")
+#endif
         switch config.columnType {
-        case .following(_):
-            guard let account else { return }
+        case .following(let feed):
+            guard let account = feed.account else { return }
             let pubkeys = account.followingPubkeys
             let hashtags = account.followingHashtags
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100)
