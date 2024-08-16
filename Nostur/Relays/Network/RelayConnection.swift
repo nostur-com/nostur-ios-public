@@ -148,76 +148,79 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         if isOutbox && !vpnGuardOK() { // TODO: Maybe need a small delay so VPN has time to connect first?
             L.sockets.debug("📡📡 No VPN: Connection cancelled (\(self.relayData.url)"); return
         }
-        let anyConnected = ConnectionPool.shared.anyConnected
-        queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            guard self.isDeviceConnected else {
-                L.sockets.debug("\(self.url) - No internet, skipping connect()")
-                self.isSocketConnecting = false
-                return
-            }
-            guard !self.isSocketConnecting || forceConnectionAttempt else {
-                L.sockets.debug("\(self.url) - Already connecting, skipping connect()")
-                self.isSocketConnecting = false
-                if let andSend {
-                    self.sendMessage(andSend)
+        DispatchQueue.main.async {
+            let anyConnected = ConnectionPool.shared.anyConnected
+            
+            self.queue.async(flags: .barrier) { [weak self] in
+                guard let self = self else { return }
+                guard self.isDeviceConnected else {
+                    L.sockets.debug("\(self.url) - No internet, skipping connect()")
+                    self.isSocketConnecting = false
+                    return
                 }
-                return
-            }
-            self.nreqSubscriptions = []
-            self.isSocketConnecting = true
-            
-            guard self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
-                self.skipped = self.skipped + 1
-                self.isSocketConnecting = false
-                L.sockets.debug("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
-                return
-            }
-            self.skipped = 0
-            
-            if let andSend = andSend {
-                self.outQueue.append(SocketMessage(text: andSend))
-            }
-            
-            self.session?.invalidateAndCancel()
-            self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-            
-            if let url = URL(string: relayData.url) {
-                let urlRequest = URLRequest(url: url)
-                self.webSocketTask = self.session?.webSocketTask(with: urlRequest)
-                self.webSocketTask?.delegate = self
-            }
-            
-            self.webSocketTask?.resume()
-            
-            if self.exponentialReconnectBackOff >= 512 {
-                self.exponentialReconnectBackOff = 512
-            }
-            else if anyConnected { // Only increase if we have any connection
-                self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
-            }
-//            else if !self.isSocketConnecting  {
-//                self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
-//            }
-            
-            
-            guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
-            
-            if self.relayData.auth {
-                L.sockets.debug("relayData.auth == true")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                    self.sendAfterAuth()
-                }
-                return
-            }
-            
-            for out in self.outQueue {
-                webSocketTask.send(.string(out.text)) { error in
-                    if let error {
-                        self.didReceiveError(error)
+                guard !self.isSocketConnecting || forceConnectionAttempt else {
+                    L.sockets.debug("\(self.url) - Already connecting, skipping connect()")
+                    self.isSocketConnecting = false
+                    if let andSend {
+                        self.sendMessage(andSend)
                     }
+                    return
                 }
-                self.outQueue.removeAll(where: { $0.id == out.id })
+                self.nreqSubscriptions = []
+                self.isSocketConnecting = true
+                
+                guard self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
+                    self.skipped = self.skipped + 1
+                    self.isSocketConnecting = false
+                    L.sockets.debug("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
+                    return
+                }
+                self.skipped = 0
+                
+                if let andSend = andSend {
+                    self.outQueue.append(SocketMessage(text: andSend))
+                }
+                
+                self.session?.invalidateAndCancel()
+                self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+                
+                if let url = URL(string: relayData.url) {
+                    let urlRequest = URLRequest(url: url)
+                    self.webSocketTask = self.session?.webSocketTask(with: urlRequest)
+                    self.webSocketTask?.delegate = self
+                }
+                
+                self.webSocketTask?.resume()
+                
+                if self.exponentialReconnectBackOff >= 512 {
+                    self.exponentialReconnectBackOff = 512
+                }
+                else if anyConnected { // Only increase if we have any connection
+                    self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+                }
+    //            else if !self.isSocketConnecting  {
+    //                self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+    //            }
+                
+                
+                guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
+                
+                if self.relayData.auth {
+                    L.sockets.debug("relayData.auth == true")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                        self.sendAfterAuth()
+                    }
+                    return
+                }
+                
+                for out in self.outQueue {
+                    webSocketTask.send(.string(out.text)) { error in
+                        if let error {
+                            self.didReceiveError(error)
+                        }
+                    }
+                    self.outQueue.removeAll(where: { $0.id == out.id })
+                }
             }
         }
     }
@@ -343,7 +346,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         L.sockets.debug("🔴🔴 didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
     #endif
         if let error {
-            self.didReceiveError(error)
+            DispatchQueue.main.async {
+                self.didReceiveError(error)
+            }
         }
     }
     
@@ -363,7 +368,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         
         // TODO: Should we handle different from didBecomeInvalidWithError or not???
         if let error {
-            self.didReceiveError(error)
+            DispatchQueue.main.async {
+                self.didReceiveError(error)
+            }
         }
     }
     
@@ -409,62 +416,64 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public func didReceiveError(_ error: Error) {
         // Respond to a WebSocket error event
-        let anyConnected = ConnectionPool.shared.anyConnected
-        queue.async(flags: .barrier) { [weak self] in
-            self?.webSocketTask?.cancel()
-            self?.session?.invalidateAndCancel()
-            self?.nreqSubscriptions = []
-            self?.lastMessageReceivedAt = nil
-            if (self?.exponentialReconnectBackOff ?? 0) >= 512 {
-                self?.exponentialReconnectBackOff = 512
-            }
-            else if anyConnected {
-                self?.exponentialReconnectBackOff = max(1, (self?.exponentialReconnectBackOff ?? 0) * 2)
-            }
-            self?.isSocketConnected = false
-            if let url = self?.url {
-                let shortURL = URL(string: url)?.baseURL?.description ?? url
-                DispatchQueue.main.async {
-                    sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
+        DispatchQueue.main.async {
+            let anyConnected = ConnectionPool.shared.anyConnected
+            self.queue.async(flags: .barrier) { [weak self] in
+                self?.webSocketTask?.cancel()
+                self?.session?.invalidateAndCancel()
+                self?.nreqSubscriptions = []
+                self?.lastMessageReceivedAt = nil
+                if (self?.exponentialReconnectBackOff ?? 0) >= 512 {
+                    self?.exponentialReconnectBackOff = 512
                 }
-            }
-            guard let self else { return }
-            
-            let code = (error as NSError).code
-            if Set([57,-999,53,54]).contains(code) {
-                // standard "The operation couldn’t be completed. Socket is not connected"
-                // not really error just standard websocket garbage
-                // dont continue as if actual error
-                // also -999 cancelled
-                // No pong 53 "Software caused connection abort"
-                // 54 The operation couldn’t be completed. Connection reset by peer
-                return
-            }
-            
-            self.stats.errors += 1
-            self.stats.addErrorMessage(error.localizedDescription)
-            
-            guard self.isOutbox else { return } // Only outbox relays can go in penalty box, not normal relays
-            guard SettingsStore.shared.enableOutboxRelays else { return }
-            guard ConnectionPool.shared.canPutInPenaltyBox(self.url) else { return }
-            
-            if Set([-1200,-1003,-1011,100,-1202]).contains(code) { // Error codes to put directly in penalty box
-                // -1200 An SSL error has occurred and a secure connection to the server cannot be made.
-                // -1003 A server with the specified hostname could not be found.
-                // -1011 There was a bad response from the server.
-                // -1202 The certificate for this server is invalid. You might be connecting to a server that is pretending to be “nostr.zebedee.cloud” which could put your confidential information at risk.
-                // 100 The operation couldn’t be completed. Protocol error
-                ConnectionPool.shared.penaltybox.insert(self.url)
-            }
-            // if other relays do respond, but this gives error, continue error handling, but if no relays respond, the problem is not relay but something else, so dont put in penalty box
-            else if Set([-1001,-1005]).contains(code) && (self.stats.connected == 0) && ConnectionPool.shared.anyConnected {
-                // -1005 The network connection was lost.
-                // -1001 The request timed out.
+                else if anyConnected {
+                    self?.exponentialReconnectBackOff = max(1, (self?.exponentialReconnectBackOff ?? 0) * 2)
+                }
+                self?.isSocketConnected = false
+                if let url = self?.url {
+                    let shortURL = URL(string: url)?.baseURL?.description ?? url
+                    DispatchQueue.main.async {
+                        sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
+                    }
+                }
+                guard let self else { return }
                 
-                ConnectionPool.shared.penaltybox.insert(self.url)
-            }
-            else if (self.stats.errors > 3) && (self.stats.connected == 0) { // other errors, put in penalty box if too many and no success connection ever
-                ConnectionPool.shared.penaltybox.insert(self.url)
+                let code = (error as NSError).code
+                if Set([57,-999,53,54]).contains(code) {
+                    // standard "The operation couldn’t be completed. Socket is not connected"
+                    // not really error just standard websocket garbage
+                    // dont continue as if actual error
+                    // also -999 cancelled
+                    // No pong 53 "Software caused connection abort"
+                    // 54 The operation couldn’t be completed. Connection reset by peer
+                    return
+                }
+                
+                self.stats.errors += 1
+                self.stats.addErrorMessage(error.localizedDescription)
+                
+                guard self.isOutbox else { return } // Only outbox relays can go in penalty box, not normal relays
+                guard SettingsStore.shared.enableOutboxRelays else { return }
+                guard ConnectionPool.shared.canPutInPenaltyBox(self.url) else { return }
+                
+                if Set([-1200,-1003,-1011,100,-1202]).contains(code) { // Error codes to put directly in penalty box
+                    // -1200 An SSL error has occurred and a secure connection to the server cannot be made.
+                    // -1003 A server with the specified hostname could not be found.
+                    // -1011 There was a bad response from the server.
+                    // -1202 The certificate for this server is invalid. You might be connecting to a server that is pretending to be “nostr.zebedee.cloud” which could put your confidential information at risk.
+                    // 100 The operation couldn’t be completed. Protocol error
+                    ConnectionPool.shared.penaltybox.insert(self.url)
+                }
+                // if other relays do respond, but this gives error, continue error handling, but if no relays respond, the problem is not relay but something else, so dont put in penalty box
+                else if Set([-1001,-1005]).contains(code) && (self.stats.connected == 0) && anyConnected {
+                    // -1005 The network connection was lost.
+                    // -1001 The request timed out.
+                    
+                    ConnectionPool.shared.penaltybox.insert(self.url)
+                }
+                else if (self.stats.errors > 3) && (self.stats.connected == 0) { // other errors, put in penalty box if too many and no success connection ever
+                    ConnectionPool.shared.penaltybox.insert(self.url)
+                }
             }
         }
         let code = (error as NSError).code
