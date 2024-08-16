@@ -128,7 +128,7 @@ class InstantFeed {
             let getFollowingEventsTask = ReqTask(prefix: "GFET-") { taskId in
                 L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
 //                req(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
-                let filters = [Filters(authors: pubkeys, kinds: [1,5,6,9802,30023,34235], since: self.since, limit: 400)]
+                let filters = [Filters(authors: pubkeys, kinds: [1,5,6,9802,30023,34235], since: self.since, limit: 500)]
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
                 
             } processResponseCommand: { [weak self] taskId, _, _ in
@@ -170,14 +170,14 @@ class InstantFeed {
                 guard let self = self else { return }
                 let getGlobalEventsTask = ReqTask(subscriptionId: "RM.getGlobalFeedEvents-" + UUID().uuidString) { taskId in
                     L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
-                    let filters = [Filters(kinds: [1,5,6,9802,30023,34235], since: self.since, limit: 200)]
+                    let filters = [Filters(kinds: [1,5,6,9802,30023,34235], since: self.since, limit: 500)]
                     if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
                         req(message, relays: self.relays)
                     }
                 } processResponseCommand: { [weak self] taskId, _, _ in
                     bg().perform {
                         guard let self = self else { return }
-                        let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0))
+                        let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0), fetchLimit: 250)
                         guard let events = try? bg().fetch(fr) else {
                             L.og.notice("🟪 \(taskId) Could not fetch posts from globalish relays using \(relayCount) relays.")
                             return
@@ -192,7 +192,11 @@ class InstantFeed {
                 } timeoutCommand: { [weak self] taskId in
                     guard let self else { return }
                     self.isRunning = false
-                    if self.events == nil {
+                    let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0), fetchLimit: 500)
+                    if let events = try? bg().fetch(fr), !events.isEmpty {
+                        self.events = events
+                    }
+                    else {
                         L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from globalish relays using \(relayCount) relays. ")
                         self.events = []
                     }

@@ -1404,7 +1404,7 @@ func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, si
         let followingHashtagsFilter = Filters(
             kinds: FETCH_FOLLOWING_KINDS,
             tagFilter: TagFilter(tag: "t", values: Array(hashtags).map { $0.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }),
-            since: since, until: until)
+            since: since, until: until, limit: limit)
         filters.append(followingHashtagsFilter)
     }
     
