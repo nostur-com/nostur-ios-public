@@ -479,6 +479,7 @@
 		1FDB74582BD6B71700649E0A /* PossibleImposterLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDB74572BD6B71700649E0A /* PossibleImposterLabel.swift */; };
 		1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */; };
 		1FDBD89C2A764224001D9F34 /* NoiseFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDBD89B2A764224001D9F34 /* NoiseFilter.swift */; };
+		1FDC9A792C697DA50060992E /* NXGapFiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDC9A782C697DA50060992E /* NXGapFiller.swift */; };
 		1FDF0ED929EC047C00B56AC4 /* ImagePreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */; };
 		1FDF0EDD29ED732500B56AC4 /* AnyStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */; };
 		1FE0C71329FAE82C00381586 /* ProfileFollowButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */; };
@@ -1041,6 +1042,7 @@
 		1FDB74572BD6B71700649E0A /* PossibleImposterLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PossibleImposterLabel.swift; sourceTree = "<group>"; };
 		1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingGuardian.swift; sourceTree = "<group>"; };
 		1FDBD89B2A764224001D9F34 /* NoiseFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoiseFilter.swift; sourceTree = "<group>"; };
+		1FDC9A782C697DA50060992E /* NXGapFiller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NXGapFiller.swift; sourceTree = "<group>"; };
 		1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviews.swift; sourceTree = "<group>"; };
 		1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyStatus.swift; sourceTree = "<group>"; };
 		1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFollowButton.swift; sourceTree = "<group>"; };
@@ -2162,6 +2164,7 @@
 				1F46A72D2C5B95E900511A79 /* NXColumnView.swift */,
 				1F46A72F2C5B96A000511A79 /* NXColumnViewModel.swift */,
 				1FB7FF822C5FE03900EAAD07 /* NXDelayur.swift */,
+				1FDC9A782C697DA50060992E /* NXGapFiller.swift */,
 				1F46A7332C5C38B200511A79 /* NXPostsFeed.swift */,
 				1F94CAB62C5E1D4300CF23B6 /* NXPostsFeedPrefetcher.swift */,
 				1FB7FF842C5FE05800EAAD07 /* NXQueuedSubscriptionIds.swift */,
@@ -2786,6 +2789,7 @@
 				1F7525802997854200477AF2 /* OldNewPost.swift in Sources */,
 				1F2810BD2B1E155F00042928 /* DMContentRenderer.swift in Sources */,
 				1F740DAD29AF8A5200EFCCA7 /* BadgesReceivedView.swift in Sources */,
+				1FDC9A792C697DA50060992E /* NXGapFiller.swift in Sources */,
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
 				1F2AC53F2B12B99300F70662 /* CashuTokenView.swift in Sources */,
 				1F2C86B72AA8D29E00D2D7B3 /* FrameTesting.swift in Sources */,
