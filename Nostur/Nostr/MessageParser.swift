@@ -96,7 +96,8 @@ class MessageParser {
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
-                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(9)) != "-DB-CHAT-" {
+                    // TODO: Make generic -OPEN-, instead of "Following-" and "List-" etc..
+                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(10)) != "Following-" && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(9)) != "-DB-CHAT-" {
                         // Send close message to this specific socket, not all.
                         #if DEBUG
                         L.sockets.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
