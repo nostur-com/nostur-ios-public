@@ -201,6 +201,10 @@ extension Filters {
         }
         return self
     }
+    
+    var hasHashtags: Bool {
+        return self.tagFilter?.tag == "t"
+    }
 }
 
 

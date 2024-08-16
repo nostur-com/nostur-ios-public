@@ -588,13 +588,13 @@ public class ConnectionPool: ObservableObject {
         guard let pubkeys = filters.first?.authors else { return }
         
         // Outbox REQs should always be author based, so remove hashtags
-        let filtersWithoutHashtags = if subscriptionId == "Following" {
+        let filtersWithoutHashtags = if let subscriptionId, subscriptionId.starts(with: "Following-") {
             [filters
                 .map { $0.withoutHashtags() } // Remove hashtags from existing query
                 .first!] // Because its "Following" subscription, we know we only need the first Filter, the second filter will be hashtags. See LVM.fetchRealtimeSinceNow()
         } else {
             filters
-                .map { $0.withoutHashtags() } // For any other query we always from hashtags from existing query
+                .filter { !$0.hasHashtags } // For any other query we always from hashtags from existing query (remove entire filter, not just hashtags
         }
         
         let plan: RequestPlan = createRequestPlan(pubkeys: pubkeys, reqFilters: filtersWithoutHashtags, ourReadRelays: ourReadRelays, preferredRelays: preferredRelays, skipTopRelays: 3)
