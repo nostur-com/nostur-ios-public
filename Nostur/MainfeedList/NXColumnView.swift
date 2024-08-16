@@ -43,9 +43,14 @@ struct NXColumnView: View {
             viewModel.load(config)
         }
         .onChange(of: isVisible) { newValue in
-            L.og.debug("☘️☘️ \(config.id) .onChange(of: isVisible)")
+            L.og.debug("☘️☘️ \(config.id) .onChange(of: isVisible) newValue: \(newValue)")
             guard viewModel.isVisible != newValue else { return }
             viewModel.isVisible = newValue
+        }
+        .onChange(of: config) { newValue in
+            L.og.debug("☘️☘️ \(config.id) .onChange(of: config)")
+            guard viewModel.config != newValue else { return }
+            viewModel.load(newValue)
         }
         .onChange(of: dim.availableNoteRowWidth) { newValue in
             L.og.debug("☘️☘️ \(config.id) .onChange(of: availableNoteRowWidth)")
@@ -100,5 +105,47 @@ struct NXColumnView: View {
             let config = NXColumnConfig(id: list.id?.uuidString ?? "?", columnType: .pubkeys(list), accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: "Following")
             NXColumnView(config: config, isVisible: true)
         }
+    }
+}
+
+
+#Preview("3 columns") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadCloudFeeds(3)
+    }) {
+        FeedListViewTester()
+    }
+}
+
+
+
+struct FeedListViewTester: View {
+    @EnvironmentObject var la: LoggedInAccount
+    
+    @State private var columnConfigs: [NXColumnConfig] = []
+    
+    var body: some View {
+        HStack {
+            ForEach(columnConfigs) { config in
+                AvailableWidthContainer {
+                    NXColumnView(config: config, isVisible: true)
+                }
+            }
+        }
+        .onAppear {
+            generateTestColumns()
+        }
+    }
+    
+    func generateTestColumns() {
+        columnConfigs =  (PreviewFetcher.fetchLists().map { list in
+            NXColumnConfig(id: list.id?.uuidString ?? "?", columnType: .pubkeys(list), accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: "Following")
+        }) + [
+//            ColumnConfig(id: "pubkeys", columnType: .pubkeys, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"),
+//            ColumnConfig(id: "mentions", columnType: .mentions, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"),
+//            ColumnConfig(id: "reactions", columnType: .reactions, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e")
+        ]
     }
 }
