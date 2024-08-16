@@ -416,7 +416,7 @@ struct FollowingAndExplore: View, Equatable {
             newExploreFeed.repliesEnabled = false
             
             DataProvider.shared().save() { // callback after save:
-                followingConfig = NXColumnConfig(id: newExploreFeed.subscriptionId, columnType: .following(newExploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
+                exploreConfig = NXColumnConfig(id: newExploreFeed.subscriptionId, columnType: .following(newExploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
             }
         }
     }
