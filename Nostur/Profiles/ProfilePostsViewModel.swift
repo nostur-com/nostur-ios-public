@@ -159,7 +159,7 @@ class ProfilePostsViewModel: ObservableObject {
             }
             
             guard !posts.isEmpty else { return }
-            guard SettingsStore.shared.fetchCounts else { return }
+            guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
             for post in posts.prefix(5) {
                 EventRelationsQueue.shared.addAwaitingEvent(post.event)
             }
@@ -204,7 +204,7 @@ class ProfilePostsViewModel: ObservableObject {
     }
     
     private func fetchPostStats(_ index:Int, postId:String) {
-        guard SettingsStore.shared.fetchCounts else { return }
+        guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
         guard !self.prefetchedIds.contains(postId) else { return }
         
         guard index % 5 == 0 else { return }
@@ -291,7 +291,7 @@ class ProfilePostsViewModel: ObservableObject {
                 self?.posts.append(contentsOf: posts)
             }
             
-            guard SettingsStore.shared.fetchCounts else { return }
+            guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
             for post in posts.prefix(5) {
                 EventRelationsQueue.shared.addAwaitingEvent(post.event)
             }
