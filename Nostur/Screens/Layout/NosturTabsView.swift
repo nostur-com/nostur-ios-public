@@ -74,7 +74,6 @@ struct NosturTabsView: View {
             if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                 AvailableWidthContainer {
                     DetailPane()
-                        .debugDimensions("DetailPane")
                 }
             }
         }

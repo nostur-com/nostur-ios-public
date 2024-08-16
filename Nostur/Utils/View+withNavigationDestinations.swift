@@ -108,7 +108,7 @@ extension View {
                 default:
                     PostDetailView(nrPost: nrPost)
                         .equatable()
-                        .debugDimensions("nbNavigationDestination.PostDetailView", alignment: .topLeading)
+//                        .debugDimensions("nbNavigationDestination.PostDetailView", alignment: .topLeading)
                 }
             }
             .nbNavigationDestination(for: Naddr1Path.self) { path in

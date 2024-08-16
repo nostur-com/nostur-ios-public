@@ -54,7 +54,7 @@ class InstantFeed {
 //        fetchPostsFromRelays() <-- No need, already done on .pubkeys { didSet }
     }
     
-    public func start(_ relays:Set<RelayData>, since: Int? = nil, onComplete: @escaping CompletionHandler) {
+    public func start(_ relays: Set<RelayData>, since: Int? = nil, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(relays.count) relays)")
         self.isRunning = true
         self.onComplete = onComplete
