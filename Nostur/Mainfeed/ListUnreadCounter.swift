@@ -9,6 +9,11 @@ import SwiftUI
 
 class LVMCounter: ObservableObject {
     @Published var count = 0 // New one based on index
+    @Published var unreadIds: [String: Int] = [:] // Dict of [post id: posts count (post + parent posts)]
+    
+    public var unreadCount: Int {
+        unreadIds.reduce(0, { $0 + $1.value })
+    }
     
     init(count: Int = 0) {
         self.count = count
@@ -16,11 +21,11 @@ class LVMCounter: ObservableObject {
 }
 
 struct ListUnreadCounter: View {
-    private var vm:LVM
-    @ObservedObject private var vmCounter:LVMCounter
-    private var theme:Theme
+    private var vm: LVM
+    @ObservedObject private var vmCounter: LVMCounter
+    private var theme: Theme
     
-    init(vm: LVM, theme:Theme) {
+    init(vm: LVM, theme: Theme) {
         self.vm = vm
         self.vmCounter = vm.lvmCounter
         self.theme = theme
@@ -37,8 +42,8 @@ struct ListUnreadCounter: View {
 //            .shadow(color: Color.gray.opacity(0.5), radius: 5)
             .frame(width: 65, height: 40)
             .overlay(alignment: .leading) {
-                Text(String(vmCounter.count))
-                    .animation(.snappy, value: vmCounter.count)
+                Text(String(vmCounter.unreadCount))
+                    .animation(.snappy, value: vmCounter.unreadCount)
                     .rollingNumber()
                     .fixedSize()
                     .frame(width: 35, alignment: .center)
@@ -53,13 +58,19 @@ struct ListUnreadCounter: View {
             .fontWeightBold()
             .foregroundColor(.white)
 
-            .opacity(vmCounter.count > 0 ? 1.0 : 0)
-            .onTapGesture {
-                sendNotification(.shouldScrollToFirstUnread)
+            .opacity(vmCounter.unreadCount > 0 ? 1.0 : 0)
+//            .onTapGesture {
+//                sendNotification(.shouldScrollToFirstUnread)
+//            }
+//            .simultaneousGesture(LongPressGesture().onEnded { _ in
+//                sendNotification(.shouldScrollToTop)
+//            })
+            .onChange(of: vmCounter.unreadCount) { newUnreadCount in
+                if newUnreadCount == 0 && vmCounter.unreadCount != 0 {
+                    vmCounter.unreadIds = [:]
+                    L.og.debug("UNREAD COUNTER RESET")
+                }
             }
-            .simultaneousGesture(LongPressGesture().onEnded { _ in
-                sendNotification(.shouldScrollToTop)
-            })
     }
 }
 

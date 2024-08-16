@@ -244,7 +244,6 @@ struct FollowingAndExplore: View, Equatable {
                     .opacity(selectedSubTab == "Explore" ? 1.0 : 0)
                 }
                 
-                
                 // HOT/ARTICLES/GALLERY
                 if account.followingPubkeys.count > 10 {
                     switch selectedSubTab {
@@ -324,9 +323,6 @@ struct FollowingAndExplore: View, Equatable {
         })
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .onReceive(receiveNotification(.showFeedToggles)) { _ in
-            showFeedSettings = true
-        }
         .onReceive(lists.publisher.collect()) { lists in
             if !lists.isEmpty && self.lists.count != lists.count {
                 removeDuplicateLists()
@@ -341,7 +337,7 @@ struct FollowingAndExplore: View, Equatable {
         }
     }
     
-    func removeDuplicateLists() {
+    private func removeDuplicateLists() {
         var uniqueLists = Set<UUID>()
         let sortedLists = lists.sorted {
             if ($0.showAsTab && !$1.showAsTab) { return true }
@@ -365,7 +361,7 @@ struct FollowingAndExplore: View, Equatable {
         }
     }
     
-    func loadColumnConfigs() {
+    private func loadColumnConfigs() {
         columnConfigs = lists
             .filter {
                 switch $0.feedType {
@@ -380,15 +376,6 @@ struct FollowingAndExplore: View, Equatable {
             .map { list in
                 NXColumnConfig(id: list.subscriptionId, columnType: list.feedType, accountPubkey: list.accountPubkey, name: list.name_)
             }
-        
-#if DEBUG
-        for columnConfig in columnConfigs {
-            L.og.debug("☘️☘️ FollowingAndExplore columnConfigs \(columnConfig.id)")
-        }
-#endif
-        
-        // If we don't have "Following" CloudFeed, create it. Check if we need to migrate hideReplies from ListState. (should run only once)
-        // ListState.listId: "Following" + ListState.pubkey "hex.." ---> CloudFeed.type "follows" + CloudFeed.accountPubkey
     }
     
     private func createFollowingFeed() {

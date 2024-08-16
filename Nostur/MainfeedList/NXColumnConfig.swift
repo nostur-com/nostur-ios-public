@@ -46,7 +46,6 @@ struct NXColumnConfig: Identifiable {
 
 enum NXColumnType {
     case following(CloudFeed) // kind:3 p + hashtags from CloudAccount.accountPubkey
-//    case pubkeys2(Set<String>) // input=specific pubkeys, no CloudFeed needed
     case pubkeys(CloudFeed) // input=specific pubkeys, no accountPubkey needed
     case pubkey // input=single pubkey - stalker
     case relays(CloudFeed)
