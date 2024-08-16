@@ -811,7 +811,7 @@ extension Event {
                 fatalError("Should only be called from bg()")
             }
         #endif
-        if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id) {
+        if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id), event.managedObjectContext != nil { // <-- maybe fix: error: fatal: Failed to re-registered lost fault. fault 0x60 with oid 0xa7 <x-coredata://3DA0D6F2-/Event/p65> has a moc of 0x0 but we expected 0x60
             guard !event.isDeleted else { return }
             let existingRelays = event.relays.split(separator: " ").map { String($0) }
             let newRelays = relays.split(separator: " ").map { String($0) }
@@ -966,8 +966,11 @@ extension Event {
                 savedEvent.reactionToId = lastE
                 // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
                 // here savedEvent is not saved yet, so appears it can crash on context, even when its the same context
-                context.perform { // so we save on next .perform?
-                    savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
+                context.perform { // so we save on next .perform? Update: nope, still crashing. lets compare managedObjectContext now
+                    if let reactionTo = try? Event.fetchEvent(id: lastE, context: context), reactionTo.managedObjectContext == savedEvent.managedObjectContext {
+                        savedEvent.reactionTo = reactionTo
+                    }
+                    
                     if let otherPubkey =  savedEvent.reactionTo?.pubkey {
                         savedEvent.otherPubkey = otherPubkey
                     }
