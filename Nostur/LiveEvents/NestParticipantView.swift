@@ -40,7 +40,6 @@ struct NestParticipantView: View {
                 .opacity(role != nil ? 1.0 : 0.0)
             
         }
-        .frame(maxWidth: 90.0)
         .onAppear {
             nrContact.listenForPresence(aTag)
         }
