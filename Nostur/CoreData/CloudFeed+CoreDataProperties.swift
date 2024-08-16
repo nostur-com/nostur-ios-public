@@ -146,6 +146,14 @@ extension CloudFeed : Identifiable {
     var relaysData: Set<RelayData> {
         Set(relays_.map { $0.toStruct() })
     }
+    
+    // helper to get account
+    var account: CloudAccount? {
+        guard let accountPubkey = self.accountPubkey,
+              let account = NRState.shared.accounts.first(where: { $0.publicKey == accountPubkey })
+        else { return nil }
+        return account
+    }
 }
 
 enum CloudFeedType: String {

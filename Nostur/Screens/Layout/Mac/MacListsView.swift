@@ -29,14 +29,15 @@ struct MacListsView: View {
                     TabView(selection: $vm.selectedTab) {
                         VStack(spacing:0) {
                             MacListHeader(title: String(localized:"Following"))
-                            if let lvm = lvm {
-                                ListViewContainer(vm: lvm)
-                                    .overlay(alignment: .topTrailing) {
-                                        ListUnreadCounter(vm: lvm, theme: themes.theme)
-                                            .padding(.trailing, 10)
-                                            .padding(.top, 5)
-                                    }
-                            }
+                            Color.green
+//                            if let lvm = lvm {
+//                                ListViewContainer(vm: lvm)
+//                                    .overlay(alignment: .topTrailing) {
+//                                        ListUnreadCounter(vm: lvm, theme: themes.theme)
+//                                            .padding(.trailing, 10)
+//                                            .padding(.top, 5)
+//                                    }
+//                            }
                         }
                             .tag("Main")
                             .toolbar(.hidden, for: .tabBar)
@@ -65,10 +66,6 @@ struct MacListsView: View {
             }
         }
         .onAppear {
-            if let account = account() {
-                lvm = LVMManager.shared.followingLVM(forAccount: account)
-            }
-            
             availableFeeds = CloudFeed.fetchAll(context: DataProvider.shared().viewContext)
         }
         .withSheets()
@@ -104,12 +101,13 @@ struct ColumnView: View {
                 FeedSelector(feeds: availableFeeds, selected: $selectedFeed)
                     .padding(.top, 10)
                 if let lvm = lvm {
-                    ListViewContainer(vm: lvm)
-                        .overlay(alignment: .topTrailing) {
-                            ListUnreadCounter(vm: lvm, theme: themes.theme)
-                                .padding(.trailing, 10)
-                                .padding(.top, 5)
-                        }
+                    Color.green
+//                    ListViewContainer(vm: lvm)
+//                        .overlay(alignment: .topTrailing) {
+//                            ListUnreadCounter(vm: lvm, theme: themes.theme)
+//                                .padding(.trailing, 10)
+//                                .padding(.top, 5)
+//                        }
                 }
                 Spacer()
             }
@@ -149,9 +147,7 @@ struct ColumnView: View {
             }
         }
         .onChange(of: selectedFeed) { newFeed in
-            if let feed = newFeed {
-                lvm = LVMManager.shared.listLVM(forList: feed, isDeck: true)
-            }
+
         }
     }
 }

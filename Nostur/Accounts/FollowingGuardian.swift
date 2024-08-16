@@ -131,9 +131,7 @@ class FollowingGuardian: ObservableObject {
         account.objectWillChange.send()
         for tag in tags {
             account.followingHashtags.insert(tag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
-        } // TODO: CHECK FOLLOWING NEW HASHTAGS
-//        sendNotification(.followersChanged, account.followingPublicKeys)
-        LVMManager.shared.followingLVM(forAccount: account).loadHashtags()
+        }
     }
     
     func restoreFollowing(removed:Set<String>, republish:Bool = true) {
