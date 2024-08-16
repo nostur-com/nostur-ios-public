@@ -1140,15 +1140,25 @@ extension NXColumnViewModel {
                         }
                     }
                     
-                    if let previousFirstPostId, let restoreToIndex = addedAndExistingPostsTruncated.firstIndex(where: { $0.id == previousFirstPostId })  {
-                        scrollToIndex = restoreToIndex
-#if DEBUG
-                L.og.debug("☘️☘️ \(config.id) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150))")
-#endif
+                    if SettingsStore.shared.autoScroll {
+                        withAnimation { // withAnimation won't keep scroll position and scrolls to newest post
+                            viewState = .posts(addedAndExistingPostsTruncated)
+                        }
+                    }
+                    else {
+                        viewState = .posts(addedAndExistingPostsTruncated)
+                        
+                        // Set scrollToIndex to restore scroll position after new posts are added on top
+                        if let previousFirstPostId, let restoreToIndex = addedAndExistingPostsTruncated.firstIndex(where: { $0.id == previousFirstPostId })  {
+                            scrollToIndex = restoreToIndex
+                            #if DEBUG
+                            L.og.debug("☘️☘️ \(config.id) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150))")
+                            #endif
+                        }
                     }
                 }
                 else {
-                    withAnimation {
+                    withAnimation { // withAnimation and not at top keeps scroll position
                         viewState = .posts(addedAndExistingPostsTruncated)
                         
                         // Update unread count
