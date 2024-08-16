@@ -610,6 +610,7 @@
       }
     },
     "%@ settings" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2233,6 +2234,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbonden"
+          }
+        }
+      }
+    },
+    "Connected: %lld/%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connected: %1$lld/%2$lld/%3$lld"
           }
         }
       }
@@ -4152,6 +4163,9 @@
         }
       }
     },
+    "Live Nests or streams from follows" : {
+
+    },
     "Load default" : {
       "localizations" : {
         "nl" : {
@@ -5411,6 +5425,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichten met de meeste reacties of reposts van mensen die je volgt"
+          }
+        }
+      }
+    },
+    "posts: %lld atTop: %@ load time: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "posts: %1$lld atTop: %2$@ load time: %3$@"
           }
         }
       }
@@ -6738,6 +6762,9 @@
           }
         }
       }
+    },
+    "Show Live banner" : {
+      "comment" : "Setting on settings screen"
     },
     "Show more" : {
       "localizations" : {
