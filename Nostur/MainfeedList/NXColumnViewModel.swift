@@ -42,6 +42,9 @@ class NXColumnViewModel: ObservableObject {
         if finishTime == nil {
             finishTime = .now
         }
+        if !ConnectionPool.shared.anyConnected { // After finish we were never connected, watch for first connection to .load() again
+            self.watchForFirstConnection = true
+        }
     }
     
     @Published var viewState: ColumnViewState = .loading {
@@ -197,9 +200,6 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public func load(_ config: NXColumnConfig) {
         self.config = config
-        if !ConnectionPool.shared.anyConnected {
-            self.watchForFirstConnection = true
-        }
         // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
         guard isVisible || (config.id.starts(with: "Following-") && config.name != "Explore") else { return }
