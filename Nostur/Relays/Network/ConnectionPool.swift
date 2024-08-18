@@ -366,15 +366,13 @@ public class ConnectionPool: ObservableObject {
             }
         }
         
-        if subscriptionId.starts(with: "Following-") { // TODO: Also List- or not?
-            for (_, connection) in self.outboxConnections {
-                connection.queue.async(flags: .barrier) {
-                    if connection.nreqSubscriptions.contains(subscriptionId) {
-                        L.lvm.info("Closing subscriptions for .relays - subscriptionId: \(subscriptionId)");
-                        let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
-                        connection.sendMessage(closeSubscription.message)
-                        connection.nreqSubscriptions.remove(subscriptionId)
-                    }
+        for (_, connection) in self.outboxConnections {
+            connection.queue.async(flags: .barrier) {
+                if connection.nreqSubscriptions.contains(subscriptionId) {
+                    L.lvm.info("Closing subscriptionId: \(subscriptionId) on outbox relay \(connection.url)");
+                    let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
+                    connection.sendMessage(closeSubscription.message)
+                    connection.nreqSubscriptions.remove(subscriptionId)
                 }
             }
         }
@@ -634,6 +632,13 @@ public class ConnectionPool: ObservableObject {
             ).json()
             else { return }
             
+            
+            if subscriptionId != nil && connection.nreqSubscriptions.contains(subscriptionId!) { continue } // Skip if sub is already active
+            if (subscriptionId != nil) {
+                self.queue.async(flags: .barrier) { [weak connection] in
+                    connection?.nreqSubscriptions.insert(subscriptionId!)
+                }
+            }
             connection.sendMessage(message)
         }
     }
