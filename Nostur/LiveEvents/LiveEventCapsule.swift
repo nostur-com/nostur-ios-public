@@ -27,7 +27,7 @@ struct LiveEventCapsule: View {
                     .id(liveEvent.participantsOrSpeakers[index].pubkey)
                 }
             }
-            .frame(height: 30.0)
+            .frame(height: 34.0)
             Text((liveEvent.title ?? liveEvent.summary) ?? "Now live").lineLimit(1)
                 .fontWeightBold()
             Spacer()
@@ -37,8 +37,9 @@ struct LiveEventCapsule: View {
         .foregroundColor(.white)
         .padding(.horizontal, 8)
         .background(themes.theme.accent)
-        .frame(height: 44)
-        .clipShape(.rect(cornerRadius: 22))
+        .frame(height: 34.0)
+        .clipShape(.rect(cornerRadius: 30))
+        .frame(height: 44.0)
         .contentShape(Rectangle())
         .offset(y: dragOffset.height)
         .gesture(
