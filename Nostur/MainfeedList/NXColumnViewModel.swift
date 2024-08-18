@@ -775,6 +775,7 @@ class NXColumnViewModel: ObservableObject {
             
                 .map { [weak self] _ in self?.queuedSubscriptionIds.getAndClear() ?? [] }
                 .filter { !$0.isEmpty }
+                .receive(on: RunLoop.main) // main because .haltedProcessing must access .isDelaying on main
                 .sink { [weak self] subscriptionIds in
                     guard let self else { return }
                     guard !haltedProcessing && (isVisible) && !isPaused && !NRState.shared.appIsInBackground else {
@@ -786,9 +787,8 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.id) listenForNewPosts.subscriptionIds \(subscriptionIds)")
 #endif
-                    Task { @MainActor in
-                        self.loadLocal(config)
-                    }
+                    
+                    self.loadLocal(config)
                 }
         }
  
@@ -1276,7 +1276,7 @@ extension NXColumnViewModel {
                 withAnimation {
                     self.viewState = .posts(existingPosts + onlyNewAddedPosts)
                 }
-                sendNextPageReq(config, until: existingPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970))
+//                sendNextPageReq(config, until: existingPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)) // TODO: do this after scrolling near end, not after putOnScreen
             }
         }
         else { // Nothing on screen yet, put first posts on screen
@@ -1291,7 +1291,7 @@ extension NXColumnViewModel {
             withAnimation {
                 viewState = .posts(uniqueAddedPosts)
             }
-            sendNextPageReq(config, until: uniqueAddedPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970))
+//            sendNextPageReq(config, until: uniqueAddedPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)) // TODO: do this after scrolling near end, not after putOnScreen
         }
         
         completion?()

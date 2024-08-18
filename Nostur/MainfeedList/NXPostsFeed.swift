@@ -124,7 +124,10 @@ struct NXPostsFeed: View {
             }
             #if DEBUG
             .overlay(alignment: .bottom) {
-                Text("posts: \(posts.count) atTop: \(vm.isAtTop ? "1" : "0") load time: \(vm.formattedLoadTime)")
+                VStack {
+                    Text("posts: \(posts.count) atTop: \(vmInner.isAtTop ? "1" : "0") load time: \(vm.formattedLoadTime)")
+                    ConnectionDebugger()
+                }
             }
             #endif
             .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
