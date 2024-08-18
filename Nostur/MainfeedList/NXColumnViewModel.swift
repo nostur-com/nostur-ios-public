@@ -247,7 +247,7 @@ class NXColumnViewModel: ObservableObject {
                 let pubkeys: Set<String> = switch config.columnType {
                 case .pubkeys(let feed):
                     feed.contactPubkeys
-                case .following(let feed):
+                case .following(_):
                     (config.account?.followingPubkeys ?? []).union(Set([config.accountPubkey ?? ""]))
                 default:
                     []
@@ -1325,7 +1325,7 @@ extension NXColumnViewModel {
     @MainActor
     private func loadRemote(_ config: NXColumnConfig, older: Bool = false) {
         #if DEBUG
-        L.og.debug("☘️☘️ \(config.id) loadRemote(pubkeys)")
+        L.og.debug("☘️☘️ \(config.id) loadRemote(config)")
         #endif
         
         switch config.columnType {

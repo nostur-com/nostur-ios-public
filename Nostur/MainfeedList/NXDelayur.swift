@@ -15,7 +15,7 @@ class NXDelayur {
     private var onResume: (() ->())?
 
     func setDelayur(_ isDelaying: Bool, seconds: TimeInterval? = nil, onResume: (() ->())? = nil) {
-        self.delaying = isDelaying
+        self.delaying = isDelaying // Data race Write of size 1 by thread 1
         self.onResume = onResume
         if delaying, let seconds {
             restartDelayurTimer(timeInterval: seconds)
@@ -25,7 +25,7 @@ class NXDelayur {
         }
     }
     
-    public var isDelaying: Bool { delaying }
+    public var isDelaying: Bool { delaying } // Data race in Nostur.NXDelayur.isDelaying.getter : Swift.Bool at 0x144288fe0 (Thread 87)
 
     private func restartDelayurTimer(timeInterval ti: TimeInterval) {
         delayurTimer?.invalidate()

@@ -361,7 +361,7 @@ struct FollowingAndExplore: View, Equatable {
     private func createFollowingFeed() {
         let context = viewContext()
         let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type == %@ && accountPubkey == %@", CloudFeedType.following.rawValue, la.pubkey)
+        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.following.rawValue, la.pubkey)
         if let followingFeed = try? context.fetch(fr).first {
             followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: la.pubkey, name: "Following")
         }
@@ -380,7 +380,7 @@ struct FollowingAndExplore: View, Equatable {
             
             // Check for existing ListState
             let fr = ListState.fetchRequest()
-            fr.predicate = NSPredicate(format: "listId == %@ && pubkey == %@", "Following", la.pubkey)
+            fr.predicate = NSPredicate(format: "listId = %@ AND pubkey = %@", "Following", la.pubkey)
             if let followingListState = try? context.fetch(fr).first {
                 newFollowingFeed.repliesEnabled = !followingListState.hideReplies
             }

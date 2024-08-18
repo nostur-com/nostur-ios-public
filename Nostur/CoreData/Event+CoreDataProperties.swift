@@ -433,31 +433,27 @@ extension Event {
     // NIP-25: The generic reaction, represented by the content set to a + string, SHOULD be interpreted as a "like" or "upvote".
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
     // TODO: 167.00 ms    1.5%    0 s          specialized static Event.updateLikeCountCache(_:content:context:)
-    static func updateLikeCountCache(_ event: Event, content: String, context: NSManagedObjectContext) throws -> Bool {
+    static func updateLikeCountCache(_ reaction: Event, content: String, context: NSManagedObjectContext) throws -> Bool {
         switch content {
             case "-": // (down vote)
                 break
             default:
                 // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
-                if let lastEtag = event.lastE() {
+                if let lastEtag = reaction.lastE() {
                     if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
                         guard !reactingToEvent.isDeleted else { break }
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-                        event.reactionTo = reactingToEvent
-                        event.reactionToId = reactingToEvent.id
+                        reaction.reactionTo = reactingToEvent
+                        reaction.reactionToId = reactingToEvent.id
                     }
                     else {
-                        let request = NSFetchRequest<Event>(entityName: "Event")
-                        request.entity = Event.entity()
-                        request.predicate = NSPredicate(format: "id == %@", lastEtag)
-                        request.fetchLimit = 1
-                        if let reactingToEvent = try context.fetch(request).first {
+                        if let reactingToEvent = try? Event.fetchEvent(id: lastEtag, context: context) {
                             guard !reactingToEvent.isDeleted else { break }
                             reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-                            event.reactionTo = reactingToEvent
-                            event.reactionToId = reactingToEvent.id
+                            reaction.reactionTo = reactingToEvent
+                            reaction.reactionToId = reactingToEvent.id
                         }
                     }
                 }
@@ -466,7 +462,7 @@ extension Event {
     }
     
     // To fix event.reactionTo but not count+1, because +1 is instant at tap, but this relation happens after 8 sec (unpublisher)
-    static func updateReactionTo(_ event:Event, context:NSManagedObjectContext) throws {
+    static func updateReactionTo(_ event: Event, context: NSManagedObjectContext) throws {
         if let lastEtag = event.lastE() {
             let request = NSFetchRequest<Event>(entityName: "Event")
             request.entity = Event.entity()
@@ -474,7 +470,6 @@ extension Event {
             request.fetchLimit = 1
             
             if let reactingToEvent = try context.fetch(request).first {
-//                reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                 event.reactionTo = reactingToEvent
                 event.reactionToId = reactingToEvent.id
@@ -878,7 +873,9 @@ extension Event {
         }
         else {
             // 100.00 ms    0.6%    0 s                     static Contact.fetchByPubkey(_:context:)
-            savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
+            if let contact = Contact.fetchByPubkey(event.publicKey, context: context) {
+                savedEvent.contact = contact
+            }
         }
         savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags) // TODO: why encode again, need to just store what we received before (performance)
         
@@ -934,14 +931,10 @@ extension Event {
                         // TODO: Maybe wrong main context event added somewhere?
                     }
                     else {
-                        context.perform { // set relation on next .perform to fix context crash?
-                            savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
-                        }
+                        savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
                     }
                     if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
-                        context.perform { // we don't have .zappedEvent yet without .perform { } .. see few lines above
-                            savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
-                        }
+                        savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
                         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, eTag: savedEvent.zappedEventId, zapState: .zapReceiptConfirmed))
                     }
                 }
@@ -966,17 +959,13 @@ extension Event {
                 savedEvent.reactionToId = lastE
                 // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
                 // here savedEvent is not saved yet, so appears it can crash on context, even when its the same context
-                context.perform { // so we save on next .perform? Update: nope, still crashing. lets compare managedObjectContext now
-                    if let reactionTo = try? Event.fetchEvent(id: lastE, context: context), reactionTo.managedObjectContext == savedEvent.managedObjectContext {
-                        savedEvent.reactionTo = reactionTo
-                    }
-                    
-                    if let otherPubkey =  savedEvent.reactionTo?.pubkey {
-                        savedEvent.otherPubkey = otherPubkey
-                    }
-                    if savedEvent.otherPubkey == nil, let lastP = event.lastP() {
-                        savedEvent.otherPubkey = lastP
-                    }
+                savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
+                
+                if let otherPubkey =  savedEvent.reactionTo?.pubkey {
+                    savedEvent.otherPubkey = otherPubkey
+                }
+                if savedEvent.otherPubkey == nil, let lastP = event.lastP() {
+                    savedEvent.otherPubkey = lastP
                 }
             }
         }
@@ -1229,7 +1218,9 @@ extension Event {
         // kind6 - repost, the reposted post is put in as .firstQuote
         if event.kind == .repost {
             savedEvent.firstQuoteId = kind6firstQuote?.id ?? event.firstE()
-            savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
+            if let kind6firstQuote {
+                savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
+            }
             
             if let repostedEvent = savedEvent.firstQuote { // we already got firstQuote passed in as param
                 repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
@@ -1240,7 +1231,7 @@ extension Event {
                 // We need to get firstQuote from db or cache
                 if let firstE = event.firstE() {
                     if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                        savedEvent.firstQuote = repostedEvent // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts 
+                        savedEvent.firstQuote = repostedEvent // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
 //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
