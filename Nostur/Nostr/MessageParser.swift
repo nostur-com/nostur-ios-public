@@ -66,8 +66,8 @@ class MessageParser {
                         }
                     }
                 case .CLOSED:
-                    L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED)")
                     if message.message.prefix(14) == "auth-required:" {
+                        L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) (auth-required)")
                         // Send auth response, but check first if its outbox relay, then remove from outbox relays
                         guard !client.isOutbox else {
                             DispatchQueue.main.async {
@@ -82,6 +82,9 @@ class MessageParser {
                         }
                         
                         client.sendAuthResponse()
+                    }
+                    else {
+                        L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED)")
                     }
                 case .NOTICE:
                     L.sockets.notice("\(relayUrl): \(message.message)")
