@@ -400,6 +400,11 @@ struct Settings: View {
                                 }
                             }
                         }
+                        .onChange(of: settings.enableVPNdetection) { newValue in
+                            if newValue {
+                                NetworkMonitor.shared.detectActualConnection()
+                            }
+                        }
                     }
                     
                     RelaysStatsLink()
