@@ -25,11 +25,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
         (naddr1 != nil && naddr1!.kind == 30023) || articlePath != nil
     }
     
-    @Published var navigationTitle = "" {
-        didSet {
-            L.og.debug("💄💄 navigationTitle set to \(self.navigationTitle)")
-        }
-    }
+    @Published var navigationTitle = ""
     
     @Published var suspended = false
     

@@ -61,7 +61,9 @@ class Importer {
             .sink { [weak self] in
                 self?.bgContext.perform { [weak self] in
                     guard let self else { return }
+#if DEBUG
                     L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
+#endif
                     let notified = self.callbackSubscriptionIds
                     self.importedMessagesFromSubscriptionIds.send(notified)
                     self.callbackSubscriptionIds = []
@@ -76,7 +78,9 @@ class Importer {
             .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
+#if DEBUG
                 L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.5 seconds), but sends first after debounce (0.15)")
+#endif
                 self?.importEvents()
             }
             .store(in: &subscriptions)
@@ -317,7 +321,9 @@ class Importer {
                 if (bgContext.hasChanges) {
                     try bgContext.save()
                     if (saved > 0) {
+#if DEBUG
                         L.importing.debug("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
+#endif
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
                         self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
@@ -325,7 +331,9 @@ class Importer {
                         subscriptionIds.removeAll()
                     }
                     else {
+#if DEBUG
                         L.importing.debug("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
+#endif
                     }
                 }
                 else {

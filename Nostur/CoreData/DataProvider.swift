@@ -231,7 +231,9 @@ class DataProvider: ObservableObject {
         
         if Thread.isMainThread {
             bg.perform {
+#if DEBUG
                 L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count)")
+#endif
                 if bg.hasChanges {
                     do {
                         try bg.save()
@@ -243,7 +245,9 @@ class DataProvider: ObservableObject {
             }
         }
         else {
+#if DEBUG
             L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count)")
+#endif
             if bg.hasChanges {
                 do {
                     try bg.save()

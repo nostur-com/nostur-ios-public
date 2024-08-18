@@ -152,6 +152,9 @@ public class ConnectionPool: ObservableObject {
     }
     
     public func connectAll(resetExpBackOff: Bool = false) {
+        #if DEBUG
+        L.og.debug("ConnectionPool.shared.connectAll()")
+        #endif
         for (_, connection) in self.connections {
             if (connection.isConnected) { continue }
             queue.async {
@@ -197,12 +200,16 @@ public class ConnectionPool: ObservableObject {
 
                 if let lastReceivedMessageAt = connection.lastMessageReceivedAt {
                     if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
+#if DEBUG
                         L.sockets.debug("PING: \(connection.url) Last message older that 45 seconds, sending ping")
+#endif
                         connection.ping()
                     }
                 }
                 else {
+#if DEBUG
                     L.sockets.debug("\(connection.url) Last message = nil. (re)connecting.. connection.isSocketConnecting: \(connection.isSocketConnecting) ")
+#endif
                     connection.connect()
                 }
             }
@@ -611,8 +618,9 @@ public class ConnectionPool: ObservableObject {
             })
             .prefix(self.maxPreferredRelays) // SANITY
         {
-            
+#if DEBUG
             L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description)")
+#endif
             let connection = ConnectionPool.shared.addOutboxConnection(RelayData(read: true, write: false, search: false, auth: false, url: req.key, excludedPubkeys: []))
             if !connection.isConnected {
                 connection.connect()

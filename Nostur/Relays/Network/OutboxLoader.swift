@@ -83,7 +83,9 @@ public class OutboxLoader {
                     ).json()
                 else { return }
                 
+#if DEBUG
                 L.sockets.debug("📤📤 Outbox: Fetching contact relay info for \(self.follows) follows")
+#endif
                 req(cm)
             },
             processResponseCommand: { [weak self] taskId, _, _ in

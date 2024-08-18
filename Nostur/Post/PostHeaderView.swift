@@ -232,9 +232,9 @@ struct PostHeaderView: View {
     public let singleLine: Bool
 
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+//        #if DEBUG
+//        let _ = Self._printChanges()
+//        #endif
         HStack(alignment: .center, spacing: 5) {
             Text(name)
                 .foregroundColor(.primary)
