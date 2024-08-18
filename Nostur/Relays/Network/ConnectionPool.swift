@@ -160,6 +160,7 @@ public class ConnectionPool: ObservableObject {
             queue.async {
                 guard connection.relayData.shouldConnect else { return }
                 guard !connection.isSocketConnected else { return }
+                guard !connection.isSocketConnecting else { return }
                 if resetExpBackOff {
                     connection.resetExponentialBackOff()
                 }

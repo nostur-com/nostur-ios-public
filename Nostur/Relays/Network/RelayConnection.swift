@@ -97,7 +97,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 // we should reset the exponential back off and connectAll
                 else if !wasConnected && isSocketConnected && !ConnectionPool.shared.anyConnected {
                     L.og.debug("RelayConnection \(self.url) - first connection after all disconnected")
-                    ConnectionPool.shared.connectAll(resetExpBackOff: true)
+//                    ConnectionPool.shared.connectAll(resetExpBackOff: true) // <-- TODO: Causes duplicate connections, at start up .connectAll has first connection, and triggers .connectAll again
                     // Should trigger resume on any visible feed?
                     sendNotification(.firstConnection)
                 }
