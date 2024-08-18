@@ -206,7 +206,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
                 
                 if self.relayData.auth {
-                    L.sockets.debug("relayData.auth == true")
+                    L.sockets.debug("\(self.url) relayData.auth == true")
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                         self.sendAfterAuth()
                     }
@@ -226,7 +226,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     public func sendAfterAuth() {
-        L.sockets.debug("sendAfterAuth()")
+        L.sockets.debug("\(self.url) sendAfterAuth()")
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
@@ -265,12 +265,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self.outQueue.append(socketMessage)
             
             if self.webSocketTask == nil || !self.isSocketConnected {
-                L.sockets.debug("🔴🔴 Not connected. Did not sendMessage \(self.url). (Message queued)")
+                L.sockets.debug("🔴🔴 Not connected. Did not sendMessage \(self.url). (Message queued): \(text.prefix(155))")
                 return
             }
             
             if self.relayData.auth && !self.didAuth {
-                L.sockets.debug("relayData.auth == true \(text)")
+                L.sockets.debug("\(self.url) relayData.auth == true. Waiting 0.25 sec for: \(text.prefix(155))")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     self.sendAfterAuth()
                 }
@@ -310,10 +310,14 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     public func ping() {
+#if DEBUG
         L.sockets.debug("PING: Trying to ping: \(self.url)")
+#endif
         queue.async { [weak self] in
             if self?.webSocketTask == nil {
+#if DEBUG
                 L.sockets.debug("🔴🔴 PING: Not connected. ????? \(self?.url ?? "")")
+#endif
                 self?.isConnected = false
                 return
             }
@@ -331,7 +335,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                             self.isConnected = false
                         }
                     }
+#if DEBUG
                     L.sockets.debug("🔴🔴 PING: No pong \(self?.url ?? ""): \(error)")
+#endif
                 }
                 else {
                     self?.didReceivePong()
@@ -342,9 +348,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     // didBecomeInvalidWithError
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: (any Error)?) {
-    #if DEBUG
+#if DEBUG
         L.sockets.debug("🔴🔴 didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
-    #endif
+#endif
         if let error {
             DispatchQueue.main.async {
                 self.didReceiveError(error)

@@ -336,6 +336,7 @@ class NXColumnViewModel: ObservableObject {
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
         self.listenForNewPosts(config: config)
+        L.og.debug("☘️☘️⏭️ \(config.id) resume().fetchGap: since: \(self.refreshedAt.description) currentGap: 0")
         gapFiller?.fetchGap(since: self.refreshedAt, currentGap: 0)
     }
     
@@ -404,6 +405,9 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.id) loadLocal(.pubkeys)\(older ? "older" : "").processToScreen")
+#endif
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .someoneElses(_):
@@ -803,7 +807,7 @@ class NXColumnViewModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self, watchForFirstConnection else { return }
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.id) listenForFirstConnection")
+                L.og.debug("☘️☘️ \(config.id) listenForFirstConnection.load(config)")
 #endif
                 Task { @MainActor in
                     self.watchForFirstConnection = false
@@ -824,10 +828,14 @@ class NXColumnViewModel: ObservableObject {
             .dropFirst()  // Skip the initial value to avoid unnecessary reload on setup
             .sink { [weak self] oldValue, newValue in
                 if oldValue != newValue {
+#if DEBUG
                     L.og.debug("☘️☘️💬 \(config.id) reloadWhenNeeded feed.repliesEnabled changed from \(oldValue) to \(newValue)")
+#endif
                     self?.reload(config)
                 } else {
-                    L.og.debug("☘️☘️💬 \(config.id) reloadWhenNeeded feed.repliesEnabled unchanged: \(newValue)")
+#if DEBUG
+                    L.og.debug("☘️☘️💬 \(config.id) reloadWhenNeeded feed.repliesEnabled unchanged, value: \(newValue)")
+#endif
                 }
             }
     }
@@ -895,6 +903,9 @@ class NXColumnViewModel: ObservableObject {
                         
                         // Then back to bg for processing
                         bg().perform {
+#if DEBUG
+                            L.og.debug("☘️☘️ \(config.id) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen")
+#endif
                             self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                         }
                     }
@@ -918,6 +929,9 @@ class NXColumnViewModel: ObservableObject {
                         
                         // Then back to bg for processing
                         bg().perform {
+#if DEBUG
+                            L.og.debug("☘️☘️ \(config.id) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen (timeoutCommand)")
+#endif
                             self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                         }
                     }
@@ -1349,6 +1363,7 @@ extension NXColumnViewModel {
             let sinceOrUntil = !older ? sinceTimestamp : untilTimestamp
             
             if !older {
+                L.og.debug("☘️☘️⏭️ \(config.id) loadRemote.fetchGap: since: \(sinceOrUntil) currentGap: 0")
                 self.gapFiller?.fetchGap(since: sinceOrUntil, currentGap: 0)
             }
             else {

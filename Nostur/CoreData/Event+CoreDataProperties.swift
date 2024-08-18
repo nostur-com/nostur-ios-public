@@ -984,7 +984,9 @@ extension Event {
         if (event.kind == .textNote) {
             
             EventCache.shared.setObject(for: event.id, value: savedEvent)
+#if DEBUG
             L.og.debug("Saved \(event.id) in cache")
+#endif
             
             if event.content == "#[0]", let firstE = event.firstE() {
                 savedEvent.isRepost = true
@@ -1058,7 +1060,6 @@ extension Event {
                 
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
                 if let parent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) ?? (try? Event.fetchEvent(id: replyToEtag.id, context: context)) {
-                     
                     savedEvent.replyTo = parent // TODO: Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
                     parent.addToReplies(savedEvent)
                     parent.repliesCount += 1
