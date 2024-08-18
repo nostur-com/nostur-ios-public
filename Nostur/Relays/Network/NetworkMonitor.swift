@@ -101,7 +101,7 @@ public class NetworkMonitor: ObservableObject {
     
     
     // https://stackoverflow.com/a/72295973/9889453
-    private func detectActualConnection() {
+    public func detectActualConnection() {
         guard SettingsStore.shared.enableVPNdetection else { return }
         
         // Check if connection to host is being routed over transparent proxy (such as VPN)
