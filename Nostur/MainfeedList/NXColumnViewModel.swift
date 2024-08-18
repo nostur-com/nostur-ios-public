@@ -552,28 +552,28 @@ class NXColumnViewModel: ObservableObject {
             
             // TODO: Update "Following" to "Following-xxx" so we can have multiple following columns
             return (cmd: {
-                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id, filters: filters))
-            }, subId: "RESUME-" + config.id)
+                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters))
+            }, subId: "RESUME-" + config.id + "-" + since.description)
             
         case .pubkeys(let feed):
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until)
             
-            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id, filters: filters).json() {
+            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
                     req(message)
-                }, subId: "RESUME-" + config.id)
+                }, subId: "RESUME-" + config.id + "-" + since.description)
                 // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
             }
             return nil
         case .someoneElses(_):
             let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: since, until: until)
             
-            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id, filters: filters).json() {
+            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
                     req(message)
-                }, subId: "RESUME-" + config.id)
+                }, subId: "RESUME-" + config.id + "-" + since.description)
             }
             return nil
         case .pubkey:
@@ -584,10 +584,10 @@ class NXColumnViewModel: ObservableObject {
             
             let filters = globalFeedReqFilters(since: since, until: until)
             
-            if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id, filters: filters).json() {
+            if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
-                    req(message)
-                }, subId: "G-RESUME-" + config.id)
+                    req(message, activeSubscriptionId: "G-RESUME-" + config.id + "-" + since.description, relays: relaysData)
+                }, subId: "G-RESUME-" + config.id + "-" + since.description)
             }
             return nil
         case .hashtags:
