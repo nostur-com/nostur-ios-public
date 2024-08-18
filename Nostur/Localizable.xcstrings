@@ -4074,9 +4074,6 @@
         }
       }
     },
-    "Leave" : {
-
-    },
     "Let's go!" : {
       "comment" : "Button to start using Nostur, during onboarding",
       "localizations" : {

@@ -357,7 +357,7 @@ public class ConnectionPool: ObservableObject {
         for (_, connection) in self.connections {
             connection.queue.async(flags: .barrier) {
                 if connection.nreqSubscriptions.contains(subscriptionId) {
-                    L.lvm.info("Closing subscriptions for .relays - subscriptionId: \(subscriptionId)");
+                    L.lvm.info("Closing subscriptionId: \(subscriptionId) on \(connection.url)");
                     let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
                     connection.sendMessage(closeSubscription.message)
                     connection.nreqSubscriptions.remove(subscriptionId)
