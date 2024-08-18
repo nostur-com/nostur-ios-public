@@ -15,6 +15,8 @@ class NXColumnViewModel: ObservableObject {
     public var id: String? { config?.id }
     public var config: NXColumnConfig?
     
+    public let vmInner = NXColumnViewModelInner()
+    
     private var startTime: Date? {
         didSet {
             finishTime = nil
@@ -45,11 +47,12 @@ class NXColumnViewModel: ObservableObject {
     @Published var viewState: ColumnViewState = .loading {
         didSet {
             if case .posts(let nrPosts) = viewState, nrPosts.isEmpty {
-                unreadIds = [:]
+                if !vmInner.unreadIds.isEmpty {
+                    vmInner.unreadIds = [:]
+                }
             }
         }
     }
-    @Published var scrollToIndex: Int?
     
     // During scrolling, don't put new posts on screen, use Delayur helper
     private var delayur: NXDelayur?
@@ -88,20 +91,8 @@ class NXColumnViewModel: ObservableObject {
         resumeSubject.send(Set())
     }
     
-    @Published var unreadIds: [String: Int] = [:] { // Dict of [post id: posts count (post + parent posts)]
-        didSet {
-            if unreadCount == 0 {
-                if !isAtTop {
-                    isAtTop = true
-                }
-            }
-        }
-    }
+   
     private var danglingIds: Set<NRPostID> = [] // posts that are transformed, but somehow not on screen (maybe not found on relays). either we put on on screen or not, dont transform over and over again.
-    
-    public var unreadCount: Int {
-        unreadIds.reduce(0, { $0 + $1.value })
-    }
     
     public var isVisible: Bool = false {
         didSet {
@@ -126,7 +117,6 @@ class NXColumnViewModel: ObservableObject {
         }
     }
     public var availableWidth: CGFloat? // Should set in NXColumnView.onAppear { } before .load()
-    @Published public var isAtTop: Bool = true
     private var fetchFeedTimer: Timer? = nil
     private var newEventsInDatabaseSub: AnyCancellable?
     private var newPostSavedSub: AnyCancellable?
@@ -972,6 +962,27 @@ class NXColumnViewModel: ObservableObject {
     }
 }
 
+// These vars change a lot but trigger rerender on NXPostFeed when not needed
+// So moved to separate NXColumnViewModelInner
+class NXColumnViewModelInner: ObservableObject {
+    
+    @Published public var unreadIds: [String: Int] = [:] { // Dict of [post id: posts count (post + parent posts)]
+        didSet {
+            if unreadCount == 0 {
+                if !isAtTop {
+                    isAtTop = true
+                }
+            }
+        }
+    }
+    public var unreadCount: Int {
+        unreadIds.reduce(0, { $0 + $1.value })
+    }
+    
+    @Published public var scrollToIndex: Int?
+    @Published public var isAtTop: Bool = true
+}
+
 // -- MARK: POST RENDERING
 extension NXColumnViewModel {
     
@@ -1193,7 +1204,7 @@ extension NXColumnViewModel {
                 let notTooLittle = dropCount > 5
                 
                 
-                let addedAndExistingPostsTruncated = if isAtTop && notTooLittle && notTooMuch {
+                let addedAndExistingPostsTruncated = if vmInner.isAtTop && notTooLittle && notTooMuch {
                     Array(addedAndExistingPosts.dropLast(dropCount))
                 }
                 else {
@@ -1202,20 +1213,20 @@ extension NXColumnViewModel {
                 
                 allIdsSeen = allIdsSeen.union(getAllPostIds(addedAndExistingPostsTruncated))
                 
-                if isAtTop {
+                if vmInner.isAtTop {
 //                    haltProcessing() // TODO: Needed or not?
                     
                     let previousFirstPostId: String? = existingPosts.first?.id
                     
-                    isAtTop = false
+                    vmInner.isAtTop = false
                     viewState = .posts(addedAndExistingPostsTruncated)
                     
                     // TODO: Should already start prefetching missing onlyNewAddedPosts pfp/kind 0 here
 
                     // Update unread count
                     for post in onlyNewAddedPosts {
-                        if unreadIds[post.id] == nil {
-                            unreadIds[post.id] = 1 + post.parentPosts.count
+                        if vmInner.unreadIds[post.id] == nil {
+                            vmInner.unreadIds[post.id] = 1 + post.parentPosts.count
                         }
                     }
                     
@@ -1229,7 +1240,9 @@ extension NXColumnViewModel {
                         
                         // Set scrollToIndex to restore scroll position after new posts are added on top
                         if let previousFirstPostId, let restoreToIndex = addedAndExistingPostsTruncated.firstIndex(where: { $0.id == previousFirstPostId })  {
-                            scrollToIndex = restoreToIndex
+                            if vmInner.scrollToIndex != restoreToIndex {
+                                vmInner.scrollToIndex = restoreToIndex
+                            }
                             #if DEBUG
                             L.og.debug("☘️☘️ \(config.id) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150))")
                             #endif
@@ -1242,8 +1255,8 @@ extension NXColumnViewModel {
                         
                         // Update unread count
                         for post in onlyNewAddedPosts {
-                            if unreadIds[post.id] == nil {
-                                unreadIds[post.id] = 1 + post.parentPosts.count
+                            if vmInner.unreadIds[post.id] == nil {
+                                vmInner.unreadIds[post.id] = 1 + post.parentPosts.count
                             }
                         }
                     }
@@ -1266,8 +1279,8 @@ extension NXColumnViewModel {
             L.og.debug("☘️☘️ \(config.id) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description)")
 #endif
             allIdsSeen = allIdsSeen.union(getAllPostIds(uniqueAddedPosts))
-            if !isAtTop {
-                isAtTop = true
+            if !vmInner.isAtTop {
+                vmInner.isAtTop = true
             }
             withAnimation {
                 viewState = .posts(uniqueAddedPosts)
@@ -1479,11 +1492,11 @@ extension NXColumnViewModel {
     public func scrollToFirstUnread() {
         if case .posts(let nrPosts) = viewState {
             for post in (nrPosts).reversed() {
-                if let unreadCount = unreadIds[post.id], unreadCount > 0 {
+                if let unreadCount = vmInner.unreadIds[post.id], unreadCount > 0 {
                     if let firstUnreadIndex = nrPosts.firstIndex(where: { $0.id == post.id }) {
                         DispatchQueue.main.async {
-                            self.objectWillChange.send()
-                            self.scrollToIndex = firstUnreadIndex
+                            self.vmInner.objectWillChange.send()
+                            self.vmInner.scrollToIndex = firstUnreadIndex
                         }
                     }
                 }
@@ -1494,8 +1507,8 @@ extension NXColumnViewModel {
     @MainActor
     public func scrollToTop() {
         DispatchQueue.main.async {
-            self.objectWillChange.send()
-            self.scrollToIndex = 0
+            self.vmInner.objectWillChange.send()
+            self.vmInner.scrollToIndex = 0
         }
     }
     
