@@ -324,7 +324,12 @@ class NotificationsViewModel: ObservableObject {
     }
     
     private func checkForEverything() {
-        guard !NRState.shared.appIsInBackground else { L.lvm.debug("NotificationViewModel.checkForEverything(): skipping, app in background."); return }
+        guard !NRState.shared.appIsInBackground else {
+#if DEBUG
+            L.og.debug("NotificationViewModel.checkForEverything(): skipping, app in background.");
+#endif
+            return
+        }
         shouldBeBg()
         
         OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
@@ -333,12 +338,16 @@ class NotificationsViewModel: ObservableObject {
         guard account() != nil else { return }
                 
         guard !Importer.shared.isImporting else {
+#if DEBUG
             L.og.info("⏳ Still importing, new notifications check skipped.");
+#endif
             return
         }
         
         needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
+#if DEBUG
         L.og.info("💜 needsUpdate, updating unread counts...")
+#endif
 
         self.relayCheckNewestNotifications() // or wait 3 seconds?
         

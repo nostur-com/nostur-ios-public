@@ -147,25 +147,39 @@ class MessageParser {
                 }
             }
             catch RelayMessage.error.NOT_IN_WOT {
+#if DEBUG
                 L.sockets.debug("🟠 \(relayUrl) Not in WoT, skipped: \(text)")
+#endif
             }
             catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
+#if DEBUG
                 L.sockets.notice("🟠 \(relayUrl) Unknown message type: \(text)")
+#endif
             }
             catch RelayMessage.error.FAILED_TO_PARSE {
+#if DEBUG
                 L.sockets.notice("🟠 \(relayUrl) Could not parse text received: \(text)")
+#endif
             }
             catch RelayMessage.error.FAILED_TO_PARSE_EVENT {
+#if DEBUG
                 L.sockets.notice("🟠 \(relayUrl) Could not parse EVENT: \(text)")
+#endif
             }
             catch RelayMessage.error.DUPLICATE_ALREADY_SAVED, RelayMessage.error.DUPLICATE_ALREADY_PARSED {
+#if DEBUG
 //                L.sockets.debug("🟡🟡 \(relayUrl) already SAVED/PARSED ")
+#endif
             }
             catch RelayMessage.error.INVALID_SIGNATURE {
+#if DEBUG
                 L.sockets.notice("🔴🔴 \(relayUrl) invalid signature \(text)")
+#endif
             }
             catch {
+#if DEBUG
                 L.sockets.info("🔴🔴 \(relayUrl) \(error)")
+#endif
             }
         }        
     }
