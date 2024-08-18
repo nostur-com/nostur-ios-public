@@ -149,6 +149,9 @@ class NXColumnViewModel: ObservableObject {
             
             switch config.columnType {
             case .following(let feed):
+                if let refreshedAt = feed.refreshedAt, let mostRecentCreatedAt = self.mostRecentCreatedAt {
+                    return min(Int64(refreshedAt.timeIntervalSince1970),Int64(mostRecentCreatedAt) - (5 * 60))
+                }
                 if let refreshedAt = feed.refreshedAt { // 5 minutes before last refreshedAt
                     return Int64(refreshedAt.timeIntervalSince1970) - (5 * 60)
                 }
@@ -156,6 +159,9 @@ class NXColumnViewModel: ObservableObject {
                    return Int64(mostRecentCreatedAt) // or most recent on screen
                 }
             case .pubkeys(let feed):
+                if let refreshedAt = feed.refreshedAt, let mostRecentCreatedAt = self.mostRecentCreatedAt {
+                    return min(Int64(refreshedAt.timeIntervalSince1970),Int64(mostRecentCreatedAt) - (5 * 60))
+                }
                 if let refreshedAt = feed.refreshedAt { // 5 minutes before last refreshedAt
                     return Int64(refreshedAt.timeIntervalSince1970) - (5 * 60)
                 }
@@ -1367,10 +1373,10 @@ extension NXColumnViewModel {
             // Fetch since 5 minutes before most recent item on screen (since)
             // Or until oldest (bottom) item on screen (until)
             let (sinceTimestamp, untilTimestamp) = if case .posts(let nrPosts) = viewState {
-                (self.refreshedAt, (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)))
+                ((nrPosts.first?.created_at ?? self.refreshedAt) - Int64(5 * 60), (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)) + Int64(5 * 60))
             }
             else { // or if empty screen: refreshedAt (since) or now (until)
-                (0, Int64(Date().timeIntervalSince1970))
+                (self.refreshedAt, Int64(Date().timeIntervalSince1970))
             }
             
             let sinceOrUntil = !older ? sinceTimestamp : untilTimestamp
