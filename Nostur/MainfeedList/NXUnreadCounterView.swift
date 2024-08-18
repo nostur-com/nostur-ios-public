@@ -10,15 +10,15 @@ import SwiftUI
 struct NXUnreadCounterView: View {
     
     @EnvironmentObject private var themes: Themes
-    public let count: Int
+    @ObservedObject public var vm: NXColumnViewModelInner
     
     var body: some View {
         RoundedRectangle(cornerRadius: 20)
             .foregroundColor(themes.theme.accent)
             .frame(width: 65, height: 40)
             .overlay(alignment: .leading) {
-                Text(count.description)
-                    .animation(.snappy, value: count)
+                Text(vm.unreadCount.description)
+                    .animation(.snappy, value: vm.unreadCount)
                     .rollingNumber()
                     .fixedSize()
                     .frame(width: 35, alignment: .center)
@@ -31,11 +31,11 @@ struct NXUnreadCounterView: View {
             }
             .fontWeightBold()
             .foregroundColor(.white)
-            .opacity(count > 0 ? 1.0 : 0)
+            .opacity(vm.unreadCount > 0 ? 1.0 : 0)
     }
 }
 
 #Preview {
-    NXUnreadCounterView(count: 321)
+    NXUnreadCounterView(vm: NXColumnViewModelInner())
         .environmentObject(Themes.default)
 }

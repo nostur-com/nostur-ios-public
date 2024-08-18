@@ -11,14 +11,22 @@ import SwiftUI
 struct NXPostsFeed: View {
     
     @EnvironmentObject private var themes: Themes
-    @ObservedObject public var vm: NXColumnViewModel
-    public let posts: [NRPost]
+    
+    private var vm: NXColumnViewModel
+    private let posts: [NRPost]
+    @ObservedObject private var vmInner: NXColumnViewModelInner
     
     @State private var collectionView: UICollectionView?
     @State private var collectionPrefetcher: NXPostsFeedPrefetcher?
     
     @State private var tableView: UITableView?
     @State private var tablePrefetcher: NXPostsFeedTablePrefetcher?
+    
+    init(vm: NXColumnViewModel, posts: [NRPost]) {
+        self.vm = vm
+        self.posts = posts
+        self.vmInner = vm.vmInner
+    }
     
     var body: some View {
         #if DEBUG
@@ -71,7 +79,7 @@ struct NXPostsFeed: View {
                 }
             }
             .scrollContentBackgroundHidden()
-            .onChange(of: vm.scrollToIndex) { scrollToIndex in
+            .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
                 L.og.debug("☘️☘️ \(vm.config?.id ?? "?") NXPostsFeed onChange(of: vm.scrollToIndex) \(scrollToIndex?.description ?? "?")")
                 
                 if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
@@ -84,7 +92,7 @@ struct NXPostsFeed: View {
                             collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
                                                         at: .top,
                                                         animated: false)
-                            vm.scrollToIndex = nil
+                            vmInner.scrollToIndex = nil
                         }
                     }
                 }
@@ -97,7 +105,7 @@ struct NXPostsFeed: View {
                     {
                         if tableView.contentOffset.y == 0 {
                             tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
-                            vm.scrollToIndex = nil
+                            vmInner.scrollToIndex = nil
                         }
                     }
                 }
@@ -135,18 +143,18 @@ struct NXPostsFeed: View {
     
     @ViewBuilder
     public var unreadCounterView: some View {
-        NXUnreadCounterView(count: vm.unreadCount)
+        NXUnreadCounterView(vm: vm.vmInner)
             .padding(.trailing, 10)
             .padding(.top, 5)
     }
     
     private func scrollToFirstUnread(_ proxy: ScrollViewProxy) {
-        if vm.unreadCount == 0 {
+        if vmInner.unreadCount == 0 {
             scrollToTop(proxy)
             return
         }
         for post in posts.reversed() {
-            if let unreadCount = vm.unreadIds[post.id], unreadCount > 0 {
+            if let unreadCount = vmInner.unreadIds[post.id], unreadCount > 0 {
                 if let firstUnreadPost = posts.first(where: { $0.id == post.id }) {
                     withAnimation {
                         proxy.scrollTo(firstUnreadPost.id, anchor: .top)
@@ -161,7 +169,7 @@ struct NXPostsFeed: View {
         guard let topPost = posts.first else { return }
         withAnimation {
             proxy.scrollTo(topPost.id, anchor: .top)
-            vm.isAtTop = true
+            vmInner.isAtTop = true
         }
     }
     
@@ -169,14 +177,18 @@ struct NXPostsFeed: View {
         updateIsAtTop()
         loadMoreIfNeeded()
         vm.haltProcessing() // will stop new updates on screen for 2.5 seconds
-        vm.unreadIds[nrPost.id] = 0
+        if vmInner.unreadIds[nrPost.id] != 0 {
+            vmInner.unreadIds[nrPost.id] = 0
+        }
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
-            if appearedIndex == 0 {
-                vm.unreadIds = [:]
+            if appearedIndex == 0 && !vmInner.unreadIds.isEmpty {
+                vmInner.unreadIds = [:]
             }
             
             for i in appearedIndex..<posts.count {
-                vm.unreadIds[posts[i].id] = 0
+                if vmInner.unreadIds[posts[i].id] != 0 {
+                    vmInner.unreadIds[posts[i].id] = 0
+                }
             }
         }
     }
@@ -185,13 +197,13 @@ struct NXPostsFeed: View {
         if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
             if let collectionView {
                 if collectionView.contentOffset.y <= 3 {
-                    if !vm.isAtTop {
-                        vm.isAtTop = true
+                    if !vmInner.isAtTop {
+                        vmInner.isAtTop = true
                     }
                 }
                 else {
-                    if vm.isAtTop {
-                        vm.isAtTop = false
+                    if vmInner.isAtTop {
+                        vmInner.isAtTop = false
                     }
                 }
             }
@@ -199,13 +211,13 @@ struct NXPostsFeed: View {
         else { // iOS 15 UITableView
             if let tableView {
                 if tableView.contentOffset.y <= 3 {
-                    if !vm.isAtTop {
-                        vm.isAtTop = true
+                    if !vmInner.isAtTop {
+                        vmInner.isAtTop = true
                     }
                 }
                 else {
-                    if vm.isAtTop {
-                        vm.isAtTop = false
+                    if vmInner.isAtTop {
+                        vmInner.isAtTop = false
                     }
                 }
             }
