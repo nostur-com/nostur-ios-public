@@ -223,7 +223,7 @@ class NXColumnViewModel: ObservableObject {
             allIdsSeen = []
             fetchKind3ForSomeoneElsesFeed(pubkey, config: config) { [weak self] updatedConfig in
                 self?.config = updatedConfig
-                self?.loadLocal(updatedConfig) { [weak self] in // <-- instant, and works offline
+                self?.loadLocal(updatedConfig) { // <-- instant, and works offline
                     // callback to load remote
                     self?.loadRemote(updatedConfig) // <--- fetch new posts (with gap filler)
                 }
@@ -237,7 +237,7 @@ class NXColumnViewModel: ObservableObject {
         }
         
         listenForOwnNewPostSaved(config)
-        listenForNewPosts(config: config) // <-- listen realtime for new posts  TODO: maybe do after 2 second delay?
+        listenForNewPosts(config)
         listenForFirstConnection(config: config)
         loadMoreWhenNearBottom(config)
         reloadWhenNeeded(config)
@@ -331,19 +331,19 @@ class NXColumnViewModel: ObservableObject {
         
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
-        self.listenForNewPosts(config: config)
+        self.listenForNewPosts(config)
         L.og.debug("☘️☘️⏭️ \(config.id) resume().fetchGap: since: \(self.refreshedAt.description) currentGap: 0")
         gapFiller?.fetchGap(since: self.refreshedAt, currentGap: 0)
     }
     
     private func fetchFeedTimerNextTick() {
         guard let config, !NRState.shared.appIsInBackground && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
-        bg().perform {
+        bg().perform { [weak self] in
             guard !Importer.shared.isImporting else { return }
             setFirstTimeCompleted()
 
-            Task { @MainActor in
-                self.sendRealtimeReq(config)
+            Task { @MainActor [weak self] in
+                self?.sendRealtimeReq(config)
             }
         }
     }
@@ -555,8 +555,7 @@ class NXColumnViewModel: ObservableObject {
             let pubkeys = account.followingPubkeys
             let hashtags = account.followingHashtags
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until)
-            
-            // TODO: Update "Following" to "Following-xxx" so we can have multiple following columns
+             
             return (cmd: {
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters))
             }, subId: "RESUME-" + config.id + "-" + since.description)
@@ -645,7 +644,6 @@ class NXColumnViewModel: ObservableObject {
             let hashtags = account.followingHashtags
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100)
             
-            // TODO: Update "Following" to "Following-xxx" so we can have multiple following columns
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
         case .pubkeys(let feed):
@@ -757,7 +755,7 @@ class NXColumnViewModel: ObservableObject {
     private let queuedSubscriptionIds = NXQueuedSubscriptionIds()
     
     @MainActor
-    private func listenForNewPosts(config: NXColumnConfig) {
+    private func listenForNewPosts(_ config: NXColumnConfig) {
         if newEventsInDatabaseSub == nil {
             // Merge the imported messages publisher with the custom subject
                let mergedPublisher = Importer.shared.importedMessagesFromSubscriptionIds
@@ -1095,7 +1093,6 @@ extension NXColumnViewModel {
             return events.filter { $0.inWoT }
         }
                 
-        // TODO: handle other config.columnTypes
         return events
     }
     
@@ -1276,7 +1273,6 @@ extension NXColumnViewModel {
                 withAnimation {
                     self.viewState = .posts(existingPosts + onlyNewAddedPosts)
                 }
-//                sendNextPageReq(config, until: existingPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)) // TODO: do this after scrolling near end, not after putOnScreen
             }
         }
         else { // Nothing on screen yet, put first posts on screen
@@ -1291,7 +1287,6 @@ extension NXColumnViewModel {
             withAnimation {
                 viewState = .posts(uniqueAddedPosts)
             }
-//            sendNextPageReq(config, until: uniqueAddedPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)) // TODO: do this after scrolling near end, not after putOnScreen
         }
         
         completion?()
@@ -1608,5 +1603,3 @@ func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
     
     return nil
 }
-
-// TODO: Still reusing old InstantFeed(), good or refactor/clean up?
