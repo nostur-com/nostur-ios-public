@@ -142,8 +142,6 @@ struct NXPostsFeed: View {
         }
     }
     
-    // TODO: Create loading spinner on first load. on unreadcounter
-    
     @ViewBuilder
     public var unreadCounterView: some View {
         NXUnreadCounterView(vm: vm.vmInner)
