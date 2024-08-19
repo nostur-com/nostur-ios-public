@@ -250,7 +250,7 @@ class NXColumnViewModel: ObservableObject {
         guard newPostSavedSub == nil else { return }
         newPostSavedSub = receiveNotification(.newPostSaved)
             .sink { [weak self] notification in
-                guard let self = self else { return }
+                guard let self else { return }
 
                 let pubkeys: Set<String> = switch config.columnType {
                 case .pubkeys(let feed):
@@ -1557,8 +1557,9 @@ extension NXColumnViewModel {
 #if DEBUG
                 L.og.debug("☘️☘️ \(config.id) loadMoreWhenNearBottom.onAppearSubject lastCreatedAt \(lastCreatedAt)")
 #endif
-                // fetch older, can reuse NXDelayur?
-                self?.loadLocal(config, older: true)
+                self?.loadLocal(config, older: true) {
+                    self?.sendNextPageReq(config, until: Int64(self?.oldestCreatedAt ?? Int(Date().timeIntervalSince1970)))
+                }
             }
             .store(in: &subscriptions)
     }
