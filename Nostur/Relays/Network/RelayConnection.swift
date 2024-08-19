@@ -526,12 +526,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                         if IS_CATALYST || !NRState.shared.appIsInBackground {
                             if self?.relayData.auth ?? false {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                                    LVMManager.shared.restoreSubscriptions()
+                                    NRState.shared.resumeFeeds()
                                     NotificationsViewModel.shared.restoreSubscriptions()
                                 }
                             }
                             else {
-                                LVMManager.shared.restoreSubscriptions()
+                                NRState.shared.resumeFeeds()
                                 NotificationsViewModel.shared.restoreSubscriptions()
                             }
                         }

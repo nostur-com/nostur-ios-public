@@ -6,10 +6,21 @@
 //
 
 import SwiftUI
+import Combine
 
 class NRState: ObservableObject {
     
     public var appIsInBackground = false
+    
+    public var resumeFeedsSubject = PassthroughSubject<Void, Never>()
+    public func resumeFeeds() {
+        resumeFeedsSubject.send()
+    }
+    
+    public var pauseFeedsSubject = PassthroughSubject<Void, Never>()
+    public func pauseFeeds() {
+        pauseFeedsSubject.send()
+    }
     
     public var draft: String {
         get { UserDefaults.standard.string(forKey: "simple_draft") ?? "" }

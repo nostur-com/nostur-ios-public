@@ -241,6 +241,8 @@ class NXColumnViewModel: ObservableObject {
         listenForFirstConnection(config: config)
         loadMoreWhenNearBottom(config)
         reloadWhenNeeded(config)
+        listenForResumeFeed(config)
+        listenForPauseFeed(config)
     }
     
     @MainActor
@@ -753,6 +755,32 @@ class NXColumnViewModel: ObservableObject {
     
     private var resumeSubject = PassthroughSubject<Set<String>, Never>()
     private let queuedSubscriptionIds = NXQueuedSubscriptionIds()
+    
+    private var resumeFeedSub: AnyCancellable?
+
+    @MainActor
+    private func listenForResumeFeed(_ config: NXColumnConfig) {
+        guard resumeFeedSub == nil else { return }
+        resumeFeedSub = NRState.shared.resumeFeedsSubject
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
+            .sink { [weak self] _ in
+                guard let self, !NRState.shared.appIsInBackground && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
+                self.resume()
+            }
+    }
+    
+    private var pauseFeedSub: AnyCancellable?
+
+    @MainActor
+    private func listenForPauseFeed(_ config: NXColumnConfig) {
+        guard pauseFeedSub == nil else { return }
+        pauseFeedSub = NRState.shared.pauseFeedsSubject
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.pause()
+            }
+    }
     
     @MainActor
     private func listenForNewPosts(_ config: NXColumnConfig) {
