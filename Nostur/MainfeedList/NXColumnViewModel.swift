@@ -299,6 +299,7 @@ class NXColumnViewModel: ObservableObject {
 #endif
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = nil
+        self.realTimeReqTask?.cancel()
         
         switch config.columnType {
         case .pubkeys(_):
@@ -818,8 +819,13 @@ class NXColumnViewModel: ObservableObject {
                 }
         }
  
-        self.sendRealtimeReq(config)
+        realTimeReqTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            self?.sendRealtimeReq(config)
+        }
     }
+    
+    private var realTimeReqTask: Task<Void, Never>?
     
     @MainActor
     private func listenForFirstConnection(config: NXColumnConfig) {
