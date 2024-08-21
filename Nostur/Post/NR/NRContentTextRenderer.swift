@@ -12,7 +12,10 @@ import UIKit
 struct NRContentTextRenderer: View, Equatable {
     
     static func == (lhs: NRContentTextRenderer, rhs: NRContentTextRenderer) -> Bool {
-        lhs.attributedStringWithPs.id == rhs.attributedStringWithPs.id
+        lhs.attributedStringWithPs.id == rhs.attributedStringWithPs.id &&
+        lhs.primaryColor == rhs.primaryColor &&
+        lhs.accentColor == rhs.accentColor &&
+        lhs.availableWidth == rhs.availableWidth
     }
     
     public let attributedStringWithPs: AttributedStringWithPs
@@ -34,10 +37,12 @@ struct NRContentTextRendererInner: View {
     private let availableWidth: CGFloat
     private let isScreenshot: Bool
     private let isPreview: Bool
-    private let primaryColor: Color?
-    private let accentColor: Color?
-
-    @State private var text: NSAttributedString? = nil
+    private let primaryColor: Color
+    private let accentColor: Color
+    
+    @State private var text: NSAttributedString
+    @State private var textPrimaryColor: Color
+    @State private var textAccentColor: Color
     @State private var textWidth: CGFloat
     @State private var textHeight: CGFloat
     
@@ -48,22 +53,26 @@ struct NRContentTextRendererInner: View {
         self.availableWidth = availableWidth
         self.isScreenshot = isScreenshot
         self.isPreview = isPreview
-        self.primaryColor = primaryColor
-        self.accentColor = accentColor
+        self.primaryColor = primaryColor ?? Themes.default.theme.primary
+        self.accentColor = accentColor ?? Themes.default.theme.accent
+        
+        _text = State(wrappedValue: attributedStringWithPs.output)
+        _textPrimaryColor = State(wrappedValue: primaryColor ?? Themes.default.theme.primary)
+        _textAccentColor = State(wrappedValue: accentColor ?? Themes.default.theme.accent)
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)
     }
     
     var body: some View {
         if isPreview {
-            NRTextDynamic(text ?? attributedStringWithPs.output, fontColor: primaryColor ?? Themes.default.theme.primary, accentColor: accentColor)
+            NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
                 .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         else if isScreenshot {
-            let aString = AttributedString(text ?? attributedStringWithPs.output)
+            let aString = AttributedString(text)
             Text(aString)
-                .foregroundColor(primaryColor ?? Themes.default.theme.primary)
+                .foregroundColor(primaryColor)
                 .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -76,7 +85,7 @@ struct NRContentTextRendererInner: View {
 //                        
 //                    }
                 
-                NRTextFixed(text ?? attributedStringWithPs.output, fontColor: primaryColor ?? Themes.default.theme.primary, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight)
+                NRTextFixed(text: $text, fontColor: $textPrimaryColor, accentColor: $textAccentColor, textWidth: $textWidth, textHeight: $textHeight)
 //                    .background(Color.red.opacity(0.2))
   
 //                    .overlay(alignment: .topLeading) {
@@ -84,26 +93,25 @@ struct NRContentTextRendererInner: View {
 //                            .background(Color.black)
 //                            .foregroundColor(.white)
 //                    }
-                    .id(text ?? attributedStringWithPs.output)
-                    .onReceive(receiveNotification(.dynamicTextChanged)) { _ in
-                        bg().perform {
-                            guard !attributedStringWithPs.input.isEmpty else { return }
-                            guard let event = attributedStringWithPs.event else { return }
-                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input)
-                            let textHeight = reparsed.output.boundingRect(
-                                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
-                                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                                context: nil
-                            ).height
-                            if self.textHeight != textHeight {
-//                                L.og.debug("⧢⧢ Reparsed after .dynamicTextChanged: \(self.textHeight) ----> \(textHeight) \(attributedStringWithPs.input.prefix(25))")
-                                DispatchQueue.main.async {
-                                    self.textHeight = textHeight
-//                                    self.text = reparsed.output
-                                }
-                            }
-                        }
-                    }
+//                    .onReceive(receiveNotification(.dynamicTextChanged)) { _ in
+//                        bg().perform {
+//                            guard !attributedStringWithPs.input.isEmpty else { return }
+//                            guard let event = attributedStringWithPs.event else { return }
+//                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input)
+//                            let textHeight = reparsed.output.boundingRect(
+//                                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
+//                                options: [.usesLineFragmentOrigin, .usesFontLeading],
+//                                context: nil
+//                            ).height
+//                            if self.textHeight != textHeight {
+////                                L.og.debug("⧢⧢ Reparsed after .dynamicTextChanged: \(self.textHeight) ----> \(textHeight) \(attributedStringWithPs.input.prefix(25))")
+//                                DispatchQueue.main.async {
+//                                    self.textHeight = textHeight
+////                                    self.text = reparsed.output
+//                                }
+//                            }
+//                        }
+//                    }
                     .onReceive(
                         Importer.shared.contactSaved
                             .receive(on: RunLoop.main)
@@ -126,17 +134,24 @@ struct NRContentTextRendererInner: View {
                         }
                     }
                     .transaction { t in t.animation = nil } // <-- needed or not?
-                    .frame(height: textHeight, alignment: .topLeading)
+//                    .frame(height: textHeight, alignment: .topLeading)
 //                    .fixedSize(horizontal: false, vertical: true) // needed or text height stays at inital textHeight (90)
                     .onChange(of: availableWidth) { newWidth in
                         guard newWidth != textWidth else { return }
                         textWidth = newWidth
                     }
+                    .onChange(of: accentColor) { newAccentColor in
+                        guard newAccentColor != textAccentColor else { return }
+                        textAccentColor = newAccentColor
+                    }
+                    .onChange(of: primaryColor) { newPrimaryColor in
+                        guard newPrimaryColor != textPrimaryColor else { return }
+                        textPrimaryColor = newPrimaryColor
+                    }
                     .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             else {
-                NRTextDynamic(text ?? attributedStringWithPs.output, fontColor: primaryColor ?? Themes.default.theme.primary, accentColor: accentColor)
-                    .id(text ?? attributedStringWithPs.output)
+                NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
                     .onReceive(
                         Importer.shared.contactSaved
                             .receive(on: RunLoop.main)

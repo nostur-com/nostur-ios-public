@@ -154,20 +154,18 @@ struct NRTextDynamic: View {
 struct NRTextFixed: UIViewRepresentable {
     typealias UIViewType = UITextView
     
-    private let attributedString: NSAttributedString
+    @Binding var attributedString: NSAttributedString
     private let plain: Bool
-    private let themes: Themes
-    private let fontColor: Color
-    private let accentColor: Color?
+    @Binding var fontColor: Color
+    @Binding var accentColor: Color
     @Binding var textWidth: CGFloat
     @Binding var textHeight: CGFloat
     
-    init(_ attributedString: NSAttributedString, plain: Bool = false, themes: Themes = Themes.default, fontColor: Color? = nil, accentColor: Color? = nil, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>) {
-        self.attributedString = attributedString
+    init(text attributedString: Binding<NSAttributedString>, plain: Bool = false, fontColor: Binding<Color>, accentColor: Binding<Color>, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>) {
+        _attributedString = attributedString
         self.plain = plain
-        self.themes = themes
-        self.fontColor = fontColor ?? themes.theme.primary
-        self.accentColor = accentColor ?? themes.theme.accent
+        _fontColor = fontColor
+        _accentColor = accentColor
         _textWidth = textWidth
         _textHeight = textHeight
     }
@@ -179,8 +177,8 @@ struct NRTextFixed: UIViewRepresentable {
         let view = UITextView()
 //        _ = view.layoutManager
         view.isScrollEnabled = false
-        view.textColor = UIColor(self.fontColor)
-        view.tintColor = UIColor(accentColor ?? themes.theme.accent)
+        view.textColor = UIColor(fontColor)
+        view.tintColor = UIColor(accentColor)
         view.adjustsFontForContentSizeCategory = false
         view.isSelectable = true
         view.isEditable = false
@@ -193,44 +191,74 @@ struct NRTextFixed: UIViewRepresentable {
         
         view.translatesAutoresizingMaskIntoConstraints = false
         
-        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        view.setContentCompressionResistancePriority(.required, for: .vertical)
+//        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+//        view.setContentCompressionResistancePriority(.required, for: .vertical)
         
-        view.showsVerticalScrollIndicator = false
-        view.showsHorizontalScrollIndicator = false
+//        view.showsVerticalScrollIndicator = false
+//        view.showsHorizontalScrollIndicator = false
 //        view.textAlignment = .left
         
         // Debug view size
 //        view.layer.backgroundColor = UIColor.red.cgColor
 //        view.layer.borderColor = UIColor.lightGray.cgColor
 //        view.layer.borderWidth = 1.0
-//        self.setHeightIfNeeded(uiView: view)
+        self.setHeightIfNeeded(uiView: view)
+        
         return view
     }
     
     func updateUIView(_ uiView: UITextView, context: Context) {
-        self.setHeightIfNeeded(uiView: uiView)
+        
+//        if uiView.attributedText != self.attributedString {
+//            uiView.attributedText = self.attributedString
+//        }
+        
+        if uiView.textColor != UIColor(self.fontColor) {
+            uiView.textColor = UIColor(self.fontColor)
+        }
+        if uiView.tintColor != UIColor(accentColor) {
+            uiView.tintColor = UIColor(accentColor)
+        }
+        
+        uiView.attributedText = self.attributedString
+        
+        if #available(iOS 16.0, *) {
+            DispatchQueue.main.async {
+                self.textHeight = attributedString.boundingRect(
+                    with: CGSize(width: self.textWidth, height: .greatestFiniteMagnitude),
+                    options: [.usesLineFragmentOrigin, .usesFontLeading],
+                    context: nil
+                ).height
+            }
+        }
+        else {
+            self.setHeightIfNeeded(uiView: uiView)
+        }
     }
     
     private func setHeightIfNeeded(uiView: UITextView) {
-      DispatchQueue.main.async {
-          let idealSize = uiView.sizeThatFits(CGSize(
-            width: self.textWidth,
-            height: .infinity
-          ))
-          if idealSize.height > 60 && self.textHeight != idealSize.height {
-              self.textHeight = idealSize.height
-          }
-      }
+//      DispatchQueue.main.async {
+//          let idealSize = uiView.sizeThatFits(CGSize(
+//            width: self.textWidth,
+//            height: .infinity
+//          ))
+//          if idealSize.height > 60 && height != idealSize.height {
+//              self.textHeight = idealSize.height
+//          }
+//      }
     }
     
     @available(iOS 16.0, *)
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
-        return CGSize(width: self.textWidth, height: self.textHeight)
+//        let dimensions = proposal.replacingUnspecifiedDimensions(
+//           by: CGSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
+//        )
+
+        return CGSize(width: textWidth, height: textHeight)
     }
     
     func sizeThatFits(_ proposal: CGSize, uiView: UITextView) -> CGSize {
-        return CGSize(width: self.textWidth, height: self.textHeight)
+        return CGSize(width: textWidth, height: textHeight)
     }
 }
 
@@ -258,8 +286,12 @@ extension NSMutableAttributedString {
 
 
 struct NRTextFixedTester: View {
+    @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject public var nrPost: NRPost
+    @State private var text = NSAttributedString(string: "")
+    @State private var primaryColor: Color = .primary
+    @State private var accentColor: Color = .accentColor
     @State private var textWidth: CGFloat = 90
     @State private var textHeight: CGFloat = 90
     
@@ -275,12 +307,12 @@ struct NRTextFixedTester: View {
                 .frame(width: textWidth, height: textHeight)
                 .fixedSize(horizontal: false, vertical: true)
             
-            NRTextFixed(NRTextParser.shared.parseText(fastTags: nrPost.fastTags, text: nrPost.content ?? "").output,
-                        textWidth: $textWidth,
-                        textHeight: $textHeight
-            )
+            NRTextFixed(text: $text, fontColor: $primaryColor, accentColor: $accentColor, textWidth: $textWidth, textHeight: $textHeight)
             .onAppear {
                 textWidth = dim.listWidth - 20
+                text = NRTextParser.shared.parseText(fastTags: nrPost.fastTags, text: nrPost.content ?? "").output
+                primaryColor = themes.theme.primary
+                accentColor = themes.theme.accent
             }
             .fixedSize(horizontal: false, vertical: true)
             .opacity(0.5)
