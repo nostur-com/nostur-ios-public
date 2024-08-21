@@ -763,7 +763,7 @@ class NXColumnViewModel: ObservableObject {
     private func listenForResumeFeed(_ config: NXColumnConfig) {
         guard resumeFeedSub == nil else { return }
         resumeFeedSub = NRState.shared.resumeFeedsSubject
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.35), scheduler: RunLoop.main)
             .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
             .sink { [weak self] _ in
                 guard let self, !NRState.shared.appIsInBackground && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
