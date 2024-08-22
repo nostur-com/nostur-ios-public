@@ -497,9 +497,19 @@ class NXColumnViewModel: ObservableObject {
     private func sendRealtimeReq(_ config: NXColumnConfig) {
         switch config.columnType {
         case .following(let feed):
-            guard let account = feed.account else { return }
-            let pubkeys = account.followingPubkeys
-            let hashtags = account.followingHashtags
+            let pubkeys: Set<String> = if let account = feed.account {
+                account.followingPubkeys
+            }
+            else if feed.accountPubkey == EXPLORER_PUBKEY {
+                NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
+            }
+            else { [] }
+            
+            let hashtags: Set<String> = if let account = feed.account {
+                account.followingHashtags
+            }
+            else { [] }
+            
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
@@ -566,13 +576,38 @@ class NXColumnViewModel: ObservableObject {
     public func getFillGapReqStatement(_ config: NXColumnConfig, since: Int, until: Int? = nil) -> (cmd: () -> Void, subId: String)? {
         switch config.columnType {
         case .following(let feed):
-            guard let account = feed.account else { return nil }
-            let pubkeys = account.followingPubkeys
-            let hashtags = account.followingHashtags
+            let pubkeys: Set<String> = if let account = feed.account {
+                account.followingPubkeys
+            }
+            else if feed.accountPubkey == EXPLORER_PUBKEY {
+                NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
+            }
+            else { [] }
+            
+            let hashtags: Set<String> = if let account = feed.account {
+                account.followingHashtags
+            }
+            else { [] }
+            
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until)
              
             return (cmd: {
-                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters))
+                guard pubkeys.count > 0 || hashtags.count > 0 else {
+                    L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
+                    return
+                }
+                if feed.accountPubkey == EXPLORER_PUBKEY {
+                    if let cm = NostrEssentials
+                        .ClientMessage(type: .REQ,
+                                       subscriptionId: "RESUME-" + config.id + "-" + since.description,
+                                       filters: filters
+                        ).json() {
+                        req(cm)
+                    }
+                }
+                else {
+                    outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters))
+                }
             }, subId: "RESUME-" + config.id + "-" + since.description)
             
         case .pubkeys(let feed):
@@ -654,9 +689,19 @@ class NXColumnViewModel: ObservableObject {
 #endif
         switch config.columnType {
         case .following(let feed):
-            guard let account = feed.account else { return }
-            let pubkeys = account.followingPubkeys
-            let hashtags = account.followingHashtags
+            let pubkeys: Set<String> = if let account = feed.account {
+                account.followingPubkeys
+            }
+            else if feed.accountPubkey == EXPLORER_PUBKEY {
+                NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
+            }
+            else { [] }
+            
+            let hashtags: Set<String> = if let account = feed.account {
+                account.followingHashtags
+            }
+            else { [] }
+            
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
