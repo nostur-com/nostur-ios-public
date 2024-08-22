@@ -28,6 +28,7 @@ struct NosturRootMenu: View {
             .onReceive(NRState.shared.agoTimer) { _ in
                 NewPostNotifier.shared.runCheck()
             }
+            .environmentObject(loggedInAccount)
             .environmentObject(sm)
             .onOpenURL { url in
                 self.handleUrl(url)

@@ -9,16 +9,11 @@ import SwiftUI
 import Combine
 import NavigationBackport
 
-struct FollowingAndExplore: View, Equatable {
-    
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.account == rhs.account && lhs.showingOtherContact == rhs.showingOtherContact
-    }
+struct FollowingAndExplore: View{
     
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
-    @ObservedObject var account: CloudAccount
     @Binding var showingOtherContact: NRContact?
     @ObservedObject private var ss: SettingsStore = .shared
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
@@ -79,11 +74,11 @@ struct FollowingAndExplore: View, Equatable {
 
     // If only the Following feed is enabled and all other feeds are disabled, we can hide the entire tab bar
     private var shouldHideTabBar: Bool {
-        if (account.followingPubkeys.count > 10 && enableHotFeed) { return false }
-        if (account.followingPubkeys.count > 10 && enableGalleryFeed) { return false }
-        if (account.followingPubkeys.count > 10 && enableDiscoverFeed) { return false }
+        if (la.account.followingPubkeys.count > 10 && enableHotFeed) { return false }
+        if (la.account.followingPubkeys.count > 10 && enableGalleryFeed) { return false }
+        if (la.account.followingPubkeys.count > 10 && enableDiscoverFeed) { return false }
         if enableExploreFeed { return false }
-        if (account.followingPubkeys.count > 10 && enableArticleFeed) { return false }
+        if (la.account.followingPubkeys.count > 10 && enableArticleFeed) { return false }
         if lists.count > 0 { return false }
             
         return true
@@ -115,7 +110,7 @@ struct FollowingAndExplore: View, Equatable {
                             Spacer()
                         }
                         
-                        if account.followingPubkeys.count > 10 && enableHotFeed {
+                        if la.account.followingPubkeys.count > 10 && enableHotFeed {
                             TabButton(
                                 action: { selectedSubTab = "Hot" },
                                 title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
@@ -124,7 +119,7 @@ struct FollowingAndExplore: View, Equatable {
                             Spacer()
                         }
                         
-                        if account.followingPubkeys.count > 10 && enableDiscoverFeed {
+                        if la.account.followingPubkeys.count > 10 && enableDiscoverFeed {
                             TabButton(
                                 action: { selectedSubTab = "Discover" },
                                 title: String(localized: "Discover", comment:"Tab title for Discover feed"),
@@ -133,7 +128,7 @@ struct FollowingAndExplore: View, Equatable {
                             Spacer()
                         }
                         
-                        if account.followingPubkeys.count > 10 && enableGalleryFeed {
+                        if la.account.followingPubkeys.count > 10 && enableGalleryFeed {
                             TabButton(
                                 action: {
                                     if IS_CATALYST { // On macOS we open the Gallery in the detail pane
@@ -156,7 +151,7 @@ struct FollowingAndExplore: View, Equatable {
                                 selected: selectedSubTab == "Explore")
                         }
                         
-                        if account.followingPubkeys.count > 10 && enableArticleFeed {
+                        if la.account.followingPubkeys.count > 10 && enableArticleFeed {
                             Spacer()
                             TabButton(
                                 action: { selectedSubTab = "Articles" },
@@ -194,7 +189,7 @@ struct FollowingAndExplore: View, Equatable {
                 themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
                 
                 // FOLLOWING
-                if (showingOtherContact == nil && account.followingPubkeys.count <= 1 && !didSend) {
+                if (showingOtherContact == nil && la.account.followingPubkeys.count <= 1 && !didSend) {
                     VStack {
                         Spacer()
                         Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -243,7 +238,7 @@ struct FollowingAndExplore: View, Equatable {
                 }
                 
                 // HOT/ARTICLES/GALLERY
-                if account.followingPubkeys.count > 10 {
+                if la.account.followingPubkeys.count > 10 {
                     switch selectedSubTab {
                     case "Hot":
                         Hot()
@@ -283,9 +278,12 @@ struct FollowingAndExplore: View, Equatable {
             createFollowingFeed()
             createExploreFeed() // Also create Explore Feed
         }
-        .onChange(of: account, perform: { newAccount in
-            guard account != newAccount else { return }
-            L.og.info("Account changed from: \(account.name)/\(account.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
+        .onChange(of: la.account, perform: { newAccount in
+            guard la.account != newAccount else { return }
+            L.og.info("Account changed from: \(la.account.name)/\(la.account.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
+            if SettingsStore.shared.appWideSeenTracker {
+                Deduplicator.shared.onScreenSeen = []
+            }
             createFollowingFeed()
         })
         .navigationTitle(navigationTitle)
@@ -361,26 +359,26 @@ struct FollowingAndExplore: View, Equatable {
     private func createFollowingFeed() {
         let context = viewContext()
         let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.following.rawValue, la.pubkey)
+        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.following.rawValue, la.account.publicKey)
         if let followingFeed = try? context.fetch(fr).first {
-            followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: la.pubkey, name: "Following")
+            followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: la.account.publicKey, name: "Following")
         }
         else {
             let newFollowingFeed = CloudFeed(context: context)
             newFollowingFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
             newFollowingFeed.name = "Following for " + la.account.anyName
-            newFollowingFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds" 
+            newFollowingFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
             newFollowingFeed.id = UUID()
             newFollowingFeed.createdAt = .now
-            newFollowingFeed.accountPubkey = la.pubkey
+            newFollowingFeed.accountPubkey = la.account.publicKey
             newFollowingFeed.type = CloudFeedType.following.rawValue
             DataProvider.shared().save() { // callback after save:
-                followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: la.pubkey, name: "Following")
+                followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: la.account.publicKey, name: "Following")
             }
             
             // Check for existing ListState
             let fr = ListState.fetchRequest()
-            fr.predicate = NSPredicate(format: "listId = %@ AND pubkey = %@", "Following", la.pubkey)
+            fr.predicate = NSPredicate(format: "listId = %@ AND pubkey = %@", "Following", la.account.publicKey)
             if let followingListState = try? context.fetch(fr).first {
                 newFollowingFeed.repliesEnabled = !followingListState.hideReplies
             }
@@ -426,9 +424,7 @@ struct FollowingAndExplore_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
             NBNavigationStack {
-                if let account = account() {
-                    FollowingAndExplore(account: account, showingOtherContact: .constant(nil))
-                }
+                FollowingAndExplore(showingOtherContact: .constant(nil))
             }
         }
     }

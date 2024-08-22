@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct MainView: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var ns: NRState
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
@@ -40,8 +41,8 @@ struct MainView: View {
         #endif
         NBNavigationStack(path: $navPath) {
             if let account = account {
-                FollowingAndExplore(account: account, showingOtherContact: $showingOtherContact)
-                    .equatable()
+                FollowingAndExplore(showingOtherContact: $showingOtherContact)
+                    .environmentObject(la)
 //                    .transaction { t in t.animation = nil }
                     .background(themes.theme.listBackground)
                     .withNavigationDestinations()

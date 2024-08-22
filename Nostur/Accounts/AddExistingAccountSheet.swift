@@ -167,46 +167,54 @@ struct AddExistingAccountSheet: View {
                     if bunkerManager.isSelfHostedNsecBunker {
                         account.ncRelay = bunkerManager.ncRelay
                     }
+                    
+                    let pubkey = account.publicKey
+                    
                     // Continue onboarding..
                     
-                    // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
-                    if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
-                        for contactEvent in contactEvents {
-                            let eventId = contactEvent.id
-                            bg().perform {
-                                Importer.shared.existingIds.removeValue(forKey: eventId)
-                            }
-                            viewContext.delete(contactEvent)
-                        }
-                    }
-                    // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
-                    if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
-                        for clEvent in clEvents {
-                            let eventId = clEvent.id
-                            bg().perform {
-                                Importer.shared.existingIds.removeValue(forKey: eventId)
-                            }
-                            viewContext.delete(clEvent)
-                        }
-                    }
+                    let bgContext = bg()
+                    bgContext.perform {
                     
-                    try! viewContext.save()
-                    NRState.shared.changeAccount(account)
-                    NRState.shared.onBoardingIsShown = false
-                    dismiss()
-                    
-                    do {
-                        try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
-                    }
-                    catch {
-                        L.og.error("🔴🔴 Failed to start onboarding")
+                        // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
+                        if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: pubkey, context: bgContext) {
+                            for contactEvent in contactEvents {
+                                let eventId = contactEvent.id
+                                Importer.shared.existingIds.removeValue(forKey: eventId)
+                                bgContext.delete(contactEvent)
+                            }
+                        }
+                        
+                        // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
+                        if let clEvents = Event.contactListEvents(byAuthorPubkey: pubkey, context: bgContext) {
+                            for clEvent in clEvents {
+                                let eventId = clEvent.id
+                                Importer.shared.existingIds.removeValue(forKey: eventId)
+                                bgContext.delete(clEvent)
+                            }
+                        }
+                        
+                        if bgContext.hasChanges {
+                            try? bgContext.save()
+                        }
+                        
+                        DispatchQueue.main.async {
+                            NRState.shared.changeAccount(account)
+                            NRState.shared.onBoardingIsShown = false
+                            dismiss()
+                            
+                            do {
+                                try NewOnboardingTracker.shared.start(pubkey: pubkey)
+                            }
+                            catch {
+                                L.og.error("🔴🔴 Failed to start onboarding")
+                            }
+                        }
                     }
                 }
                 else if bunkerState == .error {
                     if let account = bunkerManager.account {
                         NIP46SecretManager.shared.deleteSecret(account: account)
                         viewContext.delete(account)
-//                        NRState.shared.loadAccounts()
                     }
                 }
             }
@@ -235,39 +243,47 @@ struct AddExistingAccountSheet: View {
         account.privateKey = keys.privateKeyHex()
         account.flags = "full_account"
         
-        // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
-        if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
-            for contactEvent in contactEvents {
-                let eventId = contactEvent.id
-                bg().perform {
-                    Importer.shared.existingIds.removeValue(forKey: eventId)
-                }
-                viewContext.delete(contactEvent)
-            }
-        }
+        try? viewContext.save()
         
-        // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
-        if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
-            for clEvent in clEvents {
-                let eventId = clEvent.id
-                bg().perform {
-                    Importer.shared.existingIds.removeValue(forKey: eventId)
-                }
-                viewContext.delete(clEvent)
-            }
-        }
-
-        try! viewContext.save()
-//        NRState.shared.loadAccounts()
-        NRState.shared.changeAccount(account)
-        NRState.shared.onBoardingIsShown = false
-        NRState.shared.loadAccountsState()
+        let pubkey = account.publicKey
         
-        do {
-            try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
-        }
-        catch {
-            L.og.error("🔴🔴 Failed to start onboarding")
+        let bgContext = bg()
+        bgContext.perform {
+            
+            // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
+            if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: pubkey, context: bgContext) {
+                for contactEvent in contactEvents {
+                    let eventId = contactEvent.id
+                    Importer.shared.existingIds.removeValue(forKey: eventId)
+                    bgContext.delete(contactEvent)
+                }
+            }
+            
+            // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
+            if let clEvents = Event.contactListEvents(byAuthorPubkey: pubkey, context: bgContext) {
+                for clEvent in clEvents {
+                    let eventId = clEvent.id
+                    Importer.shared.existingIds.removeValue(forKey: eventId)
+                    bgContext.delete(clEvent)
+                }
+            }
+            
+            if bgContext.hasChanges {
+                try? bgContext.save()
+            }
+            
+            DispatchQueue.main.async {
+                NRState.shared.changeAccount(account)
+                NRState.shared.onBoardingIsShown = false
+                NRState.shared.loadAccountsState()
+                
+                do {
+                    try NewOnboardingTracker.shared.start(pubkey: pubkey)
+                }
+                catch {
+                    L.og.error("🔴🔴 Failed to start onboarding")
+                }
+            }
         }
     }
     
@@ -283,37 +299,44 @@ struct AddExistingAccountSheet: View {
         account.createdAt = Date()
         account.publicKey = pubkey
         
-        // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
-        if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
-            for contactEvent in contactEvents {
-                let eventId = contactEvent.id
-                bg().perform {
-                    Importer.shared.existingIds.removeValue(forKey: eventId)
-                }
-                viewContext.delete(contactEvent)
-            }
-        }
-        // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
-        if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
-            for clEvent in clEvents {
-                let eventId = clEvent.id
-                bg().perform {
-                    Importer.shared.existingIds.removeValue(forKey: eventId)
-                }
-                viewContext.delete(clEvent)
-            }
-        }
+        try? viewContext.save()
         
-        try! viewContext.save()
-//        NRState.shared.loadAccounts()
-        NRState.shared.changeAccount(account)
-        NRState.shared.onBoardingIsShown = false
-        NRState.shared.loadAccountsState()
-        do {
-            try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
-        }
-        catch {
-            L.og.error("🔴🔴 Failed to start onboarding")
+        let bgContext = bg()
+        bgContext.perform {
+            
+            // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
+            if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: pubkey, context: bgContext) {
+                for contactEvent in contactEvents {
+                    let eventId = contactEvent.id
+                    Importer.shared.existingIds.removeValue(forKey: eventId)
+                    bgContext.delete(contactEvent)
+                }
+            }
+            
+            // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
+            if let clEvents = Event.contactListEvents(byAuthorPubkey: pubkey, context: bgContext) {
+                for clEvent in clEvents {
+                    let eventId = clEvent.id
+                    Importer.shared.existingIds.removeValue(forKey: eventId)
+                    bgContext.delete(clEvent)
+                }
+            }
+            
+            if bgContext.hasChanges {
+                try? bgContext.save()
+            }
+            
+            DispatchQueue.main.async {
+                NRState.shared.changeAccount(account)
+                NRState.shared.onBoardingIsShown = false
+                NRState.shared.loadAccountsState()
+                do {
+                    try NewOnboardingTracker.shared.start(pubkey: pubkey)
+                }
+                catch {
+                    L.og.error("🔴🔴 Failed to start onboarding")
+                }
+            }
         }
     }
     

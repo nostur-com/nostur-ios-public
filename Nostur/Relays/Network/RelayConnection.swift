@@ -279,6 +279,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             
             #if DEBUG
+            if text == "" {
+                L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
+            }
             L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
             #endif
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }

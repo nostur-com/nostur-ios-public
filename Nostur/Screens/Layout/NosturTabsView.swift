@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NosturTabsView: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dm: DirectMessageViewModel
     
@@ -35,6 +36,7 @@ struct NosturTabsView: View {
                         tabTapped(newTab, oldTab: oldTab)
                     }) {
                         MainView()
+                            .environmentObject(la)
                             .tabItem { Label("", systemImage: "house") }
                             .tag("Main")
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
