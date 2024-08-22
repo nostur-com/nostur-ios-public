@@ -613,6 +613,10 @@ class NXColumnViewModel: ObservableObject {
         case .pubkeys(let feed):
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
+            guard pubkeys.count > 0 || hashtags.count > 0 else {
+                L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
+                return nil
+            }
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
@@ -623,6 +627,10 @@ class NXColumnViewModel: ObservableObject {
             }
             return nil
         case .someoneElses(_):
+            guard config.pubkeys.count > 0 || config.hashtags.count > 0 else {
+                L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
+                return nil
+            }
             let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: since, until: until)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
