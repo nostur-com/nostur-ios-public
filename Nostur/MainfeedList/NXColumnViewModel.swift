@@ -1370,7 +1370,7 @@ extension NXColumnViewModel {
 extension NXColumnViewModel {
     
     @MainActor
-    private func loadRemote(_ config: NXColumnConfig, older: Bool = false) {
+    private func loadRemote(_ config: NXColumnConfig) {
         #if DEBUG
         L.og.debug("☘️☘️ \(config.id) loadRemote(config)")
         #endif
@@ -1401,34 +1401,30 @@ extension NXColumnViewModel {
                     Task { @MainActor in
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
-                        let sinceOrUntil = !older ? (self.mostRecentCreatedAt ?? 0) : (self.oldestCreatedAt ?? Int(Date().timeIntervalSince1970))
+                        let since = (self.mostRecentCreatedAt ?? 0)
                         
                         // Then back to bg for processing
                         bg().perform { [weak self] in
-                            self?.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                            self?.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                         }
                     }
                 }
             }
         default:
-            // Fetch since 5 minutes before most recent item on screen (since)
-            // Or until oldest (bottom) item on screen (until)
-            let (sinceTimestamp, untilTimestamp) = if case .posts(let nrPosts) = viewState {
-                ((nrPosts.first?.created_at ?? self.refreshedAt) - Int64(5 * 60), (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)) + Int64(5 * 60))
+            // Fetch since 5 minutes before most recent item on screen (since) or .refeshedAt
+            let sinceTimestamp = if case .posts(let nrPosts) = viewState {
+                (nrPosts.first?.created_at ?? self.refreshedAt) - Int64(5 * 60)
             }
-            else { // or if empty screen: refreshedAt (since) or now (until)
-                (self.refreshedAt, Int64(Date().timeIntervalSince1970))
+            else { // or if empty screen: refreshedAt (since)
+                self.refreshedAt
             }
             
-            let sinceOrUntil = !older ? sinceTimestamp : untilTimestamp
+            L.og.debug("☘️☘️⏭️ \(config.id) loadRemote.fetchGap: since: \(sinceTimestamp) currentGap: 0")
             
-            if !older {
-                L.og.debug("☘️☘️⏭️ \(config.id) loadRemote.fetchGap: since: \(sinceOrUntil) currentGap: 0")
-                self.gapFiller?.fetchGap(since: sinceOrUntil, currentGap: 0)
-            }
-            else {
-                // TODO: handler older
-            }
+            // Don't go older than 24 hrs ago
+            let maxAgo = Int64(Date().addingTimeInterval(-24 * 60 * 60).timeIntervalSince1970)
+            
+            self.gapFiller?.fetchGap(since: max(sinceTimestamp, maxAgo), currentGap: 0)
             
             fetchProfiles(config)
         }
