@@ -138,7 +138,7 @@ class NewOnboardingTracker {
             prefix: "FPF-",
             reqCommand: { (taskId) in
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.reqCommand()")
-                guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false && self.fetchedOutboxRelaysTask == false else {
+                guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false else {
                     L.onboarding.info("\(taskId) ✈️✈️ SKIPPED - ALREADY HAVE BOTH")
                     return
                 }
@@ -169,7 +169,7 @@ class NewOnboardingTracker {
                 }
             })
 
-        guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false && self.fetchedOutboxRelaysTask == false else {
+        guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false else {
             self.account = nil
             return
         }
