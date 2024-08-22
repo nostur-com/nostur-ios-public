@@ -143,8 +143,8 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public var refreshedAt: Int64 {
         get {
-            guard let config else { // 7 days ago if config is somehow missing
-                return (Int64(Date().timeIntervalSince1970) - (7 * 3600 * 24))
+            guard let config else { // 2 days ago if config is somehow missing
+                return (Int64(Date().timeIntervalSince1970) - (2 * 3600 * 24))
             }
             
             switch config.columnType {
@@ -183,8 +183,8 @@ class NXColumnViewModel: ObservableObject {
             if let mostRecentCreatedAt = self.mostRecentCreatedAt {
                return Int64(mostRecentCreatedAt) // or most recent on screen
             }
-            // else take 7 days
-            return (Int64(Date().timeIntervalSince1970) - (7 * 3600 * 24))
+            // else take 2 days
+            return (Int64(Date().timeIntervalSince1970) - (2 * 3600 * 24))
         }
         set {
             guard let config else { return }
