@@ -372,13 +372,25 @@ class NXColumnViewModel: ObservableObject {
         
         switch config.columnType {
         case .following(let feed):
+            
+            let followingPubkeys: Set<String> = if let account = feed.account {
+                account.followingPubkeys
+            }
+            else if feed.accountPubkey == EXPLORER_PUBKEY {
+                NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
+            }
+            else {
+                []
+            }
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.id) loadLocal(.following) \(older ? "older" : "")")
+            L.og.debug("☘️☘️ \(config.id) loadLocal(.following) \(older ? "older" : "") \(followingPubkeys.count) pubkeys")
 #endif
-            guard let account = feed.account else { return }
-
-            let followingPubkeys = account.followingPubkeys // TODO: Need to keep updated on changing .followingPubkeys
-            let hashtagRegex: String? = makeHashtagRegex(account.followingHashtags)
+            
+            let hashtagRegex: String? = if let account = feed.account {
+                makeHashtagRegex(account.followingHashtags)
+            }
+            else { nil }
+            
             bg().perform { [weak self] in
                 guard let self else { return }
                 let fr = if !older {
