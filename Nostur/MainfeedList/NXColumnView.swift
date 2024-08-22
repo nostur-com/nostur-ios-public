@@ -12,7 +12,7 @@ struct NXColumnView: View {
     
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var dim: DIMENSIONS
-    public let config: NXColumnConfig
+    public var config: NXColumnConfig
     @StateObject private var viewModel = NXColumnViewModel()
     public var isVisible: Bool
 
