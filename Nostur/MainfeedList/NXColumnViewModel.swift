@@ -54,6 +54,11 @@ class NXColumnViewModel: ObservableObject {
                     vmInner.unreadIds = [:]
                 }
             }
+            else if case .loading = viewState {
+                if !vmInner.unreadIds.isEmpty {
+                    vmInner.unreadIds = [:]
+                }
+            }
         }
     }
     
@@ -777,7 +782,7 @@ class NXColumnViewModel: ObservableObject {
     private var instantFeed: InstantFeed?
     private var backlog = Backlog(auto: true)
     
-    private var allIdsSeen: Set<String> {
+    public var allIdsSeen: Set<String> {
         get { SettingsStore.shared.appWideSeenTracker ? Deduplicator.shared.onScreenSeen : _allIdsSeen }
         set {
             if SettingsStore.shared.appWideSeenTracker {
