@@ -37,6 +37,7 @@ struct VideoViewurRepresentable: UIViewRepresentable {
         avpc.delegate = context.coordinator
         avpc.showsPlaybackControls = true
         avpc.canStartPictureInPictureAutomaticallyFromInline = true
+        avpc.updatesNowPlayingInfoCenter = true
         context.coordinator.avpc = avpc
 
         avpc.view.isUserInteractionEnabled = true
