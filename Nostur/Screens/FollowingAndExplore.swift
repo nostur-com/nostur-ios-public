@@ -360,8 +360,21 @@ struct FollowingAndExplore: View{
         let context = viewContext()
         let fr = CloudFeed.fetchRequest()
         fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.following.rawValue, la.account.publicKey)
-        if let followingFeed = try? context.fetch(fr).first {
+        
+        let followingFeeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
+        let followingFeedsNewest: [CloudFeed] = followingFeeds
+            .sorted(by: { a, b in
+                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                return mostRecentA > mostRecentB
+            })
+        
+        if let followingFeed = followingFeedsNewest.first {
             followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: la.account.publicKey, name: "Following")
+            for f in followingFeedsNewest.dropFirst(1) {
+                context.delete(f)
+            }
+            DataProvider.shared().save()
         }
         else {
             let newFollowingFeed = CloudFeed(context: context)
@@ -399,8 +412,21 @@ struct FollowingAndExplore: View{
         let context = viewContext()
         let fr = CloudFeed.fetchRequest()
         fr.predicate = NSPredicate(format: "type == %@ && accountPubkey == %@", CloudFeedType.following.rawValue, EXPLORER_PUBKEY)
-        if let exploreFeed = try? context.fetch(fr).first {
+        
+        let exploreFeeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
+        let exploreFeedsNewest: [CloudFeed] = exploreFeeds
+            .sorted(by: { a, b in
+                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                return mostRecentA > mostRecentB
+            })
+        
+        if let exploreFeed = exploreFeedsNewest.first {
             exploreConfig = NXColumnConfig(id: exploreFeed.subscriptionId, columnType: .following(exploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
+            for e in exploreFeedsNewest.dropFirst(1) {
+                context.delete(e)
+            }
+            DataProvider.shared().save()
         }
         else {
             let newExploreFeed = CloudFeed(context: context)
