@@ -29,6 +29,8 @@ class LiveKitVoiceSession: ObservableObject {
     
     @Published public var state: LiveKitVoiceSessionState = .disconnected
     
+    @Published public var isRecording: Bool = false
+    
     static let shared = LiveKitVoiceSession()
     
     private init() { }
@@ -252,6 +254,7 @@ extension LiveKitVoiceSession: RoomDelegate {
         self.syncParticipants()
         
         Task { @MainActor in
+            self.isRecording = room.isRecording
             self.state = .connected
             // Broadcast room presence
             self.broadCastRoomPresence()
@@ -458,6 +461,15 @@ extension LiveKitVoiceSession: RoomDelegate {
         L.nests.debug("didFailToConnectWithError: error \(error?.localizedDescription ?? "")")
         Task { @MainActor in
             self.state = .error(error?.localizedDescription ?? "Error")
+        }
+    }
+    
+    /// ``Room/isRecording`` has updated.
+    func room(_ room: Room, didUpdateIsRecording isRecording: Bool) {
+        if isRecording != self.isRecording {
+            Task { @MainActor in
+                self.isRecording = isRecording
+            }
         }
     }
 
