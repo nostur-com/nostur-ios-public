@@ -38,7 +38,7 @@ class NewPostNotifier: ObservableObject {
     }
     
     private func load() {
-        L.og.debug("NewPostNotifier.load()")
+        L.og.debug("NewPostNotifier.load() -[LOG]-")
         let tasks = CloudTask.fetchAll(byType: .notifyOnPosts, andAccountPubkey: account()?.publicKey ?? activeAccountPublicKey)
         enabledPubkeys = Set(tasks.compactMap { $0.value_ })
     }
@@ -47,11 +47,11 @@ class NewPostNotifier: ObservableObject {
     @MainActor
     public func runCheck() {
         guard !NRState.shared.appIsInBackground else { L.lvm.debug("NewPostNotifier.runCheck(): skipping, app in background."); return }
-        L.og.debug("NewPostNotifier.runCheck()")
+        L.og.debug("NewPostNotifier.runCheck() -[LOG]-")
         if let lastCheck = lastCheck {
             guard (Date.now.timeIntervalSince1970 - lastCheck.timeIntervalSince1970) > 60
             else {
-                L.og.debug("NewPostNotifier.runCheck() - too soon, waiting a bit")
+                L.og.debug("NewPostNotifier.runCheck() - too soon, waiting a bit -[LOG]-")
                 return
             }
         }

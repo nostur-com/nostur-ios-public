@@ -62,7 +62,7 @@ class Importer {
                 self?.bgContext.perform { [weak self] in
                     guard let self else { return }
 #if DEBUG
-                    L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) ")
+                    L.importing.debug("🏎️🏎️ sendReceivedNotifications() after duplicate received (callbackSubscriptionIds: \(self.callbackSubscriptionIds.count)) -[LOG]-")
 #endif
                     let notified = self.callbackSubscriptionIds
                     self.importedMessagesFromSubscriptionIds.send(notified)
@@ -79,7 +79,7 @@ class Importer {
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
 #if DEBUG
-                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.5 seconds), but sends first after debounce (0.15)")
+                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.5 seconds), but sends first after debounce (0.15) -[LOG]-")
 #endif
                 self?.importEvents()
             }
@@ -90,7 +90,7 @@ class Importer {
             .throttle(for: 0.25, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
-                L.importing.debug("🏎️🏎️ importEvents() (PRIO) after relay message received (throttle = 0.25 seconds), but sends first after debounce (0.05)")
+                L.importing.debug("🏎️🏎️ importEvents() (PRIO) after relay message received (throttle = 0.25 seconds), but sends first after debounce (0.05) -[LOG]-")
                 self?.importPrioEvents()
             }
             .store(in: &subscriptions)
@@ -322,7 +322,7 @@ class Importer {
                     try bgContext.save()
                     if (saved > 0) {
 #if DEBUG
-                        L.importing.debug("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.debug("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped) -[LOG]-")
 #endif
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
@@ -332,12 +332,12 @@ class Importer {
                     }
                     else {
 #if DEBUG
-                        L.importing.debug("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.debug("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped) -[LOG]-")
 #endif
                     }
                 }
                 else {
-                    L.importing.debug("🏎️🏎️ Nothing imported, no changes in \(count) messages")
+                    L.importing.debug("🏎️🏎️ Nothing imported, no changes in \(count) messages -[LOG]-")
                     if count > 50 {
                         sendNotification(.noNewEventsInDatabase)
                     }

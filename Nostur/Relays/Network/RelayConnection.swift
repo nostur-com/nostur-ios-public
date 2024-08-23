@@ -352,7 +352,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     // didBecomeInvalidWithError
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: (any Error)?) {
 #if DEBUG
-        L.sockets.debug("🔴🔴 didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
+        L.sockets.debug("🔴🔴 urlSession.didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
 #endif
         if let error {
             DispatchQueue.main.async {

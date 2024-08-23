@@ -23,11 +23,11 @@ class BookmarkBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
             do {
                 try self?.frc.performFetch()
                 guard let items = self?.frc.fetchedObjects else { return }
-                L.og.debug("BookmarkBgFetchRequest items \(items.count)")
+                L.og.debug("BookmarkBgFetchRequest items \(items.count) -[LOG]-")
                 self?.onChange(items)
             }
             catch {
-                L.og.error("🔴🔴🔴 BookmarkBgFetchRequest failed to fetch items \(error.localizedDescription)")
+                L.og.error("🔴🔴🔴 BookmarkBgFetchRequest failed to fetch items \(error.localizedDescription) -[LOG]-")
             }
         }
         
