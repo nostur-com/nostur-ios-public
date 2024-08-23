@@ -30,46 +30,47 @@ struct LiveEventDetail: View {
         return false
     }
     
+    private var videoWidth: CGFloat {
+        dim.listWidth + (DIMENSIONS.BOX_PADDING*2)
+    }
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        VStack(spacing: 10) {
+        VStack {
+            headerView
+
+                if !didStart {
+                    participantsView
+                }
+        
+            videoStreamView
+                .background(themes.theme.background)
             
-            ScrollView {
-                headerView
-                
-                participantsView
-                
-                videoStreamView
-                
-                ChatRoom(aTag: liveEvent.id, theme: themes.theme)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 350 : 250)
-                    .padding(.horizontal, 10)
-                    .background(themes.theme.background)
-                    .border(themes.theme.lineColor)
-                    .padding(.top, -10)
-            }
-            
-            Spacer()
-            
-            nestButtonsView
-                .layoutPriority(1)
-                
+               ChatRoom(aTag: liveEvent.id, theme: themes.theme)
+                .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 350 : 250, maxHeight: .infinity)
+                .padding(.horizontal, 10)
+                .border(themes.theme.lineColor)
+                .padding(.top, -10)
+        }
+        .safeAreaInset(edge: .bottom) {
+            VStack {
+                nestButtonsView
+                    .padding(10)
+                    .layoutPriority(1)
+//                                    
 //                Text("copy event json")
 //                    .onTapGesture {
 //                        UIPasteboard.general.string = liveEvent.eventJson
 //                    }
-//                
-//                Spacer()
+            }
+            .background(themes.theme.background)
         }
-        
         .onAppear {
             liveEvent.fetchPresenceFromRelays()
             account = Nostur.account()
         }
-        .padding(10)
         .background(themes.theme.background)
 //        .navigationTitle(liveEvent.title ?? "(Stream)")
 //        .navigationBarTitleDisplayMode(.inline)
@@ -206,11 +207,14 @@ struct LiveEventDetail: View {
     @ViewBuilder
     private var videoStreamView: some View {
         if streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let url = URL(string: recordingUrl) {
-            NosturVideoViewur(url: url,  pubkey: liveEvent.pubkey, height: 200, videoWidth: 400, autoload: true, theme: Themes.default.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+            NosturVideoViewur(url: url,  pubkey: liveEvent.pubkey, height: videoWidth * 9/16, videoWidth: videoWidth, autoload: true, theme: Themes.default.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+        }
+        else if streamHasEnded {
+            Text("Stream has ended")
         }
         else if let url = liveEvent.url {
             if url.absoluteString.suffix(5) == ".m3u8" {
-                NosturVideoViewur(url: url,  pubkey: liveEvent.pubkey, height: 200, videoWidth: 400, autoload: true, theme: Themes.default.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+                NosturVideoViewur(url: url,  pubkey: liveEvent.pubkey, height: videoWidth * 9/16, videoWidth: videoWidth, autoload: true, theme: Themes.default.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
             }
             else if liveEvent.liveKitConnectUrl == nil {
                 Button {
@@ -247,10 +251,12 @@ struct LiveEventDetail: View {
             ###"["EVENT", "LIVEEVENT-LIVE", {"kind":30311,"id":"8619e382aec444d046fbea90c4ee1b791d9a6e509deb6e6328f7a050dc54f601","pubkey":"cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5","created_at":1720103970,"tags":[["d","34846ce3-d0f7-4ac9-bbb0-1a7a453acd2f"],["title","BTC Sessions LIVE"],["summary","You are the DJ on Noderunners Radio!"],["image","https://dvr.zap.stream/zap-stream-dvr/34846ce3-d0f7-4ac9-bbb0-1a7a453acd2f/thumb.jpg?AWSAccessKeyId=2gmV0suJz4lt5zZq6I5J\u0026Expires=33277012770\u0026Signature=n4l1GWDFvBLm8ZtAp%2BIss%2BjmBUk%3D"],["status","live"],["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","","speaker"],["p","e774934cb65e2b29e3b34f8b2132df4492bc346ba656cc8dc2121ff407688de0","","host"],["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","","speaker"],["p","eab0e756d32b80bcd464f3d844b8040303075a13eabc3599a762c9ac7ab91f4f","","speaker"],["relays","wss://relay.snort.social","wss://nos.lol","wss://relay.damus.io","wss://relay.nostr.band","wss://nostr.land","wss://nostr-pub.wellorder.net","wss://nostr.wine","wss://relay.nostr.bg","wss://nostr.oxtr.dev"],["starts","1720089226"],["service","https://api.zap.stream/api/nostr"],["streaming","https://data.zap.stream/stream/34846ce3-d0f7-4ac9-bbb0-1a7a453acd2f.m3u8"],["current_participants","2"],["t","Jukebox"],["t","Music"],["t","Radio"],["t","24/7"],["t","Pleb-Rule"],["goal","1b8460c1f1590aecd340fcb327c21fb466f46800aba7bd7b6ac6b0a2257f7789"]],"content":"","sig":"d3b07150e70a36009a97c0953d8c2c759b364301e92433cb0a31d5dcfffc2dabcc6d6f330054a2cae30a7ecc16dbd8ddf1e05f9b7553c88a5d9dece18a2000bc"}]"###
         ])
         pe.parseMessages([
+            ###"["EVENT","e",{"kind":30311,"id":"75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7","pubkey":"cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5","created_at":1721669595,"tags":[["d","82d27633-1dd1-4b38-8f9d-f6ab9b31fc83"],["title","Fiatjaf \u0026 utxo play dominion"],["summary","Come watch this very exciting game"],["image","https://dvr.zap.stream/zap-stream-dvr/82d27633-1dd1-4b38-8f9d-f6ab9b31fc83/thumb.jpg?AWSAccessKeyId=2gmV0suJz4lt5zZq6I5J\u0026Expires=33278578238\u0026Signature=X4Jo1oAm5pIg0YZ40CobUUdpD2A%3D"],["status","ended"],["p","e2ccf7cf20403f3f2a4a55b328f0de3be38558a7d5f33632fdaaefc726c1c8eb","","host"],["relays","wss://relay.snort.social","wss://nos.lol","wss://relay.damus.io","wss://relay.nostr.band","wss://nostr.land","wss://nostr-pub.wellorder.net","wss://nostr.wine","wss://relay.nostr.bg","wss://nostr.oxtr.dev"],["starts","1721664799"],["service","https://api.zap.stream/api/nostr"],["recording","https://data.zap.stream/recording/82d27633-1dd1-4b38-8f9d-f6ab9b31fc83.m3u8"],["ends","1721669595"]],"content":"","sig":"3f03a0de44dd2eec8dd045d5dd2242d1558f2af7719955e9ceb300c4ee14f26e4a170b13db923fb313bf4fd5d2c60be344f7901ea3ef5dd7f0fcb8df908b8b21"}]"###,
             ###"["EVENT","LIVE",{"content":"","created_at":1718076971,"id":"1460f66179e5c33e0d15b580b73773e2965f0548448efe7e22ecc98355e13bb2","kind":30311,"pubkey":"8a0969377e9abfe215e99f02e1789437892526b1d1e0b1ca4ed7cbf88b1cc421","sig":"2eb76ceda6c1345465998fe14cf53da308880fd1cf2f70e6c0d6e248d1a903105301f99f04c8e230272aaf0c8ee5a35c7c2b03cc63e64e62e88b7b55111f3920","tags":[["d","1718063831277"],["title","Corny Chat News"],["summary","Weekly news roundup providing a summary of the weeks headlines and topical discussion regarding Nostr, Lightning, Bitcoin, Geopolitics and Clown World, Humor and more."],["image","https://image.nostr.build/ea30115d83b1d3c303095a0a3349514ca2a88e12b9c5dd7fd92e984502be55f0.jpg"],["service","https://cornychat.com/cornychatnews"],["streaming","https://cornychat.com/cornychatnews"],["starts","1718063831"],["ends","1718080571"],["status","live"],["current_participants","7"],["t","talk"],["t","talk show"],["L","com.cornychat"],["l","cornychat.com","com.cornychat"],["l","audiospace","com.cornychat"],["r","https://cornychat.com/cornychatnews"],["p","50809a53fef95904513a840d4082a92b45cd5f1b9e436d9d2b92a89ce091f164","","Participant"],["p","7cc328a08ddb2afdf9f9be77beff4c83489ff979721827d628a542f32a247c0e","","Participant"],["p","21b419102da8fc0ba90484aec934bf55b7abcf75eedb39124e8d75e491f41a5e","","Room Owner"],["p","52387c6b99cc42aac51916b08b7b51d2baddfc19f2ba08d82a48432849dbdfb2","","Participant"],["p","50de492cfe5472450df1a0176fdf6d915e97cb5d9f8d3eccef7d25ff0a8871de","","Speaker"],["p","9322bd922f20c6fcd9e913454727b3bbc2d096be4811971055a826dda3d4cb0b","","Participant"],["p","cc76679480a4504b963a3809cba60b458ebf068c62713621dda94b527860447d","","Participant"]]}]"###
         ])
+        pe.loadChats()
     }) {
-        if let liveEvent = PreviewFetcher.fetchEvent("8619e382aec444d046fbea90c4ee1b791d9a6e509deb6e6328f7a050dc54f601") {
+        if let liveEvent = PreviewFetcher.fetchEvent("75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7") {
             let nrLiveEvent = NRLiveEvent(event: liveEvent)
             LiveEventDetail(liveEvent: nrLiveEvent)
         }
