@@ -41,9 +41,9 @@ struct LiveEventDetail: View {
         VStack {
             headerView
 
-                if !didStart {
-                    participantsView
-                }
+            if !didStart {
+                participantsView
+            }
         
             videoStreamView
                 .background(themes.theme.background)
@@ -114,24 +114,25 @@ struct LiveEventDetail: View {
     private var participantsView: some View {
         
         // ON STAGE
-        ScrollView(.horizontal) {
-            HFlow(alignment: .top) {
-                ForEach(liveEvent.onStage.indices, id: \.self) { index in
-                    NestParticipantView(
-                        nrContact: liveEvent.onStage[index],
-                        role: liveEvent.role(forPubkey: liveEvent.onStage[index].pubkey),
-                        aTag: liveEvent.id
-                    )
-                    .id(liveEvent.onStage[index].pubkey)
-                    .onTapGesture {
-                        navigateTo(NRContactPath(nrContact: liveEvent.onStage[index], navigationTitle: liveEvent.onStage[index].anyName))
+        if !liveEvent.onStage.isEmpty {
+            ScrollView(.horizontal) {
+                HFlow(alignment: .top) {
+                    ForEach(liveEvent.onStage.indices, id: \.self) { index in
+                        NestParticipantView(
+                            nrContact: liveEvent.onStage[index],
+                            role: liveEvent.role(forPubkey: liveEvent.onStage[index].pubkey),
+                            aTag: liveEvent.id
+                        )
+                        .id(liveEvent.onStage[index].pubkey)
+                        .onTapGesture {
+                            navigateTo(NRContactPath(nrContact: liveEvent.onStage[index], navigationTitle: liveEvent.onStage[index].anyName))
+                        }
+                        .frame(width: 95, height: 95)
+                        .fixedSize()
                     }
-                    .frame(width: 95, height: 95)
-                    .fixedSize()
                 }
+                .frame(height: liveEvent.onStage.count > 4 ? 200 : 100)
             }
-            .frame(height: liveEvent.onStage.count > 4 ? 200 : 100)
-//            .background(Color.green.opacity(0.3))
         }
         
         if !liveEvent.listeners.isEmpty {
@@ -139,24 +140,25 @@ struct LiveEventDetail: View {
         }
         
         // OTHERS PRESENT (ROOM PRESENCE 10312)
-        ScrollView(.horizontal) {
-            HFlow(alignment: .top) {
-                ForEach(liveEvent.listeners.indices, id: \.self) { index in
-                    NestParticipantView(
-                        nrContact: liveEvent.listeners[index],
-                        role: liveEvent.role(forPubkey: liveEvent.listeners[index].pubkey),
-                        aTag: liveEvent.id
-                    )
-                    .id(liveEvent.listeners[index].pubkey)
-                    .onTapGesture {
-                        navigateTo(NRContactPath(nrContact: liveEvent.listeners[index], navigationTitle: liveEvent.listeners[index].anyName))
+        if !liveEvent.listeners.isEmpty {
+            ScrollView(.horizontal) {
+                HFlow(alignment: .top) {
+                    ForEach(liveEvent.listeners.indices, id: \.self) { index in
+                        NestParticipantView(
+                            nrContact: liveEvent.listeners[index],
+                            role: liveEvent.role(forPubkey: liveEvent.listeners[index].pubkey),
+                            aTag: liveEvent.id
+                        )
+                        .id(liveEvent.listeners[index].pubkey)
+                        .onTapGesture {
+                            navigateTo(NRContactPath(nrContact: liveEvent.listeners[index], navigationTitle: liveEvent.listeners[index].anyName))
+                        }
+                        .frame(width: 95, height: 95)
+                        .fixedSize()
                     }
-                    .frame(width: 95, height: 95)
-                    .fixedSize()
                 }
+                .frame(height: liveEvent.onStage.count > 4 ? 200 : 100)
             }
-            .frame(height: liveEvent.onStage.count > 4 ? 200 : 100)
-//            .background(Color.green.opacity(0.3))
         }
     }
     
