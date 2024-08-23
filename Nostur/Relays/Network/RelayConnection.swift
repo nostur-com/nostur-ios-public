@@ -321,7 +321,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 #if DEBUG
                 L.sockets.debug("🔴🔴 PING: Not connected. ????? \(self?.url ?? "")")
 #endif
-                self?.isConnected = false
+                Task { @MainActor [weak self] in
+                    self?.isConnected = false
+                }
                 return
             }
             self?.webSocketTask?.sendPing(pongReceiveHandler: { [weak self] error in
