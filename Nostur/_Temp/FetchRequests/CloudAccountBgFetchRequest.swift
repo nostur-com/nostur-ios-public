@@ -23,11 +23,11 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
             do {
                 try self?.frc.performFetch()
                 guard let items = self?.frc.fetchedObjects else { return }
-                L.og.debug("BGAccountFetchRequest CloudAccounts: \(items.count)")
+                L.og.debug("BGAccountFetchRequest CloudAccounts: \(items.count) -[LOG]-")
                 self?.onChange(items)
             }
             catch {
-                L.og.error("🔴🔴🔴 BGAccountFetchRequest failed to fetch items \(error.localizedDescription)")
+                L.og.error("🔴🔴🔴 BGAccountFetchRequest failed to fetch items \(error.localizedDescription) -[LOG]-")
             }
         }    }
     
@@ -59,7 +59,9 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
                 return !uniqueAccounts.insert(publicKey).inserted
             }
 
-        L.cloud.debug("BGAccountFetchRequest Deleting: \(duplicates.count) duplicate accounts")
+        if duplicates.count > 0 {
+            L.cloud.debug("BGAccountFetchRequest Deleting: \(duplicates.count) duplicate accounts")
+        }
         duplicates.forEach({ duplicateAccount in
             // Before deleting, .union the follows to the existing account
             if let existingAccount = sortedAccounts.first(where: { existingAccount in

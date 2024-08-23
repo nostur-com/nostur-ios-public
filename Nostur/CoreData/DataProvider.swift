@@ -55,7 +55,7 @@ class DataProvider: ObservableObject {
             cloudStoreDescription.url = URL(fileURLWithPath: "/dev/null")
         }
         else {
-            L.og.info("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(localStoreDescription.url?.absoluteString ?? "")")
+            L.og.info("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(localStoreDescription.url?.absoluteString ?? "") -[LOG]-")
             localStoreDescription.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
             cloudStoreDescription.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
         }
@@ -246,7 +246,7 @@ class DataProvider: ObservableObject {
         }
         else {
 #if DEBUG
-            L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count)")
+            L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count) -[LOG]-")
 #endif
             if bg.hasChanges {
                 do {

@@ -22,7 +22,7 @@ class CloudRelayBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
             do {
                 try self?.frc.performFetch()
                 guard let items = self?.frc.fetchedObjects else { return }
-                L.og.debug("BGAccountFetchRequest CloudRelay: \(items.count)")
+                L.og.debug("BGAccountFetchRequest CloudRelay: \(items.count) -[LOG]-")
                 self?.onChange(items)
             }
             catch {
@@ -51,7 +51,9 @@ class CloudRelayBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
                 return !uniqueRelays.insert(normalizedUrl).inserted
             }
 
-        L.cloud.debug("BGAccountFetchRequest Deleting: \(duplicates.count) duplicate relays")
+        if duplicates.count > 0 {
+            L.cloud.debug("BGAccountFetchRequest Deleting: \(duplicates.count) duplicate relays")
+        }
         duplicates.forEach({ duplicateRelay in
             bg().delete(duplicateRelay)
         })

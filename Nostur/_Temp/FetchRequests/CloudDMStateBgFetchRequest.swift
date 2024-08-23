@@ -21,7 +21,7 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
         do {
             try self.frc.performFetch()
             guard let items = self.frc.fetchedObjects else { return }
-            L.og.debug("CloudDMStateFetchRequest CloudDMState: \(items.count)")
+            L.og.debug("CloudDMStateFetchRequest CloudDMState: \(items.count) -[LOG]-")
             onChange(items)
         }
         catch {
