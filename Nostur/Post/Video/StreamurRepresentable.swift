@@ -32,12 +32,13 @@ struct StreamurRepresentable: UIViewRepresentable {
         player.actionAtItemEnd = .pause
         avpc.player = player
         avpc.exitsFullScreenWhenPlaybackEnds = false
+        avpc.videoGravity = .resizeAspect
         avpc.allowsPictureInPicturePlayback = true
         avpc.delegate = context.coordinator
         avpc.showsPlaybackControls = true
         avpc.canStartPictureInPictureAutomaticallyFromInline = true
         avpc.updatesNowPlayingInfoCenter = true
-        avpc.setValue(false, forKey: "canHidePlaybackControls")
+//        avpc.setValue(false, forKey: "canHidePlaybackControls")
         context.coordinator.avpc = avpc
 
         avpc.view.isUserInteractionEnabled = true
