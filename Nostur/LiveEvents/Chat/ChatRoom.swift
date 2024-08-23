@@ -86,7 +86,7 @@ struct ChatRoom: View {
                         
                         HStack {
                             MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
-                            ChatInputField(message: $message, onSubmit: submitMessage)
+                            ChatInputField(message: $message, startWithFocus: false, onSubmit: submitMessage)
                         }
                         .padding(.bottom, 15)
                     }

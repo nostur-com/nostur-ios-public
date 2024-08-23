@@ -11,7 +11,9 @@ import SwiftUI
 struct ChatInputField: View {
     @EnvironmentObject private var themes: Themes
     @Binding var message: String
+    var startWithFocus: Bool = true
     var onSubmit: (() -> Void)?
+    
     
     enum FocusedField {
         case message
@@ -21,27 +23,32 @@ struct ChatInputField: View {
     
     var body: some View {
         HStack {
-            if #available(iOS 16.0, *) {
-                TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message, axis: .vertical)
-                    .lineLimit(...8)
-                    .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 0))
-                    .background(Color.clear)
-            }
-            else {
-                TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message)
-                    .lineLimit(2)
-                    .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 0))
-                    .background(Color.clear)
-            }
+            TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message)
+                .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 0))
+                .background(Color.clear)
+                .focused($focusedField, equals: .message)
+                .submitLabel(.send)
+                .onSubmit {
+                    if let onSubmit {
+                        onSubmit()
+                    }
+                }
             
             Button(action: {
                 if let onSubmit {
                     onSubmit()
                 }
+                focusedField = nil
             }) {
                 Image(systemName: "paperplane.fill")
                     .font(.system(size: 20))
                     .padding(.trailing, 10)
+            }
+            .keyboardShortcut(.defaultAction)
+            .onSubmit {
+                if let onSubmit {
+                    onSubmit()
+                }
             }
             .accentColor(themes.theme.accent)
         }
@@ -52,7 +59,11 @@ struct ChatInputField: View {
                 .stroke(Color.gray.opacity(0.5), lineWidth: 1)
         )
         .padding([.leading, .trailing], 10)
-        .onAppear { focusedField = .message }
+        .onAppear {
+            if startWithFocus {
+                focusedField = .message 
+            }
+        }
     }
 }
 
