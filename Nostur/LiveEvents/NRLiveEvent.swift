@@ -36,7 +36,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     public var liveKitJoinUrl: String?
     public var streamingUrl: String?
     public var webUrl: String?
-    public var status: String?
+    @Published public var status: String?
     public var recordingUrl: String?
     public var liveKitConnectUrl: String?
     
