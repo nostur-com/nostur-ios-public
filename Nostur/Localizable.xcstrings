@@ -5820,6 +5820,9 @@
         }
       }
     },
+    "REC" : {
+
+    },
     "Receipt from" : {
       "extractionState" : "manual",
       "localizations" : {
