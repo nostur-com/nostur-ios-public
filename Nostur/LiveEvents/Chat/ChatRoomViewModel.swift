@@ -117,6 +117,7 @@ class ChatRoomViewModel: ObservableObject {
                     return
                 }
                 guard let event = message.event else { return }
+                guard !blocks().contains(event.publicKey) else { return }
                 guard event.kind == .chatMessage || event.kind == .zapNote else { return }
                 guard event.tags.first(where: { $0.type == "a" && $0.value == aTag }) != nil else { return }
 
