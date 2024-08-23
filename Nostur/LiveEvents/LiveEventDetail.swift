@@ -85,10 +85,15 @@ struct LiveEventDetail: View {
                     .foregroundColor(.secondary)
             }
         }
-        else if liveEvent.totalParticipants > 0 {
+        else if liveEvent.totalParticipants > 0 || liveKitVoiceSession.isRecording {
             HStack {
-                Text("\(liveEvent.totalParticipants) participants")
-                    .foregroundColor(.secondary)
+                if liveEvent.totalParticipants > 0 {
+                    Text("\(liveEvent.totalParticipants) participants")
+                        .foregroundColor(.secondary)
+                }
+                if liveKitVoiceSession.isRecording {
+                    RecView()
+                }
             }
         }
         
@@ -260,5 +265,25 @@ struct LiveEventDetail: View {
             let nrLiveEvent = NRLiveEvent(event: liveEvent)
             LiveEventDetail(liveEvent: nrLiveEvent)
         }
+    }
+}
+
+
+struct RecView: View {
+    var body: some View {
+        HStack(spacing: 3) {
+            // Background Circle
+            Circle()
+                .fill(Color.red)
+                .frame(width: 13, height: 13) // Adjust size as needed
+
+            // "REC" Text
+            Text("REC")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.white)
+        }
+        .padding(5)
+        .background(Color.black.opacity(0.5)) // Optional background to enhance visibility
+        .cornerRadius(8) // Optional rounding for the background
     }
 }
