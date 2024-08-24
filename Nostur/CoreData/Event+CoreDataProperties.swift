@@ -974,7 +974,7 @@ extension Event {
             
             EventCache.shared.setObject(for: event.id, value: savedEvent)
 #if DEBUG
-            L.og.debug("Saved \(event.id) in cache")
+            L.og.debug("Saved \(event.id) in cache -[LOG]-")
 #endif
             
             if event.content == "#[0]", let firstE = event.firstE() {

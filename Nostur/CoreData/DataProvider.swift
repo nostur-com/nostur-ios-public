@@ -149,7 +149,7 @@ class DataProvider: ObservableObject {
         bg.perform { [weak self] in
             guard let self = self else { return }
             
-            L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count)")
+            L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count) -[LOG]-")
             
             if bg.hasChanges {
                 try? bg.save()
