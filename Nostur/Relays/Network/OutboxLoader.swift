@@ -84,7 +84,7 @@ public class OutboxLoader {
                 else { return }
                 
 #if DEBUG
-                L.sockets.debug("📤📤 Outbox: Fetching contact relay info for \(self.follows) follows")
+                L.sockets.debug("📤📤 Outbox: Fetching contact relay info for \(self.follows) follows -[LOG]-")
 #endif
                 req(cm)
             },

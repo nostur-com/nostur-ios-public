@@ -172,7 +172,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
                     self.skipped = self.skipped + 1
                     self.isSocketConnecting = false
-                    L.sockets.debug("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
+                    L.sockets.debug("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped) -[LOG]-")
                     return
                 }
                 self.skipped = 0
@@ -314,7 +314,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public func ping() {
 #if DEBUG
-        L.sockets.debug("PING: Trying to ping: \(self.url)")
+        L.sockets.debug("PING: Trying to ping: \(self.url) -[LOG]-")
 #endif
         queue.async { [weak self] in
             if self?.webSocketTask == nil {

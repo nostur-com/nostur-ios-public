@@ -202,7 +202,7 @@ public class ConnectionPool: ObservableObject {
                 if let lastReceivedMessageAt = connection.lastMessageReceivedAt {
                     if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
 #if DEBUG
-                        L.sockets.debug("PING: \(connection.url) Last message older that 45 seconds, sending ping")
+                        L.sockets.debug("PING: \(connection.url) Last message older that 45 seconds, sending ping -[LOG]-")
 #endif
                         connection.ping()
                     }
@@ -619,7 +619,7 @@ public class ConnectionPool: ObservableObject {
             .prefix(self.maxPreferredRelays) // SANITY
         {
 #if DEBUG
-            L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description)")
+            L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
 #endif
             let connection = ConnectionPool.shared.addOutboxConnection(RelayData(read: true, write: false, search: false, auth: false, url: req.key, excludedPubkeys: []))
             if !connection.isConnected {

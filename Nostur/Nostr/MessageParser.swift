@@ -84,7 +84,7 @@ class MessageParser {
                         client.sendAuthResponse()
                     }
                     else {
-                        L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED)")
+                        L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) -[LOG]-")
                     }
                 case .NOTICE:
                     L.sockets.notice("\(relayUrl): \(message.message)")
@@ -103,13 +103,13 @@ class MessageParser {
                     if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(10)) != "Following-" && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(9)) != "-DB-CHAT-" {
                         // Send close message to this specific socket, not all.
                         #if DEBUG
-                        L.sockets.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
+                        L.sockets.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId) -[LOG]-")
                         #endif
                         client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
                     }
                     else {
                         #if DEBUG
-                        L.sockets.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId)")
+                        L.sockets.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId) -[LOG]-")
                         #endif
                     }
                     if subscriptionId.prefix(4) == "-DB-" {

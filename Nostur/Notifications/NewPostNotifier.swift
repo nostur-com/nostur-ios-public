@@ -102,7 +102,9 @@ class NewPostNotifier: ObservableObject {
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.backlog.clear()
-                L.og.debug("NewPostNotifier.runCheck(): timeout")
+                #if DEBUG
+                    L.og.debug("NewPostNotifier.runCheck(): timeout -[LOG]-")
+                #endif
                 bg().perform { [weak self] in
                     guard let self else { return }
                     let fr = Event.fetchRequest()

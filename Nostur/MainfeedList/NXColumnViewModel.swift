@@ -1137,11 +1137,6 @@ extension NXColumnViewModel {
     // Prepare events: apply WoT filter, remove already on screen, load .parentEvents
     private func prepareEvents(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) -> [Event] {
         shouldBeBg()
-            
-#if DEBUG
-        L.og.debug("☘️☘️ \(config.id) prepareEvents \(events.count.description)")
-#endif
-        
         let filteredEvents: [Event] = (wotEnabled ? applyWoT(events, config: config) : events) // Apply WoT filter or not
             .filter { // Apply (app wide) already-seen filter
                 if $0.isRepost, let firstQuoteId = $0.firstQuoteId {
