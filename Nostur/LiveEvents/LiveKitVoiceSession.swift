@@ -31,6 +31,9 @@ class LiveKitVoiceSession: ObservableObject {
     
     @Published public var isRecording: Bool = false
     
+    public let anonymousKeys = NKeys.newKeys()
+    public var anonymousPubkeyCached = ""
+    
     static let shared = LiveKitVoiceSession()
     
     private init() { }
@@ -43,18 +46,17 @@ class LiveKitVoiceSession: ObservableObject {
 
     var tracks: [Track] = []
     
-    // own most recent presence id, delete on disconnect?
-    private var accountPubkey: String?
-    private var ownPresenceId: String?
-    
+    private var accountType: NestAccountType?
+
     private var nrLiveEvent: NRLiveEvent? = nil
     
     @MainActor
-    func connect(_ url: String, token: String, accountPubkey: String, nrLiveEvent: NRLiveEvent) {
+    func connect(_ url: String, token: String, accountType: NestAccountType, nrLiveEvent: NRLiveEvent) {
+        self.anonymousPubkeyCached = anonymousKeys.publicKeyHex()
         self.state = .connecting
         try? AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: .duckOthers)
         self.nrLiveEvent = nrLiveEvent
-        self.accountPubkey = accountPubkey
+        self.accountType = accountType
         
         Task {
            do {
@@ -74,7 +76,7 @@ class LiveKitVoiceSession: ObservableObject {
     func disconnect() {
         self.state = .disconnected
         self.nrLiveEvent = nil
-        self.accountPubkey = nil
+        self.accountType = nil
         Task {
             await room.disconnect()
        }
@@ -91,8 +93,7 @@ class LiveKitVoiceSession: ObservableObject {
     }
     
     func broadCastRoomPresence(raisedHand: Bool = false) { // TODO: broadcast to? own relay set? nest preferred relays? outbox? or? hmm
-        guard let accountPubkey = self.accountPubkey else { return }
-        guard let account = account(), account.publicKey == accountPubkey else { return }
+
         guard let currentRoomATag = self.currentRoomATag else { return }
         
         var presenceEvent = NEvent(content: "")
@@ -103,17 +104,38 @@ class LiveKitVoiceSession: ObservableObject {
             presenceEvent.tags.append(NostrTag(["hand", "1"]))
         }
         
-        guard let signedPresenceEvent = try? account.signEvent(presenceEvent) else { return }
-        
-        
-        // TODO: BUNKER HANDLING
-        ConnectionPool.shared.sendMessage(
-            NosturClientMessage(
-                clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: signedPresenceEvent.toNostrEssentialsEvent()),
-                relayType: .WRITE
-            ),
-            accountPubkey: signedPresenceEvent.publicKey
-        )        
+        switch accountType {
+        case .account(let cloudAccount):
+            presenceEvent.publicKey = cloudAccount.publicKey
+            guard let signedPresenceEvent = try? cloudAccount.signEvent(presenceEvent) else { return }
+            
+            // TODO: BUNKER HANDLING
+            ConnectionPool.shared.sendMessage(
+                NosturClientMessage(
+                    clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: signedPresenceEvent.toNostrEssentialsEvent()),
+                    relayType: .WRITE
+                ),
+                accountPubkey: signedPresenceEvent.publicKey
+            )
+            
+            
+        case .anonymous(let nKeys):
+            presenceEvent.publicKey = nKeys.publicKeyHex()
+            guard let signedPresenceEvent = try? presenceEvent.sign(nKeys) else { return }
+            
+            // TODO: BUNKER HANDLING
+            ConnectionPool.shared.sendMessage(
+                NosturClientMessage(
+                    clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: signedPresenceEvent.toNostrEssentialsEvent()),
+                    relayType: .WRITE
+                ),
+                accountPubkey: signedPresenceEvent.publicKey
+            )
+            
+        case nil:
+            return
+        }
+ 
     }
     
     // shortcut functions for convenience
@@ -205,6 +227,10 @@ class LiveKitVoiceSession: ObservableObject {
                 guard let self else { return }
                 if let contact = Contact.fetchByPubkey(participantPubkey, context: ctx) {
                     let nrContact = NRContact(contact: contact)
+                    if nrContact.pubkey == self.anonymousPubkeyCached {
+                        nrContact.name = "You"
+                        nrContact.anyName = "You"
+                    }
                     nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
                         true
                     }
@@ -219,6 +245,7 @@ class LiveKitVoiceSession: ObservableObject {
                 }
                 else {
                     let contact = Contact(context: ctx)
+                    
                     contact.pubkey = participantPubkey
                     contact.metadata_created_at = 0
                     contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
@@ -227,6 +254,10 @@ class LiveKitVoiceSession: ObservableObject {
                     QueuedFetcher.shared.enqueue(pTag: participantPubkey)
                     
                     let nrContact = NRContact(contact: contact)
+                    if nrContact.pubkey == self.anonymousPubkeyCached {
+                        nrContact.name = "You"
+                        nrContact.anyName = "You"
+                    }
                     nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
                         true
                     }
@@ -480,4 +511,9 @@ enum LiveKitVoiceSessionState {
     case connected
     case disconnected
     case error(String)
+}
+
+enum NestAccountType {
+    case account(CloudAccount)
+    case anonymous(NKeys)
 }

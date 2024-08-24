@@ -11,6 +11,7 @@ struct ChatRoom: View {
     
     public let aTag: String
     public let theme: Theme
+    public let anonymous: Bool
     
     @StateObject private var vm = ChatRoomViewModel()
     @Namespace private var bottom
@@ -84,11 +85,13 @@ struct ChatRoom: View {
                             }
                         }
                         
-                        HStack {
-                            MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
-                            ChatInputField(message: $message, startWithFocus: false, onSubmit: submitMessage)
+                        if !anonymous {
+                            HStack {
+                                MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
+                                ChatInputField(message: $message, startWithFocus: false, onSubmit: submitMessage)
+                            }
+                            .padding(.bottom, 15)
                         }
-                        .padding(.bottom, 15)
                     }
                 }
             }
@@ -167,7 +170,7 @@ struct ChatRoom: View {
 //        ])
     }){
         Box {
-            ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", theme: Themes.default.theme)
+            ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", theme: Themes.default.theme, anonymous: false)
         }
     }
 }
@@ -183,7 +186,7 @@ struct ChatRoom: View {
         pe.loadChats()
     }){
         Box {
-            ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme)
+            ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme, anonymous: false)
                 .padding(10)
         }
     }

@@ -19,6 +19,7 @@ struct LiveEventDetail: View {
     
     @State private var didStart = false
     @State private var account: CloudAccount? = nil
+    @State private var listenAnonymously: Bool = false
     
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: 4)
     @State private var rows = [GridItem(.fixed(80)), GridItem(.fixed(80))]
@@ -48,7 +49,7 @@ struct LiveEventDetail: View {
             videoStreamView
                 .background(themes.theme.background)
             
-               ChatRoom(aTag: liveEvent.id, theme: themes.theme)
+            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: listenAnonymously)
                 .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 350 : 250, maxHeight: .infinity)
                 .padding(.horizontal, 10)
                 .border(themes.theme.lineColor)
@@ -69,7 +70,9 @@ struct LiveEventDetail: View {
         }
         .onAppear {
             liveEvent.fetchPresenceFromRelays()
-            account = Nostur.account()
+            if !listenAnonymously {
+                account = Nostur.account()
+            }
         }
         .background(themes.theme.background)
 //        .navigationTitle(liveEvent.title ?? "(Stream)")
@@ -178,22 +181,48 @@ struct LiveEventDetail: View {
             .padding(.horizontal, 10)
             .disabled(true)
         }
-        else if let account, let connectUrl = liveEvent.liveKitConnectUrl, case .disconnected = liveKitVoiceSession.state {
-            Button {
-                liveEvent.joinRoom { authToken in
-                    liveKitVoiceSession.connect(connectUrl, token: authToken, accountPubkey: account.publicKey, nrLiveEvent: liveEvent)
+        else if let connectUrl = liveEvent.liveKitConnectUrl, case .disconnected = liveKitVoiceSession.state {
+            VStack(spacing: 25) {
+                Button {
+                    if listenAnonymously {
+                        liveEvent.joinRoomAnonymously(keys: liveKitVoiceSession.anonymousKeys) { authToken in
+                            liveKitVoiceSession.connect(connectUrl, token: authToken, accountType: .anonymous(liveKitVoiceSession.anonymousKeys), nrLiveEvent: liveEvent)
+                        }
+                    }
+                    else {
+                        guard let account = account else { return }
+                        
+                        liveEvent.joinRoom(account: account) { authToken in
+                            liveKitVoiceSession.connect(connectUrl, token: authToken, accountType: .account(account), nrLiveEvent: liveEvent)
+                        }
+                    }
+                } label: {
+                    HStack {
+                        if listenAnonymously {
+                            ZStack {
+                                Circle()
+                                    .foregroundColor(Color.gray)
+                                    .frame(height: 26)
+                                Image(systemName: "sunglasses.fill")
+                                    .foregroundColor(Color.black)
+                            }
+                        }
+                        else if let account {
+                            MiniPFP(pictureUrl: account.pictureUrl, size: 20.0)
+                        }
+                        Text("Start listening")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
-            } label: {
-                HStack {
-                    MiniPFP(pictureUrl: account.pictureUrl, size: 20.0)
-                    Text("Start listening")
-                }
+                .buttonStyle(NosturButton(height: 36, bgColor: themes.theme.accent))
                 .frame(maxWidth: .infinity, alignment: .center)
+                .disabled(liveKitVoiceSession.room.connectionState != .disconnected)
+                
+                Toggle(isOn: $listenAnonymously) {
+                    Text("Listen anonymously")
+                }
             }
-            .buttonStyle(NosturButton(height: 36, bgColor: themes.theme.accent))
-            .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, 10)
-            .disabled(liveKitVoiceSession.room.connectionState != .disconnected)
         }
         else if case .error(let error) = liveKitVoiceSession.state {
             Text(error)

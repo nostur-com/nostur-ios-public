@@ -133,8 +133,8 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     }
     
     @MainActor
-    public func joinRoom(_ completion: ((String) -> Void)? = nil) {
-        guard let account = account(), let liveKitJoinUrl = self.liveKitJoinUrl else { return }
+    public func joinRoom(account: CloudAccount, completion: ((String) -> Void)? = nil) {
+        guard let liveKitJoinUrl = self.liveKitJoinUrl else { return }
         
         var nEvent = NEvent(content: "")
         nEvent.publicKey = account.publicKey
@@ -143,6 +143,40 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         nEvent.tags.append(NostrTag(["method", "GET"]))
         
         guard let signedNip98Event = try? account.signEvent(nEvent) else { return }
+        
+        let jsonString = signedNip98Event.eventJson()
+        guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else { return }
+        let base64 = jsonData.base64EncodedString()
+        let authorizationHeader = "Nostr \(base64)"
+        
+        Task {
+            do {
+                let jsonResponse = try await fetchData(from: liveKitJoinUrl, authHeader: authorizationHeader)
+                Task { @MainActor in
+                    if let authToken = jsonResponse["token"] as? String {
+                        self.authToken = authToken
+                        completion?(authToken)
+                    }
+                }
+                print("JSON Response: \(jsonResponse)")
+            } catch {
+                print("Failed to fetch data: \(error.localizedDescription)")
+            }
+        }
+
+    }
+    
+    @MainActor
+    public func joinRoomAnonymously(keys: NKeys, completion: ((String) -> Void)? = nil) {
+        guard let liveKitJoinUrl = self.liveKitJoinUrl else { return }
+        
+        var nEvent = NEvent(content: "")
+        nEvent.publicKey = keys.publicKeyHex()
+        nEvent.kind = .custom(27235)
+        nEvent.tags.append(NostrTag(["u", liveKitJoinUrl]))
+        nEvent.tags.append(NostrTag(["method", "GET"]))
+        
+        guard let signedNip98Event = try? nEvent.sign(keys) else { return }
         
         let jsonString = signedNip98Event.eventJson()
         guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else { return }
