@@ -213,7 +213,7 @@ class NXColumnViewModel: ObservableObject {
         self.config = config
         // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
-        guard isVisible || (config.id.starts(with: "Following-") && config.name != "Explore") else { return }
+        guard isVisible else { return }
         startTime = .now
         startFetchFeedTimer()
         
@@ -340,8 +340,13 @@ class NXColumnViewModel: ObservableObject {
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
         self.listenForNewPosts(config)
-        L.og.debug("☘️☘️⏭️ \(config.id) resume().fetchGap: since: \(self.refreshedAt.description) currentGap: 0")
-        gapFiller?.fetchGap(since: self.refreshedAt, currentGap: 0)
+        L.og.debug("☘️☘️⏭️ \(config.id) resume().loadLocal()")
+        self.loadLocal(config) { [weak self] in
+            L.og.debug("☘️☘️⏭️ \(config.id) resume().loadRemote()")
+            self?.loadRemote(config)
+//            L.og.debug("☘️☘️⏭️ \(config.id) resume().fetchGap: since: \(self.refreshedAt.description) currentGap: 0")
+//            gapFiller?.fetchGap(since: self.refreshedAt, currentGap: 0)
+        }
     }
     
     private func fetchFeedTimerNextTick() {
@@ -836,7 +841,7 @@ class NXColumnViewModel: ObservableObject {
             .debounce(for: .seconds(0.35), scheduler: RunLoop.main)
             .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
             .sink { [weak self] _ in
-                guard let self, !NRState.shared.appIsInBackground && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
+                guard let self, !NRState.shared.appIsInBackground && isVisible else { return }
                 self.resume()
             }
     }
