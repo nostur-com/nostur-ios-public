@@ -60,11 +60,6 @@ struct LiveEventDetail: View {
                 nestButtonsView
                     .padding(10)
                     .layoutPriority(1)
-//                                    
-//                Text("copy event json")
-//                    .onTapGesture {
-//                        UIPasteboard.general.string = liveEvent.eventJson
-//                    }
             }
             .background(themes.theme.background)
         }
@@ -111,6 +106,13 @@ struct LiveEventDetail: View {
             Text(summary)
                 .lineLimit(20)
         }
+        
+#if DEBUG
+        Text("copy event json")
+            .onTapGesture {
+                UIPasteboard.general.string = liveEvent.eventJson
+            }
+#endif
     }
     
     @ViewBuilder
