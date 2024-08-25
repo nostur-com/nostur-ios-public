@@ -782,6 +782,7 @@
       }
     },
     "+15" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1487,7 +1488,7 @@
       }
     },
     "Articles" : {
-      "comment" : "Tab title\nTab title for the Articles feed",
+      "comment" : "Tab title\nTab title for feed of articles\nTab title for the Articles feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1974,6 +1975,7 @@
       }
     },
     "Clear cache" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2017,6 +2019,7 @@
       }
     },
     "Color Blue" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2830,7 +2833,7 @@
       }
     },
     "Discover" : {
-      "comment" : "Tab title for the Discover feed",
+      "comment" : "Tab title for Discover feed\nTab title for the Discover feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3041,6 +3044,7 @@
       }
     },
     "End test" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3213,6 +3217,7 @@
       }
     },
     "Example" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3223,6 +3228,7 @@
       }
     },
     "Expired" : {
+      "comment" : "Button of an expired lightning invoice (disabled)",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3233,7 +3239,7 @@
       }
     },
     "Explore" : {
-      "comment" : "Tab title for the Explore feed",
+      "comment" : "Button to go to the Explore tab\nTab title for the Explore feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3539,7 +3545,7 @@
       }
     },
     "Gallery" : {
-      "comment" : "Tab title for the Gallery feed",
+      "comment" : "Tab title for gallery feed\nTab title for the Gallery feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3715,7 +3721,7 @@
       }
     },
     "Hot" : {
-      "comment" : "Tab title for the Hot feed",
+      "comment" : "Tab title for feed of hot/popular posts\nTab title for the Hot feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4160,8 +4166,25 @@
         }
       }
     },
+    "Listen anonymously" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luister anoniem"
+          }
+        }
+      }
+    },
     "Live Nests or streams from follows" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Nests of streams van volgend"
+          }
+        }
+      }
     },
     "Load default" : {
       "localizations" : {
@@ -4225,7 +4248,7 @@
       }
     },
     "Log out" : {
-      "comment" : "Log out button\nSide bar navigation button",
+      "comment" : "Button to log out\nLog out button\nSide bar navigation button",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4289,6 +4312,7 @@
     },
     "Main WoT" : {
       "comment" : "Setting heading on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4310,7 +4334,7 @@
       }
     },
     "Mark all as read" : {
-      "comment" : "Menu action to mark all messages as read",
+      "comment" : "Menu action to mark all dm requests as read\nMenu action to mark all messages as read",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4436,7 +4460,14 @@
       }
     },
     "Minimize" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimaliseer"
+          }
+        }
+      }
     },
     "Missing mesages?" : {
       "extractionState" : "manual",
@@ -4928,6 +4959,7 @@
       }
     },
     "Nothing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5131,6 +5163,7 @@
       }
     },
     "Pay" : {
+      "comment" : "Button to pay a lightning invoice",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5821,7 +5854,14 @@
       }
     },
     "REC" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "REC"
+          }
+        }
+      }
     },
     "Receipt from" : {
       "extractionState" : "manual",
@@ -6192,7 +6232,7 @@
       }
     },
     "Replying to: %@" : {
-      "comment" : "Shown when replying to an article (Replying to: (article title)",
+      "comment" : "Shown in a post, Replying to (names)\nShown when replying to an article (Replying to: (article title)",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6764,7 +6804,15 @@
       }
     },
     "Show Live banner" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon Live Banner"
+          }
+        }
+      }
     },
     "Show more" : {
       "localizations" : {
@@ -7106,6 +7154,7 @@
       }
     },
     "test" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7116,6 +7165,7 @@
       }
     },
     "Test" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7984,6 +8034,7 @@
       }
     },
     "What" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8393,9 +8444,6 @@
           }
         }
       }
-    },
-    "出張の帰りに新幹線で報告書まとめたら後で楽だなあと思ってパソコン開いたけど気持ち悪くなってやめたことあるL cuttttttt tttof d d d d d d d d d a b c d" : {
-
     }
   },
   "version" : "1.0"
