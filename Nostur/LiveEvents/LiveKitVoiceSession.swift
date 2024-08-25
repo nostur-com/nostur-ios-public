@@ -31,6 +31,8 @@ class LiveKitVoiceSession: ObservableObject {
     
     @Published public var isRecording: Bool = false
     
+    @Published public var listenAnonymously: Bool = false
+    
     public let anonymousKeys = NKeys.newKeys()
     public var anonymousPubkeyCached = ""
     

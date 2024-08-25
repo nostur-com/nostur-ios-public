@@ -15,11 +15,11 @@ struct LiveEventDetail: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     @ObservedObject public var liveEvent: NRLiveEvent
-    public let liveKitVoiceSession: LiveKitVoiceSession = .shared
+    @ObservedObject public var liveKitVoiceSession: LiveKitVoiceSession = .shared
     
     @State private var didStart = false
     @State private var account: CloudAccount? = nil
-    @State private var listenAnonymously: Bool = false
+    
     
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: 4)
     @State private var rows = [GridItem(.fixed(80)), GridItem(.fixed(80))]
@@ -49,7 +49,7 @@ struct LiveEventDetail: View {
             videoStreamView
                 .background(themes.theme.background)
             
-            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: listenAnonymously)
+            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
                 .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 350 : 250, maxHeight: .infinity)
                 .padding(.horizontal, 10)
                 .border(themes.theme.lineColor)
@@ -70,7 +70,7 @@ struct LiveEventDetail: View {
         }
         .onAppear {
             liveEvent.fetchPresenceFromRelays()
-            if !listenAnonymously {
+            if !liveKitVoiceSession.listenAnonymously {
                 account = Nostur.account()
             }
         }
@@ -184,7 +184,7 @@ struct LiveEventDetail: View {
         else if let connectUrl = liveEvent.liveKitConnectUrl, case .disconnected = liveKitVoiceSession.state {
             VStack(spacing: 25) {
                 Button {
-                    if listenAnonymously {
+                    if liveKitVoiceSession.listenAnonymously {
                         liveEvent.joinRoomAnonymously(keys: liveKitVoiceSession.anonymousKeys) { authToken in
                             liveKitVoiceSession.connect(connectUrl, token: authToken, accountType: .anonymous(liveKitVoiceSession.anonymousKeys), nrLiveEvent: liveEvent)
                         }
@@ -198,7 +198,7 @@ struct LiveEventDetail: View {
                     }
                 } label: {
                     HStack {
-                        if listenAnonymously {
+                        if liveKitVoiceSession.listenAnonymously {
                             ZStack {
                                 Circle()
                                     .foregroundColor(Color.gray)
@@ -218,7 +218,7 @@ struct LiveEventDetail: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .disabled(liveKitVoiceSession.room.connectionState != .disconnected)
                 
-                Toggle(isOn: $listenAnonymously) {
+                Toggle(isOn: $liveKitVoiceSession.listenAnonymously) {
                     Text("Listen anonymously")
                 }
             }
