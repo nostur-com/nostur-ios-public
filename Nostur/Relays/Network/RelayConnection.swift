@@ -450,7 +450,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard let self else { return }
                 
                 let code = (error as NSError).code
-                if Set([57,-999,53,54]).contains(code) {
+                if Set([-999,53,54]).contains(code) {
                     // standard "The operation couldn’t be completed. Socket is not connected"
                     // not really error just standard websocket garbage
                     // dont continue as if actual error
