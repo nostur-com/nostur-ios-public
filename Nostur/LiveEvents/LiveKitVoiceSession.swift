@@ -82,16 +82,6 @@ class LiveKitVoiceSession: ObservableObject {
        }
     }
     
-    func uuuh() {
-        Task {
-           do {
-               try await room.localParticipant.setMicrophone(enabled: true)
-           } catch {
-               L.nests.debug("Failed to uuhhh: \(error)")
-           }
-       }
-    }
-    
     func broadCastRoomPresence(raisedHand: Bool = false) { // TODO: broadcast to? own relay set? nest preferred relays? outbox? or? hmm
 
         guard let currentRoomATag = self.currentRoomATag else { return }

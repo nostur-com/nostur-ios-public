@@ -160,7 +160,6 @@ struct FollowingAndExplore: View{
                                 selected: selectedSubTab == "Articles")
                         }
                     }
-    //                .padding(.horizontal, 10)
                     .frame(minWidth: dim.listWidth)
                     .offset(y: tabsOffsetY)
                     .onReceive(receiveNotification(.scrollingUp)) { _ in
