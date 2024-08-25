@@ -116,21 +116,23 @@ struct NotificationsView: View {
             }
             .frame(width: dim.listWidth)
             
-            switch (tab) {
-                case "Mentions", "Posts": // (old name was "Posts")
-                    NotificationsMentions(pubkey: account.publicKey, navPath: $navPath)
-                case "New Posts":
-                    NotificationsNewPosts(pubkey: account.publicKey, navPath: $navPath)
-                case "Reactions":
-                    NotificationsReactions(pubkey: account.publicKey, navPath: $navPath)
-                case "Reposts":
-                    NotificationsReposts(pubkey: account.publicKey, navPath: $navPath)
-                case "Zaps":
-                    NotificationsZaps(pubkey: account.publicKey, navPath: $navPath)
-                case "Followers":
-                    NotificationsFollowers(pubkey: account.publicKey, navPath: $navPath)
-                default:
-                    EmptyView()
+            AvailableWidthContainer {
+                switch (tab) {
+                    case "Mentions", "Posts": // (old name was "Posts")
+                        NotificationsMentions(pubkey: account.publicKey, navPath: $navPath)
+                    case "New Posts":
+                        NotificationsNewPosts(pubkey: account.publicKey, navPath: $navPath)
+                    case "Reactions":
+                        NotificationsReactions(pubkey: account.publicKey, navPath: $navPath)
+                    case "Reposts":
+                        NotificationsReposts(pubkey: account.publicKey, navPath: $navPath)
+                    case "Zaps":
+                        NotificationsZaps(pubkey: account.publicKey, navPath: $navPath)
+                    case "Followers":
+                        NotificationsFollowers(pubkey: account.publicKey, navPath: $navPath)
+                    default:
+                        EmptyView()
+                }
             }
             Spacer()
         }

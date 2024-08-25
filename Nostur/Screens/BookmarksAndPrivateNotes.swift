@@ -55,13 +55,15 @@ struct BookmarksAndPrivateNotes: View {
                         selectedSubTab = "Private Notes"
                     }, title: String(localized: "Private Notes", comment: "Tab to switch to private notes"), secondaryText: privateNotesCount, selected: selectedSubTab == "Private Notes")
                 }
-                switch selectedSubTab {
-                    case "Bookmarks":
-                    BookmarksView(navPath: $navPath, bookmarkFilters: bookmarkFilters)
-                    case "Private Notes":
-                        PrivateNotesView(navPath: $navPath)
-                    default:
-                        Text("🥪")
+                AvailableWidthContainer {
+                    switch selectedSubTab {
+                        case "Bookmarks":
+                        BookmarksView(navPath: $navPath, bookmarkFilters: bookmarkFilters)
+                        case "Private Notes":
+                            PrivateNotesView(navPath: $navPath)
+                        default:
+                            Text("🥪")
+                    }
                 }
             }
             .background(themes.theme.listBackground)
