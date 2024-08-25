@@ -69,62 +69,64 @@ struct Search: View {
                     SearchBox(prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"), text: $searchText)
                         .padding(10)
                 }
-                ScrollView {
-                    if isSearchingHashtag {
-                        FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:la.account)
-                            .padding([.top, .horizontal], 10)
-                    }
-                    if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
-                        CenteredProgressView()
-                    }
-                    LazyVStack(spacing: GUTTER) {
-                        ForEach(filteredContactSearchResults.prefix(75)) { contact in
-                            ProfileRow(contact: contact)
-                                .background(themes.theme.background)
+                AvailableWidthContainer {
+                    ScrollView {
+                        if isSearchingHashtag {
+                            FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:la.account)
+                                .padding([.top, .horizontal], 10)
                         }
-                        ForEach(nrPosts.prefix(75)) { nrPost in
-                            Box(nrPost: nrPost) {
-                                if nrPost.kind == 443 {
-                                    VStack {
-                                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                                        HStack(spacing: 0) {
-                                            self.replyButton
-                                                .foregroundColor(themes.theme.footerButtons)
-                                                .padding(.leading, 10)
-                                                .padding(.vertical, 5)
-                                                .contentShape(Rectangle())
-                                                .onTapGesture {
-                                                    navigateTo(nrPost)
-                                                }
-                                            Spacer()
+                        if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
+                            CenteredProgressView()
+                        }
+                        LazyVStack(spacing: GUTTER) {
+                            ForEach(filteredContactSearchResults.prefix(75)) { contact in
+                                ProfileRow(contact: contact)
+                                    .background(themes.theme.background)
+                            }
+                            ForEach(nrPosts.prefix(75)) { nrPost in
+                                Box(nrPost: nrPost) {
+                                    if nrPost.kind == 443 {
+                                        VStack {
+                                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                                            HStack(spacing: 0) {
+                                                self.replyButton
+                                                    .foregroundColor(themes.theme.footerButtons)
+                                                    .padding(.leading, 10)
+                                                    .padding(.vertical, 5)
+                                                    .contentShape(Rectangle())
+                                                    .onTapGesture {
+                                                        navigateTo(nrPost)
+                                                    }
+                                                Spacer()
+                                            }
                                         }
                                     }
+                                    else {
+                                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                                    }
                                 }
-                                else {
-                                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                                }
+                                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                             }
-                            .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                         }
-                    }
-                    .padding(.top, 10)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button {
-                                sendNotification(.showSideBar)
-                            } label: {
-                                PFP(pubkey: la.account.publicKey, account: la.account, size:30)
-                            }
-                            .accessibilityLabel("Account menu")
+                        .padding(.top, 10)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button {
+                                    sendNotification(.showSideBar)
+                                } label: {
+                                    PFP(pubkey: la.account.publicKey, account: la.account, size:30)
+                                }
+                                .accessibilityLabel("Account menu")
 
+                            }
+        //                    ToolbarItem(placement: .principal) {
+        //
+        //                    }
                         }
-    //                    ToolbarItem(placement: .principal) {
-    //
-    //                    }
+                        .toolbarNavigationBackgroundVisible()
                     }
-                    .toolbarNavigationBackgroundVisible()
+                    .scrollDismissesKeyboardCompat()
                 }
-                .scrollDismissesKeyboardCompat()
             }
             .overlay(alignment: .bottom) {
                 if settings.statusBubble {
