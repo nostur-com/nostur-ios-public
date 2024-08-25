@@ -126,8 +126,10 @@ class ChatRoomViewModel: ObservableObject {
                     self.state = .ready
                 }
                 
+                #if DEBUG
                 L.nests.info("received: \(event.content)")
                 print("received \(event.kind.id.description): \(event.content)")
+                #endif
                 // TODO: Filter WoT before adding? or already filtered in MessageParser?
                 bg().perform {
                     let nrChat: NRChatMessage = NRChatMessage(nEvent: event)

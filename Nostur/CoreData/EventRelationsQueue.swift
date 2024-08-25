@@ -117,7 +117,9 @@ class EventRelationsQueue {
             ctx.perform { [unowned self] in
                 guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
                 self.waitingContacts[contact.pubkey] = QueuedContact(contact: contact, queuedAt: Date.now)
-                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
+#if DEBUG
+                    L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "") -[LOG]-")
+#endif
             }
         }
         else {
@@ -125,7 +127,9 @@ class EventRelationsQueue {
                 guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
                 guard let privateContact = self.ctx.object(with: contact.objectID) as? Contact else { return }
                 self.waitingContacts[privateContact.pubkey] = QueuedContact(contact: privateContact, queuedAt: Date.now)
-                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
+#if DEBUG
+                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "") -[LOG]-")
+#endif
             }
         }
     }
