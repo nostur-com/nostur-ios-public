@@ -12,6 +12,7 @@ struct NXColumnView: View {
     
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var dim: DIMENSIONS
+    @EnvironmentObject private var themes: Themes
     public var config: NXColumnConfig
     @StateObject private var viewModel = NXColumnViewModel()
     public var isVisible: Bool
@@ -26,7 +27,10 @@ struct NXColumnView: View {
         NBNavigationStack {
             switch(viewModel.viewState) {
             case .loading:
-                ProgressView()
+                ZStack(alignment: .center) {
+                    themes.theme.listBackground
+                    ProgressView()
+                }
             case .posts(let nrPosts):
                 NXPostsFeed(vm: viewModel, posts: nrPosts)
             case .error(let errorMessage):
