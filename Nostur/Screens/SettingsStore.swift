@@ -89,17 +89,10 @@ final class SettingsStore: ObservableObject {
     ]
     
     public static let mediaUploadServiceOptions:[MediaUploadService] = [
-        // same as imgur
-        getNostrimgService(),
 
          // link will be just the image url but need to replace http with https
         getVoidCatService(),
         
-        // needs registered Client ID
-        getImgurService(),
-        
-//        // needs registered Client ID
-//        getNostrCheckMeService(),
         MediaUploadService(name: "nostrcheck.me", request: { imageData, usePNG in
             // Dummy function body just to be compatible with MediaUploadService
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
@@ -112,12 +105,6 @@ final class SettingsStore: ObservableObject {
             return "https://localhost"
         }),
         
-        // url in json response but need to replace http with https
-        getNostrFilesDevService(),
-    
-        // no api, parse media link from response
-//        getNostrBuildService(),
-        
         MediaUploadService(name: "nostr.build", request: { imageData, usePNG in
             // Dummy function body just to be compatible with MediaUploadService
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
@@ -129,6 +116,9 @@ final class SettingsStore: ObservableObject {
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
             return "https://localhost"
         }),
+
+        // needs registered Client ID
+        getImgurService(),
         
         MediaUploadService(name: "Custom File Storage (NIP-96)", request: { imageData, usePNG in
             // Dummy function body just to be compatible with MediaUploadService
