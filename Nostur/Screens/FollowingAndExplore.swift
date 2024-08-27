@@ -213,7 +213,7 @@ struct FollowingAndExplore: View {
                         AvailableWidthContainer {
                             NXColumnView(config: followingConfig, isVisible: selectedSubTab == "Following")
                         }
-                        .id(followingConfig.id)
+//                        .id(followingConfig.id)
                         .opacity(selectedSubTab == "Following" ? 1.0 : 0)
                     }
                 }
