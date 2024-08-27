@@ -2303,6 +2303,9 @@
         }
       }
     },
+    "copy event json" : {
+
+    },
     "Copy npub" : {
       "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
       "localizations" : {
@@ -3259,6 +3262,9 @@
           }
         }
       }
+    },
+    "Failed to generate QR Code" : {
+
     },
     "Failed to load image" : {
       "localizations" : {
@@ -8356,6 +8362,9 @@
           }
         }
       }
+    },
+    "zapped %@" : {
+
     },
     "Zapped %@" : {
       "comment" : "Text in zap button after zapping",
