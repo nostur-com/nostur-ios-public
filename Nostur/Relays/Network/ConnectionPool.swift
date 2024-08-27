@@ -531,7 +531,12 @@ public class ConnectionPool: ObservableObject {
             // don't send to p's if it is an event kind where p's have a different purpose than notification (eg kind:3)
             guard (message.clientMessage.event?.kind ?? 1) != 3 else { return }
             
-            let pTags: Set<String> = Set( message.nEvent?.pTags() ?? [] )
+            let pTags: Set<String> = Set( message.clientMessage.event?.tags.filter { $0.type == "p" }.compactMap { $0.pubkey } ?? [] )
+            guard !pTags.isEmpty, let pubkey = message.clientMessage.event?.pubkey else { return }
+            
+            // don't use outbox if its not our message (maybe rebroadcast of existing reply/quote)
+            guard NRState.shared.fullAccountPubkeys.contains(pubkey) else { return }
+            
             self.sendToOthersPreferredReadRelays(message.clientMessage, pubkeys: pTags)
         }
     }
