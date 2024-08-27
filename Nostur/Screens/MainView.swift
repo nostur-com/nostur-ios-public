@@ -28,7 +28,6 @@ struct MainView: View {
     
     @State private var navPath = NBNavigationPath()
     @State private var lastPathPostId: String? = nil // Need to track .id of last added to navigation stack so we can remove on undo send if needed
-    @State private var account: CloudAccount? = nil
     @State private var showingNewNote = false
     @ObservedObject private var settings: SettingsStore = .shared
     @State private var showingOtherContact: NRContact? = nil
@@ -40,121 +39,117 @@ struct MainView: View {
         let _ = Self._printChanges()
         #endif
         NBNavigationStack(path: $navPath) {
-            if let account = account {
-                FollowingAndExplore(showingOtherContact: $showingOtherContact)
-                    .environmentObject(la)
-//                    .transaction { t in t.animation = nil }
-                    .background(themes.theme.listBackground)
-                    .withNavigationDestinations()
-                    .overlay(alignment: .bottomTrailing) {
-                        NewNoteButton(showingNewNote: $showingNewNote)
-                            .padding([.top, .leading, .bottom], 10)
-                            .padding([.trailing], 25)
-                    }
-                    .overlay(alignment: .bottom) {
-                        VStack {
-                            AnyStatus(filter: "APP_NOTICE")
-                            #if DEBUG
-                            AnyStatus(filter: "RELAY_NOTICE")
-                            #endif
-                            if settings.statusBubble {
-                                ProcessingStatus()
-                                    .opacity(0.85)
-                                    .padding(.bottom, 10)
-                            }
+            FollowingAndExplore(showingOtherContact: $showingOtherContact)
+                .environmentObject(la)
+                .background(themes.theme.listBackground)
+                .withNavigationDestinations()
+                .overlay(alignment: .bottomTrailing) {
+                    NewNoteButton(showingNewNote: $showingNewNote)
+                        .padding([.top, .leading, .bottom], 10)
+                        .padding([.trailing], 25)
+                }
+                .overlay(alignment: .bottom) {
+                    VStack {
+                        AnyStatus(filter: "APP_NOTICE")
+                        #if DEBUG
+                        AnyStatus(filter: "RELAY_NOTICE")
+                        #endif
+                        if settings.statusBubble {
+                            ProcessingStatus()
+                                .opacity(0.85)
+                                .padding(.bottom, 10)
                         }
                     }
-                    .sheet(isPresented: $showingNewNote) {
-                        NBNavigationStack {
-                            if account.isNC {
-                                WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                                    ComposePostCompat(onDismiss: { showingNewNote = false })
-                                        .environmentObject(themes)
-                                        .environmentObject(dim)
-                                        .environmentObject(ns)
-                                }
-                            }
-                            else {
+                }
+                .sheet(isPresented: $showingNewNote) {
+                    NBNavigationStack {
+                        if la.account.isNC {
+                            WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                                 ComposePostCompat(onDismiss: { showingNewNote = false })
                                     .environmentObject(themes)
                                     .environmentObject(dim)
                                     .environmentObject(ns)
                             }
                         }
-                        .presentationBackgroundCompat(themes.theme.background)
-                        .nbUseNavigationStack(.never)
+                        else {
+                            ComposePostCompat(onDismiss: { showingNewNote = false })
+                                .environmentObject(themes)
+                                .environmentObject(dim)
+                                .environmentObject(ns)
+                        }
                     }
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            HStack(spacing: 10) {
-                                PFP(pubkey: account.publicKey, account: account, size: 30)
-                                    .onTapGesture {
-                                        SideBarModel.shared.showSidebar = true
-                                    }
-                                    .accessibilityLabel("Account menu")
-                                
-                                // Shortcut to open a new just posted post
-                                if newPost != nil {
-                                    Image(systemName: "ellipsis.bubble")
-                                        .frame(height: 30)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            self.goToNewPost()
-                                        }
+                    .presentationBackgroundCompat(themes.theme.background)
+                    .nbUseNavigationStack(.never)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        HStack(spacing: 10) {
+                            PFP(pubkey: la.account.publicKey, account: la.account, size: 30)
+                                .onTapGesture {
+                                    SideBarModel.shared.showSidebar = true
                                 }
+                                .accessibilityLabel("Account menu")
+                            
+                            // Shortcut to open a new just posted post
+                            if newPost != nil {
+                                Image(systemName: "ellipsis.bubble")
+                                    .frame(height: 30)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        self.goToNewPost()
+                                    }
                             }
                         }
-                        
-                        ToolbarItem(placement: .principal) {
-                            if let showingOtherContact = showingOtherContact {
-                                HStack(spacing: 6) {
-                                    PFP(pubkey: showingOtherContact.pubkey, nrContact: showingOtherContact, size: 30)
-                                        .frame(height:30)
-                                        .clipShape(Circle())
-                                        .onTapGesture {
-                                            sendNotification(.shouldScrollToTop)
-                                        }
-                                    
-                                    Image(systemName: "multiply.circle.fill")
-                                        .frame(height:30)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            guard let account = Nostur.account() else { return }
-                                            self.showingOtherContact = nil
-                                            sendNotification(.revertToOwnFeed)
-                                        }
-                                }
-                            }
-                            else {
-                                Image("NosturLogo")
-                                    .resizable()
-                                    .scaledToFit()
+                    }
+                    
+                    ToolbarItem(placement: .principal) {
+                        if let showingOtherContact = showingOtherContact {
+                            HStack(spacing: 6) {
+                                PFP(pubkey: showingOtherContact.pubkey, nrContact: showingOtherContact, size: 30)
                                     .frame(height:30)
                                     .clipShape(Circle())
                                     .onTapGesture {
                                         sendNotification(.shouldScrollToTop)
                                     }
+                                
+                                Image(systemName: "multiply.circle.fill")
+                                    .frame(height:30)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        self.showingOtherContact = nil
+                                        sendNotification(.revertToOwnFeed)
+                                    }
                             }
                         }
-                        
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Image(systemName: "tortoise")
-                                .foregroundColor(themes.theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
+                        else {
+                            Image("NosturLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height:30)
+                                .clipShape(Circle())
                                 .onTapGesture {
-                                    settings.lowDataMode.toggle()
-                                    sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
-                                }
-                        }
-                        
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Image(systemName: "gearshape")
-                                .foregroundColor(themes.theme.accent)
-                                .onTapGesture {
-                                    sendNotification(.showFeedToggles)
+                                    sendNotification(.shouldScrollToTop)
                                 }
                         }
                     }
-            }
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Image(systemName: "tortoise")
+                            .foregroundColor(themes.theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
+                            .onTapGesture {
+                                settings.lowDataMode.toggle()
+                                sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                            }
+                    }
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Image(systemName: "gearshape")
+                            .foregroundColor(themes.theme.accent)
+                            .onTapGesture {
+                                sendNotification(.showFeedToggles)
+                            }
+                    }
+                }
         }
         .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.showingSomeoneElsesFeed)) { notification in
@@ -162,16 +157,10 @@ struct MainView: View {
             showingOtherContact = nrContact
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
-            let account = notification.object as! CloudAccount
-            guard self.account != account else { return }
-            self.account = account
             self.newPost = nil
             if selectedSubTab != "Following" {
                 UserDefaults.standard.setValue("Following", forKey: "selected_subtab")
             }
-        }
-        .onAppear {
-            self.account = Nostur.account()
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
@@ -219,11 +208,8 @@ struct MainView: View {
             }
         }
         .onReceive(receiveNotification(.newPostSaved)) { notification in
-            
             // When a new post is made by our account, we show a quick shortcut in toolbar to open that post
-
-            guard let account = account else { return }
-            let accountPubkey = account.publicKey
+            let accountPubkey = la.account.publicKey
             let event = notification.object as! Event
             bg().perform {
                 guard event.pubkey == accountPubkey else { return }

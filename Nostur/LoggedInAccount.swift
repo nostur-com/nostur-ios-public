@@ -52,7 +52,7 @@ class LoggedInAccount: ObservableObject {
         }
     }
     
-    @MainActor public func follow(_ contact:Contact, pubkey: String) {
+    @MainActor public func follow(_ contact: Contact, pubkey: String) {
         viewFollowingPublicKeys.insert(pubkey)
         bg.perform { [weak self] in
             guard let self else { return }

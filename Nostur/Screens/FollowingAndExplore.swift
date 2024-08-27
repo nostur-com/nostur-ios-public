@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 import NavigationBackport
 
-struct FollowingAndExplore: View{
+struct FollowingAndExplore: View {
     
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
@@ -274,7 +274,7 @@ struct FollowingAndExplore: View{
             guard !didCreate else { return }
             didCreate = true
             loadColumnConfigs()
-            createFollowingFeed()
+            createFollowingFeed(la.account)
             createExploreFeed() // Also create Explore Feed
         }
         .onChange(of: la.account, perform: { newAccount in
@@ -283,7 +283,7 @@ struct FollowingAndExplore: View{
             if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = []
             }
-            createFollowingFeed()
+            createFollowingFeed(newAccount)
         })
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -310,8 +310,8 @@ struct FollowingAndExplore: View{
             if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = []
             }
-            createFollowingFeed()
-        }        
+            createFollowingFeed(la.account)
+        }
     }
     
     private func removeDuplicateLists() {
@@ -355,10 +355,10 @@ struct FollowingAndExplore: View{
             }
     }
     
-    private func createFollowingFeed() {
+    private func createFollowingFeed(_ account: CloudAccount) {
         let context = viewContext()
         let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.following.rawValue, la.account.publicKey)
+        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.following.rawValue, account.publicKey)
         
         let followingFeeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
         let followingFeedsNewest: [CloudFeed] = followingFeeds
@@ -369,7 +369,7 @@ struct FollowingAndExplore: View{
             })
         
         if let followingFeed = followingFeedsNewest.first {
-            followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: la.account.publicKey, name: "Following")
+            followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: account.publicKey, name: "Following")
             for f in followingFeedsNewest.dropFirst(1) {
                 context.delete(f)
             }
@@ -378,14 +378,14 @@ struct FollowingAndExplore: View{
         else {
             let newFollowingFeed = CloudFeed(context: context)
             newFollowingFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFollowingFeed.name = "Following for " + la.account.anyName
+            newFollowingFeed.name = "Following for " + account.anyName
             newFollowingFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
             newFollowingFeed.id = UUID()
             newFollowingFeed.createdAt = .now
-            newFollowingFeed.accountPubkey = la.account.publicKey
+            newFollowingFeed.accountPubkey = account.publicKey
             newFollowingFeed.type = CloudFeedType.following.rawValue
             DataProvider.shared().save() { // callback after save:
-                followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: la.account.publicKey, name: "Following")
+                followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: account.publicKey, name: "Following")
             }
             
             // Check for existing ListState
