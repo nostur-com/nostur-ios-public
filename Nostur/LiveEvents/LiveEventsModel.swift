@@ -13,13 +13,19 @@ import NostrEssentials
 // Fetch live events/activities
 class LiveEventsModel: ObservableObject {
     
+    static public let shared = LiveEventsModel()
+    
     private var backlog: Backlog
     private var follows: Set<Pubkey>
     private var didLoad = false
     private static let EVENTS_LIMIT = 250
     private var subscriptions = Set<AnyCancellable>()
     private var agoTimestamp: Int?
-    private var dismissedLiveEvents: Set<String> = [] // aTags
+    @Published var dismissedLiveEvents: Set<String> = [] { // aTags
+        didSet {
+            self.nrLiveEvents = nrLiveEvents.filter { !self.dismissedLiveEvents.contains($0.id) }
+        }
+    }
     
     @Published var nrLiveEvents: [NRLiveEvent] = [] {
         didSet {
@@ -29,7 +35,7 @@ class LiveEventsModel: ObservableObject {
         }
     }
     
-    public init() {
+    private init() {
         self.backlog = Backlog(timeout: 5.0, auto: true)
         self.follows = Nostur.follows()
         
