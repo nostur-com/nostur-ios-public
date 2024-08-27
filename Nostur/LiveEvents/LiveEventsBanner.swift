@@ -11,22 +11,15 @@ import NavigationBackport
 struct LiveEventsBanner: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
-    @StateObject private var liveEventsModel = LiveEventsModel()
-    @ObservedObject private var liveKitVoiceSession = LiveKitVoiceSession.shared
-    
-    @State private var removedEventsATags: Set<String> = []
-    
-    private var nrLiveEvents: [NRLiveEvent] {
-        liveEventsModel.nrLiveEvents.filter { nrLiveEvent in
-            return !removedEventsATags.contains(nrLiveEvent.id)
-        }
-    }
+    @ObservedObject private var liveEventsModel: LiveEventsModel = .shared
+    @ObservedObject private var liveKitVoiceSession: LiveKitVoiceSession = .shared
+    @State private var didLoad = false
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            if !nrLiveEvents.isEmpty {
+            if !liveEventsModel.nrLiveEvents.isEmpty {
                 HStack {
-                    ForEach(nrLiveEvents) { nrLiveEvent in
+                    ForEach(liveEventsModel.nrLiveEvents) { nrLiveEvent in
                         LiveEventCapsule(liveEvent: nrLiveEvent, onRemove: remove)
                             .frame(maxWidth: dim.availableNoteRowImageWidth())
                             .fixedSize(horizontal: true, vertical: false)
@@ -51,10 +44,12 @@ struct LiveEventsBanner: View {
         }
         .scrollTargetBehaviorViewAligned()
         .safeAreaPadding()
-        .frame(height: nrLiveEvents.isEmpty ? 0 : 50)
-        .animation(.interactiveSpring, value: nrLiveEvents)
+        .frame(height: liveEventsModel.nrLiveEvents.isEmpty ? 0 : 50)
+        .animation(.interactiveSpring, value: liveEventsModel.nrLiveEvents)
         .onAppear {
+            guard !didLoad else { return }
             liveEventsModel.load()
+            didLoad = true
         }
         .fullScreenCover(item: $liveKitVoiceSession.visibleNest) { visibleNest in
             NBNavigationStack {
@@ -84,7 +79,7 @@ struct LiveEventsBanner: View {
     }
     
     private func remove(_ aTag: String) {
-        removedEventsATags.insert(aTag)
+        liveEventsModel.dismissedLiveEvents.insert(aTag)
     }
 }
 

@@ -65,7 +65,7 @@ struct LiveEventDetail: View {
         }
         .onAppear {
             liveEvent.fetchPresenceFromRelays()
-            if !liveKitVoiceSession.listenAnonymously {
+            if liveEvent.liveKitConnectUrl == nil && !liveKitVoiceSession.listenAnonymously {
                 account = Nostur.account()
             }
         }
