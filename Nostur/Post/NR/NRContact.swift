@@ -110,24 +110,21 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
             }
             .store(in: &subscriptions)
         
-//        receiveNotification(.activeAccountChanged)
-//            .subscribe(on: DispatchQueue.global())
-//            .sink { [weak self] _ in
-//                bg().perform {
-//                    guard let self = self else { return }
-//                    let isFollowing = NRState.shared.loggedInAccount?.followingPublicKeys.contains(self.pubkey) ?? false
-//                    if isFollowing != self.following {
-//                        DispatchQueue.main.async {
-//                            self.objectWillChange.send()
-//                            self.following = isFollowing
-//                            if (isFollowing) {
-//                                self.couldBeImposter = 0
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            .store(in: &subscriptions)
+        receiveNotification(.activeAccountChanged)
+            .subscribe(on: RunLoop.main)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                let account = notification.object as! CloudAccount
+                
+                self.objectWillChange.send()
+                self.following = account.followingPubkeys.contains(pubkey)
+                self.privateFollow = account.privateFollowingPubkeys.contains(pubkey)
+                
+                if self.following && self.couldBeImposter == 1 {
+                    self.couldBeImposter = 0
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     var subscriptions = Set<AnyCancellable>()
