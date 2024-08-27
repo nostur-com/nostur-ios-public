@@ -117,8 +117,22 @@ struct ChatRoom: View {
         nEvent.kind = .chatMessage
         nEvent.tags.append(NostrTag(["a", aTag]))
         
+        nEvent.publicKey = account.publicKey
         
-        if let signedEvent = try? account.signEvent(nEvent) {
+        if account.isNC {
+            nEvent = nEvent.withId()
+            NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
+                Unpublisher.shared.publishNow(signedEvent, skipDB: true)
+                sendNotification(.receivedMessage, RelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
+                bg().perform {
+                    Importer.shared.existingIds[signedEvent.id] = EventState(status: .RECEIVED, relays: "self")
+                }
+            })
+            
+            message = ""
+        }
+        else {
+            guard let signedEvent = try? account.signEvent(nEvent) else { return }
             Unpublisher.shared.publishNow(signedEvent, skipDB: true)
             sendNotification(.receivedMessage, RelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
             bg().perform {
