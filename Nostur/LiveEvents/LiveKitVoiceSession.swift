@@ -99,31 +99,23 @@ class LiveKitVoiceSession: ObservableObject {
         switch accountType {
         case .account(let cloudAccount):
             presenceEvent.publicKey = cloudAccount.publicKey
-            guard let signedPresenceEvent = try? cloudAccount.signEvent(presenceEvent) else { return }
             
-            // TODO: BUNKER HANDLING
-            ConnectionPool.shared.sendMessage(
-                NosturClientMessage(
-                    clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: signedPresenceEvent.toNostrEssentialsEvent()),
-                    relayType: .WRITE
-                ),
-                accountPubkey: signedPresenceEvent.publicKey
-            )
-            
+            if cloudAccount.isNC {
+                presenceEvent = presenceEvent.withId()
+                NSecBunkerManager.shared.requestSignature(forEvent: presenceEvent, usingAccount: cloudAccount, whenSigned: { signedPresenceEvent in
+                    Unpublisher.shared.publishNow(signedPresenceEvent, skipDB: true)
+                })
+            }
+            else {
+                guard let signedPresenceEvent = try? cloudAccount.signEvent(presenceEvent) else { return }
+                Unpublisher.shared.publishNow(signedPresenceEvent, skipDB: true)
+            }
             
         case .anonymous(let nKeys):
             presenceEvent.publicKey = nKeys.publicKeyHex()
             guard let signedPresenceEvent = try? presenceEvent.sign(nKeys) else { return }
-            
-            // TODO: BUNKER HANDLING
-            ConnectionPool.shared.sendMessage(
-                NosturClientMessage(
-                    clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: signedPresenceEvent.toNostrEssentialsEvent()),
-                    relayType: .WRITE
-                ),
-                accountPubkey: signedPresenceEvent.publicKey
-            )
-            
+            Unpublisher.shared.publishNow(signedPresenceEvent, skipDB: true)
+
         case nil:
             return
         }
