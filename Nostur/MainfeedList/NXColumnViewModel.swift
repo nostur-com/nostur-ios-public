@@ -131,6 +131,7 @@ class NXColumnViewModel: ObservableObject {
     private var firstConnectionSub: AnyCancellable?
     private var reloadWhenNeededSub: AnyCancellable?
     private var lastDisconnectionSub: AnyCancellable?
+    private var onAppearSubjectSub: AnyCancellable?
     private var watchForFirstConnection = false
     private var subscriptions = Set<AnyCancellable>()
     public var onAppearSubject = PassthroughSubject<Int64,Never>()
@@ -241,12 +242,32 @@ class NXColumnViewModel: ObservableObject {
             }
         }
         
+        newPostSavedSub?.cancel()
+        newPostSavedSub = nil
         listenForOwnNewPostSaved(config)
+        
+        newEventsInDatabaseSub?.cancel()
+        newEventsInDatabaseSub = nil
         listenForNewPosts(config)
+        
+        firstConnectionSub?.cancel()
+        firstConnectionSub = nil
         listenForFirstConnection(config: config)
+        
+        onAppearSubjectSub?.cancel()
+        onAppearSubjectSub = nil
         loadMoreWhenNearBottom(config)
+        
+        reloadWhenNeededSub?.cancel()
+        reloadWhenNeededSub = nil
         reloadWhenNeeded(config)
+        
+        resumeFeedSub?.cancel()
+        resumeFeedSub = nil
         listenForResumeFeed(config)
+        
+        pauseFeedSub?.cancel()
+        pauseFeedSub = nil
         listenForPauseFeed(config)
     }
     
@@ -1615,7 +1636,8 @@ extension NXColumnViewModel {
     
     @MainActor
     public func loadMoreWhenNearBottom(_ config: NXColumnConfig) {
-        onAppearSubject
+        guard onAppearSubjectSub == nil else { return }
+        onAppearSubjectSub = onAppearSubject
             .debounce(for: 0.2, scheduler: DispatchQueue.main)
             .compactMap { $0 }
             .sink { [weak self] lastCreatedAt in
@@ -1627,7 +1649,6 @@ extension NXColumnViewModel {
                     self?.sendNextPageReq(config, until: Int64(self?.oldestCreatedAt ?? Int(Date().timeIntervalSince1970)))
                 }
             }
-            .store(in: &subscriptions)
     }
 }
 
