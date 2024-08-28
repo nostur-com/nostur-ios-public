@@ -269,6 +269,24 @@ class NXColumnViewModel: ObservableObject {
         pauseFeedSub?.cancel()
         pauseFeedSub = nil
         listenForPauseFeed(config)
+        
+        followsChangedSub?.cancel()
+        followsChangedSub = nil
+        listenForFollowsChanged(config)
+    }
+    
+    private var followsChangedSub: AnyCancellable?
+    
+    @MainActor
+    private func listenForFollowsChanged(_ config: NXColumnConfig) {
+        guard followsChangedSub == nil else { return }
+        followsChangedSub = receiveNotification(.followersChanged)
+            .debounce(for: .seconds(2.0), scheduler: RunLoop.main)
+            .throttle(for: .seconds(8.0), scheduler: RunLoop.main, latest: true)
+            .sink { [weak self] _ in
+                ConnectionPool.shared.closeSubscription(config.id)
+                self?.sendRealtimeReq(config)
+            }
     }
     
     @MainActor
