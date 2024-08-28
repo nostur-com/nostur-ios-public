@@ -17,7 +17,7 @@ struct LiveEventCapsule: View {
     private var icon: String {
         switch liveEvent.status {
         case "planned":
-            "calendar.circle"
+            "calendar"
         default:
             "waveform"
         }

@@ -94,6 +94,15 @@ struct LiveEventDetail: View {
                 }
             }
         }
+        else if let scheduledAt = liveEvent.scheduledAt {
+            HStack {
+                Image(systemName: "calendar")
+                Text(scheduledAt.formatted())
+            }
+                .padding(.top, 10)
+                .font(.footnote)
+                .foregroundColor(themes.theme.secondary)
+        }
         
         if let title = liveEvent.title {
             Text(title)
