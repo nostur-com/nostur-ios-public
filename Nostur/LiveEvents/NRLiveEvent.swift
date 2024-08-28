@@ -37,6 +37,8 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     public var streamingUrl: String?
     public var webUrl: String?
     @Published public var status: String?
+    @Published public var scheduledAt: Date?
+    
     public var recordingUrl: String?
     public var liveKitConnectUrl: String?
     
@@ -88,6 +90,15 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.liveKitConnectUrl = event.liveKitConnectUrl()
         
         self.pubkeysOnStage.insert(event.pubkey)
+        
+        self.scheduledAt = if event.isPlanned(),
+                                        let startsTag = event.fastTags.first(where: { $0.0 == "starts" }),
+                                        let starts = Double(startsTag.1) {
+            Date(timeIntervalSince1970: starts)
+        }
+        else {
+            nil
+        }
     }
     
     public func loadReplacableData(_ params: (participantsOrSpeakers: [NRContact],
@@ -103,7 +114,8 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                                               thumbUrl: String?,
                                               streamStatus: String?,
                                               recordingUrl: String?,
-                                              liveKitConnectUrl: String?
+                                              liveKitConnectUrl: String?,
+                                              scheduledAt: Date?
                                              )) {
         
         self.objectWillChange.send()
@@ -126,6 +138,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.status = params.streamStatus
         self.recordingUrl = params.recordingUrl
         self.liveKitConnectUrl = params.liveKitConnectUrl
+        self.scheduledAt = params.scheduledAt
     }
     
     func role(forPubkey pubkey: String) -> String? {
@@ -417,6 +430,10 @@ extension Event {
     
     func isLive() -> Bool {
         return self.fastTags.contains(where: { $0.0 == "status" && $0.1 == "live" })
+    }
+    
+    func isPlanned () -> Bool {
+        return self.fastTags.contains(where: { $0.0 == "status" && $0.1 == "planned" })
     }
     
     func recordingUrl() -> String? {

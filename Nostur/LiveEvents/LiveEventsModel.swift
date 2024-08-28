@@ -253,6 +253,14 @@ class LiveEventsModel: ObservableObject {
                         let streamStatus = event.streamStatus()
                         let recordingUrl = event.recordingUrl()
                         let liveKitConnectUrl = event.liveKitConnectUrl()
+                        let scheduledAt: Date? = if event.isPlanned(),
+                                                        let startsTag = event.fastTags.first(where: { $0.0 == "starts" }),
+                                                        let starts = Double(startsTag.1) {
+                            Date(timeIntervalSince1970: starts)
+                        }
+                        else {
+                            nil
+                        }
                         
                         if let nrLiveEvent = self.nrLiveEvents.first(where: { $0.id == aTag }) {
                             DispatchQueue.main.async {
@@ -270,7 +278,8 @@ class LiveEventsModel: ObservableObject {
                                                               thumbUrl: thumbUrl,
                                                               streamStatus: streamStatus,
                                                               recordingUrl: recordingUrl,
-                                                              liveKitConnectUrl: liveKitConnectUrl
+                                                              liveKitConnectUrl: liveKitConnectUrl,
+                                                              scheduledAt: scheduledAt
                                                              ))
                             }
                         }
