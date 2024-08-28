@@ -14,6 +14,15 @@ struct LiveEventCapsule: View {
     
     @State private var dragOffset = CGSize.zero
     
+    private var icon: String {
+        switch liveEvent.status {
+        case "planned":
+            "calendar.circle"
+        default:
+            "waveform"
+        }
+    }
+    
     var body: some View {
         HStack {
             // TODO: Refactor and reuse FoundAccountPFPs
@@ -31,7 +40,7 @@ struct LiveEventCapsule: View {
             Text((liveEvent.title ?? liveEvent.summary) ?? "Now live").lineLimit(1)
                 .fontWeightBold()
             Spacer()
-            Image(systemName: "waveform")
+            Image(systemName: icon)
                 .symbolEffectPulse()
         }
         .foregroundColor(.white)
