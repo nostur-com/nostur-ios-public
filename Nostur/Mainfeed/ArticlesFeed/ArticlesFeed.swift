@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct ArticlesFeed: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @ObservedObject var settings:SettingsStore = .shared
-    @EnvironmentObject var vm:ArticlesFeedViewModel
+    @EnvironmentObject var vm: ArticlesFeedViewModel
+    @State private var showSettings = false
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -93,6 +95,16 @@ struct ArticlesFeed: View {
         .onChange(of: selectedSubTab) { newValue in
             guard newValue == "Articles" else { return }
             vm.load() // didLoad is checked in .load() so no need here
+        }
+        .onReceive(receiveNotification(.showFeedToggles)) { _ in
+            showSettings = true
+        }
+        .sheet(isPresented: $showSettings) {
+            NBNavigationStack {
+                ArticleFeedSettings(vm: vm)
+                    .environmentObject(themes)
+            }
+            .nbUseNavigationStack(.never)
         }
     }
 }
