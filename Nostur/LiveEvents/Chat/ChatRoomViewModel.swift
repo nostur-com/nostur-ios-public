@@ -5,7 +5,7 @@
 //  Created by Fabian Lachman on 18/07/2024.
 //
 
-import Foundation
+import SwiftUI
 import NostrEssentials
 import CryptoKit
 import Combine
@@ -58,6 +58,7 @@ class ChatRoomViewModel: ObservableObject {
         self.pubkey = String(pubkey)
         self.dTag = String(definition)
         self.listenForChats()
+        self.listenForBlocks()
         self.fetchChatHistory()
         self.updateLiveSubscription()
     }
@@ -141,6 +142,18 @@ class ChatRoomViewModel: ObservableObject {
                         self.objectWillChange.send()
                         self.messages = messages
                     }
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    private func listenForBlocks() {
+        receiveNotification(.blockListUpdated)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                let blockedPubkeys = notification.object as! Set<String>
+                withAnimation {
+                    self.messages = self.messages.filter { !blockedPubkeys.contains($0.pubkey) }
                 }
             }
             .store(in: &subscriptions)
