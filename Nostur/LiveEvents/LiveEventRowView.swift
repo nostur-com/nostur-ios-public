@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct LiveEventRowView: View {
+    @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var liveEvent: NRLiveEvent
     private var fullWidth: Bool = false
@@ -34,24 +35,7 @@ struct LiveEventRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack {
-                if liveEvent.totalParticipants > 0 {
-                    HStack {
-                        Text("\(liveEvent.totalParticipants) participants")
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                if let title = liveEvent.title {
-                    Text(title)
-                        .font(.title)
-                        .fontWeightBold()
-                        .lineLimit(2)
-                }
-                
-                if let summary = liveEvent.summary {
-                    Text(summary)
-                        .lineLimit(20)
-                }
+                headerView
                 
                 LazyVGrid(columns: gridColumns, spacing: 8.0) {
                     ForEach(liveEvent.onStage.indices, id: \.self) { index in
@@ -91,6 +75,60 @@ struct LiveEventRowView: View {
         .onTapGesture {
             navigateTo(liveEvent)
         }
+    }
+    
+    // Copy paste from LiveEventDetail (rec removed)
+    @ViewBuilder
+    private var headerView: some View {
+        if streamHasEnded {
+            HStack {
+                Text("Stream has ended")
+                    .foregroundColor(.secondary)
+            }
+        }
+        else if liveEvent.totalParticipants > 0 {
+            HStack {
+                if liveEvent.totalParticipants > 0 {
+                    Text("\(liveEvent.totalParticipants) participants")
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        else if let scheduledAt = liveEvent.scheduledAt {
+            HStack {
+                Image(systemName: "calendar")
+                Text(scheduledAt.formatted())
+            }
+                .padding(.top, 10)
+                .font(.footnote)
+                .foregroundColor(themes.theme.secondary)
+        }
+        
+        if let title = liveEvent.title {
+            Text(title)
+                .font(.title)
+                .fontWeightBold()
+                .lineLimit(2)
+        }
+        
+        if let summary = liveEvent.summary, (liveEvent.title ?? "") != summary {
+            Text(summary)
+                .lineLimit(20)
+        }
+        
+#if DEBUG
+        Text("copy event json")
+            .onTapGesture {
+                UIPasteboard.general.string = liveEvent.eventJson
+            }
+#endif
+    }
+    
+    private var streamHasEnded: Bool {
+        if let status = liveEvent.status, status == "ended" {
+            return true
+        }
+        return false
     }
 }
 
