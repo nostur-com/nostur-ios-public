@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct Discover: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject var settings: SettingsStore = .shared
     @EnvironmentObject var discoverVM: DiscoverViewModel
+    @State private var showSettings = false
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -109,6 +111,16 @@ struct Discover: View {
         .onChange(of: selectedSubTab) { newValue in
             guard newValue == "Discover" else { return }
             discoverVM.load() // didLoad is checked in .load() so no need here
+        }
+        .onReceive(receiveNotification(.showFeedToggles)) { _ in
+            showSettings = true
+        }
+        .sheet(isPresented: $showSettings) {
+            NBNavigationStack {
+                DiscoverFeedSettings(discoverVM: discoverVM)
+                    .environmentObject(themes)
+            }
+            .nbUseNavigationStack(.never)
         }
     }
 }

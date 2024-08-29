@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct Hot: View {
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject var settings:SettingsStore = .shared
-    @EnvironmentObject var hotVM:HotViewModel
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject var settings: SettingsStore = .shared
+    @EnvironmentObject var hotVM: HotViewModel
+    @State private var showSettings = false
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -109,6 +111,16 @@ struct Hot: View {
         .onChange(of: selectedSubTab) { newValue in
             guard newValue == "Hot" else { return }
             hotVM.load() // didLoad is checked in .load() so no need here
+        }
+        .onReceive(receiveNotification(.showFeedToggles)) { _ in
+            showSettings = true
+        }
+        .sheet(isPresented: $showSettings) {
+            NBNavigationStack {
+                HotFeedSettings(hotVM: hotVM)
+                    .environmentObject(themes)
+            }
+            .nbUseNavigationStack(.never)
         }
     }
 }
