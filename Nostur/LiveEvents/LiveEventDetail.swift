@@ -178,7 +178,10 @@ struct LiveEventDetail: View {
     
     @ViewBuilder
     private var nestButtonsView: some View {
-        if case .connected = liveKitVoiceSession.state {
+        if streamHasEnded {
+            EmptyView()
+        }
+        else if case .connected = liveKitVoiceSession.state {
             NestButtons(liveKitVoiceSession: liveKitVoiceSession)
         }
         else if case .connecting = liveKitVoiceSession.state {
@@ -257,7 +260,7 @@ struct LiveEventDetail: View {
             NosturVideoViewur(url: url,  pubkey: liveEvent.pubkey, height: videoWidth * 9/16, videoWidth: videoWidth, autoload: true, theme: Themes.default.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
         }
         else if streamHasEnded {
-            Text("Stream has ended")
+            EmptyView()
         }
         else if let url = liveEvent.url {
             if url.absoluteString.suffix(5) == ".m3u8" {
