@@ -189,7 +189,7 @@ class LiveEventsModel: ObservableObject {
         self.fetchFromRelays()
     }
     
-    // for after account change
+    // for after account change // TODO: Handle account change
     public func reload() {
         self.backlog.clear()
         self.follows = Nostur.follows()
