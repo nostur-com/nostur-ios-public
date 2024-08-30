@@ -33,6 +33,7 @@ struct DetailPane: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing:0) {
                         ForEach(tm.tabs.indices, id:\.self) { index in
+                            // TODO: Clean up / Refactor below:
                             NosturTabButton(
                                 isSelected: tm.selected == tm.tabs[index],
                                 onSelect: {
@@ -61,7 +62,23 @@ struct DetailPane: View {
                                         }
                                     }
                                     else if let naddrPath = tm.selected?.naddr1 {
-                                        if naddrPath.kind >= 30000 && naddrPath.kind < 40000 {
+                                        if naddrPath.kind == 30311 {
+                                            if let cm = NostrEssentials
+                                                .ClientMessage(type: .REQ,
+                                                               subscriptionId: "REALTIME-DETAIL",
+                                                               filters: [
+                                                                Filters(
+                                                                    authors: [naddrPath.pubkey],
+                                                                    kinds: [30311],
+                                                                    tagFilter: TagFilter(tag: "d", values: [naddrPath.dTag]),
+                                                                    limit: 1
+                                                                )
+                                                               ]
+                                                ).json() {
+                                                req(cm)
+                                            }
+                                        }
+                                        else if naddrPath.kind >= 30000 && naddrPath.kind < 40000 {
                                             req(RM.getPREventReferences(aTag: naddrPath.navId, subscriptionId: "REALTIME-DETAIL"))
                                         }
                                         else {
@@ -93,7 +110,23 @@ struct DetailPane: View {
                                             bg().perform {
                                                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onClose")
                                             }
-                                            if nrPost.kind >= 30000 && nrPost.kind < 40000 {
+                                            if nrPost.kind == 30311 {
+                                                if let cm = NostrEssentials
+                                                    .ClientMessage(type: .REQ,
+                                                                   subscriptionId: "REALTIME-DETAIL",
+                                                                   filters: [
+                                                                    Filters(
+                                                                        authors: [nrPost.pubkey],
+                                                                        kinds: [30311],
+                                                                        tagFilter: TagFilter(tag: "d", values: [nrPost.dTag ?? ""]),
+                                                                        limit: 1
+                                                                    )
+                                                                   ]
+                                                    ).json() {
+                                                    req(cm)
+                                                }
+                                            }
+                                            else if nrPost.kind >= 30000 && nrPost.kind < 40000 {
                                                 req(RM.getPREventReferences(aTag: nrPost.aTag, subscriptionId: "REALTIME-DETAIL"))
                                             }
                                             else {
@@ -110,7 +143,23 @@ struct DetailPane: View {
                                             }
                                         }
                                         else if let naddrPath = tm.selected?.naddr1 {
-                                            if naddrPath.kind >= 30000 && naddrPath.kind < 40000 {
+                                            if naddrPath.kind == 30311 {
+                                                if let cm = NostrEssentials
+                                                    .ClientMessage(type: .REQ,
+                                                                   subscriptionId: "REALTIME-DETAIL",
+                                                                   filters: [
+                                                                    Filters(
+                                                                        authors: [naddrPath.pubkey],
+                                                                        kinds: Set([30311]),
+                                                                        tagFilter: TagFilter(tag: "d", values: [naddrPath.dTag]),
+                                                                        limit: 1
+                                                                    )
+                                                                   ]
+                                                    ).json() {
+                                                    req(cm)
+                                                }
+                                            }
+                                            else if naddrPath.kind >= 30000 && naddrPath.kind < 40000 {
                                                 req(RM.getPREventReferences(aTag: naddrPath.navId, subscriptionId: "REALTIME-DETAIL"))
                                             }
                                             else {
