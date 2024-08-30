@@ -129,14 +129,11 @@ class ChatRoomViewModel: ObservableObject {
                 }
                 
                 #if DEBUG
-                L.nests.info("received: \(event.content)")
-                print("received \(event.kind.id.description): \(event.content)")
+                L.nests.debug("Chat message/zap received \(event.kind == .zapNote ? "ZAP" : "MESSAGE"): \(event.content)")
                 #endif
                 // TODO: Filter WoT before adding? or already filtered in MessageParser?
                 bg().perform {
                     let nrChat: NRChatMessage = NRChatMessage(nEvent: event)
-                    
-                    
                     DispatchQueue.main.async { [weak self] in
                         guard let self = self else { return }
                         let messages: [NRChatMessage] = (self.messages + [nrChat]).sorted(by: { $0.createdAt > $1.createdAt })
@@ -180,4 +177,36 @@ class ChatRoomViewModel: ObservableObject {
             }
         }
     }
+}
+
+enum NRChatRow: Identifiable {
+    case message(NRChatMessage)
+    case zap(NRZap)
+    
+    var id: String {
+        switch self {
+        case .message(let nrChatMessage):
+            return nrChatMessage.id
+        case .zap(let nrZap):
+            return nrZap.id
+        }
+    }
+    
+    var createdAt: Date {
+        switch self {
+        case .message(let nrChatMessage):
+            return nrChatMessage.createdAt
+        case .zap(let nrZap):
+            return nrZap.createdAt
+        }
+    }
+}
+
+class NRZap: ObservableObject {
+    init(nEvent: NEvent) {
+        
+    }
+    
+    var id = "1"
+    var createdAt: Date { .now }
 }
