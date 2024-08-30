@@ -32,6 +32,7 @@ struct PaymentAmountSelector: View {
         guard let anyLud = paymentInfo.contact?.anyLud, anyLud == true else { return }
         let pubkey = paymentInfo.contact!.pubkey
         let eventId = (paymentInfo.nrPost?.id ?? paymentInfo.zapEtag) ?? nil
+        let aTag = paymentInfo.zapAtag ?? nil
         let relays = ConnectionPool.shared.connections.values
             .filter { $0.relayData.write }
             .map { $0.url }
@@ -39,7 +40,12 @@ struct PaymentAmountSelector: View {
         
         if (paymentInfo.supportsZap) {
             do {
-                let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
+                let zapRequestNote = if let aTag {
+                    zapRequest(forPubkey: pubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
+                }
+                else {
+                    zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
+                }
                 
                 if isNC {
                     NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedZapRequestNote in
