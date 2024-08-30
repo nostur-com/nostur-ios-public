@@ -153,7 +153,8 @@ struct LiveEventDetail: View {
                         NestParticipantView(
                             nrContact: liveEvent.onStage[index],
                             role: liveEvent.role(forPubkey: liveEvent.onStage[index].pubkey),
-                            aTag: liveEvent.id
+                            aTag: liveEvent.id,
+                            showZapButton: !liveKitVoiceSession.listenAnonymously
                         )
                         .id(liveEvent.onStage[index].pubkey)
                         .onTapGesture {
@@ -179,7 +180,8 @@ struct LiveEventDetail: View {
                         NestParticipantView(
                             nrContact: liveEvent.listeners[index],
                             role: liveEvent.role(forPubkey: liveEvent.listeners[index].pubkey),
-                            aTag: liveEvent.id
+                            aTag: liveEvent.id,
+                            showZapButton: !liveKitVoiceSession.listenAnonymously
                         )
                         .id(liveEvent.listeners[index].pubkey)
                         .onTapGesture {
