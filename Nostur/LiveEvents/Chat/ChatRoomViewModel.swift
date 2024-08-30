@@ -97,7 +97,8 @@ class ChatRoomViewModel: ObservableObject {
         }
     }
     
-    private func closeLiveSubscription() {
+    @MainActor
+    public func closeLiveSubscription() {
         guard pubkey != nil, dTag != nil else { return }
         req(NostrEssentials.ClientMessage(type: .CLOSE, subscriptionId: subId).json()!)
     }    
@@ -159,11 +160,6 @@ class ChatRoomViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
     
-    deinit {
-        self.closeLiveSubscription()
-        self.removeChatsFromExistingIdsCache()
-    }
-    
     enum State: Equatable {
         case initializing
         case loading
@@ -175,7 +171,8 @@ class ChatRoomViewModel: ObservableObject {
     // We are not storing chats in DB. So when we close and reopen chat and try
     // to fetch chats again they wont be parsed because they will be considered already parsed
     // by Importer.shared.existingIds. So we remove them so we can parse them again.
-    private func removeChatsFromExistingIdsCache() {
+    @MainActor
+    public func removeChatsFromExistingIdsCache() {
         let ids = self.messages.map { $0.id }
         bg().perform {
             for id in ids {
