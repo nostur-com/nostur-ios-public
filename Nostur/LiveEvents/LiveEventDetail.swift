@@ -42,9 +42,7 @@ struct LiveEventDetail: View {
         VStack {
             headerView
 
-            if !didStart {
-                participantsView
-            }
+            participantsView
         
             videoStreamView
                 .background(themes.theme.background)
