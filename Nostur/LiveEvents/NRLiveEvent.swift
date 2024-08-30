@@ -89,6 +89,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.recordingUrl = event.recordingUrl()
         self.liveKitConnectUrl = event.liveKitConnectUrl()
         
+        self.pubkeysOnStage.formUnion(Set(event.participantsOrSpeakers().map { $0.pubkey }))
         self.pubkeysOnStage.insert(event.pubkey)
         
         self.scheduledAt = if event.isPlanned(),
@@ -120,6 +121,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         
         self.objectWillChange.send()
         self.participantsOrSpeakers = params.participantsOrSpeakers
+        self.pubkeysOnStage.formUnion(Set(params.participantsOrSpeakers.map { $0.pubkey }))
         self.fastPs = params.fastPs
         self.totalParticipants = params.totalParticipants
         self.title = params.title
