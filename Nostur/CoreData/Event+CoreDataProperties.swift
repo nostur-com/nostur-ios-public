@@ -938,6 +938,23 @@ extension Event {
                         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, eTag: savedEvent.zappedEventId, zapState: .zapReceiptConfirmed))
                     }
                 }
+                if let firstA = event.firstA() {
+                    savedEvent.zappedEventId = firstA
+                    
+                    if let awaitingEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstA) {
+                        savedEvent.zappedEvent = awaitingEvent // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
+                        // _PFManagedObject_coerceValueForKeyWithDescription
+                        // _sharedIMPL_setvfk_core
+                        // TODO: Maybe wrong main context event added somewhere?
+                    }
+                    else {
+                        savedEvent.zappedEvent = try? Event.fetchEvent(id: firstA, context: context)
+                    }
+                    if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
+                        savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
+                        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, aTag: firstA, zapState: .zapReceiptConfirmed))
+                    }
+                }
                 if let firstP = event.firstP() {
 //                    savedEvent.objectWillChange.send()
                     savedEvent.otherPubkey = firstP

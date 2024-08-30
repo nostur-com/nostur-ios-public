@@ -41,6 +41,7 @@ class ViewUpdates {
 struct ZapStateChange {
     let pubkey: String
     var eTag: String?
+    var aTag: String?
     var zapState: ZapState?
 }
 

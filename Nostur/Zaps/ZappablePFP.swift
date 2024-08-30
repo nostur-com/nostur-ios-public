@@ -14,6 +14,7 @@ struct ZappablePFP: View {
     var contact: NRContact?
     var size: CGFloat = 50.0
     var zapEtag: String?
+    var zapAtag: String?
     var forceFlat: Bool?
     @State private var isZapped: Bool = false
     @State private var animate = false
@@ -64,17 +65,17 @@ struct ZappablePFP: View {
                 isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState)
             }
             .onReceive(ViewUpdates.shared.zapStateChanged.receive(on: RunLoop.main)) { zapStateChange in
-                guard let thisEtag = self.zapEtag else { return }
-                guard thisEtag == zapStateChange.eTag else { return }
-                
-                isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
+                if let thisEtag = self.zapEtag {
+                    guard thisEtag == zapStateChange.eTag else { return }
+                    guard zapStateChange.pubkey == pubkey else { return}
+                    isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
+                }
+                else if let thisAtag = self.zapAtag {
+                    guard zapStateChange.pubkey == pubkey else { return}
+                    guard thisAtag == zapStateChange.eTag else { return }
+                    isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
+                }
             }
-//            .transaction { t in t.animation = nil }
-//            .transaction { t in
-//                t.animation = nil
-//                t.disablesAnimations = true
-//            }
-//            .id(pubkey)
     }
 }
 

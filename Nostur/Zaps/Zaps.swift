@@ -7,16 +7,20 @@
 
 import Foundation
 
-func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, withMessage message:String = "", relays:[String]) -> NEvent {
-    var zapRequest = NEvent(content:message)
+func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, andATag aTag: String? = nil, withMessage message:String = "", relays:[String]) -> NEvent {
+    var zapRequest = NEvent(content: message)
     zapRequest.kind = .zapRequest
     
     let pTag = NostrTag(["p", pubkey])
     zapRequest.tags.append(pTag)
     
-    if (eventId != nil) {
-        let eTag = NostrTag(["e", eventId!])
+    if let eventId {
+        let eTag = NostrTag(["e", eventId])
         zapRequest.tags.append(eTag)
+    }
+    else if let aTag {
+        let aTag = NostrTag(["a", aTag])
+        zapRequest.tags.append(aTag)
     }
     
     let relaysTag = NostrTag(["relays"] + relays)

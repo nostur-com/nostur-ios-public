@@ -106,6 +106,7 @@ class Zap {
     var isNC = false
     var amount:Int64
     var eventId:String?
+    var aTag:String?
     var event:Event?
     let contact:Contact
     let cancellationId:UUID
@@ -117,7 +118,7 @@ class Zap {
     var pr:String? = nil // payment request (invoice)
     var fromAccountPubkey:String
     
-    init(isNC:Bool = false, amount:Int64, contact:Contact, eventId:String? = nil, event:Event? = nil, cancellationId:UUID, zapMessage:String = "") {
+    init(isNC: Bool = false, amount: Int64, contact: Contact, eventId: String? = nil, aTag: String? = nil, event: Event? = nil, cancellationId: UUID, zapMessage: String = "") {
         self.isNC = isNC
         self.fromAccountPubkey = NRState.shared.activeAccountPublicKey
         self.queuedAt = .now
@@ -126,6 +127,7 @@ class Zap {
         self.cancellationId = cancellationId
         self.contactPubkey = contact.pubkey
         self.eventId = eventId
+        self.aTag = aTag
         self.event = event
         self.lud16 = contact.lud16
         self.lud06 = contact.lud06
@@ -143,7 +145,7 @@ class Zap {
     }
     
     private func next() {
-        L.og.debug("⚡️ Zap.next() \(self.state.rawValue) - \(self.id.uuidString) - \(self.callbackUrl ?? "") - supportsZap: \(self.supportsZap) - lud \(self.lud16 ?? self.lud06 ?? "") - eventId:\(self.eventId ?? "") - \(self.pr ?? "")")
+        L.og.debug("⚡️ Zap.next() \(self.state.rawValue) - \(self.id.uuidString) - \(self.callbackUrl ?? "") - supportsZap: \(self.supportsZap) - lud \(self.lud16 ?? self.lud06 ?? "") - eventId: \(self.eventId ?? "") - aTag: \(self.aTag ?? "") - \(self.pr ?? "")")
         switch state {
         case .INIT: //1. fetch callback from ln pay end point
             fetchCallbackUrl()
@@ -225,7 +227,12 @@ class Zap {
                 guard let self = self else { return }
                 guard let account = account() else { return }
                 if isNC {
-                    let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
+                    let zapRequestNote = if let aTag = self.aTag {
+                        zapRequest(forPubkey: self.contactPubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
+                    }
+                    else {
+                        zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
+                    }
                     NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { [weak self] signedEvent in
                         Task { [weak self] in
                             guard let self else { return }
@@ -246,7 +253,13 @@ class Zap {
                 }
                 else {
                     
-                    let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
+                    let zapRequestNote = if let aTag = self.aTag {
+                        zapRequest(forPubkey: self.contactPubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
+                    }
+                    else {
+                        zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
+                    }
+                    
                     if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {
                         Task { [weak self] in
                             guard let self else { return }
