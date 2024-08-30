@@ -169,6 +169,12 @@ struct LiveEventDetail: View {
         }
         
         if !liveEvent.listeners.isEmpty {
+            if liveEvent.listeners.count > 4 {
+                Text("\(liveEvent.listeners.count) listeners")
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .font(.footnote)
+                    .foregroundColor(Color.gray)
+            }
             Divider()
         }
         
