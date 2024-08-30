@@ -89,6 +89,10 @@ struct ChatRoom: View {
                                 proxy.scrollTo(bottom)
                             }
                         }
+                        .onTapGesture {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                                to: nil, from: nil, for: nil)
+                        }
                         
                         if !anonymous {
                             HStack {
@@ -115,6 +119,7 @@ struct ChatRoom: View {
     private func submitMessage() {
         // Create and send DM (via unpublisher?)
         guard let account = self.account, account.privateKey != nil else { NRState.shared.readOnlyAccountSheetShown = true; return }
+        guard !message.isEmpty else { return }
         var nEvent = NEvent(content: message)
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
