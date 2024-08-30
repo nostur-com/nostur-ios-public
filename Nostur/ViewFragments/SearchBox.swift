@@ -87,20 +87,20 @@ struct SearchBox_Previews: PreviewProvider {
     }
 }
 
-@available(iOS 18.0, *)
-#Preview {
-    
-    @Previewable @State var text = ""
-    
-    VStack {
-        SearchBox(prompt: "SearchBox in view..", text: $text)
-            .padding()
-    }
-    .toolbar {
-        ToolbarItem(placement: .principal) {
-            SearchBox(prompt: "SearchBox in toolbar..", text: $text)
-                .padding()
-        }
-    }
-}
+//@available(iOS 18.0, *)
+//#Preview {
+//    
+//    @Previewable @State var text = ""
+//    
+//    VStack {
+//        SearchBox(prompt: "SearchBox in view..", text: $text)
+//            .padding()
+//    }
+//    .toolbar {
+//        ToolbarItem(placement: .principal) {
+//            SearchBox(prompt: "SearchBox in toolbar..", text: $text)
+//                .padding()
+//        }
+//    }
+//}
 
