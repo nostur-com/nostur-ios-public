@@ -43,7 +43,7 @@ extension Contact {
 }
 
 
-func naiveBolt11AmountDecoder(_ test:String) -> Double {
+func naiveBolt11AmountDecoder(_ test: String) -> Double {
     guard test.prefix(4) == "lnbc" else { return 0.0 }
     let noPrefix = test.dropFirst(4)
     
