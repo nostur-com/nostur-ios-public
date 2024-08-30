@@ -124,6 +124,8 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     
     var isNSFW: Bool = false
     
+    var sats: Double?
+    
     init(nEvent: NEvent) {
         
         self.nEvent = nEvent
@@ -214,15 +216,15 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
             }
             
             let decoder = JSONDecoder()
-            guard var relayMessage = try? decoder.decode(NMessage.self, from: dataFromString) else {
-                return
-            }
-
-            guard let zapFromNevent = relayMessage.event else {
+            guard let zapFromNEvent = try? decoder.decode(NEvent.self, from: dataFromString), ((try? nEvent.verified()) != nil) else {
                 return
             }
             
-            self.zapFromAttributes = ZapFromAttributes(nEvent: zapFromNevent)
+            self.zapFromAttributes = ZapFromAttributes(nEvent: zapFromNEvent)
+            
+            if let bolt11 = nEvent.tags.first(where: { $0.type == "bolt11" })?.value {
+                self.sats = naiveBolt11AmountDecoder(bolt11)
+            }
         }
     }
     
