@@ -39,7 +39,7 @@ struct LiveEventDetail: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        VStack {
+        ScrollView {
             headerView
 
             participantsView
