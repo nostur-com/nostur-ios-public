@@ -49,6 +49,14 @@ struct Naddr1Path: IdentifiableDestination {
         Int((try? ShareableIdentifier(naddr1).kind) ?? -999899912)
     }
     
+    public var pubkey: String {
+        (try? ShareableIdentifier(naddr1).pubkey) ?? "oops"
+    }
+    
+    public var dTag: String {
+        (try? ShareableIdentifier(naddr1).eventId) ?? ""
+    }
+    
     public var navId: String { 
         (try? ShareableIdentifier(naddr1))?.aTag ?? id
     }
