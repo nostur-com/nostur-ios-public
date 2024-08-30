@@ -111,6 +111,8 @@ struct ChatRoom: View {
         }
         .onDisappear {
             stopTimer()
+            vm.closeLiveSubscription()
+            vm.removeChatsFromExistingIdsCache()
         }
         
         
