@@ -155,7 +155,7 @@ struct NestZapButton: View {
             // Trigger custom zap
             customZapId = UUID()
             if let customZapId {
-                sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: name, customZapId: customZapId))
+                sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: name, customZapId: customZapId, zapAtag: aTag))
             }
         }
         else {
