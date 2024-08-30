@@ -297,6 +297,7 @@ private struct WithSheets: ViewModifier {
         
             .onReceive(receiveNotification(.showZapSheet)) { notification in
                 let paymentInfo = notification.object as! PaymentInfo
+                guard paymentInfo.zapAtag == nil else { return } // handle aTag in LiveEventDetail for now
                 self.paymentInfo = paymentInfo
             }
             .sheet(item: $paymentInfo) { paymentInfo in
@@ -353,6 +354,7 @@ private struct WithSheets: ViewModifier {
         // Zap customizer sheet
             .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
                 let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
+                guard zapCustomizerSheetInfo.zapAtag == nil else { return } // handled in LiveEventDetail for now
                 self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
             }
             .sheet(item: $zapCustomizerSheetInfo) { zapCustomizerSheetInfo in

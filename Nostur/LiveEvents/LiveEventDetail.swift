@@ -8,6 +8,7 @@
 import LiveKit
 import SwiftUI
 import SwiftUIFlow
+import NavigationBackport
 
 struct LiveEventDetail: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -35,6 +36,9 @@ struct LiveEventDetail: View {
         dim.listWidth + (DIMENSIONS.BOX_PADDING*2)
     }
     
+    @State private var zapCustomizerSheetInfo: ZapCustomizerSheetInfo? = nil
+    @State private var showZapSheet = false
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -43,6 +47,12 @@ struct LiveEventDetail: View {
             headerView
 
             participantsView
+                .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
+                    let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
+                    guard zapCustomizerSheetInfo.zapAtag != nil else { return }
+                    self.showZapSheet = true
+                    self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
+                }
         
             videoStreamView
                 .background(themes.theme.background)
@@ -71,6 +81,16 @@ struct LiveEventDetail: View {
 //        .navigationTitle(liveEvent.title ?? "(Stream)")
 //        .navigationBarTitleDisplayMode(.inline)
         .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
+        .withNavigationDestinations()
+        .nbNavigationDestination(isPresented: $showZapSheet, destination: {
+            if let zapCustomizerSheetInfo {
+                ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
+                    .environmentObject(NRState.shared)
+                    .presentationDetentsLarge()
+                    .environmentObject(themes)
+                    .presentationBackgroundCompat(themes.theme.listBackground)
+            }
+        })
     }
     
     @ViewBuilder
