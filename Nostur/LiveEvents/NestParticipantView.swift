@@ -14,6 +14,7 @@ struct NestParticipantView: View {
     public let aTag: String
     
     public var showControls = true
+    public var showZapButton = true
     
     @State private var isZapped = false
     
@@ -38,7 +39,7 @@ struct NestParticipantView: View {
                     }
                 }
                 .overlay(alignment: .topLeading) {
-                    if nrContact.anyLud {
+                    if nrContact.anyLud && showZapButton {
                         NestZapButton(name: nrContact.anyName, aTag: aTag, nrContact: nrContact)
                             .offset(x: -15.0, y: 5)
                     }
