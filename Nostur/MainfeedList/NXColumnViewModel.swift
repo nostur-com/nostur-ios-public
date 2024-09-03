@@ -1523,7 +1523,7 @@ extension NXColumnViewModel {
             
             self.gapFiller?.fetchGap(since: max(sinceTimestamp, maxAgo), currentGap: 0)
             
-            fetchProfiles(config)
+//            fetchProfiles(config) // No need? we already fetch kind 0 with 1,5,6 etc...
         }
     }
     
