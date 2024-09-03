@@ -71,9 +71,11 @@ class NXGapFiller {
                     self.columnVM?.refreshedAt = Int64(Date().timeIntervalSince1970)
                     self.columnVM?.loadLocal(config)
                     
+                    self.currentGap += 1
+                    
                     if self.windowStart < Int(Date().timeIntervalSince1970) {
                         L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1)")
-                        self.fetchGap(since: self.since, currentGap: self.currentGap + 1) // next gap (no since param)
+                        self.fetchGap(since: self.since, currentGap: self.currentGap) // next gap (no since param)
                     }
                     else {
                         self.currentGap = 0
