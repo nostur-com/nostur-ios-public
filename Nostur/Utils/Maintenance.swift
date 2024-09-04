@@ -71,6 +71,7 @@ struct Maintenance {
             Self.runFixMissingDMStates(context: context)
             Self.runInsertFixedPfps(context: context)
             Self.runMigrateListStateToCustomFeeds(context: context)
+            Self.runPutReferencedAtag(context: context)
             do {
                 if context.hasChanges {
                     try context.save()
@@ -843,6 +844,31 @@ struct Maintenance {
         migration.migrationCode = migrationCode.runPutReactionToPubkeyInOtherPubkey.rawValue
     }
     
+    // Run once to put first A tag in .otherAtag, for fast reaction notification querying
+    static func runPutReferencedAtag(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.putReferencedAtag, context: context) else { return }
+        
+        
+        // Only need to live chats now (chat messages and zaps)
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind IN {1311,9735} AND otherAtag == nil")
+        
+        var fixed = 0
+        if let items = try? context.fetch(fr) {
+            L.maintenance.info("runPutReferencedAtag: Found \(items.count) items with possible a tag")
+            for item in items {
+                if let firstA = item.firstA() {
+                    item.otherAtag = firstA
+                    fixed += 1
+                }
+            }
+            L.maintenance.info("runPutReferencedAtag: Fixed \(fixed) otherAtag in items")
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.putReferencedAtag.rawValue
+    }
+    
     // Migrate Bookmarks to iCloud-ready table
     static func runMigrateBookmarks(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.migrateBookmarks, context: context) else { return }
@@ -1384,5 +1410,8 @@ struct Maintenance {
         
         // Migrate ListState fields to CloudFeed
         case migrateListStateToCloudFeed = "migrateListStateToCloudFeed"
+        
+        // Put first A tag in .otherAtag
+        case putReferencedAtag = "putReferencedAtag"
     }
 }
