@@ -58,7 +58,11 @@ extension Event {
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
     
-    var aTag:String { (String(kind) + ":" + pubkey  + ":" + dTag) }
+    // A referenced A tag 
+    @NSManaged public var otherAtag: String?
+    
+    // Calculate this events aTag
+    var aTag: String { (String(kind) + ":" + pubkey  + ":" + dTag) }
     
     // For events with multiple versions (like NIP-33)
     // Most recent version should be nil
@@ -868,6 +872,7 @@ extension Event {
         savedEvent.likesCount = 0
         savedEvent.isRepost = event.kind == .repost
         savedEvent.flags = flags
+        savedEvent.otherAtag = savedEvent.firstA()
         if let contact = EventRelationsQueue.shared.getAwaitingBgContacts().first(where: { $0.pubkey == event.publicKey }) {
             savedEvent.contact = contact
         }
