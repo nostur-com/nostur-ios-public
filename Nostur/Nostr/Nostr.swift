@@ -401,6 +401,10 @@ public struct NEvent: Codable {
     func tagNamed(_ type:String) -> String? {
         tags.first(where: { $0.type == type })?.value
     }
+    
+    var fastTags: [(String, String, String?, String?, String?)] {
+        return tags.map { ($0.type, $0.value, $0.tag[safe: 2], $0.tag[safe: 3], $0.tag[safe: 4]) }
+    }
 }
 
 // FIX ALL REPLY MENTION ROOT DETECTION ETC
