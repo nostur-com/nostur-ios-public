@@ -31,7 +31,7 @@ class ChatRoomViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
     private var backlog = Backlog()
     
-    @Published public var messages: [NRChatMessage] = []
+    @Published public var messages: [ChatRowContent] = []
     
     @MainActor
     public func start(aTag: String) throws {
@@ -133,11 +133,67 @@ class ChatRoomViewModel: ObservableObject {
                 #endif
                 // TODO: Filter WoT before adding? or already filtered in MessageParser?
                 bg().perform {
-                    let nrChat: NRChatMessage = NRChatMessage(nEvent: event)
+                    let confirmedZap: ChatRowContent = if event.kind == .zapNote, let nZapRequest = Event.extractZapRequest(tags: event.tags) {
+                        ChatRowContent.chatConfirmedZap(
+                            ChatConfirmedZap(
+                                id: event.id,
+                                zapRequestId: nZapRequest.id,
+                                zapRequestPubkey: nZapRequest.publicKey,
+                                zapRequestCreatedAt: Date(
+                                    timeIntervalSince1970: Double(nZapRequest.createdAt.timestamp)
+                                ),
+                                amount: Int64(event.naiveSats),
+                                nxEvent: NXEvent(pubkey: event.publicKey, kind: event.kind.id),
+                                content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags).0,
+                                contact: NRContact.fetch(nZapRequest.publicKey)
+                            )
+                        )
+                    }
+                    else {
+                        ChatRowContent.chatMessage(NRChatMessage(nEvent: event))
+                    }
                     DispatchQueue.main.async { [weak self] in
                         guard let self = self else { return }
-                        let messages: [NRChatMessage] = (self.messages + [nrChat]).sorted(by: { $0.createdAt > $1.createdAt })
-                        self.objectWillChange.send()
+               
+                        if let index = self.messages.firstIndex(where: { row in
+                            if case .chatPendingZap(let pendingZap) = row, pendingZap.id == confirmedZap.id {
+                                return true
+                            }
+                            return false
+                        }) {
+                            self.objectWillChange.send()
+                            withAnimation {
+                                self.messages[index] = confirmedZap
+                            }
+                        }
+                        else {
+                            let messages: [ChatRowContent] = (self.messages + [confirmedZap]).sorted(by: { $0.createdAt > $1.createdAt })
+                            self.objectWillChange.send()
+                            withAnimation {
+                                self.messages = messages
+                            }
+                        }
+                    }
+                }
+            }
+            .store(in: &subscriptions)
+        
+        receiveNotification(.receivedPendingZap)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let pendingZap = notification.object as! ChatPendingZap
+                guard aTag == pendingZap.aTag else { return }
+             
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    
+                    let messages: [ChatRowContent] = (self.messages + [ChatRowContent.chatPendingZap(pendingZap)]).sorted(by: { $0.createdAt > $1.createdAt })
+                    
+                    self.objectWillChange.send()
+                    withAnimation {
+                        if self.state != .ready {
+                            self.state = .ready
+                        }
                         self.messages = messages
                     }
                 }

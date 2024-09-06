@@ -271,7 +271,7 @@ struct ChatRenderer: View { // VIEW things
 }
 
 
-#Preview {
+#Preview("zap?") {
     PreviewContainer({ pe in
         pe.parseMessages([
             ###"["EVENT","uno",{"kind":0,"id":"f2d31919d4fdde4aa78ee53b6241b97ce3821083e5501d2b948cfdc37fea4775","pubkey":"a80fc4a78634ee26aabcac951b4cfd7b56ae18babd33c5afdcf6bed6dc80ebd1","created_at":1721274103,"tags":[["alt","User profile for The Uno"]],"content":"{\"name\":\"The Uno\",\"nip05\":\"Uno@UnoDog.Site\",\"about\":\"That Bitcoin Dog From the Internet. \\n\\nDrinking Coffee, Building Websites, Videos, Memes, Yapping. \\n🤙🐕🫡👍\",\"lud16\":\"uno@primal.net\",\"display_name\":\"The Uno\",\"picture\":\"https://image.nostr.build/38e9e5f658ac184be7462bf76f4e915b0446a538987c03b77c0ddf0c376aa4c3.jpg\",\"banner\":\"https://image.nostr.build/68d5c31278731a64a8eea159e2633eb01a40872bf906a64369f48c94c1e7cbbb.gif\",\"website\":\"izap.lol/uno\"}","sig":"b3c043fce704ff85b7c58415622f9910f463da2478b46c20ce3fb73586c7347d32810244ebd970e272ecbdcd02923eff28792094e2c6bf2ffa32764c2096c3ae"}]"###
@@ -281,7 +281,8 @@ struct ChatRenderer: View { // VIEW things
         if let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory"),
            let nEvent = message.event {
             let nrChat: NRChatMessage = NRChatMessage(nEvent: nEvent)
-            ChatRow(nrChat: nrChat)
+            ChatRow(content: .chatMessage(nrChat))
         }
     }
 }
+
