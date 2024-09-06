@@ -150,16 +150,15 @@ struct LiveEventDetail: View {
             ScrollView(.horizontal) {
                 HFlow(alignment: .top) {
                     ForEach(liveEvent.onStage.indices, id: \.self) { index in
-                        NestParticipantView(
-                            nrContact: liveEvent.onStage[index],
-                            role: liveEvent.role(forPubkey: liveEvent.onStage[index].pubkey),
-                            aTag: liveEvent.id,
-                            showZapButton: !liveKitVoiceSession.listenAnonymously
-                        )
+                        NBNavigationLink(value: NRContactPath(nrContact: liveEvent.onStage[index], navigationTitle: liveEvent.onStage[index].anyName), label: {
+                            NestParticipantView(
+                                nrContact: liveEvent.onStage[index],
+                                role: liveEvent.role(forPubkey: liveEvent.onStage[index].pubkey),
+                                aTag: liveEvent.id,
+                                showZapButton: !liveKitVoiceSession.listenAnonymously
+                            )
+                        })
                         .id(liveEvent.onStage[index].pubkey)
-                        .onTapGesture {
-                            navigateTo(NRContactPath(nrContact: liveEvent.onStage[index], navigationTitle: liveEvent.onStage[index].anyName))
-                        }
                         .frame(width: 95, height: 95)
                         .fixedSize()
                     }
@@ -183,16 +182,15 @@ struct LiveEventDetail: View {
             ScrollView(.horizontal) {
                 HFlow(alignment: .top) {
                     ForEach(liveEvent.listeners.indices, id: \.self) { index in
-                        NestParticipantView(
-                            nrContact: liveEvent.listeners[index],
-                            role: liveEvent.role(forPubkey: liveEvent.listeners[index].pubkey),
-                            aTag: liveEvent.id,
-                            showZapButton: !liveKitVoiceSession.listenAnonymously
-                        )
+                        NBNavigationLink(value: NRContactPath(nrContact: liveEvent.listeners[index], navigationTitle: liveEvent.listeners[index].anyName), label: {
+                            NestParticipantView(
+                                nrContact: liveEvent.listeners[index],
+                                role: liveEvent.role(forPubkey: liveEvent.listeners[index].pubkey),
+                                aTag: liveEvent.id,
+                                showZapButton: !liveKitVoiceSession.listenAnonymously
+                            )
+                        })
                         .id(liveEvent.listeners[index].pubkey)
-                        .onTapGesture {
-                            navigateTo(NRContactPath(nrContact: liveEvent.listeners[index], navigationTitle: liveEvent.listeners[index].anyName))
-                        }
                         .frame(width: 95, height: 95)
                         .fixedSize()
                     }
