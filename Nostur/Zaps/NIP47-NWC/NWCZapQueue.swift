@@ -117,8 +117,9 @@ class Zap {
     var callbackUrl:String? = nil
     var pr:String? = nil // payment request (invoice)
     var fromAccountPubkey:String
+    var withPending = false
     
-    init(isNC: Bool = false, amount: Int64, contact: Contact, eventId: String? = nil, aTag: String? = nil, event: Event? = nil, cancellationId: UUID, zapMessage: String = "") {
+    init(isNC: Bool = false, amount: Int64, contact: Contact, eventId: String? = nil, aTag: String? = nil, event: Event? = nil, cancellationId: UUID, zapMessage: String = "", withPending: Bool = false) {
         self.isNC = isNC
         self.fromAccountPubkey = NRState.shared.activeAccountPublicKey
         self.queuedAt = .now
@@ -132,6 +133,7 @@ class Zap {
         self.lud16 = contact.lud16
         self.lud06 = contact.lud06
         self.zapMessage = zapMessage
+        self.withPending = withPending
         next()
     }
     
@@ -226,6 +228,9 @@ class Zap {
             bg().perform { [weak self] in
                 guard let self = self else { return }
                 guard let account = account() else { return }
+                
+                let accountNrContact = NRContact.fetch(account.publicKey)
+                
                 if isNC {
                     let zapRequestNote = if let aTag = self.aTag {
                         zapRequest(forPubkey: self.contactPubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
@@ -233,9 +238,27 @@ class Zap {
                     else {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     }
+                    
                     NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { [weak self] signedEvent in
                         Task { [weak self] in
                             guard let self else { return }
+                            
+                            if self.withPending, let aTag = self.aTag {
+                                DispatchQueue.main.async {
+                                    sendNotification(.receivedPendingZap, ChatPendingZap(
+                                        id: signedEvent.id,
+                                        pubkey: signedEvent.publicKey,
+                                        createdAt: Date(
+                                            timeIntervalSince1970: Double(signedEvent.createdAt.timestamp)
+                                        ),
+                                        aTag: aTag,
+                                        amount: 21000,
+                                        nxEvent: NXEvent(pubkey: signedEvent.publicKey, kind: signedEvent.kind.id),
+                                        content: NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags).0,
+                                        contact: accountNrContact
+                                    ))
+                                }
+                            }
                             if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedEvent) {
                                 
                                 if let pr = response.pr {
@@ -263,6 +286,22 @@ class Zap {
                     if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {
                         Task { [weak self] in
                             guard let self else { return }
+                            if self.withPending, let aTag = self.aTag {
+                                DispatchQueue.main.async {
+                                    sendNotification(.receivedPendingZap, ChatPendingZap(
+                                        id: signedZapRequestNote.id,
+                                        pubkey: signedZapRequestNote.publicKey,
+                                        createdAt: Date(
+                                            timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)
+                                        ), 
+                                        aTag: aTag,
+                                        amount: self.amount,
+                                        nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: signedZapRequestNote.kind.id),
+                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags).0,
+                                        contact: accountNrContact
+                                    ))
+                                }
+                            }
                             if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedZapRequestNote) {
                                 
                                 if let pr = response.pr {

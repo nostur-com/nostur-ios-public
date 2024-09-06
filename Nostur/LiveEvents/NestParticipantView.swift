@@ -171,18 +171,21 @@ struct NestZapButton: View {
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
         let selectedAmount = amount ?? ss.defaultZapAmount
-        sendNotification(.lightningStrike, LightningStrike(location: strikeLocation, amount: selectedAmount))
-        withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
-            activeColor = .yellow
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            sendNotification(.lightningStrike, LightningStrike(location: strikeLocation, amount: selectedAmount))
+            SoundManager.shared.playThunderzap()
+            withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
+                activeColor = .yellow
+            }
         }
         let cancellationId = UUID() // We dont cancel on nests (because already have full sheet confirmation), but still cancellation id until we refactor api
         isZapped = true
-        SoundManager.shared.playThunderzap()
-        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrContact.pubkey, aTag: aTag, zapState: .initiated))
         
+        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrContact.pubkey, aTag: aTag, zapState: .initiated))
+
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), contact: contact, aTag: aTag, cancellationId: cancellationId, zapMessage: zapMessage)
+            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), contact: contact, aTag: aTag, cancellationId: cancellationId, zapMessage: zapMessage, withPending: true)
             NWCZapQueue.shared.sendZap(zap)
             Task { @MainActor in
                 self.isZapped = false
@@ -215,7 +218,7 @@ struct NestZapButton: View {
                                 nrContact.zapperPubkey = response.nostrPubkey!
                             }
                             // Old zap sheet
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
                             sendNotification(.showZapSheet, paymentInfo)
                             
                             //                            // Trigger custom zap
@@ -248,7 +251,7 @@ struct NestZapButton: View {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 nrContact.zapperPubkey = response.nostrPubkey!
                             }
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
                             sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }
