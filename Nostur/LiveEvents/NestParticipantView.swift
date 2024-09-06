@@ -44,9 +44,6 @@ struct NestParticipantView: View {
                             .offset(x: -15.0, y: 5)
                     }
                 }
-                .onTapGesture {
-                    navigateTo(nrContact)
-                }
             Text(nrContact.anyName).lineLimit(1)
             Text(role ?? "").font(.footnote)
                 .foregroundColor(.secondary)
