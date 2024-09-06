@@ -318,6 +318,7 @@
 		1F9A55242A3C7EE400F67627 /* View+roundedCorner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */; };
 		1F9A55262A3C7FD300F67627 /* DetailTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9A55252A3C7FD300F67627 /* DetailTab.swift */; };
 		1F9AE7552A4E8BAC009D093E /* NSecBunkerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9AE7542A4E8BAB009D093E /* NSecBunkerManager.swift */; };
+		1F9C85C22C7C88B300B45304 /* AccountQR.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9C85C12C7C88B300B45304 /* AccountQR.swift */; };
 		1F9DC3A82A28E35900119D73 /* NewFollowersNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */; };
 		1FA0599D2A7414320039643C /* RelayMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0599C2A7414320039643C /* RelayMessage.swift */; };
 		1FA0599F2A74D9690039643C /* LVM+pubkeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0599E2A74D9680039643C /* LVM+pubkeys.swift */; };
@@ -881,6 +882,7 @@
 		1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+roundedCorner.swift"; sourceTree = "<group>"; };
 		1F9A55252A3C7FD300F67627 /* DetailTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailTab.swift; sourceTree = "<group>"; };
 		1F9AE7542A4E8BAB009D093E /* NSecBunkerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSecBunkerManager.swift; sourceTree = "<group>"; };
+		1F9C85C12C7C88B300B45304 /* AccountQR.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountQR.swift; sourceTree = "<group>"; };
 		1F9D69D82A3077F400628460 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = SOURCE_ROOT; };
 		1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewFollowersNotificationView.swift; sourceTree = "<group>"; };
 		1FA0599C2A7414320039643C /* RelayMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayMessage.swift; sourceTree = "<group>"; };
@@ -1537,6 +1539,7 @@
 			children = (
 				1F4773A6296D4F5B0049454B /* AccountEditView.swift */,
 				1FC4D4072997E126004E88CD /* AccountManager.swift */,
+				1F9C85C12C7C88B300B45304 /* AccountQR.swift */,
 				1F14CC44299D432300131B8D /* AccountsSheet.swift */,
 				1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */,
 				1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */,
@@ -2900,6 +2903,7 @@
 				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
 				1F15F0A22AAF35B60004E706 /* BookmarkButton.swift in Sources */,
 				1FBE253C2A9DC4F800F60FCF /* NRButton.swift in Sources */,
+				1F9C85C22C7C88B300B45304 /* AccountQR.swift in Sources */,
 				1FE4D91D2A5442450064F649 /* SettingsDefaultZapAmount.swift in Sources */,
 				1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */,
 				1F49C80629B8D7EA005C960D /* NewQuoteRepost.swift in Sources */,
