@@ -181,6 +181,8 @@ class ChatRoomViewModel: ObservableObject {
                     self.state = .ready
                 }
                 
+                // TODO: check zapRequest.pubkey for blocks(), or maybe "P" (not "p")
+                
                 #if DEBUG
                 L.nests.debug("Chat message/zap received \(event.kind == .zapNote ? "ZAP" : "MESSAGE"): \(event.content)")
                 #endif

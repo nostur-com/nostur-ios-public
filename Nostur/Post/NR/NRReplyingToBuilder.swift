@@ -79,11 +79,30 @@ func contactUsername(fromPubkey pubkey: String, event: Event? = nil) -> String {
     
     if let event {
         if let context = event.managedObjectContext {
+#if DEBUG
+            L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey event.managedObjectContext")
+#endif
             if let contact = Contact.fetchByPubkey(pubkey, context: context) {
+#if DEBUG
+                L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey \(pubkey) - \(contact.anyName)")
+#endif
                 PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
                 return contact.anyName
             }
         }
     }
+    else if !Thread.isMainThread {
+#if DEBUG
+        L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey !Thread.isMainThread")
+#endif
+        if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
+            #if DEBUG
+            L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey \(pubkey) - \(contact.anyName)")
+            #endif
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+            return contact.anyName
+        }
+    }
+    
     return "..."
 }
