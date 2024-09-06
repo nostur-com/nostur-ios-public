@@ -183,6 +183,12 @@ class Importer {
                             alreadySavedSubs.insert(subscriptionId)
                         }
                         self.importedMessagesFromSubscriptionIds.send(alreadySavedSubs)
+                        
+                        if event.kind == .zapNote || event.kind == .chatMessage {
+                            DispatchQueue.main.async {
+                                sendNotification(.receivedMessage, message)
+                            }
+                        }
                         continue
                     }                    
                     
@@ -289,6 +295,10 @@ class Importer {
                         
                         if let zappedEventId = savedEvent.zappedEventId {
                             ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Zaps, eventId: zappedEventId))
+                        }
+                        
+                        DispatchQueue.main.async {
+                            sendNotification(.receivedMessage, message)
                         }
                     }
                     

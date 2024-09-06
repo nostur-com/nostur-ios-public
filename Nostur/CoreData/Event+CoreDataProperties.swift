@@ -945,6 +945,7 @@ extension Event {
                 }
                 if let firstA = event.firstA() {
                     savedEvent.zappedEventId = firstA
+                    savedEvent.otherAtag = firstA
                     
                     if let awaitingEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstA) {
                         savedEvent.zappedEvent = awaitingEvent // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts

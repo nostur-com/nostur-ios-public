@@ -25,7 +25,13 @@ class ChatRoomViewModel: ObservableObject {
     private lazy var subId: String = {
         guard let pubkey, let dTag else { return "-DB-CHAT-??" }
         let sha256data = SHA256.hash(data: "1311-\(pubkey)-\(dTag)".data(using: .utf8)!)
-        return String("-DB-CHAT-" + String(bytes: sha256data.bytes).prefix(40))
+        return String("-DB-CHAT-" + String(bytes: sha256data.bytes).prefix(32))
+    }()
+    
+    private lazy var realTimeSubId: String = {
+        guard let pubkey, let dTag else { return "-DB-1311-9735-??" }
+        let sha256data = SHA256.hash(data: "1311-\(pubkey)-\(dTag)".data(using: .utf8)!)
+        return String("-DB-1311-9735-" + String(bytes: sha256data.bytes).prefix(32))
     }()
     
     private var subscriptions = Set<AnyCancellable>()
@@ -59,8 +65,55 @@ class ChatRoomViewModel: ObservableObject {
         self.dTag = String(definition)
         self.listenForChats()
         self.listenForBlocks()
-        self.fetchChatHistory()
+        self.fetchFromDB { [weak self] in
+            self?.fetchChatHistory()
+        }
         self.updateLiveSubscription()
+    }
+    
+    private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
+        guard let aTag else { return }
+        let blockedPubkeys = blocks()
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind IN {1311,9735} AND otherAtag == %@ AND NOT pubkey IN %@", aTag, blockedPubkeys)
+        
+        let bgContext = bg()
+        bgContext.perform { [weak self]  in
+            guard let self else { return }
+            
+            guard let events = try? bgContext.fetch(fr) else { return }
+            
+            let rows: [ChatRowContent] = events.compactMap { event in
+                let row: ChatRowContent? = if event.kind == 9735, let nZapRequest = Event.extractZapRequest(tags: event.tags()) {
+                    ChatRowContent.chatConfirmedZap(
+                        ChatConfirmedZap(
+                            id: event.id,
+                            zapRequestId: nZapRequest.id,
+                            zapRequestPubkey: nZapRequest.publicKey,
+                            zapRequestCreatedAt: Date(
+                                timeIntervalSince1970: Double(nZapRequest.createdAt.timestamp)
+                            ),
+                            amount: Int64(event.naiveSats),
+                            nxEvent: NXEvent(pubkey: event.pubkey, kind: Int(event.kind)),
+                            content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags).0,
+                            contact: NRContact.fetch(nZapRequest.publicKey)
+                        )
+                    )
+                }
+                else if event.kind != 9735 {
+                    ChatRowContent.chatMessage(NRChatMessage(nEvent: event.toNEvent()))
+                }
+                else {
+                    nil
+                }
+                return row
+            }
+
+            DispatchQueue.main.async { [weak self] in
+                onComplete?()
+                self?.messages = rows
+            }
+        }
     }
     
     // Fetch past messages
@@ -83,17 +136,17 @@ class ChatRoomViewModel: ObservableObject {
     // Realtime for future messages
     public func updateLiveSubscription() {
         guard let aTag else { return }
-        
+
         if let cm = NostrEssentials
             .ClientMessage(type: .REQ,
-                           subscriptionId: subId,
+                           subscriptionId: realTimeSubId,
                            filters: [Filters(
                             kinds: [1311,9735],
                             tagFilter: TagFilter(tag: "a", values: [aTag]),
                             since: (Int(Date.now.timeIntervalSince1970) - 60)
                            )]
             ).json() {
-            req(cm, activeSubscriptionId: subId)
+            req(cm, activeSubscriptionId: realTimeSubId)
         }
     }
     
