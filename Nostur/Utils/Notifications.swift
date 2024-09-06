@@ -222,6 +222,10 @@ extension Notification.Name {
     
     static var receivedMessage: Notification.Name {
         return Notification.Name("receivedMessage")
+    }    
+    
+    static var receivedPendingZap: Notification.Name {
+        return Notification.Name("receivedPendingZap")
     }
     
     static var newMentions: Notification.Name {

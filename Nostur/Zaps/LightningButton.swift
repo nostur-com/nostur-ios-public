@@ -51,8 +51,9 @@ class PaymentInfo: Identifiable {
     var contact: Contact?
     var zapEtag: String?
     var zapAtag: String?
+    var withPending = false
     
-    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost: NRPost? = nil, contact: Contact? = nil, zapEtag: String? = nil, zapAtag: String? = nil) {
+    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost: NRPost? = nil, contact: Contact? = nil, zapEtag: String? = nil, zapAtag: String? = nil, withPending: Bool = false) {
         self.min = min
         self.max = max
         self.callback = callback
@@ -61,6 +62,7 @@ class PaymentInfo: Identifiable {
         self.contact = contact
         self.zapEtag = zapEtag
         self.zapAtag = zapAtag
+        self.withPending = withPending
     }
 }
 

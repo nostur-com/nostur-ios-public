@@ -50,6 +50,24 @@ struct PaymentAmountSelector: View {
                 if isNC {
                     NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedZapRequestNote in
                         Task {
+                            
+                            if paymentInfo.withPending, let aTag = paymentInfo.zapAtag {
+                                DispatchQueue.main.async {
+                                    sendNotification(.receivedPendingZap,
+                                                     ChatPendingZap(
+                                                        id: signedZapRequestNote.id,
+                                                        pubkey: signedZapRequestNote.publicKey,
+                                                        createdAt: Date(timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)),
+                                                        aTag: aTag,
+                                                        amount: Int64(amount),
+                                                        nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734),
+                                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags).0,
+                                                        contact: NRContact.fetch(signedZapRequestNote.publicKey)
+                                                     )
+                                    )
+                                }
+                            }
+                            
                             let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount: UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                             
                             if response.pr != nil {
@@ -75,6 +93,20 @@ struct PaymentAmountSelector: View {
                 }
                 else {
                     let signedZapRequestNote = try account.signEvent(zapRequestNote)
+                    
+                    if paymentInfo.withPending, let aTag = paymentInfo.zapAtag {
+                        DispatchQueue.main.async {
+                            sendNotification(.receivedPendingZap,
+                                             ChatPendingZap(
+                                                id: signedZapRequestNote.id,
+                                                pubkey: signedZapRequestNote.publicKey,
+                                                createdAt: Date(timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)), aTag: aTag,
+                                                amount: Int64(amount),
+                                                nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734), content: [],
+                                                contact: NRContact.fetch(signedZapRequestNote.publicKey)
+                                             ))
+                        }
+                    }
                     
                     Task {
                         let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount: UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
