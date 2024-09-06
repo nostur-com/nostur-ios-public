@@ -495,6 +495,11 @@ public class ConnectionPool: ObservableObject {
                         //                        managedClient.connect()
                     }
                     L.sockets.info("🔚🔚 CLOSE: \(message.message)")
+                    if let cmSubId = message.clientMessage.subscriptionId {
+                        self.queue.async(flags: .barrier) { [weak connection] in
+                            connection?.nreqSubscriptions.remove(cmSubId)
+                        }
+                    }
                     connection.sendMessage(message.message)
                 }
                 else if message.type == .EVENT {
