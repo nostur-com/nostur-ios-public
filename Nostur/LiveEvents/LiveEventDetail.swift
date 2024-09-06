@@ -170,7 +170,8 @@ struct LiveEventDetail: View {
                         .fixedSize()
                     }
                 }
-                .frame(height: liveEvent.onStage.count > 4 ? 200 : 100)
+//                .frame(height: liveEvent.onStage.count > 4 ? 200 : 100)
+                .frame(height: 100)
             }
         }
         
@@ -202,7 +203,8 @@ struct LiveEventDetail: View {
                         .fixedSize()
                     }
                 }
-                .frame(height: liveEvent.onStage.count > 4 ? 200 : 100)
+//                .frame(height: liveEvent.listeners.count > 4 ? 200 : 100)
+                .frame(height: 100)
             }
         }
     }
