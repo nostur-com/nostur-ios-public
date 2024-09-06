@@ -39,29 +39,35 @@ struct LiveEventDetail: View {
     @State private var zapCustomizerSheetInfo: ZapCustomizerSheetInfo? = nil
     @State private var showZapSheet = false
     
+    // TODO: Somehow get the width somewhere on parent views
+    @State private var vc: ViewingContext?
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
         ScrollView {
-            headerView
+            if let vc {
+                headerView
 
-            participantsView
-                .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
-                    let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
-                    guard zapCustomizerSheetInfo.zapAtag != nil else { return }
-                    self.showZapSheet = true
-                    self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
-                }
-        
-            videoStreamView
-                .background(themes.theme.background)
+                participantsView
+                    .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
+                        let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
+                        guard zapCustomizerSheetInfo.zapAtag != nil else { return }
+                        self.showZapSheet = true
+                        self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
+                    }
             
-            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
-                .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 350 : 250, maxHeight: .infinity)
-                .padding(.horizontal, 10)
-                .border(themes.theme.lineColor)
-                .padding(.top, -10)
+                videoStreamView
+                    .background(themes.theme.background)
+                
+                ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
+                    .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 350 : 250, maxHeight: .infinity)
+                    .padding(.horizontal, 10)
+                    .border(themes.theme.lineColor)
+                    .padding(.top, -10)
+                    .environmentObject(vc)
+            }
         }
         .safeAreaInset(edge: .bottom) {
             VStack {
@@ -72,6 +78,7 @@ struct LiveEventDetail: View {
             .background(themes.theme.background)
         }
         .onAppear {
+            vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
             liveEvent.fetchPresenceFromRelays()
             if liveEvent.liveKitConnectUrl == nil && !liveKitVoiceSession.listenAnonymously {
                 account = Nostur.account()
