@@ -100,16 +100,16 @@ class MessageParser {
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
                     // TODO: Make generic -OPEN-, instead of "Following-" and "List-" etc..
-                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(10)) != "Following-" && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(9)) != "-DB-CHAT-" {
+                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(10)) != "Following-" && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(9)) != "-DB-CHAT-" && String(subscriptionId.prefix(14)) != "-DB-1311-9735-" { 
                         // Send close message to this specific socket, not all.
                         #if DEBUG
-                        L.sockets.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId) -[LOG]-")
+                        L.sockets.debug("🔌🔌 \(relayUrl): EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId) -[LOG]-")
                         #endif
                         client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
                     }
                     else {
                         #if DEBUG
-                        L.sockets.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId) -[LOG]-")
+                        L.sockets.debug("🔌🔌 \(relayUrl): EOSE received. keeping OPEN. \(client.url) for \(subscriptionId) -[LOG]-")
                         #endif
                     }
                     if subscriptionId.prefix(4) == "-DB-" {
@@ -120,7 +120,7 @@ class MessageParser {
                         guard let nEvent = message.event else { L.sockets.info("🔴🔴 uhh, where is nEvent "); return }
                         
                         // If a sub is prefixed with "-DB-" never hit db.
-                        if let subscriptionId = message.subscriptionId, subscriptionId.prefix(4) == "-DB-" {
+                        if let subscriptionId = message.subscriptionId, subscriptionId.prefix(4) == "-DB-", nEvent.kind != .zapNote {
                             try handleNoDbMessage(message: message, nEvent: nEvent)
                             return
                         }
