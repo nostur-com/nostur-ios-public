@@ -226,124 +226,124 @@ struct ChatConfirmedZap {
     }
 }
 
-@available(iOS 18.0, *)
-#Preview("Pending zap") {
-    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, theme: Themes.default.theme, viewType: .row)
-    PreviewContainer({ pe in
-        
-    }) {
-        let pendingZap: ChatRowContent = .chatPendingZap(
-            ChatPendingZap(id: "id",
-                           pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                           createdAt: .now,
-                           aTag: "aTag",
-                           amount: 21000,
-                           nxEvent: NXEvent(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", kind: 9734),
-                           content: [
-                            .text(
-                                AttributedStringWithPs(
-                                    input: "Hello",
-                                    output: NSAttributedString(string: "Hello"),
-                                    pTags: []
-                                )
-                            )
-                           ]
-                          )
-        )
-        ChatRow(content: pendingZap)
-            .environmentObject(vc)
-            .environmentObject(Themes.default)
-    }
-}
-
-@available(iOS 18.0, *)
-#Preview("Confirmed zap") {
-    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, theme: Themes.default.theme, viewType: .row)
-    PreviewContainer({ pe in
-        
-    }) {
-        let confirmedZap: ChatRowContent = .chatConfirmedZap(
-            ChatConfirmedZap(id: "id",
-                             zapRequestId: "id",
-                             zapRequestPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", zapRequestCreatedAt: .now,
-                             amount: 210,
-                             nxEvent: NXEvent(
-                                pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                                kind: 9734
-                             ),
-                             content: [
-                                .text(
-                                    AttributedStringWithPs(
-                                        input: "Hello",
-                                        output: NSAttributedString(string: "Hello"),
-                                        pTags: []
-                                    )
-                                )
-                             ],
-                             contact: nil
-                          )
-        )
-        ChatRow(content: confirmedZap)
-            .environmentObject(vc)
-            .environmentObject(Themes.default)
-    }
-}
-
-
-@available(iOS 18.0, *)
-#Preview("Both zaps") {
-    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, theme: Themes.default.theme, viewType: .row)
-    PreviewContainer({ pe in
-        pe.loadContacts()
-    }) {
-        
-        VStack {
-            let pendingZap: ChatRowContent = .chatPendingZap(
-                ChatPendingZap(id: "id",
-                               pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                               createdAt: .now,
-                               aTag: "aTag",
-                               amount: 21000,
-                               nxEvent: NXEvent(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", kind: 9734),
-                               content: [
-                                .text(
-                                    AttributedStringWithPs(
-                                        input: "Hello",
-                                        output: NSAttributedString(string: "Hello"),
-                                        pTags: []
-                                    )
-                                ) 
-                               ]
-                              )
-            )
-            ChatRow(content: pendingZap)
-            
-            
-            let confirmedZap: ChatRowContent = .chatConfirmedZap(
-                ChatConfirmedZap(id: "id",
-                                 zapRequestId: "id",
-                                 zapRequestPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", zapRequestCreatedAt: .now,
-                                 amount: 210,
-                                 nxEvent: NXEvent(
-                                    pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                                    kind: 9734
-                                 ),
-                                 content: [
-                                    .text(
-                                        AttributedStringWithPs(
-                                            input: "Hello",
-                                            output: NSAttributedString(string: "Hello"),
-                                            pTags: []
-                                        )
-                                    )
-                                 ],
-                                 contact: nil
-                              )
-            )
-            ChatRow(content: confirmedZap)
-           
-        }
-        .environmentObject(vc)
-        .environmentObject(Themes.default)
-    }
-}
+//@available(iOS 18.0, *)
+//#Preview("Pending zap") {
+//    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, theme: Themes.default.theme, viewType: .row)
+//    PreviewContainer({ pe in
+//        
+//    }) {
+//        let pendingZap: ChatRowContent = .chatPendingZap(
+//            ChatPendingZap(id: "id",
+//                           pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
+//                           createdAt: .now,
+//                           aTag: "aTag",
+//                           amount: 21000,
+//                           nxEvent: NXEvent(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", kind: 9734),
+//                           content: [
+//                            .text(
+//                                AttributedStringWithPs(
+//                                    input: "Hello",
+//                                    output: NSAttributedString(string: "Hello"),
+//                                    pTags: []
+//                                )
+//                            )
+//                           ]
+//                          )
+//        )
+//        ChatRow(content: pendingZap)
+//            .environmentObject(vc)
+//            .environmentObject(Themes.default)
+//    }
+//}
+//
+//@available(iOS 18.0, *)
+//#Preview("Confirmed zap") {
+//    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, theme: Themes.default.theme, viewType: .row)
+//    PreviewContainer({ pe in
+//        
+//    }) {
+//        let confirmedZap: ChatRowContent = .chatConfirmedZap(
+//            ChatConfirmedZap(id: "id",
+//                             zapRequestId: "id",
+//                             zapRequestPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", zapRequestCreatedAt: .now,
+//                             amount: 210,
+//                             nxEvent: NXEvent(
+//                                pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
+//                                kind: 9734
+//                             ),
+//                             content: [
+//                                .text(
+//                                    AttributedStringWithPs(
+//                                        input: "Hello",
+//                                        output: NSAttributedString(string: "Hello"),
+//                                        pTags: []
+//                                    )
+//                                )
+//                             ],
+//                             contact: nil
+//                          )
+//        )
+//        ChatRow(content: confirmedZap)
+//            .environmentObject(vc)
+//            .environmentObject(Themes.default)
+//    }
+//}
+//
+//
+//@available(iOS 18.0, *)
+//#Preview("Both zaps") {
+//    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, theme: Themes.default.theme, viewType: .row)
+//    PreviewContainer({ pe in
+//        pe.loadContacts()
+//    }) {
+//        
+//        VStack {
+//            let pendingZap: ChatRowContent = .chatPendingZap(
+//                ChatPendingZap(id: "id",
+//                               pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
+//                               createdAt: .now,
+//                               aTag: "aTag",
+//                               amount: 21000,
+//                               nxEvent: NXEvent(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", kind: 9734),
+//                               content: [
+//                                .text(
+//                                    AttributedStringWithPs(
+//                                        input: "Hello",
+//                                        output: NSAttributedString(string: "Hello"),
+//                                        pTags: []
+//                                    )
+//                                ) 
+//                               ]
+//                              )
+//            )
+//            ChatRow(content: pendingZap)
+//            
+//            
+//            let confirmedZap: ChatRowContent = .chatConfirmedZap(
+//                ChatConfirmedZap(id: "id",
+//                                 zapRequestId: "id",
+//                                 zapRequestPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", zapRequestCreatedAt: .now,
+//                                 amount: 210,
+//                                 nxEvent: NXEvent(
+//                                    pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
+//                                    kind: 9734
+//                                 ),
+//                                 content: [
+//                                    .text(
+//                                        AttributedStringWithPs(
+//                                            input: "Hello",
+//                                            output: NSAttributedString(string: "Hello"),
+//                                            pTags: []
+//                                        )
+//                                    )
+//                                 ],
+//                                 contact: nil
+//                              )
+//            )
+//            ChatRow(content: confirmedZap)
+//           
+//        }
+//        .environmentObject(vc)
+//        .environmentObject(Themes.default)
+//    }
+//}
