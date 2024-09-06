@@ -52,13 +52,31 @@ struct ChatRoom: View {
                                         .listRowBackground(theme.background)
                                 }
                                 else {
-                                    ForEach(vm.messages) { nrChat in
-                                        ChatRow(nrChat: nrChat)
-#if DEBUG
-                                            .overlay(alignment: .topTrailing) {
-                                                Text(nrChat.nEvent.kind.id.description)
-                                            }
-#endif
+                                    ForEach(vm.messages) { rowContent in
+                                        ChatRow(content: rowContent)
+//                                            .debugDimensions("ChatRow")
+//                                            .frame(width: 650)
+//#if DEBUG
+////                                            .background(Color.red)
+//                                            .overlay {
+//                                                VStack {
+//                                                    Text(rowContent.nxEvent.kind.description)
+//                                                    Text(rowContent.nxEvent.pubkey)
+//                                                    Text(rowContent.id)
+//                                                }
+//                                                    .onTapGesture {
+//                                                        UIPasteboard.general.string = rowContent.id
+//                                                    }
+//                                            }
+//#endif
+//#if DEBUG
+//                                            .overlay(alignment: .topTrailing) {
+//                                                Text(nrChat.nEvent.kind.id.description)
+//                                                    .onTapGesture {
+//                                                        UIPasteboard.general.string = nrChat.nEvent.eventJson()
+//                                                    }
+//                                            }
+//#endif
                                             .padding(.vertical, 5)
                                             .scaleEffect(x: 1, y: -1, anchor: .center)
                                     }
@@ -207,7 +225,7 @@ struct ChatRoom: View {
             ###"["EVENT","moizen",{"kind":0,"id":"846806929813bdd05b4d9c9ecac10193106530c61e5c1f396162df3d69f2e8db","pubkey":"dbc828cc8b33efa73a60ce27bfcf6e039fd602af289f7deb717d766aed78a663","created_at":1718928825,"tags":[],"content":"{\"name\":\"moizen\",\"picture\":\"https://image.nostr.build/f3a2b54e3e335993cc4baf20e88e03b6006110955f6d97fb3f70dbec221e7765.jpg\",\"display_name\":\"⛩oizen\",\"about\":\"architect | pleb\\nplants, stones and pepes catalogs\",\"website\":\"https://moizen.xyz\",\"lud16\":\"moizen@getalby.com\",\"banner\":null,\"nip05\":\"moizen@moizen.xyz\",\"pubkey\":\"dbc828cc8b33efa73a60ce27bfcf6e039fd602af289f7deb717d766aed78a663\",\"displayName\":\"⛩oizen\"}","sig":"6a1f709a02987d9ce610af19c4283e856b975edd2078ff68f7f664a18928659157f266f77463c2a4da43635c41b2e1435134da50a95447e3b66d6a2093cc10a0"}]"###,
             ###"["EVENT","utxo",{"kind":0,"id":"885d11734015eb69c0ebbdef7d240780206c115049f8afac5a6321517a71c4e3","pubkey":"e2ccf7cf20403f3f2a4a55b328f0de3be38558a7d5f33632fdaaefc726c1c8eb","created_at":1721395552,"tags":[["alt","User profile for utxo"]],"content":"{\"name\":\"utxo\",\"about\":\"we are so back\",\"display_name\":\"utxo\",\"picture\":\"https://i.nostr.build/6G6wW.gif\",\"lud16\":\"utxo1@getalby.com\",\"nip05\":\"utxo.one\",\"website\":\"bitvora.com\",\"banner\":\"https://i.nostr.build/RdZq.gif\"}","sig":"1b6abe57ffe0f1ac943e233577784cf45af836d0214f69af875b6a4a7a1ceffa8ca6c318a9bc5056399a442486de3a90f1680a4d7679712ff434ab2154327adb"}]"###,
             ###"["EVENT","gary",{"kind":0,"id":"90537f59169ff6046e47c89633f81079d5e28cfd18ba3bec1870ca1f23c41412","pubkey":"d3d74124ddfb5bdc61b8f18d17c3335bbb4f8c71182a35ee27314a49a4eb7b1d","created_at":1720693551,"tags":[["alt","User profile for average_gary"]],"content":"{\"name\":\"average_gary\",\"about\":\"Chief Cryptologic Technician (Interpretive)\\n\\nBe peaceful, not harmless.\\n \\nhttps://virginiafreedom.tech\\n\\nhttps://shenandoahbitcoin.club\\n\\nhttps://bitcoinveterans.org\",\"picture\":\"https://i.nostr.build/EnQZl.gif\",\"nip05\":\"gary@ShenandoahBitcoin.Club\",\"banner\":\"https://i.nostr.build/lLRMv.jpg\",\"display_name\":\"average_gary\",\"lud16\":\"gary@minibits.cash\",\"website\":\"https://garykrause.dev\"}","sig":"5f04d1e156ab393ea1fc91ef28a7ed3d745184dbff1cc82c04c7c59855380382994e721e41aa0b6e0e80561ba473bc160e423078d23eb7c97c7902747566183e"}]"###, ###"["EVENT","gazoo",{"kind":0,"id":"ae8a162c06df3de4ee4375ca63ad761386e49c5e2da263ac397a15c8043a9583","pubkey":"f6adc1cad551b73f0391eaf7cf2b359690da9ad7d0cb0b77d2bed8c89fece65f","created_at":1713393504,"tags":[],"content":"{\"display_name\":\"The Great Gazoo\",\"about\":\"Spinning records sometimes\",\"picture\":\"https://cdn.nostr.build/i/2f1e31ec624c3d376de1eafe75652b9477017abd4bfe71e947751eaa543c31a0.jpg\",\"name\":\"The great gazoo\",\"lud06\":\"\",\"banner\":\"https://void.cat/d/DpM8y2zhNjG3NghPyHrqct.webp\",\"lud16\":\"greatgazoo@getalby.com\",\"website\":\"\",\"nip05\":\"thegreatgazoo@snort.social\"}","sig":"ac65ac1489fb28540ff2cfaa15890707e021dcddb7f73618a76db7d72c9de0da4df6f3444d1c885e32a62569f1560c8adf390cf1c16f98d02c3ba14c84f83aed"}]"###,
-                ###"["EVENT", "zap", {"kind":9735,"id":"6e2355b90db4b72b82a3314206c3b5af8e16aeba02426a7b8ea01131448ab475","pubkey":"79f00d3f5a19ec806189fcab03c1be4ff81d18ee4f653c88fac41fe03570f432","created_at":1724856954,"tags":[["p","55f04590674f3648f4cdc9dc8ce32da2a282074cd0b020596ee033d12d385185"],["a","30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83"],["P","a24d0c86708fdda3300907a1f08a65468468653546d797dd425e2d46ec0f47ce"],["bolt11","lnbc4200n1pnv7wnhpp53jqrq9z3nmu7gmk0fhqhszm6jt38pj5kxfk87urm2vptnjjjd6rqhp526uk3g6z3mdc5rkfflzwrhxwa0747n6npnl5yemjtk7sjhk4f6aqcqzzsxqyz5vqsp5m8dwt2zm9uex03k95qg8d62mlwccphagvjqz52ktvfpfxhxxd3kq9qxpqysgqnygjh9fhhhrfk45h5qk9j6c0ctupfec7s7xu4w3m6xmv3nx9nxuk8m97ave8nymq4e7c730p233wlpses0n36ycnltts6ajgnlusakgqe8cu3f"],["preimage","55360488f925760dfb35907b52a2525c134192fae59438483069631978ee3ee1"],["description","{\"id\":\"98d517bfbb536ae38de5b6688bfab09efe3d7eea3a9277a47730a20f597fea7f\",\"pubkey\":\"a24d0c86708fdda3300907a1f08a65468468653546d797dd425e2d46ec0f47ce\",\"content\":\"\",\"kind\":9734,\"created_at\":1724856950,\"tags\":[[\"a\",\"30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:6fe1889f-0d3e-454a-bc0c-cb6a7cd1ea8e\"],[\"amount\",\"420000\"],[\"p\",\"55f04590674f3648f4cdc9dc8ce32da2a282074cd0b020596ee033d12d385185\"],[\"relays\",\"wss://relay.snort.social\",\"wss://nos.lol\",\"wss://relay.damus.io\",\"wss://nostr.wine\"]],\"sig\":\"193321c7e8fefdca8101425daa921961257bda099205a5215bc02b580f77aa2f49c33fbf3d189bbae882e6835f04ae549b4c44ecb6beab96ab8cf85dfec613b8\"}"]],"content":"","sig":"614f65a964a05a1c0e7804c51fa341383da9afba6a723efcaf2114d565d52e6a4910286d6dcced2836caa48a1c999d4b0ef6bf77681b6bb598ad4c54a31a0bf0"}]"###
+                ###"["EVENT", "-DB-zap", {"kind":9735,"id":"6e2355b90db4b72b82a3314206c3b5af8e16aeba02426a7b8ea01131448ab475","pubkey":"79f00d3f5a19ec806189fcab03c1be4ff81d18ee4f653c88fac41fe03570f432","created_at":1724856954,"tags":[["p","55f04590674f3648f4cdc9dc8ce32da2a282074cd0b020596ee033d12d385185"],["a","30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83"],["P","a24d0c86708fdda3300907a1f08a65468468653546d797dd425e2d46ec0f47ce"],["bolt11","lnbc4200n1pnv7wnhpp53jqrq9z3nmu7gmk0fhqhszm6jt38pj5kxfk87urm2vptnjjjd6rqhp526uk3g6z3mdc5rkfflzwrhxwa0747n6npnl5yemjtk7sjhk4f6aqcqzzsxqyz5vqsp5m8dwt2zm9uex03k95qg8d62mlwccphagvjqz52ktvfpfxhxxd3kq9qxpqysgqnygjh9fhhhrfk45h5qk9j6c0ctupfec7s7xu4w3m6xmv3nx9nxuk8m97ave8nymq4e7c730p233wlpses0n36ycnltts6ajgnlusakgqe8cu3f"],["preimage","55360488f925760dfb35907b52a2525c134192fae59438483069631978ee3ee1"],["description","{\"id\":\"98d517bfbb536ae38de5b6688bfab09efe3d7eea3a9277a47730a20f597fea7f\",\"pubkey\":\"a24d0c86708fdda3300907a1f08a65468468653546d797dd425e2d46ec0f47ce\",\"content\":\"\",\"kind\":9734,\"created_at\":1724856950,\"tags\":[[\"a\",\"30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:6fe1889f-0d3e-454a-bc0c-cb6a7cd1ea8e\"],[\"amount\",\"420000\"],[\"p\",\"55f04590674f3648f4cdc9dc8ce32da2a282074cd0b020596ee033d12d385185\"],[\"relays\",\"wss://relay.snort.social\",\"wss://nos.lol\",\"wss://relay.damus.io\",\"wss://nostr.wine\"]],\"sig\":\"193321c7e8fefdca8101425daa921961257bda099205a5215bc02b580f77aa2f49c33fbf3d189bbae882e6835f04ae549b4c44ecb6beab96ab8cf85dfec613b8\"}"]],"content":"","sig":"614f65a964a05a1c0e7804c51fa341383da9afba6a723efcaf2114d565d52e6a4910286d6dcced2836caa48a1c999d4b0ef6bf77681b6bb598ad4c54a31a0bf0"}]"###
         ])
 //        pe.loadContacts()
         pe.loadChats()
@@ -220,7 +238,7 @@ struct ChatRoom: View {
 }
 
 
-struct ChatRow: View {
+struct ChatMessageRow: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject public var nrChat: NRChatMessage
@@ -228,54 +246,61 @@ struct ChatRow: View {
     
     var body: some View {
         switch nrChat.nEvent.kind {
-        case .zapNote:
-            if let zapFromAttributes = nrChat.zapFromAttributes {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack {
-                        HStack {
-                            Image(systemName: "bolt.fill").foregroundColor(.yellow)
-                                .onTapGesture {
-                                    UIPasteboard.general.string = "zapFrom:\n\(zapFromAttributes.nEvent.eventJson())\n\nzap:\n\(nrChat.nEvent.eventJson())"
-                                }
-                            Text((nrChat.sats?.satsFormatted ?? "") + " sats")
-                                .fontWeightBold()
-                        }
-                        .padding(.vertical, 5)
-                        .padding(.horizontal, 10)
-                        .foregroundColor(Color.white)
-                        .background {
-                            themes.theme.accent
-                                .clipShape(Capsule())
-                        }
-                        MiniPFP(pictureUrl: zapFromAttributes.contact?.pictureUrl)
-                            .onTapGesture {
-                                if let nrContact = zapFromAttributes.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: zapFromAttributes.pubkey))
-                                }
-                            }
-                        Text(zapFromAttributes.anyName ?? "...")
-                            .onTapGesture {
-                                if let nrContact = zapFromAttributes.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: zapFromAttributes.pubkey))
-                                }
-                            }
-                        Ago(zapFromAttributes.created_at)
-                            .foregroundColor(themes.theme.secondary)
-                    }
-                    .foregroundColor(themes.theme.accent)
-                    ChatRenderer(nrChat: nrChat, availableWidth: dim.listWidth - 10, forceAutoload: false, theme: themes.theme, didStart: $didStart)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .frame(maxHeight: 450, alignment: .top)
-                        .padding(.leading, 10)
-                    
-                }
-            }
+//        case .zapNote:
+//            if let zapFromAttributes = nrChat.zapFromAttributes {
+//                VStack(alignment: .leading, spacing: 0) {
+//                    HStack {
+//                        HStack {
+//                            Image(systemName: "bolt.fill").foregroundColor(.yellow)
+//                                .onTapGesture {
+//                                    UIPasteboard.general.string = "zapFrom:\n\(zapFromAttributes.nEvent.eventJson())\n\nzap:\n\(nrChat.nEvent.eventJson())"
+//                                }
+//                            Text((nrChat.sats?.satsFormatted ?? "") + " sats")
+//                                .fontWeightBold()
+//                        }
+//                        .padding(.vertical, 5)
+//                        .padding(.horizontal, 10)
+//                        .foregroundColor(Color.white)
+//                        .background {
+//                            themes.theme.accent
+//                                .clipShape(Capsule())
+//                        }
+//                        MiniPFP(pictureUrl: zapFromAttributes.contact?.pictureUrl)
+//                            .onTapGesture {
+//                                if let nrContact = zapFromAttributes.contact {
+//                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+//                                }
+//                                else {
+//                                    navigateTo(ContactPath(key: zapFromAttributes.pubkey))
+//                                }
+//                            }
+//                        Text(zapFromAttributes.anyName ?? "...")
+//                            .onTapGesture {
+//                                if let nrContact = zapFromAttributes.contact {
+//                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+//                                }
+//                                else {
+//                                    navigateTo(ContactPath(key: zapFromAttributes.pubkey))
+//                                }
+//                            }
+//                        Ago(zapFromAttributes.created_at)
+//                            .foregroundColor(themes.theme.secondary)
+//                    }
+//                    .foregroundColor(themes.theme.accent)
+//                    ChatRenderer(nrChat: nrChat, availableWidth: dim.listWidth - 10, forceAutoload: false, theme: themes.theme, didStart: $didStart)
+//                        .frame(maxWidth: .infinity, alignment: .leading)
+//                        .frame(maxHeight: 450, alignment: .top)
+//                        .padding(.leading, 10)
+//                    
+//                }
+//                .onAppear {
+//                    if !zapFromAttributes.missingPs.isEmpty {
+//                        bg().perform {
+//                            QueuedFetcher.shared.enqueue(pTags: zapFromAttributes.missingPs)
+//                        }
+//                    }
+//                }
+//            }
         default:
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
@@ -304,6 +329,14 @@ struct ChatRow: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(maxHeight: 450, alignment: .top)
                 
+//                Text("dim.listWidth: \(dim.listWidth.description)")
+            }
+            .onAppear {
+                if !nrChat.missingPs.isEmpty {
+                    bg().perform {
+                        QueuedFetcher.shared.enqueue(pTags: nrChat.missingPs)
+                    }
+                }
             }
         }
     }
