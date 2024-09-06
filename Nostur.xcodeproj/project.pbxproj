@@ -145,6 +145,7 @@
 		1F46A7302C5B96A000511A79 /* NXColumnViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F46A72F2C5B96A000511A79 /* NXColumnViewModel.swift */; };
 		1F46A7322C5BFA4500511A79 /* NXUnreadCounterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F46A7312C5BFA4500511A79 /* NXUnreadCounterView.swift */; };
 		1F46A7342C5C38B200511A79 /* NXPostsFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F46A7332C5C38B200511A79 /* NXPostsFeed.swift */; };
+		1F46EC062C83CD4100BB7440 /* ChatRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F46EC052C83CBCA00BB7440 /* ChatRow.swift */; };
 		1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A6296D4F5B0049454B /* AccountEditView.swift */; };
 		1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */; };
 		1F48441F2ACBDF4D00EA6FC1 /* MusicOrVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F48441E2ACBDF4D00EA6FC1 /* MusicOrVideo.swift */; };
@@ -711,6 +712,7 @@
 		1F46A72F2C5B96A000511A79 /* NXColumnViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NXColumnViewModel.swift; sourceTree = "<group>"; };
 		1F46A7312C5BFA4500511A79 /* NXUnreadCounterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NXUnreadCounterView.swift; sourceTree = "<group>"; };
 		1F46A7332C5C38B200511A79 /* NXPostsFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NXPostsFeed.swift; sourceTree = "<group>"; };
+		1F46EC052C83CBCA00BB7440 /* ChatRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatRow.swift; sourceTree = "<group>"; };
 		1F4773A6296D4F5B0049454B /* AccountEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountEditView.swift; sourceTree = "<group>"; };
 		1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsZaps.swift; sourceTree = "<group>"; };
 		1F48441E2ACBDF4D00EA6FC1 /* MusicOrVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicOrVideo.swift; sourceTree = "<group>"; };
@@ -817,6 +819,7 @@
 		1F7E38ED2A2DDE7300ABAA85 /* AnySigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnySigner.swift; sourceTree = "<group>"; };
 		1F7E40E829BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrivateNote+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F7E40E929BD9AD6003F9F71 /* PrivateNote+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrivateNote+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1F7E7F632C884B54004DE888 /* NosturCloud 8.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 8.xcdatamodel"; sourceTree = "<group>"; };
 		1F80EF682A0B680C00FF8F3B /* NewOnboardingTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewOnboardingTracker.swift; sourceTree = "<group>"; };
 		1F80EF6A2A0B77DE00FF8F3B /* GuestAccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestAccountManager.swift; sourceTree = "<group>"; };
 		1F810B2D29E65639006B1614 /* TermsAndConditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermsAndConditions.swift; sourceTree = "<group>"; };
@@ -1555,6 +1558,7 @@
 				1F48C6952C4AB921007BAE00 /* ChatRenderer.swift */,
 				1F48C68F2C49C771007BAE00 /* ChatRoom.swift */,
 				1F48C6912C49C77D007BAE00 /* ChatRoomViewModel.swift */,
+				1F46EC052C83CBCA00BB7440 /* ChatRow.swift */,
 				1F48C6932C49D1CA007BAE00 /* NRChatMessage.swift */,
 			);
 			path = Chat;
@@ -2766,6 +2770,7 @@
 				1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */,
 				1F6629142B0D49BD00508988 /* RelayData.swift in Sources */,
 				1F88EE8E2AD12CFA006A83C3 /* MentionChoices.swift in Sources */,
+				1F46EC062C83CD4100BB7440 /* ChatRow.swift in Sources */,
 				1F39756F2AB622C1004F9D77 /* MultiFollowSheet.swift in Sources */,
 				1FCFDDD229FCEA91005320B8 /* HighlightComposer.swift in Sources */,
 				1FC85CA92B0C23CF00789615 /* CloudRelay+CoreDataClass.swift in Sources */,
@@ -3478,6 +3483,7 @@
 		1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				1F7E7F632C884B54004DE888 /* NosturCloud 8.xcdatamodel */,
 				1FB7FF812C5FCC0C00EAAD07 /* NosturCloud 7.xcdatamodel */,
 				1F7B0B3C2BE40A9B00182FB3 /* NosturCloud 6.xcdatamodel */,
 				1F44A1F12BDD1EEF00C1D3DB /* NosturCloud 5.xcdatamodel */,
@@ -3486,7 +3492,7 @@
 				1F37C8392B8B71F700B0B78B /* NosturCloud 2.xcdatamodel */,
 				1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */,
 			);
-			currentVersion = 1FB7FF812C5FCC0C00EAAD07 /* NosturCloud 7.xcdatamodel */;
+			currentVersion = 1F7E7F632C884B54004DE888 /* NosturCloud 8.xcdatamodel */;
 			path = NosturCloud.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

@@ -321,3 +321,18 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     @Published public var volume: CGFloat = 0.0
     @Published public var isMuted: Bool = true
 }
+
+
+extension NRContact {
+    static func fetch(_ pubkey: String) -> NRContact? {
+        if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
+            return cachedNRContact
+        }
+        else if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
+            let nrContact = NRContact(contact: contact)
+            NRContactCache.shared.setObject(for: pubkey, value: nrContact)
+            return nrContact
+        }
+        return nil
+    }
+}

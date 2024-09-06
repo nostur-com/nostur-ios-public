@@ -10,7 +10,6 @@ import Foundation
 extension Double {
     var clean: String {
         String(format: "%.0f", self)
-//       return self.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", self) : String(self)
     }
     
     var satsFormatted: String {
@@ -79,4 +78,6 @@ extension Int64 {
             return String(format: "%.1fT", Double(self) / Double(trillion))
         }
     }
+    
+    var satsFormatted: String { formatNumber }
 }
