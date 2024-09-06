@@ -290,7 +290,7 @@ class LiveEventsModel: ObservableObject {
                         }
                     }
                 }
-                else { // insert new live event
+                else if !self.dismissedLiveEvents.contains(aTag) { // insert new live event
                     let nrLiveEvent = NRLiveEvent(event: event)
                     
                     DispatchQueue.main.async {
