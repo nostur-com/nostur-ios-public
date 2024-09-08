@@ -475,7 +475,7 @@ extension Event {
                 return nil
             }
         
-        if let author {
+        if let author, !participantsOrSpeakers.contains(where: { $0.pubkey == author.pubkey }) {
             participantsOrSpeakers.append(author)
         }
         
