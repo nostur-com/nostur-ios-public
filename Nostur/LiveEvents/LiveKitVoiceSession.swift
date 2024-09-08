@@ -225,8 +225,11 @@ class LiveKitVoiceSession: ObservableObject {
                     }
 
                     DispatchQueue.main.async {
-                        self.nrLiveEvent?.objectWillChange.send()
-                        self.nrLiveEvent?.participantsOrSpeakers.append(nrContact)
+                        guard let nrLiveEvent = self.nrLiveEvent else { return }
+                        nrLiveEvent.objectWillChange.send()
+                        if !nrLiveEvent.participantsOrSpeakers.contains(where: { $0.pubkey == nrContact.pubkey } ) {
+                            nrLiveEvent.participantsOrSpeakers.append(nrContact)
+                        }
                     }
                 }
                 else {
@@ -251,8 +254,11 @@ class LiveKitVoiceSession: ObservableObject {
                         false
                     }
                     DispatchQueue.main.async {
-                        self.nrLiveEvent?.objectWillChange.send()
-                        self.nrLiveEvent?.participantsOrSpeakers.append(nrContact)
+                        guard let nrLiveEvent = self.nrLiveEvent else { return }
+                        nrLiveEvent.objectWillChange.send()
+                        if !nrLiveEvent.participantsOrSpeakers.contains(where: { $0.pubkey == nrContact.pubkey } ) {
+                            nrLiveEvent.participantsOrSpeakers.append(nrContact)
+                        }
                     }
                     bgSave()
                 }
