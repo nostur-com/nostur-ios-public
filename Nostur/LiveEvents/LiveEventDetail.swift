@@ -80,7 +80,7 @@ struct LiveEventDetail: View {
         .onAppear {
             vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
             liveEvent.fetchPresenceFromRelays()
-            if liveEvent.liveKitConnectUrl == nil && !liveKitVoiceSession.listenAnonymously {
+            if liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
                 account = Nostur.account()
             }
         }
