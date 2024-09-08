@@ -144,6 +144,15 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     }
     
     func role(forPubkey pubkey: String) -> String? {
+        if self.pubkey == pubkey {
+            return "Host"
+        }
+        if admins.contains(pubkey) {
+            return "Moderator"
+        }
+        if onStage.contains(where: { $0.pubkey == pubkey }) {
+            return "Speaker"
+        }
         return fastPs.first(where: { $0.1 == pubkey })?.3?.capitalized
     }
     
@@ -282,6 +291,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     
     @Published public var raisedHands: Set<String> = [] // Not used in views? can be private and not @Published?
     @Published public var pubkeysOnStage: Set<String> = []
+    @Published public var admins: Set<String> = []
     @Published public var mutedPubkeys: Set<String> = []
     @Published public var othersPresent: Set<String> = []
     

@@ -275,6 +275,7 @@ extension LiveKitVoiceSession: RoomDelegate {
         L.nests.debug("roomDidConnect: participantCount: \(room.participantCount.description)")
         
         self.syncParticipants()
+        self.syncRoomMetadata(metadata: room.metadata)
         
         Task { @MainActor in
             self.isRecording = room.isRecording
@@ -496,7 +497,24 @@ extension LiveKitVoiceSession: RoomDelegate {
             }
         }
     }
+    
+    /// ``Room/metadata`` has updated.
+    func room(_ room: Room, didUpdateMetadata metadata: String?) {
+        L.nests.debug("room: didUpdateMetadata: metadata \(metadata ?? "")")
+        self.syncRoomMetadata(metadata: metadata)
+    }
 
+    private func syncRoomMetadata(metadata: String?) {
+        guard let metadataString = metadata else { return }
+        let decoder = JSONDecoder()
+        guard let dataFromString = metadataString.data(using: .utf8, allowLossyConversion: false), let lkMetadata = try? decoder.decode(LiveKitRoomMetaData.self, from: dataFromString) else {
+            return
+        }
+        Task { @MainActor in
+            nrLiveEvent?.admins = Set(lkMetadata.admins)
+            isRecording = lkMetadata.recording
+        }
+    }
 }
 
 enum LiveKitVoiceSessionState {
@@ -509,4 +527,12 @@ enum LiveKitVoiceSessionState {
 enum NestAccountType {
     case account(CloudAccount)
     case anonymous(NKeys)
+}
+
+struct LiveKitRoomMetaData: Decodable {
+    var host: String?
+    let speakers: [String]
+    let admins: [String]
+    var link: String?
+    let recording: Bool
 }
