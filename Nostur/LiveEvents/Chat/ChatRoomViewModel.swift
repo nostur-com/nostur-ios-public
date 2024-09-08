@@ -163,7 +163,7 @@ class ChatRoomViewModel: ObservableObject {
                 guard let self = self else { return }
                 let message = notification.object as! RelayMessage
                 
-                if (state == .initializing || state == .loading) && message.type == .EOSE, let subscriptionId = message.subscriptionId, subscriptionId == subId {
+                if (state == .initializing || state == .loading) && message.type == .EOSE, let subscriptionId = message.subscriptionId, (subscriptionId == subId || subscriptionId == realTimeSubId) {
                     DispatchQueue.main.async { [weak self] in
                         guard let self = self else { return }
                         self.objectWillChange.send()
