@@ -100,6 +100,7 @@ class LiveKitVoiceSession: ObservableObject {
         
         switch accountType {
         case .account(let cloudAccount):
+            nrLiveEvent?.participantsOrSpeakers.first(where: { $0.pubkey == cloudAccount.publicKey })?.raisedHand = raisedHand
             presenceEvent.publicKey = cloudAccount.publicKey
             
             if cloudAccount.isNC {
@@ -115,6 +116,7 @@ class LiveKitVoiceSession: ObservableObject {
             
         case .anonymous(let nKeys):
             presenceEvent.publicKey = nKeys.publicKeyHex()
+            nrLiveEvent?.participantsOrSpeakers.first(where: { $0.pubkey == presenceEvent.publicKey })?.raisedHand = raisedHand
             guard let signedPresenceEvent = try? presenceEvent.sign(nKeys) else { return }
             Unpublisher.shared.publishNow(signedPresenceEvent, skipDB: true)
 
