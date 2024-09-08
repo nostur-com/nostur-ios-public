@@ -59,6 +59,7 @@ class LiveKitVoiceSession: ObservableObject {
         try? AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: .duckOthers)
         self.nrLiveEvent = nrLiveEvent
         self.accountType = accountType
+        self.isRecording = false
         
         Task {
            do {
@@ -79,6 +80,7 @@ class LiveKitVoiceSession: ObservableObject {
         self.state = .disconnected
         self.nrLiveEvent = nil
         self.accountType = nil
+        self.isRecording = false
         Task {
             await room.disconnect()
        }
@@ -142,7 +144,7 @@ class LiveKitVoiceSession: ObservableObject {
 
     @Published public var isMuted: Bool = true {
         didSet {
-            Task {
+            Task { @MainActor in
                 guard room.connectionState == .connected else { return }
                 do {
                     try await room.localParticipant.setMicrophone(enabled: !isMuted)
@@ -476,6 +478,7 @@ extension LiveKitVoiceSession: RoomDelegate {
         L.nests.debug("didFailToConnectWithError: error \(error?.localizedDescription ?? "")")
         Task { @MainActor in
             self.state = .error(error?.localizedDescription ?? "Error")
+            self.isRecording = room.isRecording
         }
     }
     
