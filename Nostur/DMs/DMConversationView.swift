@@ -164,6 +164,10 @@ struct DMConversationView: View {
                                             NostrAddress(nip05: nip05)
                                         }
                                     }
+                                    
+                                    CopyableTextView(text: contact.npub)
+                                        .lineLimit(1)
+                                    
                                     if (contact.followsYou()) {
                                         Text("Follows you", comment: "Label that shows if someone is following you").font(.system(size: 12))
                                             .foregroundColor(.white)
