@@ -18,6 +18,7 @@ struct CopyableTextView: View {
             Image(systemName: tapped1 ? "doc.on.doc.fill" : "doc.on.doc")
                 .font(.footnote)
         }
+        .opacity(text == "" ? 0.0 : 1.0)
         .contentShape(Rectangle())
         .onTapGesture {
             UIPasteboard.general.string = text
