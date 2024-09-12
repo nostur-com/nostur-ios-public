@@ -44,6 +44,7 @@ struct ReplyingToEditable: View {
             NBNavigationStack {
                 ContactsToggleSheet(requiredP: requiredP, available: available, selected: $selected, unselected: $unselected)
                     .presentationDetentsMedium()
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
         }

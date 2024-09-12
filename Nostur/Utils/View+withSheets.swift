@@ -237,8 +237,8 @@ private struct WithSheets: ViewModifier {
                             ComposePostCompat(replyTo: eventNotification.event, onDismiss: { self.replyToEvent = nil })
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
+                                .environmentObject(themes)
                         }
-                        .environmentObject(themes)
                     }
                     else {
                         ComposePostCompat(replyTo: eventNotification.event, onDismiss: { self.replyToEvent = nil })
