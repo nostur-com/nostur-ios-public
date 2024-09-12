@@ -81,10 +81,10 @@ class NXGapFiller {
                         self.currentGap = 0
                     }
                 },
-                timeoutCommand: { subId in
+                timeoutCommand: { [weak self] subId in
                     L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") timeout in fetchGap \(subId)")
                     Task { @MainActor in
-                        self.columnVM?.loadLocal(config)
+                        self?.columnVM?.loadLocal(config)
                     }
                 })
 

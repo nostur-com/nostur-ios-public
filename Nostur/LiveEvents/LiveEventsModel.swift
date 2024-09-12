@@ -118,15 +118,13 @@ class LiveEventsModel: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
-                guard let self else { return }
-                self.fetchFromDB(onComplete)
+                self?.fetchFromDB(onComplete)
 #if DEBUG
                 L.og.debug("LIVE feed: ready to process relay response")
 #endif
             },
             timeoutCommand: { [weak self] taskId in
-                guard let self else { return }
-                self.fetchFromDB(onComplete)
+                self?.fetchFromDB(onComplete)
 #if DEBUG
                 L.og.debug("LIVE feed: timeout")
 #endif
@@ -160,15 +158,13 @@ class LiveEventsModel: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
-                guard let self else { return }
-                self.fetchFromDB(onComplete)
+                self?.fetchFromDB(onComplete)
 #if DEBUG
                 L.og.debug("LIVE feed: ready to process relay response")
 #endif
             },
             timeoutCommand: { [weak self] taskId in
-                guard let self else { return }
-                self.fetchFromDB(onComplete)
+                self?.fetchFromDB(onComplete)
 #if DEBUG
                 L.og.debug("LIVE feed: timeout")
 #endif

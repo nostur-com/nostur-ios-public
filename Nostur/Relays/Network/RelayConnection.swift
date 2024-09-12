@@ -148,10 +148,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         if isOutbox && !vpnGuardOK() { // TODO: Maybe need a small delay so VPN has time to connect first?
             L.sockets.debug("📡📡 No VPN: Connection cancelled (\(self.relayData.url)"); return
         }
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
             let anyConnected = ConnectionPool.shared.anyConnected
             
-            self.queue.async(flags: .barrier) { [weak self] in
+            self?.queue.async(flags: .barrier) { [weak self] in
                 guard let self = self else { return }
                 guard self.isDeviceConnected else {
                     L.sockets.debug("\(self.url) - No internet, skipping connect()")
@@ -336,8 +336,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 //                        self.skipped = 0
                         self.lastMessageReceivedAt = nil
                         self.isSocketConnected = false
-                        Task { @MainActor in
-                            self.isConnected = false
+                        Task { @MainActor [weak self] in
+                            self?.isConnected = false
                         }
                     }
 #if DEBUG
@@ -357,8 +357,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         L.sockets.debug("🔴🔴 urlSession.didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
 #endif
         if let error {
-            DispatchQueue.main.async {
-                self.didReceiveError(error)
+            DispatchQueue.main.async { [weak self] in
+                self?.didReceiveError(error)
             }
         }
     }
@@ -379,8 +379,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         
         // TODO: Should we handle different from didBecomeInvalidWithError or not???
         if let error {
-            DispatchQueue.main.async {
-                self.didReceiveError(error)
+            DispatchQueue.main.async { [weak self] in
+                self?.didReceiveError(error)
             }
         }
     }
@@ -427,9 +427,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public func didReceiveError(_ error: Error) {
         // Respond to a WebSocket error event
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
             let anyConnected = ConnectionPool.shared.anyConnected
-            self.queue.async(flags: .barrier) { [weak self] in
+            self?.queue.async(flags: .barrier) { [weak self] in
                 self?.webSocketTask?.cancel()
                 self?.session?.invalidateAndCancel()
                 self?.nreqSubscriptions = []
@@ -629,8 +629,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public func sendAuthResponse() {
         guard self.relayData.auth else { return }
         
-        DispatchQueue.main.async {
-            guard let account = Nostur.account(), account.isFullAccount else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let account = Nostur.account(), account.isFullAccount else { return }
             guard !self.relayData.excludedPubkeys.contains(account.publicKey) else { return }
             
             self.queue.async { [weak self] in
@@ -645,8 +645,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 authResponse.tags.append(NostrTag(["relay", relayData.url]))
                 authResponse.tags.append(NostrTag(["challenge", challenge]))
 
-                DispatchQueue.main.async {
-                    guard let signedAuthResponse = try? account.signEvent(authResponse) else { return }
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, let signedAuthResponse = try? account.signEvent(authResponse) else { return }
                     self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
                     
                     self.queue.async(flags: .barrier) { [weak self] in
