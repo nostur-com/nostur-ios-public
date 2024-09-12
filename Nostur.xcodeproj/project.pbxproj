@@ -249,6 +249,8 @@
 		1F7C4CAF2AB1DDD400145D83 /* Repost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C4CAE2AB1DDD400145D83 /* Repost.swift */; };
 		1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */; };
 		1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65BE29A14BA3009FF3EA /* Zaps.swift */; };
+		1F7C8AEA2C9302AF00B13BB7 /* CopyableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C8AE92C9302AF00B13BB7 /* CopyableTextView.swift */; };
+		1F7C8AEC2C93364000B13BB7 /* LiveEventPFP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C8AEB2C93364000B13BB7 /* LiveEventPFP.swift */; };
 		1F7D47A32B3670B90071476A /* GalleryFullScreenSwiper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7D47A22B3670B90071476A /* GalleryFullScreenSwiper.swift */; };
 		1F7E19352C2DFEDC00034B06 /* NosturClientMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E19342C2DFEDC00034B06 /* NosturClientMessage.swift */; };
 		1F7E38EC2A2D9AED00ABAA85 /* DIMENSIONS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E38EB2A2D9AED00ABAA85 /* DIMENSIONS.swift */; };
@@ -809,6 +811,8 @@
 		1F7C4CAE2AB1DDD400145D83 /* Repost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repost.swift; sourceTree = "<group>"; };
 		1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadOnlyAccountInformationSheet.swift; sourceTree = "<group>"; };
 		1F7C65BE29A14BA3009FF3EA /* Zaps.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Zaps.swift; sourceTree = "<group>"; };
+		1F7C8AE92C9302AF00B13BB7 /* CopyableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableTextView.swift; sourceTree = "<group>"; };
+		1F7C8AEB2C93364000B13BB7 /* LiveEventPFP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventPFP.swift; sourceTree = "<group>"; };
 		1F7D47A22B3670B90071476A /* GalleryFullScreenSwiper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFullScreenSwiper.swift; sourceTree = "<group>"; };
 		1F7E19342C2DFEDC00034B06 /* NosturClientMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturClientMessage.swift; sourceTree = "<group>"; };
 		1F7E38EB2A2D9AED00ABAA85 /* DIMENSIONS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DIMENSIONS.swift; sourceTree = "<group>"; };
@@ -2144,6 +2148,8 @@
 				1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */,
 				1FDB74572BD6B71700649E0A /* PossibleImposterLabel.swift */,
 				1F7B0B3D2BE40D4E00182FB3 /* FixedPFP.swift */,
+				1F7C8AE92C9302AF00B13BB7 /* CopyableTextView.swift */,
+				1F7C8AEB2C93364000B13BB7 /* LiveEventPFP.swift */,
 			);
 			path = Profiles;
 			sourceTree = "<group>";
@@ -2613,6 +2619,7 @@
 				1F69856329F40409006F813F /* Data+agoString.swift in Sources */,
 				1FC268C729A2CC4F00A2B577 /* NoteReactions.swift in Sources */,
 				1FE0F0842AA7352400580FD8 /* DMSettings.swift in Sources */,
+				1F7C8AEC2C93364000B13BB7 /* LiveEventPFP.swift in Sources */,
 				1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */,
 				1FFE7F602A7927E2001E8D80 /* PostTest.swift in Sources */,
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
@@ -2775,6 +2782,7 @@
 				1F77AD082A40B96500585E12 /* ArticleView.swift in Sources */,
 				1FD78EF72A0CC365003E7B3E /* PostRowDeletable.swift in Sources */,
 				1F84189B2A2BDD1A001EFE7A /* NIP47TesterView.swift in Sources */,
+				1F7C8AEA2C9302AF00B13BB7 /* CopyableTextView.swift in Sources */,
 				1FC0F5A72A4AEB62004E4DAA /* TabTitlePreferenceKey.swift in Sources */,
 				1F2810BD2B1E155F00042928 /* DMContentRenderer.swift in Sources */,
 				1F740DAD29AF8A5200EFCCA7 /* BadgesReceivedView.swift in Sources */,
