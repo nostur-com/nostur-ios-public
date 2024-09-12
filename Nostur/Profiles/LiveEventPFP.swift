@@ -54,9 +54,27 @@ struct LiveEventPFP: View {
                 }
             }
             .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+            .overlay(alignment: .bottom) {
+                ZStack {
+                    Circle()
+                        .fill(Color.purple)
+                    Image(systemName: "waveform")
+                        .foregroundColor(.white)
+                        .padding(2)
+                }
+                .frame(width: 20, height: 20)
+                .symbolEffectPulse()
+                .offset(y: 14)
+            }
     }
 }
 
-//#Preview {
-//    LiveEventPFP()
-//}
+#Preview {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+    }) {
+        if let contact = PreviewFetcher.fetchNRContact() {
+            LiveEventPFP(pubkey: contact.pubkey, nrContact: contact, size: 50, forceFlat: false)
+        }
+    }
+}
