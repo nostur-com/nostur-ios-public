@@ -158,6 +158,7 @@ struct NXPostsFeed: View {
             if let unreadCount = vmInner.unreadIds[post.id], unreadCount > 0 {
                 if let firstUnreadPost = posts.first(where: { $0.id == post.id }) {
                     withAnimation {
+                        // NOTE: This can crash, but so far only only iOS 16.1?
                         proxy.scrollTo(firstUnreadPost.id, anchor: .top)
                     }
                 }
