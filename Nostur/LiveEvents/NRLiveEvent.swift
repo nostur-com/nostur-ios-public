@@ -36,7 +36,15 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     public var liveKitJoinUrl: String?
     public var streamingUrl: String?
     public var webUrl: String?
-    @Published public var status: String?
+    @Published public var status: String? {
+        didSet {
+            if status == "live" {
+                Task { @MainActor in
+                    LiveEventsModel.shared.livePubkeys = LiveEventsModel.shared.livePubkeys.union(Set(self.participantsOrSpeakers.map { $0.pubkey } + [self.pubkey]))
+                }
+            }
+        }
+    }
     @Published public var scheduledAt: Date?
     
     public var recordingUrl: String?
