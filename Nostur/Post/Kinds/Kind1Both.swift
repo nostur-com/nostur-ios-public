@@ -70,44 +70,60 @@ struct Kind1Both: View {
 //        let _ = Self._printChanges()
 //        #endif
         HStack(alignment: .top, spacing: 10) {
-            ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isScreenshot)
-                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-                .background(alignment: .top) {
-                    if connect == .top || connect == .both {
-                        theme.lineColor
-                            .frame(width: 1, height: 20)
-                            .offset(x: -0.5, y: -10)
-                    }
-                }
-                .onTapGesture {
-                    withAnimation {
-                        showMiniProfile = true
-                    }
-                }
-                .overlay(alignment: .topLeading) {
-                    if (showMiniProfile) {
-                        GeometryReader { geo in
-                            Color.clear
-                                .onAppear {
-                                    sendNotification(.showMiniProfile,
-                                                     MiniProfileSheetInfo(
-                                                        pubkey: nrPost.pubkey,
-                                                        contact: pfpAttributes.contact,
-                                                        zapEtag: nrPost.id,
-                                                        location: geo.frame(in: .global).origin
-                                                     )
-                                    )
-                                    showMiniProfile = false
-                                }
+            if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
+                LiveEventPFP(pubkey: nrPost.pubkey, nrContact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nrPost.isScreenshot)
+                    .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                    .background(alignment: .top) {
+                        if connect == .top || connect == .both {
+                            theme.lineColor
+                                .frame(width: 1, height: 20)
+                                .offset(x: -0.5, y: -10)
                         }
-                          .frame(width: 10)
-                          .zIndex(100)
-                          .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                          .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                              showMiniProfile = false
-                          }
                     }
-                }
+                    .onTapGesture {
+                        
+                    }
+            }
+            else {
+                ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isScreenshot)
+                    .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                    .background(alignment: .top) {
+                        if connect == .top || connect == .both {
+                            theme.lineColor
+                                .frame(width: 1, height: 20)
+                                .offset(x: -0.5, y: -10)
+                        }
+                    }
+                    .onTapGesture {
+                        withAnimation {
+                            showMiniProfile = true
+                        }
+                    }
+                    .overlay(alignment: .topLeading) {
+                        if (showMiniProfile) {
+                            GeometryReader { geo in
+                                Color.clear
+                                    .onAppear {
+                                        sendNotification(.showMiniProfile,
+                                                         MiniProfileSheetInfo(
+                                                            pubkey: nrPost.pubkey,
+                                                            contact: pfpAttributes.contact,
+                                                            zapEtag: nrPost.id,
+                                                            location: geo.frame(in: .global).origin
+                                                         )
+                                        )
+                                        showMiniProfile = false
+                                    }
+                            }
+                            .frame(width: 10)
+                            .zIndex(100)
+                            .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                            .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                                showMiniProfile = false
+                            }
+                        }
+                    }
+            }
 
 
             VStack(alignment: .leading, spacing: 3) { // Post container
@@ -213,37 +229,52 @@ struct Kind1Both: View {
     private var fullWidthView: some View {
         VStack(spacing: 10) {
             HStack(alignment: .center, spacing: 10) {
-                ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isScreenshot)
-                    .frame(width: 50, height: 50)
-                    .onTapGesture {
-                        withAnimation {
-                            showMiniProfile = true
-                        }
-                    }
-                    .overlay(alignment: .topLeading) {
-                        if (showMiniProfile) {
-                            GeometryReader { geo in
-                                Color.clear
-                                    .onAppear {
-                                        sendNotification(.showMiniProfile,
-                                                         MiniProfileSheetInfo(
-                                                            pubkey: nrPost.pubkey,
-                                                            contact: nrPost.contact,
-                                                            zapEtag: nrPost.id,
-                                                            location: geo.frame(in: .global).origin
-                                                         )
-                                        )
-                                        showMiniProfile = false
-                                    }
-                            }
-                            .frame(width: 10)
-                            .zIndex(100)
-                            .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                            .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                showMiniProfile = false
+                if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
+                    LiveEventPFP(pubkey: nrPost.pubkey, nrContact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nrPost.isScreenshot)
+                        .onTapGesture {
+                            if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
+                                if IS_CATALYST {
+                                    navigateTo(liveEvent)
+                                }
+                                else {
+                                    LiveKitVoiceSession.shared.activeNest = liveEvent
+                                }
                             }
                         }
-                    }
+                }
+                else {
+                    ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isScreenshot)
+                        .frame(width: 50, height: 50)
+                        .onTapGesture {
+                            withAnimation {
+                                showMiniProfile = true
+                            }
+                        }
+                        .overlay(alignment: .topLeading) {
+                            if (showMiniProfile) {
+                                GeometryReader { geo in
+                                    Color.clear
+                                        .onAppear {
+                                            sendNotification(.showMiniProfile,
+                                                             MiniProfileSheetInfo(
+                                                                pubkey: nrPost.pubkey,
+                                                                contact: nrPost.contact,
+                                                                zapEtag: nrPost.id,
+                                                                location: geo.frame(in: .global).origin
+                                                             )
+                                            )
+                                            showMiniProfile = false
+                                        }
+                                }
+                                .frame(width: 10)
+                                .zIndex(100)
+                                .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                                .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                                    showMiniProfile = false
+                                }
+                            }
+                        }
+                }
                 NRPostHeaderContainer(nrPost: nrPost, singleLine: false)
                 Spacer()
                 LazyNoteMenuButton(nrPost: nrPost)

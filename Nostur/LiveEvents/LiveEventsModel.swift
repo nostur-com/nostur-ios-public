@@ -32,8 +32,14 @@ class LiveEventsModel: ObservableObject {
             if oldValue.count != nrLiveEvents.count {
                 updateLiveSubscription()
             }
+            livePubkeys = Set(nrLiveEvents
+                .flatMap { $0.participantsOrSpeakers }  // Flatten all participants or speakers into a single array
+                .map { $0.pubkey })                     // Extract the pubkey from each Contact
         }
     }
+    
+    // To make PFPs "Live" in other viewsa
+    @Published var livePubkeys: Set<String> = []
     
     private init() {
         self.backlog = Backlog(timeout: 5.0, auto: true)
