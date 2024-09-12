@@ -30,6 +30,7 @@ struct ProfileView: View {
     @State private var similarPFP = false
     @State private var showingNewNote = false
     @State private var fixedPfp: URL?
+    @State private var npub = ""
     
     @State private var showArticlesTab = false
     
@@ -193,7 +194,11 @@ struct ProfileView: View {
                         }
                     }
                     
-                    Text(verbatim:lastSeen ?? "Last seen:")
+                    CopyableTextView(text: npub)
+                        .lineLimit(1)
+                        .frame(width: 140, alignment: .leading)
+                    
+                    Text(verbatim: lastSeen ?? "Last seen:")
                         .font(.caption).foregroundColor(.primary)
                         .lineLimit(1)
                         .opacity(lastSeen != nil ? 1.0 : 0)
@@ -204,7 +209,7 @@ struct ProfileView: View {
                         }
                         Menu {
                             Button {
-                                UIPasteboard.general.string = npub(nrContact.pubkey)
+                                UIPasteboard.general.string = self.npub
                             } label: {
                                 Label(String(localized:"Copy npub", comment:"Menu action"), systemImage: "doc.on.clipboard")
                             }
@@ -427,8 +432,12 @@ struct ProfileView: View {
             }
         }
         .task { [weak nrContact] in
-            bg().perform {
+            bg().perform { [weak nrContact] in
                 guard let nrContact, let contact = nrContact.contact else { return }
+                let npub = contact.npub
+                DispatchQueue.main.async {
+                    self.npub = npub
+                }
                 if (NIP05Verifier.shouldVerify(contact)) {
                     NIP05Verifier.shared.verify(contact)
                 }

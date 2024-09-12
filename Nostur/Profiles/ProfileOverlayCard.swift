@@ -92,6 +92,7 @@ struct ProfileOverlayCard: View {
     @State private var lastSeen: String? = nil
     @State private var isFollowingYou = false
     @State private var fixedPfp: URL?
+    @State private var npub = ""
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
@@ -241,6 +242,10 @@ struct ProfileOverlayCard: View {
                             .offset(y: -4)
                             .opacity(isFollowingYou ? 1.0 : 0)
                     }
+                    
+                    CopyableTextView(text: npub)
+                        .lineLimit(1)
+                        .frame(width: 140, alignment: .leading)
                     
                     Color.clear
                         .frame(height: 15)
@@ -402,11 +407,16 @@ struct ProfileOverlayCard: View {
             
             bg().perform { [weak contact] in
                 guard let contact, let backlog else { return }
+                
+                let npub = contact.npub
+                
                 EventRelationsQueue.shared.addAwaitingContact(contact)
-                if (contact.followsYou()) {
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            isFollowingYou = true
+                
+                DispatchQueue.main.async {
+                    withAnimation {
+                        self.npub = npub
+                        if (contact.followsYou()) {
+                            self.isFollowingYou = true
                         }
                     }
                 }
