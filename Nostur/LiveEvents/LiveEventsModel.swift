@@ -33,6 +33,7 @@ class LiveEventsModel: ObservableObject {
                 updateLiveSubscription()
             }
             livePubkeys = Set(nrLiveEvents
+                .filter { $0.status == "live" }
                 .flatMap { $0.participantsOrSpeakers }  // Flatten all participants or speakers into a single array
                 .map { $0.pubkey })                     // Extract the pubkey from each Contact
         }
