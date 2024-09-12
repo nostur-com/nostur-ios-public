@@ -81,7 +81,16 @@ struct Kind1Both: View {
                         }
                     }
                     .onTapGesture {
-                        
+                        if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
+                            if IS_CATALYST {
+                                navigateTo(liveEvent)
+                            }
+                            else {
+                                Task { @MainActor in
+                                    LiveKitVoiceSession.shared.activeNest = liveEvent
+                                }
+                            }
+                        }
                     }
             }
             else {
@@ -232,12 +241,14 @@ struct Kind1Both: View {
                 if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
                     LiveEventPFP(pubkey: nrPost.pubkey, nrContact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nrPost.isScreenshot)
                         .onTapGesture {
-                            if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
+                            if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
                                 if IS_CATALYST {
                                     navigateTo(liveEvent)
                                 }
                                 else {
-                                    LiveKitVoiceSession.shared.activeNest = liveEvent
+                                    Task { @MainActor in
+                                        LiveKitVoiceSession.shared.activeNest = liveEvent
+                                    }
                                 }
                             }
                         }
