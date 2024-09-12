@@ -86,9 +86,10 @@ public class NetworkMonitor: ObservableObject {
             .store(in: &subscriptions)
         
         
-        monitor.pathUpdateHandler = { path in
-            self.isConnectedSubject.send(path.status == .satisfied)
-            DispatchQueue.main.async {
+        monitor.pathUpdateHandler = { [weak self] path in
+            self?.isConnectedSubject.send(path.status == .satisfied)
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 let usesOtherInterface = path.usesInterfaceType(.other)
                 if self.vpnConfigurationDetected != usesOtherInterface {
                     self.vpnConfigurationDetected = usesOtherInterface
@@ -106,16 +107,16 @@ public class NetworkMonitor: ObservableObject {
         
         // Check if connection to host is being routed over transparent proxy (such as VPN)
         let c = NWConnection(host: "protection.nostur.com", port: 443, using: .tcp)
-        c.stateUpdateHandler = { state in
+        c.stateUpdateHandler = { [weak self] state in
             if (state == .ready) {
                 if (c.currentPath?.usesInterfaceType(.other) == true) {
-                    DispatchQueue.main.async {
-                        self.actualVPNconnectionDetected = true
+                    DispatchQueue.main.async { [weak self] in
+                        self?.actualVPNconnectionDetected = true
                     }
                     L.sockets.debug("📡📡 Connection is over VPN")
                 } else {
                     DispatchQueue.main.async {
-                        self.actualVPNconnectionDetected = false
+                        self?.actualVPNconnectionDetected = false
                     }
                     L.sockets.debug("📡📡 Connection is not over VPN")
                 }

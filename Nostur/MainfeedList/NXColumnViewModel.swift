@@ -1027,24 +1027,24 @@ class NXColumnViewModel: ObservableObject {
                     req(RM.getEvents(ids: danglerIds, subscriptionId: taskId)) // TODO: req or outboxReq?
                 }
             },
-            processResponseCommand: { [weak self] (taskId, _, _) in
-                guard let self else { return }
+            processResponseCommand: { (taskId, _, _) in
                 bg().perform { [weak self] in
-                    guard let self else { return }
                     let danglingEvents = danglers.compactMap { $0.event }
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.id) fetchParents.processResponseCommand")
 #endif
                     
                     // Need to go to main context again to get current screen state
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
                         
                         // Then back to bg for processing
-                        bg().perform {
+                        bg().perform { [weak self] in
+                            guard let self else { return }
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.id) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen")
 #endif
@@ -1053,24 +1053,24 @@ class NXColumnViewModel: ObservableObject {
                     }
                 }
             },
-            timeoutCommand: { [weak self] (taskId) in
-                guard let self else { return }
-                bg().perform { [weak self] in
-                    guard let self else { return }
+            timeoutCommand: { (taskId) in
+                bg().perform { [weak self]  in
                     let danglingEvents: [Event] = danglers.compactMap { $0.event }
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.id) fetchParents.timeoutCommand")
 #endif
                     
                     // Need to go to main context again to get current screen state
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
                         
                         // Then back to bg for processing
-                        bg().perform {
+                        bg().perform { [weak self] in
+                            guard let self else { return }
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.id) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen (timeoutCommand)")
 #endif
