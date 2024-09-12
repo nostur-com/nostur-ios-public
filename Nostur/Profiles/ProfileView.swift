@@ -36,7 +36,7 @@ struct ProfileView: View {
     
     @State private var scrollPosition = ScrollPosition()
     
-    init(nrContact: NRContact, tab:String? = nil) {
+    init(nrContact: NRContact, tab: String? = nil) {
         self.nrContact = nrContact
         self.pubkey = nrContact.pubkey
         self.tab = tab
@@ -57,6 +57,7 @@ struct ProfileView: View {
         List {
             Section {
                 VStack(alignment: .leading) {
+                    
                     ProfileBanner(banner: nrContact.banner, width: dim.listWidth)
                         .overlay(alignment: .bottomLeading, content: {
                             PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
@@ -86,6 +87,7 @@ struct ProfileView: View {
                                 }
                                 .offset(x: 10, y: DIMENSIONS.PFP_BIG/2)
                         })
+                    
                     HStack(alignment: .top) {
                         if (!settings.hideBadges) {
                             ProfileBadgesContainer(pubkey: nrContact.pubkey)
@@ -183,6 +185,7 @@ struct ProfileView: View {
                                 .layoutPriority(3)
                         }
                     }
+                    
                     if let fixedName = nrContact.fixedName, fixedName != nrContact.anyName {
                         HStack {
                             Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)

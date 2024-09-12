@@ -409,13 +409,14 @@ struct ProfileOverlayCard: View {
                 guard let contact, let backlog else { return }
                 
                 let npub = contact.npub
+                let isFollowingYou = contact.followsYou()
                 
                 EventRelationsQueue.shared.addAwaitingContact(contact)
                 
                 DispatchQueue.main.async {
                     withAnimation {
                         self.npub = npub
-                        if (contact.followsYou()) {
+                        if (isFollowingYou) {
                             self.isFollowingYou = true
                         }
                     }
@@ -430,7 +431,7 @@ struct ProfileOverlayCard: View {
                             guard let contact else { return }
                             if (contact.followsYou()) {
                                 DispatchQueue.main.async {
-                                    isFollowingYou = true
+                                    self.isFollowingYou = true
                                 }
                             }
                         }
@@ -440,7 +441,7 @@ struct ProfileOverlayCard: View {
                             guard let contact else { return }
                             if (contact.followsYou()) {
                                 DispatchQueue.main.async {
-                                    isFollowingYou = true
+                                    self.isFollowingYou = true
                                 }
                             }
                         }
