@@ -47,6 +47,14 @@ class LiveEventsModel: ObservableObject {
         
         self.listenForReplacableEventUpdates()
         self.listenForBlocklistUpdates()
+        
+        receiveNotification(.scenePhaseActive)
+            .debounce(for: .seconds(4), scheduler: RunLoop.main)
+            .throttle(for: .seconds(15.0), scheduler: RunLoop.main, latest: false)
+            .sink { [weak self] _ in
+                self?.updateLiveSubscription()
+            }
+            .store(in: &subscriptions)
     }
     
     private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
@@ -213,7 +221,7 @@ class LiveEventsModel: ObservableObject {
                             tagFilter: TagFilter(tag: "d", values: [$0.dTag])
                            )
             }).json() {
-            req(cm)
+            req(cm, activeSubscriptionId: "LIVEEVENTS")
         }
     }
         
