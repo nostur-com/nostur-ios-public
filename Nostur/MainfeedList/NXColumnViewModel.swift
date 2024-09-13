@@ -128,6 +128,7 @@ class NXColumnViewModel: ObservableObject {
     private var fetchFeedTimer: Timer? = nil
     private var newEventsInDatabaseSub: AnyCancellable?
     private var newPostSavedSub: AnyCancellable?
+    private var newPostUndoSub: AnyCancellable?
     private var firstConnectionSub: AnyCancellable?
     private var reloadWhenNeededSub: AnyCancellable?
     private var lastDisconnectionSub: AnyCancellable?
@@ -246,6 +247,10 @@ class NXColumnViewModel: ObservableObject {
         newPostSavedSub = nil
         listenForOwnNewPostSaved(config)
         
+        newPostUndoSub?.cancel()
+        newPostUndoSub = nil
+        listenForOwnNewPostUndo(config)
+        
         newEventsInDatabaseSub?.cancel()
         newEventsInDatabaseSub = nil
         listenForNewPosts(config)
@@ -319,6 +324,20 @@ class NXColumnViewModel: ObservableObject {
                     Task { @MainActor in
                         self?.putOnScreen([newOwnPost], config: config)
                     }
+                }
+            }
+    }
+    
+    @MainActor
+    private func listenForOwnNewPostUndo(_ config: NXColumnConfig) {
+        guard newPostUndoSub == nil else { return }
+        newPostUndoSub =  receiveNotification(.unpublishedNRPost)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                if case .posts(let existingPosts) = viewState {
+                    let nrPost = notification.object as! NRPost
+                    vmInner.unreadIds[nrPost.id] = nil
+                    viewState = .posts(existingPosts.filter { $0.id != nrPost.id })
                 }
             }
     }
