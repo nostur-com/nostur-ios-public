@@ -48,7 +48,7 @@ struct ClosedMessage: Decodable {
     }
     
     var id: String { values[safe: 0] as? String ?? "NOSTUR.ERROR" }
-    var message: String? { values[safe: 2] as? String }
+    var message: String? { values[safe: 1] as? String }
 }
 
 struct NMessage: Decodable {
