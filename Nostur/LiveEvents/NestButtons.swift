@@ -59,16 +59,16 @@ struct NestButtonStyle: ButtonStyle {
         switch style {
         case .default:
             configuration.label
-                .padding(10)
-                .background(theme.accent)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
                 .clipShape(.rect(cornerRadius: 25))
-//                .foregroundColor(theme.accent)
+                .foregroundColor(theme.accent)
         case .borderedProminent:
             configuration.label
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(theme.accent)
-                .cornerRadius(5)
+                .clipShape(.rect(cornerRadius: 25))
                 .foregroundColor(Color.white)
         }
     }

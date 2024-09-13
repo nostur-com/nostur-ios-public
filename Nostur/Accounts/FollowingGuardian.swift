@@ -35,10 +35,6 @@ class FollowingGuardian: ObservableObject {
 #endif
         listenForNewContactListEvents()
         listenForAccountChanged()
-        
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { duplicate, check logs. already triggered by .activeAccountChanged
-//            self.checkForUpdatedContactList()
-//        }
     }
     
     func checkForUpdatedContactList() {
