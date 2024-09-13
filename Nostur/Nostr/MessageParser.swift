@@ -84,6 +84,36 @@ class MessageParser {
                         
                         client.sendAuthResponse()
                     }
+                    else if message.message.prefix(13) == "rate-limited:" {
+                        ConnectionPool.shared.queue.async(flags: .barrier) {
+                            client.stats.addNoticeMessage(message.message)
+                        }
+                    }
+                    else if message.message.prefix(8) == "invalid:" {
+                        ConnectionPool.shared.queue.async(flags: .barrier) {
+                            client.stats.addNoticeMessage(message.message)
+                        }
+                    }
+                    else if message.message.prefix(8) == "blocked:" {
+                        ConnectionPool.shared.queue.async(flags: .barrier) {
+                            client.stats.addNoticeMessage(message.message)
+                        }
+                    }
+                    else if message.message.prefix(4) == "pow:" {
+                        ConnectionPool.shared.queue.async(flags: .barrier) {
+                            client.stats.addNoticeMessage(message.message)
+                        }
+                    }
+                    else if message.message.prefix(10) == "duplicate:" {
+                        ConnectionPool.shared.queue.async(flags: .barrier) {
+                            client.stats.addNoticeMessage(message.message)
+                        }
+                    }
+                    else if message.message.prefix(6) == "error:" {
+                        ConnectionPool.shared.queue.async(flags: .barrier) {
+                            client.stats.addNoticeMessage(message.message)
+                        }
+                    }
                     else {
                         L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) -[LOG]-")
                     }
