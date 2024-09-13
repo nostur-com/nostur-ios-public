@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import NostrEssentials
 
 // The follower notififier tracks if you have new followers
 // To get your followers the filter "#p": [your pubkey], "kinds": [3]  is used
@@ -14,6 +15,8 @@ import Combine
 // If we find a newer .created_at from someone with our pubkey in p's we generate a notification in the app
 
 class FollowerNotifier {
+    
+    static let LIMIT = 500 // After 500 followers will only check for Follow-backs because of data usage
     
     static let shared = FollowerNotifier()
     private var currentFollowerPubkeys = Set<String>()
@@ -68,7 +71,37 @@ class FollowerNotifier {
                 NTimestamp(timestamp: Int(Date.now.timeIntervalSince1970 - (3600 * 3*24)))
             }
             
-            req(RM.getFollowers(pubkey: NRState.shared.activeAccountPublicKey, since: since))
+            if self.currentFollowerPubkeys.count <= Self.LIMIT { // Check all new followers
+                let rf = Filters(
+                    kinds: [3],
+                    tagFilter: TagFilter(tag: "p", values: [NRState.shared.activeAccountPublicKey]),
+                    since: since.timestamp
+                )
+                
+                if let cm = NostrEssentials.ClientMessage(type: .REQ,
+                                                          subscriptionId: "FOLL-" + UUID().uuidString,
+                                                          filters: [rf]).json() {
+                    req(cm)
+                }
+            }
+            else if let follows = NRState.shared.loggedInAccount?.followingPublicKeys { // Check only new following back (because data usage)
+
+                // We need to REQ all that we follow (for follow-back check), but we don't need to check those already following us
+                let followsWithoutFollowers = follows.subtracting(self.currentFollowerPubkeys)
+                
+                let rf = Filters(
+                    authors: followsWithoutFollowers,
+                    kinds: [3],
+                    tagFilter: TagFilter(tag: "p", values: [NRState.shared.activeAccountPublicKey]),
+                    since: since.timestamp
+                )
+                
+                if let cm = NostrEssentials.ClientMessage(type: .REQ,
+                                                          subscriptionId: "FOLL-" + UUID().uuidString,
+                                                          filters: [rf]).json() {
+                    req(cm)
+                }
+            }
         }
     }
     
