@@ -64,7 +64,7 @@ struct LiveEventPFP: View {
                 }
                 .frame(width: 20, height: 20)
                 .symbolEffectPulse()
-                .offset(y: 14)
+                .offset(y: 10)
             }
     }
 }
