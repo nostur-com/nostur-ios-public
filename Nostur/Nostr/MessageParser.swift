@@ -76,6 +76,7 @@ class MessageParser {
                                     guard SettingsStore.shared.enableOutboxRelays else { return }
                                     guard ConnectionPool.shared.canPutInPenaltyBox(relayUrl) else { return }
                                     ConnectionPool.shared.penaltybox.insert(relayUrl)
+                                    client.stats.addNoticeMessage(message.message)
                                 }
                             }
                             return
