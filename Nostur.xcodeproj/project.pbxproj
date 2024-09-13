@@ -251,6 +251,8 @@
 		1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65BE29A14BA3009FF3EA /* Zaps.swift */; };
 		1F7C8AEA2C9302AF00B13BB7 /* CopyableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C8AE92C9302AF00B13BB7 /* CopyableTextView.swift */; };
 		1F7C8AEC2C93364000B13BB7 /* LiveEventPFP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C8AEB2C93364000B13BB7 /* LiveEventPFP.swift */; };
+		1F7C8AEE2C93863D00B13BB7 /* ScheduleReminderButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C8AED2C93863D00B13BB7 /* ScheduleReminderButton.swift */; };
+		1F7C8AF02C9386EA00B13BB7 /* RecView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C8AEF2C9386EA00B13BB7 /* RecView.swift */; };
 		1F7D47A32B3670B90071476A /* GalleryFullScreenSwiper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7D47A22B3670B90071476A /* GalleryFullScreenSwiper.swift */; };
 		1F7E19352C2DFEDC00034B06 /* NosturClientMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E19342C2DFEDC00034B06 /* NosturClientMessage.swift */; };
 		1F7E38EC2A2D9AED00ABAA85 /* DIMENSIONS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E38EB2A2D9AED00ABAA85 /* DIMENSIONS.swift */; };
@@ -813,6 +815,8 @@
 		1F7C65BE29A14BA3009FF3EA /* Zaps.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Zaps.swift; sourceTree = "<group>"; };
 		1F7C8AE92C9302AF00B13BB7 /* CopyableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableTextView.swift; sourceTree = "<group>"; };
 		1F7C8AEB2C93364000B13BB7 /* LiveEventPFP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventPFP.swift; sourceTree = "<group>"; };
+		1F7C8AED2C93863D00B13BB7 /* ScheduleReminderButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleReminderButton.swift; sourceTree = "<group>"; };
+		1F7C8AEF2C9386EA00B13BB7 /* RecView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecView.swift; sourceTree = "<group>"; };
 		1F7D47A22B3670B90071476A /* GalleryFullScreenSwiper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFullScreenSwiper.swift; sourceTree = "<group>"; };
 		1F7E19342C2DFEDC00034B06 /* NosturClientMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturClientMessage.swift; sourceTree = "<group>"; };
 		1F7E38EB2A2D9AED00ABAA85 /* DIMENSIONS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DIMENSIONS.swift; sourceTree = "<group>"; };
@@ -1300,6 +1304,8 @@
 				1FD6CA002C53E5900021E3A7 /* NestButtons.swift */,
 				1F781EBE2C42A086002226AB /* NestParticipantView.swift */,
 				1FA97AA22C3EA3620091446A /* NRLiveEvent.swift */,
+				1F7C8AEF2C9386EA00B13BB7 /* RecView.swift */,
+				1F7C8AED2C93863D00B13BB7 /* ScheduleReminderButton.swift */,
 			);
 			path = LiveEvents;
 			sourceTree = "<group>";
@@ -2121,9 +2127,13 @@
 				1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */,
 				1F740DA629AF61A700EFCCA7 /* ContactSearchResultRow.swift */,
 				1F740DA429AF5F6900EFCCA7 /* ContactsSearch.swift */,
+				1F7C8AE92C9302AF00B13BB7 /* CopyableTextView.swift */,
+				1F7B0B3D2BE40D4E00182FB3 /* FixedPFP.swift */,
 				1F09D2732B024678000B9B2B /* FollowedBy.swift */,
 				1FC4D40C2998ED0E004E88CD /* FollowersList.swift */,
 				1F7483542A67823300CA7026 /* ImposterChecker.swift */,
+				1F7C8AEB2C93364000B13BB7 /* LiveEventPFP.swift */,
+				1FDB74572BD6B71700649E0A /* PossibleImposterLabel.swift */,
 				1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */,
 				1FC7A49A29F95AD400645FEF /* ProfileByPubkey.swift */,
 				1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */,
@@ -2146,10 +2156,6 @@
 				1F716C742A14D4F300B202CA /* ProfileTabs.swift */,
 				1F8322D02B62A23B0098AEAD /* ProfileView.swift */,
 				1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */,
-				1FDB74572BD6B71700649E0A /* PossibleImposterLabel.swift */,
-				1F7B0B3D2BE40D4E00182FB3 /* FixedPFP.swift */,
-				1F7C8AE92C9302AF00B13BB7 /* CopyableTextView.swift */,
-				1F7C8AEB2C93364000B13BB7 /* LiveEventPFP.swift */,
 			);
 			path = Profiles;
 			sourceTree = "<group>";
@@ -2559,6 +2565,7 @@
 				1FD6C34D2C2CDA320085A240 /* PostZapsModel.swift in Sources */,
 				1F685B562A0D6E96009EEC9B /* NRReplyingToBuilder.swift in Sources */,
 				1F0CA5D82AA68DF200DC10CD /* DirectMessageRows.swift in Sources */,
+				1F7C8AF02C9386EA00B13BB7 /* RecView.swift in Sources */,
 				1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */,
 				1FCB52722A533027006D08DF /* Migration+CoreDataClass.swift in Sources */,
 				1FC705BC2B5B14D300FED57B /* CloudSyncManager.swift in Sources */,
@@ -2760,6 +2767,7 @@
 				1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */,
 				1F2BD4A42A22206500F006AC /* SnapshotTest.swift in Sources */,
 				1FD6C34A2C2CD3600085A240 /* PostReactions.swift in Sources */,
+				1F7C8AEE2C93863D00B13BB7 /* ScheduleReminderButton.swift in Sources */,
 				1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */,
 				1F6629142B0D49BD00508988 /* RelayData.swift in Sources */,
 				1F88EE8E2AD12CFA006A83C3 /* MentionChoices.swift in Sources */,
