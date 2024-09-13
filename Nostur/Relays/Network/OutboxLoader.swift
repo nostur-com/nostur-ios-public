@@ -219,12 +219,12 @@ extension Filters {
 let DETECT_MISCONFIGURED_KIND10002_HELPER_LIST: Set<String> = [
     "ws://127.0.0.1",
     "ws://localhost",
-    "wss://filter.nostr.wine",
-    "wss://welcome.nostr.wine",
-    "wss://nostr.mutinywallet.com",
-    "wss://feeds.nostr.band",
+    "wss://filter.nostr.wine", // is paid
+    "wss://welcome.nostr.wine", // is special feed relay
+    "wss://nostr.mutinywallet.com", // is write only relay (blastr)
+    "wss://feeds.nostr.band", // special feeds
     "wss://search.nos.today",
-    "wss://feeds.nostr.band"
+    "wss://relay.getalby.com" // only for NWC connections
 ]
 
 func removeMisconfiguredKind10002s(_ kind10002s: [NostrEssentials.Event]) -> [NostrEssentials.Event] {
