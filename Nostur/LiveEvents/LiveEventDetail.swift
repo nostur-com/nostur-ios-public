@@ -354,9 +354,11 @@ struct LiveEventDetail: View {
         ])
         pe.loadChats()
     }) {
-        if let liveEvent = PreviewFetcher.fetchEvent("75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7") {
-            let nrLiveEvent = NRLiveEvent(event: liveEvent)
-            LiveEventDetail(liveEvent: nrLiveEvent)
+        NBNavigationStack {
+            if let liveEvent = PreviewFetcher.fetchEvent("75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7") {
+                let nrLiveEvent = NRLiveEvent(event: liveEvent)
+                LiveEventDetail(liveEvent: nrLiveEvent)
+            }
         }
     }
 }
