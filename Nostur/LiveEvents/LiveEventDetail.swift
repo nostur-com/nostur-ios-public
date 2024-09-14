@@ -46,58 +46,70 @@ struct LiveEventDetail: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        ScrollView {
-            if let vc {
-                headerView
-
-                participantsView
-                    .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
-                        let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
-                        guard zapCustomizerSheetInfo.zapAtag != nil else { return }
-                        self.showZapSheet = true
-                        self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
+            GeometryReader { geo in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if let vc {
+                            VStack {
+                                headerView
+                                
+                                participantsView
+                                    .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
+                                        let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
+                                        guard zapCustomizerSheetInfo.zapAtag != nil else { return }
+                                        self.showZapSheet = true
+                                        self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
+                                    }
+                                
+                                videoStreamView
+                                    .background(themes.theme.background)
+                            }
+                            
+                            ZStack {
+                                ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
+                                    .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
+                                    .padding(.horizontal, 10)
+                                    .environmentObject(vc)
+                                
+                                if let selectedContact {
+                                    themes.theme.background
+                                    
+                                    SelectedParticipantView(nrContact: selectedContact, showZapButton: !liveKitVoiceSession.listenAnonymously, liveEvent: liveEvent, showModeratorControls: showModeratorControls, selectedContact: $selectedContact)
+                                        .padding(10)
+                                }
+                            }
+                        }
                     }
-            
-                videoStreamView
-                    .background(themes.theme.background)
-                
-                ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
-                    .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 350 : 250, maxHeight: .infinity)
-                    .padding(.horizontal, 10)
-                    .border(themes.theme.lineColor)
-                    .padding(.top, -10)
-                    .environmentObject(vc)
+                    .frame(minHeight: geo.size.height)
+                }
             }
-        }
-        .safeAreaInset(edge: .bottom) {
-            VStack {
-                nestButtonsView
-                    .padding(10)
-                    .layoutPriority(1)
+            .safeAreaInset(edge: .bottom) {
+                VStack {
+                    nestButtonsView
+                        .padding(10)
+                        .layoutPriority(1)
+                }
+                .background(themes.theme.background)
+            }
+            .onAppear {
+                vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
+                liveEvent.fetchPresenceFromRelays()
+                if liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
+                    account = Nostur.account()
+                }
             }
             .background(themes.theme.background)
-        }
-        .onAppear {
-            vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
-            liveEvent.fetchPresenceFromRelays()
-            if liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
-                account = Nostur.account()
-            }
-        }
-        .background(themes.theme.background)
-//        .navigationTitle(liveEvent.title ?? "(Stream)")
-//        .navigationBarTitleDisplayMode(.inline)
-        .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
-        .withNavigationDestinations()
-        .nbNavigationDestination(isPresented: $showZapSheet, destination: {
-            if let zapCustomizerSheetInfo {
-                ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
-                    .environmentObject(NRState.shared)
-                    .presentationDetentsLarge()
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
-            }
-        })
+            .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
+            .withNavigationDestinations()
+            .nbNavigationDestination(isPresented: $showZapSheet, destination: {
+                if let zapCustomizerSheetInfo {
+                    ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
+                        .environmentObject(NRState.shared)
+                        .presentationDetentsLarge()
+                        .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
+                }
+            })
     }
     
     @ViewBuilder
