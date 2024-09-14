@@ -174,28 +174,54 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         nEvent.tags.append(NostrTag(["u", liveKitJoinUrl]))
         nEvent.tags.append(NostrTag(["method", "GET"]))
         
-        guard let signedNip98Event = try? account.signEvent(nEvent) else { return }
-        
-        let jsonString = signedNip98Event.eventJson()
-        guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else { return }
-        let base64 = jsonData.base64EncodedString()
-        let authorizationHeader = "Nostr \(base64)"
-        
-        Task {
-            do {
-                let jsonResponse = try await fetchData(from: liveKitJoinUrl, authHeader: authorizationHeader)
-                Task { @MainActor in
-                    if let authToken = jsonResponse["token"] as? String {
-                        self.authToken = authToken
-                        completion?(authToken)
+        if account.isNC {
+            NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { [weak self] signedNip98Event in
+     
+                let jsonString = signedNip98Event.eventJson()
+                guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else { return }
+                let base64 = jsonData.base64EncodedString()
+                let authorizationHeader = "Nostr \(base64)"
+                
+                Task {
+                    do {
+                        guard let self else { return }
+                        let jsonResponse = try await self.fetchData(from: liveKitJoinUrl, authHeader: authorizationHeader)
+                        Task { @MainActor in
+                            if let authToken = jsonResponse["token"] as? String {
+                                self.authToken = authToken
+                                completion?(authToken)
+                            }
+                        }
+                        print("JSON Response: \(jsonResponse)")
+                    } catch {
+                        print("Failed to fetch data: \(error.localizedDescription)")
                     }
                 }
-                print("JSON Response: \(jsonResponse)")
-            } catch {
-                print("Failed to fetch data: \(error.localizedDescription)")
+            })
+        }
+        else {
+            guard let signedNip98Event = try? account.signEvent(nEvent) else { return }
+            
+            let jsonString = signedNip98Event.eventJson()
+            guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else { return }
+            let base64 = jsonData.base64EncodedString()
+            let authorizationHeader = "Nostr \(base64)"
+            
+            Task {
+                do {
+                    let jsonResponse = try await fetchData(from: liveKitJoinUrl, authHeader: authorizationHeader)
+                    Task { @MainActor in
+                        if let authToken = jsonResponse["token"] as? String {
+                            self.authToken = authToken
+                            completion?(authToken)
+                        }
+                    }
+                    print("JSON Response: \(jsonResponse)")
+                } catch {
+                    print("Failed to fetch data: \(error.localizedDescription)")
+                }
             }
         }
-
     }
     
     @MainActor
