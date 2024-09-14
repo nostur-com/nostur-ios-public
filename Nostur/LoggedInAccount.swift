@@ -54,6 +54,10 @@ class LoggedInAccount: ObservableObject {
     
     @MainActor public func follow(_ contact: Contact, pubkey: String) {
         viewFollowingPublicKeys.insert(pubkey)
+        account.followingPubkeys.insert(pubkey)
+        account.publishNewContactList()
+        viewContextSave()
+        
         bg.perform { [weak self] in
             guard let self else { return }
             guard let contact = self.bg.object(with: contact.objectID) as? Contact else {
@@ -62,13 +66,12 @@ class LoggedInAccount: ObservableObject {
             }
             guard let account = self.bgAccount else { return }
             contact.couldBeImposter = 0
-            account.followingPubkeys.insert(pubkey)
+            
             bgSave()
             
             self.followingPublicKeys = self.viewFollowingPublicKeys
             self.followingCache = account.loadFollowingCache()
 
-            account.publishNewContactList()
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 sendNotification(.followersChanged, self.viewFollowingPublicKeys)
@@ -79,15 +82,18 @@ class LoggedInAccount: ObservableObject {
     
     @MainActor public func unfollow(_ pubkey: String) {
         viewFollowingPublicKeys.remove(pubkey)
+        account.followingPubkeys.remove(pubkey)
+        account.publishNewContactList()
+        viewContextSave()
+        
         bg.perform { [weak self] in
             guard let self else { return }
             guard let account = self.bgAccount else { return }
-            account.followingPubkeys.remove(pubkey)
-            bgSave()
+            
             self.followingPublicKeys = self.viewFollowingPublicKeys
             self.followingCache = account.loadFollowingCache()
             
-            account.publishNewContactList()
+            
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 sendNotification(.followersChanged, self.viewFollowingPublicKeys)
