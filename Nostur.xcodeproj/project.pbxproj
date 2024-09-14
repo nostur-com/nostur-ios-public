@@ -3386,7 +3386,7 @@
 			repositoryURL = "https://github.com/johnpatrickmorgan/NavigationBackport";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.1;
+				minimumVersion = 0.9.3;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

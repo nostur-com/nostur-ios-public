@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/livekit/client-sdk-swift",
       "state" : {
-        "revision" : "2ef58ab19eb653d631286c35fa1f1ef3bef34c78",
-        "version" : "2.0.12"
+        "revision" : "df0629ae6c7a9279e94545124bcbb3c44b550268",
+        "version" : "2.0.15"
       }
     },
     {
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/johnpatrickmorgan/NavigationBackport",
       "state" : {
-        "revision" : "b002991691b54fd7b952e1e780de252620f8ac77",
-        "version" : "0.9.1"
+        "revision" : "b648d876f3fbe879c9c3580d3aa6a42e7807a8e3",
+        "version" : "0.9.6"
       }
     },
     {
@@ -165,8 +165,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/livekit/webrtc-xcframework.git",
       "state" : {
-        "revision" : "d2e233b034cac7489aa4c86baa5ce7fb8ca70711",
-        "version" : "125.6422.3"
+        "revision" : "9b8d54b203247a84d5f2a9f682d75f4129d0b09b",
+        "version" : "125.6422.7"
       }
     }
   ],
