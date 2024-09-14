@@ -16,14 +16,8 @@ public class Contact: NSManagedObject {
     
     func followsYou() -> Bool {
         guard let clEvent = clEvent else { return false }
-        let account = if Thread.isMainThread {
-            NRState.shared.loggedInAccount?.account
-        }
-        else {
-            NRState.shared.loggedInAccount?.bgAccount
-        }
-        guard let account = account else { return false }
-        return !clEvent.fastTags.filter { $0.0 == "p" && $0.1 == account.publicKey }.isEmpty
+        guard let accountPubkey = NRState.shared.loggedInAccount?.pubkey else { return false }
+        return !clEvent.fastTags.filter { $0.0 == "p" && $0.1 == accountPubkey }.isEmpty
     }
     
     var isPrivateFollow:Bool { // Not saved in DB (derived from account() + privateFollowingPubkeys

@@ -210,8 +210,7 @@ struct ProfileRow: View {
                 let currentAccountPubkey = la.pubkey
                 
                 bg().perform { [weak contact] in
-                    guard let account = la.bgAccount else { return }
-                    guard account.publicKey == currentAccountPubkey else { return }
+                    guard la.pubkey == currentAccountPubkey else { return }
                     guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
                         pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
                     }) else { return }
