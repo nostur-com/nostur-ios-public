@@ -203,7 +203,9 @@ class Zap {
                         }
                     }
                     self.callbackUrl = callback
-                    self.state = .CALLBACK_RECEIVED
+                    Task { @MainActor in
+                        self.state = .CALLBACK_RECEIVED
+                    }
                 }
                 else {
                     self.error = String(localized:"Could not fetch invoice", comment: "Error message")
@@ -288,43 +290,45 @@ class Zap {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     }
                     
-                    if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {
-                        Task { [weak self] in
-                            guard let self else { return }
-                            if self.withPending, let aTag = self.aTag {
-                                DispatchQueue.main.async {
-                                    sendNotification(.receivedPendingZap, ChatPendingZap(
-                                        id: signedZapRequestNote.id,
-                                        pubkey: signedZapRequestNote.publicKey,
-                                        createdAt: Date(
-                                            timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)
-                                        ), 
-                                        aTag: aTag,
-                                        amount: self.amount,
-                                        nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: signedZapRequestNote.kind.id),
-                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags).0,
-                                        contact: accountNrContact
-                                    ))
+                    Task { @MainActor in
+                        if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {
+                            Task { [weak self] in
+                                guard let self else { return }
+                                if self.withPending, let aTag = self.aTag {
+                                    DispatchQueue.main.async {
+                                        sendNotification(.receivedPendingZap, ChatPendingZap(
+                                            id: signedZapRequestNote.id,
+                                            pubkey: signedZapRequestNote.publicKey,
+                                            createdAt: Date(
+                                                timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)
+                                            ),
+                                            aTag: aTag,
+                                            amount: self.amount,
+                                            nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: signedZapRequestNote.kind.id),
+                                            content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags).0,
+                                            contact: accountNrContact
+                                        ))
+                                    }
                                 }
-                            }
-                            if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedZapRequestNote) {
-                                
-                                if let pr = response.pr {
-                                    self.pr = pr
-                                    self.state = .INVOICE_FETCHED
-                                }
-                                else {
-                                    L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
-                                    self.error = String(localized:"Could not fetch invoice", comment: "Error message")
-                                    self.state = .ERROR
+                                if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedZapRequestNote) {
+                                    
+                                    if let pr = response.pr {
+                                        self.pr = pr
+                                        self.state = .INVOICE_FETCHED
+                                    }
+                                    else {
+                                        L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                                        self.error = String(localized:"Could not fetch invoice", comment: "Error message")
+                                        self.state = .ERROR
+                                    }
                                 }
                             }
                         }
-                    }
-                    else {
-                        L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
-                        self.error = String(localized:"Could not fetch invoice", comment: "Error message")
-                        self.state = .ERROR
+                        else {
+                            L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                            self.error = String(localized:"Could not fetch invoice", comment: "Error message")
+                            self.state = .ERROR
+                        }
                     }
                 }
             }
