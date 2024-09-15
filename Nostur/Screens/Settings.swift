@@ -313,6 +313,9 @@ struct Settings: View {
                             // trigger custom NWC setup
                             customNWCsheetShown = true
                         }
+                        else if newWallet.scheme.starts(with: "nostur:nwc:last:") {
+
+                        }
                         else {
                             settings.activeNWCconnectionId = ""
                         }

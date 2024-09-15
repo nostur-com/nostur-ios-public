@@ -47,10 +47,16 @@ extension NWCConnection : Identifiable {
         return c
     }
     
-    static func fetchConnection(_ connectionId:String, context:NSManagedObjectContext) -> NWCConnection? {
-        guard !connectionId.isEmpty else { return nil }
+    static func fetchConnection(_ connectionId: String? = nil, context:NSManagedObjectContext) -> NWCConnection? {
         let fr = NWCConnection.fetchRequest()
-        fr.predicate = NSPredicate(format: "connectionId == %@", connectionId)
+        if let connectionId {
+            fr.predicate = NSPredicate(format: "connectionId == %@", connectionId)
+        }
+        else {
+            fr.predicate = NSPredicate(value: true)
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \NWCConnection.createdAt, ascending: false)]
+        }
+        fr.fetchLimit = 1
         return try? context.fetch(fr).first
     }
     
