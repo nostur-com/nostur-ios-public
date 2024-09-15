@@ -524,7 +524,7 @@ public final class NewPostModel: ObservableObject {
     
     public func selectContactSearchResult(_ contact: Contact) {
         guard let textView = textView else { return }
-        let mentionName = contact.handle
+        let mentionName = contact.anyName
         let mentionText = "\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} " // invisible characters to replace later
 
         if let selectedRange = textView.selectedTextRange {
@@ -671,7 +671,7 @@ public final class NewPostModel: ObservableObject {
     public func directMention(_ contact: Contact) {
         guard textView != nil else { return }
         guard let pubkey = account()?.publicKey, pubkey != contact.pubkey else { return }
-        let mentionName = contact.handle
+        let mentionName = contact.anyName
         typingTextModel.text = "@\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} "
         availableContacts.insert(contact)
         typingTextModel.selectedMentions.insert(contact)
