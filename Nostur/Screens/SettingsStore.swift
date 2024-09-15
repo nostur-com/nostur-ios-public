@@ -567,7 +567,7 @@ final class SettingsStore: ObservableObject {
 }
 
 struct LightningWallet: Identifiable, Hashable {
-    var id:String { name }
+    var id: String { name }
     let name: String
     let scheme: String
 }
