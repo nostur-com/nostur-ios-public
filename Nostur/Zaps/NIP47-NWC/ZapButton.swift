@@ -86,7 +86,12 @@ struct ZapButtonInner: View {
             .simultaneousGesture(
                 LongPressGesture()
                     .onEnded { _ in
-                        self.longTap()
+                        if ss.nwcReady {
+                            self.longTap()
+                        }
+                        else {
+                            tap() 
+                        }
                     }
             )
             .highPriorityGesture(
