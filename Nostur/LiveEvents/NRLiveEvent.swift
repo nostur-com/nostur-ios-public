@@ -57,7 +57,10 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     private let backlog = Backlog(auto: true)
     private var listenForPresenceSub: AnyCancellable?
     
+    public var nEvent: NEvent
+    
     init(event: Event) {
+        self.nEvent = event.toNEvent() // TODO: This is NEvent (MessageParser) to Event (Importer) back to NEvent (here), need to fix better
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -112,7 +115,8 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         }
     }
     
-    public func loadReplacableData(_ params: (participantsOrSpeakers: [NRContact],
+    public func loadReplacableData(_ params: (nEvent: NEvent,
+                                              participantsOrSpeakers: [NRContact],
                                               title: String?,
                                               summary: String?,
                                               fastPs: [(String, String, String?, String?, String?)],
@@ -131,6 +135,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                                              )) {
         
         self.objectWillChange.send()
+        self.nEvent = params.nEvent
         self.participantsOrSpeakers = params.participantsOrSpeakers
         self.pubkeysOnStage.formUnion(Set(params.participantsOrSpeakers.map { $0.pubkey }))
         self.fastPs = params.fastPs
