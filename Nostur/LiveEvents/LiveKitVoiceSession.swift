@@ -48,7 +48,7 @@ class LiveKitVoiceSession: ObservableObject {
 
     var tracks: [Track] = []
     
-    private var accountType: NestAccountType?
+    public var accountType: NestAccountType?
 
     private var nrLiveEvent: NRLiveEvent? = nil
     
@@ -334,90 +334,90 @@ extension LiveKitVoiceSession: RoomDelegate {
     func room(_ room: Room, participant: RemoteParticipant, didPublishTrack publication: RemoteTrackPublication) {
         L.nests.debug("participant: didPublishTrack: publication.track?.id \(publication.track?.id ?? "" )")
         
-//        guard let participantPubkey = participant.identity?.stringValue else { return }
-//        guard isValidPubkey(participantPubkey) else { return }
-//        
-//        DispatchQueue.main.async {
-//            self.nrLiveEvent?.objectWillChange.send()
-//            
-//            if participant.permissions.canPublish {
-//                self.nrLiveEvent?.pubkeysOnStage.insert(participantPubkey)
-//                self.nrLiveEvent?.othersPresent.remove(participantPubkey)
-//            }
-//            else {
-//                self.nrLiveEvent?.pubkeysOnStage.remove(participantPubkey)
-//                self.nrLiveEvent?.othersPresent.insert(participantPubkey)
-//            }
-//            
-//            if publication.isMuted {
-//                self.nrLiveEvent?.mutedPubkeys.insert(participantPubkey)
-//            }
-//            else {
-//                self.nrLiveEvent?.mutedPubkeys.remove(participantPubkey)
-//            }
-//        }
+        //        guard let participantPubkey = participant.identity?.stringValue else { return }
+        //        guard isValidPubkey(participantPubkey) else { return }
+        //
+        //        DispatchQueue.main.async {
+        //            self.nrLiveEvent?.objectWillChange.send()
+        //
+        //            if participant.permissions.canPublish {
+        //                self.nrLiveEvent?.pubkeysOnStage.insert(participantPubkey)
+        //                self.nrLiveEvent?.othersPresent.remove(participantPubkey)
+        //            }
+        //            else {
+        //                self.nrLiveEvent?.pubkeysOnStage.remove(participantPubkey)
+        //                self.nrLiveEvent?.othersPresent.insert(participantPubkey)
+        //            }
+        //
+        //            if publication.isMuted {
+        //                self.nrLiveEvent?.mutedPubkeys.insert(participantPubkey)
+        //            }
+        //            else {
+        //                self.nrLiveEvent?.mutedPubkeys.remove(participantPubkey)
+        //            }
+        //        }
     }
     
     // A ``RemoteParticipant`` has un-published a ``RemoteTrack``. (REMOVED FROM STAGE)
     func room(_ room: Room, participant: RemoteParticipant, didUnpublishTrack publication: RemoteTrackPublication) {
         L.nests.debug("participant: didUnpublishTrack: publication.track?.id \(publication.track?.id ?? "" )")
         
-//        guard let participantPubkey = participant.identity?.stringValue else { return }
-//        guard isValidPubkey(participantPubkey) else { return }
-//        
-//        DispatchQueue.main.async {
-//            self.nrLiveEvent?.objectWillChange.send()
-//            if participant.permissions.canPublish {
-//                self.nrLiveEvent?.pubkeysOnStage.insert(participantPubkey)
-//                self.nrLiveEvent?.othersPresent.remove(participantPubkey)
-//            }
-//            else {
-//                self.nrLiveEvent?.pubkeysOnStage.remove(participantPubkey)
-//                self.nrLiveEvent?.othersPresent.insert(participantPubkey)
-//            }
-//            if publication.isMuted {
-//                self.nrLiveEvent?.mutedPubkeys.insert(participantPubkey)
-//            }
-//            else {
-//                self.nrLiveEvent?.mutedPubkeys.remove(participantPubkey)
-//            }
-//        }
+        //        guard let participantPubkey = participant.identity?.stringValue else { return }
+        //        guard isValidPubkey(participantPubkey) else { return }
+        //
+        //        DispatchQueue.main.async {
+        //            self.nrLiveEvent?.objectWillChange.send()
+        //            if participant.permissions.canPublish {
+        //                self.nrLiveEvent?.pubkeysOnStage.insert(participantPubkey)
+        //                self.nrLiveEvent?.othersPresent.remove(participantPubkey)
+        //            }
+        //            else {
+        //                self.nrLiveEvent?.pubkeysOnStage.remove(participantPubkey)
+        //                self.nrLiveEvent?.othersPresent.insert(participantPubkey)
+        //            }
+        //            if publication.isMuted {
+        //                self.nrLiveEvent?.mutedPubkeys.insert(participantPubkey)
+        //            }
+        //            else {
+        //                self.nrLiveEvent?.mutedPubkeys.remove(participantPubkey)
+        //            }
+        //        }
     }
-
+    
     func room(_ room: Room, participant: LocalParticipant, didPublishTrack publication: LocalTrackPublication) {
         guard let track = publication.track as? AudioTrack else { return }
         
         L.nests.debug("participant: LocalParticipant didPublishTrack: publication.track?.id \(publication.track?.id ?? "" )")
-//        
-//        guard let participantPubkey = participant.identity?.stringValue else { return }
-//        guard isValidPubkey(participantPubkey) else { return }
+        //
+        //        guard let participantPubkey = participant.identity?.stringValue else { return }
+        //        guard isValidPubkey(participantPubkey) else { return }
         
-//        DispatchQueue.main.async {
-//            self.nrLiveEvent?.objectWillChange.send()
-//            if participant.permissions.canPublish {
-//                self.nrLiveEvent?.pubkeysOnStage.insert(participantPubkey)
-//                self.nrLiveEvent?.othersPresent.remove(participantPubkey)
-//            }
-//            else {
-//                self.nrLiveEvent?.pubkeysOnStage.remove(participantPubkey)
-//                self.nrLiveEvent?.othersPresent.insert(participantPubkey)
-//            }
-//            if publication.isMuted {
-//                self.nrLiveEvent?.mutedPubkeys.insert(participantPubkey)
-//            }
-//            else {
-//                self.nrLiveEvent?.mutedPubkeys.remove(participantPubkey)
-//            }
-//        }
+        //        DispatchQueue.main.async {
+        //            self.nrLiveEvent?.objectWillChange.send()
+        //            if participant.permissions.canPublish {
+        //                self.nrLiveEvent?.pubkeysOnStage.insert(participantPubkey)
+        //                self.nrLiveEvent?.othersPresent.remove(participantPubkey)
+        //            }
+        //            else {
+        //                self.nrLiveEvent?.pubkeysOnStage.remove(participantPubkey)
+        //                self.nrLiveEvent?.othersPresent.insert(participantPubkey)
+        //            }
+        //            if publication.isMuted {
+        //                self.nrLiveEvent?.mutedPubkeys.insert(participantPubkey)
+        //            }
+        //            else {
+        //                self.nrLiveEvent?.mutedPubkeys.remove(participantPubkey)
+        //            }
+        //        }
         
         DispatchQueue.main.async {
             self.tracks.append(track)
         }
     }
-
-//    func room(_ room: Room, participant: RemoteParticipant, didSubscribeTrack publication: RemoteTrackPublication) {
-//        
-//    }
+    
+    //    func room(_ room: Room, participant: RemoteParticipant, didSubscribeTrack publication: RemoteTrackPublication) {
+    //
+    //    }
     
     // The ``LocalParticipant`` has un-published a ``LocalTrack``.
     func room(_ room: Room, participant: LocalParticipant, didUnpublishTrack publication: LocalTrackPublication) {
@@ -425,26 +425,26 @@ extension LiveKitVoiceSession: RoomDelegate {
         
         L.nests.debug("participant: LocalParticipant didUnpublishTrack: publication.track?.id \(publication.track?.id ?? "" )")
         
-//        guard let participantPubkey = participant.identity?.stringValue else { return }
-//        guard isValidPubkey(participantPubkey) else { return }
-//        
-//        DispatchQueue.main.async {
-//            self.nrLiveEvent?.objectWillChange.send()
-//            if participant.permissions.canPublish {
-//                self.nrLiveEvent?.pubkeysOnStage.insert(participantPubkey)
-//                self.nrLiveEvent?.othersPresent.remove(participantPubkey)
-//            }
-//            else {
-//                self.nrLiveEvent?.pubkeysOnStage.remove(participantPubkey)
-//                self.nrLiveEvent?.othersPresent.insert(participantPubkey)
-//            }
-//            if publication.isMuted {
-//                self.nrLiveEvent?.mutedPubkeys.insert(participantPubkey)
-//            }
-//            else {
-//                self.nrLiveEvent?.mutedPubkeys.remove(participantPubkey)
-//            }
-//        }
+        //        guard let participantPubkey = participant.identity?.stringValue else { return }
+        //        guard isValidPubkey(participantPubkey) else { return }
+        //
+        //        DispatchQueue.main.async {
+        //            self.nrLiveEvent?.objectWillChange.send()
+        //            if participant.permissions.canPublish {
+        //                self.nrLiveEvent?.pubkeysOnStage.insert(participantPubkey)
+        //                self.nrLiveEvent?.othersPresent.remove(participantPubkey)
+        //            }
+        //            else {
+        //                self.nrLiveEvent?.pubkeysOnStage.remove(participantPubkey)
+        //                self.nrLiveEvent?.othersPresent.insert(participantPubkey)
+        //            }
+        //            if publication.isMuted {
+        //                self.nrLiveEvent?.mutedPubkeys.insert(participantPubkey)
+        //            }
+        //            else {
+        //                self.nrLiveEvent?.mutedPubkeys.remove(participantPubkey)
+        //            }
+        //        }
         
         DispatchQueue.main.async {
             self.tracks.removeAll(where: { $0 == track })
@@ -476,7 +476,7 @@ extension LiveKitVoiceSession: RoomDelegate {
     func room(_ room: Room, participant: Participant, didUpdateMetadata metadata: String?) {
         L.nests.debug("room: didUpdateMetadata: metadata \(metadata ?? "")")
     }
-
+    
     // ``Participant/name`` has updated.
     func room(_ room: Room, participant: Participant, didUpdateName name: String) {
         L.nests.debug("room: didUpdateName: name \(name)")
@@ -505,7 +505,7 @@ extension LiveKitVoiceSession: RoomDelegate {
         L.nests.debug("room: didUpdateMetadata: metadata \(metadata ?? "")")
         self.syncRoomMetadata(metadata: metadata)
     }
-
+    
     private func syncRoomMetadata(metadata: String?) {
         guard let metadataString = metadata else { return }
         let decoder = JSONDecoder()
@@ -513,8 +513,37 @@ extension LiveKitVoiceSession: RoomDelegate {
             return
         }
         Task { @MainActor in
-            nrLiveEvent?.admins = Set(lkMetadata.admins)
+            // Remove from stage
+            let beforeOnStage = nrLiveEvent?.pubkeysOnStage ?? []
+            let noLongerOnStage = beforeOnStage.subtracting(Set(lkMetadata.speakers)) // diff
+            nrLiveEvent?.othersPresent = (nrLiveEvent?.othersPresent ?? []).union(noLongerOnStage) // put what is removed back to .othersPresent (listening)
+            
+            // Add to stage
+            nrLiveEvent?.pubkeysOnStage = Set(lkMetadata.speakers)
+            nrLiveEvent?.othersPresent.subtract(Set(lkMetadata.speakers)) // remove from listening
+            
+            nrLiveEvent?.admins = if let host = lkMetadata.host {
+                Set(lkMetadata.admins + [host])
+            }
+            else {
+                Set(lkMetadata.admins)
+            }
             isRecording = lkMetadata.recording
+        }
+    }
+    
+    /// ``TrackPublication/isMuted`` has updated.
+    func room(_ room: Room, participant: Participant, trackPublication: TrackPublication, didUpdateIsMuted isMuted: Bool) {
+        guard let participantPubkey = participant.identity?.stringValue else { return }
+        guard isValidPubkey(participantPubkey) else { return }
+        
+        if let nrContact = self.nrLiveEvent?.participantsOrSpeakers.first(where: { $0.pubkey == participantPubkey }) {
+            Task { @MainActor in
+                withAnimation {
+                    nrContact.volume = isMuted ? 0 : CGFloat(participant.audioLevel)
+                    nrContact.isMuted = isMuted
+                }
+            }
         }
     }
 }
@@ -529,12 +558,4 @@ enum LiveKitVoiceSessionState {
 enum NestAccountType {
     case account(CloudAccount)
     case anonymous(NKeys)
-}
-
-struct LiveKitRoomMetaData: Decodable {
-    var host: String?
-    let speakers: [String]
-    let admins: [String]
-    var link: String?
-    let recording: Bool
 }
