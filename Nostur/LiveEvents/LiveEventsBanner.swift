@@ -30,6 +30,7 @@ struct LiveEventsBanner: View {
                             .simultaneousGesture(
                                 DragGesture()
                                     .onEnded { value in
+                                        guard nrLiveEvent.pubkey != NRState.shared.activeAccountPublicKey else { return } // Never dismiss own event
                                         if value.translation.height < -50 { // Adjust the threshold as needed
                                             remove(nrLiveEvent.id)
                                         }

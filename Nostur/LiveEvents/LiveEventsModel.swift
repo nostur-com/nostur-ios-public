@@ -20,7 +20,7 @@ class LiveEventsModel: ObservableObject {
     private var didLoad = false
     private static let EVENTS_LIMIT = 250
     private var subscriptions = Set<AnyCancellable>()
-    private var agoTimestamp: Int?
+
     @Published var dismissedLiveEvents: Set<String> = [] { // aTags
         didSet {
             self.nrLiveEvents = nrLiveEvents.filter { !self.dismissedLiveEvents.contains($0.id) }
@@ -59,11 +59,11 @@ class LiveEventsModel: ObservableObject {
     }
     
     private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
-        guard let agoTimestamp = self.agoTimestamp else { return }
+        guard let accountPubkey = NRState.shared.loggedInAccount?.pubkey else { return }
         
         let blockedPubkeys = blocks()
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "created_at > %i AND kind == 30311 AND mostRecentId == nil AND NOT pubkey IN %@", agoTimestamp, blockedPubkeys)
+        fr.predicate = NSPredicate(format: "(created_at > %i OR pubkey == %@) AND kind == 30311 AND mostRecentId == nil AND NOT pubkey IN %@", agoTimestamp, accountPubkey, blockedPubkeys)
         
         let bgContext = bg()
         bgContext.perform { [weak self]  in
@@ -74,7 +74,7 @@ class LiveEventsModel: ObservableObject {
             let nrLiveEvents: [NRLiveEvent] = events
                 .filter { !self.dismissedLiveEvents.contains($0.aTag) } // don't show dismissed events
                 .filter { $0.fastTags.contains(where: { $0.0 == "status" && $0.1 == "live" }) } // only LIVE
-                .filter { self.hasSpeakerOrHostInFollows($0) }
+                .filter { self.hasSpeakerOrHostInFollows($0) || (accountPubkey == $0.pubkey) }
                 .map { NRLiveEvent(event: $0) }
             
             DispatchQueue.main.async { [weak self] in
@@ -100,10 +100,11 @@ class LiveEventsModel: ObservableObject {
         return self.follows.intersection(speakerOrHostPubkeys).count > 0
     }
     
+    private var agoTimestamp: Int {
+        Int(Date().timeIntervalSince1970 - (60 * 60 * 4)) // Only with recent 4 hours
+    }
+    
     private func fetchFromRelays(_ onComplete: (() -> ())? = nil) {
-        
-        self.agoTimestamp = Int(Date().timeIntervalSince1970 - (60 * 60 * 4)) // Only with recent 4 hours
-        guard let agoTimestamp = self.agoTimestamp else { return }
         
         // Live Event created by follows
         let createdByTask = ReqTask(
@@ -119,8 +120,7 @@ class LiveEventsModel: ObservableObject {
                                     Filters(
                                         authors: self.follows,
                                         kinds: Set([30311]),
-                                        since: agoTimestamp,
-                                        limit: 200
+                                        since: agoTimestamp
                                     )
                                    ]
                     ).json() {
@@ -159,8 +159,7 @@ class LiveEventsModel: ObservableObject {
                                     Filters(
                                         kinds: Set([30311]),
                                         tagFilter: TagFilter(tag: "p", values: self.follows),
-                                        since: agoTimestamp,
-                                        limit: 200
+                                        since: agoTimestamp
                                     ),
                                    ]
                     ).json() {
@@ -191,6 +190,7 @@ class LiveEventsModel: ObservableObject {
         participatingTask.fetch()
     }
     
+    @MainActor
     public func load() {
 #if DEBUG
         L.og.debug("LIVE feed: load()")
@@ -201,6 +201,7 @@ class LiveEventsModel: ObservableObject {
     }
     
     // for after account change // TODO: Handle account change
+    @MainActor
     public func reload() {
         self.backlog.clear()
         self.follows = Nostur.follows()
