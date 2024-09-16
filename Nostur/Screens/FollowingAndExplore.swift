@@ -238,22 +238,24 @@ struct FollowingAndExplore: View {
                 
                 // HOT/ARTICLES/GALLERY
                 if la.account.followingPubkeys.count > 10 {
-                    switch selectedSubTab {
-                    case "Hot":
-                        Hot()
-                            .environmentObject(hotVM)
-                    case "Discover":
-                        Discover()
-                            .environmentObject(discoverVM)
-                    case "Articles":
-                        ArticlesFeed()
-                            .environmentObject(articlesVM)
-                    case "Gallery":
-                        Gallery()
-                            .environmentObject(galleryVM)
-                    default:
-                        EmptyView()
-                    }                        
+                    AvailableWidthContainer {
+                        switch selectedSubTab {
+                        case "Hot":
+                            Hot()
+                                .environmentObject(hotVM)
+                        case "Discover":
+                            Discover()
+                                .environmentObject(discoverVM)
+                        case "Articles":
+                            ArticlesFeed()
+                                .environmentObject(articlesVM)
+                        case "Gallery":
+                            Gallery()
+                                .environmentObject(galleryVM)
+                        default:
+                            EmptyView()
+                        }
+                    }
                 }
             }
         }

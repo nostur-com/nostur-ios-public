@@ -74,20 +74,31 @@ struct LiveEventDetail: View {
                                 videoStreamView
                                     .background(themes.theme.background)
                             }
-                            
-                            ZStack {
-                                ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
-                                    .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
-                                    .padding(.horizontal, 10)
-                                    .environmentObject(vc)
-                                
-                                if let selectedContact {
-                                    themes.theme.background
-                                    
-                                    SelectedParticipantView(nrContact: selectedContact, showZapButton: !liveKitVoiceSession.listenAnonymously, liveEvent: liveEvent, showModeratorControls: showModeratorControls, selectedContact: $selectedContact)
-                                        .padding(10)
+                            .onTapGesture {
+                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                                to: nil, from: nil, for: nil)
+                            }
+                            .overlay(alignment: .topTrailing) {
+                                if showModeratorControls {
+                                    self.recordingsMenu
                                 }
                             }
+                            
+                            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
+                                .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
+                                .padding(.horizontal, 10)
+                                .environmentObject(vc)
+                            
+//                            ZStack {
+//
+//                                
+//                                if let selectedContact {
+//                                    themes.theme.background
+//                                    
+//                                    SelectedParticipantView(nrContact: selectedContact, showZapButton: !liveKitVoiceSession.listenAnonymously, liveEvent: liveEvent, showModeratorControls: showModeratorControls, selectedContact: $selectedContact)
+//                                        .padding(10)
+//                                }
+//                            }
                         }
                     }
                     .frame(minHeight: geo.size.height)
