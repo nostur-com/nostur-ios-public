@@ -810,7 +810,7 @@ struct PreviewContainer<Content: View>: View {
             }
         }
         .onAppear {
-            pe.themes.loadBlue()
+            pe.themes.loadGreen()
             if pe.loadAccount() {
                 if let setup {
                     setup(pe)
