@@ -266,6 +266,7 @@ struct LiveEventDetail: View {
         }
         else if case .connected = liveKitVoiceSession.state {
             NestButtons(liveKitVoiceSession: liveKitVoiceSession)
+                .frame(height: 100)
         }
         else if case .connecting = liveKitVoiceSession.state {
             Button { } label: {
