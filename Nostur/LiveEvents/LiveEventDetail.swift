@@ -49,6 +49,9 @@ struct LiveEventDetail: View {
         guard let account else { return false }
         return liveEvent.admins.contains(account.publicKey) || liveEvent.pubkey == account.publicKey
     }
+    
+    @State private var recordings: [RecordingInfo]? = nil
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -357,6 +360,106 @@ struct LiveEventDetail: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, 10)
             }
+        }
+    }
+    
+    @ViewBuilder
+    private var recordingsMenu: some View {
+        Menu {
+            if liveEvent.status == "live" || liveEvent.status == "planned" {
+                Button("Close room", systemImage: "xmark.app") {
+                    guard let account, account.publicKey == liveEvent.pubkey else { return }
+                    
+                    var closedNEvent = liveEvent.nEvent
+                    closedNEvent.createdAt = NTimestamp(date: .now)
+                    closedNEvent.tags = closedNEvent.tags.map { tag in
+                        if tag.type == "status" {
+                            return NostrTag(["status", "ended"])
+                        }
+                        else if tag.type == "ends" {
+                            return NostrTag(["ends", Int(Date.now.timeIntervalSince1970).description])
+                        }
+                        return tag
+                    }
+                    if !closedNEvent.tags.contains(where: { $0.type == "ends" }) {
+                        closedNEvent.tags.append(NostrTag(["ends", Int(Date.now.timeIntervalSince1970).description]))
+                    }
+                    if account.isNC {
+                        NSecBunkerManager.shared.requestSignature(forEvent: closedNEvent, usingAccount: account) { signedClosedNEvent in
+                            Unpublisher.shared.publishNow(signedClosedNEvent, skipDB: true)
+                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedClosedNEvent), nEvent: signedClosedNEvent, relayUrl: "local")
+                            liveEvent.status = "ended"
+                        }
+                    }
+                    else {
+                        if let signedClosedNEvent = try? account.signEvent(closedNEvent) {
+                            Unpublisher.shared.publishNow(signedClosedNEvent, skipDB: true)
+                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedClosedNEvent), nEvent: signedClosedNEvent, relayUrl: "local")
+                            liveEvent.status = "ended"
+                        }
+                    }
+                    
+                }
+            }
+                
+            Text("Recordings")
+                .font(.footnote)
+            if !liveKitVoiceSession.isRecording {
+                Button("Start recording", systemImage: "record.circle") {
+                    guard let account else { return }
+                    Task { @MainActor in
+                        try? await liveEvent.startRecording(account: account)
+                        if let recordings = try? await liveEvent.listRecordings(account: account) {
+                            Task { @MainActor in
+                                self.recordings = recordings
+                            }
+                        }
+                    }
+                }
+            }
+            if let recordings {
+                ForEach(recordings) { recording in
+                    Button("\(recording.stopped != nil ? "Recorded" : "Recording since") \(Date(timeIntervalSince1970: TimeInterval(recording.started)).formatted(date: .omitted, time: .shortened))", systemImage: recording.stopped != nil ? "arrow.down.circle" : "stop.circle") {
+                        guard let account else { return }
+                        if recording.stopped == nil {
+                            // stop
+                            Task { @MainActor in
+                                try? await liveEvent.stopRecording(account: account, recordingId: recording.id)
+                                
+                                // refresh list
+                                if let recordings = try? await liveEvent.listRecordings(account: account) {
+                                    Task { @MainActor in
+                                        self.recordings = recordings
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            // download
+                            L.og.debug("Download recording.......")
+                            guard let url = URL(string: recording.url) else { return }
+                            UIApplication.shared.open(url)
+                        }
+                        
+                    }
+                    .foregroundColor(recording.stopped != nil ? Color.red : Color.primary)
+                }
+            }
+            else {
+                ProgressView()
+                    .task {
+                        guard let account else { return }
+                        if let recordings = try? await liveEvent.listRecordings(account: account) {
+                            Task { @MainActor in
+                                self.recordings = recordings
+                            }
+                        }
+                    }
+            }
+        } label: {
+            Image(systemName: "gearshape.fill")
+                .font(.title2)
+                .padding()
         }
     }
 }
