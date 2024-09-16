@@ -96,11 +96,13 @@ public final class NewPostModel: ObservableObject {
                 .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
                 // Put following before non-following
                 .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
+                // TODO: Put mentioned in thread before all
         }
         else {
             // WoT disabled, just following before non-following
             return contactSearchResults
                 .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
+                // TODO: Put mention in thread before all
         }
     }
     

@@ -281,7 +281,7 @@ func bg() -> NSManagedObjectContext {
     (DataProvider.shared().bgStored ?? DataProvider.shared().bg) // .bg lazy computed, so may have thread contention issues when used a lot, try to directly access .bgStored here.
 }
 
-func viewContextSave() {
+func viewContextSave() { // TODO make this always debounce + throttle latest
     if DataProvider.shared().viewContext.hasChanges {
         do {
             try DataProvider.shared().viewContext.save()

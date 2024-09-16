@@ -12,9 +12,7 @@ struct NestButtons: View {
     @ObservedObject public var liveKitVoiceSession: LiveKitVoiceSession
     
     var body: some View {
-    
         HStack(alignment: .top) {
-
             VStack {
                 Toggle("Mute mic", systemImage: liveKitVoiceSession.isMuted ? "mic.slash.fill" : "mic.fill", isOn: $liveKitVoiceSession.isMuted)
                     .font(.largeTitle)
