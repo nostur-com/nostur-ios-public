@@ -321,8 +321,6 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         }
     }
     
-    
-    
     @Published public var raisedHands: Set<String> = [] // Not used in views? can be private and not @Published?
     @Published public var pubkeysOnStage: Set<String> = []
     @Published public var admins: Set<String> = []
