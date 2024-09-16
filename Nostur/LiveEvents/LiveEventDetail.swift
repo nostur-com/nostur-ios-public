@@ -258,7 +258,7 @@ struct LiveEventDetail: View {
     
     @ViewBuilder
     private var nestButtonsView: some View {
-        if let scheduledAt = liveEvent.scheduledAt {
+        if let scheduledAt = liveEvent.scheduledAt, liveEvent.status == "planned" {
             ScheduleReminderButton(at: scheduledAt, reminderId: liveEvent.id)
         }
         else if streamHasEnded {
