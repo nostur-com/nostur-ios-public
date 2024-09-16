@@ -39,9 +39,16 @@ struct LiveEventDetail: View {
     @State private var zapCustomizerSheetInfo: ZapCustomizerSheetInfo? = nil
     @State private var showZapSheet = false
     
+    @State private var selectedContact: NRContact? = nil
+    
     // TODO: Somehow get the width somewhere on parent views
     @State private var vc: ViewingContext?
     
+    private var showModeratorControls: Bool {
+        if liveKitVoiceSession.listenAnonymously { return false }
+        guard let account else { return false }
+        return liveEvent.admins.contains(account.publicKey) || liveEvent.pubkey == account.publicKey
+    }
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -110,6 +117,16 @@ struct LiveEventDetail: View {
                         .presentationBackgroundCompat(themes.theme.listBackground)
                 }
             })
+            .sheet(item: $selectedContact) { nrContact in
+                NBNavigationStack {
+                    SelectedParticipantView(nrContact: nrContact, showZapButton: !liveKitVoiceSession.listenAnonymously, liveEvent: liveEvent, showModeratorControls: showModeratorControls, selectedContact: $selectedContact)
+                        .environmentObject(themes)
+                        .padding(10)
+                }
+                .nbUseNavigationStack(.never)
+                .presentationBackgroundCompat(themes.theme.background)
+                .presentationDetents45ml()
+            }
     }
     
     @ViewBuilder
@@ -169,14 +186,21 @@ struct LiveEventDetail: View {
             ScrollView(.horizontal) {
                 HFlow(alignment: .top) {
                     ForEach(liveEvent.onStage.indices, id: \.self) { index in
-                        NBNavigationLink(value: NRContactPath(nrContact: liveEvent.onStage[index], navigationTitle: liveEvent.onStage[index].anyName), label: {
+//                        NBNavigationLink(value: NRContactPath(nrContact: liveEvent.onStage[index], navigationTitle: liveEvent.onStage[index].anyName), label: {
                             NestParticipantView(
                                 nrContact: liveEvent.onStage[index],
                                 role: liveEvent.role(forPubkey: liveEvent.onStage[index].pubkey),
-                                aTag: liveEvent.id,
-                                showZapButton: !liveKitVoiceSession.listenAnonymously
+                                aTag: liveEvent.id
                             )
-                        })
+                            .onTapGesture {
+                                if liveEvent.onStage[index] == selectedContact {
+                                    selectedContact = nil
+                                }
+                                else {
+                                    selectedContact = liveEvent.onStage[index]
+                                }
+                            }
+//                        })
                         .id(liveEvent.onStage[index].pubkey)
                         .frame(width: 95, height: 95)
                         .fixedSize()
@@ -202,14 +226,22 @@ struct LiveEventDetail: View {
             ScrollView(.horizontal) {
                 HFlow(alignment: .top) {
                     ForEach(liveEvent.listeners.indices, id: \.self) { index in
-                        NBNavigationLink(value: NRContactPath(nrContact: liveEvent.listeners[index], navigationTitle: liveEvent.listeners[index].anyName), label: {
+//                        NBNavigationLink(value: NRContactPath(nrContact: liveEvent.listeners[index], navigationTitle: liveEvent.listeners[index].anyName), label: {
                             NestParticipantView(
                                 nrContact: liveEvent.listeners[index],
                                 role: liveEvent.role(forPubkey: liveEvent.listeners[index].pubkey),
                                 aTag: liveEvent.id,
-                                showZapButton: !liveKitVoiceSession.listenAnonymously
+                                showControls: false
                             )
-                        })
+                            .onTapGesture {
+                                if liveEvent.listeners[index] == selectedContact {
+                                    selectedContact = nil
+                                }
+                                else {
+                                    selectedContact = liveEvent.listeners[index]
+                                }
+                            }
+//                        })
                         .id(liveEvent.listeners[index].pubkey)
                         .frame(width: 95, height: 95)
                         .fixedSize()
