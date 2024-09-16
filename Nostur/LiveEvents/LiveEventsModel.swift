@@ -258,6 +258,7 @@ class LiveEventsModel: ObservableObject {
                             nil
                         }
                         let eventJson = event.toNEvent().eventJson()
+                        let liveKitBaseUrl = event.liveKitBaseUrl()
                         let liveKitJoinUrl = event.liveKitJoinUrl()
                         let streamingUrl = event.streamingUrl()
                         let webUrl = event.webUrl()
@@ -290,6 +291,7 @@ class LiveEventsModel: ObservableObject {
                                                               thumbUrl: thumbUrl,
                                                               streamStatus: streamStatus,
                                                               recordingUrl: recordingUrl,
+                                                              liveKitBaseUrl: liveKitBaseUrl,
                                                               liveKitConnectUrl: liveKitConnectUrl,
                                                               scheduledAt: scheduledAt
                                                              ))
