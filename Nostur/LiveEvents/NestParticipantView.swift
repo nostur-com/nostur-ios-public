@@ -14,7 +14,6 @@ struct NestParticipantView: View {
     public let aTag: String
     
     public var showControls = true
-    public var showZapButton = true
     
     @State private var isZapped = false
     
@@ -33,17 +32,17 @@ struct NestParticipantView: View {
                     }
                 }
                 .overlay(alignment: .bottomTrailing) {
-                    if showControls && nrContact.volume > 0 {
+                    if showControls {
                         MicButton(volume: nrContact.volume, isMuted: nrContact.isMuted)
                             .offset(x: 15.0, y: 5)
                     }
                 }
-                .overlay(alignment: .topLeading) {
-                    if nrContact.anyLud && showZapButton {
-                        NestZapButton(name: nrContact.anyName, aTag: aTag, nrContact: nrContact)
-                            .offset(x: -15.0, y: 5)
-                    }
-                }
+//                .overlay(alignment: .bottomLeading) {
+//                    if nrContact.anyLud && showZapButton {
+//                        NestZapButton(name: nrContact.anyName, aTag: aTag, nrContact: nrContact)
+//                            .offset(x: -15.0, y: 5)
+//                    }
+//                }
             Text(nrContact.anyName).lineLimit(1)
             Text(role ?? "").font(.footnote)
                 .foregroundColor(.secondary)
@@ -79,7 +78,7 @@ struct MicButton: View {
                 .frame(width: 28, height: 28)
                 .overlay(alignment: .bottom) {
                     Color.accentColor
-                        .frame(height: 28*(min(volume+(volume > 0.125 ? 0.25 : 0), 1.0)))
+                        .frame(height: isMuted ? 0 : 28*(min(volume+(volume > 0.125 ? 0.25 : 0), 1.0)))
                         .animation(.interpolatingSpring(stiffness: 400, damping: 3), value: volume)
                 }
                 
