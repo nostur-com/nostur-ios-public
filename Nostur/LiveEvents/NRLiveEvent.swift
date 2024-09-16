@@ -34,6 +34,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     
     public var eventJson: String
     public var liveKitJoinUrl: String?
+    public var liveKitBaseUrl: String?
     public var streamingUrl: String?
     public var webUrl: String?
     @Published public var status: String? {
@@ -91,6 +92,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         }
         self.eventJson = event.toNEvent().eventJson()
         self.liveKitJoinUrl = event.liveKitJoinUrl()
+        self.liveKitBaseUrl = event.liveKitBaseUrl()
         self.streamingUrl = event.streamingUrl()
         self.webUrl = event.webUrl()
         self.status = event.streamStatus()
@@ -123,6 +125,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                                               thumbUrl: String?,
                                               streamStatus: String?,
                                               recordingUrl: String?,
+                                              liveKitBaseUrl: String?,
                                               liveKitConnectUrl: String?,
                                               scheduledAt: Date?
                                              )) {
@@ -137,6 +140,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.url = params.url
         self.eventJson = params.eventJson
         self.liveKitJoinUrl = params.liveKitJoinUrl
+        self.liveKitBaseUrl = params.liveKitBaseUrl
         self.streamingUrl = params.streamingUrl
         self.webUrl = params.webUrl
         self.thumbUrl = if let thumbUrl = params.thumbUrl {
@@ -445,6 +449,12 @@ extension Event {
         guard self.isLiveKit() else { return nil }
         guard let service = self.fastTags.first(where: { $0.0 == "service" })?.1 else { return nil }
         return (service + "/api/v1/nests/auth")
+    }
+    
+    func liveKitBaseUrl() -> String? {
+        guard self.isLiveKit() else { return nil }
+        guard let service = self.fastTags.first(where: { $0.0 == "service" })?.1 else { return nil }
+        return service
     }
     
     func liveKitJoinUrl() -> String? {
