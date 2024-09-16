@@ -232,6 +232,7 @@ class LiveEventsModel: ObservableObject {
             .sink { [weak self] event in
                 guard let self else { return }
                 // We should be in bg() already, here (?)
+                let nEvent = event.toNEvent() // TODO: This is NEvent (MessageParser) to Event (Importer) to NEvent (here), need to fix better
                 let aTag = event.aTag
                 
                 if Set(self.nrLiveEvents.map { $0.id }).contains(aTag) { // update existing event
@@ -239,7 +240,7 @@ class LiveEventsModel: ObservableObject {
                     
                     guard (self.nrLiveEvents.first(where: { $0.id == aTag })) != nil else { return }
                     
-                    if (event.isLive()) { // update if still live
+                    if (event.isLive() || event.isPlanned()) { // update if still live or planned
                         
                         let participantsOrSpeakers = event.participantsOrSpeakers()
                         let fastPs = event.fastPs
@@ -278,7 +279,8 @@ class LiveEventsModel: ObservableObject {
                         if let nrLiveEvent = self.nrLiveEvents.first(where: { $0.id == aTag }) {
                             DispatchQueue.main.async {
                                 nrLiveEvent.objectWillChange.send()
-                                nrLiveEvent.loadReplacableData((participantsOrSpeakers: participantsOrSpeakers,
+                                nrLiveEvent.loadReplacableData((nEvent: nEvent,
+                                                              participantsOrSpeakers: participantsOrSpeakers,
                                                               title: title,
                                                               summary: summary,
                                                               fastPs: fastPs,
