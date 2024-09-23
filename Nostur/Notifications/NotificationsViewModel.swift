@@ -657,7 +657,7 @@ class NotificationsViewModel: ObservableObject {
                     
             let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
             r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@",
+            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@ AND NOT id == nil",
                                        pubkey, PNType.newPosts.rawValue)
             r3.resultType = .updatedObjectIDsResultType
 
@@ -787,7 +787,7 @@ class NotificationsViewModel: ObservableObject {
                     
             let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
             r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@",
+            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@ AND NOT id == nil",
                                        pubkey, PNType.newFollowers.rawValue)
             r3.resultType = .updatedObjectIDsResultType
 
@@ -840,7 +840,7 @@ fileprivate class NotificationFetchRequests {
         let pubkey = account.publicKey
 
         let r = PersistentNotification.fetchRequest()
-        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@", PNType.newPosts.rawValue, pubkey)
+        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@ AND NOT id == nil", PNType.newPosts.rawValue, pubkey)
         r.fetchLimit = Self.FETCH_LIMIT
         r.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
         r.resultType = .countResultType
@@ -880,7 +880,7 @@ fileprivate class NotificationFetchRequests {
         let pubkey = account.publicKey
 
         let r = PersistentNotification.fetchRequest()
-        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@", PNType.newFollowers.rawValue, pubkey)
+        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@ AND NOT id == nil", PNType.newFollowers.rawValue, pubkey)
         r.fetchLimit = Self.FETCH_LIMIT
         r.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
         r.resultType = .countResultType

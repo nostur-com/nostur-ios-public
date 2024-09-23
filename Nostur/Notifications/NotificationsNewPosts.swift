@@ -43,7 +43,7 @@ struct NotificationsNewPosts: View {
         _navPath = navPath
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
-        fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", pubkey, PNType.newPosts.rawValue)
+        fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", pubkey, PNType.newPosts.rawValue)
         _notifications = FetchRequest(fetchRequest: fr)
     }
     
@@ -120,7 +120,7 @@ struct NotificationsNewPosts: View {
         .background(themes.theme.listBackground)
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
             let account = notification.object as! CloudAccount
-            notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", account.publicKey, PNType.newPosts.rawValue)
+            notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", account.publicKey, PNType.newPosts.rawValue)
         }
         .simultaneousGesture(
                DragGesture().onChanged({

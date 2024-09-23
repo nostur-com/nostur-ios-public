@@ -46,13 +46,13 @@ extension PersistentNotification : Identifiable {
             request.predicate = NSPredicate(format: "id == %@", id)
         }
         else if let pubkey, let type {
-            request.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", pubkey, type.rawValue)
+            request.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", pubkey, type.rawValue)
             request.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
         }
         else {
             request.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
             if let type = type {
-                request.predicate = NSPredicate(format: "type_ == %@", type.rawValue)
+                request.predicate = NSPredicate(format: "type_ == %@ AND NOT id == nil", type.rawValue)
             }
             else {
                 request.predicate = NSPredicate(value: true)
