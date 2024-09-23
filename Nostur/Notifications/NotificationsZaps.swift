@@ -36,7 +36,7 @@ struct NotificationsZaps: View {
         _navPath = navPath
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
-        fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ IN %@", pubkey, [PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue,PNType.failedLightningInvoice.rawValue])
+        fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ IN %@ AND NOT id == nil", pubkey, [PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue,PNType.failedLightningInvoice.rawValue])
         _pNotifications = FetchRequest(fetchRequest: fr)
     }
     
