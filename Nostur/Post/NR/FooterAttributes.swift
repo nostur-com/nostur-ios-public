@@ -60,9 +60,9 @@ class FooterAttributes: ObservableObject {
         
         self.relays = event.relays
         
-        if withFooter && Self.isBookmarked(event) {
+        if withFooter, let bookmarkColor = Self.getBookmarkColor(event) {
             self.bookmarked = true
-            self.bookmarkColor = Bookmark.fetchColor(eventId: event.id, context: bg())
+            self.bookmarkColor = bookmarkColor
         }
         else {
             self.bookmarked = false
@@ -92,9 +92,9 @@ class FooterAttributes: ObservableObject {
             var isBookmarked = false
             var bookmarkColor: Color = .orange
             
-            if Self.isBookmarked(event) {
+            if let color = Self.getBookmarkColor(event) {
                 isBookmarked = true
-                bookmarkColor = Bookmark.fetchColor(eventId: event.id, context: bg())
+                bookmarkColor = color
             }
             
 //            let zapsCount = self.event.zapsCount
@@ -217,15 +217,20 @@ class FooterAttributes: ObservableObject {
             }
     }
     
-    static private func isBookmarked(_ event: Event) -> Bool {
+    static private func getBookmarkColor(_ event: Event) -> Color? {
         if let accountCache = accountCache() {
-            return accountCache.isBookmarked(event.id)
+            return accountCache.getBookmarkColor(event.id)
         }
         
         // TODO: Need to cache this, update cache when bookmarks change
-        let allBookmarks = Set(Bookmark.fetchAll(context: bg()).compactMap({ $0.eventId }))
-        
-        return allBookmarks.contains(event.id)
+        let bookmarks = Bookmark.fetchAll(context: bg())
+        for bookmark in bookmarks {
+            guard let eventId = bookmark.eventId else { continue }
+            if event.id == eventId {
+                return bookmark.color
+            }
+        }
+        return nil
     }
     
     static private func isLiked(_ event:Event) -> Bool {

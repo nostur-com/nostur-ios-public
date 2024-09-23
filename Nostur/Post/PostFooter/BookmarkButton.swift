@@ -144,7 +144,7 @@ struct BookmarkButton: View {
         Bookmark.addBookmark(nrPost, color: color)
         self.footerAttributes.bookmarkColor = color
         bg().perform {
-            accountCache()?.addBookmark(nrPost.id)
+            accountCache()?.addBookmark(nrPost.id, color: color)
         }
     }
     

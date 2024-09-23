@@ -5,7 +5,7 @@
 //  Created by Fabian Lachman on 26/01/2023.
 //
 
-import Foundation
+import SwiftUI
 
 typealias EventId = String
 
@@ -57,7 +57,7 @@ class AccountCache {
     
     public let pubkey: String
     
-    private var bookmarkedIds: Set<String> = []
+    private var bookmarkedIds: [String: Color] = [:]
     private var likedIds: Set<String> = []
     private var repostedIds: Set<String> = []
     private var repliedToIds: Set<String> = []
@@ -82,16 +82,16 @@ class AccountCache {
     
     
     
-    public func isBookmarked(_ eventId: String) -> Bool {
-        return bookmarkedIds.contains(eventId)
+    public func getBookmarkColor(_ eventId: String) -> Color? {
+        return bookmarkedIds[eventId]
     }
     
-    public func addBookmark(_ eventId: String) {
-        bookmarkedIds.insert(eventId)
+    public func addBookmark(_ eventId: String, color: Color) {
+        bookmarkedIds[eventId] = color
     }
     
     public func removeBookmark(_ eventId: String) {
-        bookmarkedIds.remove(eventId)
+        bookmarkedIds[eventId] = nil
     }
     
     
@@ -178,8 +178,11 @@ class AccountCache {
     
     
     private func initBookmarked() {
-        let allBookmarkIds = Set(Bookmark.fetchAll(context: bg()).compactMap({ $0.eventId }))
-        self.bookmarkedIds = allBookmarkIds
+        let bookmarks = Bookmark.fetchAll(context: bg())
+        for bookmark in bookmarks {
+            guard let eventId = bookmark.eventId else { continue }
+            self.bookmarkedIds[eventId] = bookmark.color
+        }
         self.initializedCaches.insert("bookmarks")
     }
     
