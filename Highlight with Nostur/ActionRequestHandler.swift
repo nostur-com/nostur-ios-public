@@ -27,25 +27,15 @@ class ActionRequestHandler: NSObject, NSExtensionRequestHandling {
                         if itemProvider.hasItemConformingToTypeIdentifier(kUTTypePropertyList as String) {
                             
                             itemProvider.loadItem(forTypeIdentifier: kUTTypePropertyList as String, options: nil, completionHandler: { (item, error) in
-                                let dictionary = item as! [String: Any]
-                                OperationQueue.main.addOperation {
-                                    self.itemLoadCompletedWithPreprocessingResults(dictionary[NSExtensionJavaScriptPreprocessingResultsKey] as! [String: Any]? ?? [:])
+                                if let dictionary = item as? [String: Any] {
+                                    OperationQueue.main.addOperation {
+                                        self.itemLoadCompletedWithPreprocessingResults(dictionary[NSExtensionJavaScriptPreprocessingResultsKey] as! [String: Any]? ?? [:])
+                                    }
                                 }
                             })
                             found = true
                             break outer
                         }
-                        
-//                        if itemProvider.hasItemConformingToTypeIdentifier(UTType.propertyList.identifier) {
-//                            itemProvider.loadItem(forTypeIdentifier: UTType.propertyList.identifier, options: nil, completionHandler: { (item, error) in
-//                                let dictionary = item as! [String: Any]
-//                                OperationQueue.main.addOperation {
-//                                    self.itemLoadCompletedWithPreprocessingResults(dictionary[NSExtensionJavaScriptPreprocessingResultsKey] as! [String: Any]? ?? [:])
-//                                }
-//                            })
-//                            found = true
-//                            break outer
-//                        }
                     }
                 }
         }
