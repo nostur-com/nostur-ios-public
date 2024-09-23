@@ -58,7 +58,7 @@ struct BookmarksAndPrivateNotes: View {
                 AvailableWidthContainer {
                     switch selectedSubTab {
                         case "Bookmarks":
-                        BookmarksView(navPath: $navPath, bookmarkFilters: bookmarkFilters)
+                            BookmarksView(navPath: $navPath, bookmarkFilters: bookmarkFilters)
                         case "Private Notes":
                             PrivateNotesView(navPath: $navPath)
                         default:

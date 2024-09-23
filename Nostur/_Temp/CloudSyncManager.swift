@@ -62,7 +62,7 @@ class CloudSyncManager {
         Task { @MainActor in
             if let accountCache = NRState.shared.loggedInAccount?.accountCache {
                 bg().perform {
-                    accountCache.addBookmark(eventId)
+                    accountCache.addBookmark(eventId, color: bookmark.color)
                 }
             }
         }
