@@ -13,6 +13,7 @@ public typealias PhotoPickerTappedCallback = () -> Void
 public typealias VideoPickerTappedCallback = () -> Void
 public typealias GifsTappedCallback = () -> Void
 public typealias CameraTappedCallback = () -> Void
+public typealias NestsTappedCallback = () -> Void
 
 protocol PastedMediaDelegate: UITextViewDelegate {
     func didPasteImage(_ image: UIImage)
@@ -21,6 +22,7 @@ protocol PastedMediaDelegate: UITextViewDelegate {
     func videoTapped()
     func gifsTapped()
     func cameraTapped()
+    func nestsTapped()
 }
 
 class NosturTextView: UITextView {
@@ -65,6 +67,11 @@ class NosturTextView: UITextView {
         pastedMediaDelegate?.cameraTapped()
     }
     
+    @objc func nestsTapped() {
+        pastedMediaDelegate?.nestsTapped()
+    }
+    
+    
 }
 
 public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor {
@@ -87,6 +94,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     var videoPickerTapped: VideoPickerTappedCallback?
     var gifsTapped: GifsTappedCallback?
     var cameraTapped: CameraTappedCallback?
+    var nestsTapped: NestsTappedCallback?
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
     private(set) var onCommit: OnCommitCallback?
@@ -101,7 +109,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         photoPickerTapped: PhotoPickerTappedCallback? = nil,
         videoPickerTapped: VideoPickerTappedCallback? = nil,
         gifsTapped: GifsTappedCallback? = nil,
-        cameraTapped: CameraTappedCallback? = nil
+        cameraTapped: CameraTappedCallback? = nil,
+        nestsTapped: NestsTappedCallback? = nil
     ) {
         _text = text
         _pastedImages = pastedImages
@@ -112,6 +121,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         self.videoPickerTapped = videoPickerTapped
         self.gifsTapped = gifsTapped
         self.cameraTapped = cameraTapped
+        self.nestsTapped = nestsTapped
     }
     
     public func makeCoordinator() -> Coordinator {
@@ -135,6 +145,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
         doneToolbar.barStyle = .default
+        
+        let nestsButton = UIButton(type: .system)
+        nestsButton.setImage(UIImage(systemName: "mic"), for: .normal)
+        nestsButton.tintColor = UIColor(Themes.default.theme.accent)
+        nestsButton.addTarget(self, action: #selector(textView.nestsTapped), for: .touchUpInside)
+        let nests = UIBarButtonItem(customView: nestsButton)
         
         let cameraButton = UIButton(type: .system)
         cameraButton.setImage(UIImage(systemName: "camera"), for: .normal)
@@ -171,10 +187,10 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             videoButton.addTarget(self, action: #selector(textView.videoTapped), for: .touchUpInside)
             let videos = UIBarButtonItem(customView: videoButton)
             
-            doneToolbar.setItems([camera, fixedSpace, photos, fixedSpace, videos, gifs, flexibleSpace], animated: false)
+            doneToolbar.setItems([nests, fixedSpace, camera, fixedSpace, photos, fixedSpace, videos, gifs, flexibleSpace], animated: false)
         }
         else {
-            doneToolbar.setItems([camera, fixedSpace, gifs, flexibleSpace], animated: false)
+            doneToolbar.setItems([nests, fixedSpace, camera, fixedSpace, gifs, flexibleSpace], animated: false)
         }
       
 
@@ -252,6 +268,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         func cameraTapped() {
             guard let cameraTapped = self.parent.cameraTapped else { return }
             cameraTapped()
+        }
+        
+        
+        func nestsTapped() {
+            guard let nestsTapped = self.parent.nestsTapped else { return }
+            nestsTapped()
         }
         
         var parent: HighlightedTextEditor
