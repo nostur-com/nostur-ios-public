@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CopyableTextView: View {
     let text: String
+    var copyText: String? = nil
     
     @State private var tapped1 = false
     
@@ -21,7 +22,7 @@ struct CopyableTextView: View {
         .opacity(text == "" ? 0.0 : 1.0)
         .contentShape(Rectangle())
         .onTapGesture {
-            UIPasteboard.general.string = text
+            UIPasteboard.general.string = copyText ?? text
             tapped1 = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 tapped1 = false

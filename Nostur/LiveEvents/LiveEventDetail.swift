@@ -53,6 +53,8 @@ struct LiveEventDetail: View {
     
     @State private var recordings: [RecordingInfo]? = nil
     
+    @State private var roomAddress: String? = nil
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -103,6 +105,23 @@ struct LiveEventDetail: View {
                 .background(themes.theme.background)
             }
             .onAppear {
+                if let relaysTag = liveEvent.nEvent.fastTags.first(where: { $0.0 == "relays" }) {
+                    var relays: [String] = [normalizeRelayUrl(relaysTag.1)]
+                    if let relay = relaysTag.2 {
+                        relays = relays + [normalizeRelayUrl(relay)]
+                    }
+                    if let relay = relaysTag.3 {
+                        relays = relays + [normalizeRelayUrl(relay)]
+                    }
+                    if let relay = relaysTag.4 {
+                        relays = relays + [normalizeRelayUrl(relay)]
+                    }
+                    
+                    if let bech32 = try? ShareableIdentifier(prefix: "naddr", kind: 30311, pubkey: liveEvent.pubkey, dTag: liveEvent.dTag, relays: relays).bech32string {
+                        roomAddress = bech32
+                    }
+                }
+                
                 vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
                 liveEvent.fetchPresenceFromRelays()
                 if liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
@@ -280,6 +299,13 @@ struct LiveEventDetail: View {
                 .lineLimit(20)
         }
         
+        if let roomAddress {
+            CopyableTextView(text: roomAddress, copyText: "nostr:" + roomAddress)
+                .foregroundColor(Color.gray)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: 140)
+        }
 #if DEBUG
         Text("copy event json")
             .onTapGesture {
