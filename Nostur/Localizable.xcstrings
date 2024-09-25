@@ -610,7 +610,14 @@
       }
     },
     "%@ Send sats" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Stuur sats"
+          }
+        }
+      }
     },
     "%@ settings" : {
       "extractionState" : "stale",
@@ -695,7 +702,14 @@
       }
     },
     "%lld listeners" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld luisteraars"
+          }
+        }
+      }
     },
     "%lld min read" : {
       "localizations" : {
@@ -788,6 +802,7 @@
       }
     },
     "+15" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1317,7 +1332,14 @@
       }
     },
     "Add to stage" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naar podium"
+          }
+        }
+      }
     },
     "Add/Remove %@ from custom feed" : {
       "comment" : "Post context menu button",
@@ -1496,7 +1518,7 @@
       }
     },
     "Articles" : {
-      "comment" : "Tab title\nTab title for the Articles feed",
+      "comment" : "Tab title\nTab title for feed of articles\nTab title for the Articles feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1983,6 +2005,7 @@
       }
     },
     "Clear cache" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2015,7 +2038,14 @@
       }
     },
     "Close room" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruimte sluiten"
+          }
+        }
+      }
     },
     "Code (bravery, verified_human, early_adoptor)" : {
       "comment" : "Label for input field for badge code on Badge creation screen",
@@ -2029,6 +2059,7 @@
       }
     },
     "Color Blue" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2522,6 +2553,16 @@
         }
       }
     },
+    "Create your Audio Nest" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak jouw Audio Nest"
+          }
+        }
+      }
+    },
     "Currently allowed by the filter: %lld contacts" : {
       "localizations" : {
         "nl" : {
@@ -2645,6 +2686,9 @@
           }
         }
       }
+    },
+    "ddd" : {
+
     },
     "decode ack" : {
       "localizations" : {
@@ -2845,7 +2889,7 @@
       }
     },
     "Discover" : {
-      "comment" : "Tab title for the Discover feed",
+      "comment" : "Tab title for Discover feed\nTab title for the Discover feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3056,6 +3100,7 @@
       }
     },
     "End test" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3174,6 +3219,9 @@
         }
       }
     },
+    "Error" : {
+
+    },
     "Error messages for %@" : {
       "comment" : "Title of relay error messages log sheet",
       "extractionState" : "manual",
@@ -3228,6 +3276,7 @@
       }
     },
     "Example" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3249,7 +3298,7 @@
       }
     },
     "Explore" : {
-      "comment" : "Tab title for the Explore feed",
+      "comment" : "Button to go to the Explore tab\nTab title for the Explore feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3558,7 +3607,7 @@
       }
     },
     "Gallery" : {
-      "comment" : "Tab title for the Gallery feed",
+      "comment" : "Tab title for gallery feed\nTab title for the Gallery feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3734,7 +3783,7 @@
       }
     },
     "Hot" : {
-      "comment" : "Tab title for the Hot feed",
+      "comment" : "Tab title for feed of hot/popular posts\nTab title for the Hot feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4093,6 +4142,16 @@
         }
       }
     },
+    "Leave" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verlaten"
+          }
+        }
+      }
+    },
     "Let's go!" : {
       "comment" : "Button to start using Nostur, during onboarding",
       "localizations" : {
@@ -4261,7 +4320,7 @@
       }
     },
     "Log out" : {
-      "comment" : "Log out button\nSide bar navigation button",
+      "comment" : "Button to log out\nLog out button\nSide bar navigation button",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4325,6 +4384,7 @@
     },
     "Main WoT" : {
       "comment" : "Setting heading on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4335,7 +4395,14 @@
       }
     },
     "Make moderator" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak beheerder"
+          }
+        }
+      }
     },
     "Make sure you have a back-up of your private key (nsec)\nNostur cannot recover your account without it" : {
       "comment" : "Informational text during logout action\ninformational message",
@@ -4349,7 +4416,7 @@
       }
     },
     "Mark all as read" : {
-      "comment" : "Menu action to mark all messages as read",
+      "comment" : "Menu action to mark all dm requests as read\nMenu action to mark all messages as read",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4619,6 +4686,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NColumnFeedView"
+          }
+        }
+      }
+    },
+    "Nest title" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nest titel"
+          }
+        }
+      }
+    },
+    "Nests Audio Server" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nests Audio Server"
+          }
+        }
+      }
+    },
+    "Nests server" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nests server"
+          }
+        }
+      }
+    },
+    "Nests server:" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nests server:"
+          }
+        }
+      }
+    },
+    "Nests will be announced on:" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nests wordt aangekondigd op:"
           }
         }
       }
@@ -4931,7 +5048,15 @@
       }
     },
     "Nostur does not have permissions to set a reminder" : {
-      "comment" : "Error message"
+      "comment" : "Error message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur heeft geen toegang om een herinnering in te stellen"
+          }
+        }
+      }
     },
     "Nostur Pro" : {
       "comment" : "Setting on settings screen",
@@ -4977,6 +5102,7 @@
       }
     },
     "Nothing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5986,8 +6112,25 @@
         }
       }
     },
+    "Record audio" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio opnemen"
+          }
+        }
+      }
+    },
     "Recordings" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnames"
+          }
+        }
+      }
     },
     "Red" : {
       "localizations" : {
@@ -6029,6 +6172,9 @@
           }
         }
       }
+    },
+    "Relay Autopilot will broadcast to following relays" : {
+
     },
     "Relay connection stats" : {
       "localizations" : {
@@ -6168,7 +6314,14 @@
       }
     },
     "Reminder set!" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herinnering ingesteld!"
+          }
+        }
+      }
     },
     "Remove" : {
       "localizations" : {
@@ -6202,7 +6355,14 @@
       }
     },
     "Remove from stage" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Van podium af"
+          }
+        }
+      }
     },
     "Remove imposter label" : {
       "comment" : "Button to remove 'possible imposter' label from a contact",
@@ -6216,7 +6376,14 @@
       }
     },
     "Remove moderator" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schrap beheerder"
+          }
+        }
+      }
     },
     "Remove this relay: %@?" : {
       "localizations" : {
@@ -6261,7 +6428,7 @@
       }
     },
     "Replying to: %@" : {
-      "comment" : "Shown when replying to an article (Replying to: (article title)",
+      "comment" : "Shown in a post, Replying to (names)\nShown when replying to an article (Replying to: (article title)",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6428,6 +6595,16 @@
         }
       }
     },
+    "Restart room" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herstart ruimte"
+          }
+        }
+      }
+    },
     "Restore %lld contacts" : {
       "localizations" : {
         "nl" : {
@@ -6439,7 +6616,14 @@
       }
     },
     "Restore previous NWC configuration" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorige NWC configuratie herstellen"
+          }
+        }
+      }
     },
     "Restrict auto-downloading of media posted by others" : {
       "localizations" : {
@@ -6728,8 +6912,18 @@
         }
       }
     },
-    "Set reminder" : {
+    "Session has ended" : {
 
+    },
+    "Set reminder" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herinnering instellen"
+          }
+        }
+      }
     },
     "Settings" : {
       "comment" : "Side bar navigation button",
@@ -7094,8 +7288,25 @@
         }
       }
     },
+    "Start now" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu starten"
+          }
+        }
+      }
+    },
     "Start recording" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnemen"
+          }
+        }
+      }
     },
     "Status" : {
       "comment" : "Connection status header",
@@ -7192,6 +7403,7 @@
       }
     },
     "test" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7202,6 +7414,7 @@
       }
     },
     "Test" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8070,11 +8283,22 @@
       }
     },
     "What" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wat"
+          }
+        }
+      }
+    },
+    "What do you want to talk about?" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waar wil je het over hebben?"
           }
         }
       }
@@ -8482,9 +8706,6 @@
           }
         }
       }
-    },
-    "出張の帰りに新幹線で報告書まとめたら後で楽だなあと思ってパソコン開いたけど気持ち悪くなってやめたことあるL cuttttttt tttof d d d d d d d d d a b c d" : {
-
     }
   },
   "version" : "1.0"
