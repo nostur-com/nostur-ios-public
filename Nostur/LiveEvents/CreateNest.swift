@@ -50,14 +50,14 @@ struct CreateNest: View {
                 .lineLimit(1)
                 .padding(.bottom, 30)
             
-            Text("Nests will be announced on:")
-                .fontWeightBold()
-                .padding(.bottom, 10)
-            ForEach(selectedRelays.indices, id:\.self) { index in
-                Text(selectedRelays[index])
-                    .id(selectedRelays[index])
-                    .opacity(0.3)
-            }
+//            Text("Nests will be announced on:") // TODO: Add back after we have some more option
+//                .fontWeightBold()
+//                .padding(.bottom, 10)
+//            ForEach(selectedRelays.indices, id:\.self) { index in
+//                Text(selectedRelays[index])
+//                    .id(selectedRelays[index])
+//                    .opacity(0.3)
+//            }
             
             Spacer()
             
