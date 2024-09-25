@@ -69,14 +69,22 @@ struct LiveEventsBanner: View {
                 LiveEventDetail(liveEvent: visibleNest)
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
-                            Button("Close") {
-                                LiveKitVoiceSession.shared.activeNest = nil
-                                LiveKitVoiceSession.shared.visibleNest = nil
+                            if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
+                                Button("Leave") {
+                                    LiveKitVoiceSession.shared.activeNest = nil
+                                    LiveKitVoiceSession.shared.visibleNest = nil
+                                }
+                            }
+                            else {
+                                Button("Close") {
+                                    LiveKitVoiceSession.shared.activeNest = nil
+                                    LiveKitVoiceSession.shared.visibleNest = nil
+                                }
                             }
                         }
                         
                         ToolbarItem(placement: .primaryAction) {
-                            if LiveKitVoiceSession.shared.activeNest != nil {
+                            if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
                                 Button("Minimize") {
                                     LiveKitVoiceSession.shared.visibleNest = nil
                                 }
