@@ -15,84 +15,6 @@ extension NRLiveEvent {
         self.dTag
     }
 
-    // Helper function to create NIP-98 authorization header
-    @MainActor
-    private func createAuthorizationHeader(account: CloudAccount, urlString: String, method: String) async throws -> String {
-        var nEvent = NEvent(content: "")
-        nEvent.publicKey = account.publicKey
-        nEvent.kind = .custom(27235)
-        nEvent.tags.append(NostrTag(["u", urlString]))
-        nEvent.tags.append(NostrTag(["method", method]))
-
-        let signedNip98Event: NEvent
-
-        if account.isNC {
-            // Sign remotely
-            nEvent = nEvent.withId()
-            signedNip98Event = try await withCheckedThrowingContinuation { continuation in
-                NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account) { signedEvent in
-                    continuation.resume(returning: signedEvent)
-                }
-            }
-        } else {
-            // Sign locally
-            guard let signedEvent = try? account.signEvent(nEvent) else {
-                throw NSError(domain: "Signing failed", code: 500, userInfo: nil)
-            }
-            signedNip98Event = signedEvent
-        }
-
-        let jsonString = signedNip98Event.eventJson()
-        guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else {
-            throw NSError(domain: "Encoding failed", code: 500, userInfo: nil)
-        }
-        let base64 = jsonData.base64EncodedString()
-        let authorizationHeader = "Nostr \(base64)"
-        return authorizationHeader
-    }
-
-    // MARK: - Create Room
-
-    @MainActor
-    public func createRoom(account: CloudAccount, relays: [String], hlsStream: Bool) async throws -> CreateRoomResponse {
-        guard let baseURL = liveKitBaseUrl else { throw NSError(domain: "Invalid baseURL", code: 400, userInfo: nil) }
-        let urlString = baseURL + "/api/v1/nests"
-        guard let url = URL(string: urlString) else {
-            throw NSError(domain: "Invalid URL", code: 400, userInfo: nil)
-        }
-
-        let authorizationHeader = try await createAuthorizationHeader(account: account, urlString: urlString, method: "PUT")
-
-        let requestBody: [String: Any] = [
-            "relays": relays,
-            "hls_stream": hlsStream
-        ]
-
-        let requestData = try JSONSerialization.data(withJSONObject: requestBody, options: [])
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue(authorizationHeader, forHTTPHeaderField: "Authorization")
-        request.httpBody = requestData
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        if let httpResponse = response as? HTTPURLResponse {
-            switch httpResponse.statusCode {
-            case 200:
-                let decoder = JSONDecoder()
-                let createRoomResponse = try decoder.decode(CreateRoomResponse.self, from: data)
-                return createRoomResponse
-            default:
-                let errorMessage = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
-                throw NSError(domain: errorMessage, code: httpResponse.statusCode, userInfo: nil)
-            }
-        } else {
-            throw NSError(domain: "Invalid Response", code: 500, userInfo: nil)
-        }
-    }
-
     // MARK: - Join Room
 
     @MainActor
@@ -395,4 +317,80 @@ struct LiveKitRoomMetaData: Decodable {
     let admins: [String]
     var link: String?
     let recording: Bool
+}
+
+
+// Helper function to create NIP-98 authorization header
+@MainActor
+func createAuthorizationHeader(account: CloudAccount, urlString: String, method: String) async throws -> String {
+    var nEvent = NEvent(content: "")
+    nEvent.publicKey = account.publicKey
+    nEvent.kind = .custom(27235)
+    nEvent.tags.append(NostrTag(["u", urlString]))
+    nEvent.tags.append(NostrTag(["method", method]))
+
+    let signedNip98Event: NEvent
+
+    if account.isNC {
+        // Sign remotely
+        nEvent = nEvent.withId()
+        signedNip98Event = try await withCheckedThrowingContinuation { continuation in
+            NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account) { signedEvent in
+                continuation.resume(returning: signedEvent)
+            }
+        }
+    } else {
+        // Sign locally
+        guard let signedEvent = try? account.signEvent(nEvent) else {
+            throw NSError(domain: "Signing failed", code: 500, userInfo: nil)
+        }
+        signedNip98Event = signedEvent
+    }
+
+    let jsonString = signedNip98Event.eventJson()
+    guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else {
+        throw NSError(domain: "Encoding failed", code: 500, userInfo: nil)
+    }
+    let base64 = jsonData.base64EncodedString()
+    let authorizationHeader = "Nostr \(base64)"
+    return authorizationHeader
+}
+
+@MainActor
+func createRoom(baseURL: String, account: CloudAccount, relays: [String], hlsStream: Bool) async throws -> CreateRoomResponse {
+    let urlString = baseURL + "/api/v1/nests"
+    guard let url = URL(string: urlString) else {
+        throw NSError(domain: "Invalid URL", code: 400, userInfo: nil)
+    }
+
+    let authorizationHeader = try await createAuthorizationHeader(account: account, urlString: urlString, method: "PUT")
+
+    let requestBody: [String: Any] = [
+        "relays": relays,
+        "hls_stream": hlsStream
+    ]
+
+    let requestData = try JSONSerialization.data(withJSONObject: requestBody, options: [])
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "PUT"
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.addValue(authorizationHeader, forHTTPHeaderField: "Authorization")
+    request.httpBody = requestData
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+
+    if let httpResponse = response as? HTTPURLResponse {
+        switch httpResponse.statusCode {
+        case 200:
+            let decoder = JSONDecoder()
+            let createRoomResponse = try decoder.decode(CreateRoomResponse.self, from: data)
+            return createRoomResponse
+        default:
+            let errorMessage = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
+            throw NSError(domain: errorMessage, code: httpResponse.statusCode, userInfo: nil)
+        }
+    } else {
+        throw NSError(domain: "Invalid Response", code: 500, userInfo: nil)
+    }
 }
