@@ -78,6 +78,12 @@ struct Entry: View {
                 },
                 cameraTapped: {
                     cameraSheetShown = true
+                },
+                nestsTapped: {
+                    onDismiss()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                        sendNotification(.showCreateNestsSheet)
+                    }
                 }
             )
             .introspect { editor in
