@@ -54,24 +54,38 @@ struct NestButtonStyle: ButtonStyle {
     }
     
     func makeBody(configuration: Configuration) -> some View {
-        switch style {
-        case .default:
-            configuration.label
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                       RoundedRectangle(cornerRadius: 25)
-                        .stroke(theme.lineColor, lineWidth: 1)
-                )
-                .clipShape(.rect(cornerRadius: 25))
-                .foregroundColor(theme.accent)
-        case .borderedProminent:
-            configuration.label
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(theme.accent)
-                .clipShape(.rect(cornerRadius: 25))
-                .foregroundColor(Color.white)
+        MyButton(configuration: configuration, style: style, theme: theme)
+    }
+    
+    struct MyButton: View {
+        let configuration: ButtonStyle.Configuration
+        var style: Style = .default
+        var theme: Theme
+    
+        @Environment(\.isEnabled) private var isEnabled: Bool
+    
+        var body: some View {
+            switch style {
+            case .default:
+                configuration.label
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                           RoundedRectangle(cornerRadius: 25)
+                            .stroke(theme.lineColor, lineWidth: 1)
+                    )
+                    .clipShape(.rect(cornerRadius: 25))
+                    .foregroundColor(theme.accent)
+                    .opacity(isEnabled ? 1.0 : 0.5)
+            case .borderedProminent:
+                configuration.label
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(theme.accent)
+                    .clipShape(.rect(cornerRadius: 25))
+                    .foregroundColor(Color.white)
+                    .opacity(isEnabled ? 1.0 : 0.5)
+            }
         }
     }
 }
