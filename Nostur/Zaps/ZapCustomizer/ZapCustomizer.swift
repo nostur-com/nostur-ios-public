@@ -12,7 +12,7 @@ struct ZapCustomizerSheet: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject private var ss: SettingsStore = .shared
     public var name: String
-    public var customZapId: UUID?
+    public var customZapId: String?
     public var supportsZap = false
     public var sendAction: ((CustomZap) -> Void)?
     @Environment(\.dismiss) private var dismiss
@@ -254,23 +254,23 @@ struct ZapCustomizerSheet: View {
 
 struct ZapCustomizerSheetInfo: Identifiable {
     let name: String
-    var customZapId: UUID?
-    var id: UUID { customZapId ?? UUID() }
+    var customZapId: String?
+    var id: String { customZapId ?? UUID().uuidString }
     var zapEtag: String?
     var zapAtag: String?
 }
 
 struct CustomZap: Identifiable {
-    var id: UUID { customZapId ?? UUID() }
+    var id: String { customZapId ?? UUID().uuidString }
     var publicNote = ""
-    var customZapId: UUID?
+    var customZapId: String?
     let amount: Double
 }
 
 #Preview("ZapCustomizerSheet") {
     PreviewContainer({ pe in pe.loadPosts() }) {
         if let nrPost = PreviewFetcher.fetchNRPost() {
-            ZapCustomizerSheet(name:nrPost.anyName, customZapId: UUID(), supportsZap: true)
+            ZapCustomizerSheet(name:nrPost.anyName, customZapId: UUID().uuidString, supportsZap: true)
                     .environmentObject(Themes.default)
         }
     }

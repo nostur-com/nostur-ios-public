@@ -12,7 +12,7 @@ struct LightningButton: View {
     private let nrPost:NRPost
     @ObservedObject private var footerAttributes:FooterAttributes
     @State private var isLoading = false
-    @State private var customZapId:UUID? = nil
+    @State private var customZapId: String? = nil
     private var isFirst:Bool
     private var isLast:Bool
     

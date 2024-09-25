@@ -19,7 +19,7 @@ struct ProfileZapButton: View {
     @ObservedObject private var ss: SettingsStore = .shared
     @State private var isZapped = false
     @State private var cancellationId: UUID? = nil
-    @State private var customZapId: UUID? = nil
+    @State private var customZapId: String? = nil
     @State private var activeColor = Self.grey
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
@@ -96,7 +96,7 @@ struct ProfileZapButton: View {
                                            .onEnded { _ in
                                                guard isFullAccount() else { showReadOnlyMessage(); return }
                                                // Trigger custom zap
-                                               customZapId = UUID()
+                                               customZapId = String()
                                                if let customZapId {
                                                    sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: contact.anyName, customZapId: customZapId))
                                                }

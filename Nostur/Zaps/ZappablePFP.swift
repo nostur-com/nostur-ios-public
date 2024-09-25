@@ -72,7 +72,7 @@ struct ZappablePFP: View {
                 }
                 else if let thisAtag = self.zapAtag {
                     guard zapStateChange.pubkey == pubkey else { return}
-                    guard thisAtag == zapStateChange.eTag else { return }
+                    guard thisAtag == zapStateChange.aTag else { return }
                     isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
                 }
             }

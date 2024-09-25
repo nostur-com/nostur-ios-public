@@ -35,7 +35,7 @@ struct ZapButtonInner: View {
     @ObservedObject private var footerAttributes: FooterAttributes
     @ObservedObject private var ss: SettingsStore = .shared
     @State private var cancellationId: UUID? = nil
-    @State private var customZapId: UUID? = nil
+    @State private var customZapId: String? = nil
     @State private var activeColor: Color? = nil
     @State private var isLoading = false
     
@@ -150,7 +150,7 @@ struct ZapButtonInner: View {
     private func longTap() {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         // Trigger custom zap
-        customZapId = UUID()
+        customZapId = UUID().uuidString
         if let customZapId {
             sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
         }
