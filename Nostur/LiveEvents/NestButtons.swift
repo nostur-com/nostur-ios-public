@@ -59,6 +59,10 @@ struct NestButtonStyle: ButtonStyle {
             configuration.label
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
+                .background(
+                       RoundedRectangle(cornerRadius: 25)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
                 .clipShape(.rect(cornerRadius: 25))
                 .foregroundColor(theme.accent)
         case .borderedProminent:
