@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct LiveEventsBanner: View {
+    @EnvironmentObject private var npn: NewPostNotifier
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var liveEventsModel: LiveEventsModel = .shared
@@ -93,6 +94,7 @@ struct LiveEventsBanner: View {
                     }
                     .environmentObject(NRState.shared)
                     .environmentObject(themes)
+                    .environmentObject(npn)
                     .presentationBackgroundCompat(themes.theme.listBackground)
             }
             .nbUseNavigationStack(.never)

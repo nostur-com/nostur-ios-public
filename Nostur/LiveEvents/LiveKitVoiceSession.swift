@@ -14,7 +14,7 @@ class LiveKitVoiceSession: ObservableObject {
     
     @Published public var activeNest: NRLiveEvent? = nil {
         didSet {
-            if activeNest != oldValue {
+            if oldValue != nil && activeNest != oldValue {
                 Task { @MainActor in
                     self.disconnect()
                 }

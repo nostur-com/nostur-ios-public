@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct ChatRoom: View {
+    
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var npn: NewPostNotifier
     
     public let aTag: String
     public let theme: Theme
@@ -156,6 +160,7 @@ struct ChatRoom: View {
             vm.closeLiveSubscription()
             vm.removeChatsFromExistingIdsCache()
         }
+        
         
         
     }
