@@ -53,7 +53,7 @@ class LiveKitVoiceSession: ObservableObject {
     private var nrLiveEvent: NRLiveEvent? = nil
     
     @MainActor
-    func connect(_ url: String, token: String, accountType: NestAccountType, nrLiveEvent: NRLiveEvent) {
+    func connect(_ url: String, token: String, accountType: NestAccountType, nrLiveEvent: NRLiveEvent, completion: (() -> Void)? = nil) {
         self.anonymousPubkeyCached = anonymousKeys.publicKeyHex()
         self.state = .connecting
         try? AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: .duckOthers)
@@ -68,6 +68,7 @@ class LiveKitVoiceSession: ObservableObject {
                try await room.localParticipant.setCamera(enabled: false)
                try await room.localParticipant.setMicrophone(enabled: !self.isMuted)
                self.state = .connected
+               completion?()
            } catch {
                L.nests.debug("Failed to connect: \(error)")
                self.state = .error(error.localizedDescription)
