@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NestParticipantView: View {
     
+    @ObservedObject private var ss: SettingsStore = .shared
     @ObservedObject public var nrContact: NRContact
     public var role: String? = nil
     public let aTag: String
@@ -16,10 +17,33 @@ struct NestParticipantView: View {
     public var showControls = true
     
     @State private var isZapped = false
+    @State private var triggerStrike = false
+    @State private var customAmount: Double? = nil
+    @State private var zapMessage: String = ""
     
     var body: some View {
         VStack(spacing: 2.0) {
             ZappablePFP(pubkey: nrContact.pubkey, contact: nrContact, zapAtag: aTag)
+                .onReceive(receiveNotification(.sendCustomZap)) { notification in
+                    // Complete custom zap
+                    let customZap = notification.object as! CustomZap
+                    guard customZap.customZapId == "LIVE-\(nrContact.pubkey)" else { return }
+                    customAmount = customZap.amount
+                    zapMessage = customZap.publicNote
+                    triggerStrike = true
+                }
+                .overlay {
+                    if triggerStrike {
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    guard !isZapped else { return }
+                                    guard let contact = nrContact.contact else { return }
+                                    self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact, zapMessage: zapMessage, amount: customAmount)
+                                }
+                        }
+                    }
+                }
 //            PFP(pubkey: nrContact.pubkey, nrContact: nrContact)
                 .overlay(alignment: .topLeading) {
                     if nrContact.raisedHand {
@@ -51,6 +75,38 @@ struct NestParticipantView: View {
         }
         .onAppear {
             nrContact.listenForPresence(aTag)
+        }
+    }
+    
+    func triggerZap(strikeLocation: CGPoint, contact: Contact, zapMessage: String = "", amount: Double? = nil) {
+        guard isFullAccount() else { showReadOnlyMessage(); return }
+        guard let account = account() else { return }
+        let isNC = account.isNC
+        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+        impactMed.impactOccurred()
+        let selectedAmount = amount ?? ss.defaultZapAmount
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            sendNotification(.lightningStrike, LightningStrike(location: strikeLocation, amount: selectedAmount))
+            SoundManager.shared.playThunderzap()
+//            withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
+//                activeColor = .yellow
+//            }
+        }
+        let cancellationId = UUID() // We dont cancel on nests (because already have full sheet confirmation), but still cancellation id until we refactor api
+        isZapped = true
+        
+        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrContact.pubkey, aTag: aTag, zapState: .initiated))
+
+        bg().perform {
+            NWCRequestQueue.shared.ensureNWCconnection()
+            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), contact: contact, aTag: aTag, cancellationId: cancellationId, zapMessage: zapMessage, withPending: true)
+            NWCZapQueue.shared.sendZap(zap)
+            Task { @MainActor in
+                self.isZapped = false
+                self.triggerStrike = false
+                self.customAmount = nil
+                self.zapMessage = ""
+            }
         }
     }
 }
@@ -87,176 +143,5 @@ struct MicButton: View {
                     .foregroundColor(.white)
         }
         .clipShape(Circle())
-    }
-}
-
-struct NestZapButton: View {
-    
-    public var name: String
-    public var aTag: String
-    @ObservedObject public var nrContact: NRContact
-    
-    @ObservedObject private var ss: SettingsStore = .shared
-    
-    @State private var customZapId: UUID? = nil
-    @State private var activeColor: Color? = nil
-    @State private var isLoading = false
-    
-    
-    @State private var triggerStrike = false
-    @State private var customAmount: Double? = nil
-    @State private var zapMessage: String = ""
-    
-    @State private var isZapped = false
-    
-    var body: some View {
-        ZStack(alignment: .center) {
-            Circle()
-                .fill(Color.gray)
-                .frame(width: 28, height: 28)
-                
-            Image(systemName: "bolt.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(.white)
-        }
-        .clipShape(Circle())
-        .onTapGesture {
-            self.tap()
-        }
-        .onReceive(receiveNotification(.sendCustomZap)) { notification in
-            // Complete custom zap
-            let customZap = notification.object as! CustomZap
-            guard customZap.customZapId == customZapId else { return }
-            customAmount = customZap.amount
-            zapMessage = customZap.publicNote
-            triggerStrike = true
-        }
-        .overlay {
-            if triggerStrike {
-                GeometryReader { geo in
-                    Color.clear
-                        .onAppear {
-                            guard !isZapped else { return }
-                            guard let contact = nrContact.contact else { return }
-                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact, zapMessage: zapMessage, amount: customAmount)
-                        }
-                }
-            }
-        }
-    }
-    
-    private func tap() {
-        guard isFullAccount() else { showReadOnlyMessage(); return }
-
-        if ss.nwcReady {
-            // Trigger custom zap
-            customZapId = UUID()
-            if let customZapId {
-                sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: name, customZapId: customZapId, zapAtag: aTag))
-            }
-        }
-        else {
-            nonNWCtap()
-        }
-    }
-    
-    func triggerZap(strikeLocation: CGPoint, contact: Contact, zapMessage: String = "", amount: Double? = nil) {
-        guard isFullAccount() else { showReadOnlyMessage(); return }
-        guard let account = account() else { return }
-        let isNC = account.isNC
-        let impactMed = UIImpactFeedbackGenerator(style: .medium)
-        impactMed.impactOccurred()
-        let selectedAmount = amount ?? ss.defaultZapAmount
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-            sendNotification(.lightningStrike, LightningStrike(location: strikeLocation, amount: selectedAmount))
-            SoundManager.shared.playThunderzap()
-            withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
-                activeColor = .yellow
-            }
-        }
-        let cancellationId = UUID() // We dont cancel on nests (because already have full sheet confirmation), but still cancellation id until we refactor api
-        isZapped = true
-        
-        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrContact.pubkey, aTag: aTag, zapState: .initiated))
-
-        bg().perform {
-            NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), contact: contact, aTag: aTag, cancellationId: cancellationId, zapMessage: zapMessage, withPending: true)
-            NWCZapQueue.shared.sendZap(zap)
-            Task { @MainActor in
-                self.isZapped = false
-                self.triggerStrike = false
-                self.customAmount = nil
-                self.zapMessage = ""
-            }
-        }
-    }
-    
-    private func nonNWCtap() {
-        guard isFullAccount() else { showReadOnlyMessage(); return }
-        guard nrContact.anyLud else { return }
-        isLoading = true
-        
-        if let lud16 = nrContact.lud16 {
-            Task {
-                do {
-                    let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                    await MainActor.run {
-                        var supportsZap = false
-                        // Make sure at least 1 sat, and not more than 2000000 sat (around $210)
-                        let min = ((response.minSendable ?? 1000) < 1000 ? 1000 : (response.minSendable ?? 1000)) / 1000
-                        let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 100000000)) / 1000
-                        if response.callback != nil {
-                            let callback = response.callback!
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                                supportsZap = true
-                                // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrContact.zapperPubkey = response.nostrPubkey!
-                            }
-                            // Old zap sheet
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
-                            sendNotification(.showZapSheet, paymentInfo)
-                            
-                            //                            // Trigger custom zap
-                            //                            customZapId = UUID()
-                            //                            if let customZapId {
-                            //                                sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(nrPost: nrPost!, customZapId: customZapId))
-                            //                            }
-                            isLoading = false
-                        }
-                    }
-                }
-                catch {
-                    L.og.error("🔴🔴 problem in lnurlp \(error)")
-                }
-            }
-        }
-        else if let lud06 = nrContact.lud06 {
-            Task {
-                do {
-                    let response = try await LUD16.getCallbackUrl(lud06: lud06)
-                    await MainActor.run {
-                        var supportsZap = false
-                        // Make sure at least 1 sat, and not more than 2000000 sat (around $210)
-                        let min = ((response.minSendable ?? 1000) < 1000 ? 1000 : (response.minSendable ?? 1000)) / 1000
-                        let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 200000000)) / 1000
-                        if response.callback != nil {
-                            let callback = response.callback!
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                                supportsZap = true
-                                // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrContact.zapperPubkey = response.nostrPubkey!
-                            }
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
-                            sendNotification(.showZapSheet, paymentInfo)
-                            isLoading = false
-                        }
-                    }
-                }
-                catch {
-                    L.og.error("🔴🔴🔴🔴 problem in lnurlp \(error)")
-                }
-            }
-        }
     }
 }

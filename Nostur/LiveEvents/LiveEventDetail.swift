@@ -15,6 +15,7 @@ struct LiveEventDetail: View {
     
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var npn: NewPostNotifier
     @ObservedObject public var liveEvent: NRLiveEvent
     @ObservedObject public var liveKitVoiceSession: LiveKitVoiceSession = .shared
     
@@ -88,17 +89,6 @@ struct LiveEventDetail: View {
                                 .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
                                 .padding(.horizontal, 10)
                                 .environmentObject(vc)
-                            
-//                            ZStack {
-//
-//                                
-//                                if let selectedContact {
-//                                    themes.theme.background
-//                                    
-//                                    SelectedParticipantView(nrContact: selectedContact, showZapButton: !liveKitVoiceSession.listenAnonymously, liveEvent: liveEvent, showModeratorControls: showModeratorControls, selectedContact: $selectedContact)
-//                                        .padding(10)
-//                                }
-//                            }
                         }
                     }
                     .frame(minHeight: geo.size.height)
@@ -133,14 +123,120 @@ struct LiveEventDetail: View {
             })
             .sheet(item: $selectedContact) { nrContact in
                 NBNavigationStack {
-                    SelectedParticipantView(nrContact: nrContact, showZapButton: !liveKitVoiceSession.listenAnonymously, liveEvent: liveEvent, showModeratorControls: showModeratorControls, selectedContact: $selectedContact)
+                    VStack {
+                        SelectedParticipantView(nrContact: nrContact, showZapButton: !liveKitVoiceSession.listenAnonymously, aTag: liveEvent.id, showModeratorControls: showModeratorControls, selectedContact: $selectedContact)
+                        
+                        Spacer()
+                        
+                        // Moderator actions
+                        if showModeratorControls {
+                            HStack(alignment: .top) {
+
+                                if liveEvent.pubkeysOnStage.contains(nrContact.pubkey) {
+                                    VStack {
+                                        Button("Remove from stage", systemImage: "mic.fill.badge.xmark") {
+                                            guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
+                                                return
+                                            }
+                                            Task { @MainActor in
+                                                try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, canPublish: false)
+                                            }
+                                            selectedContact = nil
+                                        }
+                                        .font(.title2)
+                                        .labelStyle(.iconOnly)
+                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                        
+                                        Text("Remove from stage")
+                                            .font(.caption)
+                                    }
+                                }
+                                else {
+                                    VStack {
+                                        Button("Add to stage", systemImage: "mic.fill.badge.plus") {
+                                            guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
+                                                return
+                                            }
+                                            Task { @MainActor in
+                                                try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, canPublish: true)
+                                            }
+                                            selectedContact = nil
+                                        }
+                                        .font(.title2)
+                                        .labelStyle(.iconOnly)
+                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                        
+                                        Text("Add to stage")
+                                            .font(.caption)
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                if liveEvent.admins.contains(nrContact.pubkey) {
+                                    VStack {
+                                        Button("Remove moderator", systemImage: "person.slash.fill") {
+                                            guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
+                                                return
+                                            }
+                                            Task { @MainActor in
+                                                try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, isAdmin: false)
+                                            }
+                                            selectedContact = nil
+                                            
+                                        }
+                                        .font(.title2)
+                                        .labelStyle(.iconOnly)
+                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                        
+                                        Text("Remove moderator")
+                                            .font(.caption)
+                                    }
+                                }
+                                else {
+                                    VStack {
+                                        Button("Make moderator", systemImage: "arrow.up.and.person.rectangle.portrait") {
+                                            guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
+                                                return
+                                            }
+                                            Task { @MainActor in
+                                                try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, isAdmin: true)
+                                            }
+                                            selectedContact = nil
+                                        }
+                                        .font(.title2)
+                                        .labelStyle(.iconOnly)
+                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                        
+                                        Text("Make moderator")
+                                            .font(.caption)
+                                    }
+                                }
+                            }
+                                .padding(10)
+                        }
+                    }
                         .environmentObject(themes)
+                        .environmentObject(npn)
                         .padding(10)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                if IS_CATALYST {
+                                    Button {
+                                        selectedContact = nil
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                           .imageScale(.large) // Adjust the size of the "X"
+                                    }
+                                }
+                            }
+                        }
                 }
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)
                 .presentationDetents45ml()
             }
+            .withLightningEffect()
     }
     
     @ViewBuilder
@@ -509,11 +605,4 @@ struct LiveEventDetail: View {
         }
     }
 }
-
-
-
-
-
-
-
 

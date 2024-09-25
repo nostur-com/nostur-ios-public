@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct SelectedParticipantView: View {
     @Environment(\.dismiss) private var dismiss
@@ -14,7 +15,7 @@ struct SelectedParticipantView: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject var nrContact: NRContact
     public let showZapButton: Bool
-    @ObservedObject var liveEvent: NRLiveEvent
+    public let aTag: String
     public let showModeratorControls: Bool
     @Binding var selectedContact: NRContact?
     
@@ -30,7 +31,7 @@ struct SelectedParticipantView: View {
     @State private var npub = ""
 
     
-    @State private var triggerStrike = false
+
     @State private var customAmount: Double? = nil
     @State private var zapMessage: String = ""
     @State private var isZapped = false
@@ -69,33 +70,14 @@ struct SelectedParticipantView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading) {
                     PFP(pubkey: nrContact.pubkey, nrContact: nrContact)
-                        .onReceive(receiveNotification(.sendCustomZap)) { notification in
-                            // Complete custom zap
-                            let customZap = notification.object as! CustomZap
-                            guard customZap.customZapId == customZapId else { return }
-                            customAmount = customZap.amount
-                            zapMessage = customZap.publicNote
-                            triggerStrike = true
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            // TODO: Need to fix navigation issues
+    //                        dismiss()
+    //                        navigateTo(nrContact)
+    //                        selectedContact = nil
+    //                        LiveKitVoiceSession.shared.visibleNest = nil
                         }
-                        .overlay {
-                            if triggerStrike {
-                                GeometryReader { geo in
-                                    Color.clear
-                                        .onAppear {
-                                            guard !isZapped else { return }
-                                            guard let contact = nrContact.contact else { return }
-                                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact, zapMessage: zapMessage, amount: customAmount)
-                                        }
-                                }
-                            }
-                        }
-                    
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        dismiss()
-                        navigateTo(nrContact)
-                        selectedContact = nil
-                    }
                     
                     Text(nrContact.anyName)
                         .fontWeightBold()
@@ -171,6 +153,7 @@ struct SelectedParticipantView: View {
                     
                     if showZapButton {
                         Button {
+                            selectedContact = nil
                             self.sendSats()
                         } label: {
                             Text("\(Image(systemName: "bolt.fill")) Send sats")
@@ -180,12 +163,12 @@ struct SelectedParticipantView: View {
                     }
                 }
             }
-            .border(Color.red)
+//            .border(Color.red)
             
             CopyableTextView(text: npub)
                 .lineLimit(1)
                 .frame(width: 140, alignment: .leading)
-                .border(Color.red)
+//                .border(Color.red)
             
             if !couldBeImposter && hasNip05Shortened {
                 NostrAddress(nip05: nrContact.nip05 ?? "", shortened: true)
@@ -195,7 +178,7 @@ struct SelectedParticipantView: View {
             
             Color.clear
                 .frame(height: 15)
-                .border(Color.red)
+//                .border(Color.red)
                 .overlay(alignment: .leading) {
                     if couldBeImposter {
                         PossibleImposterLabel(possibleImposterPubkey: nrContact.pubkey, followingPubkey: similarToPubkey ?? nrContact.similarToPubkey)
@@ -205,101 +188,11 @@ struct SelectedParticipantView: View {
                             .layoutPriority(3)
                     }
                 }
-                .border(Color.red)
+//                .border(Color.red)
             
 //            FollowedBy(pubkey: nrContact.pubkey)
 //                .frame(minHeight: 65.0)
 //                .border(Color.red)
-            
-            Spacer()
-            
-            // Moderator actions
-            if showModeratorControls {
-                HStack(alignment: .top) {
-
-                    if liveEvent.pubkeysOnStage.contains(nrContact.pubkey) {
-                        VStack {
-                            Button("Remove from stage", systemImage: "mic.fill.badge.xmark") {
-                                guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
-                                    return
-                                }
-                                Task { @MainActor in
-                                    try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, canPublish: false)
-                                }
-                                dismiss()
-                            }
-                            .font(.title2)
-                            .labelStyle(.iconOnly)
-                            .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
-                            
-                            Text("Remove from stage")
-                                .font(.caption)
-                        }
-                    }
-                    else {
-                        VStack {
-                            Button("Add to stage", systemImage: "mic.fill.badge.plus") {
-                                guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
-                                    return
-                                }
-                                Task { @MainActor in
-                                    try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, canPublish: true)
-                                }
-                                dismiss()
-                            }
-                            .font(.title2)
-                            .labelStyle(.iconOnly)
-                            .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
-                            
-                            Text("Add to stage")
-                                .font(.caption)
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    if liveEvent.admins.contains(nrContact.pubkey) {
-                        VStack {
-                            Button("Remove moderator", systemImage: "person.slash.fill") {
-                                guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
-                                    return
-                                }
-                                Task { @MainActor in
-                                    try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, isAdmin: false)
-                                }
-                                dismiss()
-                                
-                            }
-                            .font(.title2)
-                            .labelStyle(.iconOnly)
-                            .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
-                            
-                            Text("Remove moderator")
-                                .font(.caption)
-                        }
-                    }
-                    else {
-                        VStack {
-                            Button("Make moderator", systemImage: "arrow.up.and.person.rectangle.portrait") {
-                                guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
-                                    return
-                                }
-                                Task { @MainActor in
-                                    try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, isAdmin: true)
-                                }
-                                dismiss()
-                            }
-                            .font(.title2)
-                            .labelStyle(.iconOnly)
-                            .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
-                            
-                            Text("Make moderator")
-                                .font(.caption)
-                        }
-                    }
-                }
-                    .padding(10)
-            }
         }
 //        .navigationTitle(nrContact.anyName)
 //        .navigationBarTitleDisplayMode(.inline)
@@ -466,8 +359,6 @@ struct SelectedParticipantView: View {
     
     @ObservedObject private var ss: SettingsStore = .shared
     
-    @State private var activeColor: Color? = nil
-    @State private var customZapId: UUID? = nil
     @State private var isLoading = false
     
     private func sendSats() {
@@ -475,10 +366,7 @@ struct SelectedParticipantView: View {
 
         if ss.nwcReady {
             // Trigger custom zap
-            customZapId = UUID()
-            if let customZapId {
-                sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrContact.anyName, customZapId: customZapId, zapAtag: liveEvent.id))
-            }
+            sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrContact.anyName, customZapId: "LIVE-\(nrContact.pubkey)", zapAtag: aTag))
         }
         else {
             nonNWCtap()
@@ -507,7 +395,7 @@ struct SelectedParticipantView: View {
                                 nrContact.zapperPubkey = response.nostrPubkey!
                             }
                             // Old zap sheet
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: liveEvent.id, withPending: true)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
                             sendNotification(.showZapSheet, paymentInfo)
                             
                             //                            // Trigger custom zap
@@ -540,7 +428,7 @@ struct SelectedParticipantView: View {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 nrContact.zapperPubkey = response.nostrPubkey!
                             }
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: liveEvent.id, withPending: true)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
                             sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }
@@ -549,38 +437,6 @@ struct SelectedParticipantView: View {
                 catch {
                     L.og.error("🔴🔴🔴🔴 problem in lnurlp \(error)")
                 }
-            }
-        }
-    }
-    
-    func triggerZap(strikeLocation: CGPoint, contact: Contact, zapMessage: String = "", amount: Double? = nil) {
-        guard isFullAccount() else { showReadOnlyMessage(); return }
-        guard let account = account() else { return }
-        let isNC = account.isNC
-        let impactMed = UIImpactFeedbackGenerator(style: .medium)
-        impactMed.impactOccurred()
-        let selectedAmount = amount ?? ss.defaultZapAmount
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-            sendNotification(.lightningStrike, LightningStrike(location: strikeLocation, amount: selectedAmount))
-            SoundManager.shared.playThunderzap()
-            withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
-                activeColor = .yellow
-            }
-        }
-        let cancellationId = UUID() // We dont cancel on nests (because already have full sheet confirmation), but still cancellation id until we refactor api
-        isZapped = true
-        
-        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrContact.pubkey, aTag: liveEvent.id, zapState: .initiated))
-
-        bg().perform {
-            NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), contact: contact, aTag: liveEvent.id, cancellationId: cancellationId, zapMessage: zapMessage, withPending: true)
-            NWCZapQueue.shared.sendZap(zap)
-            Task { @MainActor in
-                self.isZapped = false
-                self.triggerStrike = false
-                self.customAmount = nil
-                self.zapMessage = ""
             }
         }
     }
@@ -597,12 +453,12 @@ struct SelectedParticipantView: View {
         if let contact = PreviewFetcher.fetchNRContact(), let liveEvent = PreviewFetcher.fetchEvent("1460f66179e5c33e0d15b580b73773e2965f0548448efe7e22ecc98355e13bb2") {
             let nrLiveEvent = NRLiveEvent(event: liveEvent)
             VStack {
-                SelectedParticipantView(nrContact: contact, showZapButton: false, liveEvent: nrLiveEvent, showModeratorControls: true, selectedContact: .constant(contact))
+                SelectedParticipantView(nrContact: contact, showZapButton: false, aTag: "1", showModeratorControls: true, selectedContact: .constant(contact))
                     .padding(10)
                 
                 Divider()
                 
-                SelectedParticipantView(nrContact: contact, showZapButton: false, liveEvent: nrLiveEvent, showModeratorControls: false, selectedContact: .constant(contact))
+                SelectedParticipantView(nrContact: contact, showZapButton: false, aTag: "2", showModeratorControls: false, selectedContact: .constant(contact))
                     .padding(10)
             }
         }
