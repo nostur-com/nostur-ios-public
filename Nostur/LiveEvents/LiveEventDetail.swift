@@ -477,7 +477,7 @@ struct LiveEventDetail: View {
     @ViewBuilder
     private var recordingsMenu: some View {
         Menu {
-            if liveEvent.status == "live" || liveEvent.status == "planned" {
+            if (liveEvent.status == "live" || liveEvent.status == "planned") && liveEvent.pubkey == account?.publicKey {
                 Button("Close room", systemImage: "xmark.app") {
                     guard let account, account.publicKey == liveEvent.pubkey else { return }
                     
