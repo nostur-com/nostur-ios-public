@@ -377,4 +377,8 @@ extension Notification.Name {
     static var lastDisconnection: Notification.Name {
         return Notification.Name("lastDisconnection")
     }
+    
+    static var showCreateNestsSheet: Notification.Name {
+        return Notification.Name("showCreateNestsSheet")
+    }
 }

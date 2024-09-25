@@ -336,6 +336,7 @@
 		1FA451AA2B101F6A00810367 /* CloudTask+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA451A82B101F6A00810367 /* CloudTask+CoreDataClass.swift */; };
 		1FA451AB2B101F6A00810367 /* CloudTask+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA451A92B101F6A00810367 /* CloudTask+CoreDataProperties.swift */; };
 		1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA477222A780C0E00A4CCD3 /* Binding+not.swift */; };
+		1FA4F33E2CA33BA600A3445B /* CreateNest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA4F33D2CA33BA600A3445B /* CreateNest.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
 		1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA6D5522C5A6A90001C3FDB /* SwiftUIIntrospect */; };
@@ -904,6 +905,7 @@
 		1FA451A82B101F6A00810367 /* CloudTask+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudTask+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA451A92B101F6A00810367 /* CloudTask+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudTask+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FA477222A780C0E00A4CCD3 /* Binding+not.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+not.swift"; sourceTree = "<group>"; };
+		1FA4F33D2CA33BA600A3445B /* CreateNest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateNest.swift; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FA70F912B053C9500BB636F /* CloudDMState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CloudDMState+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1312,6 +1314,7 @@
 				1F7C8AED2C93863D00B13BB7 /* ScheduleReminderButton.swift */,
 				1F7C8AF12C93872000B13BB7 /* SelectedParticipantView.swift */,
 				1F7C8AF32C96EFB100B13BB7 /* NRLiveEvent+NestsApi.swift */,
+				1FA4F33D2CA33BA600A3445B /* CreateNest.swift */,
 			);
 			path = LiveEvents;
 			sourceTree = "<group>";
@@ -2690,6 +2693,7 @@
 				1F7B218C2AE3118D00CE972E /* Settings+Nip96Configurator.swift in Sources */,
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
 				1FF2E6C92A72AEB300BF5A4C /* StreamurRepresentable.swift in Sources */,
+				1FA4F33E2CA33BA600A3445B /* CreateNest.swift in Sources */,
 				1F4C76742B779F82009F047D /* PostHeaderView.swift in Sources */,
 				1FFED8032A39C86F00A0B1E8 /* MacListState.swift in Sources */,
 				1F210B0629F853BB00159814 /* ProfileMediaView.swift in Sources */,

@@ -14,6 +14,7 @@ struct LiveEventsBanner: View {
     @ObservedObject private var liveEventsModel: LiveEventsModel = .shared
     @ObservedObject private var liveKitVoiceSession: LiveKitVoiceSession = .shared
     @State private var didLoad = false
+    @State private var showCreateNestsSheet = false
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -52,6 +53,17 @@ struct LiveEventsBanner: View {
             liveEventsModel.load()
             didLoad = true
         }
+        .onReceive(receiveNotification(.showCreateNestsSheet)) { _ in
+            showCreateNestsSheet = true
+        }
+        .fullScreenCover(isPresented: $showCreateNestsSheet, content: {
+            if let account = NRState.shared.loggedInAccount?.account {
+                NBNavigationStack {
+                    CreateNest(account: account)
+                        .padding()
+                }
+            }
+        })
         .fullScreenCover(item: $liveKitVoiceSession.visibleNest) { visibleNest in
             NBNavigationStack {
                 LiveEventDetail(liveEvent: visibleNest)

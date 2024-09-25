@@ -422,6 +422,34 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         }
         timer?.tolerance = 5.0
     }
+    
+    @MainActor
+    public func goLive(account: CloudAccount) {
+        guard account.publicKey == self.pubkey else { return }
+        
+        var nEvent = self.nEvent
+        nEvent.createdAt = NTimestamp(date: .now)
+        nEvent.tags = nEvent.tags.compactMap { tag in
+            if tag.type == "status" {
+                return NostrTag(["status", "live"])
+            }
+            return tag
+        }
+        if account.isNC {
+            NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account) { signedNEvent in
+                Unpublisher.shared.publishNow(signedNEvent, skipDB: true)
+                MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedNEvent), nEvent: signedNEvent, relayUrl: "local")
+                self.status = "live"
+            }
+        }
+        else {
+            if let signedNEvent = try? account.signEvent(nEvent) {
+                Unpublisher.shared.publishNow(signedNEvent, skipDB: true)
+                MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedNEvent), nEvent: signedNEvent, relayUrl: "local")
+                self.status = "live"
+            }
+        }
+    }
 }
 
 extension Event {
