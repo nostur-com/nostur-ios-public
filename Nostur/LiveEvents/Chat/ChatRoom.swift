@@ -18,6 +18,7 @@ struct ChatRoom: View {
     @State private var message: String = ""
     @State private var account: CloudAccount? = nil
     @State private var timer: Timer?
+    @State private var selectedContact: NRContact? = nil
     
     var body: some View {
         ScrollViewReader { proxy in
@@ -123,6 +124,29 @@ struct ChatRoom: View {
                 }
             }
         }
+//        .sheet(item: $selectedContact) { nrContact in
+//            NBNavigationStack {
+//                SelectedParticipantView(nrContact: nrContact, showZapButton: !anonymous, aTag: aTag, showModeratorControls: false, selectedContact: $selectedContact)
+//                    .environmentObject(themes)
+//                    .environmentObject(npn)
+//                    .padding(10)
+//                    .toolbar {
+//                        ToolbarItem(placement: .confirmationAction) {
+//                            if IS_CATALYST {
+//                                Button {
+//                                    selectedContact = nil
+//                                } label: {
+//                                    Image(systemName: "xmark")
+//                                        .imageScale(.large) // Adjust the size of the "X"
+//                                }
+//                            }
+//                        }
+//                    }
+//            }
+//            .nbUseNavigationStack(.never)
+//            .presentationBackgroundCompat(themes.theme.background)
+//            .presentationDetents45ml()
+//        }
         .onAppear {
             account = Nostur.account()
             startTimer()

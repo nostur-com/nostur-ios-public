@@ -32,23 +32,23 @@ struct ChatRow: View {
                                 .clipShape(Capsule())
                         }
                         MiniPFP(pictureUrl: confirmedZap.contact?.pictureUrl)
-                            .onTapGesture {
-                                if let nrContact = confirmedZap.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey))
-                                }
-                            }
+//                            .onTapGesture {
+//                                if let nrContact = confirmedZap.contact {
+//                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+//                                }
+//                                else {
+//                                    navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey))
+//                                }
+//                            }
                         Text(confirmedZap.contact?.anyName ?? "...")
-                            .onTapGesture {
-                                if let nrContact = confirmedZap.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey))
-                                }
-                            }
+//                            .onTapGesture {
+//                                if let nrContact = confirmedZap.contact {
+//                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+//                                }
+//                                else {
+//                                    navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey))
+//                                }
+//                            }
                         Ago(confirmedZap.zapRequestCreatedAt)
                             .foregroundColor(themes.theme.secondary)
                     }
@@ -83,23 +83,23 @@ struct ChatRow: View {
                         }
                         
                         MiniPFP(pictureUrl: pendingZap.contact?.pictureUrl)
-                            .onTapGesture {
-                                if let nrContact = pendingZap.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: pendingZap.pubkey))
-                                }
-                            }
+//                            .onTapGesture {
+//                                if let nrContact = pendingZap.contact {
+//                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+//                                }
+//                                else {
+//                                    navigateTo(ContactPath(key: pendingZap.pubkey))
+//                                }
+//                            }
                         Text(pendingZap.contact?.anyName ?? "...")
-                            .onTapGesture {
-                                if let nrContact = pendingZap.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: pendingZap.pubkey))
-                                }
-                            }
+//                            .onTapGesture {
+//                                if let nrContact = pendingZap.contact {
+//                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+//                                }
+//                                else {
+//                                    navigateTo(ContactPath(key: pendingZap.pubkey))
+//                                }
+//                            }
                         Ago(pendingZap.createdAt)
                             .foregroundColor(themes.theme.secondary)
                     }
