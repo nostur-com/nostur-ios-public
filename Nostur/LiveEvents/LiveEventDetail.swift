@@ -243,7 +243,7 @@ struct LiveEventDetail: View {
     private var headerView: some View {
         if streamHasEnded {
             HStack {
-                Text("Stream has ended")
+                Text("Session has ended")
                     .foregroundColor(.secondary)
             }
         }
@@ -300,9 +300,11 @@ struct LiveEventDetail: View {
                             NestParticipantView(
                                 nrContact: liveEvent.onStage[index],
                                 role: liveEvent.role(forPubkey: liveEvent.onStage[index].pubkey),
-                                aTag: liveEvent.id
+                                aTag: liveEvent.id,
+                                showControls: liveEvent.liveKitConnectUrl != nil
                             )
                             .onTapGesture {
+//                                guard liveEvent.liveKitConnectUrl != nil else { return } // only for nests for now because navigation issues / video stream doesn't continue in bg
                                 if liveEvent.onStage[index] == selectedContact {
                                     selectedContact = nil
                                 }
@@ -344,6 +346,7 @@ struct LiveEventDetail: View {
                                 showControls: false
                             )
                             .onTapGesture {
+//                                guard liveEvent.liveKitConnectUrl != nil else { return } // only for nests for now because navigation issues / video stream doesn't continue in bg
                                 if liveEvent.listeners[index] == selectedContact {
                                     selectedContact = nil
                                 }
