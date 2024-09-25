@@ -512,6 +512,39 @@ struct LiveEventDetail: View {
                     
                 }
             }
+            else if liveEvent.status == "ended" && liveEvent.pubkey == account?.publicKey {
+                Button("Restart room", systemImage: "restart.circle") {
+                    guard let account, account.publicKey == liveEvent.pubkey else { return }
+                    
+                    var restartedNEvent = liveEvent.nEvent
+                    restartedNEvent.createdAt = NTimestamp(date: .now)
+                    restartedNEvent.tags = restartedNEvent.tags.compactMap { tag in
+                        if tag.type == "status" {
+                            return NostrTag(["status", "live"])
+                        }
+                        else if tag.type == "ends" {
+                            return nil
+                        }
+                        return tag
+                    }
+
+                    if account.isNC {
+                        NSecBunkerManager.shared.requestSignature(forEvent: restartedNEvent, usingAccount: account) { signedRestartedNEvent in
+                            Unpublisher.shared.publishNow(signedRestartedNEvent, skipDB: true)
+                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedRestartedNEvent), nEvent: signedRestartedNEvent, relayUrl: "local")
+                            liveEvent.status = "live"
+                        }
+                    }
+                    else {
+                        if let signedRestartedNEvent = try? account.signEvent(restartedNEvent) {
+                            Unpublisher.shared.publishNow(signedRestartedNEvent, skipDB: true)
+                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedRestartedNEvent), nEvent: signedRestartedNEvent, relayUrl: "local")
+                            liveEvent.status = "live"
+                        }
+                    }
+                    
+                }
+            }
                 
             Text("Recordings")
                 .font(.footnote)
