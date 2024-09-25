@@ -151,7 +151,7 @@ struct SelectedParticipantView: View {
                     }
                     .disabled(!fg.didReceiveContactListThisSession)
                     
-                    if showZapButton {
+                    if showZapButton && nrContact.anyLud {
                         Button {
                             selectedContact = nil
                             self.sendSats()
