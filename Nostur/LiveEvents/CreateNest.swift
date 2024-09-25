@@ -77,6 +77,7 @@ struct CreateNest: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(NestButtonStyle(theme: Themes.default.theme, style: .borderedProminent))
+                    .disabled(title.isEmpty)
                     .hCentered()
 //                    Button {
 //                        
