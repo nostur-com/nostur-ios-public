@@ -60,10 +60,18 @@ struct LiveEventsBanner: View {
         .onReceive(receiveNotification(.showCreateNestsSheet)) { _ in
             showCreateNestsSheet = true
         }
+        .onReceive(receiveNotification(.hideCreateNestsSheet)) { _ in
+            showCreateNestsSheet = false
+        }
         .fullScreenCover(isPresented: $showCreateNestsSheet, content: {
             if let account = NRState.shared.loggedInAccount?.account {
                 NBNavigationStack {
                     CreateNest(account: account)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel") { showCreateNestsSheet = false }
+                            }
+                        }
                         .padding()
                 }
             }
