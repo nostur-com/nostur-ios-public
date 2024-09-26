@@ -381,4 +381,8 @@ extension Notification.Name {
     static var showCreateNestsSheet: Notification.Name {
         return Notification.Name("showCreateNestsSheet")
     }
+    
+    static var hideCreateNestsSheet: Notification.Name {
+        return Notification.Name("hideCreateNestsSheet")
+    }
 }

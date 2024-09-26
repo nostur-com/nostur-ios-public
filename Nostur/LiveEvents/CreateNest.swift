@@ -22,6 +22,8 @@ struct CreateNest: View {
     
     @State private var creatingRoomState: CreateNestState = .initial
     @State private var backlog = Backlog(auto: true)
+    @State private var showScheduleSheet = false
+    @State private var selectedDate = Date()
     
     @FocusState private var isTitleFocused: Bool // Declare focus state
     
@@ -78,19 +80,19 @@ struct CreateNest: View {
                     }
                     .buttonStyle(NestButtonStyle(theme: Themes.default.theme, style: .borderedProminent))
                     .disabled(title.isEmpty)
-                    .hCentered()
-//                    Button {
-//                        
-//                    } label: {
-//                        Image(systemName: "calendar.badge.clock")
-//                            .fontWeightBold()
-//                            .padding(.horizontal, 20)
-//                            .padding(.vertical, 5)
-//                            .contentShape(Rectangle())
-//                    }
-//                    .buttonStyle(NestButtonStyle(theme: Themes.default.theme))
-
+                    
+                    Button {
+                        showScheduleSheet = true
+                    } label: {
+                        Image(systemName: "calendar.badge.clock")
+                            .fontWeightBold()
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 5)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(NestButtonStyle(theme: Themes.default.theme))
                 }
+                .hCentered()
             case .creatingRoom:
                 ProgressView()
                     .hCentered()
@@ -100,15 +102,16 @@ struct CreateNest: View {
                 Text("Error")
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
-        }
         .onAppear {
             isTitleFocused = true // Focus the TextField when view appears
             preselectRelays()
         }
+        .nbNavigationDestination(isPresented: $showScheduleSheet, destination: {
+            ScheduleNestSheet(account: account, selectedDate: $selectedDate, server: server, selectedRelays: selectedRelays, title: title)
+                .navigationTitle("Set date/time")
+                .navigationBarTitleDisplayMode(.inline)
+                .padding()
+        })
     }
     
     private func startNest() {
@@ -205,6 +208,116 @@ struct CreateNest: View {
         // else fall back to defaults
         if selectedRelays.isEmpty {
             selectedRelays = ["wss://nos.lol", "wss://relay.damus.io", "wss://relay.nostr.band", "wss://nostr.wine"]
+        }
+    }
+}
+
+import SwiftUI
+
+struct ScheduleNestSheet: View {
+    public let account: CloudAccount
+    @Binding var selectedDate: Date
+    public let server: String
+    public let selectedRelays: [String]
+    public let title: String
+
+    @Environment(\.dismiss) var dismiss
+    @State private var backlog = Backlog(auto: true)
+    @State private var creatingRoomState: CreateNestState = .initial
+
+    var body: some View {
+        VStack {
+            DatePicker(
+                "Select Date & Time",
+                selection: $selectedDate,
+                in: Date()..., // Disable dates before today
+                displayedComponents: [.date, .hourAndMinute]
+            )
+            .datePickerStyle(GraphicalDatePickerStyle())
+            .padding()
+
+            Spacer()
+            
+            switch creatingRoomState {
+            case .initial:
+                Button {
+                    scheduleNest()
+                } label: {
+                    HStack {
+                        MiniPFP(pictureUrl: account.pictureUrl, size: 20.0)
+                        Text("Schedule")
+                    }
+                    .fontWeightBold()
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 5)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(NestButtonStyle(theme: Themes.default.theme, style: .borderedProminent))
+            case .creatingRoom:
+                ProgressView()
+                    .hCentered()
+            case .created:
+                EmptyView()
+            case .error:
+                Text("Error")
+            }
+        }
+    }
+    
+    private func scheduleNest() {
+        creatingRoomState = .creatingRoom
+        // Create Room (NESTS API) (receive roomId / dTag)
+        let service = "https://\(server)"
+        Task { @MainActor in
+            if let response: CreateRoomResponse = try? await createRoom(baseURL: service, account: account, relays: selectedRelays, hlsStream: false) {
+                let streaming = "wss+livekit://\(server)"
+                var nestsEvent = createNestsEvent(title: title, summary: "", service: service, streaming: streaming, starts: selectedDate, relays: selectedRelays, roomId: response.roomId)
+                
+                let signedNestsEvent: NEvent
+                
+                if account.isNC {
+                    // Sign remotely
+                    nestsEvent = nestsEvent.withId()
+                    signedNestsEvent = try await withCheckedThrowingContinuation { continuation in
+                        NSecBunkerManager.shared.requestSignature(forEvent: nestsEvent, usingAccount: account) { signedEvent in
+                            continuation.resume(returning: signedEvent)
+                        }
+                    }
+                } else {
+                    // Sign locally
+                    guard let signedEvent = try? account.signEvent(nestsEvent) else {
+                        creatingRoomState = .error
+                        return
+                    }
+                    signedNestsEvent = signedEvent
+                }
+                
+                let subId = UUID().uuidString
+                
+                let task = ReqTask(
+                    prio: true,
+                    subscriptionId: subId,
+                    reqCommand: { (taskId) in
+                        Unpublisher.shared.publishNow(signedNestsEvent, skipDB: true)
+                        MessageParser.shared.handlePrioMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", subscriptionId: taskId, event: signedNestsEvent), nEvent: signedNestsEvent, relayUrl: "local")
+                    },
+                    processResponseCommand: { (taskId, _, event) in
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            sendNotification(.hideCreateNestsSheet)
+                            // dismiss()
+                        }
+                        self.backlog.clear()
+                    },
+                    timeoutCommand: { _ in
+                        creatingRoomState = .error
+                    })
+
+                backlog.add(task)
+                task.fetch()
+            }
+            else {
+                creatingRoomState = .error
+            }
         }
     }
 }
