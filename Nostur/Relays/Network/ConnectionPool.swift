@@ -51,9 +51,29 @@ public class ConnectionPool: ObservableObject {
     
     // .connectionStats should only be accessed from connection ConnectionPool.queue
     public var connectionStats: [CanonicalRelayUrl: RelayConnectionStats] = [:]
+        
+    @MainActor
+    public var anyConnected: Bool = false
     
-    public var anyConnected: Bool { // TODO: Should also include outbox connections?
-        connections.contains(where: { $0.value.isConnected })
+    public func updateAnyConnected() {
+        queue.async { [unowned self] in
+            if self.connections.contains(where: { $0.value.isConnected }) {
+                Task { @MainActor in
+                    if !self.anyConnected {
+                        self.objectWillChange.send()
+                        self.anyConnected = true
+                    }
+                }
+            }
+            else {
+                Task { @MainActor in
+                    if self.anyConnected {
+                        self.objectWillChange.send()
+                        self.anyConnected = false
+                    }
+                }
+            }
+        }
     }
     
     public var connectedCount: Int {
