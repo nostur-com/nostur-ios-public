@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct RelayEditView: View {
     @EnvironmentObject private var themes: Themes
@@ -25,9 +26,8 @@ struct RelayEditView: View {
             .filter { $0.isFullAccount }
     }
     
-    private var isConnected: Bool {
-        connection?.isConnected ?? false
-    }
+    @State private var isConnected: Bool = false
+    @State private var connectedSub: AnyCancellable? = nil
     
     private func toggleAccount(_ account: CloudAccount) {
         if excludedPubkeys.contains(account.publicKey) {
@@ -122,12 +122,28 @@ struct RelayEditView: View {
                                 }
                                 let newRelayData = RelayData.new(url: correctedRelayUrl, read: relay.read, write: relay.write, search: relay.search, auth: relay.auth, excludedPubkeys:  relay.excludedPubkeys)
                                 
-                                let replacedConnection = ConnectionPool.shared.addConnection(newRelayData)
-                                connection = replacedConnection
+                                ConnectionPool.shared.addConnection(newRelayData) { replacedConnection in
+                                    Task { @MainActor in
+                                        connection = replacedConnection
+                                        // Then connect (force)
+                                        connection?.connect(forceConnectionAttempt: true)
+                                        
+                                        isConnected = replacedConnection.isConnected
+                                        connectedSub?.cancel()
+                                        connectedSub = replacedConnection.objectWillChange.sink { _ in
+                                            Task { @MainActor in
+                                                isConnected = replacedConnection.isConnected
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                // Then connect (force)
+                                connection?.connect(forceConnectionAttempt: true)
                             }
                             
-                            // Then connect (force)
-                            connection?.connect(forceConnectionAttempt: true)
+                            
                         } label: {
                             Text("Connect", comment: "Button to connect to relay")
                         }
@@ -181,11 +197,23 @@ struct RelayEditView: View {
                                 ConnectionPool.shared.removeConnection(oldUrl.lowercased())
                             }
                             let newRelayData = RelayData.new(url: correctedRelayUrl, read: relay.read, write: relay.write, search: relay.search, auth: relay.auth, excludedPubkeys: relay.excludedPubkeys)
-                            let relayConnection = ConnectionPool.shared.addConnection(newRelayData)
-                            if relay.read {
-                                relayConnection.connect()
+                            let read = relay.read
+                            ConnectionPool.shared.addConnection(newRelayData) { relayConnection in
+                                if read {
+                                    relayConnection.connect()
+                                }
+                                Task { @MainActor in
+                                    connection = relayConnection
+                                    
+                                    isConnected = relayConnection.isConnected
+                                    connectedSub?.cancel()
+                                    connectedSub = relayConnection.objectWillChange.sink { _ in
+                                        Task { @MainActor in
+                                            isConnected = relayConnection.isConnected
+                                        }
+                                    }
+                                }
                             }
-                            connection = relayConnection
                         }
                         else {
                             // read/write/exclude change?
@@ -193,6 +221,16 @@ struct RelayEditView: View {
                             connection?.relayData.setWrite(relay.write)
                             connection?.relayData.setAuth(relay.auth)
                             connection?.relayData.setExcludedPubkeys(relay.excludedPubkeys)
+                            
+                            if let connection {
+                                isConnected = connection.isConnected
+                                connectedSub?.cancel()
+                                connectedSub = connection.objectWillChange.sink { _ in
+                                    Task { @MainActor in
+                                        isConnected = connection.isConnected
+                                    }
+                                }
+                            }
                         }
                     }
                     catch {
@@ -220,10 +258,38 @@ struct RelayEditView: View {
         .onAppear {
             relayUrl = relay.url_ ?? ""
             excludedPubkeys = relay.excludedPubkeys
-            connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
+            Task {
+                if let conn = await ConnectionPool.shared.getConnection(relayUrl.lowercased()) {
+                    Task { @MainActor in
+                        connection = conn
+                        
+                        isConnected = conn.isConnected
+                        connectedSub?.cancel()
+                        connectedSub = conn.objectWillChange.sink { _ in
+                            Task { @MainActor in
+                                isConnected = conn.isConnected
+                            }
+                        }
+                    }
+                }
+            }
         }
         .onReceive(cp.objectWillChange, perform: { _ in
-            connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
+            Task {
+                if let conn = await ConnectionPool.shared.getConnection(relayUrl.lowercased()) {
+                    Task { @MainActor in
+                        connection = conn
+                        
+                        isConnected = conn.isConnected
+                        connectedSub?.cancel()
+                        connectedSub = conn.objectWillChange.sink { _ in
+                            Task { @MainActor in
+                                isConnected = conn.isConnected
+                            }
+                        }
+                    }
+                }
+            }
         })
     }
 }
