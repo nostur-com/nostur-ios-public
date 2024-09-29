@@ -182,10 +182,12 @@ struct CustomNWCConnectSheet: View {
             removeExistingNWCsocket()
             DispatchQueue.main.async {
                 L.og.info("⚡️ Adding NWC connection")
-                let newConnection = ConnectionPool.shared.addNWCConnection(connectionId:connectionId, url: relay)
-                if !newConnection.isConnected {
-                    newConnection.connect()
+                ConnectionPool.shared.addNWCConnection(connectionId:connectionId, url: relay) { conn in
+                    if !conn.isConnected {
+                        conn.connect()
+                    }
                 }
+                
                 NWCRequestQueue.shared.nwcConnection = c
                 Importer.shared.nwcConnection = c
                 

@@ -165,9 +165,9 @@ func checkForNotifications() async {
             }
             
             // Setup connections
-            let relays:[RelayData] = CloudRelay.fetchAll(context: DataProvider.shared().viewContext).map { $0.toStruct() }
+            let relays: [RelayData] = CloudRelay.fetchAll(context: DataProvider.shared().viewContext).map { $0.toStruct() }
             for relay in relays {
-                _ = ConnectionPool.shared.addConnection(relay)
+                ConnectionPool.shared.addConnection(relay)
             }
             ConnectionPool.shared.connectAll()
             bg().perform {
