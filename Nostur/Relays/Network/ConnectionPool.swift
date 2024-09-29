@@ -535,7 +535,7 @@ public class ConnectionPool: ObservableObject {
         guard !message.onlyForNWCRelay && !message.onlyForNCRelay else { return } // also not NW or NWC
         
         // Additions for Outbox taken from nostr-essentials
-        guard SettingsStore.shared.enableOutboxRelays else { return } // Check if Enhanced Relay Routing toggle is turned on
+        guard SettingsStore.shared.enableOutboxRelays, vpnGuardOK() else { return } // Check if Enhanced Relay Routing toggle is turned on
         guard let preferredRelays = self.preferredRelays else { return }
         
         // SEND REQ TO WHERE OTHERS WRITE (TO FIND THEIR POSTS, SO WE CAN READ)
