@@ -11,7 +11,7 @@ import KeychainAccess
 
 struct Maintenance {
 
-    static let BOOTSTRAP_RELAYS = ["wss://relay.nostr.band", "wss://nos.lol", "wss://nostr.wine", "wss://nostr.mutinywallet.com", "wss://purplepag.es"]
+    static let BOOTSTRAP_RELAYS = ["wss://relay.nostr.band", "wss://nos.lol", "wss://nostr.wine", "wss://purplepag.es"]
     
     // Removed: wss://relay.damus.io // shows only cameri bug
     // Removed: time out... "wss://nostr.fmt.wiz.biz"
@@ -28,7 +28,7 @@ struct Maintenance {
                 if (relaysCount == 0) {
                     for url in BOOTSTRAP_RELAYS {
                         let bootstrapRelay = CloudRelay(context: context)
-                        bootstrapRelay.read = (url == "wss://nostr.mutinywallet.com" || url == "wss://relay.nostr.band") ? false : true // this one is write only
+                        bootstrapRelay.read = (url == "wss://relay.nostr.band") ? false : true // this one is write only
                         bootstrapRelay.write = true
                         bootstrapRelay.createdAt = Date.now
                         bootstrapRelay.url_ = url
