@@ -14,7 +14,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     // for views (viewContext)
     @Published private(set) var isConnected = false { // don't set directly, set isDeviceConnected or isSocketConnected
         willSet {
-            ConnectionPool.shared.objectWillChange.send()
+            ConnectionPool.shared.updateAnyConnected()
         }
     }
     
