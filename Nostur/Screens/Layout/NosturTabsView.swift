@@ -23,6 +23,7 @@ struct NosturTabsView: View {
     @ObservedObject private var ss: SettingsStore = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     
     var body: some View {
         #if DEBUG
@@ -36,6 +37,7 @@ struct NosturTabsView: View {
                         tabTapped(newTab, oldTab: oldTab)
                     }) {
                         MainView()
+                            .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .environmentObject(la)
                             .tabItem { Label("", systemImage: "house") }
                             .tag("Main")
@@ -47,27 +49,32 @@ struct NosturTabsView: View {
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
                         
                         NotificationsContainer()
+                            .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .tabItem { Label("", systemImage: "bell.fill") }
                             .tag("Notifications")
                             .badge(unread)
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
                         
                         Search()
+                            .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .tabItem { Label("", systemImage: "magnifyingglass") }
                             .tag("Search")
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
                         
                         BookmarksAndPrivateNotes()
+                            .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .tabItem { Label("", systemImage: "bookmark") }
                             .tag("Bookmarks")
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
                         
                         DMContainer()
+                            .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .tabItem { Label("", systemImage: "envelope.fill") }
                             .tag("Messages")
                             .badge((dm.unread + dm.newRequests))
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
                     }
+                    .environment(\.horizontalSizeClass, .compact)
                     .withSheets() // Move .sheets to each (NB)NavigationStack?
                     .edgesIgnoringSafeArea(.all)
                 }
