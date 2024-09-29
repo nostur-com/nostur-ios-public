@@ -456,24 +456,3 @@ struct FollowingAndExplore_Previews: PreviewProvider {
         }
     }
 }
-
-struct ConnectionDebugger: View {
-    @ObservedObject private var cp: ConnectionPool = .shared
-    @State private var showDetails: Bool = false
-
-    private var connectedRelays: [RelayConnection] {
-        cp.connections.values.filter({ $0.isConnected })
-    }
-    
-    var body: some View {
-        Text("Connected: \(cp.connectedCount)/\(cp.outboxConnectedCount)/\(cp.ephemeralConnectedCount)")
-            .onTapGesture {
-                showDetails.toggle()
-            }
-        if showDetails {
-            ForEach(connectedRelays) { relay in
-                Text(relay.url)
-            }
-        }
-    }
-}

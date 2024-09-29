@@ -122,14 +122,6 @@ struct NXPostsFeed: View {
                         scrollToTop(proxy)
                     })
             }
-            #if DEBUG
-            .overlay(alignment: .bottom) {
-                VStack {
-                    Text("posts: \(posts.count) atTop: \(vmInner.isAtTop ? "1" : "0") load time: \(vm.formattedLoadTime)")
-                    ConnectionDebugger()
-                }
-            }
-            #endif
             .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
                 guard vm.isVisible else { return }
                 scrollToFirstUnread(proxy)
