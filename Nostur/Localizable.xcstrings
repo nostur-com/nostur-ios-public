@@ -2281,16 +2281,6 @@
         }
       }
     },
-    "Connected: %lld/%lld/%lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Connected: %1$lld/%2$lld/%3$lld"
-          }
-        }
-      }
-    },
     "contact" : {
       "comment" : "The word \"contact\" when used as contact #1, contact #2 and contact #3.",
       "localizations" : {
@@ -4731,6 +4721,7 @@
       }
     },
     "Nests will be announced on:" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5602,16 +5593,6 @@
         }
       }
     },
-    "posts: %lld atTop: %@ load time: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "posts: %1$lld atTop: %2$@ load time: %3$@"
-          }
-        }
-      }
-    },
     "prefix: %@" : {
       "localizations" : {
         "nl" : {
@@ -6113,6 +6094,7 @@
       }
     },
     "Record audio" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6172,9 +6154,6 @@
           }
         }
       }
-    },
-    "Relay Autopilot will broadcast to following relays" : {
-
     },
     "Relay connection stats" : {
       "localizations" : {
@@ -6730,6 +6709,9 @@
         }
       }
     },
+    "Schedule" : {
+
+    },
     "screenshot" : {
       "comment" : "Post context menu button",
       "localizations" : {
@@ -6806,6 +6788,9 @@
           }
         }
       }
+    },
+    "Select Date & Time" : {
+
     },
     "Self-hosted nsecBunker" : {
       "extractionState" : "manual",
@@ -6913,6 +6898,9 @@
       }
     },
     "Session has ended" : {
+
+    },
+    "Set date/time" : {
 
     },
     "Set reminder" : {

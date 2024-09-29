@@ -54,7 +54,7 @@ struct ScheduleReminderButton: View {
     func scheduleNotification() {
         let content = UNMutableNotificationContent()
         content.title = name ?? "Going live"
-        content.body = "\(name ?? "Nests or stream") is start soon"
+        content.body = "\(name ?? "Nests or stream") is starting soon"
         content.sound = .default
         
         // Create a trigger based on the selected date
