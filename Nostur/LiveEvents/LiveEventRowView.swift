@@ -73,7 +73,7 @@ struct LiveEventRowView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            if IS_CATALYST {
+            if IS_CATALYST || IS_IPAD {
                 navigateTo(liveEvent)
             }
             else {
