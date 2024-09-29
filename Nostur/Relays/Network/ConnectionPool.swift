@@ -33,7 +33,7 @@ public class ConnectionPool: ObservableObject {
     static public let shared = ConnectionPool()
     public var queue = DispatchQueue(label: "connection-pool", qos: .utility, attributes: .concurrent)
     
-    // .connections should be read/mutated from main context
+    // .connections should be read/mutated from connection context
     public var connections: [CanonicalRelayUrl: RelayConnection] = [:]
     
     // .ephemeralConnections should be read/mutated from main context
@@ -268,11 +268,12 @@ public class ConnectionPool: ObservableObject {
         }
     }
     
-    @MainActor
     func removeOutboxConnection(_ relayId: String) {
-        if let connection = outboxConnections[relayId] {
-            connection.disconnect()
-            outboxConnections.removeValue(forKey: relayId)
+        queue.async(flags: .barrier) {
+            if let connection = self.outboxConnections[relayId] {
+                connection.disconnect()
+                self.outboxConnections.removeValue(forKey: relayId)
+            }
         }
     }
     
@@ -291,8 +292,10 @@ public class ConnectionPool: ObservableObject {
     func disconnectAllAdditional() {
         L.og.debug("ConnectionPool.disconnectAllAdditional")
         
-        for (_, connection) in outboxConnections {
-            connection.disconnect()
+        queue.async {
+            for (_, connection) in self.outboxConnections {
+                connection.disconnect()
+            }
         }
         
         for (_, connection) in ephemeralConnections {
