@@ -91,6 +91,7 @@ struct CreateNest: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(NestButtonStyle(theme: Themes.default.theme))
+                    .disabled(title.isEmpty)
                 }
                 .hCentered()
             case .creatingRoom:
