@@ -409,9 +409,9 @@ public final class NewPostModel: ObservableObject {
             }
         }
         if let quotingEvent {
-            let quotingNEvent = quotingEvent.toNEvent()
-            let quotingEventId = quotingEvent.id
             bg().perform {
+                let quotingNEvent = quotingEvent.toNEvent()
+                let quotingEventId = quotingEvent.id
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEventId))
                     // Republish post being quoted
