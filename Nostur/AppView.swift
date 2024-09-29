@@ -220,62 +220,60 @@ struct AppView: View {
             }
             
             for relay in relays {
-                _ = ConnectionPool.shared.addConnection(relay)
+                ConnectionPool.shared.addConnection(relay)
             }
             
             ConnectionPool.shared.connectAll()
             
-            Task {
-                let addedConnection: RelayConnection? = await bg().perform {
-                    if !SettingsStore.shared.activeNWCconnectionId.isEmpty,
-                        let nwc = NWCConnection.fetchConnection(SettingsStore.shared.activeNWCconnectionId, context: bg()) {
-                        
+            if !SettingsStore.shared.activeNWCconnectionId.isEmpty {
+                await bg().perform {
+                    if let nwc = NWCConnection.fetchConnection(SettingsStore.shared.activeNWCconnectionId, context: bg()) {
                         NWCRequestQueue.shared.nwcConnection = nwc
                         Importer.shared.nwcConnection = nwc
                         
-                        return ConnectionPool.shared.addNWCConnection(connectionId: nwc.connectionId, url: nwc.relay)
+                        ConnectionPool.shared.addNWCConnection(connectionId: nwc.connectionId, url: nwc.relay) { conn in
+                            conn.connect()
+                        }
                     }
-                    return nil
                 }
-                addedConnection?.connect()
-                
-                Task {
-                    if (ns.rawExplorePubkeys.isEmpty) {
-                        // Fetch updated contactlist for Explore feed
+            }
             
-                        // First get from cache
-                        let rawExplorePubkeys = await bg().perform {
-                            let r = Event.fetchRequest()
-                            r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", EXPLORER_PUBKEY)
-                            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                            if let exploreContactList = try? bg().fetch(r).first {
-                                return Set(exploreContactList.pTags())
-                            }
-                            return Set()
+            Task {
+                if (ns.rawExplorePubkeys.isEmpty) {
+                    // Fetch updated contactlist for Explore feed
+        
+                    // First get from cache
+                    let rawExplorePubkeys = await bg().perform {
+                        let r = Event.fetchRequest()
+                        r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", EXPLORER_PUBKEY)
+                        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                        if let exploreContactList = try? bg().fetch(r).first {
+                            return Set(exploreContactList.pTags())
                         }
-                        ns.rawExplorePubkeys = rawExplorePubkeys
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                            req(RM.getAuthorContactsList(pubkey: EXPLORER_PUBKEY))
-                        }
+                        return Set()
                     }
-                    
-                    if (!firstTimeCompleted) {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                            bg().perform {
-                                _ = GuestAccountManager.shared.createGuestAccount()
-                                DataProvider.shared().save()
-                                do {
-                                    try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
-                                }
-                                catch {
-                                    L.og.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR")
-                                }
-                            }
-                        }
+                    ns.rawExplorePubkeys = rawExplorePubkeys
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        req(RM.getAuthorContactsList(pubkey: EXPLORER_PUBKEY))
                     }
-                    
-                    loadAccounts()
                 }
+                
+                if (!firstTimeCompleted) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        bg().perform {
+                            _ = GuestAccountManager.shared.createGuestAccount()
+                            DataProvider.shared().save()
+                            do {
+                                try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
+                            }
+                            catch {
+                                L.og.error("🔴🔴✈️✈️✈️ ONBOARDING ERROR")
+                            }
+                        }
+                    }
+                }
+                
+                loadAccounts()
             }
         }
         return

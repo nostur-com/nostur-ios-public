@@ -154,17 +154,19 @@ class NSecBunkerManager: ObservableObject {
     
     @MainActor
     private func connectToSelfHostedNsecbunker(sessionPublicKey: String, relay:String) {
-        let newConnection = ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: relay)
-        if !newConnection.isConnected {
-            newConnection.connect()
+        ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: relay) { conn in
+            if !conn.isConnected {
+                conn.connect()
+            }
         }
     }
     
     @MainActor
     private func connectToHardcodedNsecbunker(sessionPublicKey: String) {
-        let newConnection = ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: "wss://relay.nsecbunker.com")
-        if !newConnection.isConnected {
-            newConnection.connect()
+        ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: "wss://relay.nsecbunker.com") { conn in
+            if !conn.isConnected {
+                conn.connect()
+            }
         }
     }
     
