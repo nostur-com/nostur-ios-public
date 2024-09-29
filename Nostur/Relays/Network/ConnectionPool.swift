@@ -80,10 +80,6 @@ public class ConnectionPool: ObservableObject {
         connections.filter({ $0.value.isConnected }).count
     }
     
-    public var outboxConnectedCount: Int {
-        outboxConnections.filter({ $0.value.isConnected }).count
-    }
-    
     public var ephemeralConnectedCount: Int {
         ephemeralConnections.filter({ $0.value.isConnected }).count
     }
