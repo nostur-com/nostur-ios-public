@@ -579,12 +579,15 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] }
             
+            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
         case .pubkeys(let feed):
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
+            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp)
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
@@ -592,6 +595,7 @@ class NXColumnViewModel: ObservableObject {
                 // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
             }
         case .someoneElses(_):
+            guard config.pubkeys.count > 0 || config.hashtags.count > 0 else { return }
             let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: NTimestamp(date: Date.now).timestamp)
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
@@ -779,6 +783,8 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] }
             
+            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
@@ -786,6 +792,9 @@ class NXColumnViewModel: ObservableObject {
         case .pubkeys(let feed):
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
+            
+            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100)
             
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
@@ -794,6 +803,7 @@ class NXColumnViewModel: ObservableObject {
             }
             
         case .someoneElses(_):
+            guard config.pubkeys.count > 0 || config.hashtags.count > 0 else { return }
             let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, until: Int(until), limit: 100)
             
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
