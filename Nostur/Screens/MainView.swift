@@ -162,6 +162,10 @@ struct MainView: View {
                 UserDefaults.standard.setValue("Following", forKey: "selected_subtab")
             }
         }
+        .onReceive(receiveNotification(.newTemplatePost)) { _ in
+            // Note: use  NRState.shared.draft = ...
+            showingNewNote = true
+        }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
             guard !IS_IPAD || horizontalSizeClass == .compact else { return }

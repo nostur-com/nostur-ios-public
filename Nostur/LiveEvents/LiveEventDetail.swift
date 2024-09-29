@@ -305,6 +305,19 @@ struct LiveEventDetail: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(maxWidth: 140)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Share", systemImage: "square.and.arrow.up") {
+                            if !IS_CATALYST && !IS_IPAD {
+                                LiveKitVoiceSession.shared.visibleNest = nil
+                            }
+                            NRState.shared.draft = "\(liveEvent.title ?? "Join") 👇\n\n" + "nostr:" + roomAddress
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                sendNotification(.newTemplatePost)
+                            }
+                        }
+                    }
+                }
         }
 #if DEBUG
         Text("copy event json")

@@ -6924,6 +6924,9 @@
         }
       }
     },
+    "Share" : {
+
+    },
     "Share highlight" : {
       "comment" : "Navigation title for screen to Share a Highlighted Text",
       "localizations" : {
