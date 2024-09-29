@@ -38,6 +38,7 @@ class NXColumnViewModel: ObservableObject {
         return formatter.string(from: NSNumber(value: loadTime)) ?? "-"
     }
     
+    @MainActor
     private func didFinish() {
         if finishTime == nil {
             finishTime = .now
