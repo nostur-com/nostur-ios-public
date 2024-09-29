@@ -156,6 +156,7 @@ struct AlbyNWCConnectSheet: View {
                     ss.activeNWCconnectionId = connectionId
                     nwcConnectSuccess = true
                 }
+                bgSave()
             }
             
             if account.lud06.isEmpty && account.lud16.isEmpty {
