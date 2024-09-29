@@ -8,15 +8,15 @@
 import SwiftUI
 import CoreData
 import NavigationBackport
+import Combine
 
 struct RelayRowView: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject public var relay: CloudRelay
     @ObservedObject private var cp: ConnectionPool = .shared
     
-    private var isConnected:Bool {
-        connection?.isConnected ?? false
-    }
+    @State private var isConnected: Bool = false
+    @State private var connectedSub: AnyCancellable? = nil
     
     @State private var connection: RelayConnection? = nil
     
@@ -74,13 +74,41 @@ struct RelayRowView: View {
         }
         .task {
             let relayUrl = relay.url_ ?? ""
-            connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
-            L.sockets.debug("connection is now \(connection?.url ?? "")")
+            Task {
+                if let conn = await ConnectionPool.shared.getConnection(relayUrl.lowercased()) {
+                    Task { @MainActor in
+                        connection = conn
+                        L.sockets.debug("connection is now \(connection?.url ?? "")")
+                        
+                        isConnected = conn.isConnected
+                        connectedSub?.cancel()
+                        connectedSub = conn.objectWillChange.sink { _ in
+                            Task { @MainActor in
+                                isConnected = conn.isConnected
+                            }
+                        }
+                    }
+                }
+            }
         }
         .onReceive(cp.objectWillChange, perform: { _ in
             let relayUrl = relay.url_ ?? ""
-            connection = ConnectionPool.shared.connectionByUrl(relayUrl.lowercased())
-            L.sockets.debug("connection is now \(connection?.url ?? "")")
+            Task {
+                if let conn = await ConnectionPool.shared.getConnection(relayUrl.lowercased()) {
+                    Task { @MainActor in
+                        connection = conn
+                        L.sockets.debug("connection is now \(connection?.url ?? "")")
+                        
+                        isConnected = conn.isConnected
+                        connectedSub?.cancel()
+                        connectedSub = conn.objectWillChange.sink { _ in
+                            Task { @MainActor in
+                                isConnected = conn.isConnected
+                            }
+                        }
+                    }
+                }
+            }
         })
     }
 }

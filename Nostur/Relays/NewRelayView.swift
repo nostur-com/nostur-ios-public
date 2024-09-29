@@ -44,7 +44,7 @@ struct NewRelayView: View {
         do {
             try viewContext().save()
             if (relay.read || relay.write) {
-                _ = ConnectionPool.shared.addConnection(relay.toStruct())
+                ConnectionPool.shared.addConnection(relay.toStruct())
             }
         } catch {
             L.og.error("Unresolved error \(error)")

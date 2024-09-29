@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NostrEssentials
+import Combine
 
 struct ProfileRelays: View {
     @EnvironmentObject private var themes:Themes
@@ -126,39 +127,59 @@ struct ProfileRelays: View {
 }
 
 struct RelayConnectButton: View {
-    @EnvironmentObject private var cp: ConnectionPool
     private var url: String
-    private var isConnected: Bool {
-        cp.isUrlConnected(normalizeRelayUrl(url))
-    }
+    @State private var isConnected: Bool = false
+    @State private var subscriptions = Set<AnyCancellable>()
     
     init(url: String) {
         self.url = url
     }
     
     var body: some View {
-        if isConnected {
-            Text("Connected").foregroundColor(.secondary)
-        }
-        else {
-            Button("Connect") {
-                // Connect to relay
-                let connection = cp.addConnection(RelayData(read: true, write: true, search: false, auth: false, url: normalizeRelayUrl(url), excludedPubkeys: []))
-                connection.connect(forceConnectionAttempt: true)
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    // If connection is successful, save relay to database
-                    if cp.isUrlConnected(normalizeRelayUrl(url)) {
-                        let relay = CloudRelay(context: context())
-                        relay.createdAt = Date()
-                        relay.url_ = url
-                        relay.read = true
-                        relay.write = true
-                        relay.auth = false
+        VStack {
+            if isConnected {
+                Text("Connected").foregroundColor(.secondary)
+            }
+            else {
+                Button("Connect") {
+                    // Connect to relay
+                    ConnectionPool.shared.addConnection(RelayData(read: true, write: true, search: false, auth: false, url: normalizeRelayUrl(url), excludedPubkeys: [])) { newConnection in
+                     
+                        newConnection.connect(forceConnectionAttempt: true)
+                        newConnection.objectWillChange.sink { _ in
+                            Task { @MainActor in
+                                isConnected = newConnection.isConnected
+                            }
+                        }
+                        .store(in: &subscriptions)
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            // If connection is successful, save relay to database
+                            if newConnection.isConnected {
+                                let relay = CloudRelay(context: context())
+                                relay.createdAt = Date()
+                                relay.url_ = url
+                                relay.read = true
+                                relay.write = true
+                                relay.auth = false
+                            }
+                        }
+                        
                     }
                 }
-            }
                 .buttonStyle(BorderlessButtonStyle())
+            }
+        }
+        .task {
+            if let conn = await ConnectionPool.shared.getConnection(normalizeRelayUrl(url)) {
+                isConnected = conn.isConnected
+                conn.objectWillChange.sink { _ in
+                    Task { @MainActor in
+                        isConnected = conn.isConnected
+                    }
+                }
+                .store(in: &subscriptions)
+            }
         }
     }
 }
