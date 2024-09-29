@@ -54,7 +54,7 @@ struct LiveEventCapsule: View {
         .gesture(
             TapGesture()
                .onEnded {
-                   if IS_CATALYST {
+                   if IS_CATALYST || IS_IPAD {
                        navigateTo(liveEvent)
                    }
                    else {
