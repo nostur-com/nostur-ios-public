@@ -25,22 +25,6 @@ struct LiveEventsBanner: View {
                         LiveEventCapsule(liveEvent: nrLiveEvent, onRemove: remove)
                             .frame(maxWidth: dim.availableNoteRowImageWidth())
                             .fixedSize(horizontal: true, vertical: false)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(nrLiveEvent)
-                            }
-                            .simultaneousGesture(
-                                DragGesture()
-                                    .onEnded { value in
-                                        // Never dismiss own event, except if its already ended
-                                        if nrLiveEvent.pubkey == NRState.shared.activeAccountPublicKey && nrLiveEvent.status != "ended" {
-                                            return
-                                        }
-                                        if value.translation.height < -50 { // Adjust the threshold as needed
-                                            remove(nrLiveEvent.id)
-                                        }
-                                    }
-                            )
                     }
                 }
             }

@@ -73,7 +73,13 @@ struct LiveEventRowView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            navigateTo(liveEvent)
+            if IS_CATALYST {
+                navigateTo(liveEvent)
+            }
+            else {
+                UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                LiveKitVoiceSession.shared.activeNest = liveEvent
+            }
         }
     }
     
