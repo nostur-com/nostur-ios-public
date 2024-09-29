@@ -141,6 +141,22 @@ struct Entry: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {
                     if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+                        Button {
+                            if IS_CATALYST { // MacOS can reuse same weird sheet
+                                sendNotification(.showCreateNestsSheet)
+                            }
+                            else { // IPAD needs to dismiss first
+                                onDismiss()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                                    sendNotification(.showCreateNestsSheet)
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "mic")
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(typingTextModel.uploading)
+                        
                         Button { cameraSheetShown = true } label: {
                             Image(systemName: "camera")
                         }
