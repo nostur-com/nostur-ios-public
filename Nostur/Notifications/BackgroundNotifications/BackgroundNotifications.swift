@@ -47,6 +47,12 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         completionHandler()
     }
     
+    // This method will be called when a notification is delivered while the app is in the foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Show the notification as a banner, sound, etc.
+        completionHandler([.banner, .sound])
+    }
+    
     // Delete feed entries older than one day.
     func handleDatabaseCleaning(task: BGProcessingTask) {
         L.maintenance.debug("handleDatabaseCleaning()")
