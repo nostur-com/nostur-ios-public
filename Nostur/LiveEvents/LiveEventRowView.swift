@@ -61,10 +61,10 @@ struct LiveEventRowView: View {
             }
             
             if let image = liveEvent.thumbUrl {
-                SingleMediaViewer(url: image, pubkey: liveEvent.pubkey, imageWidth: dim.listWidth, fullWidth: true, contentMode: .aspectFill, upscale: true)
+                SingleMediaViewer(url: image, pubkey: liveEvent.pubkey, imageWidth: dim.articleRowImageWidth(), fullWidth: true, contentMode: .aspectFill, upscale: true)
 //                        .frame(width: dim.listWidth)
 //                        .frame(minHeight: 100)
-                    .padding(.horizontal, -20) // on article preview always use full width style
+//                    .padding(.horizontal, -20) // on article preview always use full width style
                     .padding(.vertical, 10)
             }
         }

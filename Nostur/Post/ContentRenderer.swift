@@ -61,6 +61,15 @@ struct ContentRenderer: View { // VIEW things
                         .id(index)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
+                case .naddr1(let identifier):
+                    NaddrView(naddr1: identifier.bech32string, fullWidth: fullWidth, theme: theme)
+//                        .frame(minHeight: 75)
+                        .environmentObject(childDIM)
+//                        .debugDimensions("NEventView")
+                        .padding(.vertical, 10)
+                        .id(index)
+//                        .withoutAnimation()
+//                        .transaction { t in t.animation = nil }
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey, theme: theme)
@@ -407,6 +416,10 @@ struct EmbeddedPost: View {
         self.theme = theme
     }
     
+    private var shouldAutoload: Bool { // Only for non-detail view. On detail we force show images.
+        forceAutoload || SettingsStore.shouldAutodownload(nrPost)
+    }
+    
     var body: some View {
         if prd.blocked {
             HStack {
@@ -434,8 +447,19 @@ struct EmbeddedPost: View {
                 )
 //                .debugDimensions("EmbeddedPost.ArticleView", alignment: .bottomLeading)
         }
-        else {
+        else if nrPost.kind == 1 {
             QuotedNoteFragmentView(nrPost: nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
+//                .debugDimensions("EmbeddedPost.QuotedNoteFragmentView", alignment: .bottomLeading)
+        }
+        else {
+            NoteRow(nrPost: nrPost, hideFooter: true, missingReplyTo: false, fullWidth: fullWidth, isReply: false, isDetail: false, grouped: false, theme: theme)
+                .padding(.horizontal, 10)
+                .padding(.top, 10)
+                .padding(.bottom, 5)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(theme.lineColor, lineWidth: 1)

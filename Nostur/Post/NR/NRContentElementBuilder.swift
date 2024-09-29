@@ -112,6 +112,19 @@ class NRContentElementBuilder {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
+                else if !matchString.matchingStrings(regex: Self.naddrPattern).isEmpty {
+                    do {
+                        let match = matchString.replacingOccurrences(of: "nostr:", with: "")
+                                                .replacingOccurrences(of: "@", with: "")
+                        let identifier = try ShareableIdentifier(match)
+                        result.append(ContentElement.naddr1(identifier))
+                        
+                    }
+                    catch {
+                        L.og.notice("problem decoding naddr in event.id: \(event?.id ?? "?") - \(matchString)")
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
+                    }
+                }
                 else if !matchString.matchingStrings(regex: Self.nprofilePattern).isEmpty {
                     do {
                         let match = matchString.replacingOccurrences(of: "\n", with: "")
@@ -191,6 +204,19 @@ class NRContentElementBuilder {
                         result.append(ContentElement.md(NRTextParser.shared.parseMD(event, text:matchString)))
                     }
                 }
+                else if !matchString.matchingStrings(regex: Self.naddrPattern).isEmpty {
+                    do {
+                        let match = matchString.replacingOccurrences(of: "nostr:", with: "")
+                                                .replacingOccurrences(of: "@", with: "")
+                        let identifier = try ShareableIdentifier(match)
+                        result.append(ContentElement.naddr1(identifier))
+                        
+                    }
+                    catch {
+                        L.og.notice("problem decoding naddr in event.id: \(event.id) - \(matchString)")
+                        result.append(ContentElement.md(NRTextParser.shared.parseMD(event, text:matchString)))
+                    }
+                }
                 else if !matchString.matchingStrings(regex: Self.nprofilePattern).isEmpty {
                     do {
                         let match = matchString.replacingOccurrences(of: "\n", with: "")
@@ -239,6 +265,7 @@ class NRContentElementBuilder {
     static let cashuTokenPattern = ###"cashuA([A-Za-z0-9=]+)"###
     static let notePattern = ###"(nostr:|@?)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
     static let neventPattern = ###"(nostr:|@?)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let naddrPattern = ###"(nostr:|@?)(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
     static let codePattern = ###"```([\s\S]*?)```"###
     
     // These become cards so
@@ -250,11 +277,11 @@ class NRContentElementBuilder {
     static let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)\.]"###
     
     // For kind 1 or similar text notes
-    static let pattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
+    static let pattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(naddrPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
     static let regex = try! NSRegularExpression(pattern: pattern)
     
     // For long form articles (kind 30023), no image urls, video urls, other urls, as these are handled by markdown
-    static let articlePattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(codePattern)"
+    static let articlePattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(naddrPattern)|\(codePattern)"
     static let articleRegex = try! NSRegularExpression(pattern: articlePattern)
 }
 
@@ -262,7 +289,7 @@ public typealias Ptag = String
 
 // NOTE: When adding types, update ContentRenderer AND DMContentRenderer
 enum ContentElement: Hashable, Identifiable {
-    var id:Self { self }
+    var id: Self { self }
     case code(String) // dont parse anything here
     case text(AttributedStringWithPs) // text notes
     case md(MarkdownContentWithPs) // long form articles
@@ -280,6 +307,7 @@ enum ContentElement: Hashable, Identifiable {
     case nevent1(ShareableIdentifier)
     case nprofile1(ShareableIdentifier)
     case nrPost(NRPost) // embedded post, already processed for rendering
+    case naddr1(ShareableIdentifier)
 }
 
 import MarkdownUI

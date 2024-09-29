@@ -532,6 +532,7 @@
 		1FF853882B1FDA3E00C336E6 /* ProfileRelays2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF853872B1FDA3E00C336E6 /* ProfileRelays2.swift */; };
 		1FF8BD1229D41BBD00C8C96A /* SingleMediaViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */; };
 		1FF8BD1429D444D900C8C96A /* ProcessingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */; };
+		1FF9B3AE2CA9F804004CD6F1 /* NaddrView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF9B3AD2CA9F804004CD6F1 /* NaddrView.swift */; };
 		1FF9BF1629DC966700D16EE7 /* ReportContactSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */; };
 		1FFA89A02B19720A00D9BE26 /* NewPostsBy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFA899F2B19720A00D9BE26 /* NewPostsBy.swift */; };
 		1FFA89A52B197AE600D9BE26 /* NewPostsVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFA89A42B197AE600D9BE26 /* NewPostsVM.swift */; };
@@ -1105,6 +1106,7 @@
 		1FF853872B1FDA3E00C336E6 /* ProfileRelays2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelays2.swift; sourceTree = "<group>"; };
 		1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleMediaViewer.swift; sourceTree = "<group>"; };
 		1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingStatus.swift; sourceTree = "<group>"; };
+		1FF9B3AD2CA9F804004CD6F1 /* NaddrView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaddrView.swift; sourceTree = "<group>"; };
 		1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportContactSheet.swift; sourceTree = "<group>"; };
 		1FFA899F2B19720A00D9BE26 /* NewPostsBy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostsBy.swift; sourceTree = "<group>"; };
 		1FFA89A42B197AE600D9BE26 /* NewPostsVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostsVM.swift; sourceTree = "<group>"; };
@@ -1180,6 +1182,7 @@
 				1F00F1FD2C85C850000E8C6D /* NXContentRenderer.swift */,
 				1FB130B029C0DB07004AC98D /* NoteRow.swift */,
 				1FD49736298029600084F14E /* NoteTextRenderView.swift */,
+				1FF9B3AD2CA9F804004CD6F1 /* NaddrView.swift */,
 				1F4C1C292A07B21F0010573F /* NProfileView.swift */,
 				1F71ACF72AAEE2780040EA3B /* OwnPostFooter.swift */,
 				1F8B6A702A20C6020060EDB3 /* PostActionNotification.swift */,
@@ -2437,6 +2440,7 @@
 				1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */,
 				1F0592DC2A505531003B4B3C /* DiscoverCommunities.swift in Sources */,
 				1FF78BB82A45421500CA3DDA /* PaddingsTesting.swift in Sources */,
+				1FF9B3AE2CA9F804004CD6F1 /* NaddrView.swift in Sources */,
 				1FED0D872ACAFC5A002DAC02 /* ReactionButton.swift in Sources */,
 				1F92D89C2ABBEED9002F300D /* EmbedById.swift in Sources */,
 				1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */,
