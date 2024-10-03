@@ -37,8 +37,14 @@ struct LiveEventDetail: View {
         dim.listWidth + (DIMENSIONS.BOX_PADDING*2)
     }
     
-    @State private var zapCustomizerSheetInfo: ZapCustomizerSheetInfo? = nil
-    @State private var showZapSheet = false
+    // Zap sheet NON-NWC
+    @State private var paymentInfo: PaymentInfo? = nil // NON-NWC ZAP
+    @State private var showNonNWCZapSheet = false // NON-NWC ZAP
+    
+    // Zap sheet NWC
+    @State private var zapCustomizerSheetInfo: ZapCustomizerSheetInfo? = nil // NWC ZAP
+    @State private var showZapSheet = false // NWC ZAP
+    
     
     @State private var selectedContact: NRContact? = nil
     
@@ -72,6 +78,12 @@ struct LiveEventDetail: View {
                                         guard zapCustomizerSheetInfo.zapAtag != nil else { return }
                                         self.showZapSheet = true
                                         self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
+                                    }
+                                    .onReceive(receiveNotification(.showZapSheet)) { notification in
+                                        let paymentInfo = notification.object as! PaymentInfo
+                                        guard paymentInfo.zapAtag != nil else { return }
+                                        self.paymentInfo = paymentInfo
+                                        self.showNonNWCZapSheet = true
                                     }
                                 
                                 videoStreamView
@@ -134,6 +146,15 @@ struct LiveEventDetail: View {
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
                 if let zapCustomizerSheetInfo {
                     ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
+                        .environmentObject(NRState.shared)
+                        .presentationDetentsLarge()
+                        .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
+                }
+            })
+            .nbNavigationDestination(isPresented: $showNonNWCZapSheet, destination: {
+                if let paymentInfo {
+                    PaymentAmountSelector(paymentInfo: paymentInfo)
                         .environmentObject(NRState.shared)
                         .presentationDetentsLarge()
                         .environmentObject(themes)
