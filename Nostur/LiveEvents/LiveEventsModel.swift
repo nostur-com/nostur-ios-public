@@ -75,6 +75,8 @@ class LiveEventsModel: ObservableObject {
                 .filter { !self.dismissedLiveEvents.contains($0.aTag) } // don't show dismissed events
                 .filter { $0.fastTags.contains(where: { $0.0 == "status" && $0.1 == "live" }) } // only LIVE
                 .filter { self.hasSpeakerOrHostInFollows($0) || (accountPubkey == $0.pubkey) }
+                .sorted(by: { $0.created_at > $1.created_at })
+                .uniqued(on: { $0.aTag })
                 .map { NRLiveEvent(event: $0) }
             
             DispatchQueue.main.async { [weak self] in
