@@ -308,7 +308,7 @@ class LiveEventsModel: ObservableObject {
                         }
                     }
                 }
-                else if !self.dismissedLiveEvents.contains(aTag) { // insert new live event
+                else if !self.dismissedLiveEvents.contains(aTag) && (event.isLive() || event.isPlanned()) { // insert new live or planned event
                     let nrLiveEvent = NRLiveEvent(event: event)
                     
                     DispatchQueue.main.async {
