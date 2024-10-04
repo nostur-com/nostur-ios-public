@@ -31,7 +31,7 @@ extension Date {
             return (String(Int(-timeIntervalSinceNow / Self.secondsInMinute)) + Self.minuteString)
         } else {
             if -timeIntervalSinceNow <= 30 {
-                return "just now"
+                return String(localized: "just now", comment: "Time ago (less than 30 seconds)" )
             }
             return (String(max(1,Int(-timeIntervalSinceNow / Self.secondsInDay))) + Self.secondString)
         }

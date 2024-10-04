@@ -726,7 +726,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%llddeelnemers"
+            "value" : "%lld deelnemers"
           }
         }
       }
@@ -3772,6 +3772,9 @@
         }
       }
     },
+    "Host" : {
+      "comment" : "Role of participant"
+    },
     "Hot" : {
       "comment" : "Tab title for feed of hot/popular posts\nTab title for the Hot feed",
       "localizations" : {
@@ -4015,6 +4018,9 @@
           }
         }
       }
+    },
+    "just now" : {
+      "comment" : "Time ago (less than 30 seconds)"
     },
     "Keeps track across all feeds posts you have already seen, don't show them again" : {
       "comment" : "Setting on settings screen",
@@ -4584,6 +4590,9 @@
           }
         }
       }
+    },
+    "Moderator" : {
+      "comment" : "Role of participant"
     },
     "Month" : {
       "localizations" : {
@@ -7257,6 +7266,9 @@
           }
         }
       }
+    },
+    "Speaker" : {
+      "comment" : "Role of participant"
     },
     "Specific word or sentence" : {
       "comment" : "Heading for entering a word or sentence to mute",

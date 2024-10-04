@@ -162,13 +162,13 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     
     func role(forPubkey pubkey: String) -> String? {
         if self.pubkey == pubkey {
-            return "Host"
+            return String(localized: "Host", comment: "Role of participant")
         }
         if admins.contains(pubkey) {
-            return "Moderator"
+            return String(localized: "Moderator", comment: "Role of participant")
         }
         if onStage.contains(where: { $0.pubkey == pubkey }) {
-            return "Speaker"
+            return String(localized: "Speaker", comment: "Role of participant")
         }
         return fastPs.first(where: { $0.1 == pubkey })?.3?.capitalized
     }
