@@ -127,21 +127,22 @@ public class ConnectionPool: ObservableObject {
     }
     
     // Same as addConnection() but should use from connection queue, not @MainActor
-    public func addOutboxConnection(_ relayData: RelayData) -> RelayConnection {
-        if let existingConnection = outboxConnections[relayData.id] {
-            if relayData.read && !existingConnection.relayData.read {
-                existingConnection.relayData.setRead(true)
+    public func addOutboxConnection(_ relayData: RelayData, completion: ((RelayConnection) -> Void )? = nil) {
+        let newConnection = RelayConnection(relayData, queue: queue)
+        self.queue.async(flags: .barrier) { [unowned self] in
+            if let conn = self.outboxConnections[relayData.id] {
+                if relayData.read && !conn.relayData.read {
+                    conn.relayData.setRead(true)
+                }
+                if relayData.write && !conn.relayData.write {
+                    conn.relayData.setWrite(true)
+                }
+                completion?(conn)
             }
-            if relayData.write && !existingConnection.relayData.write {
-                existingConnection.relayData.setWrite(true)
+            else {
+                self.outboxConnections[relayData.id] = newConnection
+                completion?(newConnection)
             }
-            return existingConnection
-        }
-        else {
-            let newConnection = RelayConnection(relayData, isOutbox: true, queue: queue)
-            outboxConnections[relayData.id] = newConnection
-//            removeAfterDelay(relayData.id)
-            return newConnection
         }
     }
     
@@ -643,25 +644,41 @@ public class ConnectionPool: ObservableObject {
 #if DEBUG
             L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
 #endif
-            let connection = ConnectionPool.shared.addOutboxConnection(RelayData(read: true, write: false, search: false, auth: false, url: req.key, excludedPubkeys: []))
-            if !connection.isConnected {
-                connection.connect()
+            
+            if let conn = self.outboxConnections[req.key] {
+                if !conn.relayData.read {
+                    conn.relayData.setRead(true)
+                }
+                if !conn.isConnected {
+                    conn.connect()
+                }
+                if subscriptionId != nil && conn.nreqSubscriptions.contains(subscriptionId!) { continue } // Skip if sub is already active
+                if (subscriptionId != nil) {
+                    conn.nreqSubscriptions.insert(subscriptionId!)
+                }
+                guard let message = NostrEssentials.ClientMessage(
+                    type: .REQ,
+                    subscriptionId: subscriptionId,
+                    filters: req.value.filters
+                ).json()
+                else { return }
+                conn.sendMessage(message)
             }
-            guard let message = NostrEssentials.ClientMessage(
-                type: .REQ,
-                subscriptionId: subscriptionId,
-                filters: req.value.filters
-            ).json()
-            else { return }
-            
-            
-            if subscriptionId != nil && connection.nreqSubscriptions.contains(subscriptionId!) { continue } // Skip if sub is already active
-            if (subscriptionId != nil) {
-                self.queue.async(flags: .barrier) { [weak connection] in
-                    connection?.nreqSubscriptions.insert(subscriptionId!)
+            else {
+                ConnectionPool.shared.addOutboxConnection(RelayData(read: true, write: false, search: false, auth: false, url: req.key, excludedPubkeys: [])) { connection in
+                    if !connection.isConnected {
+                        connection.connect()
+                    }
+                    
+                    guard let message = NostrEssentials.ClientMessage(
+                        type: .REQ,
+                        subscriptionId: subscriptionId,
+                        filters: req.value.filters
+                    ).json()
+                    else { return }
+                    connection.sendMessage(message)
                 }
             }
-            connection.sendMessage(message)
         }
     }
     
@@ -684,12 +701,25 @@ public class ConnectionPool: ObservableObject {
             }) {
             
             L.og.debug("📤📤 Outbox 🟩 SENDING EVENT -- \(relay): \(pubkeys.joined(separator: ","))")
-            let connection = ConnectionPool.shared.addOutboxConnection(RelayData(read: false, write: true, search: false, auth: false, url: relay, excludedPubkeys: []))
-            if !connection.isConnected {
-                connection.connect()
+            if let conn = self.outboxConnections[relay] {
+                if !conn.relayData.write {
+                    conn.relayData.setWrite(true)
+                }
+                if !conn.isConnected {
+                    conn.connect()
+                }
+                guard let messageString = message.json() else { return }
+                conn.sendMessage(messageString)
             }
-            guard let messageString = message.json() else { return }
-            connection.sendMessage(messageString)
+            else {
+                ConnectionPool.shared.addOutboxConnection(RelayData(read: false, write: true, search: false, auth: false, url: relay, excludedPubkeys: [])) { connection in
+                    if !connection.isConnected {
+                        connection.connect()
+                    }
+                    guard let messageString = message.json() else { return }
+                    connection.sendMessage(messageString)
+                }
+            }
         }
     }
 }
