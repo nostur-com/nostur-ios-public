@@ -194,6 +194,7 @@ class Zap {
     private func fetchCallbackUrl() {
         Task { [weak self] in
             guard let self else { return }
+            guard (lud16 != nil || lud06 != nil) else { return }
             do {
                 let response = try await (lud16 != nil ? LUD16.getCallbackUrl(lud16: lud16!) : LUD16.getCallbackUrl(lud06: lud06!))
                 if let callback = response.callback {
