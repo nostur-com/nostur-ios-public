@@ -126,6 +126,10 @@ struct Search: View {
                         .toolbarNavigationBackgroundVisible()
                     }
                     .scrollDismissesKeyboardCompat()
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                            to: nil, from: nil, for: nil)
+                    }
                 }
             }
             .overlay(alignment: .bottom) {

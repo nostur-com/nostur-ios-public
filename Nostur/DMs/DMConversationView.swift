@@ -257,6 +257,10 @@ struct DMConversationView: View {
                     .listStyle(.plain)
                     .padding(.top, 55)
                     .scaleEffect(x: 1, y: -1, anchor: .center)
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                            to: nil, from: nil, for: nil)
+                    }
                     
                     VStack(spacing: 0) {
                         Spacer()
