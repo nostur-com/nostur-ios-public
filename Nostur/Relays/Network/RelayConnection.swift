@@ -181,27 +181,28 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     self.outQueue.append(SocketMessage(text: andSend))
                 }
                 
-                self.session?.invalidateAndCancel()
-                self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-                
-                if let url = URL(string: relayData.url) {
-                    let urlRequest = URLRequest(url: url)
-                    self.webSocketTask = self.session?.webSocketTask(with: urlRequest)
-                    self.webSocketTask?.delegate = self
+                if !self.isSocketConnected {
+                    self.session?.invalidateAndCancel()
+                    self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+                    
+                    if let url = URL(string: relayData.url) {
+                        let urlRequest = URLRequest(url: url)
+                        self.webSocketTask = self.session?.webSocketTask(with: urlRequest)
+                        self.webSocketTask?.delegate = self
+                    }
+                    
+                    self.webSocketTask?.resume()
+                    
+                    if self.exponentialReconnectBackOff >= 512 {
+                        self.exponentialReconnectBackOff = 512
+                    }
+                    else if anyConnected { // Only increase if we have any connection
+                        self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+                    }
+                    //            else if !self.isSocketConnecting  {
+                    //                self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+                    //            }
                 }
-                
-                self.webSocketTask?.resume()
-                
-                if self.exponentialReconnectBackOff >= 512 {
-                    self.exponentialReconnectBackOff = 512
-                }
-                else if anyConnected { // Only increase if we have any connection
-                    self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
-                }
-    //            else if !self.isSocketConnecting  {
-    //                self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
-    //            }
-                
                 
                 guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
                 
