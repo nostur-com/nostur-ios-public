@@ -142,7 +142,16 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 }
             }
             .store(in: &subscriptions)
+        
+        sendAfterAuthSubject
+            .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
+            .sink { [weak self] in
+                self?.sendAfterAuth()
+            }
+            .store(in: &subscriptions)
     }
+    
+    private var sendAfterAuthSubject = PassthroughSubject<Void, Never>()
     
     public func connect(andSend: String? = nil, forceConnectionAttempt: Bool = false) {
         if isOutbox && !vpnGuardOK() { // TODO: Maybe need a small delay so VPN has time to connect first?
@@ -208,9 +217,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 
                 if self.relayData.auth {
                     L.sockets.debug("\(self.url) relayData.auth == true")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                        self.sendAfterAuth()
-                    }
+                    self.sendAfterAuthSubject.send()
                     return
                 }
                 
@@ -272,9 +279,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             if self.relayData.auth && !self.didAuth {
                 L.sockets.debug("\(self.url) relayData.auth == true. Waiting 0.25 sec for: \(text.prefix(155))")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                    self.sendAfterAuth()
-                }
+                self.sendAfterAuthSubject.send()
                 return
             }
             
@@ -551,9 +556,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             if self.relayData.auth && !self.didAuth {
                 L.sockets.debug("relayData.auth == true but did not auth yet, waiting 0.25 secs")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                    self.sendAfterAuth()
-                }
+                self.sendAfterAuthSubject.send()
                 return
             }
             
