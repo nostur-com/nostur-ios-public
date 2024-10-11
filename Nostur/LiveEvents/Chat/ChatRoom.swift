@@ -11,7 +11,6 @@ import NavigationBackport
 struct ChatRoom: View {
     
     @EnvironmentObject private var themes: Themes
-    @EnvironmentObject private var npn: NewPostNotifier
     
     public let aTag: String
     public let theme: Theme
@@ -25,6 +24,9 @@ struct ChatRoom: View {
     @State private var selectedContact: NRContact? = nil
     
     var body: some View {
+#if DEBUG
+let _ = Self._printChanges()
+#endif
         ScrollViewReader { proxy in
             if let account {
                 AvailableWidthContainer {
@@ -58,7 +60,7 @@ struct ChatRoom: View {
                                 }
                                 else {
                                     ForEach(vm.messages) { rowContent in
-                                        ChatRow(content: rowContent)
+                                        ChatRow(content: rowContent, theme: themes.theme)
 //                                            .debugDimensions("ChatRow")
 //                                            .frame(width: 650)
 //#if DEBUG

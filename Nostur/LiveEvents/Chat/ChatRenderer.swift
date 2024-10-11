@@ -281,7 +281,7 @@ struct ChatRenderer: View { // VIEW things
         if let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory"),
            let nEvent = message.event {
             let nrChat: NRChatMessage = NRChatMessage(nEvent: nEvent)
-            ChatRow(content: .chatMessage(nrChat))
+            ChatRow(content: .chatMessage(nrChat), theme: Themes.default.theme)
         }
     }
 }

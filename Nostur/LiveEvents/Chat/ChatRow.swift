@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct ChatRow: View {
-    @EnvironmentObject private var themes: Themes
     @State private var didStart = false
     
     public let content: ChatRowContent
+    public let theme: Theme
     
     var body: some View {
         switch content {
@@ -28,7 +28,7 @@ struct ChatRow: View {
                         .padding(.horizontal, 10)
                         .foregroundColor(Color.white)
                         .background {
-                            themes.theme.accent
+                            theme.accent
                                 .clipShape(Capsule())
                         }
                         MiniPFP(pictureUrl: confirmedZap.contact?.pictureUrl)
@@ -50,9 +50,9 @@ struct ChatRow: View {
 //                                }
 //                            }
                         Ago(confirmedZap.zapRequestCreatedAt)
-                            .foregroundColor(themes.theme.secondary)
+                            .foregroundColor(theme.secondary)
                     }
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                     
                     NXContentRenderer(nxEvent: confirmedZap.nxEvent, contentElements: confirmedZap.content, didStart: $didStart)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -78,7 +78,7 @@ struct ChatRow: View {
                         .padding(.horizontal, 10)
                         .foregroundColor(Color.white)
                         .background {
-                            themes.theme.accent
+                            theme.accent
                                 .clipShape(Capsule())
                         }
                         
@@ -101,9 +101,9 @@ struct ChatRow: View {
 //                                }
 //                            }
                         Ago(pendingZap.createdAt)
-                            .foregroundColor(themes.theme.secondary)
+                            .foregroundColor(theme.secondary)
                     }
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                     
                     NXContentRenderer(nxEvent: pendingZap.nxEvent, contentElements: pendingZap.content, didStart: $didStart)
                         .frame(maxWidth: .infinity, alignment: .leading)

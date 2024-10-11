@@ -15,7 +15,6 @@ struct LiveEventDetail: View {
     
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
-    @EnvironmentObject private var npn: NewPostNotifier
     @ObservedObject public var liveEvent: NRLiveEvent
     @ObservedObject public var liveKitVoiceSession: LiveKitVoiceSession = .shared
     
@@ -257,7 +256,6 @@ struct LiveEventDetail: View {
                         }
                     }
                         .environmentObject(themes)
-                        .environmentObject(npn)
                         .padding(10)
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {

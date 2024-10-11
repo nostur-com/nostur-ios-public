@@ -19,7 +19,7 @@ struct SelectedParticipantView: View {
     public let showModeratorControls: Bool
     @Binding var selectedContact: NRContact?
     
-    @EnvironmentObject private var npn: NewPostNotifier
+    @ObservedObject private var npn: NewPostNotifier = .shared
     @ObservedObject private var fg: FollowingGuardian = .shared
     
     @State private var similarPFP = false
