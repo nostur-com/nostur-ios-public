@@ -128,7 +128,7 @@ public class ConnectionPool: ObservableObject {
     
     // Same as addConnection() but should use from connection queue, not @MainActor
     public func addOutboxConnection(_ relayData: RelayData, completion: ((RelayConnection) -> Void )? = nil) {
-        let newConnection = RelayConnection(relayData, queue: queue)
+        let newConnection = RelayConnection(relayData, isOutbox: true, queue: queue)
         self.queue.async(flags: .barrier) { [unowned self] in
             if let conn = self.outboxConnections[relayData.id] {
                 if relayData.read && !conn.relayData.read {
