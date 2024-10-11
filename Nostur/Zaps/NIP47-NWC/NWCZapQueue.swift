@@ -248,6 +248,8 @@ class Zap {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     }
                     
+                    let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags).0
+                    
                     Task { @MainActor in
                         NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { [weak self] signedEvent in
                             Task { [weak self] in
@@ -264,7 +266,7 @@ class Zap {
                                             aTag: aTag,
                                             amount: 21000,
                                             nxEvent: NXEvent(pubkey: signedEvent.publicKey, kind: signedEvent.kind.id),
-                                            content: NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags).0,
+                                            content: content,
                                             contact: accountNrContact
                                         ))
                                     }
@@ -294,6 +296,8 @@ class Zap {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     }
                     
+                    let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags).0
+                    
                     Task { @MainActor in
                         if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {
                             if self.withPending, let aTag = self.aTag {
@@ -306,7 +310,7 @@ class Zap {
                                         aTag: aTag,
                                         amount: self.amount,
                                         nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: signedZapRequestNote.kind.id),
-                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags).0,
+                                        content: content,
                                         contact: accountNrContact
                                     ))
                             }

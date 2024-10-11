@@ -59,7 +59,7 @@ let _ = Self._printChanges()
                                         .listRowBackground(theme.background)
                                 }
                                 else {
-                                    ForEach(vm.messages) { rowContent in
+                                    ForEach(vm.messages, id:\.id) { rowContent in
                                         ChatRow(content: rowContent, theme: themes.theme)
 //                                            .debugDimensions("ChatRow")
 //                                            .frame(width: 650)

@@ -38,6 +38,9 @@ class ChatRoomViewModel: ObservableObject {
 //    private var backlog = Backlog()
     
     @Published public var messages: [ChatRowContent] = []
+    private var bgMessages: [ChatRowContent] = []
+    
+    private var renderMessages = PassthroughSubject<Void, Never>()
     
     @MainActor
     public func start(aTag: String) throws {
@@ -63,6 +66,24 @@ class ChatRoomViewModel: ObservableObject {
         
         self.pubkey = String(pubkey)
         self.dTag = String(definition)
+        
+        renderMessages
+            .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
+            .sink { [weak self] in
+                if let messages = self?.bgMessages {
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else { return }
+                        withAnimation {
+                            if self.state != .ready {
+                                self.state = .ready
+                            }
+                            self.messages = messages
+                        }
+                    }
+                }
+            }
+            .store(in: &subscriptions)
+        
         self.listenForChats()
         self.listenForBlocks()
         self.fetchFromDB { [weak self] in
@@ -109,10 +130,9 @@ class ChatRoomViewModel: ObservableObject {
                 return row
             }
 
-            DispatchQueue.main.async { [weak self] in
-                onComplete?()
-                self?.messages = rows
-            }
+            self.bgMessages = rows
+            self.renderMessages.send()
+            onComplete?()
         }
     }
     
@@ -207,28 +227,19 @@ class ChatRoomViewModel: ObservableObject {
                     else {
                         ChatRowContent.chatMessage(NRChatMessage(nEvent: event))
                     }
-                    DispatchQueue.main.async { [weak self] in
-                        guard let self = self else { return }
-               
-                        if let index = self.messages.firstIndex(where: { row in
-                            if case .chatPendingZap(let pendingZap) = row, pendingZap.id == confirmedZap.id {
-                                return true
-                            }
-                            return false
-                        }) {
-                            self.objectWillChange.send()
-                            withAnimation {
-                                self.messages[index] = confirmedZap
-                            }
+                    if let index = self.bgMessages.firstIndex(where: { row in
+                        if case .chatPendingZap(let pendingZap) = row, pendingZap.id == confirmedZap.id {
+                            return true
                         }
-                        else {
-                            let messages: [ChatRowContent] = (self.messages + [confirmedZap]).sorted(by: { $0.createdAt > $1.createdAt })
-                            self.objectWillChange.send()
-                            withAnimation {
-                                self.messages = messages
-                            }
-                        }
+                        return false
+                    }) {
+                        self.bgMessages[index] = confirmedZap
                     }
+                    else {
+                        let messages: [ChatRowContent] = (self.bgMessages + [confirmedZap]).sorted(by: { $0.createdAt > $1.createdAt })
+                        self.bgMessages = messages
+                    }
+                    self.renderMessages.send()
                 }
             }
             .store(in: &subscriptions)
@@ -238,19 +249,11 @@ class ChatRoomViewModel: ObservableObject {
                 guard let self = self else { return }
                 let pendingZap = notification.object as! ChatPendingZap
                 guard aTag == pendingZap.aTag else { return }
-             
-                DispatchQueue.main.async { [weak self] in
+                
+                bg().perform { [weak self] in
                     guard let self = self else { return }
-                    
-                    let messages: [ChatRowContent] = (self.messages + [ChatRowContent.chatPendingZap(pendingZap)]).sorted(by: { $0.createdAt > $1.createdAt })
-                    
-                    self.objectWillChange.send()
-                    withAnimation {
-                        if self.state != .ready {
-                            self.state = .ready
-                        }
-                        self.messages = messages
-                    }
+                    self.bgMessages = (self.bgMessages + [ChatRowContent.chatPendingZap(pendingZap)]).sorted(by: { $0.createdAt > $1.createdAt })
+                    self.renderMessages.send()
                 }
             }
             .store(in: &subscriptions)
@@ -259,10 +262,11 @@ class ChatRoomViewModel: ObservableObject {
     private func listenForBlocks() {
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in
-                guard let self else { return }
                 let blockedPubkeys = notification.object as! Set<String>
-                withAnimation {
-                    self.messages = self.messages.filter { !blockedPubkeys.contains($0.pubkey) }
+                bg().perform { [weak self] in
+                    guard let self else { return }
+                    self.bgMessages = self.bgMessages.filter { !blockedPubkeys.contains($0.pubkey) }
+                    self.renderMessages.send()
                 }
             }
             .store(in: &subscriptions)
