@@ -40,14 +40,20 @@
 			</array>
 		</dict>
 	</array>
+	<key>CI_BUILD_NUMBER</key>
+	<string>$(CI_BUILD_NUMBER)</string>
 	<key>IMGUR_CLIENT_ID</key>
 	<string>$(IMGUR_CLIENT_ID)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSMinimumSystemVersion</key>
 	<string>12.4</string>
+	<key>NIP89_APP_REFERENCE</key>
+	<string>$(NIP89_APP_REFERENCE)</string>
 	<key>NOSTRCHECK_PUBLIC_API_KEY</key>
 	<string>$(NOSTRCHECK_PUBLIC_API_KEY)</string>
+	<key>NOSTUR_IS_DESKTOP</key>
+	<string>$(NOSTUR_IS_DESKTOP)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -55,10 +61,6 @@
 	</dict>
 	<key>TENOR_API_KEY</key>
 	<string>$(TENOR_API_KEY)</string>
-	<key>NIP89_APP_REFERENCE</key>
-	<string>$(NIP89_APP_REFERENCE)</string>
-	<key>CI_BUILD_NUMBER</key>
-	<string>$(CI_BUILD_NUMBER)</string>
 	<key>TENOR_CLIENT_KEY</key>
 	<string>$(TENOR_CLIENT_KEY)</string>
 	<key>UIApplicationSceneManifest</key>
@@ -82,8 +84,6 @@
 		<key>UIImageName</key>
 		<string>LaunchScreen</string>
 	</dict>
-	<key>NOSTUR_IS_DESKTOP</key>
-	<string>$(NOSTUR_IS_DESKTOP)</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

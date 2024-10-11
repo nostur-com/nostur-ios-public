@@ -255,20 +255,20 @@ struct LiveEventDetail: View {
                                 .padding(10)
                         }
                     }
-                        .environmentObject(themes)
-                        .padding(10)
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                if IS_CATALYST {
-                                    Button {
-                                        selectedContact = nil
-                                    } label: {
-                                        Image(systemName: "xmark")
-                                           .imageScale(.large) // Adjust the size of the "X"
-                                    }
+                    .environmentObject(themes)
+                    .padding(10)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            if IS_CATALYST {
+                                Button {
+                                    selectedContact = nil
+                                } label: {
+                                    Image(systemName: "xmark")
+                                       .imageScale(.large) // Adjust the size of the "X"
                                 }
                             }
                         }
+                    }
                 }
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.background)
