@@ -21,6 +21,7 @@ struct NosturListsView: View {
     @State private var didRemoveDuplicates = false
     
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
+    @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
@@ -60,6 +61,10 @@ struct NosturListsView: View {
                     Toggle(isOn: $enableDiscoverFeed, label: {
                         Text("Discover")
                         Text("Posts from people you don't follow which are most liked or reposted by people you follow")
+                    })
+                    Toggle(isOn: $enableEmojiFeed, label: {
+                        Text("Emoji Feed")
+                        Text("Posts from anyone which are reacted to with several specific emojis by people you follow")
                     })
                     Toggle(isOn: $enableGalleryFeed, label: {
                         Text("Gallery")

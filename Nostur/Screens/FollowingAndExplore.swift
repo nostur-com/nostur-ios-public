@@ -20,6 +20,7 @@ struct FollowingAndExplore: View {
     @AppStorage("selected_listId") private var selectedListId = ""
     
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
+    @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
@@ -36,6 +37,7 @@ struct FollowingAndExplore: View {
     @State private var selectedList: CloudFeed?
 
     @StateObject private var hotVM = HotViewModel()
+    @StateObject private var emojiVM = EmojiFeedViewModel()
     @StateObject private var discoverVM = DiscoverViewModel()
     @StateObject private var articlesVM = ArticlesFeedViewModel()
     @StateObject private var galleryVM = GalleryViewModel()
@@ -47,6 +49,8 @@ struct FollowingAndExplore: View {
     @State var followingConfig: NXColumnConfig?
     @State var exploreConfig: NXColumnConfig?
     
+    @AppStorage("feed_emoji_type") var emojiType: String = "😂"
+    
     private var navigationTitle: String {
         if selectedSubTab == "List" {
             return (selectedList?.name_ ?? String(localized: "List"))
@@ -56,6 +60,9 @@ struct FollowingAndExplore: View {
         }
         if selectedSubTab == "Explore" {
             return String(localized: "Explore", comment: "Tab title for the Explore feed")
+        }
+        if selectedSubTab == "Emoji" {
+            return emojiType
         }
         if selectedSubTab == "Hot" {
             return String(localized: "Hot", comment: "Tab title for the Hot feed")
@@ -75,6 +82,7 @@ struct FollowingAndExplore: View {
     // If only the Following feed is enabled and all other feeds are disabled, we can hide the entire tab bar
     private var shouldHideTabBar: Bool {
         if (la.account.followingPubkeys.count > 10 && enableHotFeed) { return false }
+        if (la.account.followingPubkeys.count > 10 && enableEmojiFeed) { return false }
         if (la.account.followingPubkeys.count > 10 && enableGalleryFeed) { return false }
         if (la.account.followingPubkeys.count > 10 && enableDiscoverFeed) { return false }
         if enableExploreFeed { return false }
@@ -107,6 +115,15 @@ struct FollowingAndExplore: View {
                                 },
                                 title: list.name_,
                                 selected: selectedSubTab == "List" && selectedList == list )
+                            Spacer()
+                        }
+                        
+                        if la.account.followingPubkeys.count > 10 && enableEmojiFeed {
+                            TabButton(
+                                action: { selectedSubTab = "Emoji" },
+                                title: emojiType,
+                                secondaryText: String(format: "%ih", emojiVM.ago),
+                                selected: selectedSubTab == "Emoji")
                             Spacer()
                         }
                         
@@ -240,6 +257,9 @@ struct FollowingAndExplore: View {
                 if la.account.followingPubkeys.count > 10 {
                     AvailableWidthContainer {
                         switch selectedSubTab {
+                        case "Emoji":
+                            EmojiFeed()
+                                .environmentObject(emojiVM)
                         case "Hot":
                             Hot()
                                 .environmentObject(hotVM)
