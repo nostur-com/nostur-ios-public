@@ -11,6 +11,7 @@ struct GalleryFeedSettings: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var vm: GalleryViewModel
     @State var needsReload = false
+    @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     
     var body: some View {
         Form {
@@ -30,6 +31,10 @@ struct GalleryFeedSettings: View {
                 }
                 .pickerStyle(.segmented)
             } header: { Text("Gallery feed time frame") } footer: { Text("The Gallery feed shows pictures most liked or reposted by people you follow in the last \(vm.ago) hours") }
+            
+            Toggle(isOn: $enableGalleryFeed, label: {
+                Text("Show feed in tab bar")
+            })
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

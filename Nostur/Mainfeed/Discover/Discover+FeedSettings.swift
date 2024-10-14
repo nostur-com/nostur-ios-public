@@ -11,6 +11,7 @@ struct DiscoverFeedSettings: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var discoverVM: DiscoverViewModel
     @State var needsReload = false
+    @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     
     var body: some View {
         Form {
@@ -30,6 +31,10 @@ struct DiscoverFeedSettings: View {
                 }
                 .pickerStyle(.segmented)
             } header: { Text("Discover feed time frame") } footer: { Text("The Discover feed shows posts from people you don't follow which are most liked or reposted by people you follow in the last \(discoverVM.ago) hours") }
+            
+            Toggle(isOn: $enableDiscoverFeed, label: {
+                Text("Show feed in tab bar")
+            })
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

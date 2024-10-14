@@ -11,6 +11,7 @@ struct HotFeedSettings: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var hotVM: HotViewModel
     @State var needsReload = false
+    @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
     
     var body: some View {
         Form {
@@ -30,6 +31,10 @@ struct HotFeedSettings: View {
                 }
                 .pickerStyle(.segmented)
             } header: { Text("Hot feed time frame") } footer: { Text("The Hot feed shows posts from anyone which are most liked or reposted by people you follow in the last \(hotVM.ago) hours") }
+            
+            Toggle(isOn: $enableHotFeed, label: {
+                Text("Show feed in tab bar")
+            })
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

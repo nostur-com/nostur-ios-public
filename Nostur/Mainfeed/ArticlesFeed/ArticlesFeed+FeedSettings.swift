@@ -11,6 +11,7 @@ struct ArticleFeedSettings: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var vm: ArticlesFeedViewModel
     @State var needsReload = false
+    @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     
     var body: some View {
         Form {
@@ -28,6 +29,10 @@ struct ArticleFeedSettings: View {
                 }
                 .pickerStyle(.segmented)
             } header: { Text("Article feed time frame") } footer: { Text("The article feed shows articles from people you follow in the selected time frame") }
+            
+            Toggle(isOn: $enableArticleFeed, label: {
+                Text("Show feed in tab bar")
+            })
         }
         .navigationTitle("Article feed settings")
         .navigationBarTitleDisplayMode(.inline)
