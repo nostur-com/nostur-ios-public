@@ -863,6 +863,12 @@
         }
       }
     },
+    "😂" : {
+
+    },
+    "😡" : {
+
+    },
     "0" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2141,6 +2147,26 @@
         }
       }
     },
+    "Configure feed" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed instellen"
+          }
+        }
+      }
+    },
+    "Configure feed type" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configureer type feed"
+          }
+        }
+      }
+    },
     "Configure published relays" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3046,6 +3072,19 @@
         }
       }
     },
+    "Emoji Feed" : {
+
+    },
+    "Emoji feed time frame" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emoji feed tijdsvak"
+          }
+        }
+      }
+    },
     "Enable animated profile pics" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -3210,7 +3249,14 @@
       }
     },
     "Error" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error"
+          }
+        }
+      }
     },
     "Error messages for %@" : {
       "comment" : "Title of relay error messages log sheet",
@@ -3773,7 +3819,15 @@
       }
     },
     "Host" : {
-      "comment" : "Role of participant"
+      "comment" : "Role of participant",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gastheer"
+          }
+        }
+      }
     },
     "Hot" : {
       "comment" : "Tab title for feed of hot/popular posts\nTab title for the Hot feed",
@@ -4020,7 +4074,15 @@
       }
     },
     "just now" : {
-      "comment" : "Time ago (less than 30 seconds)"
+      "comment" : "Time ago (less than 30 seconds)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zojuist"
+          }
+        }
+      }
     },
     "Keeps track across all feeds posts you have already seen, don't show them again" : {
       "comment" : "Setting on settings screen",
@@ -4592,7 +4654,15 @@
       }
     },
     "Moderator" : {
-      "comment" : "Role of participant"
+      "comment" : "Role of participant",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moderator"
+          }
+        }
+      }
     },
     "Month" : {
       "localizations" : {
@@ -5295,6 +5365,16 @@
         }
       }
     },
+    "Outrage feed may or may not be available in a future release" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outrage feed zal misschien in een toekomstige release beschikbaar worden"
+          }
+        }
+      }
+    },
     "P" : {
       "localizations" : {
         "nl" : {
@@ -5547,6 +5627,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichten van iedereen met de meeste reacties of herplaatsingen door mensen die je volgt"
+          }
+        }
+      }
+    },
+    "Posts from anyone which are reacted to with several specific emojis by people you follow" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van iedereen waar op gereageerd is met specifieke emojis door mensen die je volgt"
           }
         }
       }
@@ -6164,6 +6254,9 @@
         }
       }
     },
+    "Relay Autopilot will broadcast to following relays" : {
+
+    },
     "Relay connection stats" : {
       "localizations" : {
         "nl" : {
@@ -6719,7 +6812,14 @@
       }
     },
     "Schedule" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inplannen"
+          }
+        }
+      }
     },
     "screenshot" : {
       "comment" : "Post context menu button",
@@ -6799,7 +6899,14 @@
       }
     },
     "Select Date & Time" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies datum & tijd"
+          }
+        }
+      }
     },
     "Self-hosted nsecBunker" : {
       "extractionState" : "manual",
@@ -6907,10 +7014,24 @@
       }
     },
     "Session has ended" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afgelopen"
+          }
+        }
+      }
     },
     "Set date/time" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stel datum/tijd in"
+          }
+        }
+      }
     },
     "Set reminder" : {
       "localizations" : {
@@ -6934,7 +7055,14 @@
       }
     },
     "Share" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel"
+          }
+        }
+      }
     },
     "Share highlight" : {
       "comment" : "Navigation title for screen to Share a Highlighted Text",
@@ -7017,6 +7145,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toon feed"
+          }
+        }
+      }
+    },
+    "Show feed in tab bar" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon feed in tab balk"
           }
         }
       }
@@ -7268,7 +7406,15 @@
       }
     },
     "Speaker" : {
-      "comment" : "Role of participant"
+      "comment" : "Role of participant",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spreker"
+          }
+        }
+      }
     },
     "Specific word or sentence" : {
       "comment" : "Heading for entering a word or sentence to mute",
@@ -7463,6 +7609,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichten van mensen die je niet volgt met de meeste reacties of herplaatsingen door mensen die je volgt in de afgelopen %lld uur"
+          }
+        }
+      }
+    },
+    "The Emoji feed shows posts from anyone which are reacted to with specific emojis by people you follow in the last %lld hours" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Emoji feed toont berichten van iedereen waar op gereageerd is met specifieke emojis door mensen die je volgt in de afgelopen %lld uur"
           }
         }
       }
