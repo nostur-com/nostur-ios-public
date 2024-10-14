@@ -528,6 +528,9 @@
 		1FF2C6C629EAD7D00096AC4A /* NosturListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2C6C529EAD7D00096AC4A /* NosturListsView.swift */; };
 		1FF2E6C92A72AEB300BF5A4C /* StreamurRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2E6C82A72AEB300BF5A4C /* StreamurRepresentable.swift */; };
 		1FF30DEF2A05784F00B0F011 /* SearchBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF30DEE2A05784F00B0F011 /* SearchBox.swift */; };
+		1FF4B0502CBD224400B4E66C /* EmojiFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF4B04F2CBD224400B4E66C /* EmojiFeedViewModel.swift */; };
+		1FF4B0512CBD224400B4E66C /* EmojiFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF4B04D2CBD224400B4E66C /* EmojiFeed.swift */; };
+		1FF4B0522CBD224400B4E66C /* EmojiFeed+FeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF4B04E2CBD224400B4E66C /* EmojiFeed+FeedSettings.swift */; };
 		1FF78BB82A45421500CA3DDA /* PaddingsTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF78BB72A45421500CA3DDA /* PaddingsTesting.swift */; };
 		1FF853882B1FDA3E00C336E6 /* ProfileRelays2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF853872B1FDA3E00C336E6 /* ProfileRelays2.swift */; };
 		1FF8BD1229D41BBD00C8C96A /* SingleMediaViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */; };
@@ -1102,6 +1105,9 @@
 		1FF2C6C829EAD9C20096AC4A /* NosturList+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FF2E6C82A72AEB300BF5A4C /* StreamurRepresentable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StreamurRepresentable.swift; sourceTree = "<group>"; };
 		1FF30DEE2A05784F00B0F011 /* SearchBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBox.swift; sourceTree = "<group>"; };
+		1FF4B04D2CBD224400B4E66C /* EmojiFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiFeed.swift; sourceTree = "<group>"; };
+		1FF4B04E2CBD224400B4E66C /* EmojiFeed+FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EmojiFeed+FeedSettings.swift"; sourceTree = "<group>"; };
+		1FF4B04F2CBD224400B4E66C /* EmojiFeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiFeedViewModel.swift; sourceTree = "<group>"; };
 		1FF78BB72A45421500CA3DDA /* PaddingsTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaddingsTesting.swift; sourceTree = "<group>"; };
 		1FF853872B1FDA3E00C336E6 /* ProfileRelays2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelays2.swift; sourceTree = "<group>"; };
 		1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleMediaViewer.swift; sourceTree = "<group>"; };
@@ -1957,6 +1963,7 @@
 		1FB4D3F929BAEAE4004DB537 /* Mainfeed */ = {
 			isa = PBXGroup;
 			children = (
+				1FF4B04C2CBD223700B4E66C /* EmojiFeed */,
 				1F20F4B92AAE2F3A002D8886 /* ArticlesFeed */,
 				1F6337D92C30CB36009C290C /* Discover */,
 				1F21D6792AAB68F400CCF3B1 /* Gallery */,
@@ -2260,6 +2267,16 @@
 			path = _Temp;
 			sourceTree = "<group>";
 		};
+		1FF4B04C2CBD223700B4E66C /* EmojiFeed */ = {
+			isa = PBXGroup;
+			children = (
+				1FF4B04D2CBD224400B4E66C /* EmojiFeed.swift */,
+				1FF4B04E2CBD224400B4E66C /* EmojiFeed+FeedSettings.swift */,
+				1FF4B04F2CBD224400B4E66C /* EmojiFeedViewModel.swift */,
+			);
+			path = EmojiFeed;
+			sourceTree = "<group>";
+		};
 		1FFA89A32B197AD700D9BE26 /* NewPostsBy */ = {
 			isa = PBXGroup;
 			children = (
@@ -2526,6 +2543,9 @@
 				1F62F4C62A2C572700783892 /* KrakenApiResponse.swift in Sources */,
 				1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */,
 				1F1EF1992AA0FEB400B78A55 /* LVM+someonesFeed.swift in Sources */,
+				1FF4B0502CBD224400B4E66C /* EmojiFeedViewModel.swift in Sources */,
+				1FF4B0512CBD224400B4E66C /* EmojiFeed.swift in Sources */,
+				1FF4B0522CBD224400B4E66C /* EmojiFeed+FeedSettings.swift in Sources */,
 				1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */,
 				1F365FBB2AF2F561003A82CB /* Bookmark+CoreDataProperties.swift in Sources */,
 				1FB6E6F929E3B16A008BE8A6 /* NewListSheet.swift in Sources */,
