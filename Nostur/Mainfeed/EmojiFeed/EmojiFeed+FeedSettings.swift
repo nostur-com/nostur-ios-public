@@ -1,5 +1,5 @@
 //
-//  Hot+FeedSettings.swift
+//  EmojiFeed+FeedSettings.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 07/09/2023.
