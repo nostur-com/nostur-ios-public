@@ -49,6 +49,7 @@ struct Discover: View {
                                 Box(nrPost: post) {
                                     PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                                 }
+                                .fixedSize(horizontal: false, vertical: true) // <--  seems to fix missing text (truncated because no space maybe?) Seems to be needed in LazyVStack but not in List
                                 .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
 //                                .transaction { t in
 //                                    t.animation = nil
