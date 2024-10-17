@@ -169,7 +169,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 }
                 guard !self.isSocketConnecting || forceConnectionAttempt else {
                     L.sockets.debug("\(self.url) - Already connecting, skipping connect()")
-                    self.isSocketConnecting = false
+//                    self.isSocketConnecting = false
                     if let andSend {
                         self.sendMessage(andSend)
                     }
@@ -201,6 +201,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     }
                     
                     self.webSocketTask?.resume()
+                    L.sockets.debug("\(self.url) webSocketTask?.resume()")
                     
                     if self.exponentialReconnectBackOff >= 512 {
                         self.exponentialReconnectBackOff = 512
@@ -307,8 +308,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     // (Planned) disconnect, so exponetional backoff and skipped is reset
     public func disconnect() {
         queue.async(flags: .barrier) { [weak self] in
-            self?.webSocketTask?.cancel()
-            self?.session?.invalidateAndCancel()
+            self?.webSocketTask?.cancel(with: .normalClosure, reason: nil)
+//            self?.session?.invalidateAndCancel()
             self?.exponentialReconnectBackOff = 0
             self?.skipped = 0
             self?.firstConnection = true
@@ -359,10 +360,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     // didBecomeInvalidWithError
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: (any Error)?) {
-#if DEBUG
-        L.sockets.debug("🔴🔴 urlSession.didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
-#endif
         if let error {
+#if DEBUG
+        L.sockets.debug("🔴🔴 urlSession.didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error.localizedDescription)")
+#endif
             DispatchQueue.main.async { [weak self] in
                 self?.didReceiveError(error)
             }
@@ -379,12 +380,11 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     // didCompleteWithError
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
-#if DEBUG
-    L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error?.localizedDescription ?? "")")
-#endif
-        
         // TODO: Should we handle different from didBecomeInvalidWithError or not???
         if let error {
+#if DEBUG
+    L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error.localizedDescription)")
+#endif
             DispatchQueue.main.async { [weak self] in
                 self?.didReceiveError(error)
             }
@@ -437,7 +437,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             let anyConnected = ConnectionPool.shared.anyConnected
             self?.queue.async(flags: .barrier) { [weak self] in
                 self?.webSocketTask?.cancel()
-                self?.session?.invalidateAndCancel()
+//                self?.session?.invalidateAndCancel()
                 self?.nreqSubscriptions = []
                 self?.lastMessageReceivedAt = nil
                 if (self?.exponentialReconnectBackOff ?? 0) >= 512 {
@@ -456,8 +456,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard let self else { return }
                 
                 let code = (error as NSError).code
-                if Set([-999,53,54]).contains(code) {
-                    // standard "The operation couldn’t be completed. Socket is not connected"
+                if Set([-999,53,54,57]).contains(code) {
+                    // standard 57 "The operation couldn’t be completed. Socket is not connected"
                     // not really error just standard websocket garbage
                     // dont continue as if actual error
                     // also -999 cancelled
@@ -465,6 +465,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     // 54 The operation couldn’t be completed. Connection reset by peer
                     return
                 }
+                
+                L.sockets.debug("🏎️🏎️🔌🔴🔴 Error \(self.url): \(code.description) \(error.localizedDescription)")
                 
                 self.stats.errors += 1
                 self.stats.addErrorMessage(error.localizedDescription)
@@ -493,8 +495,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 }
             }
         }
-        let code = (error as NSError).code
-        L.sockets.debug("🏎️🏎️🔌🔴🔴 Error \(self.url): \(code.description) \(error.localizedDescription)")
     }
     
     public func didReceivePong() {
@@ -576,7 +576,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         
         queue.async(flags: .barrier) { [weak self] in
-            self?.session?.invalidateAndCancel()
+//            self?.session?.invalidateAndCancel()
             self?.nreqSubscriptions = []
 //            self?.exponentialReconnectBackOff = 0
 //            self?.skipped = 0
