@@ -178,7 +178,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 self.nreqSubscriptions = []
                 self.isSocketConnecting = true
                 
-                guard self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
+                guard self.stats.errors == 0 || self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
                     self.skipped = self.skipped + 1
                     self.isSocketConnecting = false
                     L.sockets.debug("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped) -[LOG]-")
@@ -362,11 +362,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: (any Error)?) {
         if let error {
 #if DEBUG
-        L.sockets.debug("🔴🔴 urlSession.didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error.localizedDescription)")
+            L.sockets.debug("🔴🔴 urlSession.didBecomeInvalidWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error.localizedDescription)")
 #endif
-            DispatchQueue.main.async { [weak self] in
-                self?.didReceiveError(error)
-            }
+            self.didReceiveError(error)
         }
     }
     
@@ -383,11 +381,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         // TODO: Should we handle different from didBecomeInvalidWithError or not???
         if let error {
 #if DEBUG
-    L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error.localizedDescription)")
+            L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error.localizedDescription)")
 #endif
-            DispatchQueue.main.async { [weak self] in
-                self?.didReceiveError(error)
-            }
+            self.didReceiveError(error)
         }
     }
     

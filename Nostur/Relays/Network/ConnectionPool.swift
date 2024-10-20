@@ -70,6 +70,12 @@ public class ConnectionPool: ObservableObject {
                     if self.anyConnected {
                         self.objectWillChange.send()
                         self.anyConnected = false
+                        
+                        self.queue.async { [unowned self] in
+                            for connection in self.connections.values {
+                                connection.resetExponentialBackOff()
+                            }
+                        }
                     }
                 }
             }
