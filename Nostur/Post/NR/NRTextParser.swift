@@ -248,7 +248,7 @@ class NRTextParser { // TEXT things
 
 
     private func removeImageLinks(text:String) -> String {
-        text.replacingOccurrences(of: #"(?i)https?:\/\/\S+?\.(?:png#?|jpe?g#?|gif#?|webp#?|bmp#?)(\??\S+){0,1}\b"#,
+        text.replacingOccurrences(of: #"(?i)https?:\/\/\S+?\.(?:png#?|jpe?g#?|heic#?|gif#?|webp#?|bmp#?)(\??\S+){0,1}\b"#,
                                   with: "",
                                   options: .regularExpression)
     }
