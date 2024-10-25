@@ -46,8 +46,10 @@ class Importer {
     let decoder = JSONDecoder()
     var nwcConnection:NWCConnection?
     private var bgContext: NSManagedObjectContext
+    private var relationFixer: CoreDataRelationFixer
     
     private init() {
+        relationFixer = CoreDataRelationFixer.shared
         bgContext = bg()
         triggerImportWhenRelayMessagesAreAdded()
         sendReceivedNotifications()
@@ -352,6 +354,7 @@ class Importer {
                         sendNotification(.noNewEventsInDatabase)
                     }
                 }
+                CoreDataRelationFixer.shared.saveRelations()
             }
             catch {
                 L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")

@@ -930,13 +930,18 @@ extension Event {
                     savedEvent.zappedEventId = firstE
                     
                     if let awaitingEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                        savedEvent.zappedEvent = awaitingEvent // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
+                        CoreDataRelationFixer.shared.addTask({
+                            savedEvent.zappedEvent = awaitingEvent
+                        })
+                         // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
                         // _PFManagedObject_coerceValueForKeyWithDescription
                         // _sharedIMPL_setvfk_core
                         // TODO: Maybe wrong main context event added somewhere?
                     }
                     else {
-                        savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
+                        CoreDataRelationFixer.shared.addTask({
+                            savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
+                        })
                     }
                     if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
@@ -948,13 +953,18 @@ extension Event {
                     savedEvent.otherAtag = firstA
                     
                     if let awaitingEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstA) {
-                        savedEvent.zappedEvent = awaitingEvent // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
+                        CoreDataRelationFixer.shared.addTask({
+                            savedEvent.zappedEvent = awaitingEvent
+                        })
+                        // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
                         // _PFManagedObject_coerceValueForKeyWithDescription
                         // _sharedIMPL_setvfk_core
                         // TODO: Maybe wrong main context event added somewhere?
                     }
                     else {
-                        savedEvent.zappedEvent = try? Event.fetchEvent(id: firstA, context: context)
+                        CoreDataRelationFixer.shared.addTask({
+                            savedEvent.zappedEvent = try? Event.fetchEvent(id: firstA, context: context)
+                        })
                     }
                     if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
@@ -982,7 +992,9 @@ extension Event {
                 savedEvent.reactionToId = lastE
                 // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
                 // here savedEvent is not saved yet, so appears it can crash on context, even when its the same context
-                savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
+                CoreDataRelationFixer.shared.addTask({
+                    savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
+                })
                 
                 if let otherPubkey =  savedEvent.reactionTo?.pubkey {
                     savedEvent.otherPubkey = otherPubkey
@@ -1072,7 +1084,10 @@ extension Event {
                 
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
                 if let parent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) ?? (try? Event.fetchEvent(id: replyToEtag.id, context: context)) {
-                    savedEvent.replyTo = parent // TODO: Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
+                    CoreDataRelationFixer.shared.addTask({
+                        savedEvent.replyTo = parent
+                    })
+                    // TODO: Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
                     parent.addToReplies(savedEvent)
                     parent.repliesCount += 1
 //                    replyTo.repliesUpdated.send(replyTo.replies_)
@@ -1092,7 +1107,12 @@ extension Event {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                 }
                 if let root = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (try? Event.fetchEvent(id: replyToRootEtag.id, context: context)), !root.isDeleted {
-                    savedEvent.replyToRoot = root // Thread 32193: "Illegal attempt to establish a relationship 'replyToRoot' between objects in different contexts (source = <Nostur.Event: 0x371850ee0> (entity: Event; id: 0x351b9e3e0 <x-coredata:///Event/tB769F78C-0ED3-427A-B8A2-BDDA94C71D1030798>; data: {\n    bookmarkedBy =     (\n    );\n    contact = \"0xafbaca1f2e1691dc <x-coredata://3DA0D6F2-885E-43D0-B952-9C23B7D82BA8/Contact/p12190>\";\n    content = \"Do you mind elaborating on \\U201crolling your own kind number is a heavy lift in practice\\U201d? \\n\\nIs it the choice of which kind number to use that\\U2019s the blocker? Are people hesitant to pick a new one and just\";\n    \"created_at\" = 1728407076;\n    dTag = \"\";\n    deletedById = nil;\n    dmAccepted = 0;\n    firstQuote = nil;\n    firstQuoteId = nil;\n    flags = \"\";\n    id = 10eeb3d72083929e9409750c6ad009f736297557b6f8e76bb320b3bd1e61bebd;\n    insertedAt = \"2024-10-10 19:27:50 +0000\";\n    isRepost = 0;\n    kind = 1;\n    lastSeenDMCreatedAt = 0;\n    likesCount = 0;\n    mentionsCount = 0;\n    mostRecentId = nil;\n    otherAtag"
+                    
+                    CoreDataRelationFixer.shared.addTask({
+                        savedEvent.replyToRoot = root
+                    })
+                    
+                    // Thread 32193: "Illegal attempt to establish a relationship 'replyToRoot' between objects in different contexts (source = <Nostur.Event: 0x371850ee0> (entity: Event; id: 0x351b9e3e0 <x-coredata:///Event/tB769F78C-0ED3-427A-B8A2-BDDA94C71D1030798>; data: {\n    bookmarkedBy =     (\n    );\n    contact = \"0xafbaca1f2e1691dc <x-coredata://3DA0D6F2-885E-43D0-B952-9C23B7D82BA8/Contact/p12190>\";\n    content = \"Do you mind elaborating on \\U201crolling your own kind number is a heavy lift in practice\\U201d? \\n\\nIs it the choice of which kind number to use that\\U2019s the blocker? Are people hesitant to pick a new one and just\";\n    \"created_at\" = 1728407076;\n    dTag = \"\";\n    deletedById = nil;\n    dmAccepted = 0;\n    firstQuote = nil;\n    firstQuoteId = nil;\n    flags = \"\";\n    id = 10eeb3d72083929e9409750c6ad009f736297557b6f8e76bb320b3bd1e61bebd;\n    insertedAt = \"2024-10-10 19:27:50 +0000\";\n    isRepost = 0;\n    kind = 1;\n    lastSeenDMCreatedAt = 0;\n    likesCount = 0;\n    mentionsCount = 0;\n    mostRecentId = nil;\n    otherAtag"
                     
                     ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: root))
                     ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRootInverse, id:  root.id, event: savedEvent))
