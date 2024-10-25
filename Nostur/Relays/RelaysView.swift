@@ -36,6 +36,7 @@ struct RelayRowView: View {
             }
             
             Text("\(relay.url_ ?? "(Unknown)")")
+                .lineLimit(1)
             
             Spacer()
             
@@ -135,12 +136,15 @@ struct RelaysView: View {
                         .onTapGesture {
                             editRelay = relay
                         }
-                    Divider()
-                }
-                Button("Add new relay...") {
-                    createRelayPresented = true
+                        .padding(.vertical, 5)
+//                    Divider()
                 }
             }
+            
+            Button("Add new relay...") {
+                createRelayPresented = true
+            }
+            
         }
         .sheet(isPresented: $createRelayPresented) {
             NBNavigationStack {

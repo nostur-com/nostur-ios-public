@@ -151,19 +151,15 @@ struct RelayEditView: View {
                 }
             }
             .listRowBackground(themes.theme.background)
-        }
-        .navigationTitle(String(localized:"Edit relay", comment:"Navigation title for Edit relay screen"))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
-            ToolbarItem(placement: .destructiveAction) {
-                Button {
-                    confirmRemoveShown = true
-                } label: {
-                    Label("Remove", systemImage: "trash")
-                }
+            
+            Section(header: Text("")) {
+                Text("Remove")
+                    .foregroundColor(.red)
+                    .onTapGesture {
+                        confirmRemoveShown = true
+                    }
+                .hCentered()
+                
                 .confirmationDialog("Remove this relay: \(relay.url_ ?? "")?", isPresented: $confirmRemoveShown, titleVisibility: .visible) {
                     Button("Remove", role: .destructive) {
                         connection?.disconnect()
@@ -179,6 +175,14 @@ struct RelayEditView: View {
                         }
                     }
                 }
+            }
+            .listRowBackground(themes.theme.background)
+        }
+        .navigationTitle(String(localized:"Edit relay", comment:"Navigation title for Edit relay screen"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Save") {
