@@ -1023,6 +1023,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
     }
     
+    @MainActor
+    public func undelete() {
+        self.objectWillChange.send()
+        self.postRowDeletableAttributes.deletedById = nil
+    }
+    
     @MainActor public func sendNow() {
         guard let cancellationId = ownPostAttributes.cancellationId else { return }
         let didSend = Unpublisher.shared.sendNow(cancellationId)
@@ -1038,7 +1044,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         guard firstQuote != nil else { return }
         self.objectWillChange.send()
         self.noteRowAttributes.objectWillChange.send()
+        self.noteRowAttributes.firstQuote?.objectWillChange.send()
         self.noteRowAttributes.firstQuote?.blocked = false
+        self.firstQuote!.objectWillChange.send()
         self.firstQuote!.blocked = false
     }
     

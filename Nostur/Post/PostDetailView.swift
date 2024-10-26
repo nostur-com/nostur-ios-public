@@ -262,6 +262,10 @@ struct PostAndParent: View {
                 else {
                     Text("_Post deleted by author_", comment: "Message shown when a post is deleted")
                         .hCentered()
+                    Button("Undelete") {
+                        nrPost.undelete()
+                    }
+                    .hCentered()
                 }
             }
             else if let replyToId = nrPost.replyToId {
@@ -336,6 +340,10 @@ struct PostAndParent: View {
                 else {
                     Text("_Post deleted by \(nrPost.anyName)_", comment: "Message shown when a post is deleted by (name)")
                         .hCentered()
+                    Button("Undelete") {
+                        nrPost.undelete()
+                    }
+                    .hCentered()
                 }
             }
             .id(nrPost.id)
