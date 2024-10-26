@@ -43,6 +43,13 @@ struct NXColumnView: View {
             L.og.debug("☘️☘️ \(config.id) .onAppear")
             viewModel.isVisible = isVisible
             viewModel.availableWidth = dim.availableNoteRowWidth
+            if let relaysData = config.feed?.relaysData {
+                for relay in relaysData {
+                    ConnectionPool.shared.addConnection(relay) { conn in
+                        conn.connect()
+                    }
+                }
+            }
             viewModel.load(config)
         }
         .onChange(of: isVisible) { newValue in
@@ -53,6 +60,13 @@ struct NXColumnView: View {
         .onChange(of: config) { newValue in
             L.og.debug("☘️☘️ \(config.id) .onChange(of: config)")
             guard viewModel.config != newValue else { return }
+            if let relaysData = newValue.feed?.relaysData {
+                for relay in relaysData {
+                    ConnectionPool.shared.addConnection(relay) { conn in
+                        conn.connect()
+                    }
+                }
+            }
             viewModel.load(newValue)
         }
         .onChange(of: dim.availableNoteRowWidth) { newValue in
