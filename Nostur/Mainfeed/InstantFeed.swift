@@ -170,7 +170,7 @@ class InstantFeed {
                 guard let self = self else { return }
                 let getGlobalEventsTask = ReqTask(subscriptionId: "RM.getGlobalFeedEvents-" + UUID().uuidString) { taskId in
                     L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
-                    let filters = [Filters(kinds: [1,5,6,9802,30023,34235], since: self.since, limit: 500)]
+                    let filters = [Filters(kinds: [1,5,6,9802,30023,34235], since: self.since != 0 ? self.since : nil, limit: 500)]
                     if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
                         req(message, relays: self.relays)
                     }
