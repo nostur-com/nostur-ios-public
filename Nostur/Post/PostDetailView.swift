@@ -265,6 +265,7 @@ struct PostAndParent: View {
                     Button("Undelete") {
                         nrPost.undelete()
                     }
+                    .foregroundColor(themes.theme.accent)
                     .hCentered()
                 }
             }
@@ -343,6 +344,7 @@ struct PostAndParent: View {
                     Button("Undelete") {
                         nrPost.undelete()
                     }
+                    .foregroundColor(themes.theme.accent)
                     .hCentered()
                 }
             }

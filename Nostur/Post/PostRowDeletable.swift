@@ -61,6 +61,7 @@ struct PostRowDeletable: View {
                 Button("Undelete") {
                     nrPost.undelete()
                 }
+                .foregroundColor(theme.accent)
                 .hCentered()
             }
         }
