@@ -11,9 +11,9 @@ import Combine
 
 struct NewPostsBy: View {
     
-    @EnvironmentObject private var themes:Themes
-    @ObservedObject private var settings:SettingsStore = .shared
-    @StateObject private var vm:NewPostsVM
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var settings: SettingsStore = .shared
+    @StateObject private var vm: NewPostsVM
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
@@ -24,8 +24,6 @@ struct NewPostsBy: View {
         get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "New Posts" }
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
     }
-    
-    @Namespace private var top
     
     init(pubkeys: Set<String>, since: Int64) {
         _vm = StateObject(wrappedValue: NewPostsVM(pubkeys: pubkeys, since: since))
@@ -46,42 +44,26 @@ struct NewPostsBy: View {
                         } catch { }
                     }
             case .ready:
-                ScrollView {
-                    Color.clear.frame(height: 1).id(top)
-                    if !vm.posts.isEmpty {
-                        LazyVStack(spacing: GUTTER) {
-                            ForEach(vm.posts) { post in
-                                Box(nrPost: post) {
-                                    PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                                }
-                                .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-//                                .transaction { t in
-//                                    t.animation = nil
-//                                }
+                List {
+                    ForEach(vm.posts) { nrPost in
+                        ZStack(alignment: .leading) {
+                            PostOrThread(nrPost: nrPost)
                                 .onBecomingVisible {
                                     // SettingsStore.shared.fetchCounts should be true for below to work
-                                    vm.prefetch(post)
+                                    vm.prefetch(nrPost)
                                 }
-                            }
                         }
-                        .padding(0)
-                    }
-                    else {
-                        Button("Refresh") { vm.load() }
-                            .centered()
+                        .id(nrPost.id)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
                 }
+                .environment(\.defaultMinListRowHeight, 50)
+                .listStyle(.plain)
                 .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
                     guard selectedTab == "Notifications" && selectedNotificationsTab == "New Posts" else { return }
-                    withAnimation {
-                        proxy.scrollTo(top)
-                    }
-                }
-                .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
-                    guard selectedTab == "Notifications" && selectedNotificationsTab == "New Posts" else { return }
-                    withAnimation {
-                        proxy.scrollTo(top)
-                    }
+                    self.scrollToTop(proxy)
                 }
                 .padding(0)
             case .timeout:
@@ -102,6 +84,13 @@ struct NewPostsBy: View {
         .onChange(of: selectedNotificationsTab) { newValue in
             guard newValue == "New Posts" else { return }
             vm.load()
+        }
+    }
+    
+    private func scrollToTop(_ proxy: ScrollViewProxy) {
+        guard let topPost = vm.posts.first else { return }
+        withAnimation {
+            proxy.scrollTo(topPost.id, anchor: .top)
         }
     }
 }
