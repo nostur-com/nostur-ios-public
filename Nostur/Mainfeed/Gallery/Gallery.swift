@@ -7,10 +7,12 @@
 
 import SwiftUI
 import NukeUI
+import NavigationBackport
 
 struct Gallery: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject var vm: GalleryViewModel
+    @State private var showSettings = false
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -125,6 +127,16 @@ struct Gallery: View {
         .onChange(of: selectedSubTab) { newValue in
             guard newValue == "Gallery" else { return }
             vm.load() // didLoad is checked in .load() so no need here
+        }
+        .onReceive(receiveNotification(.showFeedToggles)) { _ in
+            showSettings = true
+        }
+        .sheet(isPresented: $showSettings) {
+            NBNavigationStack {
+                GalleryFeedSettings(vm: vm)
+                    .environmentObject(themes)
+            }
+            .nbUseNavigationStack(.never)
         }
     }
 }
