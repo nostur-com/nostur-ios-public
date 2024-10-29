@@ -24,8 +24,6 @@ struct EmojiFeed: View {
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_subtab") }
     }
     
-    @Namespace private var top
-    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -41,46 +39,29 @@ struct EmojiFeed: View {
                         } catch { }
                     }
             case .ready:
-                ScrollView {
-                    Color.clear.frame(height: 1).id(top)
-                    if !vm.feedPosts.isEmpty {
-                        LazyVStack(spacing: GUTTER) {
-                            ForEach(vm.feedPosts) { post in
-                                Box(nrPost: post) {
-                                    PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                                }
-                                .fixedSize(horizontal: false, vertical: true) // <--  seems to fix missing text (truncated because no space maybe?) Seems to be needed in LazyVStack but not in List
-                                .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-//                                .transaction { t in
-//                                    t.animation = nil
-//                                }
+                List {
+                    ForEach(vm.feedPosts) { nrPost in
+                        ZStack(alignment: .leading) {
+                            PostOrThread(nrPost: nrPost)
                                 .onBecomingVisible {
                                     // SettingsStore.shared.fetchCounts should be true for below to work
-                                    vm.prefetch(post)
+                                    vm.prefetch(nrPost)
                                 }
-                            }
                         }
-                        .padding(0)
-                    }
-                    else {
-                        Button("Refresh") { vm.reload() }
-                            .centered()
+                        .id(nrPost.id)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
                 }
+                .environment(\.defaultMinListRowHeight, 50)
+                .listStyle(.plain)
                 .refreshable {
                     await vm.refresh()
                 }
                 .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
                     guard selectedTab == "Main" && selectedSubTab == "Emoji" else { return }
-                    withAnimation {
-                        proxy.scrollTo(top)
-                    }
-                }
-                .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
-                    guard selectedTab == "Main" && selectedSubTab == "Emoji" else { return }
-                    withAnimation {
-                        proxy.scrollTo(top)
-                    }
+                    self.scrollToTop(proxy)
                 }
                 .onReceive(receiveNotification(.activeAccountChanged)) { _ in
                     vm.reload()
@@ -122,6 +103,13 @@ struct EmojiFeed: View {
                     .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
+        }
+    }
+    
+    private func scrollToTop(_ proxy: ScrollViewProxy) {
+        guard let topPost = vm.feedPosts.first else { return }
+        withAnimation {
+            proxy.scrollTo(topPost.id, anchor: .top)
         }
     }
 }
