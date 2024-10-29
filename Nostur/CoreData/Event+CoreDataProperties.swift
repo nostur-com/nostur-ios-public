@@ -1117,7 +1117,9 @@ extension Event {
                     ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: root))
                     ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRootInverse, id:  root.id, event: savedEvent))
                     if (savedEvent.replyToId == savedEvent.replyToRootId) {
-                        savedEvent.replyTo = root // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                        CoreDataRelationFixer.shared.addTask({
+                            savedEvent.replyTo = root // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                        })
                         root.addToReplies(savedEvent)
                         root.repliesCount += 1
                         ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: root.id, replies: root.replies_))
@@ -1131,15 +1133,17 @@ extension Event {
             else if savedEvent.replyToRootId != nil, savedEvent.replyToId == nil {
                 // so set replyToRoot (aTag) as replyTo
                 savedEvent.replyToId = savedEvent.replyToRootId
-                savedEvent.replyTo = savedEvent.replyToRoot
-                
-                if let parent = savedEvent.replyTo {
-                    parent.addToReplies(savedEvent)
-                    parent.repliesCount += 1
-//                    replyTo.repliesUpdated.send(replyTo.replies_)
-                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
-                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: parent.id, replies: parent.repliesCount))
-                }
+                CoreDataRelationFixer.shared.addTask({
+                    savedEvent.replyTo = savedEvent.replyToRoot
+                    
+                    if let parent = savedEvent.replyTo {
+                        parent.addToReplies(savedEvent)
+                        parent.repliesCount += 1
+    //                    replyTo.repliesUpdated.send(replyTo.replies_)
+                        ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
+                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: parent.id, replies: parent.repliesCount))
+                    }
+                })
             }
             
         }
