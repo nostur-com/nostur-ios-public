@@ -1,0 +1,57 @@
+{
+  "configurations" : [
+    {
+      "id" : "E124AD41-05EE-4FFE-A963-670B31CD7BFC",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "commandLineArgumentEntries" : [
+      {
+        "argument" : "-com.apple.CoreData.ConcurrencyDebug 1"
+      },
+      {
+        "argument" : "-com.apple.CoreData.CloudKitDebug 0"
+      },
+      {
+        "argument" : "-com.apple.CoreData.Logging.stderr 0"
+      },
+      {
+        "argument" : "-com.apple.CoreData.SQLDebug 4",
+        "enabled" : false
+      },
+      {
+        "argument" : "-com.apple.CoreData.SQLDebug 1",
+        "enabled" : false
+      }
+    ],
+    "environmentVariableEntries" : [
+      {
+        "enabled" : false,
+        "key" : "OS_ACTIVITY_MODE",
+        "value" : "disable"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Nostur.xcodeproj",
+      "identifier" : "1FB448B92965F3D000038671",
+      "name" : "Nostur"
+    },
+    "uiTestingScreenshotsLifetime" : "keepNever"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Nostur.xcodeproj",
+        "identifier" : "1FBCD6112CAAB112008258C3",
+        "name" : "NosturTests"
+      }
+    }
+  ],
+  "version" : 1
+}

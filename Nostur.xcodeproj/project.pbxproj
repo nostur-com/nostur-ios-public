@@ -386,6 +386,8 @@
 		1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901E2A85128A007A1550 /* String+StringMetric.swift */; };
 		1FBCA08F2AC84AC800913E16 /* ReplyingToEditable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */; };
 		1FBCA0912AC84AFF00913E16 /* ContactsToggleSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBCA0902AC84AFF00913E16 /* ContactsToggleSheet.swift */; };
+		1FBCD61C2CAAB127008258C3 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBCD61B2CAAB127008258C3 /* XCTest.framework */; platformFilter = ios; };
+		1FBCD61D2CAAB127008258C3 /* XCTest.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBCD61B2CAAB127008258C3 /* XCTest.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */; };
 		1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */; };
 		1FBE253C2A9DC4F800F60FCF /* NRButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE253B2A9DC4F700F60FCF /* NRButton.swift */; };
@@ -548,6 +550,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1FBCD6162CAAB112008258C3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FB448B22965F3D000038671 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1FB448B92965F3D000038671;
+			remoteInfo = Nostur;
+		};
 		1FCFDDCC29FCC735005320B8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1FB448B22965F3D000038671 /* Project object */;
@@ -558,6 +567,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		1FBCD61E2CAAB127008258C3 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1FBCD61D2CAAB127008258C3 /* XCTest.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1FCEA0B329992FBE00A309DC /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -960,6 +980,8 @@
 		1FBB901E2A85128A007A1550 /* String+StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+StringMetric.swift"; sourceTree = "<group>"; };
 		1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToEditable.swift; sourceTree = "<group>"; };
 		1FBCA0902AC84AFF00913E16 /* ContactsToggleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsToggleSheet.swift; sourceTree = "<group>"; };
+		1FBCD61B2CAAB127008258C3 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		1FBCD6562CAC0009008258C3 /* NosturTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NosturTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FBE253B2A9DC4F700F60FCF /* NRButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRButton.swift; sourceTree = "<group>"; };
@@ -1124,6 +1146,10 @@
 		1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicFullScreenSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		1FBCD6132CAAB112008258C3 /* NosturTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = NosturTests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		1FB448B72965F3D000038671 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -1146,6 +1172,14 @@
 				1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1FA97AA62C3F61480091446A /* LiveKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1FBCD60F2CAAB112008258C3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FBCD61C2CAAB127008258C3 /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1726,6 +1760,7 @@
 		1F7C65B629A1466D009FF3EA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1FBCD61B2CAAB127008258C3 /* XCTest.framework */,
 				1FC7A4D929F99AB100645FEF /* UniformTypeIdentifiers.framework */,
 			);
 			name = Frameworks;
@@ -1902,6 +1937,7 @@
 				1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */,
 				1F18035C2C381D570025227E /* NostrEssentials.xctestplan */,
 				1FC7A54629FA46F000645FEF /* Highlight with Nostur */,
+				1FBCD6132CAAB112008258C3 /* NosturTests */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
 				1F83498529DE80E60032E52B /* Libraries */,
@@ -1913,6 +1949,7 @@
 			children = (
 				1FB448BA2965F3D000038671 /* Nostur.app */,
 				1FC7A54429FA46F000645FEF /* Share selected text with Nostur.appex */,
+				1FBCD6562CAC0009008258C3 /* NosturTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2349,6 +2386,30 @@
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
 			productType = "com.apple.product-type.application";
 		};
+		1FBCD6112CAAB112008258C3 /* NosturTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1FBCD6182CAAB112008258C3 /* Build configuration list for PBXNativeTarget "NosturTests" */;
+			buildPhases = (
+				1FBCD60E2CAAB112008258C3 /* Sources */,
+				1FBCD60F2CAAB112008258C3 /* Frameworks */,
+				1FBCD6102CAAB112008258C3 /* Resources */,
+				1FBCD61E2CAAB127008258C3 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1FBCD6172CAAB112008258C3 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1FBCD6132CAAB112008258C3 /* NosturTests */,
+			);
+			name = NosturTests;
+			packageProductDependencies = (
+			);
+			productName = NosturTests;
+			productReference = 1FBCD6562CAC0009008258C3 /* NosturTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		1FC7A54329FA46F000645FEF /* Share selected text with Nostur */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1FC7A55229FA46F000645FEF /* Build configuration list for PBXNativeTarget "Share selected text with Nostur" */;
@@ -2378,6 +2439,10 @@
 				TargetAttributes = {
 					1FB448B92965F3D000038671 = {
 						CreatedOnToolsVersion = 14.2;
+					};
+					1FBCD6112CAAB112008258C3 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 1FB448B92965F3D000038671;
 					};
 					1FC7A54329FA46F000645FEF = {
 						CreatedOnToolsVersion = 14.3;
@@ -2416,6 +2481,7 @@
 			targets = (
 				1FB448B92965F3D000038671 /* Nostur */,
 				1FC7A54329FA46F000645FEF /* Share selected text with Nostur */,
+				1FBCD6112CAAB112008258C3 /* NosturTests */,
 			);
 		};
 /* End PBXProject section */
@@ -2430,6 +2496,13 @@
 				1FA7B57C2BDBBC03008A78A8 /* Localizable.xcstrings in Resources */,
 				1F0F0F642A9D220E00E23BA7 /* Themes.xcassets in Resources */,
 				1FBAA6182B53E694007C7535 /* Thunderzap16.m4a in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1FBCD6102CAAB112008258C3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2963,6 +3036,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1FBCD60E2CAAB112008258C3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1FC7A54029FA46F000645FEF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2974,6 +3054,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		1FBCD6172CAAB112008258C3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1FB448B92965F3D000038671 /* Nostur */;
+			targetProxy = 1FBCD6162CAAB112008258C3 /* PBXContainerItemProxy */;
+		};
 		1FCFDDCD29FCC735005320B8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 1FC7A54329FA46F000645FEF /* Share selected text with Nostur */;
@@ -3225,6 +3310,66 @@
 			};
 			name = Release;
 		};
+		1FBCD6192CAAB112008258C3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 5T4GDWX88Z;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nostur.NosturTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Nostur.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Nostur";
+				XROS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Debug;
+		};
+		1FBCD61A2CAAB112008258C3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5T4GDWX88Z;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nostur.NosturTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Nostur.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Nostur";
+				XROS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Release;
+		};
 		1FC7A55329FA46F000645FEF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3311,6 +3456,15 @@
 			buildConfigurations = (
 				1FB448CF2965F3D200038671 /* Debug */,
 				1FB448D02965F3D200038671 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1FBCD6182CAAB112008258C3 /* Build configuration list for PBXNativeTarget "NosturTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1FBCD6192CAAB112008258C3 /* Debug */,
+				1FBCD61A2CAAB112008258C3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
