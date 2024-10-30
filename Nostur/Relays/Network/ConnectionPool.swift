@@ -537,7 +537,7 @@ public class ConnectionPool: ObservableObject {
             }
         }
         
-        guard limitToRelayIds.isEmpty else { return } // REQ limited for specific relays are handled about, don't continue this in outbox stuff
+        guard limitToRelayIds.isEmpty else { return } // REQ limited for specific relays are handled above, don't continue this in outbox stuff
         guard !SettingsStore.shared.lowDataMode else { return } // Don't continue with additional outbox relays on low data mode
         guard !message.onlyForNWCRelay && !message.onlyForNCRelay else { return } // also not NW or NWC
         

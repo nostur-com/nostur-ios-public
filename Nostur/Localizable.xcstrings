@@ -2137,6 +2137,9 @@
         }
       }
     },
+    "Configure column" : {
+
+    },
     "Configure contacts..." : {
       "localizations" : {
         "nl" : {
@@ -2317,6 +2320,9 @@
           }
         }
       }
+    },
+    "Contacts" : {
+
     },
     "Contacts:" : {
       "localizations" : {
@@ -3128,6 +3134,9 @@
         }
       }
     },
+    "Enable WoT filter" : {
+
+    },
     "End test" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3733,6 +3742,9 @@
           }
         }
       }
+    },
+    "Hashtags" : {
+
     },
     "Hello, World! Hello World! Hello World! Hello World! Hello World! Hello World" : {
       "localizations" : {
@@ -4546,6 +4558,9 @@
           }
         }
       }
+    },
+    "Mentions" : {
+
     },
     "Mentions, replies, or DMs" : {
       "localizations" : {
@@ -8115,6 +8130,9 @@
         }
       }
     },
+    "Type" : {
+
+    },
     "Type your message..." : {
       "comment" : "Placeholder for input field for new direct message",
       "localizations" : {
@@ -8209,6 +8227,9 @@
       }
     },
     "Unchecked" : {
+
+    },
+    "Undelete" : {
 
     },
     "Undo" : {

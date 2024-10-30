@@ -59,7 +59,15 @@ class EventRelationsQueue {
     /// Adds event to the queue waiting for related data that is being fetched
     /// - Parameter event: Event should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingEvent(_ event: Event? = nil, debugInfo:String? = "") {
-        guard let event = event else { return }
+        guard let event else { return }
+#if DEBUG
+        if event.managedObjectContext == nil {
+            print("event is nil")
+        }
+        else if event.managedObjectContext != self.ctx {
+            print("event is not  bg")
+        }
+#endif
         
         // nil can apparently happen when we have event.replyTo.replyToRoot. 
         //                                          ^      ^        ^

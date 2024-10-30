@@ -11,6 +11,8 @@ import Nuke
 import NukeUI
 import Combine
 
+// WIP Rewrite where we remove Core Data "Event" as much as possible
+
 class ViewingContext: ObservableObject {
     public var availableWidth: CGFloat
     public var fullWidthImages: Bool

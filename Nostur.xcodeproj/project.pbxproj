@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -927,7 +927,6 @@
 		1FAC42B42C03CB3900362997 /* GroupedReactionsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupedReactionsFeedModel.swift; sourceTree = "<group>"; };
 		1FAC42B62C03D1C300362997 /* RepostsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepostsFeedModel.swift; sourceTree = "<group>"; };
 		1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapsFeedModel.swift; sourceTree = "<group>"; };
-		1FAC67AF29F5527800798661 /* DisabledAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DisabledAssets.xcassets; sourceTree = "<group>"; };
 		1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyNoteMenu.swift; sourceTree = "<group>"; };
 		1FAE9B432A2F0ADB00439A63 /* ProfileImagesHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImagesHelpers.swift; sourceTree = "<group>"; };
 		1FB130B029C0DB07004AC98D /* NoteRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRow.swift; sourceTree = "<group>"; };
@@ -1901,7 +1900,6 @@
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
 				1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */,
-				1FAC67AF29F5527800798661 /* DisabledAssets.xcassets */,
 				1F18035C2C381D570025227E /* NostrEssentials.xctestplan */,
 				1FC7A54629FA46F000645FEF /* Highlight with Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
@@ -2375,7 +2373,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1540;
+				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					1FB448B92965F3D000038671 = {
@@ -3140,6 +3138,9 @@
 				INFOPLIST_FILE = Nostur/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nostur;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take pictures you want to post on nostr";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To use voice chats";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save a post screenshot to your Photo Library";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -3164,6 +3165,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -3189,6 +3191,9 @@
 				INFOPLIST_FILE = Nostur/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nostur;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take pictures you want to post on nostr";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To use voice chats";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save a post screenshot to your Photo Library";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -3213,6 +3218,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
