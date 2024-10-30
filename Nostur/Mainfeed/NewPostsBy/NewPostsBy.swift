@@ -65,6 +65,10 @@ struct NewPostsBy: View {
                     guard selectedTab == "Notifications" && selectedNotificationsTab == "New Posts" else { return }
                     self.scrollToTop(proxy)
                 }
+                .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                    guard selectedTab == "Notifications" && selectedNotificationsTab == "New Posts" else { return }
+                    self.scrollToTop(proxy)
+                }
                 .padding(0)
             case .timeout:
                 VStack {
