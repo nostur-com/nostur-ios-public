@@ -61,6 +61,7 @@ struct NosturTabButton: View {
                     .sheet(isPresented: $showGallerySettings, content: {
                         NBNavigationStack {
                             GalleryFeedSettings(vm: galleryVM)
+                                .environmentObject(themes)
                         }
                         .nbUseNavigationStack(.never)
                     })
