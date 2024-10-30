@@ -41,12 +41,17 @@ public class CloudAccount: NSManagedObject {
         return withoutBlocked
     }
     
-    public func publishNewContactList() {
-        guard let clEvent = try? AccountManager.createContactListEvent(account: self)
+    public func publishNewContactList(_ safeMode: Bool = false) {
+        guard var clEvent = try? AccountManager.createContactListEvent(account: self)
         else {
             L.og.error("🔴🔴 Could not create new clEvent")
             return
         }
+        
+        if safeMode {
+            clEvent.createdAt = NTimestamp(timestamp: Int((Date().timeIntervalSince1970 - (3600*24*7))))
+        }
+        
         if self.isNC {
             NSecBunkerManager.shared.requestSignature(forEvent: clEvent, usingAccount: self, whenSigned: { signedEvent in
                 _ = Unpublisher.shared.publishLast(signedEvent, ofType: .contactList)
