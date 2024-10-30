@@ -63,6 +63,10 @@ struct EmojiFeed: View {
                     guard selectedTab == "Main" && selectedSubTab == "Emoji" else { return }
                     self.scrollToTop(proxy)
                 }
+                .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                    guard selectedTab == "Main" && selectedSubTab == "Emoji" else { return }
+                    self.scrollToTop(proxy)
+                }
                 .onReceive(receiveNotification(.activeAccountChanged)) { _ in
                     vm.reload()
                 }

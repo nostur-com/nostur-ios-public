@@ -63,6 +63,10 @@ struct Hot: View {
                     guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
                     self.scrollToTop(proxy)
                 }
+                .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                    guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
+                    self.scrollToTop(proxy)
+                }
                 .onReceive(receiveNotification(.activeAccountChanged)) { _ in
                     hotVM.reload()
                 }
