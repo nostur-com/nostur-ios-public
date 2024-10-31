@@ -263,7 +263,8 @@ struct PostAndParent: View {
                     Text("_Post deleted by author_", comment: "Message shown when a post is deleted")
                         .hCentered()
                     Button("Undelete") {
-                        nrPost.undelete()
+                        nrPost.objectWillChange.send()
+                        replyTo.undelete()
                     }
                     .foregroundColor(themes.theme.accent)
                     .hCentered()
