@@ -263,7 +263,9 @@ class Importer {
                         subscriptionIds.insert(subscriptionId)
                     }
                     if (kind6firstQuote != nil) {
-                        savedEvent.firstQuote = kind6firstQuote
+                        CoreDataRelationFixer.shared.addTask({
+                            savedEvent.firstQuote = kind6firstQuote
+                        })
                     }
                     
                     if event.kind == .setMetadata {
@@ -480,7 +482,9 @@ class Importer {
                         importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
                     }
                     if (kind6firstQuote != nil) {
-                        savedEvent.firstQuote = kind6firstQuote
+                        CoreDataRelationFixer.shared.addTask({
+                            savedEvent.firstQuote = kind6firstQuote
+                        })
                     }
                     
                     if event.kind == .setMetadata {

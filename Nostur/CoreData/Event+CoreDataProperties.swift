@@ -1016,24 +1016,32 @@ extension Event {
                 savedEvent.isRepost = true
                 
                 savedEvent.firstQuoteId = firstE
-                savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
                 
-                if savedEvent.firstQuote == nil { // or we fetch it if we dont have it yet
+                if let kind6firstQuote = kind6firstQuote {
+                    CoreDataRelationFixer.shared.addTask({
+                        savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
+                    })
+                }
+                else {
                     // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
                     if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                        savedEvent.firstQuote = repostedEvent
+                        CoreDataRelationFixer.shared.addTask({
+                            savedEvent.firstQuote = repostedEvent
+                        })
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
 //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
                     else if let repostedEvent = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                        savedEvent.firstQuote = repostedEvent
+                        CoreDataRelationFixer.shared.addTask({
+                            savedEvent.firstQuote = repostedEvent
+                        })
                         repostedEvent.repostsCount += 1
 //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
                 }
-                
+  
                 // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
                 // if we already have the firstQuote (reposted post), we use that .pubkey
                 if let otherPubkey = savedEvent.firstQuote?.pubkey {
@@ -1239,7 +1247,9 @@ extension Event {
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
             if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                savedEvent.firstQuote = firstQuote
+                CoreDataRelationFixer.shared.addTask({
+                    savedEvent.firstQuote = firstQuote
+                })
                 
                 if (firstE.tag[safe: 3] == "mention") {
 //                    firstQuote.objectWillChange.send()
@@ -1255,7 +1265,9 @@ extension Event {
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
             if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                savedEvent.firstQuote = firstQuote
+                CoreDataRelationFixer.shared.addTask({
+                    savedEvent.firstQuote = firstQuote
+                })
                 
 //                firstQuote.objectWillChange.send()
                 firstQuote.mentionsCount += 1
@@ -1265,31 +1277,34 @@ extension Event {
         // kind6 - repost, the reposted post is put in as .firstQuote
         if event.kind == .repost {
             savedEvent.firstQuoteId = kind6firstQuote?.id ?? event.firstE()
-            if let kind6firstQuote {
-                savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
-            }
-            
-            if let repostedEvent = savedEvent.firstQuote { // we already got firstQuote passed in as param
-                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-//                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
-            }
-            else {
-                // We need to get firstQuote from db or cache
-                if let firstE = event.firstE() {
-                    if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                        savedEvent.firstQuote = repostedEvent // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts
+            if let kind6firstQuote = kind6firstQuote {
+                CoreDataRelationFixer.shared.addTask({
+                    savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
+                    
+                    
+                    if let repostedEvent = savedEvent.firstQuote { // we already got firstQuote passed in as param
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-//                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+        //                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
-                    else if let repostedEvent = try? Event.fetchEvent(id: firstE, context: context) {
-                        savedEvent.firstQuote = repostedEvent
-                        repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-//                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
-                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+                    else {
+                        // We need to get firstQuote from db or cache
+                        if let firstE = event.firstE() {
+                            if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+                                savedEvent.firstQuote = repostedEvent // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts
+                                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+        //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+                            }
+                            else if let repostedEvent = try? Event.fetchEvent(id: firstE, context: context) {
+                                savedEvent.firstQuote = repostedEvent
+                                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+        //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+                            }
+                        }
                     }
-                }
+                })
             }
             
             // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
@@ -1407,18 +1422,24 @@ extension Event {
             
             for waitingEvent in awaitingEvents {
                 if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
-                    waitingEvent.replyTo = savedEvent
+                    CoreDataRelationFixer.shared.addTask({
+                        waitingEvent.replyTo = savedEvent
+                    })
 //                    waitingEvent.replyToUpdated.send(savedEvent)
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyTo, id: waitingEvent.id, event: savedEvent)))
                 }
                 if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
-                    waitingEvent.replyToRoot = savedEvent
+                    CoreDataRelationFixer.shared.addTask({
+                        waitingEvent.replyToRoot = savedEvent
+                    })
 //                    waitingEvent.replyToRootUpdated.send(savedEvent)
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRoot, id: waitingEvent.id, event: savedEvent)))
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRootInverse, id: savedEvent.id, event: waitingEvent)))
                 }
                 if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
-                    waitingEvent.firstQuote = savedEvent
+                    CoreDataRelationFixer.shared.addTask({
+                        waitingEvent.firstQuote = savedEvent
+                    })
 //                    waitingEvent.firstQuoteUpdated.send(savedEvent)
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .firstQuote, id: waitingEvent.id, event: savedEvent)))
                 }
