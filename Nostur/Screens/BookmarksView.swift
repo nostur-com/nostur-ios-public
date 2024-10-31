@@ -23,7 +23,6 @@ struct BookmarksView: View {
     public var bookmarkFilters: Set<Color>
     
     @ObservedObject private var settings: SettingsStore = .shared
-    @Namespace private var top
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt, order: .reverse)])
     private var bookmarks: FetchedResults<Bookmark>
@@ -44,13 +43,12 @@ struct BookmarksView: View {
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            ScrollView {
-                Color.clear.frame(height: 1).id(top)
-                if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
-                    LazyVStack(spacing: GUTTER) {
-                        ForEach(filteredBookmarks) { bookmark in
-                            LazyBookmark(bookmark, events: events)
-                            .onDelete {
+            if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
+                List(filteredBookmarks) { bookmark in
+                    LazyBookmark(bookmark, events: events)
+                        .id(bookmark.objectID)
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive, action: {
                                 guard let eventId = bookmark.eventId else { return }
                                 bg().perform {
                                     Bookmark.removeBookmark(eventId: eventId, context: bg())
@@ -58,27 +56,56 @@ struct BookmarksView: View {
                                     DataProvider.shared().save()
                                     bg().transactionAuthor = nil
                                 }
+                            }) {
+                            Label("Remove", systemImage: "trash")
+                          }
+                          .tint(.red)
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .padding(.bottom, GUTTER)
+                }
+                .environment(\.defaultMinListRowHeight, 50)
+                .listStyle(.plain)
+                .padding(0)
+                
+                .preference(key: BookmarksCountPreferenceKey.self, value: filteredBookmarks.count.description)
+                .onReceive(receiveNotification(.didTapTab)) { notification in
+                    guard selectedSubTab == "Bookmarks", let first = filteredBookmarks.first else { return }
+                    if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
+                        if navPath.count == 0 {
+                            withAnimation {
+                                proxy.scrollTo(first.objectID)
                             }
                         }
-                        Spacer()
                     }
-                    .background(themes.theme.listBackground)
-                    .preference(key: BookmarksCountPreferenceKey.self, value: filteredBookmarks.count.description)
                 }
-                else {
-                    Text("When you bookmark a post it will show up here.")
-                        .hCentered()
-                        .padding(.top, 40)
+                .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
+                    guard selectedSubTab == "Bookmarks", let first = filteredBookmarks.first else { return }
+                    if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
+                        if navPath.count == 0 {
+                            withAnimation {
+                                proxy.scrollTo(first.objectID)
+                            }
+                        }
+                    }
+                }
+                .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                    guard selectedSubTab == "Bookmarks", let first = filteredBookmarks.first else { return }
+                    if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
+                        if navPath.count == 0 {
+                            withAnimation {
+                                proxy.scrollTo(first.objectID)
+                            }
+                        }
+                    }
                 }
             }
-            .onReceive(receiveNotification(.didTapTab)) { notification in
-                guard selectedSubTab == "Bookmarks" else { return }
-                guard let tabName = notification.object as? String, tabName == "Bookmarks" else { return }
-                if navPath.count == 0 {
-                    withAnimation {
-                        proxy.scrollTo(top)
-                    }
-                }
+            else {
+                Text("When you bookmark a post it will show up here.")
+                    .hCentered()
+                    .padding(.top, 40)
             }
         }
         .navigationTitle(String(localized:"Bookmarks", comment:"Navigation title for Bookmarks screen"))

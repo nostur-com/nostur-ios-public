@@ -38,38 +38,60 @@ struct PrivateNotesView: View {
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            ScrollView {
-                Color.clear.frame(height: 1).id(top)
-                if !privateNotes.isEmpty && (!events.isEmpty || noEvents) && (!contacts.isEmpty || noContacts) {
-                    LazyVStack(spacing: GUTTER) {
-                        ForEach(privateNotes) { pn in
-                            LazyPrivateNote(pn: pn, events: events, contacts: contacts)
-                                .onDelete {
-                                    viewContext.delete(pn)
-                                    viewContext.transactionAuthor = "removeCloudPrivateNote"
-                                    DataProvider.shared().save()
-                                    viewContext.transactionAuthor = nil
-                                }
+            if !privateNotes.isEmpty && (!events.isEmpty || noEvents) && (!contacts.isEmpty || noContacts) {
+                List(privateNotes) { pn in
+                    LazyPrivateNote(pn: pn, events: events, contacts: contacts)
+                        .id(pn.objectID)
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive, action: {
+                                viewContext.delete(pn)
+                                viewContext.transactionAuthor = "removeCloudPrivateNote"
+                                DataProvider.shared().save()
+                                viewContext.transactionAuthor = nil
+                            }) {
+                            Label("Remove", systemImage: "trash")
+                          }
+                          .tint(.red)
                         }
-                        Spacer()
-                    }
-                    .background(themes.theme.listBackground)
-                    .preference(key: PrivateNotesCountPreferenceKey.self, value: privateNotes.count.description)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .padding(.bottom, GUTTER)
                 }
-                else {
-                    Text("When you bookmark a post it will show up here.")
-                        .hCentered()
-                        .padding(.top, 40)
+                .environment(\.defaultMinListRowHeight, 50)
+                .listStyle(.plain)
+                .padding(0)
+                
+                .preference(key: PrivateNotesCountPreferenceKey.self, value: privateNotes.count.description)
+                .onReceive(receiveNotification(.didTapTab)) { notification in
+                    guard selectedSubTab == "Private Notes", let first = privateNotes.first else { return }
+                    if navPath.count == 0 {
+                        withAnimation {
+                            proxy.scrollTo(first.objectID)
+                        }
+                    }
+                }
+                .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
+                    guard selectedSubTab == "Private Notes", let first = privateNotes.first else { return }
+                    if navPath.count == 0 {
+                        withAnimation {
+                            proxy.scrollTo(first.objectID)
+                        }
+                    }
+                }
+                .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                    guard selectedSubTab == "Private Notes", let first = privateNotes.first else { return }
+                    if navPath.count == 0 {
+                        withAnimation {
+                            proxy.scrollTo(first.objectID)
+                        }
+                    }
                 }
             }
-            .onReceive(receiveNotification(.didTapTab)) { notification in
-                guard selectedSubTab == "Bookmarks" else { return }
-                guard let tabName = notification.object as? String, tabName == "Bookmarks" else { return }
-                if navPath.count == 0 {
-                    withAnimation {
-                        proxy.scrollTo(top)
-                    }
-                }
+            else {
+                Text("When you bookmark a post it will show up here.")
+                    .hCentered()
+                    .padding(.top, 40)
             }
         }
         .navigationTitle(String(localized:"Bookmarks", comment:"Navigation title for Bookmarks screen"))
