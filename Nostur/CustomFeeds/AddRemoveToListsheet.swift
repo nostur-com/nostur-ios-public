@@ -9,6 +9,15 @@ import SwiftUI
 import Combine
 import NavigationBackport
 
+enum ListType: String, Identifiable, Hashable {
+    case pubkeys = "pubkeys"
+    case relays = "relays"
+
+    var id: String {
+        String(self.rawValue)
+    }
+}
+
 struct AddRemoveToListsheet: View {
     
     @Environment(\.dismiss) var dismiss
@@ -17,7 +26,7 @@ struct AddRemoveToListsheet: View {
     // only contact lists, not relay lists
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CloudFeed.createdAt, ascending: false)],
-        predicate: NSPredicate(format: "type == %@ OR type == nil", LVM.ListType.pubkeys.rawValue),
+        predicate: NSPredicate(format: "type == %@ OR type == nil", ListType.pubkeys.rawValue),
         animation: .none)
     var lists:FetchedResults<CloudFeed>
     

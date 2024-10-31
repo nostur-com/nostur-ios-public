@@ -17,7 +17,7 @@ public class CloudFeed: NSManagedObject {
         for i in 0..<amount {
             let feed = CloudFeed(context: context)
             feed.id = UUID()
-            feed.type = LVM.ListType.pubkeys.rawValue
+            feed.type = ListType.pubkeys.rawValue
             feed.createdAt = .now
             feed.name = "Example Feed \(i)"
             feed.contactPubkeys = Set(contacts.randomSample(count: 10).map { $0.pubkey })

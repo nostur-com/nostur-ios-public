@@ -13,7 +13,7 @@ struct MacListsView: View {
     let SIDEBAR_WIDTH:CGFloat = 50.0
     @StateObject private var dim = DIMENSIONS()
     @StateObject private var vm:MacListState = .shared
-    @State var lvm:LVM? = nil
+//    @State var lvm:LVM? = nil
     @State var availableFeeds:[CloudFeed] = []
     
     var body: some View {
@@ -81,10 +81,11 @@ struct MacListsView: View {
 struct ColumnViewWrapper: View {
     let availableFeeds:[CloudFeed]
     @State private var selectedFeed:CloudFeed? = nil
-    @State private var lvm:LVM? = nil
+//    @State private var lvm:LVM? = nil
     
     var body: some View {
-        ColumnView(availableFeeds: availableFeeds, selectedFeed: $selectedFeed, lvm: $lvm)
+        Text("uuuh")
+//        ColumnView(availableFeeds: availableFeeds, selectedFeed: $selectedFeed, lvm: $lvm)
     }
 }
 
@@ -92,7 +93,7 @@ struct ColumnView: View {
     @EnvironmentObject private var themes:Themes
     let availableFeeds:[CloudFeed]
     @Binding var selectedFeed:CloudFeed?
-    @Binding var lvm:LVM?
+//    @Binding var lvm:LVM?
     
     var body: some View {
         ZStack {
@@ -100,15 +101,15 @@ struct ColumnView: View {
             VStack {
                 FeedSelector(feeds: availableFeeds, selected: $selectedFeed)
                     .padding(.top, 10)
-                if let lvm = lvm {
-                    Color.green
-//                    ListViewContainer(vm: lvm)
-//                        .overlay(alignment: .topTrailing) {
-//                            ListUnreadCounter(vm: lvm, theme: themes.theme)
-//                                .padding(.trailing, 10)
-//                                .padding(.top, 5)
-//                        }
-                }
+//                if let lvm = lvm {
+//                    Color.green
+////                    ListViewContainer(vm: lvm)
+////                        .overlay(alignment: .topTrailing) {
+////                            ListUnreadCounter(vm: lvm, theme: themes.theme)
+////                                .padding(.trailing, 10)
+////                                .padding(.top, 5)
+////                        }
+//                }
                 Spacer()
             }
             if selectedFeed == nil {

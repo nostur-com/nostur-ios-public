@@ -1773,3 +1773,292 @@ func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
     
     return nil
 }
+
+
+// From old LVM code, need to refactor:
+
+typealias CM = NostrEssentials.ClientMessage
+
+let FETCH_GLOBAL_KINDS: Set<Int> = [1,5,6,9802,30023,34235]
+let FETCH_FOLLOWING_KINDS: Set<Int> = [0,1,5,6,9802,30023,34235,30311,10002]
+let QUERY_FOLLOWING_KINDS: Set<Int> = [1,6,9802,30023,34235]
+let QUERY_FETCH_LIMIT = 50 // Was 25 before, but seems we are missing posts, maybe too much non WoT-hashtag coming back. Increase limit or split query? or could be the time cutoff is too short/strict
+
+
+import CoreData
+
+// LVM pubkeys
+extension Event {
+    
+    // TODO: Optimize tagsSerialized / hashtags matching
+    static func postsByPubkeys(_ pubkeys: Set<String>, mostRecent: Event, hideReplies: Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let cutOffPoint = mostRecent.created_at - (15 * 60)
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        fr.fetchLimit = QUERY_FETCH_LIMIT
+        if let hashtagRegex = hashtagRegex {
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+        }
+        else {
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint,  pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+        }
+        return fr
+    }
+    
+    
+    static func postsByPubkeys(_ pubkeys: Set<String>, until: Event, hideReplies: Bool = false, hashtagRegex: String? = nil) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let cutOffPoint = until.created_at + (1 * 60)
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        fr.fetchLimit = QUERY_FETCH_LIMIT
+        if let hashtagRegex = hashtagRegex {
+            
+            let after = until.created_at - (8 * 3600) // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
+            
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+        }
+        else {
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+        }
+        return fr
+    }
+    
+    static func postsByPubkeys(_ pubkeys: Set<String>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, hashtagRegex: String? = nil) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
+        
+        // Take oldest timestamp: 8 hours ago OR lastAppearedCreatedAt
+        // if we don't have lastAppearedCreatedAt. Take 8 hours ago
+        let cutOffPoint = lastAppearedCreatedAt == 0 ? hoursAgo : min(lastAppearedCreatedAt, hoursAgo)
+        
+        // get 15 events before lastAppearedCreatedAt (or 8 hours ago, if we dont have it)
+        let frBefore = Event.fetchRequest()
+        frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        frBefore.fetchLimit = QUERY_FETCH_LIMIT
+        if let hashtagRegex = hashtagRegex {
+            if hideReplies {
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+            else {
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+        }
+        else {
+            if hideReplies {
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+            else {
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+        }
+        
+        let newFirstEvent = try? bg().fetch(frBefore).last
+        
+        let newCutOffPoint = newFirstEvent != nil ? newFirstEvent!.created_at : cutOffPoint
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        fr.fetchLimit = QUERY_FETCH_LIMIT
+        if hideReplies {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint,  pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+        }
+        return fr
+    }
+    
+    static func postsByPubkeys(_ pubkeys: Set<String>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, hashtagRegex: String? = nil) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        fr.fetchLimit = QUERY_FETCH_LIMIT
+        if let hashtagRegex = hashtagRegex {
+            
+            let after = cutOffPoint - (8 * 3600) // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
+            
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+            }
+        }
+        else {
+            if hideReplies {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            }
+        }
+        return fr
+    }
+}
+
+// LVM relays
+extension Event {
+    
+    static func postsByRelays(_ relays: Set<RelayData>, mostRecent: Event, hideReplies: Bool = false, fetchLimit: Int = 50) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let regex = "(" + relays.compactMap { $0.url }.map {
+            NSRegularExpression.escapedPattern(for: $0)
+        }.joined(separator: "|") + ")"
+        let cutOffPoint = mostRecent.created_at - (15 * 60)
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        fr.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
+        if hideReplies {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+        }
+        return fr
+    }
+    
+    
+    static func postsByRelays(_ relays: Set<RelayData>, until: Event, hideReplies: Bool = false, fetchLimit: Int = 50) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let regex = "(" + relays.compactMap { $0.url }.map {
+            NSRegularExpression.escapedPattern(for: $0)
+        }.joined(separator: "|") + ")"
+        let cutOffPoint = until.created_at + (1 * 60)
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        fr.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
+        
+        if hideReplies {
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+        }
+        return fr
+    }
+    
+    static func postsByRelays(_ relays: Set<RelayData>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, fetchLimit: Int = 50) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let regex = "(" + relays.compactMap { $0.url }.map {
+            NSRegularExpression.escapedPattern(for: $0)
+        }.joined(separator: "|") + ")"
+        let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
+        
+        // Take oldest timestamp: 8 hours ago OR lastAppearedCreatedAt
+        // if we don't have lastAppearedCreatedAt. Take 8 hours ago
+        let cutOffPoint = lastAppearedCreatedAt == 0 ? hoursAgo : min(lastAppearedCreatedAt, hoursAgo)
+        
+        // get 50 events before lastAppearedCreatedAt (or 8 hours ago, if we dont have it)
+        let frBefore = Event.fetchRequest()
+        frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        frBefore.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
+        
+        if hideReplies {
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, regex)
+        }
+        else {
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, regex)
+        }
+        
+        let newFirstEvent = try? bg().fetch(frBefore).last
+        
+        let newCutOffPoint = newFirstEvent != nil ? newFirstEvent!.created_at : cutOffPoint
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        fr.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
+        
+        if hideReplies {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
+        }
+        return fr
+    }
+    
+    
+    static func postsByRelays(_ relays: Set<RelayData>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, fetchLimit: Int = 50) -> NSFetchRequest<Event> {
+        let blockedPubkeys = blocks()
+        let regex = "(" + relays.compactMap { $0.url }.map {
+            NSRegularExpression.escapedPattern(for: $0)
+        }.joined(separator: "|") + ")"
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+
+        // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
+        fr.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
+        
+        if hideReplies {
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+        }
+        return fr
+    }
+}
+
+func notMutedWords(in text: String, mutedWords: [String]) -> Bool {
+    return mutedWords.first(where: { text.localizedCaseInsensitiveContains($0) }) == nil
+}
+
+func notMuted(_ nrPost: NRPost) -> Bool {
+    let mutedRootIds: Set<String> = CloudBlocked.mutedRootIds()
+    return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "NIL") && !mutedRootIds.contains(nrPost.replyToId ?? "NIL")
+}
+
+
+
+func threadCount(_ nrPosts: [NRPost]) -> Int {
+    nrPosts.reduce(0) { partialResult, nrPost in
+        (partialResult + nrPost.threadPostsCount) //  Data race in Nostur.NRPost.threadPostsCount.setter : Swift.Int at 0x10fbe9680 - thread 1
+    }
+}
+
+struct NewPubkeysForList {
+    var subscriptionId: String
+    var pubkeys: Set<String>
+}
+
+struct NewRelaysForList {
+    var subscriptionId: String
+    var relays: Set<RelayData>
+    var wotEnabled: Bool
+}

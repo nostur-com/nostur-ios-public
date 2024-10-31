@@ -968,10 +968,10 @@ struct Maintenance {
         if let customFeeds = try? context.fetch(fr) {
             L.maintenance.info("migrateCustomFeeds: Found \(customFeeds.count) custom feeds")
             for cf in customFeeds {
-                if let type = cf.type, type == LVM.ListType.relays.rawValue {
+                if let type = cf.type, type == ListType.relays.rawValue {
                     // Relays
                     let migratedCF = CloudFeed(context: context)
-                    migratedCF.type = LVM.ListType.relays.rawValue
+                    migratedCF.type = ListType.relays.rawValue
                     migratedCF.createdAt = cf.createdAt ?? .now
                     migratedCF.followingHashtags_ = cf.followingHashtags_
                     migratedCF.id = cf.id
@@ -983,7 +983,7 @@ struct Maintenance {
                 }
                 else { // Pubkeys
                     let migratedCF = CloudFeed(context: context)
-                    migratedCF.type = LVM.ListType.pubkeys.rawValue
+                    migratedCF.type = ListType.pubkeys.rawValue
                     migratedCF.createdAt = cf.createdAt ?? .now
                     migratedCF.followingHashtags_ = cf.followingHashtags_
                     migratedCF.id = cf.id

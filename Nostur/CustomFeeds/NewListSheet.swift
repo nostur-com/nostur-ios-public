@@ -17,7 +17,7 @@ struct NewListSheet: View {
     @State private var addContactsSheetShown = false
     @State private var selectedContacts: Set<Contact> = []
     @State private var contactSelectionVisible = false
-    @State private var feedType: LVM.ListType = .pubkeys
+    @State private var feedType: ListType = .pubkeys
     @State private var selectedRelays: Set<CloudRelay> = []
     
     private var selectedRelaysData: Set<RelayData> {
@@ -46,9 +46,9 @@ struct NewListSheet: View {
             Section(header: Text("Feed settings", comment: "Header for a feed setting")) {
                 Picker("Feed content", selection: $feedType) {
                     Text("Posts from contacts")
-                        .tag(LVM.ListType.pubkeys)
+                        .tag(ListType.pubkeys)
                     Text("Posts from relays")
-                        .tag(LVM.ListType.relays)
+                        .tag(ListType.relays)
                 }
             }
             

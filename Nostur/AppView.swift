@@ -25,7 +25,7 @@ struct AppView: View {
     // These singletons always exists during the apps lifetime
     @State private var er:ExchangeRateModel = .shared
     @State private var eventRelationsQueue:EventRelationsQueue = .shared
-    @State private var lvmManager:LVMManager = .shared
+//    @State private var lvmManager:LVMManager = .shared
     @State private var queuedFetcher:QueuedFetcher = .shared
     @State private var mp:MessageParser = .shared
     @State private var zpvq:ZapperPubkeyVerificationQueue = .shared

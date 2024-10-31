@@ -152,7 +152,7 @@ extension View {
                 BadgeDetailView(badge: badge.badge)
             }
             .nbNavigationDestination(for: CloudFeed.self) { list in
-                if list.type == LVM.ListType.relays.rawValue {
+                if list.type == ListType.relays.rawValue {
                     EditRelaysNosturList(list: list)
                 }
                 else {
