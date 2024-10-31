@@ -33,26 +33,22 @@ struct NXPostsFeed: View {
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            List {
-                ForEach(posts) { nrPost in
-                    ZStack(alignment: .leading) {
-                        PostOrThread(nrPost: nrPost)
-                            .onBecomingVisible {
-                                // SettingsStore.shared.fetchCounts should be true for below to work
-                                vm.prefetch(nrPost)
-                            }
-                    }
+            List(posts) { nrPost in
+                PostOrThread(nrPost: nrPost)
                     .id(nrPost.id)
+                    .onBecomingVisible {
+                        // SettingsStore.shared.fetchCounts should be true for below to work
+                        vm.prefetch(nrPost)
+                    }
                     .onAppear {
                         onPostAppear(nrPost)
-                    }                    
+                    }
                     .onDisappear {
                         onPostDisappear(nrPost)
                     }
                     .listRowSeparator(.hidden)
                     .listRowBackground(themes.theme.listBackground)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                }
             }
             .environment(\.defaultMinListRowHeight, 50)
             .listStyle(.plain)

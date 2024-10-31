@@ -39,20 +39,16 @@ struct Hot: View {
                         } catch { }
                     }
             case .ready:
-                List {
-                    ForEach(hotVM.hotPosts) { nrPost in
-                        ZStack(alignment: .leading) {
-                            PostOrThread(nrPost: nrPost)
-                                .onBecomingVisible {
-                                    // SettingsStore.shared.fetchCounts should be true for below to work
-                                    hotVM.prefetch(nrPost)
-                                }
+                List(hotVM.hotPosts) { nrPost in
+                    PostOrThread(nrPost: nrPost)
+                        .onBecomingVisible {
+                            // SettingsStore.shared.fetchCounts should be true for below to work
+                            hotVM.prefetch(nrPost)
                         }
-                        .id(nrPost.id)
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
-                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    }
+                    .id(nrPost.id)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(themes.theme.listBackground)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)

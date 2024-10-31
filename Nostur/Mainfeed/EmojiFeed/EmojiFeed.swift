@@ -39,20 +39,16 @@ struct EmojiFeed: View {
                         } catch { }
                     }
             case .ready:
-                List {
-                    ForEach(vm.feedPosts) { nrPost in
-                        ZStack(alignment: .leading) {
-                            PostOrThread(nrPost: nrPost)
-                                .onBecomingVisible {
-                                    // SettingsStore.shared.fetchCounts should be true for below to work
-                                    vm.prefetch(nrPost)
-                                }
-                        }
+                List(vm.feedPosts) { nrPost in
+                    PostOrThread(nrPost: nrPost)
                         .id(nrPost.id)
+                        .onBecomingVisible {
+                            // SettingsStore.shared.fetchCounts should be true for below to work
+                            vm.prefetch(nrPost)
+                        }
                         .listRowSeparator(.hidden)
                         .listRowBackground(themes.theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    }
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)

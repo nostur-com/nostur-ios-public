@@ -39,20 +39,16 @@ struct Discover: View {
                         } catch { }
                     }
             case .ready:
-                List {
-                    ForEach(discoverVM.discoverPosts) { nrPost in
-                        ZStack(alignment: .leading) {
-                            PostOrThread(nrPost: nrPost)
-                                .onBecomingVisible {
-                                    // SettingsStore.shared.fetchCounts should be true for below to work
-                                    discoverVM.prefetch(nrPost)
-                                }
+                List(discoverVM.discoverPosts) { nrPost in
+                    PostOrThread(nrPost: nrPost)
+                        .onBecomingVisible {
+                            // SettingsStore.shared.fetchCounts should be true for below to work
+                            discoverVM.prefetch(nrPost)
                         }
                         .id(nrPost.id)
                         .listRowSeparator(.hidden)
                         .listRowBackground(themes.theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    }
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)
