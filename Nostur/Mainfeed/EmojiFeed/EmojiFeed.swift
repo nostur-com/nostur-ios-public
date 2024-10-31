@@ -74,7 +74,7 @@ struct EmojiFeed: View {
             case .timeout:
                 VStack {
                     Spacer()
-                    Text("Time-out while loading hot feed")
+                    Text("Time-out while loading feed")
                     Button("Try again") { vm.reload() }
                     Spacer()
                 }
