@@ -285,8 +285,10 @@ struct ProfileOverlayCard: View {
                 .padding(.bottom, 10)
                 .offset(y: -15.0)
                 
-                NRTextDynamic("\(String(contact.about ?? ""))\n")
-                    .frame(minHeight: 75.0)
+                ScrollView {
+                    NRTextDynamic("\(String(contact.about ?? ""))\n")
+                }
+                    .frame(maxHeight: 65.0)
                 
                 FollowedBy(pubkey: contact.pubkey)
                     .frame(minHeight: 95.0)
