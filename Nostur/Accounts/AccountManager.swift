@@ -11,7 +11,7 @@ import CoreData
 
 class AccountManager {
     
-    static var shared = AccountManager()
+    static let shared = AccountManager()
     
     func generateAccount(name:String = "", about:String = "", context: NSManagedObjectContext) -> CloudAccount {
         let newKeys = NKeys.newKeys()

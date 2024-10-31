@@ -823,6 +823,7 @@
       }
     },
     "⚠️" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1232,6 +1233,7 @@
       }
     },
     "Add +7" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8331,6 +8333,9 @@
           }
         }
       }
+    },
+    "uuuh" : {
+
     },
     "Verify message signatures" : {
       "comment" : "Setting on settings screen",

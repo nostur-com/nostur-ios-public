@@ -75,7 +75,7 @@ extension UTType {
 
 struct EventsArchive: FileDocument {
 
-    static var readableContentTypes = [UTType.events]
+    static let readableContentTypes = [UTType.events]
 
     var jsonl:Data?
 
