@@ -33,29 +33,36 @@ struct NotificationsMentions: View {
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(spacing: GUTTER) {
-                    ForEach(model.mentions) { nrPost in
-                        Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                        }
-                        .id(nrPost.id)
+            
+            List {
+                ForEach (model.mentions) { nrPost in
+                    Box(nrPost: nrPost) {
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                     }
-                    VStack {
-                        if !model.mentions.isEmpty {
-                            Button("Show more") {
-                                model.showMore()
-                            }
-                            .padding(.bottom, 40)
-                            .buttonStyle(.bordered)
-                        }
-                        else {
-                            ProgressView()
-                        }
-                    }
-                    .hCentered()
+                    .id(nrPost.id)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(themes.theme.listBackground)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
+                
+                VStack {
+                    if !model.mentions.isEmpty {
+                        Button("Show more") {
+                            model.showMore()
+                        }
+                        .padding(.bottom, 40)
+                        .buttonStyle(.bordered)
+                    }
+                    else {
+                        ProgressView()
+                    }
+                }
+                .hCentered()
             }
+            .environment(\.defaultMinListRowHeight, 50)
+            .listStyle(.plain)
+            .scrollContentBackgroundHidden()
+            
             .onReceive(receiveNotification(.didTapTab)) { notification in
                 guard selectedNotificationsTab == "Mentions" else { return }
                 guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
@@ -96,15 +103,6 @@ struct NotificationsMentions: View {
             model.setup(pubkey: pubkey)
             model.load(limit: 50)
             fetchNewer()
-        }
-        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
-            bg().perform {
-                guard let backlog else { return }
-                let reqTasks = backlog.tasks(with: subscriptionIds)
-                reqTasks.forEach { task in
-                    task.process()
-                }
-            }
         }
         .simultaneousGesture(
                DragGesture().onChanged({
