@@ -180,6 +180,21 @@ struct DetailPane: View {
                                         }
                                     }
                                     // TODO make tabs identifiable, and make animation
+                                    if index < tm.tabs.count {
+                                        let closedTab = tm.tabs[index]
+                                        if closedTab.navId == LiveKitVoiceSession.shared.currentRoomATag {
+                                            LiveKitVoiceSession.shared.disconnect()
+                                        }
+                                        else if let nrLiveEvent = closedTab.nrLiveEvent, LiveKitVoiceSession.shared.currentRoomATag == nrLiveEvent.id  {
+                                            LiveKitVoiceSession.shared.disconnect()
+                                        }
+                                        else if let nrPost = closedTab.nrPost, nrPost.kind == 30311, LiveKitVoiceSession.shared.currentRoomATag == nrPost.aTag {
+                                            LiveKitVoiceSession.shared.disconnect()
+                                        }
+                                        else if let naddrPath = closedTab.naddr1, naddrPath.kind == 30311, LiveKitVoiceSession.shared.currentRoomATag == naddrPath.navId {
+                                            LiveKitVoiceSession.shared.disconnect()
+                                        }
+                                    }
                                     tm.tabs.remove(at: index)
                                 },
                                 tab: tm.tabs[index]

@@ -42,7 +42,7 @@ class LiveKitVoiceSession: ObservableObject {
     
     lazy var room = Room(delegate: self)
     
-    private var currentRoomATag: String? {
+    public var currentRoomATag: String? {
         nrLiveEvent?.id
     }
 
