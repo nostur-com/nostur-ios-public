@@ -1390,8 +1390,6 @@ extension NXColumnViewModel {
                 allIdsSeen = allIdsSeen.union(getAllPostIds(addedAndExistingPostsTruncated))
                 
                 if vmInner.isAtTop {
-//                    haltProcessing() // TODO: Needed or not?
-                    
                     let previousFirstPostId: String? = existingPosts.first?.id
                     
                     vmInner.isAtTop = false

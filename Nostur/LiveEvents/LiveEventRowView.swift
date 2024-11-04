@@ -122,12 +122,12 @@ struct LiveEventRowView: View {
                 .lineLimit(20)
         }
         
-#if DEBUG
-        Text("copy event json")
-            .onTapGesture {
-                UIPasteboard.general.string = liveEvent.eventJson
-            }
-#endif
+//#if DEBUG
+//        Text("copy event json")
+//            .onTapGesture {
+//                UIPasteboard.general.string = liveEvent.eventJson
+//            }
+//#endif
     }
     
     private var streamHasEnded: Bool {

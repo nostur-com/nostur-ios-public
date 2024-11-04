@@ -338,12 +338,12 @@ struct LiveEventDetail: View {
                     }
                 }
         }
-#if DEBUG
-        Text("copy event json")
-            .onTapGesture {
-                UIPasteboard.general.string = liveEvent.eventJson
-            }
-#endif
+//#if DEBUG
+//        Text("copy event json")
+//            .onTapGesture {
+//                UIPasteboard.general.string = liveEvent.eventJson
+//            }
+//#endif
     }
     
     @ViewBuilder

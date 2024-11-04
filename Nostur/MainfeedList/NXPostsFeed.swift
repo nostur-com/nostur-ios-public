@@ -76,11 +76,11 @@ struct NXPostsFeed: View {
             }
             .scrollContentBackgroundHidden()
             .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
-                L.og.debug("☘️☘️ \(vm.config?.id ?? "?") NXPostsFeed onChange(of: vm.scrollToIndex) \(scrollToIndex?.description ?? "?")")
+                guard let scrollToIndex else { return }
+                L.og.debug("☘️☘️ \(vm.config?.id ?? "?") NXPostsFeed onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
                 
                 if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
                     if let collectionView,
-                       let scrollToIndex,
                        let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
                        rows > scrollToIndex
                     {
@@ -93,9 +93,7 @@ struct NXPostsFeed: View {
                     }
                 }
                 else { // iOS 15 UITableView
-                    
                     if let tableView,
-                       let scrollToIndex,
                        let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
                        rows > scrollToIndex
                     {
