@@ -16,10 +16,10 @@ struct NXPostsFeed: View {
     private let posts: [NRPost]
     @ObservedObject private var vmInner: NXColumnViewModelInner
     
-    @State private var collectionView: UICollectionView?
+    @Weak private var collectionView: UICollectionView?
     @State private var collectionPrefetcher: NXPostsFeedPrefetcher?
     
-    @State private var tableView: UITableView?
+    @Weak private var tableView: UITableView?
     @State private var tablePrefetcher: NXPostsFeedTablePrefetcher?
     
     init(vm: NXColumnViewModel, posts: [NRPost]) {
