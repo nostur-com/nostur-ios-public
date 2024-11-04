@@ -785,7 +785,7 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
@@ -1966,7 +1966,7 @@ extension Event {
         return fr
     }
     
-    static func postsByRelays(_ relays: Set<RelayData>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, fetchLimit: Int = 50) -> NSFetchRequest<Event> {
+    static func postsByRelays(_ relays: Set<RelayData>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, fetchLimit: Int = 50, force: Bool = false) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -2002,10 +2002,14 @@ extension Event {
         fr.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
+            fr.predicate = !force
+                ? NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
+                : NSPredicate(format: "kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", QUERY_FOLLOWING_KINDS, regex)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
+            fr.predicate = !force
+                ? NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
+                : NSPredicate(format: "kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", QUERY_FOLLOWING_KINDS, regex)
         }
         return fr
     }

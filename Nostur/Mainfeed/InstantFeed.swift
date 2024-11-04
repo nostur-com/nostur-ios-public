@@ -192,12 +192,13 @@ class InstantFeed {
                 } timeoutCommand: { [weak self] taskId in
                     guard let self else { return }
                     self.isRunning = false
-                    let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0), fetchLimit: 500)
+                    let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0), fetchLimit: 500, force: true)
                     if let events = try? bg().fetch(fr), !events.isEmpty {
+                        L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from globalish relays using \(relayCount) relays. (1) ")
                         self.events = events
                     }
                     else {
-                        L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from globalish relays using \(relayCount) relays. ")
+                        L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from globalish relays using \(relayCount) relays. (2)")
                         self.events = []
                     }
                 }
