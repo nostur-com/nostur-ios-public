@@ -1026,6 +1026,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     @MainActor
     public func undelete() {
         self.objectWillChange.send()
+        self.postRowDeletableAttributes.objectWillChange.send()
         self.postRowDeletableAttributes.deletedById = nil
     }
     
