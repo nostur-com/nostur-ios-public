@@ -24,7 +24,7 @@ class CoreDataRelationFixer {
     
     private init() {
         saveRelationsSubject
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
             .sink { [unowned self] in
                 self._saveRelations()
             }

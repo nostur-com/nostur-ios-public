@@ -816,19 +816,16 @@ extension Event {
             let newRelays = relays.split(separator: " ").map { String($0) }
             let uniqueRelays = Set(existingRelays + newRelays)
             if uniqueRelays.count > existingRelays.count {
-                event.relays = uniqueRelays.joined(separator: " ")
-//                    event.relaysUpdated.send(event.relays)
+                
+                CoreDataRelationFixer.shared.addTask({
+                    event.relays = uniqueRelays.joined(separator: " ")
+                })
+                
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(
                     id: event.id,
                     relaysCount: event.relays.split(separator: " ").count,
                     relays: event.relays
                 ))
-                do {
-                    try context.save()
-                }
-                catch {
-                    L.og.error("🔴🔴 error updateRelays \(error)")
-                }
             }
         }
         else if let event = try? Event.fetchEvent(id: id, context: context) {
@@ -837,18 +834,16 @@ extension Event {
             let newRelays = relays.split(separator: " ").map { String($0) }
             let uniqueRelays = Set(existingRelays + newRelays)
             if uniqueRelays.count > existingRelays.count {
-                event.relays = uniqueRelays.joined(separator: " ")
+                
+                CoreDataRelationFixer.shared.addTask({
+                    event.relays = uniqueRelays.joined(separator: " ")
+                })
+                
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(
                     id: event.id,
                     relaysCount: event.relays.split(separator: " ").count,
                     relays: event.relays
                 ))
-                do {
-                    try context.save()
-                }
-                catch {
-                    L.og.error("🔴🔴 error updateRelays \(error)")
-                }
             }
         }
     }
