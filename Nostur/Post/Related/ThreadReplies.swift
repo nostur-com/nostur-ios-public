@@ -28,9 +28,14 @@ struct ThreadReplies: View {
                 if !nrPost.groupedRepliesNotWoT.isEmpty {
                     Divider()
                     if WOT_FILTER_ENABLED() && !showNotWoT {
-                        Button("Show more") {
+                        Button {
                             showNotWoT = true
+                        } label: {
+                           Text("Show more")
+                                .padding(10)
+                                .contentShape(Rectangle())
                         }
+                        .padding(.bottom, 10)
                     }
                     if showNotWoT {
                         ForEach(nrPost.groupedRepliesNotWoT) { reply in
