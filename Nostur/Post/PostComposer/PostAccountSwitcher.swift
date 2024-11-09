@@ -10,7 +10,7 @@ import SwiftUI
 // TODO: .fanOutDirection doesn't work well yet so only use .bottom for now
 struct InlineAccountSwitcher: View, Equatable {
     static func == (lhs: InlineAccountSwitcher, rhs: InlineAccountSwitcher) -> Bool {
-        lhs.activeAccount == rhs.activeAccount //&& lhs.accounts.count == rhs.accounts.count
+        lhs.activeAccount == rhs.activeAccount && lhs.expanded == rhs.expanded //&& lhs.accounts.count == rhs.accounts.count
     }
     
     public var activeAccount: CloudAccount
