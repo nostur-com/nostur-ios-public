@@ -19,7 +19,8 @@ struct EmbedById: View {
         Group {
             switch vm.state {
             case .initializing, .loading, .altLoading:
-                ProgressView()
+                CenteredProgressView()
+                    .frame(height: 250)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .onAppear(perform: load)
