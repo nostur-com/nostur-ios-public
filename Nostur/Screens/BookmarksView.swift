@@ -45,7 +45,9 @@ struct BookmarksView: View {
         ScrollViewReader { proxy in
             if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
                 List(filteredBookmarks) { bookmark in
-                    LazyBookmark(bookmark, events: events)
+                    ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯
+                        LazyBookmark(bookmark, events: events)
+                    }
                         .id(bookmark.objectID)
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive, action: {
@@ -203,6 +205,7 @@ struct LazyBookmark: View {
             switch viewState {
             case .loading:
                 ProgressView()
+                    .frame(height: 175)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .task {
