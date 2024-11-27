@@ -89,8 +89,9 @@ class NRTextParser { // TEXT things
                 attributes,
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
-            
+#if DEBUG
             L.og.error("NRTextParser: \(error)")
+#endif
             let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             return a
         }
