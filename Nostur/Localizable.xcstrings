@@ -2139,9 +2139,6 @@
         }
       }
     },
-    "Configure column" : {
-
-    },
     "Configure contacts..." : {
       "localizations" : {
         "nl" : {
@@ -2322,9 +2319,6 @@
           }
         }
       }
-    },
-    "Contacts" : {
-
     },
     "Contacts:" : {
       "localizations" : {
@@ -3134,9 +3128,6 @@
         }
       }
     },
-    "Enable WoT filter" : {
-
-    },
     "End test" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3742,9 +3733,6 @@
           }
         }
       }
-    },
-    "Hashtags" : {
-
     },
     "Hello, World! Hello World! Hello World! Hello World! Hello World! Hello World" : {
       "localizations" : {
@@ -6269,9 +6257,6 @@
         }
       }
     },
-    "Relay Autopilot will broadcast to following relays" : {
-
-    },
     "Relay connection stats" : {
       "localizations" : {
         "nl" : {
@@ -8132,9 +8117,6 @@
           }
         }
       }
-    },
-    "Type" : {
-
     },
     "Type your message..." : {
       "comment" : "Placeholder for input field for new direct message",
