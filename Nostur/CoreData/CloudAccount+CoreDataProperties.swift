@@ -38,7 +38,9 @@ extension CloudAccount {
     @NSManaged public var lud16_: String?
     @NSManaged public var mutedRootIds: String?
     @NSManaged public var name_: String?
-    @NSManaged public var ncRelay_: String?
+    @NSManaged public var ncRelay_: String? // bunker relay
+    @NSManaged public var ncRemoteSignerPubkey_: String? // used to be user pubkey, but can be different for frost setup
+    @NSManaged public var ncClientPubkey_: String? // key used to store private key in nc keychain (used to be .publicKey but can be different because pubkey can be updated by get_public_key)
     @NSManaged public var nip05_: String?
     @NSManaged public var picture_: String?
     @NSManaged public var publicKey_: String?
@@ -173,6 +175,23 @@ extension CloudAccount {
     public var publicKey: String {
         get { publicKey_ ?? "" }
         set { publicKey_ = newValue }
+    }
+    
+    public var ncRemoteSignerPubkey: String {
+        get { ncRemoteSignerPubkey_ ?? publicKey }
+        set { ncRemoteSignerPubkey_ = newValue }
+    }
+    
+    public var ncClientPubkey: String {
+        get {
+            if publicKey == ncRemoteSignerPubkey {
+                return publicKey
+            }
+            else {
+                return ncClientPubkey_ ?? ""
+            }
+        }
+        set { ncClientPubkey_ = newValue }
     }
     
     public var mostRecentItemDate:Int64 { // Used for duplicate accounts in iCloud, to resolve which one to keep (most recent)

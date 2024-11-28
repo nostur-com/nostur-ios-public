@@ -697,6 +697,7 @@
 		1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F313DED296980D8004C7366 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Nostur/Info.plist; sourceTree = "<group>"; };
+		1F32A7B12CF0CDA7003290BF /* NosturCloud 9.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 9.xcdatamodel"; sourceTree = "<group>"; };
 		1F33096029891C4800D4D8CF /* ProfileLikesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileLikesView.swift; sourceTree = "<group>"; };
 		1F3309622989598600D4D8CF /* NosturRootMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturRootMenuView.swift; sourceTree = "<group>"; };
 		1F3309822989819700D4D8CF /* Maintenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Maintenance.swift; sourceTree = "<group>"; };
@@ -3659,6 +3660,7 @@
 		1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				1F32A7B12CF0CDA7003290BF /* NosturCloud 9.xcdatamodel */,
 				1F7E7F632C884B54004DE888 /* NosturCloud 8.xcdatamodel */,
 				1FB7FF812C5FCC0C00EAAD07 /* NosturCloud 7.xcdatamodel */,
 				1F7B0B3C2BE40A9B00182FB3 /* NosturCloud 6.xcdatamodel */,
@@ -3668,7 +3670,7 @@
 				1F37C8392B8B71F700B0B78B /* NosturCloud 2.xcdatamodel */,
 				1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */,
 			);
-			currentVersion = 1F7E7F632C884B54004DE888 /* NosturCloud 8.xcdatamodel */;
+			currentVersion = 1F32A7B12CF0CDA7003290BF /* NosturCloud 9.xcdatamodel */;
 			path = NosturCloud.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

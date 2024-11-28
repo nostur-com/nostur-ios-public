@@ -30,7 +30,7 @@ class NIP46SecretManager {
             .synchronizable(true)
         do {
             let privateKeyHex = try keychain
-                .get(account.publicKey)
+                .get(account.ncClientPubkey) 
             return privateKeyHex
         }
         catch Status.itemNotFound {
