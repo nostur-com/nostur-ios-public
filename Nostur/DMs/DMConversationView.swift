@@ -126,7 +126,7 @@ struct DMConversationView: View {
                     List {
                         ForEach(messagesByDay.keys.sorted(by: { $0 > $1 }), id:\.self) { date in
                             if let messages = messagesByDay[date] {
-                                LazyVStack {
+                                VStack { // Used to be LazyVStack, but now crashes for unknown reasons if not VStack
                                     Text(dateHeaderFormatter.string(from: date))
                                         .font(.caption).foregroundColor(.gray)
                                         .padding(.top, 15)
