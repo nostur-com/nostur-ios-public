@@ -16,10 +16,9 @@ class NSecBunkerManager: ObservableObject {
     
     @Published var state: STATE = .disconnected
     @Published var error = ""
-    @Published var isSelfHostedNsecBunker = false
     @Published var ncRelay = ""
     
-    var invalidSelfHostedAddress: Bool {
+    var invalidRelayAddress: Bool {
         if let url = URL(string: ncRelay) {
             if url.absoluteString.lowercased().prefix(6) == "wss://" { return false }
             if url.absoluteString.lowercased().prefix(5) == "ws://" { return false }
@@ -176,17 +175,8 @@ class NSecBunkerManager: ObservableObject {
     }
     
     @MainActor
-    private func connectToSelfHostedNsecbunker(sessionPublicKey: String, relay:String) {
+    private func connectToBunker(sessionPublicKey: String, relay: String) {
         ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: relay) { conn in
-            if !conn.isConnected {
-                conn.connect()
-            }
-        }
-    }
-    
-    @MainActor
-    private func connectToHardcodedNsecbunker(sessionPublicKey: String) {
-        ConnectionPool.shared.addNCConnection(connectionId: sessionPublicKey, url: "wss://relay.nsecbunker.com") { conn in
             if !conn.isConnected {
                 conn.connect()
             }
@@ -200,12 +190,7 @@ class NSecBunkerManager: ObservableObject {
         // connect to NC relay, the session public key is used as id
         if account.ncRelay != "" {
             Task { @MainActor in
-                self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: account.ncRelay)
-            }
-        }
-        else {
-            Task { @MainActor in
-                self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+                self.connectToBunker(sessionPublicKey: keys.publicKeyHex(), relay: account.ncRelay)
             }
         }
     }
@@ -225,16 +210,12 @@ class NSecBunkerManager: ObservableObject {
         guard let sessionPrivateKey = account.privateKey else { state = .error; return }
         guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { state = .error; return }
         
-        // connect to NC relay, the session public key is used as id
-        if isSelfHostedNsecBunker {
-            Task { @MainActor in
-                self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: self.ncRelay)
-            }
+        // connect to NC relay, the ncRemoteSignerPubkey is used as id
+        Task { @MainActor in
+            self.connectToBunker(sessionPublicKey: ncRemoteSignerPubkey, relay: self.ncRelay)
+        }
         }
         else {
-            Task { @MainActor in
-                self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
-            }
         }
         
         // the connect request, params are our session public key and the bunker provided redemption token
