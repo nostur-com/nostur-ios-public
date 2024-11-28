@@ -2139,6 +2139,9 @@
         }
       }
     },
+    "Configure column" : {
+
+    },
     "Configure contacts..." : {
       "localizations" : {
         "nl" : {
@@ -2320,6 +2323,9 @@
         }
       }
     },
+    "Contacts" : {
+
+    },
     "Contacts:" : {
       "localizations" : {
         "nl" : {
@@ -2360,9 +2366,6 @@
           }
         }
       }
-    },
-    "copy event json" : {
-
     },
     "Copy npub" : {
       "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
@@ -2643,6 +2646,7 @@
       }
     },
     "Custom relay for signer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3129,6 +3133,9 @@
           }
         }
       }
+    },
+    "Enable WoT filter" : {
+
     },
     "End test" : {
       "extractionState" : "stale",
@@ -3735,6 +3742,9 @@
           }
         }
       }
+    },
+    "Hashtags" : {
+
     },
     "Hello, World! Hello World! Hello World! Hello World! Hello World! Hello World" : {
       "localizations" : {
@@ -6259,6 +6269,9 @@
         }
       }
     },
+    "Relay Autopilot will broadcast to following relays" : {
+
+    },
     "Relay connection stats" : {
       "localizations" : {
         "nl" : {
@@ -8119,6 +8132,9 @@
           }
         }
       }
+    },
+    "Type" : {
+
     },
     "Type your message..." : {
       "comment" : "Placeholder for input field for new direct message",

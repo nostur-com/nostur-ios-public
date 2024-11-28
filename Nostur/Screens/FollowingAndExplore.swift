@@ -412,7 +412,7 @@ struct FollowingAndExplore: View {
             
             // Check for existing ListState
             let fr = ListState.fetchRequest()
-            fr.predicate = NSPredicate(format: "listId = %@ AND pubkey = %@", "Following", la.account.publicKey)
+            fr.predicate = NSPredicate(format: "listId = %@ AND pubkey = %@", "Following", account.publicKey)
             if let followingListState = try? context.fetch(fr).first {
                 newFollowingFeed.repliesEnabled = !followingListState.hideReplies
             }

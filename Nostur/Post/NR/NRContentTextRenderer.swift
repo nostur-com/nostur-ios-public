@@ -133,7 +133,7 @@ struct NRContentTextRendererInner: View {
                             }
                         }
                     }
-                    .transaction { t in t.animation = nil } // <-- needed or not?
+//                    .transaction { t in t.animation = nil } // <-- needed or not?
 //                    .frame(height: textHeight, alignment: .topLeading)
 //                    .fixedSize(horizontal: false, vertical: true) // needed or text height stays at inital textHeight (90)
                     .onChange(of: availableWidth) { newWidth in
@@ -173,7 +173,7 @@ struct NRContentTextRendererInner: View {
                             }
                         }
                     }
-                    .transaction { t in t.animation = nil }
+//                    .transaction { t in t.animation = nil }
             }
         }
     }
