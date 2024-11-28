@@ -48,6 +48,31 @@ struct AddExistingAccountSheet: View {
                             .background(grayBackground)
                             .cornerRadius(5.0)
                             .padding(.bottom, 20)
+                            .disabled(bunkerManager.state == .connecting)
+                            .onChange(of: key) { newKey in
+                                if isNsecbunkerKey {
+                                    if let bunkerURL = parseBunkerUrl(key)?.relay {
+                                        bunkerManager.ncRelay = bunkerURL
+                                    }
+                                    else {
+                                        bunkerManager.ncRelay = ""
+                                    }
+                                }
+                                else {
+                                    bunkerManager.ncRelay = ""
+                                }
+                            }
+                    }
+                    
+                    if isNsecbunkerKey {
+                        TextField(text: $bunkerManager.ncRelay) {
+                            Text("Enter relay address")
+                        }
+                        .keyboardType(.URL)
+                        .padding()
+                        .background(grayBackground)
+                        .cornerRadius(5.0)
+                        .padding(.bottom, 10)
                     }
                     
 //                    Text("Keys are stored on your device in iOS keychain", comment:"Informational message about key storage on Add Existing Account screen").foregroundColor(.gray)
@@ -60,10 +85,6 @@ struct AddExistingAccountSheet: View {
                                     invalidKey = true
                                     key = ""
                                     return
-                                }
-                                if let ncRelay = bunkerURL.relay {
-                                    bunkerManager.ncRelay = ncRelay
-                                    bunkerManager.isSelfHostedNsecBunker = true
                                 }
                                 addExistingBunkerAccount(pubkey: bunkerURL.pubkey, token: bunkerURL.secret)
                             }
@@ -99,7 +120,8 @@ struct AddExistingAccountSheet: View {
                         
                     } label: {
                         if bunkerManager.state == .connecting {
-                            ProgressView()
+                            CenteredProgressView()
+                                .frame(width: 20, height: 20)
                                 .foregroundColor(.white)
                                 .padding(.vertical, 10)
                         }
@@ -116,24 +138,8 @@ struct AddExistingAccountSheet: View {
                     }
                     .frame(maxWidth: 300)
                     .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
-                    .disabled(bunkerManager.state == .connecting || (bunkerManager.isSelfHostedNsecBunker && bunkerManager.invalidSelfHostedAddress))
-                    
-                    if isNsecbunkerKey && parseBunkerUrl(key)?.relay == nil {
-                        
-                        Toggle(isOn: $bunkerManager.isSelfHostedNsecBunker) {
-                            Text("Custom relay for signer")
-                        }.padding()
-                        if bunkerManager.isSelfHostedNsecBunker {
-                            TextField(text: $bunkerManager.ncRelay) {
-                                Text("Enter relay address")
-                            }
-                            .keyboardType(.URL)
-                            .padding()
-                            .background(grayBackground)
-                            .cornerRadius(5.0)
-                            .padding(.bottom, 10)
-                        }
-                    }
+                    .disabled(bunkerManager.state == .connecting || bunkerManager.invalidRelayAddress)
+                    .opacity(bunkerManager.state == .connecting || bunkerManager.invalidRelayAddress ? 0.5 : 1.0)
                     
                     if (offerTryOut) {
                         NavigationLink {
@@ -164,9 +170,7 @@ struct AddExistingAccountSheet: View {
             .onChange(of: bunkerManager.state) { bunkerState in
                 if bunkerState == .connected {
                     guard let account = bunkerManager.account else { return }
-                    if bunkerManager.isSelfHostedNsecBunker {
-                        account.ncRelay = bunkerManager.ncRelay
-                    }
+                    account.ncRelay = bunkerManager.ncRelay
                     
                     let pubkey = account.publicKey
                     
@@ -216,6 +220,11 @@ struct AddExistingAccountSheet: View {
                         NIP46SecretManager.shared.deleteSecret(account: account)
                         viewContext.delete(account)
                     }
+                }
+            }
+            .onAppear {
+                if bunkerManager.state == .error {
+                    bunkerManager.state = .disconnected
                 }
             }
     }
@@ -340,7 +349,7 @@ struct AddExistingAccountSheet: View {
         }
     }
     
-    private func addExistingBunkerAccount(pubkey: String, token: String) {
+    private func addExistingBunkerAccount(pubkey: String, token: String? = nil) {
         if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
             existingAccount.flagsSet.insert("full_account")
             bunkerManager.connect(existingAccount, token: token)
@@ -350,9 +359,15 @@ struct AddExistingAccountSheet: View {
         let account = CloudAccount(context: viewContext)
         account.flags = "full_account"
         account.createdAt = Date()
-        account.publicKey = pubkey
-        bunkerManager.connect(account, token: token)
         
+        // NIP-46 user-pubkey. This one can change after we call get_public_key on bunker
+        account.publicKey = pubkey
+        
+        // NIP-46 remote-signer-pubkey
+        account.ncRemoteSignerPubkey_ = pubkey
+        account.ncRelay = bunkerManager.ncRelay
+        bunkerManager.connect(account, token: token)
+ 
         NRState.shared.changeAccount(account)
         NRState.shared.onBoardingIsShown = false
         NRState.shared.loadAccountsState()
