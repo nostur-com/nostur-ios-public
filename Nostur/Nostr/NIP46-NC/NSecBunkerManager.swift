@@ -66,12 +66,16 @@ class NSecBunkerManager: ObservableObject {
                         return
                     }
                     guard let result = ncResponse.result else {
+#if DEBUG
                         L.og.error("🏰 NSECBUNKER Unknown or missing result \(decrypted) ")
+#endif
                         return
                     }
                     
                     guard let nEvent = try? decoder.decode(NEvent.self, from: result.data(using: .utf8)!) else {
+#if DEBUG
                         L.og.error("🏰 NSECBUNKER error decoding signed result event \(decrypted)")
+#endif
                         return
                     }
                     command(nEvent)
@@ -82,27 +86,34 @@ class NSecBunkerManager: ObservableObject {
                 // CONNECT RESPONSE
                 if ncResponse.id.prefix(8) == "connect-" {
                     guard let result = ncResponse.result else {
+#if DEBUG
                         L.og.error("🏰 ncMessage does not have result, \(event.eventJson()) - \(decrypted)")
+#endif
                         return
                     }
                     if result == "auth_url" { // ugh need useless OAuth like flow now
                         DispatchQueue.main.async {
                             self.state = .connected
-                            L.og.info("🏰 NSECBUNKER connection needs auth_url oauth type handling ")
-//                            L.og.info("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
+                            L.og.debug("🏰 NSECBUNKER connection needs auth_url oauth type handling ")
+#if DEBUG
+                            L.og.info("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
+#endif
+                            self.getPublicKey()
                         }
                     }                   
                     else if result == "ack" {
                         DispatchQueue.main.async {
                             self.state = .connected
-                            L.og.info("🏰 NSECBUNKER connection success ")
+                            L.og.debug("🏰 NSECBUNKER connection success ")
                         }
                     }
                     else {
                         DispatchQueue.main.async {
                             self.error = "Unable to connect"
                             self.state = .error
-                            L.og.error("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
+#if DEBUG
+                                L.og.error("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
+#endif
                         }
                     }
                 }
@@ -110,13 +121,18 @@ class NSecBunkerManager: ObservableObject {
                 // DESCRIBE RESPONSE - Using this to check connectivity
                 else if ncResponse.id.prefix(9) == "describe-" {
                     guard let result = ncResponse.result else {
+#if DEBUG
                         L.og.error("🏰 ncMessage does not have result, \(event.eventJson()) - \(decrypted)")
+#endif
                         return
                     }
                     if result.contains("\"describe\"") { // should be something like "[\"connect\",\"sign_event\",\"nip04_encrypt\",\"nip04_decrypt\",\"get_public_key\",\"describe\",\"publish_event\"]"
                         DispatchQueue.main.async {
                             self.state = .connected
-                            L.og.info("🏰 NSECBUNKER connection success ")
+                            L.og.debug("🏰 NSECBUNKER connection success ")
+#if DEBUG
+                            L.og.debug("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
+#endif
                         }
                     }
                 }
@@ -124,7 +140,9 @@ class NSecBunkerManager: ObservableObject {
                 // GET_PUBLIC_KEY RESPONSE - Using this to check connectivity as alternative for when "describe" is not available (nak bunker)
                 else if ncResponse.id.prefix(15) == "get_public_key-" {
                     guard let result = ncResponse.result else {
+#if DEBUG
                         L.og.error("🏰 ncMessage does not have result, \(event.eventJson()) - \(decrypted)")
+#endif
                         return
                     }
                     if result.count == 64 { // should be 64 char public key
@@ -133,6 +151,9 @@ class NSecBunkerManager: ObservableObject {
                             L.og.info("🏰 NSECBUNKER connection success ")
                         }
                     }
+#if DEBUG
+                            L.og.debug("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
+#endif
                 }
                 
                 // SIGNED EVENT RESPONSE
@@ -143,7 +164,9 @@ class NSecBunkerManager: ObservableObject {
                         return
                     }
                     guard let result = ncResponse.result else {
+#if DEBUG
                         L.og.error("🏰 NSECBUNKER Unknown or missing result \(decrypted) ")
+#endif
                         return
                     }
                     self.handleSignedEvent(eventString:result)
@@ -226,7 +249,9 @@ class NSecBunkerManager: ObservableObject {
         ncReq.kind = .ncMessage
         ncReq.tags.append(NostrTag(["p", bunkerManagedPublicKey]))
         
+#if DEBUG
         L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
+#endif
         
         guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: bunkerManagedPublicKey, content: ncReq.content) else {
             L.og.error("🏰 🔴🔴 Could not encrypt content for ncMessage")
@@ -288,6 +313,9 @@ class NSecBunkerManager: ObservableObject {
         var ncReq = NEvent(content: requestJsonString)
         ncReq.kind = .ncMessage
         ncReq.tags.append(NostrTag(["p", account.publicKey]))
+#if DEBUG
+        L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
+#endif
         
         guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: account.publicKey, content: ncReq.content) else {
             L.og.error("🏰🔴🔴 Could not encrypt content")
@@ -343,6 +371,10 @@ class NSecBunkerManager: ObservableObject {
         ncReq.tags.append(NostrTag(["p", account.publicKey]))
         
         guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: account.publicKey, content: ncReq.content) else {
+#if DEBUG
+        L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
+#endif
+        
             L.og.error("🏰🔴🔴 Could not encrypt content")
             return
         }
@@ -386,6 +418,9 @@ class NSecBunkerManager: ObservableObject {
         var ncReq = NEvent(content: requestJsonString)
         ncReq.kind = .ncMessage
         ncReq.tags.append(NostrTag(["p", account.publicKey]))
+#if DEBUG
+        L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
+#endif
         
         guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: account.publicKey, content: ncReq.content) else {
             L.og.error("🏰🔴🔴 Could not encrypt content")
