@@ -26,6 +26,14 @@ struct NoteTextRenderView: View {
         }
         else {
             switch nrPost.kind {
+            case 20:
+                if let imageUrl = nrPost.imageUrls.first {
+                    PictureEventView(imageUrl: imageUrl, autoload: true, theme: theme)
+                        .padding(.vertical, 10)
+                }
+                else {
+                    EmptyView()
+                }
             case 9802:
                 HighlightRenderer(nrPost: nrPost, theme: theme)
                 

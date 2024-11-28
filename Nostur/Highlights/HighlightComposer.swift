@@ -181,7 +181,7 @@ struct HighlightComposer: View {
                 savedEvent.cancellationId = cancellationId
                 DataProvider.shared().bgSave()
                 dismiss()
-                if ([1,6,9802,30023,34235].contains(savedEvent.kind)) {
+                if ([1,6,20,9802,30023,34235].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         sendNotification(.newPostSaved, savedEvent)
                     }

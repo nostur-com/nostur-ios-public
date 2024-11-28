@@ -122,7 +122,7 @@ struct NotificationsMentions: View {
                 bg().perform {
                     req(RM.getMentions(
                         pubkeys: [pubkey],
-                        kinds: [1,9802,30023,34235],
+                        kinds: [1,20,9802,30023,34235],
                         limit: 500,
                         subscriptionId: taskId,
                         since: NTimestamp(timestamp: Int(model.mostRecentMentionCreatedAt))

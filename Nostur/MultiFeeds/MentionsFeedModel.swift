@@ -55,7 +55,7 @@ class MentionsFeedModel: ObservableObject {
             guard let self else { return }
             let r1 = Event.fetchRequest()
             r1.predicate = NSPredicate(
-                format: "NOT pubkey IN %@ AND kind IN {1,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+                format: "NOT pubkey IN %@ AND kind IN {1,20,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                 (NRState.shared.blockedPubkeys + [pubkey]),
                 serializedP(pubkey),
                 NRState.shared.mutedRootIds,

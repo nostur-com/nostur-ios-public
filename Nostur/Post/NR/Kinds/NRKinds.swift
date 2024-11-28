@@ -16,25 +16,43 @@ struct KindFileMetadata {
 }
 
 // We expect to show these properly
-let SUPPORTED_VIEW_KINDS: Set<Int64> = [1,6,9802,30023,99999]
+let SUPPORTED_VIEW_KINDS: Set<Int64> = [1,6,20,9802,30023,99999,20]
 
 // We don't expect to show these, but anyone can quote or reply to any event so we still need to show something
 let KNOWN_VIEW_KINDS: Set<Int64> = [0,3,4,5,7,1984,9734,9735,30009,8,30008]
 
+// Need to clean up, AnyKind is only in Kind1Both?? shouldn't be there
 struct AnyKind: View {
     private var nrPost: NRPost
     private var hideFooter: Bool = false
+    private var autoload: Bool = false
+    private var imageWidth: CGFloat
     private var theme: Theme
     
-    init(_ nrPost: NRPost, hideFooter: Bool = false, theme: Theme) {
+    @State private var didStart = false
+    
+    init(_ nrPost: NRPost, hideFooter: Bool = false, autoload: Bool = false, imageWidth: CGFloat, theme: Theme) {
         self.nrPost = nrPost
         self.hideFooter = hideFooter
+        self.autoload = autoload
+        self.imageWidth = imageWidth
         self.theme = theme
     }
     
     var body: some View {
         if SUPPORTED_VIEW_KINDS.contains(nrPost.kind) {
             switch nrPost.kind {
+                case 20:
+                    if let imageUrl = nrPost.imageUrls.first {
+                        VStack {
+                            PictureEventView(imageUrl: imageUrl, autoload: autoload, theme: theme, availableWidth: imageWidth)
+                            ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: imageWidth, forceAutoload: autoload, theme: theme, didStart: $didStart)
+                                .padding(.vertical, 10)
+                        }
+                    }
+                    else {
+                        EmptyView()
+                    }
                 case 99999:
                     let title = nrPost.eventTitle ?? "Untitled"
                     if let eventUrl = nrPost.eventUrl {
@@ -43,14 +61,14 @@ struct AnyKind: View {
                     }
                     else {
                         EmptyView()
-                }
+                    }
 //                case 9735: TODO: ....
-//                    ZapReceipt(sats: <#T##Double#>, receiptPubkey: <#T##String#>, fromPubkey: <#T##String#>, from: <#T##Event#>)
+//                    ZapReceipt(sats: , receiptPubkey: , fromPubkey: , from: )
                 default:
                     EmptyView()
             }
         }
-        if KNOWN_VIEW_KINDS.contains(nrPost.kind) {
+        else if KNOWN_VIEW_KINDS.contains(nrPost.kind) {
             KnownKindView(nrPost: nrPost, hideFooter: hideFooter, theme: theme)
                 .padding(.vertical, 10)
         }
@@ -61,7 +79,7 @@ struct AnyKind: View {
     }
 }
 
-
+// Kinds we know and need but don't really render
 struct KnownKindView: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @EnvironmentObject private var dim: DIMENSIONS

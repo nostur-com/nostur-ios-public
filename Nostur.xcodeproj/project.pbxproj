@@ -188,6 +188,7 @@
 		1F6629122B0D429D00508988 /* RelayConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629112B0D429D00508988 /* RelayConnection.swift */; };
 		1F6629142B0D49BD00508988 /* RelayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629132B0D49BD00508988 /* RelayData.swift */; };
 		1F6629182B0E672500508988 /* Kind10002ConfigurationWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6629172B0E672500508988 /* Kind10002ConfigurationWizard.swift */; };
+		1F683A072CF8C20E000D17F4 /* PictureEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F683A062CF8C209000D17F4 /* PictureEvent.swift */; };
 		1F685B522A0D18D2009EEC9B /* NRContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B512A0D18D2009EEC9B /* NRContact.swift */; };
 		1F685B562A0D6E96009EEC9B /* NRReplyingToBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B552A0D6E96009EEC9B /* NRReplyingToBuilder.swift */; };
 		1F685B582A0D7800009EEC9B /* QueuedFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B572A0D7800009EEC9B /* QueuedFetcher.swift */; };
@@ -778,6 +779,7 @@
 		1F6629112B0D429D00508988 /* RelayConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayConnection.swift; sourceTree = "<group>"; };
 		1F6629132B0D49BD00508988 /* RelayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayData.swift; sourceTree = "<group>"; };
 		1F6629172B0E672500508988 /* Kind10002ConfigurationWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind10002ConfigurationWizard.swift; sourceTree = "<group>"; };
+		1F683A062CF8C209000D17F4 /* PictureEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureEvent.swift; sourceTree = "<group>"; };
 		1F685B512A0D18D2009EEC9B /* NRContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContact.swift; sourceTree = "<group>"; };
 		1F685B552A0D6E96009EEC9B /* NRReplyingToBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRReplyingToBuilder.swift; sourceTree = "<group>"; };
 		1F685B572A0D7800009EEC9B /* QueuedFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueuedFetcher.swift; sourceTree = "<group>"; };
@@ -1659,6 +1661,14 @@
 			path = Discover;
 			sourceTree = "<group>";
 		};
+		1F683A052CF8C1FE000D17F4 /* 20-Picture */ = {
+			isa = PBXGroup;
+			children = (
+				1F683A062CF8C209000D17F4 /* PictureEvent.swift */,
+			);
+			path = "20-Picture";
+			sourceTree = "<group>";
+		};
 		1F685B502A0D1886009EEC9B /* NR */ = {
 			isa = PBXGroup;
 			children = (
@@ -1808,6 +1818,7 @@
 		1F8B6A722A20C63E0060EDB3 /* Kinds */ = {
 			isa = PBXGroup;
 			children = (
+				1F683A052CF8C1FE000D17F4 /* 20-Picture */,
 				1F55FF992B44489C00AC6103 /* NIP-89 */,
 				1F747A112B3F21B30020F4A5 /* 34235-VideoEvent */,
 				1F8B6A732A20C6510060EDB3 /* NRKinds.swift */,
@@ -2527,6 +2538,7 @@
 				1F7C4CAF2AB1DDD400145D83 /* Repost.swift in Sources */,
 				1F3E135B29C8B21200D076EA /* Contact+PrivateNotes.swift in Sources */,
 				1FA0599D2A7414320039643C /* RelayMessage.swift in Sources */,
+				1F683A072CF8C20E000D17F4 /* PictureEvent.swift in Sources */,
 				1F49A5502CCAE8520056B505 /* CoreDataRelationFixer.swift in Sources */,
 				1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */,
 				1F33EC3929B6849800615FB9 /* Centered.swift in Sources */,

@@ -16,7 +16,7 @@ class NotificationsViewModel: ObservableObject {
         set { UserDefaults.standard.setValue(newValue, forKey: "last_local_notification_timestamp") }
     }
     
-    static let UNREAD_KINDS: Set<Int> = Set([1,4,6,7,9735,9802,30023,34235]) // posts, dms, reposts, reactions, zaps, highlights, articles, video
+    static let UNREAD_KINDS: Set<Int> = Set([1,4,6,7,20,9735,9802,30023,34235]) // posts, dms, reposts, reactions, zaps, highlights, articles, video
     
     static let shared = NotificationsViewModel()
     
@@ -43,7 +43,7 @@ class NotificationsViewModel: ObservableObject {
     public func checkNeedsUpdate(_ event: Event) {
         guard let account = account() else { return }
         switch event.kind {
-        case 1,4,9802,30023,34235: // TODO: Should check if not muted or blocked
+        case 1,4,20,9802,30023,34235: // TODO: Should check if not muted or blocked
             let before = needsUpdate
             needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == account.publicKey })
             if needsUpdate && needsUpdate != before {
@@ -98,7 +98,7 @@ class NotificationsViewModel: ObservableObject {
     
     
     // Don't read these @Published vars, only set them. Use the computed above instead because they correctly return 0 when muted
-    @Published var unreadMentions_:Int = 0 {      // 1,9802,30023,34235
+    @Published var unreadMentions_:Int = 0 {      // 1,20,9802,30023,34235
         didSet {
             if unreadMentions_ > oldValue {
                 sendNotification(.newMentions)
@@ -106,7 +106,7 @@ class NotificationsViewModel: ObservableObject {
             unreadPublisher.send(unread)
         }
     }
-    @Published var unreadNewPosts_:Int = 0 {      // 1,9802,30023,34235
+    @Published var unreadNewPosts_:Int = 0 {      // 1,20,9802,30023,34235
         didSet {
             if unreadNewPosts_ > oldValue {
                 sendNotification(.unreadNewPosts)
@@ -815,7 +815,7 @@ fileprivate class NotificationFetchRequests {
         r.predicate = NSPredicate(format:
                                     "created_at > %i " +
                                     "AND NOT pubkey IN %@ " +
-                                    "AND kind IN {1,9802,30023,34235} " +
+                                    "AND kind IN {1,20,9802,30023,34235} " +
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " + // mutedRootIds
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
@@ -970,7 +970,7 @@ class OfflinePosts {
                 r1.predicate = NSPredicate(format:
                                             "created_at > %i " +
                                             "AND pubkey = %@ " +
-                                            "AND kind IN {0,1,3,4,5,6,7,9802,34235} " +
+                                            "AND kind IN {0,1,3,4,5,6,7,20,9802,34235} " +
                                             "AND relays = \"\"" +
                                             "AND NOT flags IN {\"nsecbunker_unsigned\",\"awaiting_send\",\"draft\"}" +
                                             "AND sig != nil",

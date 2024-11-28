@@ -495,6 +495,14 @@ struct ParentPost: View {
                                 }
                                 
                                 switch nrPost.kind {
+                                case 20:
+                                    if let imageUrl = nrPost.imageUrls.first {
+                                        PictureEventView(imageUrl: imageUrl, autoload: true, theme: themes.theme)
+                                            .padding(.vertical, 10)
+                                    }
+                                    else {
+                                        EmptyView()
+                                    }
                                 case 30023:
                                     ArticleView(nrPost, isDetail: false, fullWidth: settings.fullWidthImages, hideFooter: false, theme: themes.theme)
                                         .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
@@ -638,6 +646,14 @@ struct DetailPost: View {
             }
         
             switch nrPost.kind {
+            case 20:
+                if let imageUrl = nrPost.imageUrls.first {
+                    PictureEventView(imageUrl: imageUrl, autoload: true, theme: themes.theme)
+                        .padding(.vertical, 10)
+                }
+                else {
+                    EmptyView()
+                }
             case 30023:
                 ArticleView(nrPost, isDetail: true, fullWidth: settings.fullWidthImages, hideFooter: false, theme: themes.theme)
                     .background(Color(.secondarySystemBackground))

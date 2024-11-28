@@ -101,6 +101,7 @@ public enum NEventKind: Codable, Equatable {
     case repost
     case chatMessage
     case reaction
+    case picture
     case report
     case zapRequest
     case zapNote
@@ -129,6 +130,7 @@ public enum NEventKind: Codable, Equatable {
         case     5: self = .delete
         case     6: self = .repost
         case     7: self = .reaction
+        case    20: self = .picture
         case  1311: self = .chatMessage
         case  1984: self = .report
         case  9734: self = .zapRequest
@@ -161,6 +163,7 @@ public enum NEventKind: Codable, Equatable {
         case .repost:               return 6
         case .chatMessage:          return 1311
         case .reaction:             return 7
+        case .picture:              return 20
         case .report:               return 1984
         case .zapRequest:           return 9734
         case .zapNote:              return 9735

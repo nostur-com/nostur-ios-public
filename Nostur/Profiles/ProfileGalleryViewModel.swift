@@ -50,7 +50,7 @@ class ProfileGalleryViewModel: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: Set([self.pubkey]),
-                                                kinds: Set([1]),
+                                                kinds: Set([1,20]),
                                                 limit: limit
                                             )
                                            ]
@@ -83,7 +83,7 @@ class ProfileGalleryViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", self.pubkey)
+            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,20}", self.pubkey)
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             
             var items: [GalleryItem] = []
@@ -91,7 +91,12 @@ class ProfileGalleryViewModel: ObservableObject {
             
             for event in events {
                 guard let content = event.content else { continue }
-                let urls = getImgUrlsFromContent(content)
+                var urls = getImgUrlsFromContent(content)
+                
+                if urls.isEmpty {
+                    urls = event.fastTags.compactMap { imageUrlFromIMetaFastTag($0) }
+                }
+                
                 guard !urls.isEmpty else { continue }
                 
                 for url in urls.prefix(Self.MAX_IMAGES_PER_POST) {

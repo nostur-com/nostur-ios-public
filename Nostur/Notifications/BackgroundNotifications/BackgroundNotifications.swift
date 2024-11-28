@@ -189,7 +189,7 @@ func checkForNotifications() async {
                             
                             DispatchQueue.main.async {
                                 // Mentions kinds (1,9802,30023) and DM (4)
-                                req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[1,4,9802,30023,34235], subscriptionId: taskId, since: since))
+                                req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[1,4,20,9802,30023,34235], subscriptionId: taskId, since: since))
                             }
                         }
                     },

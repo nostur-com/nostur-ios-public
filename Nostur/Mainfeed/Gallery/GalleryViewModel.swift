@@ -276,7 +276,12 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                     guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
                     guard let content = event.content else { continue }
                     
-                    let urls = getImgUrlsFromContent(content)
+                    var urls = getImgUrlsFromContent(content)
+                    
+                    if urls.isEmpty {
+                        urls = event.fastTags.compactMap { imageUrlFromIMetaFastTag($0) }
+                    }
+                    
                     guard !urls.isEmpty else { continue }
                     
                     for url in urls.prefix(Self.MAX_IMAGES_PER_POST) {

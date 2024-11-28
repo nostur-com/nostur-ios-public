@@ -236,7 +236,7 @@ struct Maintenance {
         
         
         
-        // KIND 1,4,5,6,9802,30023,34235
+        // KIND 1,4,5,6,20,9802,30023,34235
         // OLDER THAN X DAYS
         // IS NOT BOOKMARKED
         // IS NOT OWN EVENT
@@ -248,7 +248,7 @@ struct Maintenance {
         let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds))
         
         let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-        fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,5,6,9802,30023,34235} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
+        fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,5,6,20,9802,30023,34235} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
         
         let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
         fr16batchDelete.resultType = .resultTypeCount
@@ -256,10 +256,10 @@ struct Maintenance {
         do {
             let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
             if let count = result.result as? Int, count > 0 {
-                L.maintenance.info("🧹🧹 Deleted \(count) kind {1,4,5,6,9802,30023,34235} events")
+                L.maintenance.info("🧹🧹 Deleted \(count) kind {1,4,5,6,20,9802,30023,34235} events")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete {1,4,5,6,9802,30023,34235} data")
+            L.maintenance.info("🔴🔴 Failed to delete {1,4,5,6,20,9802,30023,34235} data")
         }
         
         
@@ -379,7 +379,7 @@ struct Maintenance {
         //            context.perform {
         let frOther = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
         
-        frOther.predicate = NSPredicate(format: "created_at < %i AND NOT kind IN {0,1,3,4,5,6,7,8,9734,9735,9802,10002,30023,34235} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+        frOther.predicate = NSPredicate(format: "created_at < %i AND NOT kind IN {0,1,3,4,5,6,7,8,20,9734,9735,9802,10002,30023,34235} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
         
         let frOtherbatchDelete = NSBatchDeleteRequest(fetchRequest: frOther)
         frOtherbatchDelete.resultType = .resultTypeCount

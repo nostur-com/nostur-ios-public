@@ -56,12 +56,16 @@ struct Kind1Both: View {
     }
     
     var body: some View {
-        if fullWidth {
+        if fullWidth || nrPost.kind == 20 {
             self.fullWidthView
         }
         else {
             self.normalView
         }
+    }
+    
+    private var shouldAutoload: Bool {
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
     }
     
     @ViewBuilder
@@ -161,7 +165,7 @@ struct Kind1Both: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                     else if (nrPost.kind != 1) && (nrPost.kind != 6) {
-                        AnyKind(nrPost, hideFooter: hideFooter, theme: theme)
+                        AnyKind(nrPost, hideFooter: hideFooter, autoload: shouldAutoload, imageWidth: dim.availableNoteRowImageWidth(), theme: theme)
                     }
                     else if (isDetail) {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
@@ -308,7 +312,7 @@ struct Kind1Both: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                     else if (nrPost.kind != 1) && (nrPost.kind != 6) {
-                        AnyKind(nrPost, hideFooter: hideFooter, theme: theme)
+                        AnyKind(nrPost, hideFooter: hideFooter, autoload: shouldAutoload, imageWidth: imageWidth, theme: theme)
                     }
                     else if (isDetail) {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)

@@ -22,7 +22,7 @@ class EmojiFeedViewModel: ObservableObject {
     private var didLoad = false
     private static let POSTS_LIMIT = 75
     private static let REQ_IDS_LIMIT = 500 // (strfry default)
-    private static let EMOJIFEED_KINDS: Set<Int64> = Set([1,9802,30032,34235])
+    private static let EMOJIFEED_KINDS: Set<Int64> = Set([1,20,9802,30032,34235])
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
     

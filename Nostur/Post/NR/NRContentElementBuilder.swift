@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import NostrEssentials
 
 typealias FastTag = (String, String, String?, String?, String?)
 
@@ -157,6 +158,13 @@ class NRContentElementBuilder {
         if !nonMatch.isEmpty {
             result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:nonMatch, primaryColor: primaryColor)))
         }
+        
+        // for kind:20 image urls are not in text but only as imeta:
+        if imageUrls.isEmpty {
+            imageUrls = fastTags
+                .compactMap { imageUrlFromIMetaFastTag($0) }
+        }
+        
         return (result, linkPreviewUrls, imageUrls)
     }
     
@@ -451,4 +459,30 @@ func findImetaFromUrl(_ url:String) -> CGSize? {
     }
     return nil
 //    return ...
+}
+
+
+func imageUrlFromIMetaFastTag(_ tag: FastTag) -> URL? {
+    guard tag.0 == "imeta"  else { return nil }
+    var valuesDict: [String: String] = [:]
+    
+    let property1 = tag.1.components(separatedBy: " ")
+    if property1.count >= 2 {
+        valuesDict[property1[0]] = property1[1]
+    }
+    
+    if let property2 = tag.2?.components(separatedBy: " "), property2.count >= 2 {
+        valuesDict[property2[0]] = property2[1]
+    }
+    
+    if let property3 = tag.3?.components(separatedBy: " "), property3.count >= 2 {
+        valuesDict[property3[0]] = property3[1]
+    }
+    
+    if let property4 = tag.4?.components(separatedBy: " "), property4.count >= 2 {
+        valuesDict[property4[0]] = property4[1]
+    }
+        
+    guard let url = valuesDict["url"] else { return nil }
+    return URL(string: url)
 }
