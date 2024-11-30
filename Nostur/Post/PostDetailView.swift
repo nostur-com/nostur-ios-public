@@ -497,8 +497,14 @@ struct ParentPost: View {
                                 switch nrPost.kind {
                                 case 20:
                                     if let imageUrl = nrPost.imageUrls.first {
-                                        PictureEventView(imageUrl: imageUrl, autoload: true, theme: themes.theme)
-                                            .padding(.vertical, 10)
+                                        VStack {
+                                            PictureEventView(imageUrl: imageUrl, autoload: true, theme: themes.theme)
+                                                .padding(.top, 10)
+                                                .padding(.horizontal, -10)
+                                            
+                                            ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.listWidth - 80, theme: themes.theme, didStart: $didStart)
+                                                .padding(.vertical, 10)
+                                        }
                                     }
                                     else {
                                         EmptyView()
@@ -648,8 +654,14 @@ struct DetailPost: View {
             switch nrPost.kind {
             case 20:
                 if let imageUrl = nrPost.imageUrls.first {
-                    PictureEventView(imageUrl: imageUrl, autoload: true, theme: themes.theme)
-                        .padding(.vertical, 10)
+                    VStack {
+                        PictureEventView(imageUrl: imageUrl, autoload: true, theme: themes.theme)
+                            .padding(.top, 10)
+                            .padding(.horizontal, -10)
+                        
+                        ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: themes.theme, didStart: $didStart)
+                            .padding(.vertical, 10)
+                    }
                 }
                 else {
                     EmptyView()

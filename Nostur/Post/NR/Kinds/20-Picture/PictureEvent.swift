@@ -25,8 +25,6 @@ struct PictureEventView: View {
     @State private var didStart = false
     
     var body: some View {
-        VStack {
-            SingleMediaViewer(url: imageUrl, pubkey: "", imageWidth: availableWidth ?? dim.availableNoteRowImageWidth(), fullWidth: true, autoload: autoload, contentPadding: 0, contentMode: .aspectFit, upscale: true, theme: theme)
-        }
+        SingleMediaViewer(url: imageUrl, pubkey: "", imageWidth: availableWidth ?? dim.availableNoteRowImageWidth(), fullWidth: true, autoload: autoload, contentPadding: 0, contentMode: .aspectFit, upscale: true, theme: theme)
     }
 }

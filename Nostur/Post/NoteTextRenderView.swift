@@ -28,8 +28,12 @@ struct NoteTextRenderView: View {
             switch nrPost.kind {
             case 20:
                 if let imageUrl = nrPost.imageUrls.first {
-                    PictureEventView(imageUrl: imageUrl, autoload: true, theme: theme)
-                        .padding(.vertical, 10)
+                    VStack {
+                        PictureEventView(imageUrl: imageUrl, autoload: true, theme: theme)
+                            .padding(.horizontal, -10)
+                        ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
+                            .padding(.vertical, 10)
+                    }
                 }
                 else {
                     EmptyView()

@@ -46,6 +46,8 @@ struct AnyKind: View {
                     if let imageUrl = nrPost.imageUrls.first {
                         VStack {
                             PictureEventView(imageUrl: imageUrl, autoload: autoload, theme: theme, availableWidth: imageWidth)
+                                .padding(.horizontal, -10)
+                            
                             ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: imageWidth, forceAutoload: autoload, theme: theme, didStart: $didStart)
                                 .padding(.vertical, 10)
                         }
