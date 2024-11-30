@@ -84,7 +84,11 @@ class RelayMessage {
             guard let result = try? decoder.decode(CommandResult.self, from: dataFromString) else {
                 throw error.FAILED_TO_PARSE
             }
-            return RelayMessage(relays: relay, type: .OK, message: text, id:result.id, success:result.success)
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(
+                id: result.id,
+                detectedRelay: relay
+            ))
+            return RelayMessage(relays: relay, type: .OK, message: text, id: result.id, success: result.success)
         }
         
         guard text.prefix(9) != ###"["CLOSED""### else {

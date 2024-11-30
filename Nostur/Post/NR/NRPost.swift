@@ -259,7 +259,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         let replies = withReplies && withFooter ? event.replies_.map { NRPost(event: $0) } : []
         self._replies = replies
-        self.ownPostAttributes = OwnPostAttributes(id: event.id, isOwnPost: NRState.shared.fullAccountPubkeys.contains(pubkey), relaysCount: event.relays.split(separator: " ").count, cancellationId: cancellationId, flags: event.flags)
+        self.ownPostAttributes = OwnPostAttributes(id: event.id, isOwnPost: NRState.shared.fullAccountPubkeys.contains(pubkey), relays: event.relays, cancellationId: cancellationId, flags: event.flags)
         
         if withReplies && withFooter {
             self.footerAttributes = FooterAttributes(replyPFPs: Array(_replies.compactMap { reply in
@@ -593,20 +593,20 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             .sink { [weak self] event in
                 guard let self else { return }
                 
-                let relays = event.relays
-                let relaysCount = event.relays.split(separator: " ").count
+                let relaysString = event.relays
+                let relays = Set(relaysString.split(separator: " ").map { String($0) }).filter { $0 != "" } 
                 let flags = event.flags
                 let cancellationId = event.cancellationId
 
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
                     self.ownPostAttributes.objectWillChange.send()
-                    self.ownPostAttributes.relaysCount = relaysCount
+                    self.ownPostAttributes.relays = relays.union(self.ownPostAttributes.relays)
                     self.ownPostAttributes.flags = flags
                     self.ownPostAttributes.cancellationId = cancellationId
                     
                     self.footerAttributes.objectWillChange.send()
-                    self.footerAttributes.relays = relays
+                    self.footerAttributes.relays = relays.union(self.footerAttributes.relays)
                 }
             }
     }

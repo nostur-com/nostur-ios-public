@@ -70,8 +70,7 @@ struct EventStatChange {
     var likes: Int64? // likes (reactions), reposts,
     var zaps: Int64? // zaps
     var zapTally: Int64? // total zap amount
-    var relaysCount: Int? // Sent to relays count
-    var relays: String? // space seperated relays
+    var detectedRelay: String? // update view with new detected sent-to relay (after "OK")
 }
 
 public enum ZapState: String {

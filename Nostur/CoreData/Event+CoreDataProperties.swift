@@ -812,39 +812,27 @@ extension Event {
         #endif
         if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id), event.managedObjectContext != nil { // <-- maybe fix: error: fatal: Failed to re-registered lost fault. fault 0x60 with oid 0xa7 <x-coredata://3DA0D6F2-/Event/p65> has a moc of 0x0 but we expected 0x60
             guard !event.isDeleted else { return }
-            let existingRelays = event.relays.split(separator: " ").map { String($0) }
-            let newRelays = relays.split(separator: " ").map { String($0) }
-            let uniqueRelays = Set(existingRelays + newRelays)
-            if uniqueRelays.count > existingRelays.count {
-                
-                CoreDataRelationFixer.shared.addTask({
+
+            CoreDataRelationFixer.shared.addTask({
+                let existingRelays = event.relays.split(separator: " ").map { String($0) }
+                let newRelays = relays.split(separator: " ").map { String($0) }
+                let uniqueRelays = Set(existingRelays + newRelays)
+                if uniqueRelays.count > existingRelays.count {
                     event.relays = uniqueRelays.joined(separator: " ")
-                })
-                
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(
-                    id: event.id,
-                    relaysCount: event.relays.split(separator: " ").count,
-                    relays: event.relays
-                ))
-            }
+                }
+            })
         }
         else if let event = try? Event.fetchEvent(id: id, context: context) {
             guard !event.isDeleted else { return }
-            let existingRelays = event.relays.split(separator: " ").map { String($0) }
-            let newRelays = relays.split(separator: " ").map { String($0) }
-            let uniqueRelays = Set(existingRelays + newRelays)
-            if uniqueRelays.count > existingRelays.count {
-                
-                CoreDataRelationFixer.shared.addTask({
+            
+            CoreDataRelationFixer.shared.addTask({
+                let existingRelays = event.relays.split(separator: " ").map { String($0) }
+                let newRelays = relays.split(separator: " ").map { String($0) }
+                let uniqueRelays = Set(existingRelays + newRelays)
+                if uniqueRelays.count > existingRelays.count {
                     event.relays = uniqueRelays.joined(separator: " ")
-                })
-                
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(
-                    id: event.id,
-                    relaysCount: event.relays.split(separator: " ").count,
-                    relays: event.relays
-                ))
-            }
+                }
+            })
         }
     }
     

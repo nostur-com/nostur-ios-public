@@ -17,16 +17,17 @@ import Combine
 class OwnPostAttributes: ObservableObject {
     private let id: String
     var isOwnPost = false // all own accounts, so can undo from quick account switch post too
-    @Published var relaysCount: Int
+    @Published var relays: Set<String> = []
+    var relaysCount: Int { relays.count }
     @Published var cancellationId: UUID? = nil
     @Published var flags = ""
     
     private var subscriptions =  Set<AnyCancellable>()
     
-    init(id: String, isOwnPost: Bool = false, relaysCount: Int = 0, cancellationId: UUID? = nil, flags: String = "") {
+    init(id: String, isOwnPost: Bool = false, relays: String = "", cancellationId: UUID? = nil, flags: String = "") {
         self.id = id
         self.isOwnPost = isOwnPost
-        self.relaysCount = relaysCount
+        self.relays = relays.isEmpty ? [] : Set(relays.components(separatedBy: " "))
         self.cancellationId = cancellationId
         self.flags = flags
         self.setupListeners()
@@ -42,10 +43,11 @@ class OwnPostAttributes: ObservableObject {
         ViewUpdates.shared.eventStatChanged
             .filter { $0.id == id }
             .sink { [weak self] change in
-                guard let relaysCount = change.relaysCount else { return }
-                DispatchQueue.main.async {
-                    self?.objectWillChange.send()
-                    self?.relaysCount = relaysCount
+                guard let self, let detectedRelay = change.detectedRelay else { return }
+                if !self.relays.contains(detectedRelay) {
+                    DispatchQueue.main.async {
+                        self.relays.insert(detectedRelay)
+                    }
                 }
             }
             .store(in: &subscriptions)

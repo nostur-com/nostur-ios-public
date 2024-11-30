@@ -443,7 +443,7 @@ private struct WithSheets: ViewModifier {
             .onReceive(receiveNotification(.shareWeblink)) { notification in
                 let nrPost = notification.object as! NRPost
                 
-                let relays = nrPost.footerAttributes.relays.split(separator: " ").map { String($0) }
+                let relays = Array(nrPost.footerAttributes.relays).map { String($0) }
                     .filter {
                         // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
                         !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0")

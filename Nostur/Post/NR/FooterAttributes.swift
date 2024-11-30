@@ -25,7 +25,7 @@ class FooterAttributes: ObservableObject {
     @Published var zapsCount: Int64
     @Published var zapTally: Int64
     
-    @Published var relays: String
+    @Published var relays: Set<String> = []
     
     @Published var bookmarked: Bool
     @Published var bookmarkColor: Color
@@ -58,7 +58,7 @@ class FooterAttributes: ObservableObject {
         self.zapsCount = event.zapsCount
         self.zapTally = event.zapTally
         
-        self.relays = event.relays
+        self.relays = Set(event.relays.split(separator: " ").map { String($0) }).filter { $0 != "" } 
         
         if withFooter, let bookmarkColor = Self.getBookmarkColor(event) {
             self.bookmarked = true
@@ -128,19 +128,31 @@ class FooterAttributes: ObservableObject {
         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: pubkey, eTag: id, zapState: .cancelled))
     }
     
+    private var relayChangeSubscription: AnyCancellable?
     private var eventStatChangeSubscription: AnyCancellable?
     private var postActionSubscription: AnyCancellable?
     
     private func setupListeners() {
         guard eventStatChangeSubscription == nil else { return }
         let id = self.id
+        
+        relayChangeSubscription = ViewUpdates.shared.eventStatChanged
+            .filter { $0.id == id }
+            .sink { [weak self] change in
+                guard let self, let detectedRelay = change.detectedRelay else { return }
+                if !self.relays.contains(detectedRelay) {
+                    DispatchQueue.main.async {
+                        self.relays.insert(detectedRelay)
+                    }
+                }
+            }
+        
         eventStatChangeSubscription = ViewUpdates.shared.eventStatChanged
             .filter { $0.id == id }
             .scan(nil) { (accumulated: EventStatChange?, change: EventStatChange) -> EventStatChange? in
                 if let acc = accumulated {
                     var mergedChange = acc
                     
-                    mergedChange.relays = change.relays ?? acc.relays
                     mergedChange.reposts = max(change.reposts ?? 0, acc.reposts ?? 0)
                     mergedChange.replies = max(change.replies ?? 0, acc.replies ?? 0)
                     mergedChange.likes = max(change.likes ?? 0, acc.likes ?? 0)
@@ -172,9 +184,6 @@ class FooterAttributes: ObservableObject {
                 }
                 if let zapTally = change.zapTally, zapTally != self.zapTally {
                     self.zapTally = zapTally
-                }
-                if let relays = change.relays {
-                    self.relays = relays
                 }
                 
                 // Also update own like (or slow? disabled)
