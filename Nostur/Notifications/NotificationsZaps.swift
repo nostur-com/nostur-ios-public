@@ -201,7 +201,9 @@ struct PostZapsView: View {
             VStack {
                 Image(systemName: "bolt.fill")
                     .foregroundColor(themes.theme.accent)
-                Text(Double(footerAttributes.zapTally).satsFormatted)
+//                Text(Double(footerAttributes.zapTally).satsFormatted)
+//                    .font(.title2)
+                Text(postZaps.zaps.reduce(0, { $0 + $1.sats }).satsFormatted)
                     .font(.title2)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
                     let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))

@@ -97,8 +97,8 @@ class FooterAttributes: ObservableObject {
                 bookmarkColor = color
             }
             
-//            let zapsCount = self.event.zapsCount
-//            let zapTally = self.event.zapTally
+            let zapsCount = self.event.zapsCount
+            let zapTally = self.event.zapTally
             
             let zapState = Self.hasZapReceipt(self.event) ? .zapReceiptConfirmed : self.event.zapState
 //            let isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(self.zapState)
@@ -113,8 +113,8 @@ class FooterAttributes: ObservableObject {
                 self?.hasPrivateNote = hasPrivateNote
                 self?.zapState = zapState
 //                self?.zapped = isZapped
-//                self.zapsCount = zapsCount
-//                self.zapTally = zapTally
+                self?.zapsCount = zapsCount
+                self?.zapTally = zapTally
             }
         }
         
