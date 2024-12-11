@@ -450,7 +450,6 @@
 		1FCCACA22AB764D300B3F00A /* ProfileLikesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCCACA12AB764D300B3F00A /* ProfileLikesViewModel.swift */; };
 		1FCD6C9D2C1EE19500C82E21 /* VideoPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCD6C9C2C1EE19500C82E21 /* VideoPickerView.swift */; };
 		1FCD6C9F2C224ADA00C82E21 /* MentionsFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCD6C9E2C224ADA00C82E21 /* MentionsFeedModel.swift */; };
-		1FCDDEBC2A480AA2002EDEEC /* SettingsDevTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */; };
 		1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */; };
 		1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCEA0B62999413C00A309DC /* Double+clean.swift */; };
 		1FCFDDBA2A284A7B0096CD84 /* FollowerNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCFDDB92A284A7B0096CD84 /* FollowerNotifier.swift */; };
@@ -1039,7 +1038,6 @@
 		1FCCACA12AB764D300B3F00A /* ProfileLikesViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ProfileLikesViewModel.swift; path = Nostur/Profiles/ProfileLikesViewModel.swift; sourceTree = SOURCE_ROOT; };
 		1FCD6C9C2C1EE19500C82E21 /* VideoPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPickerView.swift; sourceTree = "<group>"; };
 		1FCD6C9E2C224ADA00C82E21 /* MentionsFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentionsFeedModel.swift; sourceTree = "<group>"; };
-		1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDevTools.swift; sourceTree = "<group>"; };
 		1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayCensorshipResistorTest.swift; sourceTree = "<group>"; };
 		1FCEA0B62999413C00A309DC /* Double+clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+clean.swift"; sourceTree = "<group>"; };
 		1FCFDDB92A284A7B0096CD84 /* FollowerNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowerNotifier.swift; sourceTree = "<group>"; };
@@ -1406,7 +1404,6 @@
 				1F7B218B2AE3118D00CE972E /* Settings+Nip96Configurator.swift */,
 				1FBE253D2A9E5A7400F60FCF /* Settings+ThemePicker.swift */,
 				1F2DEDDA2ADAB368009E360C /* Settings+WebOfTrustLevelPicker.swift */,
-				1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */,
 				1F21442D29A797B80090E78E /* SettingsStore.swift */,
 				1F810B2D29E65639006B1614 /* TermsAndConditions.swift */,
 			);
@@ -2753,7 +2750,6 @@
 				1F48C6962C4AB921007BAE00 /* ChatRenderer.swift in Sources */,
 				1F71E8B329EB4E4C00B99340 /* NosturList+CoreDataProperties.swift in Sources */,
 				1FE1281C2AF8BFDF0070936C /* CloudFeed+CoreDataClass.swift in Sources */,
-				1FCDDEBC2A480AA2002EDEEC /* SettingsDevTools.swift in Sources */,
 				1F46A7342C5C38B200511A79 /* NXPostsFeed.swift in Sources */,
 				1F88491529B537B400145340 /* NSRegularExpression.swift in Sources */,
 				1F0A6BDC2A7DF97100258255 /* FeedSelector.swift in Sources */,
