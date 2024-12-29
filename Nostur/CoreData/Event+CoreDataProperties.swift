@@ -1076,6 +1076,8 @@ extension Event {
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
                 if let parent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) ?? (try? Event.fetchEvent(id: replyToEtag.id, context: context)) {
                     CoreDataRelationFixer.shared.addTask({
+                        // TODO: Thread 24: "Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
+                        // (when opening from bookmarks)
                         savedEvent.replyTo = parent
                     })
                     // TODO: Illegal attempt to establish a relationship 'replyTo' between objects in different contexts

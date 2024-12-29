@@ -34,7 +34,7 @@ struct BookmarksView: View {
             }
     }
     
-    @State private var events: [Event] = []
+    @State private var events: [Event] = [] // bg events
     @State private var bookmarkSnapshot: Int = 0
     @State private var noEvents = false
     
@@ -225,6 +225,7 @@ struct LazyBookmark: View {
                                 if let json = json, let jsonData = json.data(using: .utf8, allowLossyConversion: false) {
                                     if let nEvent = try? decoder.decode(NEvent.self, from: jsonData) {
                                         let savedEvent = Event.saveEvent(event: nEvent, relays: "iCloud", context: bgContext)
+                                        try? bgContext.save()
                                         let nrPost = NRPost(event: savedEvent)
                                         L.cloud.debug("Decoded and saved from iCloud: \(nEvent.id) ")
                                         DispatchQueue.main.async {
