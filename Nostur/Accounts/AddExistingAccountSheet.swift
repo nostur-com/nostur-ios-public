@@ -32,6 +32,10 @@ struct AddExistingAccountSheet: View {
     
     @ObservedObject private var bunkerManager = NSecBunkerManager.shared
     
+    private var shouldDisableAddButton: Bool {
+        isNsecbunkerKey && (bunkerManager.state == .connecting || bunkerManager.invalidRelayAddress)
+    }
+    
     var body: some View {
             ZStack {
                 VStack {
@@ -138,8 +142,8 @@ struct AddExistingAccountSheet: View {
                     }
                     .frame(maxWidth: 300)
                     .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
-                    .disabled(bunkerManager.state == .connecting || bunkerManager.invalidRelayAddress)
-                    .opacity(bunkerManager.state == .connecting || bunkerManager.invalidRelayAddress ? 0.5 : 1.0)
+                    .disabled(shouldDisableAddButton)
+                    .opacity(shouldDisableAddButton ? 0.5 : 1.0)
                     
                     if (offerTryOut) {
                         NavigationLink {
